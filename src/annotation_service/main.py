@@ -20,8 +20,17 @@ def get_pending_requests():
 
 def start_vep(input_vcf, output_vcf):
     command = [paths.vep_path,
-            "-i", input_vcf, "--format vcf"
-            "-o", output_vcf, "--vcf", "--no_stats", "--force_overwrite"]
+            "-i", input_vcf, "--format", "vcf",
+            "-o", output_vcf, "--vcf", "--no_stats", "--force_overwrite",
+            "--species", "homo_sapiens", "--assembly", "GRCh38",
+            "--fork", "1",
+            "--offline", "--cache", "--dir_cache", "/mnt/storage2/GRCh38/share/data/dbs/ensembl-vep-104/cache", "--fasta", "/mnt/storage2/GRCh38/share/data/genomes/GRCh38.fa",
+            "--numbers", "--hgvs", "--domains", "--transcript_version",
+            "--regulatory",
+            "--sift", "b", "--polyphen", "b",
+            "--af", "--af_gnomad", "--failed", "1",
+            "--pubmed",
+            "--fields", "Allele,Consequence,IMPACT,SYMBOL,HGNC_ID,Feature,Feature_type,EXON,INTRON,HGVSc,HGVSp,DOMAINS,SIFT,PolyPhen,Existing_variation,AF,gnomAD_AF,gnomAD_AFR_AF,gnomAD_AMR_AF,gnomAD_EAS_AF,gnomAD_NFE_AF,gnomAD_SAS_AF,BIOTYPE,PUBMED"]
     subprocess.run(command)
 
 
@@ -37,7 +46,7 @@ if __name__ == '__main__':
         functions.variant_to_vcf(one_variant, one_variant_path)
 
         output_path = temp_file_path + "/variant_vep_" + str(variant_id) + ".vcf"
-        #start_vep(one_variant_path, output_path)
+        start_vep(one_variant_path, output_path)
 
 
 
