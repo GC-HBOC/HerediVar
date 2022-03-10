@@ -1,8 +1,10 @@
-from db_IO import Connection
-import functions
+import sys
+from os import path
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+from pkgs.db_IO import Connection
+import pkgs.functions as functions
 import subprocess
 import paths
-import os
 import tempfile
 
 conn = Connection()
@@ -23,10 +25,21 @@ def start_vep(input_vcf, output_vcf):
                "--pubmed",
                "--fields",
                "Allele,Consequence,IMPACT,SYMBOL,HGNC_ID,Feature,Feature_type,EXON,INTRON,HGVSc,HGVSp,DOMAINS,SIFT,PolyPhen,Existing_variation,AF,gnomAD_AF,gnomAD_AFR_AF,gnomAD_AMR_AF,gnomAD_EAS_AF,gnomAD_NFE_AF,gnomAD_SAS_AF,BIOTYPE,PUBMED"]
-    completed_process = subprocess.run(command, capture_output=True) # catch errors and warnings here from STDERR
-    exit_status = completed_process.returncode
-    stderr = completed_process.stderr.decode()
-    return exit_status, stderr
+    completed_process = subprocess.Popen(command, stderr=subprocess.PIPE)
+    std_err = completed_process.communicate()[1].strip().decode("utf-8") # catch errors and warnings and convert to str
+    if completed_process.returncode != 0:
+        err_msg = "VEP ERROR: " + std_err + " Code: " + completed_process.returncode
+    elif len(std_err):
+        err_msg = "VEP WARNING: " + std_err
+    return completed_process.returncode, err_msg
+
+
+def collect_error_msgs(msg1, msg2):
+    if len(msg2):
+        res = msg1 + "\n~~\n" + msg2
+    else:
+        res = msg1
+    return res
 
 
 if __name__ == '__main__':
@@ -37,16 +50,52 @@ if __name__ == '__main__':
     one_variant_path = temp_file_path + "/variant_temp.vcf"
 
     for request_id, variant_id in pending_requests:
+        err_msgs = ""
         one_variant = conn.get_one_variant(variant_id)
         functions.variant_to_vcf(one_variant, one_variant_path)
 
-        output_path = temp_file_path + "/variant_vep_" + variant_id + ".vcf"
-        exit_status_vep, stderr_vep = start_vep(one_variant_path, output_path)
+        ## VEP
+        output_path = temp_file_path + "/variant_vep.vcf"
+        execution_code_vep, err_msg_vep = start_vep(one_variant_path, output_path)
 
-        print(exit_status_vep)
-        print(stderr_vep)
+        if execution_code_vep != 0:
+            status = "error"
+        else:
+            status = "success"
+        err_msgs = collect_error_msgs(err_msgs, err_msg_vep)
+        
+        ## Save Variant Consequence to database
+        headers, vep_info = functions.read_vcf_info(output_path)
 
-        #conn.update_annotation_log(request_id, status, error_msg)
+        vep_info = vep_info[0].split(',')
+        headers = headers[0]
+        headers = headers[headers.find('Format: ')+8:]
+        headers = headers.split('|')
+
+        num_fields = len(headers)
+        
+        transcript_name_pos = headers.index("Feature")
+        HGVS_C_pos = headers.index("HGVSc")
+        HGVS_P_pos = headers.index("HGVSp")
+        consequence_pos = headers.index("Consequence")
+        impact_pos = headers.index("IMPACT")
+        exon_nr_pos = headers.index("EXON") 
+        intron_nr_pos = headers.index("INTRON") 
+        hgnc_id_pos = headers.index("HGNC_ID")
+
+        for entry in vep_info:
+            entry = entry.split('|')
+            exon_nr = entry[exon_nr_pos]
+            exon_nr = exon_nr[:exon_nr.find('/')] # take only number from number/total
+            intron_nr = entry[intron_nr_pos]
+            intron_nr = intron_nr[:intron_nr.find('/')] # take only number from number/total
+            conn.insert_variant_consequence(variant_id, entry[transcript_name_pos], entry[HGVS_C_pos], entry[HGVS_P_pos], entry[consequence_pos], entry[impact_pos], exon_nr, intron_nr, entry[hgnc_id_pos])
+
+
+        
+        
+
+        #conn.update_annotation_queue(row_id=request_id, status=status, error_msg=err_msgs)
 
 
     conn.close()

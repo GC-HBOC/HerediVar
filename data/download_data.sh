@@ -8,6 +8,12 @@ set -o verbose
 ###
 
 root=`pwd`
-folder=$root/dbs/
 tools=$root/tools/
+dbs=$root/dbs/
 
+mkdir $dbs
+
+cd $dbs
+mkdir HGNC
+cd HGNC
+wget -O - http://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/hgnc_complete_set.txt > hgnc_complete_set.tsv
