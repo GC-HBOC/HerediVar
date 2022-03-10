@@ -22,3 +22,14 @@ def variant_to_vcf(variant, path):
     file.write(vcf_record)
     file.close()
 
+def read_vcf_info(path):
+    file = open(path, "r")
+    entries = []
+    info_headers = []
+    for line in file:
+        if line.startswith('##INFO'):
+            info_headers.append(line.strip())
+        if not line.startswith('#'):
+            l = line.split('\t')[7]
+            entries.append(l.strip())
+    return info_headers, entries

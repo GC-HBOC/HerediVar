@@ -17,10 +17,10 @@ if [ -z "$1" ]
 	mkdir -p $1/genomes/
 	genome=$1/genomes/GRCh38.fa
 fi
-rm -rf $genome $genome.fai
+#rm -rf $genome $genome.fai
 
-wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
-(gunzip -c GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz |  sed -r 's/>chrM/>chrMT/g' > $genome) || true
-rm GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
+#wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
+#(gunzip -c GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz |  sed -r 's/>chrM/>chrMT/g' > $genome) || true
+#rm GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
 
-#php $src/Tools/index_genome.php -in $genome
+php $src/tools/index_genome.php -in $genome
