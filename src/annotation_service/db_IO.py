@@ -25,6 +25,40 @@ class Connection:
         result = self.cursor.fetchone()
         return result
 
-    def close_connection(self):
+    def close(self):
         self.conn.close()
         self.cursor.close()
+
+    def get_pending_requests(self):
+        self.cursor.execute("SELECT id,variant_id FROM annotation_log WHERE status = 'pending'")
+        pending_variant_ids = self.cursor.fetchall()
+        return pending_variant_ids
+
+    def update_annotation_log(self, row_id, status, error_msg):
+        self.cursor.execute("UPDATE annotation_log SET status = " + status + ", finished_at = NOW(), error = " + error_msg + " WHERE id = " + row_id)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
