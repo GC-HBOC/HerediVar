@@ -1,30 +1,32 @@
 import sys
 from os import path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-from pkgs.db_IO import Connection
-import pkgs.functions as functions
+from common.db_IO import Connection
+import common.functions as functions
 import subprocess
 import paths
 import tempfile
 
 conn = Connection()
 
-
+#"/mnt/storage2/GRCh38/share/data/genomes/GRCh38.fa"
 def start_vep(input_vcf, output_vcf):
+    fields_oi = "Allele,Consequence,IMPACT,SYMBOL,HGNC_ID,Feature,Feature_type,EXON,INTRON,HGVSc,HGVSp," \
+        "DOMAINS,SIFT,PolyPhen,Existing_variation,AF,gnomAD_AF,gnomAD_AFR_AF,gnomAD_AMR_AF,gnomAD_EAS_AF," \
+        "gnomAD_NFE_AF,gnomAD_SAS_AF,BIOTYPE,PUBMED"
     command = [paths.vep_path,
                "-i", input_vcf, "--format", "vcf",
                "-o", output_vcf, "--vcf", "--no_stats", "--force_overwrite",
                "--species", "homo_sapiens", "--assembly", "GRCh38",
                "--fork", "1",
                "--offline", "--cache", "--dir_cache", "/mnt/storage2/GRCh38/share/data/dbs/ensembl-vep-104/cache",
-               "--fasta", "/mnt/storage2/GRCh38/share/data/genomes/GRCh38.fa",
+               "--fasta", "data/genomes/GRCh38.fa",
                "--numbers", "--hgvs", "--domains", "--transcript_version",
                "--regulatory",
                "--sift", "b", "--polyphen", "b",
                "--af", "--af_gnomad", "--failed", "1",
                "--pubmed",
-               "--fields",
-               "Allele,Consequence,IMPACT,SYMBOL,HGNC_ID,Feature,Feature_type,EXON,INTRON,HGVSc,HGVSp,DOMAINS,SIFT,PolyPhen,Existing_variation,AF,gnomAD_AF,gnomAD_AFR_AF,gnomAD_AMR_AF,gnomAD_EAS_AF,gnomAD_NFE_AF,gnomAD_SAS_AF,BIOTYPE,PUBMED"]
+               "--fields", fields_oi]
     completed_process = subprocess.Popen(command, stderr=subprocess.PIPE)
     std_err = completed_process.communicate()[1].strip().decode("utf-8") # catch errors and warnings and convert to str
     if completed_process.returncode != 0:
@@ -49,6 +51,8 @@ if __name__ == '__main__':
     # print(temp_file_path)
     one_variant_path = temp_file_path + "/variant_temp.vcf"
 
+    status = "success"
+
     for request_id, variant_id in pending_requests:
         err_msgs = ""
         one_variant = conn.get_one_variant(variant_id)
@@ -60,8 +64,7 @@ if __name__ == '__main__':
 
         if execution_code_vep != 0:
             status = "error"
-        else:
-            status = "success"
+            
         err_msgs = collect_error_msgs(err_msgs, err_msg_vep)
         
         ## Save Variant Consequence to database
@@ -89,10 +92,43 @@ if __name__ == '__main__':
             exon_nr = exon_nr[:exon_nr.find('/')] # take only number from number/total
             intron_nr = entry[intron_nr_pos]
             intron_nr = intron_nr[:intron_nr.find('/')] # take only number from number/total
-            conn.insert_variant_consequence(variant_id, entry[transcript_name_pos], entry[HGVS_C_pos], entry[HGVS_P_pos], entry[consequence_pos], entry[impact_pos], exon_nr, intron_nr, entry[hgnc_id_pos])
+            #conn.insert_variant_consequence(variant_id, entry[transcript_name_pos], entry[HGVS_C_pos], entry[HGVS_P_pos], entry[consequence_pos], entry[impact_pos], exon_nr, intron_nr, entry[hgnc_id_pos])
+        
 
+        ## extract rsid from VEP
+        ids_pos = headers.index('Existing_variation')
+        rsid = None
+        rsid_error_msg = ""
+
+        for entry in vep_info:
+            entry = entry.split('|')
+            ids = entry[ids_pos]
+            
+            if len(ids) > 0:
+                ids = ids.split('&')
+                if rsid is None:
+                    rsid = ids[0]
+                elif rsid != ids[0]:
+                    rsid_error_msg = "RSID warning: multiple dbSNP rsids for one variant."
+        
+        conn.insert_variant_annotation(variant_id, 3, rsid)
+
+
+
+
+        ## gnomAD
+
+        # fetch one_variant from gnomAD database local copy
+        # use vcfannotatefromvcf from ngs-bits: one_variant_path, path_to_gnomad.tbi + fields to annotate
+        # read the annotated file back in
+        # save INFO column to variant_annotation table
 
         
+
+
+
+
+
         
 
         #conn.update_annotation_queue(row_id=request_id, status=status, error_msg=err_msgs)

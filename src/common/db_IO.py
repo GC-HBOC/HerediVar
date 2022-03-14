@@ -17,7 +17,7 @@ def get_db_connection():
 
 
 def enquote(string):
-    return "'" + string + "'"
+    return "'" + str(string) + "'"
 
 
 class Connection:
@@ -80,6 +80,15 @@ class Connection:
         self.cursor.execute("INSERT INTO gene (hgnc_id, symbol, name, type) VALUES (%s, %s, %s, %s)", 
                             (hgnc_id, symbol, name, type))
         self.conn.commit()
+
+    def insert_annotation_type(self, name, description, value_type, version, version_date):
+        command = "SELECT id FROM annotation_type WHERE name =" + enquote(name) + " AND version = " + enquote(version) + " AND version_date = " + enquote(version_date)
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        if len(result) == 0:
+            command = "INSERT INTO annotation_type (name, description, value_type, version, version_date) VALUES (%s, %s, %s, %s, %s)"
+            self.cursor.execute(command, (name, description, value_type, version, version_date))
+            self.conn.commit()
 
 
         
