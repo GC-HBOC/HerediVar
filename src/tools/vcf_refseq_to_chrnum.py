@@ -30,5 +30,7 @@ for line in input_file:
         print(line)
     else:
         line = line.split('\t')
-        line[0] = refseq_dict[line[0]]
-        print('\t'.join(line))
+        current_refseq_id = line[0]
+        if current_refseq_id in refseq_dict:
+            line[0] = refseq_dict[current_refseq_id]
+            print('\t'.join(line))
