@@ -150,3 +150,9 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
+# directories to ignore
+/data/dbs/
+/data/genomes/
+
+/src/tools/ngs-bits/
+/src/tools/samtools/
