@@ -18,7 +18,7 @@ def variant_to_vcf(variant, path):
                 "."
     file = open(path, "w")
     file.write("##fileformat=VCFv4.2\n")
-    file.write("# CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n")
+    file.write("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n")
     file.write(vcf_record)
     file.close()
 
