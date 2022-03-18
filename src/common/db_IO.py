@@ -1,6 +1,9 @@
+from os import path
+import sys
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 import mysql.connector
 from mysql.connector import Error
-import time
+import common.functions as functions
 
 
 def get_db_connection():
@@ -89,6 +92,34 @@ class Connection:
             command = "INSERT INTO annotation_type (name, description, value_type, version, version_date) VALUES (%s, %s, %s, %s, %s)"
             self.cursor.execute(command, (name, description, value_type, version, version_date))
             self.conn.commit()
+    
+    def insert_variant_annotation(self, variant_id, annotation_type_id, value, supplementary_document = None):
+        # supplementary documents are not supported yet! see: https://stackoverflow.com/questions/10729824/how-to-insert-blob-and-clob-files-in-mysql
+        command = "INSERT INTO variant_annotation (variant_id, annotation_type_id, value) VALUES (%s, %s, %s)"
+        self.cursor.execute(command, (variant_id, annotation_type_id, value))
+        self.conn.commit()
+
+    def insert_variants_from_vcf(self, path):
+        variants = functions.read_variants(path)
+
+        for variant in variants:
+            chr = variant.CHROM
+            pos = variant.POS
+            ref = variant.REF
+            alt = variant.ALT
+            self.cursor().execute("INSERT INTO variant (chr, pos, ref, alt) VALUES (%s, %s, %s, %s)",
+                                  (chr, pos, ref, alt))
+        self.conn.commit()
+    
+    def insert_variant(self, chr, pos, ref, alt):
+        self.cursor.execute("INSERT INTO variant (chr, pos, ref, alt) VALUES (%s, %s, %s, %s)",
+                         (chr, pos, ref, alt))
+        self.conn.commit()
+    
+    def insert_annotation_request(self, variant_id, user_id):
+        command = "INSERT INTO annotation_queue (variant_id, status, user_id) VALUES (%s, %s, %s)"
+        self.cursor.execute(command, (variant_id, "pending", user_id))
+        self.conn.commit()
 
 
         
