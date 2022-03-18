@@ -1,4 +1,5 @@
 import os
+import collections
 
 
 def basedir():
@@ -32,4 +33,21 @@ def read_vcf_info(path):
         if not line.startswith('#'):
             l = line.split('\t')[7]
             entries.append(l.strip())
+    file.close()
     return info_headers, entries
+
+
+Record = collections.namedtuple('Record', [
+    'CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER'
+])
+
+
+# doesnt collect FORMAT/INFO fields
+def read_vcf_variant(path):
+    all_records = []
+    for line in open(path, "r"):
+        if not line.startswith("#"):
+            prep_line = line.strip().split("\t")#[0:upper_bound]
+            rec = Record(prep_line[0], prep_line[1], prep_line[2], prep_line[3], prep_line[4], prep_line[5], prep_line[6])
+            all_records.append(rec)
+    return all_records

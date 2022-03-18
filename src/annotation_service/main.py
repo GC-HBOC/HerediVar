@@ -1,4 +1,5 @@
 import sys
+import os
 from os import path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from common.db_IO import Connection
@@ -7,26 +8,29 @@ import subprocess
 import paths
 import tempfile
 
+
 conn = Connection()
 
 #"/mnt/storage2/GRCh38/share/data/genomes/GRCh38.fa"
 def annotate_vep(input_vcf, output_vcf):
     # Existing_variation
+    #gnomAD_AF,gnomAD_AFR_AF,gnomAD_AMR_AF,gnomAD_EAS_AF,gnomAD_NFE_AF,gnomAD_SAS_AF, "--af_gnomad",
     fields_oi = "Allele,Consequence,IMPACT,SYMBOL,HGNC_ID,Feature,Feature_type,EXON,INTRON,HGVSc,HGVSp," \
-        "DOMAINS,SIFT,PolyPhen,AF,gnomAD_AF,gnomAD_AFR_AF,gnomAD_AMR_AF,gnomAD_EAS_AF," \
-        "gnomAD_NFE_AF,gnomAD_SAS_AF,BIOTYPE,PUBMED"
-    command = [paths.vep_path,
+        "DOMAINS,SIFT,PolyPhen,AF,BIOTYPE,PUBMED,MaxEntScan_ref,MaxEntScan_alt"
+    #fields_oi = "Allele,MaxEntScan_ref,MaxEntScan_alt"
+    command = [paths.vep_path + "/vep",
                "-i", input_vcf, "--format", "vcf",
                "-o", output_vcf, "--vcf", "--no_stats", "--force_overwrite",
-               "--species", "homo_sapiens", "--assembly", "GRCh38",
+               "--species", "homo_sapiens", "--assembly", paths.ref_genome_name,
                "--fork", "1",
                "--offline", "--cache", "--dir_cache", "/mnt/storage2/GRCh38/share/data/dbs/ensembl-vep-104/cache",
                "--fasta", paths.ref_genome_path,
                "--numbers", "--hgvs", "--domains", "--transcript_version",
                "--regulatory",
                "--sift", "b", "--polyphen", "b",
-               "--af", "--af_gnomad", "--failed", "1",
+               "--af", "--failed", "1",
                "--pubmed",
+               "--plugin", "MaxEntScan," + paths.vep_path + "/MaxEntScan/",
                "--fields", fields_oi]
     completed_process = subprocess.Popen(command, stderr=subprocess.PIPE)
     std_err = completed_process.communicate()[1].strip().decode("utf-8") # catch errors and warnings and convert to str
@@ -83,6 +87,67 @@ def check_vcf(path):
     return completed_process.returncode, err_msg, vcf_errors
 
 
+def annotate_missing_spliceai(input_vcf_path, output_vcf_path):
+    input_file = open(input_vcf_path, 'r')
+    temp_path = tempfile.gettempdir() + "/spliceai_temp.vcf"
+    temp_file = open(temp_path, 'w')
+
+    found_spliceai_header = False
+    need_annotation = False
+    errors = ''
+    execution_code_spliceai = -1
+    for line in input_file:
+        if line.startswith('#'):
+            temp_file.write(line)
+            if line.startswith('##INFO=<ID=SpliceAI'):
+                found_spliceai_header = True
+            continue
+        else:
+            entries = line.split('\t')
+            if len(entries) != 8: 
+                errors = collect_error_msgs(errors, "SpliceAI ERROR: not the correct number of entries in input vcf line: " + line)
+                continue
+            
+            if "SpliceAI=" in line:
+                continue
+            
+            need_annotation = True
+            temp_file.write(line)
+    temp_file.close()
+    if not found_spliceai_header:
+        errors = collect_error_msgs(errors, "SpliceAI WARNING: did not find a SpliceAI INFO entry in input vcf, did you annotate the file using a precomputed file before?")
+    if need_annotation:
+        print('executing SpliceAI to annotate new variant...')
+        subprocess.run(['sed', '-i', '/SpliceAI/d', temp_path])
+        execution_code_spliceai, err_msg_spliceai = annotate_spliceai_algorithm(temp_path, output_vcf_path)
+        errors = collect_error_msgs(errors, err_msg_spliceai)
+
+    # need to insert some code here to merge the newly annotated variants and previously 
+    # annotated ones from the db if there are files which contain more than one variant! 
+    input_file.close()
+
+    return execution_code_spliceai, errors
+
+
+
+def annotate_spliceai_algorithm(input_vcf_path, output_vcf_path):
+    input_vcf_zipped_path = input_vcf_path + ".gz"
+    subprocess.run([paths.ngs_bits_path + "VcfSort", "-in", input_vcf_path, "-out", input_vcf_path])
+    subprocess.run(['bgzip', '-f', input_vcf_path])
+    subprocess.run(['tabix', "-f", "-p", "vcf", input_vcf_zipped_path])
+
+    command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path, '-A', paths.ref_genome_name.lower()]
+    completed_process = subprocess.Popen(command, stderr=subprocess.PIPE)
+    std_err = completed_process.communicate()[1].strip().decode("utf-8") # catch errors and warnings and convert to str
+    err_msg = ""
+    if completed_process.returncode != 0:
+        err_msg = "SpliceAI ERROR: " + std_err + " Code: " + str(completed_process.returncode)
+    elif len(std_err):
+        err_msg = "SpliceAI WARNING: " + std_err
+    return completed_process.returncode, err_msg
+
+
+
 
 def collect_error_msgs(msg1, msg2):
     if len(msg1) > 0 and len(msg2) > 0:
@@ -92,6 +157,20 @@ def collect_error_msgs(msg1, msg2):
     else:
         res = msg1
     return res
+
+
+def update_output(not_annotated_file_path, annotated_file_path, error_code):
+    if error_code == 0: # execution worked and we want to keep the info
+        os.replace(annotated_file_path, not_annotated_file_path)
+
+
+def is_snv(one_var):
+    ref = one_var[3]
+    alt = one_var[4]
+    if len(ref) > 1 or len(alt) > 1:
+        return False
+    else:
+        return True
 
 
 if __name__ == '__main__':
@@ -109,29 +188,46 @@ if __name__ == '__main__':
         print("processing request " + str(one_variant[0]) + " annotating variant: " + " ".join([str(x) for x in one_variant[1:5]]))
 
         functions.variant_to_vcf(one_variant, one_variant_path)
-
-        ## VEP
         variant_annotated_path = temp_file_path + "/variant_annotated.vcf"
+        
+        ## VEP
+        print("executing vep...")
         execution_code_vep, err_msg_vep = annotate_vep(one_variant_path, variant_annotated_path)
-
+        update_output(one_variant_path, variant_annotated_path, execution_code_vep)
         if execution_code_vep != 0:
             status = "error"
         err_msgs = collect_error_msgs(err_msgs, err_msg_vep)
                 
 
         ## annotate variant with phylop 100-way conservation scores
-        #execution_code_phylop, err_msg_phylop = annotate_phylop(one_variant_path, output_path)
-        #if execution_code_phylop != 0:
-        #    status = "error"
-        #err_msgs = collect_error_msgs(err_msgs, err_msg_phylop)
+        print("annotating phyloP...")
+        execution_code_phylop, err_msg_phylop = annotate_phylop(one_variant_path, variant_annotated_path)
+        update_output(one_variant_path, variant_annotated_path, execution_code_phylop)
+        if execution_code_phylop != 0:
+            status = "error"
+        err_msgs = collect_error_msgs(err_msgs, err_msg_phylop)
 
 
         # create config file for vcfannotatefromvcf
+        print("annotating from vcf resources...")
         config_file_path = temp_file_path + "/.config"
         config_file = open(config_file_path, 'w')
 
         ## add rs-num from dbsnp
         config_file.write(paths.dbsnp_path + "\tdbSNP\tRS\t\n")
+
+        ## add revel score
+        config_file.write(paths.revel_path + "\t\tREVEL\t\n")
+
+        ## add spliceai precomputed scores
+        config_file.write(paths.spliceai_path + "\t\tSpliceAI\t\n")
+
+        ## add cadd precomputed scores
+        if is_snv(one_variant):
+            config_file.write(paths.cadd_snvs_path + "\t\tCADD\t\n")
+        else:
+            config_file.write(paths.cadd_indels_path + "\t\tCADD\t\n")
+
 
         ## add gnomAD
         # fetch one_variant from gnomAD database local copy
@@ -142,14 +238,14 @@ if __name__ == '__main__':
         config_file.close()
 
         ## execute vcfannotatefromvcf
-        variant_annotated_path_2 = temp_file_path + "/variant_annotated_2.vcf"
-        execution_code_vcf_anno, err_msg_vcf_anno = annotate_from_vcf(config_file_path, variant_annotated_path, variant_annotated_path_2)
+        execution_code_vcf_anno, err_msg_vcf_anno = annotate_from_vcf(config_file_path, one_variant_path, variant_annotated_path)
+        update_output(one_variant_path, variant_annotated_path, execution_code_vcf_anno)
         if execution_code_vcf_anno != 0:
             status = "error"
         err_msgs = collect_error_msgs(err_msgs, err_msg_vcf_anno)
 
-        
-        execution_code_vcfcheck, err_msg_vcfcheck, vcf_erros = check_vcf(variant_annotated_path_2)
+        print("checking validity of annotated vcf file...")
+        execution_code_vcfcheck, err_msg_vcfcheck, vcf_erros = check_vcf(one_variant_path)
         if execution_code_vcfcheck != 0:
             status = "error"
         err_msgs = collect_error_msgs(err_msgs, err_msg_vcfcheck)
@@ -157,9 +253,20 @@ if __name__ == '__main__':
         print(vcf_erros)
 
 
-        ## Save Variant Consequence to database
-        headers, info = functions.read_vcf_info(variant_annotated_path_2)
+        ## run SpliecAI on the variants which are not contained in the precomputed file
+        execution_code_spliceai, err_msg_spliceai = annotate_missing_spliceai(one_variant_path, variant_annotated_path)
+        update_output(one_variant_path, variant_annotated_path, execution_code_spliceai)
+        if execution_code_spliceai > 0: # execution resulted in an error (we didn't execute spliceai algorithm at -1)
+            status = "error"
+        err_msgs = collect_error_msgs(err_msgs, err_msg_spliceai)
+
+
+        ## Save to database
+        print("saving to database...")
+        headers, info = functions.read_vcf_info(one_variant_path)
         vep_header_pos = [i for i, s in enumerate(headers) if 'ID=CSQ' in s]
+
+        vep_header_present = False
         if len(vep_header_pos) > 1:
             err_msgs = collect_error_msgs(err_msgs, "VEP DB save WARNING: There were multiple CSQ INFO columns for this variant. Taking the first one.")
         if len(vep_header_pos) == 0:
@@ -167,7 +274,7 @@ if __name__ == '__main__':
         else:
             vep_header_pos = vep_header_pos[0]
             vep_headers = headers[vep_header_pos]
-            vep_headers = vep_headers[vep_headers.find('Format: ')+8:]
+            vep_headers = vep_headers[vep_headers.find('Format: ')+8:len(vep_headers)-2]
             vep_headers = vep_headers.split('|')
             num_fields = len(vep_headers)
 
@@ -180,37 +287,70 @@ if __name__ == '__main__':
             intron_nr_pos = vep_headers.index("INTRON") 
             hgnc_id_pos = vep_headers.index("HGNC_ID")
 
-            for vcf_variant_idx in range(len(info)):
-                current_info = info[vcf_variant_idx].split(';')
+            maxentscan_ref_pos = vep_headers.index("MaxEntScan_ref")
+            maxentscan_alt_pos = vep_headers.index("MaxEntScan_alt")
 
-                for entry in current_info:
-                    if entry.startswith("CSQ="):
-                        vep_entries = entry.split(',')
-                        for vep_entry in vep_entries:
-                            vep_entry = vep_entry.split('|')
-                            exon_nr = vep_entry[exon_nr_pos]
-                            exon_nr = exon_nr[:exon_nr.find('/')] # take only number from number/total
-                            intron_nr = vep_entry[intron_nr_pos]
-                            intron_nr = intron_nr[:intron_nr.find('/')] # take only number from number/total
-                            conn.insert_variant_consequence(variant_id, 
-                                                            vep_entry[transcript_name_pos], 
-                                                            vep_entry[HGVS_C_pos], 
-                                                            vep_entry[HGVS_P_pos], 
-                                                            vep_entry[consequence_pos], 
-                                                            vep_entry[impact_pos], 
-                                                            exon_nr, 
-                                                            intron_nr, 
-                                                            vep_entry[hgnc_id_pos])
-        ## save dbsnp rsid to database
+            vep_header_present = True
 
+        for vcf_variant_idx in range(len(info)):
+            current_info = info[vcf_variant_idx].split(';')
 
-
-
-            print(err_msgs)
+            for entry in current_info:
+                # save variant consequence
+                if entry.startswith("CSQ=") and vep_header_present: 
+                    vep_entries = entry.split(',')
+                    transcript_independent_saved = False
+                    for vep_entry in vep_entries:
+                        vep_entry = vep_entry.split('|')
+                        exon_nr = vep_entry[exon_nr_pos]
+                        exon_nr = exon_nr[:exon_nr.find('/')] # take only number from number/total
+                        intron_nr = vep_entry[intron_nr_pos]
+                        intron_nr = intron_nr[:intron_nr.find('/')] # take only number from number/total
+                        #conn.insert_variant_consequence(variant_id, 
+                        #                                vep_entry[transcript_name_pos], 
+                        #                                vep_entry[HGVS_C_pos], 
+                        #                                vep_entry[HGVS_P_pos], 
+                        #                                vep_entry[consequence_pos], 
+                        #                                vep_entry[impact_pos], 
+                        #                                exon_nr, 
+                        #                                intron_nr, 
+                        #                                vep_entry[hgnc_id_pos])
+                        if not transcript_independent_saved:
+                            transcript_independent_saved = True
+                            maxentscan_ref = vep_entry[maxentscan_ref_pos]
+                            if maxentscan_ref != '':
+                                conn.insert_variant_annotation(variant_id, 9, maxentscan_ref)
+                            maxentscan_alt = vep_entry[maxentscan_alt_pos]
+                            if maxentscan_alt != '':
+                                conn.insert_variant_annotation(variant_id, 10, maxentscan_alt)
+                if entry.startswith("PHYLOP="):
+                    value = entry[7:]
+                    #conn.insert_variant_annotation(variant_id, 4, value)
+                if entry.startswith("dbSNP_RS="):
+                    value = entry[9:]
+                    #conn.insert_variant_annotation(variant_id, 3, value)
+                if entry.startswith("REVEL="):
+                    value = entry[6:]
+                    #conn.insert_variant_annotation(variant_id, 6, value)
+                if entry.startswith("SpliceAI="):
+                    values = entry[9:]
+                    values = values.split('|')
+                    #conn.insert_variant_annotation(variant_id, 7, '|'.join(values[2:]))
+                    max_delta_score = max(values[2:6])
+                    #conn.insert_variant_annotation(variant_id, 8, max_delta_score)
+                if entry.startswith("CADD="):
+                    value = entry[5:]
+                    #conn.insert_variant_annotation(variant_id, 5, value)
 
         
 
-    #conn.update_annotation_queue(row_id=request_id, status=status, error_msg=err_msgs)
+
+
+        print(err_msgs)
+
+        
+
+        #conn.update_annotation_queue(row_id=request_id, status=status, error_msg=err_msgs)
         
 
 

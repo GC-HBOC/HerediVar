@@ -2,14 +2,22 @@ import os
 
 # workdir
 workdir = "/mnt/users/ahdoebm1/HerediVar/"
-
+datadir = workdir + "data/dbs/"
 
 # tools
-vep_path = "/mnt/storage2/GRCh38/share/opt/ensembl-vep-release-104.3/vep"
+vep_path = "/mnt/storage2/GRCh38/share/opt/ensembl-vep-release-104.3"
 ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
-ref_genome_path = workdir + "data/genomes/GRCh38.fa"
+
 
 # data
-gnomad_path = workdir + "data/dbs/gnomAD/gnomAD_genome_v3.1.2_GRCh38.vcf"
-phylop_file_path = workdir + "data/dbs/phyloP/hg38.phyloP100way.bw"
-dbsnp_path = workdir + "data/dbs/dbSNP/dbSNP_v155.vcf.gz"
+ref_genome_name = "GRCh38"
+ref_genome_path = workdir + "data/genomes/GRCh38.fa"
+gnomad_path = datadir + "gnomAD/gnomAD_genome_v3.1.2_GRCh38.vcf"
+phylop_file_path = datadir + "phyloP/hg38.phyloP100way.bw"
+dbsnp_path = datadir + "dbSNP/dbSNP_v155.vcf.gz"
+revel_path = datadir + "REVEL/revel_grch38_all_chromosomes.vcf.gz"
+spliceai_path = datadir + "SpliceAI/spliceai_scores_2022_02_09_GRCh38.vcf.gz"
+#spliceai_path = datadir + "SpliceAI/spliceai_test.vcf.gz"
+cadd_snvs_path = datadir + "CADD/CADD_SNVs_1.6_GRCh38.vcf.gz"
+#cadd_snvs_path = datadir + "CADD/CADD_SNVs_1.6_test.vcf.gz"
+cadd_indels_path = datadir + "CADD/CADD_InDels_1.6_GRCh38.vcf.gz"
