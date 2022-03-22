@@ -228,6 +228,13 @@ if __name__ == '__main__':
         else:
             config_file.write(paths.cadd_indels_path + "\t\tCADD\t\n")
 
+        ## add clinvar annotation
+        #config_file.write(paths.clinvar_path + "\tClinVar\tinpret,revstat,varid,submissions\t\n")
+
+        ## add gnomAD annotation
+        #config_file.write(paths.gnomad_path + "\tGnomAD\tAF,AC,hom,hemi,het,popmax\t\n")
+        config_file.write(paths.gnomad_m_path + "\tGnomADm\tAC_hom\t\n")
+
 
         ## add gnomAD
         # fetch one_variant from gnomAD database local copy
@@ -249,9 +256,6 @@ if __name__ == '__main__':
         if execution_code_vcfcheck != 0:
             status = "error"
         err_msgs = collect_error_msgs(err_msgs, err_msg_vcfcheck)
-
-        print(vcf_erros)
-
 
         ## run SpliecAI on the variants which are not contained in the precomputed file
         execution_code_spliceai, err_msg_spliceai = annotate_missing_spliceai(one_variant_path, variant_annotated_path)
@@ -292,13 +296,16 @@ if __name__ == '__main__':
 
             vep_header_present = True
 
+        clv_revstat = ''
+        clv_inpret = ''
+        clv_varid = ''
         for vcf_variant_idx in range(len(info)):
             current_info = info[vcf_variant_idx].split(';')
 
             for entry in current_info:
                 # save variant consequence
                 if entry.startswith("CSQ=") and vep_header_present: 
-                    vep_entries = entry.split(',')
+                    vep_entries = entry[4:].split(',')
                     transcript_independent_saved = False
                     for vep_entry in vep_entries:
                         vep_entry = vep_entry.split('|')
@@ -318,11 +325,17 @@ if __name__ == '__main__':
                         if not transcript_independent_saved:
                             transcript_independent_saved = True
                             maxentscan_ref = vep_entry[maxentscan_ref_pos]
-                            if maxentscan_ref != '':
-                                conn.insert_variant_annotation(variant_id, 9, maxentscan_ref)
-                            maxentscan_alt = vep_entry[maxentscan_alt_pos]
-                            if maxentscan_alt != '':
-                                conn.insert_variant_annotation(variant_id, 10, maxentscan_alt)
+                            #if maxentscan_ref != '':
+                            #    conn.insert_variant_annotation(variant_id, 9, maxentscan_ref)
+                            #maxentscan_alt = vep_entry[maxentscan_alt_pos]
+                            #if maxentscan_alt != '':
+                            #    conn.insert_variant_annotation(variant_id, 10, maxentscan_alt)
+                if entry.startswith("ClinVar_submissions="):
+                    clinvar_submissions = entry[20:].split(',')
+                    for submission in clinvar_submissions:
+                        #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|4CollectionMethod|5SubmittedPhenotypeInfo|6OriginCounts|7Submitter|8ExplanationOfInterpretation
+                        submissions = submission.split('|')
+                        conn.insert_clinvar_submission(submissions[0], submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6], submissions[7], submissions[8])
                 if entry.startswith("PHYLOP="):
                     value = entry[7:]
                     #conn.insert_variant_annotation(variant_id, 4, value)
@@ -341,7 +354,36 @@ if __name__ == '__main__':
                 if entry.startswith("CADD="):
                     value = entry[5:]
                     #conn.insert_variant_annotation(variant_id, 5, value)
+                if entry.startswith("ClinVar_revstat="):
+                    clv_revstat = entry[16:].replace('_', ' ')
+                if entry.startswith("ClinVar_varid="):
+                    clv_varid = entry[14:]
+                if entry.startswith("ClinVar_inpret="):
+                    clv_inpret = entry[15:].replace('_', ' ')
+                if entry.startswith("GnomAD_AC="):
+                    value = entry[10:]
+                    conn.insert_variant_annotation(variant_id, 11, value)
+                if entry.startswith("GnomAD_AF="):
+                    value = entry[10:]
+                    conn.insert_variant_annotation(variant_id, 12, value)
+                if entry.startswith("GnomAD_hom="):
+                    value = entry[11:]
+                    conn.insert_variant_annotation(variant_id, 13, value)
+                if entry.startswith("GnomAD_hemi="):
+                    value = entry[12:]
+                    conn.insert_variant_annotation(variant_id, 14, value)
+                if entry.startswith("GnomAD_het="):
+                    value = entry[11:]
+                    conn.insert_variant_annotation(variant_id, 15, value)
+                if entry.startswith("GnomAD_popmax="):
+                    value = entry[14:]
+                    conn.insert_variant_annotation(variant_id, 16, value)
+                if entry.startswith("GnomADm_AC_hom="):
+                    value = entry[15:]
+                    conn.insert_variant_annotation(variant_id, 17, value)
 
+            # submit collected clinvar data to db
+            #conn.insert_clinvar_variant_annotation(variant_id, clv_varid, clv_inpret, clv_revstat)
         
 
 

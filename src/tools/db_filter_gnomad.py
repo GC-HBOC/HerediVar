@@ -1,6 +1,8 @@
 import argparse
-from gc import collect
-from ntpath import join
+from os import path
+import sys
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+import common.functions as functions
 import sys
 
 parser = argparse.ArgumentParser(description="This script takes a gnomad.vcf file and filters it such that only a few interesting fields in the INFO column are left")
@@ -24,7 +26,7 @@ line = None
 
 while(line is None or line.startswith('##')):
     line = input_file.readline()
-    if not line.startswith('##INFO') and not line.startswith('#CHROM') and include_header:
+    if not line.startswith('##INFO') and not line.startswith('#CHROM') and not line.startswith('#FILTER') and include_header:
         print(line.strip())
 
     
@@ -46,12 +48,15 @@ while line != "":
         entries = line.split('\t')
         infos = entries[7].split(';')
 
-        is_gonosome = (entries[0] == "chrX") or (entries[0] == "chrY")
+        chr_num = functions.validate_chr(entries[0])
+        if not chr_num:
+            continue
+
+        is_gonosome = (chr_num == "X") or (chr_num == "Y")
         is_nonpar = "nonpar" in entries[7]
 
-        nhomalt = None
-        ac = None
-
+        nhomalt = ''
+        ac = ''
         af = ''
         hom = ''
         popmax = ''
@@ -60,23 +65,34 @@ while line != "":
 
         for info in infos:
             if info.startswith('AF='):
-                af = "AF=" + info[3:]
+                af = info[3:]
             elif info.startswith('nhomalt='):
                 nhomalt = int(info[8:])
-                hom = "hom=" + info[8:]
+                hom = info[8:]
             elif info.startswith('popmax='):
-                popmax = "popmax=" + info[7:]
+                popmax = info[7:]
             elif info.startswith('AC_male=') and is_gonosome and is_nonpar:
-                hemi = "hemi=" + info[8:]
+                hemi = info[8:]
             elif info.startswith('AC='):
                 ac = int(info[3:])
-                if entries[0] == "chrY": # gnomad does not record AC_male for chrY as AC_male=AC
-                    hemi = "hemi=" + str(ac)
+                if chr_num == "Y": # gnomad does not record AC_male for chrY as AC_male=AC
+                    hemi = str(ac)
     
         #calculate the number of heterozygotes
-        het = "het=" + str(ac - (2*nhomalt))
+        if nhomalt != '' and ac != '':
+            het = "het=" + str(ac - (2*nhomalt))
 
-        print('\t'.join(entries[:6]) + '\t' + af + ';' + 'AC=' + str(ac) + ';' + hom + ';' + popmax + ';' + hemi + ';' + het)
+        entries[0] = "chr" + chr_num
+
+        info = ''
+        info = functions.collect_info(info, "AF=", af)
+        info = functions.collect_info(info, "AC=", ac)
+        info = functions.collect_info(info, "hom=", hom)
+        info = functions.collect_info(info, "popmax=", popmax)
+        info = functions.collect_info(info, "hemi=", hemi)
+        info = functions.collect_info(info, "het=", het)
+
+        print('\t'.join(entries[:7]) + '\t' + info)
     
 
     

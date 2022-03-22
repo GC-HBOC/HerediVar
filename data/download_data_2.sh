@@ -41,13 +41,13 @@ wget http://hgdownload.soe.ucsc.edu/goldenPath/hg38/phyloP100way/hg38.phyloP100w
 cd $dbs
 mkdir -p CADD
 cd CADD
-wget -O - http://kircherlab.bihealth.org/download/CADD/v1.6/GRCh38/whole_genome_SNVs.tsv.gz > CADD_SNVs_1.6_GRCh38.tsv.gz # this file can be removed!
+wget -O - http://kircherlab.bihealth.org/download/CADD/v1.6/GRCh38/whole_genome_SNVs.tsv.gz > CADD_SNVs_1.6_GRCh38.tsv.gz
 zcat CADD_SNVs_1.6_GRCh38.tsv.gz | python3 $tools/db_converter_cadd.py | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > CADD_SNVs_1.6_GRCh38.vcf.gz
 tabix -f -p vcf CADD_SNVs_1.6_GRCh38.vcf.gz
 rm -f CADD_SNVs_1.6_GRCh38.tsv.gz
 $ngsbits/VcfCheck -in CADD_SNVs_1.6_GRCh38.vcf.gz -ref $genome -lines 0
 
-wget -O - https://kircherlab.bihealth.org/download/CADD/v1.6/GRCh38/gnomad.genomes.r3.0.indel.tsv.gz > CADD_InDels_1.6_GRCh38.tsv.gz # this file can be removed
+wget -O - https://kircherlab.bihealth.org/download/CADD/v1.6/GRCh38/gnomad.genomes.r3.0.indel.tsv.gz > CADD_InDels_1.6_GRCh38.tsv.gz
 zcat CADD_InDels_1.6_GRCh38.tsv.gz | python3 $tools/db_converter_cadd.py | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > CADD_InDels_1.6_GRCh38.vcf.gz
 tabix -f -p vcf CADD_InDels_1.6_GRCh38.vcf.gz
 rm -f CADD_InDels_1.6_GRCh38.tsv.gz
@@ -84,17 +84,41 @@ tabix -p vcf spliceai_scores_2022_02_09_GRCh38.vcf.gz
 cd $dbs
 mkdir -p ClinVar
 cd ClinVar
-#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20220313.vcf.gz
+
+# submissions table for 'Submitted interpretations and evidence' table from website
+#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
+#ncomment_lines=$(zgrep '^#' submission_summary.txt.gz | wc -l)
+##source $tools/zhead.sh
+#zhead submission_summary.txt.gz $ncomment_lines | tail -1 | cut -c 2- > h # nochmal auf die encoding schauen (SâˆšÂ°nchez-GutiâˆšÂ©rrez_2002_PMID:12417303; Sebastio_1991_PMID:18)
+#zgrep -v '^#' submission_summary.txt.gz | cat h - | bgzip > submission_summary_preprocessed.txt.gz
+
 #most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz
+#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20220320.vcf.gz 
+gunzip -c clinvar_20220320.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary_preprocessed.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_20220320_converted_GRCh38.vcf.gz
+tabix -p vcf clinvar_20220320_converted_GRCh38.vcf.gz
 
-# clinvar_variant_annotation
+#CNVs
+#wget -O - http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive/variant_summary_2021-12.txt.gz | gunzip > variant_summary_2021-12.txt
+#cat variant_summary_2021-12.txt | php $src/Tools/db_converter_clinvar_cnvs.php 5 "Pathogenic/Likely pathogenic" | sort | uniq > clinvar_cnvs_2021-12.bed
+#$ngsbits/BedSort -with_name -in clinvar_cnvs_2021-12.bed -out clinvar_cnvs_2021-12.bed
+
+
+
+
+
+
+
+
+
+
+
+# clinvar_variant_annotation table
 # - ID (column): variation ID
-# - CLNSIG: interpretation
+# - CLNSIG + CLNSIGCONF: interpretation
 # - CLNREVSTAT: review status
-# - last evaluated aus submission_summary.txt: look at all entries and save the newest date (column: DateLastEvaluated)
 
-#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz <<<<------ need to think about this again!
-# clinvar_interpretations
+
+# clinvar_interpretations table
 # - interpretation: ClinicalSignificance column
 # - last_evaluated: DateLastEvaluated column
 # - review_status: ReviewStatus column
@@ -102,13 +126,4 @@ cd ClinVar
 # - condition: SubmittedPhenotypeInfo column
 # (- inheritance: OriginCounts column)
 # - submitter: Submitter column
-# - supporting_information: ExplanationOfInterpretation
-
-
-
-#gunzip clinvar_20211212.vcf.gz | php $src/Tools/db_converter_clinvar.php | bgzip > clinvar_20211212_converted_GRCh38.vcf.gz
-#tabix -p vcf clinvar_20211212_converted_GRCh38.vcf.gz
-#CNVs
-#wget -O - http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive/variant_summary_2021-12.txt.gz | gunzip > variant_summary_2021-12.txt
-#cat variant_summary_2021-12.txt | php $src/Tools/db_converter_clinvar_cnvs.php 5 "Pathogenic/Likely pathogenic" | sort | uniq > clinvar_cnvs_2021-12.bed
-#$ngsbits/BedSort -with_name -in clinvar_cnvs_2021-12.bed -out clinvar_cnvs_2021-12.bed
+# - supporting_information: ExplanationOfInterpretation / description
