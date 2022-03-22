@@ -120,6 +120,26 @@ class Connection:
         command = "INSERT INTO annotation_queue (variant_id, status, user_id) VALUES (%s, %s, %s)"
         self.cursor.execute(command, (variant_id, "pending", user_id))
         self.conn.commit()
+    
+    def insert_clinvar_variant_annotation(self, variant_id, variation_id, interpretation, review_status):
+        command = "INSERT INTO clinvar_variant_annotation (variant_id, variation_id, interpretation, review_status) VALUES (%s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, variation_id, interpretation, review_status))
+        self.conn.commit()
+
+    def insert_clinvar_submission(self, clinvar_variant_annotation_id, interpretation, last_evaluated, review_status, assertion_criteria, condition, allele_origin, submitter, supporting_information):
+        columns_with_info = "clinvar_variant_annotation_id, interpretation, review_status, assertion_criteria, condition, allele_origin, submitter"
+        actual_information = (clinvar_variant_annotation_id, interpretation, review_status, assertion_criteria, condition, allele_origin, submitter)
+        if (supporting_information != '' or supporting_information != '-'):
+            columns_with_info = columns_with_info + ", supporting_information"
+            actual_information = actual_information + (supporting_information,)
+        if (last_evaluated != '' or last_evaluated != '-'):
+            columns_with_info = columns_with_info + ", last_evaluated"
+            actual_information = actual_information + (last_evaluated,)
+        placeholders = "%s, "*len(actual_information)
+        command = "INSERT INTO clinvar_submission (" + columns_with_info + ") VALUES (" + placeholders[:len(placeholders)-2] + ")"
+        #print(command)
+        self.cursor.execute(command, actual_information)
+        self.conn.commit()
 
 
         

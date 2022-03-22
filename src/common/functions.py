@@ -1,5 +1,6 @@
 import os
 import collections
+import datetime
 
 
 def basedir():
@@ -51,3 +52,44 @@ def read_vcf_variant(path):
             rec = Record(prep_line[0], prep_line[1], prep_line[2], prep_line[3], prep_line[4], prep_line[5], prep_line[6])
             all_records.append(rec)
     return all_records
+
+
+def write_vcf_header(info_columns):
+    print("##fileformat=VCFv4.2")
+    print("##fileDate=" + datetime.datetime.today().strftime('%Y-%m-%d'))
+    print("##reference=GRCh38")
+    for info_column in info_columns:
+        print(info_column.strip())
+    print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO")
+
+
+def trim_chr(chr):
+    chr = str(chr).upper()
+    if chr.startswith('CHR'):
+        return chr[3:]
+    else:
+        return chr
+
+
+def validate_chr(chr, max = 22):
+    chr = trim_chr(chr)
+
+    if not chr in ['X', 'Y', 'M', 'MT'] and not chr in [str(i) for i in range(1,max+1)]:
+        return False
+    if chr == "M":
+        return 'MT'
+    else:
+        return chr
+
+def collect_info(old_info, new_info_name, new_value, sep = ';'):
+    new_value = str(new_value)
+    if old_info != '':
+        if new_value == '':
+            return old_info
+        else:
+            return old_info + sep + new_info_name + new_value
+    else:
+        if new_value == '':
+            return old_info
+        else:
+            return new_info_name + new_value

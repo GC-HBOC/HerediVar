@@ -1,8 +1,11 @@
+import sys
+from os import path
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 import argparse
 from gc import collect
 from ntpath import join
-import sys
-import datetime
+import common.functions as functions
+
 
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("-i", "--input",  default="", help="path to input.vcf file")
@@ -19,11 +22,8 @@ else:
     input_file = sys.stdin
 
 # write vcf header
-print("##fileformat=VCFv4.2\n")
-print("##fileDate=" + datetime.datetime.today().strftime('%Y-%m-%d') + "\n")
-print("##reference=GRCh38\n")
-print("##INFO=<ID=CADD,Number=1,Type=Float,Description=\"CADD scaled score (PHRED) score of this variant.\">\n")
-print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n")
+info_headers = ["##INFO=<ID=CADD,Number=1,Type=Float,Description=\"CADD scaled score (PHRED) score of this variant.\">"]
+functions.write_vcf_header(info_headers)
 
 for line in input_file:
     line = line.strip()
