@@ -107,11 +107,6 @@ tabix -p vcf clinvar_20220320_converted_GRCh38.vcf.gz
 
 
 
-
-
-
-
-
 # clinvar_variant_annotation table
 # - ID (column): variation ID
 # - CLNSIG + CLNSIGCONF: interpretation

@@ -9,7 +9,7 @@ def basedir():
 
 # converts one line from the variant table to a vcf record
 def variant_to_vcf(variant, path):
-    # CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+    #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
     vcf_record = variant[1][3:] + "\t" + \
                 str(variant[2]) + "\t" + \
                 str(variant[0]) + "\t" + \

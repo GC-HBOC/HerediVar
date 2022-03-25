@@ -5,6 +5,7 @@ import argparse
 import common.functions as functions
 import pandas as pd
 import datetime
+import csv
 
 
 parser = argparse.ArgumentParser(description="")
@@ -23,27 +24,31 @@ else:
     input_file = sys.stdin
 
 submission_summary_path = args.submissions
-submission_summary = pd.read_csv(submission_summary_path, sep = "\t", compression="gzip", comment='#')
+submission_summary = pd.read_csv(submission_summary_path, sep = "\t", compression="gzip", comment='#', quoting=csv.QUOTE_NONE)
 
 
 def convert_row_to_string(variationid, row):
     last_evaluated = str(row['DateLastEvaluated'])
-    if last_evaluated != '-' or last_evaluated != '':
+    if last_evaluated != '-' and last_evaluated != '':
         last_evaluated = datetime.datetime.strptime(last_evaluated, "%b %d, %Y").strftime("%Y-%m-%d")
     else:
         last_evaluated = ''
     
-    description = str(row['Description'])
-    explanation_of_interpretation = str(row['ExplanationOfInterpretation'])
+    description = str(row['Description']).strip('\"')
+    explanation_of_interpretation = str(row['ExplanationOfInterpretation']).strip('\"')
     if description == '-':
         description = ''
+    else:
+        description = "description: " + description
     if explanation_of_interpretation == '-':
         explanation_of_interpretation = ''
+    else:
+        explanation_of_interpretation = "ExplanationOfInterpretation: " + explanation_of_interpretation
 
     result = str(variationid) + '|' + str(row['ClinicalSignificance']) + '|' \
      + last_evaluated + '|' + str(row['ReviewStatus']) + '|' \
-      + str(row['CollectionMethod']) + '|' + str(row['SubmittedPhenotypeInfo']) + '|' \
-       + str(row['OriginCounts']) + '|' + str(row['Submitter']) + '|' + functions.collect_info(description, '', explanation_of_interpretation, sep = ' - ')
+      + str(row['ReportedPhenotypeInfo']) + '|' \
+       + str(row['Submitter']) + '|' + functions.collect_info(description, '', explanation_of_interpretation, sep = ' - ')
 
     result.replace(' ', '_')
     result.replace('\\', '/')

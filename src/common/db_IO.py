@@ -1,3 +1,4 @@
+from logging import raiseExceptions
 from os import path
 import sys
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
@@ -121,25 +122,37 @@ class Connection:
         self.cursor.execute(command, (variant_id, "pending", user_id))
         self.conn.commit()
     
-    def insert_clinvar_variant_annotation(self, variant_id, variation_id, interpretation, review_status):
-        command = "INSERT INTO clinvar_variant_annotation (variant_id, variation_id, interpretation, review_status) VALUES (%s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, variation_id, interpretation, review_status))
+    def insert_clinvar_variant_annotation(self, variant_id, variation_id, interpretation, review_status, version_date):
+        command = "INSERT INTO clinvar_variant_annotation (variant_id, variation_id, interpretation, review_status, version_date) VALUES (%s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, variation_id, interpretation, review_status, version_date))
         self.conn.commit()
 
-    def insert_clinvar_submission(self, clinvar_variant_annotation_id, interpretation, last_evaluated, review_status, assertion_criteria, condition, allele_origin, submitter, supporting_information):
-        columns_with_info = "clinvar_variant_annotation_id, interpretation, review_status, assertion_criteria, condition, allele_origin, submitter"
-        actual_information = (clinvar_variant_annotation_id, interpretation, review_status, assertion_criteria, condition, allele_origin, submitter)
-        if (supporting_information != '' or supporting_information != '-'):
-            columns_with_info = columns_with_info + ", supporting_information"
-            actual_information = actual_information + (supporting_information,)
-        if (last_evaluated != '' or last_evaluated != '-'):
+    def insert_clinvar_submission(self, clinvar_variant_annotation_id, interpretation, last_evaluated, review_status, condition, submitter, comment):
+        columns_with_info = "clinvar_variant_annotation_id, interpretation, review_status, submission_condition, submitter"
+        actual_information = (clinvar_variant_annotation_id, interpretation, review_status, condition, submitter)
+        if (comment != '' and comment != '-'):
+            columns_with_info = columns_with_info + ", comment"
+            actual_information = actual_information + (comment,)
+        if (last_evaluated != '' and last_evaluated != '-'):
             columns_with_info = columns_with_info + ", last_evaluated"
             actual_information = actual_information + (last_evaluated,)
         placeholders = "%s, "*len(actual_information)
         command = "INSERT INTO clinvar_submission (" + columns_with_info + ") VALUES (" + placeholders[:len(placeholders)-2] + ")"
-        #print(command)
         self.cursor.execute(command, actual_information)
         self.conn.commit()
+
+    def get_clinvar_variant_annotation_id_by_variant_id(self, variant_id):
+        command = "SELECT a.id,a.variant_id,a.version_date \
+                    FROM clinvar_variant_annotation a \
+                    INNER JOIN ( \
+                        SELECT variant_id, max(version_date) AS version_date FROM clinvar_variant_annotation GROUP BY variant_id \
+                    ) b ON a.variant_id = b.variant_id AND a.variant_id = " + enquote(variant_id) + " AND a.version_date = b.version_date"
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        if len(result) == 1:
+            return result[0][0]
+        else:
+            return False
 
 
         
