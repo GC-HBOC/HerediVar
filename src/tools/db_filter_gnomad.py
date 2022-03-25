@@ -80,7 +80,7 @@ while line != "":
     
         #calculate the number of heterozygotes
         if nhomalt != '' and ac != '':
-            het = "het=" + str(ac - (2*nhomalt))
+            het = str(ac - (2*nhomalt))
 
         entries[0] = "chr" + chr_num
 

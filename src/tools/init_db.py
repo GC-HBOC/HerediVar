@@ -2,24 +2,72 @@ import sys
 from os import path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from common.db_IO import Connection
+import common.paths as paths
+import gzip
 
 conn = Connection()
 
 if __name__ == '__main__':
-    # initialize database structure from scheme.sql
+    ## initialize database structure from scheme.sql
     ## REMEMBER TO UPDATE scheme.sql if any changes happened to the database structure!
     #file = open("data/dbs/HGNC/hgnc_complete_set.tsv")
     #sql = file.read()
     #conn.cursor.execute(sql, multi=True)
 
-    # init gene table with info from HGNC tab
-    hgnc_path = "data/dbs/HGNC/hgnc_complete_set.tsv"
-    file = open(hgnc_path, "r")
-    header = file.readline()
+    ## init gene table with info from HGNC tab
     print("initializing gene table...")
-    for line in file:
+    hgnc = open(paths.hgnc_path, "r")
+    header = hgnc.readline()
+    for line in hgnc:
         line = line.strip().split("\t")
-        #conn.insert_gene(hgnc_id = line[0], symbol = line[1], name = line[2], type = line[3])
+        hgnc_id = line[0]
+        hgnc_id = hgnc_id[5:]
+        #conn.insert_gene(hgnc_id = hgnc_id, symbol = line[1], name = line[2], type = line[3])
+    hgnc.close()
+
+    ## init transcripts table
+    # format info:
+    #The 'type' of gene features in gff3 is:
+    # * "gene" for protein-coding genes
+    # * "ncRNA_gene" for RNA genes
+    # * "pseudogene" for pseudogenes
+    #The 'type' of transcript features is:
+    # * "mRNA" for protein-coding transcripts
+    # * a specific type or RNA transcript such as "snoRNA" or "lnc_RNA"
+    # * "pseudogenic_transcript" for pseudogenes
+    #All transcripts are linked to "exon" features.
+    #Protein-coding transcripts are linked to "CDS", "five_prime_UTR", and
+    #"three_prime_UTR" features.
+
+    ensembl_transcript = gzip.open(paths.ensembl_transcript_path, 'rb')
+    print("initializing transcripts table...")
+    for line in ensembl_transcript:
+        if line.startswith('#'):
+            continue
+
+        parts = line.split('\t')
+        biotype = parts[2]
+        start = parts[3]
+        end = parts[4]
+        info = parts[8].split(';')
+
+        name = None
+        hgnc_id = None
+
+        if biotype in ['gene', 'ncRNA_gene', 'pseudogene']:
+            for info_entry in info:
+                if info_entry.startswith('Name='):
+                    name = info_entry[5:]
+                if info_entry.startswith('description='):
+                    hgnc_id = info_entry[info_entry.find('HGNC:')+5:].strip(']')
+        
+        if biotype in ['mRNA', 'pseudogenic_transcript'] or 'RNA' in biotype:
+            pass #TODO
+
+
+
+
+
     
     # init annotation_type table
     conn.insert_annotation_type("gnomad_af", "Frequency of the alternate allele in samples", "float", "v3.1.2_GRCh38", "2021-10-22") 

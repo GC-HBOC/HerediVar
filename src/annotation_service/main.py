@@ -1,3 +1,4 @@
+from hmac import trans_36
 import sys
 import os
 from os import path
@@ -5,7 +6,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from common.db_IO import Connection
 import common.functions as functions
 import subprocess
-import paths
+import common.paths as paths
 import tempfile
 
 
@@ -229,11 +230,17 @@ if __name__ == '__main__':
             config_file.write(paths.cadd_indels_path + "\t\tCADD\t\n")
 
         ## add clinvar annotation
-        #config_file.write(paths.clinvar_path + "\tClinVar\tinpret,revstat,varid,submissions\t\n")
+        config_file.write(paths.clinvar_path + "\tClinVar\tinpret,revstat,varid,submissions\t\n")
 
         ## add gnomAD annotation
         #config_file.write(paths.gnomad_path + "\tGnomAD\tAF,AC,hom,hemi,het,popmax\t\n")
         config_file.write(paths.gnomad_m_path + "\tGnomADm\tAC_hom\t\n")
+
+        ## add BRCA_exchange clinical significance
+        config_file.write(paths.BRCA_exchange_path + "\tBRCA_exchange\tclin_sig_short\t\n")
+
+        ## add FLOSSIES annotation
+        config_file.write(paths.FLOSSIES_path + "\tFLOSSIES\tnum_eur,num_afr\t\n")
 
 
         ## add gnomAD
@@ -299,6 +306,7 @@ if __name__ == '__main__':
         clv_revstat = ''
         clv_inpret = ''
         clv_varid = ''
+        clinvar_submissions = []
         for vcf_variant_idx in range(len(info)):
             current_info = info[vcf_variant_idx].split(';')
 
@@ -313,10 +321,16 @@ if __name__ == '__main__':
                         exon_nr = exon_nr[:exon_nr.find('/')] # take only number from number/total
                         intron_nr = vep_entry[intron_nr_pos]
                         intron_nr = intron_nr[:intron_nr.find('/')] # take only number from number/total
+                        hgvs_c = vep_entry[HGVS_C_pos]
+                        hgvs_c = hgvs_c[hgvs_c.find(':')+1:]
+                        hgvs_p = vep_entry[HGVS_P_pos]
+                        hgvs_p = hgvs_p[hgvs_p.find(':')+1:]
+                        transcript_name = vep_entry[transcript_name_pos]
+                        transcript_name = transcript_name[transcript_name.find('.')+1:]
                         #conn.insert_variant_consequence(variant_id, 
                         #                                vep_entry[transcript_name_pos], 
-                        #                                vep_entry[HGVS_C_pos], 
-                        #                                vep_entry[HGVS_P_pos], 
+                        #                                hgvs_c, 
+                        #                                hgvs_p, 
                         #                                vep_entry[consequence_pos], 
                         #                                vep_entry[impact_pos], 
                         #                                exon_nr, 
@@ -332,10 +346,12 @@ if __name__ == '__main__':
                             #    conn.insert_variant_annotation(variant_id, 10, maxentscan_alt)
                 if entry.startswith("ClinVar_submissions="):
                     clinvar_submissions = entry[20:].split(',')
-                    for submission in clinvar_submissions:
-                        #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|4CollectionMethod|5SubmittedPhenotypeInfo|6OriginCounts|7Submitter|8ExplanationOfInterpretation
-                        submissions = submission.split('|')
-                        conn.insert_clinvar_submission(submissions[0], submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6], submissions[7], submissions[8])
+                if entry.startswith("ClinVar_revstat="):
+                    clv_revstat = entry[16:].replace('\\', ',').replace('_', ' ')
+                if entry.startswith("ClinVar_varid="):
+                    clv_varid = entry[14:]
+                if entry.startswith("ClinVar_inpret="):
+                    clv_inpret = entry[15:].replace('\\', ',').replace('_', ' ')
                 if entry.startswith("PHYLOP="):
                     value = entry[7:]
                     #conn.insert_variant_annotation(variant_id, 4, value)
@@ -354,12 +370,6 @@ if __name__ == '__main__':
                 if entry.startswith("CADD="):
                     value = entry[5:]
                     #conn.insert_variant_annotation(variant_id, 5, value)
-                if entry.startswith("ClinVar_revstat="):
-                    clv_revstat = entry[16:].replace('_', ' ')
-                if entry.startswith("ClinVar_varid="):
-                    clv_varid = entry[14:]
-                if entry.startswith("ClinVar_inpret="):
-                    clv_inpret = entry[15:].replace('_', ' ')
                 if entry.startswith("GnomAD_AC="):
                     value = entry[10:]
                     conn.insert_variant_annotation(variant_id, 11, value)
@@ -381,9 +391,27 @@ if __name__ == '__main__':
                 if entry.startswith("GnomADm_AC_hom="):
                     value = entry[15:]
                     conn.insert_variant_annotation(variant_id, 17, value)
+                if entry.startswith("BRCA_exchange_clin_sig_short="):
+                    value = entry[29:].replace('_', ' ').replace(',', ';')
+                    #conn.insert_variant_annotation(variant_id, 18, value)
+                if entry.startswith("FLOSSIES_num_afr"):
+                    value = entry[16:]
+                    conn.insert_variant_annotation(variant_id, 19, value)
+                if entry.startswith("FLOSSIES_num_eur"):
+                    value = entry[16:]
+                    conn.insert_variant_annotation(variant_id, 20, value)
 
-            # submit collected clinvar data to db
-            #conn.insert_clinvar_variant_annotation(variant_id, clv_varid, clv_inpret, clv_revstat)
+            # submit collected clinvar data to db if it exists
+            if clv_varid != '' and clv_inpret != '' and clv_revstat != '':
+                #conn.insert_clinvar_variant_annotation(variant_id, clv_varid, clv_inpret, clv_revstat, '2022-03-20')
+                clinvar_variant_annotation_id = conn.get_clinvar_variant_annotation_id_by_variant_id(variant_id)
+                if not clinvar_variant_annotation_id:
+                    err_msgs = collect_error_msgs(err_msgs, "CLINVAR_VARIANT_ANNOTATION ERROR: no or multiple clinvar variant annotation ids for variant " + variant_id)
+                else:
+                    for submission in clinvar_submissions:
+                        #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|5SubmittedPhenotypeInfo|7Submitter|8comment
+                        submissions = submission.replace('\\', ',').replace('_', ' ').split('|')
+                        #conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
         
 
 

@@ -23,4 +23,10 @@ cadd_snvs_path = datadir + "CADD/CADD_SNVs_1.6_GRCh38.vcf.gz"
 #cadd_snvs_path = datadir + "CADD/CADD_SNVs_1.6_test.vcf.gz"
 cadd_indels_path = datadir + "CADD/CADD_InDels_1.6_GRCh38.vcf.gz"
 clinvar_path = datadir + "ClinVar/clinvar_20220320_converted_GRCh38.vcf.gz"
-submission_summary_path = "/mnt/users/ahdoebm1/HerediVar/data/dbs/ClinVar/submission_summary_preprocessed.txt.gz"
+submission_summary_path = datadir + "ClinVar/submission_summary_preprocessed.txt.gz"
+BRCA_exchange_path = datadir + "BRCA_exchange/BRCA_exchange_02-22-22.vcf.gz"
+FLOSSIES_path = datadir + "FLOSSIES/FLOSSIES_25-03-2022.vcf.gz"
+
+# data for init_db
+hgnc_path = datadir + "HGNC/hgnc_complete_set.tsv"
+ensembl_transcript_path = datadir + "ensembl/Homo_sapiens.GRCh38.105.gff3"
