@@ -4,6 +4,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from common.db_IO import Connection
 import common.paths as paths
 import gzip
+import common.functions as functions
 
 conn = Connection()
 
@@ -15,16 +16,31 @@ if __name__ == '__main__':
     #conn.cursor.execute(sql, multi=True)
 
     ## init gene table with info from HGNC tab
+    '''
     print("initializing gene table...")
     hgnc = open(paths.hgnc_path, "r")
     header = hgnc.readline()
     for line in hgnc:
         line = line.strip().split("\t")
         hgnc_id = line[0]
-        hgnc_id = hgnc_id[5:]
-        #conn.insert_gene(hgnc_id = hgnc_id, symbol = line[1], name = line[2], type = line[3])
-    hgnc.close()
+        conn.insert_gene(hgnc_id = hgnc_id, symbol = line[1], name = line[2], type = line[3])
 
+        alt_symbols = functions.collect_info('', '', line[8].strip("\""), sep = '|')
+        alt_symbols = functions.collect_info(alt_symbols, '', line[10].strip("\""), sep = '|')
+        alt_symbols = alt_symbols.split('|')
+        
+        for symbol in alt_symbols:
+            if symbol != '':
+                conn.insert_gene_alias(hgnc_id, symbol)
+
+    hgnc.close()
+    '''
+
+    #conn.remove_duplicates("gene_alias", "alt_symbol")
+
+
+
+    '''
     ## init transcripts table
     # format info:
     #The 'type' of gene features in gff3 is:
@@ -63,6 +79,7 @@ if __name__ == '__main__':
         
         if biotype in ['mRNA', 'pseudogenic_transcript'] or 'RNA' in biotype:
             pass #TODO
+    '''
 
 
 
@@ -70,7 +87,7 @@ if __name__ == '__main__':
 
     
     # init annotation_type table
-    conn.insert_annotation_type("gnomad_af", "Frequency of the alternate allele in samples", "float", "v3.1.2_GRCh38", "2021-10-22") 
+    #conn.insert_annotation_type("gnomad_af", "Frequency of the alternate allele in samples", "float", "v3.1.2_GRCh38", "2021-10-22") 
 
 
     conn.close()

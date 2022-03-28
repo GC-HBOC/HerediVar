@@ -93,3 +93,10 @@ def collect_info(old_info, new_info_name, new_value, sep = ';'):
             return old_info
         else:
             return new_info_name + new_value
+
+def trim_hgnc(hgnc_id):
+    hgnc_id = hgnc_id.upper()
+    if hgnc_id.startswith('HGNC:'):
+        return hgnc_id[5:]
+    else:
+        return hgnc_id
