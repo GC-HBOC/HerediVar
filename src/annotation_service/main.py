@@ -13,26 +13,34 @@ import tempfile
 conn = Connection()
 
 #"/mnt/storage2/GRCh38/share/data/genomes/GRCh38.fa"
-def annotate_vep(input_vcf, output_vcf):
-    # Existing_variation
-    #gnomAD_AF,gnomAD_AFR_AF,gnomAD_AMR_AF,gnomAD_EAS_AF,gnomAD_NFE_AF,gnomAD_SAS_AF, "--af_gnomad",
-    fields_oi = "Allele,Consequence,IMPACT,SYMBOL,HGNC_ID,Feature,Feature_type,EXON,INTRON,HGVSc,HGVSp," \
-        "DOMAINS,SIFT,PolyPhen,AF,BIOTYPE,PUBMED,MaxEntScan_ref,MaxEntScan_alt"
-    #fields_oi = "Allele,MaxEntScan_ref,MaxEntScan_alt"
+def annotate_vep(input_vcf, output_vcf, refseq = False):
+    fields_oi_base = "Feature,HGVSc,HGVSp,Consequence,IMPACT,EXON,INTRON,HGNC_ID,SYMBOL"
     command = [paths.vep_path + "/vep",
                "-i", input_vcf, "--format", "vcf",
                "-o", output_vcf, "--vcf", "--no_stats", "--force_overwrite",
                "--species", "homo_sapiens", "--assembly", paths.ref_genome_name,
                "--fork", "1",
-               "--offline", "--cache", "--dir_cache", "/mnt/storage2/GRCh38/share/data/dbs/ensembl-vep-104/cache",
-               "--fasta", paths.ref_genome_path,
-               "--numbers", "--hgvs", "--domains", "--transcript_version",
-               "--regulatory",
-               "--sift", "b", "--polyphen", "b",
-               "--af", "--failed", "1",
-               "--pubmed",
-               "--plugin", "MaxEntScan," + paths.vep_path + "/MaxEntScan/",
-               "--fields", fields_oi]
+               "--offline", "--cache", "--dir_cache", "/mnt/storage2/GRCh38/share/data/dbs/ensembl-vep-104/cache", "--fasta", paths.ref_genome_path,
+               "--numbers", "--hgvs", "--symbol", #"--domains", #"--transcript_version",
+               "--failed", "1",
+               #"--sift", "b", "--polyphen", "b", "--af","--pubmed"
+               ]
+
+    if not refseq:
+        #use ensembl
+        #gnomAD_AF,gnomAD_AFR_AF,gnomAD_AMR_AF,gnomAD_EAS_AF,gnomAD_NFE_AF,gnomAD_SAS_AF, "--af_gnomad",
+        #DOMAINS,SIFT,PolyPhen,PUBMED,AF
+        
+        fields_oi = fields_oi_base + ",MaxEntScan_ref,MaxEntScan_alt"
+        command = command + ["--plugin", "MaxEntScan," + paths.vep_path + "/MaxEntScan/",
+                             "--regulatory",
+                             "--fields", fields_oi]
+        
+    if refseq:
+        fields_oi = fields_oi_base
+        command = command + ["--refseq",
+                             "--vcf_info_field", "CSQ_refseq",
+                             "--fields", fields_oi]
     completed_process = subprocess.Popen(command, stderr=subprocess.PIPE)
     std_err = completed_process.communicate()[1].strip().decode("utf-8") # catch errors and warnings and convert to str
     err_msg = ""
@@ -193,12 +201,17 @@ if __name__ == '__main__':
         
         ## VEP
         print("executing vep...")
-        execution_code_vep, err_msg_vep = annotate_vep(one_variant_path, variant_annotated_path)
+        execution_code_vep, err_msg_vep = annotate_vep(one_variant_path, variant_annotated_path, refseq=False)
         update_output(one_variant_path, variant_annotated_path, execution_code_vep)
         if execution_code_vep != 0:
             status = "error"
         err_msgs = collect_error_msgs(err_msgs, err_msg_vep)
-                
+
+        execution_code_vep_refseq, err_msg_vep_refseq = annotate_vep(one_variant_path, variant_annotated_path, refseq=True)
+        update_output(one_variant_path, variant_annotated_path, execution_code_vep_refseq)
+        if execution_code_vep_refseq != 0:
+            status = "error"
+        err_msgs = collect_error_msgs(err_msgs, err_msg_vep_refseq)
 
         ## annotate variant with phylop 100-way conservation scores
         print("annotating phyloP...")
@@ -275,33 +288,6 @@ if __name__ == '__main__':
         ## Save to database
         print("saving to database...")
         headers, info = functions.read_vcf_info(one_variant_path)
-        vep_header_pos = [i for i, s in enumerate(headers) if 'ID=CSQ' in s]
-
-        vep_header_present = False
-        if len(vep_header_pos) > 1:
-            err_msgs = collect_error_msgs(err_msgs, "VEP DB save WARNING: There were multiple CSQ INFO columns for this variant. Taking the first one.")
-        if len(vep_header_pos) == 0:
-            err_msgs = collect_error_msgs(err_msgs, "VEP DB save ERROR: There was no CSQ INFO column for this variant. Skipping variant consequences.")
-        else:
-            vep_header_pos = vep_header_pos[0]
-            vep_headers = headers[vep_header_pos]
-            vep_headers = vep_headers[vep_headers.find('Format: ')+8:len(vep_headers)-2]
-            vep_headers = vep_headers.split('|')
-            num_fields = len(vep_headers)
-
-            transcript_name_pos = vep_headers.index("Feature")
-            HGVS_C_pos = vep_headers.index("HGVSc")
-            HGVS_P_pos = vep_headers.index("HGVSp")
-            consequence_pos = vep_headers.index("Consequence")
-            impact_pos = vep_headers.index("IMPACT")
-            exon_nr_pos = vep_headers.index("EXON") 
-            intron_nr_pos = vep_headers.index("INTRON") 
-            hgnc_id_pos = vep_headers.index("HGNC_ID")
-
-            maxentscan_ref_pos = vep_headers.index("MaxEntScan_ref")
-            maxentscan_alt_pos = vep_headers.index("MaxEntScan_alt")
-
-            vep_header_present = True
 
         clv_revstat = ''
         clv_inpret = ''
@@ -311,37 +297,49 @@ if __name__ == '__main__':
             current_info = info[vcf_variant_idx].split(';')
 
             for entry in current_info:
-                # save variant consequence
-                if entry.startswith("CSQ=") and vep_header_present: 
-                    vep_entries = entry[4:].split(',')
+                entry = entry.strip()
+                # save variant consequences from ensembl and refseq
+                # !!!! format of refseq and ensembl annotations from vep need to be equal: 0Feature,1HGVSc,2HGVSp,3Consequence,4IMPACT,5EXON,6INTRON,7HGNC_ID,8SYMBOL,...additional info
+                if entry.startswith("CSQ=") or entry.startswith("CSQ_refseq="):
+                    consequence_source = ''
+                    if entry.startswith("CSQ="):
+                        consequence_source = "ensembl"
+                    elif entry.startswith("CSQ_refseq="):
+                        consequence_source = "refseq"
+                    vep_entries = entry.lstrip('CSQ').lstrip('_refseq').lstrip('=').split(',')
                     transcript_independent_saved = False
                     for vep_entry in vep_entries:
+                        #9MaxEntScan_ref,10MaxEntScan_alt
                         vep_entry = vep_entry.split('|')
-                        exon_nr = vep_entry[exon_nr_pos]
+                        exon_nr = vep_entry[5]
                         exon_nr = exon_nr[:exon_nr.find('/')] # take only number from number/total
-                        intron_nr = vep_entry[intron_nr_pos]
+                        intron_nr = vep_entry[6]
                         intron_nr = intron_nr[:intron_nr.find('/')] # take only number from number/total
-                        hgvs_c = vep_entry[HGVS_C_pos]
-                        hgvs_c = hgvs_c[hgvs_c.find(':')+1:]
-                        hgvs_p = vep_entry[HGVS_P_pos]
-                        hgvs_p = hgvs_p[hgvs_p.find(':')+1:]
-                        transcript_name = vep_entry[transcript_name_pos]
-                        transcript_name = transcript_name[transcript_name.find('.')+1:]
-                        #conn.insert_variant_consequence(variant_id, 
-                        #                                vep_entry[transcript_name_pos], 
-                        #                                hgvs_c, 
-                        #                                hgvs_p, 
-                        #                                vep_entry[consequence_pos], 
-                        #                                vep_entry[impact_pos], 
-                        #                                exon_nr, 
-                        #                                intron_nr, 
-                        #                                vep_entry[hgnc_id_pos])
-                        if not transcript_independent_saved:
+                        hgvs_c = vep_entry[1]
+                        hgvs_c = hgvs_c[hgvs_c.find(':')+1:] # remove transcript name
+                        hgvs_p = vep_entry[2]
+                        hgvs_p = hgvs_p[hgvs_p.find(':')+1:] # remove transcript name
+                        transcript_name = vep_entry[0]
+                        transcript_name = transcript_name[:transcript_name.find('.')] # remove transcript version
+                        vep_entry[8] = "BANK"
+                        conn.insert_variant_consequence(variant_id, 
+                                                        transcript_name, 
+                                                        hgvs_c, 
+                                                        hgvs_p, 
+                                                        vep_entry[3].replace('_', ' ').replace('&', ' & '), 
+                                                        vep_entry[4], 
+                                                        exon_nr, 
+                                                        intron_nr, 
+                                                        vep_entry[7],
+                                                        vep_entry[8],
+                                                        consequence_source)
+                        print(vep_entry)
+                        if not transcript_independent_saved and len(vep_entry) > 9:
                             transcript_independent_saved = True
-                            maxentscan_ref = vep_entry[maxentscan_ref_pos]
+                            maxentscan_ref = vep_entry[9]
                             #if maxentscan_ref != '':
                             #    conn.insert_variant_annotation(variant_id, 9, maxentscan_ref)
-                            #maxentscan_alt = vep_entry[maxentscan_alt_pos]
+                            maxentscan_alt = vep_entry[10]
                             #if maxentscan_alt != '':
                             #    conn.insert_variant_annotation(variant_id, 10, maxentscan_alt)
                 if entry.startswith("ClinVar_submissions="):
@@ -395,18 +393,18 @@ if __name__ == '__main__':
                     value = entry[29:].replace('_', ' ').replace(',', ';')
                     #conn.insert_variant_annotation(variant_id, 18, value)
                 if entry.startswith("FLOSSIES_num_afr"):
-                    value = entry[16:]
-                    conn.insert_variant_annotation(variant_id, 19, value)
+                    value = entry[17:]
+                    #conn.insert_variant_annotation(variant_id, 19, value)
                 if entry.startswith("FLOSSIES_num_eur"):
-                    value = entry[16:]
-                    conn.insert_variant_annotation(variant_id, 20, value)
+                    value = entry[17:]
+                    #conn.insert_variant_annotation(variant_id, 20, value)
 
             # submit collected clinvar data to db if it exists
             if clv_varid != '' and clv_inpret != '' and clv_revstat != '':
                 #conn.insert_clinvar_variant_annotation(variant_id, clv_varid, clv_inpret, clv_revstat, '2022-03-20')
                 clinvar_variant_annotation_id = conn.get_clinvar_variant_annotation_id_by_variant_id(variant_id)
                 if not clinvar_variant_annotation_id:
-                    err_msgs = collect_error_msgs(err_msgs, "CLINVAR_VARIANT_ANNOTATION ERROR: no or multiple clinvar variant annotation ids for variant " + variant_id)
+                    err_msgs = collect_error_msgs(err_msgs, "CLINVAR_VARIANT_ANNOTATION ERROR: no or multiple clinvar variant annotation ids for variant " + str(variant_id))
                 else:
                     for submission in clinvar_submissions:
                         #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|5SubmittedPhenotypeInfo|7Submitter|8comment
