@@ -23,6 +23,13 @@ chmod 755 ./download_GRCh38.sh
 ./download_GRCh38.sh
 '
 
+# download GRCH37 reference_genome (used for lifting)
+: '
+cd $data
+chmod 755 ./download_GRCh37.sh
+./download_GRCh37.sh
+'
+
 # download HGNC
 : '
 cd $dbs
@@ -32,6 +39,7 @@ wget -O - http://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/hgnc_complete_se
 '
 
 # download gnomAD genome data
+: '
 cd $dbs
 mkdir -p gnomAD
 cd gnomAD
@@ -61,7 +69,158 @@ wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/3.1.2/v
 wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/3.1.2/vcf/genomes/gnomad.genomes.v3.1.2.sites.chrY.vcf.bgz | gunzip  | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | python3 $tools/db_filter_gnomad.py >> gnomAD_genome_v3.1.2_GRCh38.vcf
 bgzip gnomAD_genome_v3.1.2_GRCh38.vcf
 tabix -p vcf gnomAD_genome_v3.1.2_GRCh38.vcf.gz
-
+'
 #wget -O - https://gnomad-public-us-east-1.s3.amazonaws.com/release/3.1/vcf/genomes/gnomad.genomes.v3.1.sites.chrM.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | sed 's/chrM/chrMT/g' > gnomAD_genome_v3.1.mito_GRCh38.vcf
 #bgzip gnomAD_genome_v3.1.mito_GRCh38.vcf
 #tabix -p vcf gnomAD_genome_v3.1.mito_GRCh38.vcf.gz
+
+
+
+# download BRCA exchange (https://brcaexchange.org/releases)
+: '
+cd $dbs
+mkdir -p BRCA_exchange
+cd BRCA_exchange
+wget https://brcaexchange.org/backend/downloads/releases/release-02-22-22/release-02-22-22.tar.gz
+tar -xf release-02-22-22.tar.gz
+mv -f output/release/built_with_change_types.tsv .
+rm -rf output/
+python3 $tools/db_converter_brca_exchange.py -i built_with_change_types.tsv | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > BRCA_exchange_02-22-22.vcf.gz
+tabix -p vcf BRCA_exchange_02-22-22.vcf.gz
+'
+
+
+# download ensembl transcripts (http://ftp.ensembl.org/pub/current_gff3/homo_sapiens/)
+: '
+cd $dbs
+mkdir -p ensembl
+cd ensembl
+wget http://ftp.ensembl.org/pub/current_gff3/homo_sapiens/Homo_sapiens.GRCh38.105.gff3.gz
+gunzip Homo_sapiens.GRCh38.105.gff3.gz
+## download ensembl canonical transcripts (http://ftp.ensembl.org/pub/current_tsv/homo_sapiens)
+wget -O - http://ftp.ensembl.org/pub/release-105/tsv/homo_sapiens/Homo_sapiens.GRCh38.105.canonical.tsv.gz | gunzip > Homo_sapiens.GRCh38.105.canonical.tsv
+'
+
+# download mane select (https://ftp.ncbi.nlm.nih.gov/refseq/MANE/)
+: '
+cd $dbs
+mkdir -p MANE
+cd MANE
+wget -O - https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/release_1.0/MANE.GRCh38.v1.0.ensembl_genomic.gff.gz | gunzip > MANE.GRCh38.v1.0.ensembl_genomic.gff
+'
+
+
+
+
+## download FLOSSIES (https://whi.color.com/about) there is no versioning so the date specified in the filename equals the date when the database was accessed
+#cd $dbs
+#mkdir -p FLOSSIES
+#cd FLOSSIES
+#flossies_file=FLOSSIES_25-03-2022.vcf
+#cat $data/FLOSSIES_data_uris.txt | python3 $tools/data_uri_to_blob.py --header | python3 $tools/db_converter_flossies.py > $flossies_file
+#$ngsbits/VcfSort -in $flossies_file -out $flossies_file
+#$ngsbits/VcfLeftNormalize -in $flossies_file -stream -ref $data/genomes/GRCh37.fa -out $flossies_file.2
+#$ngsbits/VcfStreamSort -in $flossies_file.2 -out $flossies_file
+#awk -v OFS="\t" '!/##/ {$9=$10=""}1' $flossies_file |sed 's/^\s\+//g' > $flossies_file.2 # remove SAMPLE and FORMAT columns from vcf as they are added by vcfsort
+#mv -f $flossies_file.2 $flossies_file
+#bgzip $flossies_file
+
+#$ngsbits/VcfCheck -in $flossies_file.gz -ref $data/genomes/GRCh37.fa
+
+## crossmap to lift from GRCh37 to GRCh37
+#CrossMap.py vcf $data/genomes/hg19ToHg38.over.chain.gz $flossies_file.gz $genome $flossies_file.2
+#cat $flossies_file.2 | $ngsbits/VcfLeftNormalize -stream -ref $data/genomes/GRCh37.fa | $ngsbits/VcfStreamSort | bgzip > $flossies_file.gz
+#tabix -p vcf $flossies_file.gz
+#rm -f $flossies_file.2
+
+#$ngsbits/VcfCheck -in $flossies_file.gz -ref $genome
+
+
+
+# download dbSNP
+: '
+cd dbs
+mkdir -p dbSNP
+cd dbSNP
+wget -O - https://ftp.ncbi.nih.gov/snp/latest_release/VCF/GCF_000001405.39.gz | gunzip | python3 $tools/vcf_refseq_to_chrnum.py | $ngsbits/VcfBreakMulti | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort > dbSNP_v155.vcf
+bgzip dbSNP_v155.vcf
+tabix -p vcf dbSNP_v155.vcf.gz
+'
+
+
+# download phyloP conservation scores (https://www.ensembl.org/info/docs/tools/vep/script/vep_example.html#gerp)
+: '
+cd $dbs
+mkdir -p phyloP
+cd phyloP
+wget http://hgdownload.soe.ucsc.edu/goldenPath/hg38/phyloP100way/hg38.phyloP100way.bw
+'
+
+
+# Install CADD - http://cadd.gs.washington.edu/download
+: '
+cd $dbs
+mkdir -p CADD
+cd CADD
+wget -O - http://kircherlab.bihealth.org/download/CADD/v1.6/GRCh38/whole_genome_SNVs.tsv.gz > CADD_SNVs_1.6_GRCh38.tsv.gz
+zcat CADD_SNVs_1.6_GRCh38.tsv.gz | python3 $tools/db_converter_cadd.py | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > CADD_SNVs_1.6_GRCh38.vcf.gz
+tabix -f -p vcf CADD_SNVs_1.6_GRCh38.vcf.gz
+rm -f CADD_SNVs_1.6_GRCh38.tsv.gz
+$ngsbits/VcfCheck -in CADD_SNVs_1.6_GRCh38.vcf.gz -ref $genome -lines 0
+
+wget -O - https://kircherlab.bihealth.org/download/CADD/v1.6/GRCh38/gnomad.genomes.r3.0.indel.tsv.gz > CADD_InDels_1.6_GRCh38.tsv.gz
+zcat CADD_InDels_1.6_GRCh38.tsv.gz | python3 $tools/db_converter_cadd.py | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > CADD_InDels_1.6_GRCh38.vcf.gz
+tabix -f -p vcf CADD_InDels_1.6_GRCh38.vcf.gz
+rm -f CADD_InDels_1.6_GRCh38.tsv.gz
+$ngsbits/VcfCheck -in CADD_InDels_1.6_GRCh38.vcf.gz -ref $genome -lines 0
+: '
+
+
+# download REVEL (https://sites.google.com/site/revelgenomics/downloads)
+#cd $dbs
+#mkdir -p REVEL
+#cd REVEL
+#source $tools/zhead.sh
+#wget https://rothsj06.u.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip
+#unzip -p revel-v1.3_all_chromosomes.zip | tr ',' '\t' | sed '1s/.*/#&/' | bgzip > revel_tmp.tsv.gz
+#zhead revel_tmp.tsv.gz 1 > h
+#zgrep -h -v '^#chr' revel_tmp.tsv.gz | $ngsbits/TsvFilter -numeric -v -filter '3 is .' | egrep -v '^#\s' | sort -k1,1 -k3,3n - | cat h - | cut -f1-8 > revel_grch38_all_chromosomes.tsv
+#python3 $tools/db_converter_revel.py -i revel_grch38_all_chromosomes.tsv | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip -c > revel_grch38_all_chromosomes.vcf.gz
+#tabix -f -p vcf revel_grch38_all_chromosomes.vcf.gz
+#rm -f revel_tmp.tsv.gz h revel_grch38_all_chromosomes.tsv
+#$ngsbits/VcfCheck -in revel_grch38_all_chromosomes.vcf.gz -ref $genome -lines 0
+
+
+# download annotation file for SpliceAI
+: '
+cd $dbs
+mkdir -p SpliceAI
+cd SpliceAI
+wget https://download.imgag.de/ahsturm1/spliceai_scores_2022_02_09_GRCh38.vcf.gz
+tabix -p vcf spliceai_scores_2022_02_09_GRCh38.vcf.gz
+'
+
+
+## download ClinVar (https://www.ncbi.nlm.nih.gov/clinvar/)
+#cd $dbs
+#mkdir -p ClinVar
+#cd ClinVar
+
+## submissions table for 'Submitted interpretations and evidence' table from website
+#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
+#ncomment_lines=$(zgrep '^#' submission_summary.txt.gz | wc -l)
+#source $tools/zhead.sh
+#zhead submission_summary.txt.gz $ncomment_lines | tail -1 | cut -c 2- > h # nochmal auf die encoding schauen (SâˆšÂ°nchez-GutiâˆšÂ©rrez_2002_PMID:12417303; Sebastio_1991_PMID:18)
+#zgrep -v '^#' submission_summary.txt.gz | cat h - | bgzip > submission_summary_preprocessed.txt.gz
+
+## most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz
+#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20220320.vcf.gz 
+#gunzip -c clinvar_20220320.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary_preprocessed.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_20220320_converted_GRCh38.vcf.gz
+#tabix -p vcf clinvar_20220320_converted_GRCh38.vcf.gz
+
+## CNVs - not used atm
+#wget -O - http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive/variant_summary_2021-12.txt.gz | gunzip > variant_summary_2021-12.txt
+#cat variant_summary_2021-12.txt | php $src/Tools/db_converter_clinvar_cnvs.php 5 "Pathogenic/Likely pathogenic" | sort | uniq > clinvar_cnvs_2021-12.bed
+#$ngsbits/BedSort -with_name -in clinvar_cnvs_2021-12.bed -out clinvar_cnvs_2021-12.bed
+
+

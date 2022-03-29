@@ -209,22 +209,21 @@ class Connection:
             return result[0][0]
         else:
             return False
-
-
+    
+    def insert_transcript(self, symbol, hgnc_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical):
+        # transcript names are here usually ENST-ids
+        gene_id = None
+        if symbol is None and hgnc_id is None:
+            print("WARNING: transcript: " + transcript_name + ", transcript_biotype: " + transcript_biotype + " was not imported due to missing gene symbol and hgnc id")
+            return
+        if symbol is not None:
+            gene_id = self.get_gene_id_by_hgnc_id(hgnc_id)
+        elif hgnc_id is not None:
+            gene_id = self.get_gene_id_by_symbol(symbol)
         
-
-
-
-
-
-
-
-
-
-
-
-
-
+        command = "INSERT INTO transcript (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (int(gene_id), transcript_name, transcript_biotype.replace('_', ' '), int(total_length), int(is_gencode_basic), int(is_mane_select), int(is_mane_plus_clinical), int(is_ensembl_canonical)))
+        self.conn.commit()
 
 
 

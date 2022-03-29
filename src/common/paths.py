@@ -30,3 +30,5 @@ FLOSSIES_path = datadir + "FLOSSIES/FLOSSIES_25-03-2022.vcf.gz"
 # data for init_db
 hgnc_path = datadir + "HGNC/hgnc_complete_set.tsv"
 ensembl_transcript_path = datadir + "ensembl/Homo_sapiens.GRCh38.105.gff3"
+MANE_path = datadir + "MANE/MANE.GRCh38.v1.0.ensembl_genomic.gff"
+ensembl_canonical_path = datadir + "ensembl/Homo_sapiens.GRCh38.105.canonical.tsv"
