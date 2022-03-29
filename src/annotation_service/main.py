@@ -246,7 +246,7 @@ if __name__ == '__main__':
         config_file.write(paths.clinvar_path + "\tClinVar\tinpret,revstat,varid,submissions\t\n")
 
         ## add gnomAD annotation
-        #config_file.write(paths.gnomad_path + "\tGnomAD\tAF,AC,hom,hemi,het,popmax\t\n")
+        config_file.write(paths.gnomad_path + "\tGnomAD\tAF,AC,hom,hemi,het,popmax\t\n")
         config_file.write(paths.gnomad_m_path + "\tGnomADm\tAC_hom\t\n")
 
         ## add BRCA_exchange clinical significance
@@ -321,19 +321,17 @@ if __name__ == '__main__':
                         hgvs_p = hgvs_p[hgvs_p.find(':')+1:] # remove transcript name
                         transcript_name = vep_entry[0]
                         transcript_name = transcript_name[:transcript_name.find('.')] # remove transcript version
-                        vep_entry[8] = "BANK"
-                        conn.insert_variant_consequence(variant_id, 
-                                                        transcript_name, 
-                                                        hgvs_c, 
-                                                        hgvs_p, 
-                                                        vep_entry[3].replace('_', ' ').replace('&', ' & '), 
-                                                        vep_entry[4], 
-                                                        exon_nr, 
-                                                        intron_nr, 
-                                                        vep_entry[7],
-                                                        vep_entry[8],
-                                                        consequence_source)
-                        print(vep_entry)
+                        #conn.insert_variant_consequence(variant_id, 
+                        #                                transcript_name, 
+                        #                                hgvs_c, 
+                        #                                hgvs_p, 
+                        #                                vep_entry[3].replace('_', ' ').replace('&', ' & '), 
+                        #                                vep_entry[4], 
+                        #                                exon_nr, 
+                        #                                intron_nr, 
+                        #                                vep_entry[7],
+                        #                                vep_entry[8],
+                        #                                consequence_source)
                         if not transcript_independent_saved and len(vep_entry) > 9:
                             transcript_independent_saved = True
                             maxentscan_ref = vep_entry[9]
@@ -370,25 +368,25 @@ if __name__ == '__main__':
                     #conn.insert_variant_annotation(variant_id, 5, value)
                 if entry.startswith("GnomAD_AC="):
                     value = entry[10:]
-                    conn.insert_variant_annotation(variant_id, 11, value)
+                    #conn.insert_variant_annotation(variant_id, 11, value)
                 if entry.startswith("GnomAD_AF="):
                     value = entry[10:]
-                    conn.insert_variant_annotation(variant_id, 12, value)
+                    #conn.insert_variant_annotation(variant_id, 12, value)
                 if entry.startswith("GnomAD_hom="):
                     value = entry[11:]
-                    conn.insert_variant_annotation(variant_id, 13, value)
+                    #conn.insert_variant_annotation(variant_id, 13, value)
                 if entry.startswith("GnomAD_hemi="):
                     value = entry[12:]
-                    conn.insert_variant_annotation(variant_id, 14, value)
+                    #conn.insert_variant_annotation(variant_id, 14, value)
                 if entry.startswith("GnomAD_het="):
                     value = entry[11:]
-                    conn.insert_variant_annotation(variant_id, 15, value)
+                    #conn.insert_variant_annotation(variant_id, 15, value)
                 if entry.startswith("GnomAD_popmax="):
                     value = entry[14:]
-                    conn.insert_variant_annotation(variant_id, 16, value)
+                    #conn.insert_variant_annotation(variant_id, 16, value)
                 if entry.startswith("GnomADm_AC_hom="):
                     value = entry[15:]
-                    conn.insert_variant_annotation(variant_id, 17, value)
+                    #conn.insert_variant_annotation(variant_id, 17, value)
                 if entry.startswith("BRCA_exchange_clin_sig_short="):
                     value = entry[29:].replace('_', ' ').replace(',', ';')
                     #conn.insert_variant_annotation(variant_id, 18, value)

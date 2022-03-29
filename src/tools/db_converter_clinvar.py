@@ -114,3 +114,19 @@ for line in input_file:
 
     print('\t'.join(parts))
 
+
+## clinvar_variant_annotation table
+## - ID (column): variation ID
+## - CLNSIG + CLNSIGCONF: interpretation
+## - CLNREVSTAT: review status
+
+
+## clinvar_interpretations table
+## - interpretation: ClinicalSignificance column
+## - last_evaluated: DateLastEvaluated column
+## - review_status: ReviewStatus column
+## (- assertion_criteria: CollectionMethod column)
+## - condition: SubmittedPhenotypeInfo column
+## (- inheritance: OriginCounts column)
+## - submitter: Submitter column
+## - supporting_information: ExplanationOfInterpretation / description
