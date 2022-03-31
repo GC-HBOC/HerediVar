@@ -31,6 +31,7 @@ class Connection:
         self.cursor = self.conn.cursor()
         self.set_connection_encoding()
 
+
     def set_connection_encoding(self):
         self.cursor.execute("SET NAMES 'utf8'")
         self.cursor.execute("SET CHARACTER SET utf8")
@@ -75,9 +76,12 @@ class Connection:
         self.cursor.execute("UPDATE annotation_queue SET status = " + status + ", finished_at = NOW(), error_message = " + error_msg + " WHERE id = " + str(row_id))
         self.conn.commit()
 
-    def insert_variant_consequence(self, variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, symbol, consequence_source):
+    def insert_variant_consequence(self, variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, symbol, consequence_source, domain):
         columns_with_info = "variant_id, transcript_name, consequence, impact, source"
         actual_information = (variant_id, transcript_name, consequence, impact, consequence_source)
+        if domain != '':
+            columns_with_info = columns_with_info + ", protein_domain"
+            actual_information = actual_information + (domain,)
         if hgvs_c != '':
             columns_with_info = columns_with_info + ", hgvs_c"
             actual_information = actual_information + (hgvs_c,)
@@ -210,20 +214,24 @@ class Connection:
         else:
             return False
     
+
+
     def insert_transcript(self, symbol, hgnc_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical):
         # transcript names are here usually ENST-ids
         gene_id = None
         if symbol is None and hgnc_id is None:
-            print("WARNING: transcript: " + transcript_name + ", transcript_biotype: " + transcript_biotype + " was not imported due to missing gene symbol and hgnc id")
+            print("WARNING: transcript: " + transcript_name + ", transcript_biotype: " + transcript_biotype + " was not imported as gene symbol and hgnc id were missing")
             return
-        if symbol is not None:
+        if hgnc_id is not None:
             gene_id = self.get_gene_id_by_hgnc_id(hgnc_id)
-        elif hgnc_id is not None:
+        elif symbol is not None:
             gene_id = self.get_gene_id_by_symbol(symbol)
-        
-        command = "INSERT INTO transcript (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (int(gene_id), transcript_name, transcript_biotype.replace('_', ' '), int(total_length), int(is_gencode_basic), int(is_mane_select), int(is_mane_plus_clinical), int(is_ensembl_canonical)))
-        self.conn.commit()
+        if gene_id is not None:
+            command = "INSERT INTO transcript (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+            self.cursor.execute(command, (int(gene_id), transcript_name, transcript_biotype.replace('_', ' '), int(total_length), int(is_gencode_basic), int(is_mane_select), int(is_mane_plus_clinical), int(is_ensembl_canonical)))
+            self.conn.commit()
+        else:
+            print("WARNING: transcript: " + transcript_name + ", transcript_biotype: " + transcript_biotype + " was not imported as the corresponding gene is not in the database (gene-table) " + "hgncid: " + str(hgnc_id) + ", gene symbol: " + str(symbol))
 
 
 

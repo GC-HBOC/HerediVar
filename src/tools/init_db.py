@@ -91,12 +91,10 @@ if __name__ == '__main__':
         if line[2] == 'Ensembl Canonical':
             enst = line[1]
             ensembl_canonical_transcripts.append(enst[:enst.find('.')])
+            
 
-
-
-
-    #ensembl_transcript = open(paths.ensembl_transcript_path, 'r')
-    ensembl_transcript = open("/mnt/users/ahdoebm1/HerediVar/data/test.gff3")
+    ensembl_transcript = open(paths.ensembl_transcript_path, 'r')
+    #ensembl_transcript = open("/mnt/users/ahdoebm1/HerediVar/data/dbs/ensembl/test.gff3")
     print("initializing transcripts table...")
     parent_biotype = None
     first_iter = True
@@ -197,11 +195,9 @@ if __name__ == '__main__':
     #print("last print:")
     #print("Symbol: " + str(symbol) + ", hgnc_id: " + str(hgnc_id) + ", transcript name: " + str(transcript_name) + ", transcript_biotype: " + str(transcript_biotype) + ", length: " + str(total_length))
     conn.insert_transcript(symbol, hgnc_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical)
-
     
 
     ensembl_transcript.close()
-
     
     # init annotation_type table
     #conn.insert_annotation_type("gnomad_af", "Frequency of the alternate allele in samples", "float", "v3.1.2_GRCh38", "2021-10-22") 
