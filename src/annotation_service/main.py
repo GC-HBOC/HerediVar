@@ -8,20 +8,21 @@ import common.functions as functions
 import subprocess
 import common.paths as paths
 import tempfile
+import re
 
 
 conn = Connection()
 
 #"/mnt/storage2/GRCh38/share/data/genomes/GRCh38.fa"
 def annotate_vep(input_vcf, output_vcf, refseq = False):
-    fields_oi_base = "Feature,HGVSc,HGVSp,Consequence,IMPACT,EXON,INTRON,HGNC_ID,SYMBOL"
+    fields_oi_base = "Feature,HGVSc,HGVSp,Consequence,IMPACT,EXON,INTRON,HGNC_ID,SYMBOL,DOMAINS"
     command = [paths.vep_path + "/vep",
                "-i", input_vcf, "--format", "vcf",
                "-o", output_vcf, "--vcf", "--no_stats", "--force_overwrite",
                "--species", "homo_sapiens", "--assembly", paths.ref_genome_name,
                "--fork", "1",
                "--offline", "--cache", "--dir_cache", "/mnt/storage2/GRCh38/share/data/dbs/ensembl-vep-104/cache", "--fasta", paths.ref_genome_path,
-               "--numbers", "--hgvs", "--symbol", #"--domains", #"--transcript_version",
+               "--numbers", "--hgvs", "--symbol", "--domains", #"--transcript_version",
                "--failed", "1",
                #"--sift", "b", "--polyphen", "b", "--af","--pubmed"
                ]
@@ -272,17 +273,18 @@ if __name__ == '__main__':
         err_msgs = collect_error_msgs(err_msgs, err_msg_vcf_anno)
 
         print("checking validity of annotated vcf file...")
-        execution_code_vcfcheck, err_msg_vcfcheck, vcf_erros = check_vcf(one_variant_path)
+        execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = check_vcf(one_variant_path)
+        print(vcf_errors)
         if execution_code_vcfcheck != 0:
             status = "error"
         err_msgs = collect_error_msgs(err_msgs, err_msg_vcfcheck)
 
         ## run SpliecAI on the variants which are not contained in the precomputed file
-        execution_code_spliceai, err_msg_spliceai = annotate_missing_spliceai(one_variant_path, variant_annotated_path)
-        update_output(one_variant_path, variant_annotated_path, execution_code_spliceai)
-        if execution_code_spliceai > 0: # execution resulted in an error (we didn't execute spliceai algorithm at -1)
-            status = "error"
-        err_msgs = collect_error_msgs(err_msgs, err_msg_spliceai)
+        #execution_code_spliceai, err_msg_spliceai = annotate_missing_spliceai(one_variant_path, variant_annotated_path)
+        #update_output(one_variant_path, variant_annotated_path, execution_code_spliceai)
+        #if execution_code_spliceai > 0: # execution resulted in an error (we didn't execute spliceai algorithm at -1)
+        #    status = "error"
+        #err_msgs = collect_error_msgs(err_msgs, err_msg_spliceai)
 
 
         ## Save to database
@@ -321,23 +323,30 @@ if __name__ == '__main__':
                         hgvs_p = hgvs_p[hgvs_p.find(':')+1:] # remove transcript name
                         transcript_name = vep_entry[0]
                         transcript_name = transcript_name[:transcript_name.find('.')] # remove transcript version
-                        #conn.insert_variant_consequence(variant_id, 
-                        #                                transcript_name, 
-                        #                                hgvs_c, 
-                        #                                hgvs_p, 
-                        #                                vep_entry[3].replace('_', ' ').replace('&', ' & '), 
-                        #                                vep_entry[4], 
-                        #                                exon_nr, 
-                        #                                intron_nr, 
-                        #                                vep_entry[7],
-                        #                                vep_entry[8],
-                        #                                consequence_source)
-                        if not transcript_independent_saved and len(vep_entry) > 9:
+                        domains = vep_entry[9]
+                        pfam_acc = ''
+                        if domains.count("PFAM:") >= 1:
+                            pfam_acc = re.search('PFAM:(PF\d+)[&|]', domains).group(1)
+                            if domains.count("PFAM:") > 1:
+                                print("WARNING: there were multiple PFAM domain ids in: " + str(domains) + ". defaulting to the first one.")
+                        conn.insert_variant_consequence(variant_id, 
+                                                        transcript_name, 
+                                                        hgvs_c, 
+                                                        hgvs_p, 
+                                                        vep_entry[3].replace('_', ' ').replace('&', ' & '), 
+                                                        vep_entry[4], 
+                                                        exon_nr, 
+                                                        intron_nr, 
+                                                        vep_entry[7],
+                                                        vep_entry[8],
+                                                        consequence_source,
+                                                        pfam_acc)
+                        if not transcript_independent_saved and len(vep_entry) > 10:
                             transcript_independent_saved = True
-                            maxentscan_ref = vep_entry[9]
+                            maxentscan_ref = vep_entry[10]
                             #if maxentscan_ref != '':
                             #    conn.insert_variant_annotation(variant_id, 9, maxentscan_ref)
-                            maxentscan_alt = vep_entry[10]
+                            maxentscan_alt = vep_entry[11]
                             #if maxentscan_alt != '':
                             #    conn.insert_variant_annotation(variant_id, 10, maxentscan_alt)
                 if entry.startswith("ClinVar_submissions="):
