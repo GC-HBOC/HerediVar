@@ -256,13 +256,6 @@ if __name__ == '__main__':
         ## add FLOSSIES annotation
         config_file.write(paths.FLOSSIES_path + "\tFLOSSIES\tnum_eur,num_afr\t\n")
 
-
-        ## add gnomAD
-        # fetch one_variant from gnomAD database local copy
-        # use vcfannotatefromvcf from ngs-bits: one_variant_path, path_to_gnomad.tbi + fields to annotate
-        # read the annotated file back in
-        # save INFO column to variant_annotation table
-
         config_file.close()
 
         ## execute vcfannotatefromvcf
@@ -289,6 +282,7 @@ if __name__ == '__main__':
 
         ## Save to database
         print("saving to database...")
+        #one_variant_path = "/tmp/variant_old_pfam.vcf"
         headers, info = functions.read_vcf_info(one_variant_path)
 
         clv_revstat = ''
@@ -301,7 +295,7 @@ if __name__ == '__main__':
             for entry in current_info:
                 entry = entry.strip()
                 # save variant consequences from ensembl and refseq
-                # !!!! format of refseq and ensembl annotations from vep need to be equal: 0Feature,1HGVSc,2HGVSp,3Consequence,4IMPACT,5EXON,6INTRON,7HGNC_ID,8SYMBOL,...additional info
+                # !!!! format of refseq and ensembl annotations from vep need to be equal: 0Feature,1HGVSc,2HGVSp,3Consequence,4IMPACT,5EXON,6INTRON,7HGNC_ID,8SYMBOL,9DOMAIN,...additional info
                 if entry.startswith("CSQ=") or entry.startswith("CSQ_refseq="):
                     consequence_source = ''
                     if entry.startswith("CSQ="):
@@ -311,7 +305,7 @@ if __name__ == '__main__':
                     vep_entries = entry.lstrip('CSQ').lstrip('_refseq').lstrip('=').split(',')
                     transcript_independent_saved = False
                     for vep_entry in vep_entries:
-                        #9MaxEntScan_ref,10MaxEntScan_alt
+                        #10MaxEntScan_ref,11MaxEntScan_alt
                         vep_entry = vep_entry.split('|')
                         exon_nr = vep_entry[5]
                         exon_nr = exon_nr[:exon_nr.find('/')] # take only number from number/total
@@ -325,22 +319,22 @@ if __name__ == '__main__':
                         transcript_name = transcript_name[:transcript_name.find('.')] # remove transcript version
                         domains = vep_entry[9]
                         pfam_acc = ''
-                        if domains.count("PFAM:") >= 1:
-                            pfam_acc = re.search('PFAM:(PF\d+)[&|]', domains).group(1)
-                            if domains.count("PFAM:") > 1:
+                        if domains.count("Pfam:") >= 1:
+                            pfam_acc = re.search('Pfam:(PF\d+)[&|]', domains).group(1)
+                            if domains.count("Pfam:") > 1:
                                 print("WARNING: there were multiple PFAM domain ids in: " + str(domains) + ". defaulting to the first one.")
-                        conn.insert_variant_consequence(variant_id, 
-                                                        transcript_name, 
-                                                        hgvs_c, 
-                                                        hgvs_p, 
-                                                        vep_entry[3].replace('_', ' ').replace('&', ' & '), 
-                                                        vep_entry[4], 
-                                                        exon_nr, 
-                                                        intron_nr, 
-                                                        vep_entry[7],
-                                                        vep_entry[8],
-                                                        consequence_source,
-                                                        pfam_acc)
+                        #conn.insert_variant_consequence(variant_id, 
+                        #                                transcript_name, 
+                        #                                hgvs_c, 
+                        #                                hgvs_p, 
+                        #                                vep_entry[3].replace('_', ' ').replace('&', ' & '), 
+                        #                                vep_entry[4], 
+                        #                                exon_nr, 
+                        #                                intron_nr, 
+                        #                                vep_entry[7],
+                        #                                vep_entry[8],
+                        #                                consequence_source,
+                        #                                pfam_acc)
                         if not transcript_independent_saved and len(vep_entry) > 10:
                             transcript_independent_saved = True
                             maxentscan_ref = vep_entry[10]

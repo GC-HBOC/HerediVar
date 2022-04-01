@@ -201,6 +201,7 @@ if __name__ == '__main__':
     '''
     
     ## init pfam auxiliaries tables (pfam_id_mapping and pfam_legacy)
+    print("initializing PFAM id mapping table...")
     pfam_id_mapping_file = open(paths.pfam_id_mapping_path, 'r')
     for line in pfam_id_mapping_file:
         line = line.strip()
@@ -212,7 +213,7 @@ if __name__ == '__main__':
     
     pfam_id_mapping_file.close()
     
-    
+    print("inititalizing PFAM legacy table...")
     pfam_legacy_file = open(paths.pfam_legacy_path, 'r')
     for line in pfam_legacy_file:
         line = line.strip()
