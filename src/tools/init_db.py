@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
 
 
-    
+    '''
     ## init transcripts table
     # format info:
     #The 'type' of gene features in gff3 is:
@@ -198,6 +198,32 @@ if __name__ == '__main__':
     
 
     ensembl_transcript.close()
+    '''
+    
+    ## init pfam auxiliaries tables (pfam_id_mapping and pfam_legacy)
+    pfam_id_mapping_file = open(paths.pfam_id_mapping_path, 'r')
+    for line in pfam_id_mapping_file:
+        line = line.strip()
+        if line.startswith('#') or line == '':
+            continue
+        
+        parts = line.split('\t')
+        conn.insert_pfam_id_mapping(parts[0], parts[1])
+    
+    pfam_id_mapping_file.close()
+    
+    
+    pfam_legacy_file = open(paths.pfam_legacy_path, 'r')
+    for line in pfam_legacy_file:
+        line = line.strip()
+        if line.startswith('#') or line == '':
+            continue
+        
+        parts = line.split('\t')
+        conn.insert_pfam_legacy(parts[0], parts[1])
+    
+    pfam_legacy_file.close()
+    
     
     # init annotation_type table
     #conn.insert_annotation_type("gnomad_af", "Frequency of the alternate allele in samples", "float", "v3.1.2_GRCh38", "2021-10-22") 

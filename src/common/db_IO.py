@@ -76,12 +76,14 @@ class Connection:
         self.cursor.execute("UPDATE annotation_queue SET status = " + status + ", finished_at = NOW(), error_message = " + error_msg + " WHERE id = " + str(row_id))
         self.conn.commit()
 
-    def insert_variant_consequence(self, variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, symbol, consequence_source, domain):
+    def insert_variant_consequence(self, variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, symbol, consequence_source, pfam_acc):
         columns_with_info = "variant_id, transcript_name, consequence, impact, source"
         actual_information = (variant_id, transcript_name, consequence, impact, consequence_source)
-        if domain != '':
-            columns_with_info = columns_with_info + ", protein_domain"
-            actual_information = actual_information + (domain,)
+        if pfam_acc != '':
+            domain_description = get_pfam_description_by_pfam_acc(pfam_acc)
+            if domain_description is not None:
+                columns_with_info = columns_with_info + ", protein_domain"
+                actual_information = actual_information + (domain_description,)
         if hgvs_c != '':
             columns_with_info = columns_with_info + ", hgvs_c"
             actual_information = actual_information + (hgvs_c,)
@@ -233,10 +235,50 @@ class Connection:
         else:
             print("WARNING: transcript: " + transcript_name + ", transcript_biotype: " + transcript_biotype + " was not imported as the corresponding gene is not in the database (gene-table) " + "hgncid: " + str(hgnc_id) + ", gene symbol: " + str(symbol))
 
+    def insert_pfam_id_mapping(self, accession_id, description):
+        # remove version numbers first
+        accession_id = functions.remove_version_num(accession_id)
+        command = "INSERT INTO pfam_id_mapping (accession_id, description) VALUES (%s, %s)"
+        self.cursor.execute(command, (accession_id, description))
+        self.conn.commit()
+       
+       
+    def insert_pfam_legacy(self, old_accession_id, new_accession_id):
+        #remove version numbers first
+        old_accession_id = functions.remove_version_num(old_accession_id)
+        new_accession_id = functions.remove_version_num(new_accession_id)
+        command = "INSERT INTO pfam_legacy (old_accession_id, new_accession_id) VALUES (%s, %s)"
+        self.cursor.execute(command, (old_accession_id, new_accesssion_id))
+        self.conn.commit()
 
-
-
-
+    def get_pfam_description_by_pfam_acc(self, pfam_acc):
+        pfam_acc = functions.remove_version_num(pfam_acc)
+        orig_pfam_acc = pfam_acc
+        found_description = False
+        
+        while not found_description:
+            command = "SELECT * FROM pfam_id_mapping WHERE accession_id = " + enquote(pfam_acc)
+            self.cursor.execute(command)
+            pfam_description = self.cursor.fetchone()
+            if pfam_description is None:
+                command = "SELECT * FROM pfam_legacy WHERE old_accession_id = " + enquote(pfam_acc)
+                self.cursor.execute(command)
+                pfam_description = self.cursor.fetchone()
+                if pfam_description is not None:
+                    if pfam_description[1] == 'removed':
+                        found_description = True
+                    else:
+                        pfam_acc = pfam_description[0]
+                else:
+                    found_description = True
+            else:
+                found_description = True
+        
+        if pfam_description is None:
+            print("WARNING: there was no description for pfam accession id: " + orig_pfam_acc)
+            return None
+        else:
+            return pfam_description[1]
 
 
 

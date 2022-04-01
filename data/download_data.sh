@@ -231,14 +231,12 @@ tabix -p vcf spliceai_scores_2022_02_09_GRCh38.vcf.gz
 #wget https://arup.utah.edu/database/BRCA/Variants/BRCA1.php
 
 
-## download PFAM
+## download PFAM (last accessed at realease 35.0)
 cd $dbs
 mkdir -p PFAM
 cd PFAM
-#wget http://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.full.gz
-zcat Pfam-A.full.gz | grep -e '^#=GF AC' -e '^#=GF DE' | tr -d '\n' | sed 's/#=GF AC   /\n/g' | sed 's/\.[0-9]\+#=GF DE   /\t/g' | sed '/^$$/d' | sed '1 i\#PFAM_ID\tDESCRIPTION' | tr '\n\n' '\n'> pfam_description.tsv
-
-wget -O - ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.dead.gz | zcat | grep -e '^#=GF AC' -e '^#=GF FW' | tr -d '\n' | sed 's/#=GF AC   /\n/g' | sed 's/#=GF FW   /\t/g' | sed '/^$$/d' | sed '1 i\#OLD_PFAM_ID\tNEW_PFAM_ID' | tr '\n\n' '\n'> pfam_replacements.tsv
+wget -O - http://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.seed.gz | zcat | python3 $tools/db_converter_pfam.py > pfam_id_mapping.tsv
+wget -O - ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.dead.gz | zcat | python3 $tools/db_converter_pfam.py -deadfile > pfam_legacy.tsv
 
 
 
