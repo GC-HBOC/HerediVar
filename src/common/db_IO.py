@@ -11,8 +11,8 @@ def get_db_connection():
     conn = None
     try:
         conn = mysql.connector.connect(user='ahdoebm1', password='20220303',
-                                       host='SRV018.img.med.uni-tuebingen.de',
-                                       database='bioinf_heredivar_ahdoebm1', 
+                                       host='SRV011.img.med.uni-tuebingen.de',
+                                       database='HerediVar_ahdoebm1', 
                                        charset = 'utf8')
     except Error as e:
         print("Error while connecting to DB", e)
@@ -76,14 +76,42 @@ class Connection:
         self.cursor.execute("UPDATE annotation_queue SET status = " + status + ", finished_at = NOW(), error_message = " + error_msg + " WHERE id = " + str(row_id))
         self.conn.commit()
 
+    def get_pfam_description_by_pfam_acc(self, pfam_acc):
+        pfam_acc = functions.remove_version_num(pfam_acc)
+        orig_pfam_acc = pfam_acc
+        found_description = False
+        
+        while not found_description:
+            command = "SELECT accession_id,description FROM pfam_id_mapping WHERE accession_id = " + enquote(pfam_acc)
+            self.cursor.execute(command)
+            pfam_description = self.cursor.fetchone()
+            if pfam_description is None:
+                command = "SELECT old_accession_id,new_accession_id FROM pfam_legacy WHERE old_accession_id = " + enquote(pfam_acc)
+                self.cursor.execute(command)
+                pfam_description = self.cursor.fetchone()
+                if pfam_description is not None:
+                    if pfam_description[1] == 'removed':
+                        found_description = True
+                    else:
+                        pfam_acc = pfam_description[1]
+                else:
+                    found_description = True
+            else:
+                found_description = True
+        if pfam_description is None:
+            print("WARNING: there was no description for pfam accession id: " + orig_pfam_acc)
+            return None, None
+        else:
+            return pfam_description[0], pfam_description[1]
+
     def insert_variant_consequence(self, variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, symbol, consequence_source, pfam_acc):
         columns_with_info = "variant_id, transcript_name, consequence, impact, source"
         actual_information = (variant_id, transcript_name, consequence, impact, consequence_source)
         if pfam_acc != '':
-            domain_description = get_pfam_description_by_pfam_acc(pfam_acc)
-            if domain_description is not None:
-                columns_with_info = columns_with_info + ", protein_domain"
-                actual_information = actual_information + (domain_description,)
+            pfam_acc, domain_description = self.get_pfam_description_by_pfam_acc(pfam_acc)
+            if domain_description is not None and pfam_acc is not None and domain_description != 'removed':
+                columns_with_info = columns_with_info + ", pfam_accession, pfam_description"
+                actual_information = actual_information + (pfam_acc, domain_description)
         if hgvs_c != '':
             columns_with_info = columns_with_info + ", hgvs_c"
             actual_information = actual_information + (hgvs_c,)
@@ -248,37 +276,10 @@ class Connection:
         old_accession_id = functions.remove_version_num(old_accession_id)
         new_accession_id = functions.remove_version_num(new_accession_id)
         command = "INSERT INTO pfam_legacy (old_accession_id, new_accession_id) VALUES (%s, %s)"
-        self.cursor.execute(command, (old_accession_id, new_accesssion_id))
+        self.cursor.execute(command, (old_accession_id, new_accession_id))
         self.conn.commit()
 
-    def get_pfam_description_by_pfam_acc(self, pfam_acc):
-        pfam_acc = functions.remove_version_num(pfam_acc)
-        orig_pfam_acc = pfam_acc
-        found_description = False
-        
-        while not found_description:
-            command = "SELECT * FROM pfam_id_mapping WHERE accession_id = " + enquote(pfam_acc)
-            self.cursor.execute(command)
-            pfam_description = self.cursor.fetchone()
-            if pfam_description is None:
-                command = "SELECT * FROM pfam_legacy WHERE old_accession_id = " + enquote(pfam_acc)
-                self.cursor.execute(command)
-                pfam_description = self.cursor.fetchone()
-                if pfam_description is not None:
-                    if pfam_description[1] == 'removed':
-                        found_description = True
-                    else:
-                        pfam_acc = pfam_description[0]
-                else:
-                    found_description = True
-            else:
-                found_description = True
-        
-        if pfam_description is None:
-            print("WARNING: there was no description for pfam accession id: " + orig_pfam_acc)
-            return None
-        else:
-            return pfam_description[1]
+
 
 
 

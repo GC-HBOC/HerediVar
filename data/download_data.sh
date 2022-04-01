@@ -224,29 +224,39 @@ tabix -p vcf spliceai_scores_2022_02_09_GRCh38.vcf.gz
 #$ngsbits/BedSort -with_name -in clinvar_cnvs_2021-12.bed -out clinvar_cnvs_2021-12.bed
 
 
-## download ARUP BRCA1 & BRCA2
-#cd $dbs
-#mkdir -p ARUP
-#cd ARUP
-#wget https://arup.utah.edu/database/BRCA/Variants/BRCA1.php
-
+## download ARUP BRCA1 & BRCA2 (https://arup.utah.edu/database/BRCA/Variants/BRCA1.php and https://arup.utah.edu/database/BRCA/Variants/BRCA2.php)
+## Database was accessed at 01.04.2022. As there is no versioning this date was used instead of an actual version number
+: '
+cd $dbs
+mkdir -p ARUP
+cd ARUP
+wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA1.php | python3 $tools/db_converter_arup.py --reference NM_007294.3 > ARUP_BRCA_2022_04_01.tsv
+wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA2.php | python3 $tools/db_converter_arup.py --reference NM_000059.3 >> ARUP_BRCA_2022_04_01.tsv
+'
 
 ## download PFAM (last accessed at realease 35.0)
+: '
 cd $dbs
 mkdir -p PFAM
 cd PFAM
-wget -O - http://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.seed.gz | zcat | python3 $tools/db_converter_pfam.py > pfam_id_mapping.tsv
-wget -O - ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.dead.gz | zcat | python3 $tools/db_converter_pfam.py -deadfile > pfam_legacy.tsv
+wget -O - http://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.seed.gz | zcat | iconv -f utf-8 -t utf-8 -c | python3 $tools/db_converter_pfam.py > pfam_id_mapping.tsv
+wget -O - ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.dead.gz | zcat | iconv -f utf-8 -t utf-8 -c | python3 $tools/db_converter_pfam.py --deadfile > pfam_legacy.tsv
+'
 
 
-
-
-
-
-
-
-
-
+## download CancerHotspots.org
+cd $dbs
+mkdir -p cancerhotspots
+cd cancerhotspots
+#wget https://www.cancerhotspots.org/files/hotspots_v2.xls
+#wget http://download.cbioportal.org/cancerhotspots/cancerhotspots.v2.maf.gz
+ssconvert -O 'separator="	" format=raw' -T Gnumeric_stf:stf_assistant -S hotspots_v2.xls hotspots.tsv
+php $src/Tools/db_converter_cancerhotspots.php -in hotspots.tsv.0 -maf cancerhotspots.v2.maf.gz -out cancerhotspots_snv.tsv
+#rm hotspots_v2.xls
+#rm hotspots.tsv.0 
+#rm hotspots.tsv.1
+#rm cancerhotspots.v2.maf.gz
+#
 
 
 
