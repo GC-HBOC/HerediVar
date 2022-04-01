@@ -100,3 +100,9 @@ def trim_hgnc(hgnc_id):
         return hgnc_id[5:]
     else:
         return hgnc_id
+        
+def remove_version_num(identifier, char = ':'):
+    if char in identifier:
+        return identifier[identifier.find(char)+1:]
+    else:
+        return identifier
