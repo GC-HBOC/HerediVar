@@ -32,9 +32,10 @@ def annotate_vep(input_vcf, output_vcf, refseq = False):
         #gnomAD_AF,gnomAD_AFR_AF,gnomAD_AMR_AF,gnomAD_EAS_AF,gnomAD_NFE_AF,gnomAD_SAS_AF, "--af_gnomad",
         #DOMAINS,SIFT,PolyPhen,PUBMED,AF
         
-        fields_oi = fields_oi_base + ",MaxEntScan_ref,MaxEntScan_alt"
+        fields_oi = fields_oi_base + ",MaxEntScan_ref,MaxEntScan_alt,PUBMED"
         command = command + ["--plugin", "MaxEntScan," + paths.vep_path + "/MaxEntScan/",
                              "--regulatory",
+                             "--pubmed",
                              "--fields", fields_oi]
         
     if refseq:
@@ -256,6 +257,9 @@ if __name__ == '__main__':
         ## add FLOSSIES annotation
         config_file.write(paths.FLOSSIES_path + "\tFLOSSIES\tnum_eur,num_afr\t\n")
 
+        ## add cancerhotspots annotations
+        config_file.write(paths.cancerhotspots_path + "\tcancerhotspots\tcancertypes,AC,AF\t\n")
+
         config_file.close()
 
         ## execute vcfannotatefromvcf
@@ -320,7 +324,7 @@ if __name__ == '__main__':
                         domains = vep_entry[9]
                         pfam_acc = ''
                         if domains.count("Pfam:") >= 1:
-                            pfam_acc = re.search('Pfam:(PF\d+)[&|]', domains).group(1)
+                            pfam_acc = re.search('Pfam:(PF\d+)[&|]', domains).group(1) # grab only pfam accession id from all protein domains which were returned
                             if domains.count("Pfam:") > 1:
                                 print("WARNING: there were multiple PFAM domain ids in: " + str(domains) + ". defaulting to the first one.")
                         #conn.insert_variant_consequence(variant_id, 
@@ -335,14 +339,19 @@ if __name__ == '__main__':
                         #                                vep_entry[8],
                         #                                consequence_source,
                         #                                pfam_acc)
-                        if not transcript_independent_saved and len(vep_entry) > 10:
+                        num_vep_basic_entries = 10
+                        if not transcript_independent_saved and len(vep_entry) > num_vep_basic_entries:
                             transcript_independent_saved = True
-                            maxentscan_ref = vep_entry[10]
+                            maxentscan_ref = vep_entry[num_vep_basic_entries]
                             #if maxentscan_ref != '':
                             #    conn.insert_variant_annotation(variant_id, 9, maxentscan_ref)
-                            maxentscan_alt = vep_entry[11]
+                            maxentscan_alt = vep_entry[num_vep_basic_entries+1]
                             #if maxentscan_alt != '':
                             #    conn.insert_variant_annotation(variant_id, 10, maxentscan_alt)
+                            pmids = vep_entry[num_vep_basic_entries+2]
+                            if pmids != '':
+                                pmids = pmids.split('&')
+                                
                 if entry.startswith("ClinVar_submissions="):
                     clinvar_submissions = entry[20:].split(',')
                 if entry.startswith("ClinVar_revstat="):
@@ -393,12 +402,21 @@ if __name__ == '__main__':
                 if entry.startswith("BRCA_exchange_clin_sig_short="):
                     value = entry[29:].replace('_', ' ').replace(',', ';')
                     #conn.insert_variant_annotation(variant_id, 18, value)
-                if entry.startswith("FLOSSIES_num_afr"):
+                if entry.startswith("FLOSSIES_num_afr="):
                     value = entry[17:]
                     #conn.insert_variant_annotation(variant_id, 19, value)
-                if entry.startswith("FLOSSIES_num_eur"):
+                if entry.startswith("FLOSSIES_num_eur="):
                     value = entry[17:]
                     #conn.insert_variant_annotation(variant_id, 20, value)
+                if entry.startswith("cancerhotspots_cancertypes="):
+                    value = entry[27:]
+                    #conn.insert_variant_annotation(variant_id, 22, value)
+                if entry.startswith("cancerhotspots_AC="):
+                    value = entry[18:]
+                    #conn.insert_variant_annotation(variant_id, 23, value)
+                if entry.startswith("cancerhotspots_AF="):
+                    value = entry[18:]
+                    #conn.insert_variant_annotation(variant_id, 24, value)
 
             # submit collected clinvar data to db if it exists
             if clv_varid != '' and clv_inpret != '' and clv_revstat != '':
