@@ -156,3 +156,4 @@ fabric.properties
 
 /src/tools/ngs-bits/
 /src/tools/samtools/
+/src/tools/vcf2maf/
