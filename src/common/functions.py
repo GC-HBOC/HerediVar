@@ -1,7 +1,8 @@
 import os
 import collections
 import datetime
-
+import re
+import sys
 
 def basedir():
     return os.getcwd()
@@ -106,3 +107,9 @@ def remove_version_num(identifier, char = '.'):
         return identifier[:identifier.find(char)]
     else:
         return identifier
+
+def is_dna(strg, search=re.compile(r'[^ACGTacgt-]').search):
+    return not bool(search(strg))
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
