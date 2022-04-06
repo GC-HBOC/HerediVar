@@ -40,6 +40,7 @@ mv samtools-1.11 samtools
 
 
 # create venv and download packages
+: '
 cd $root
 python3 -m venv .venv
 source .venv/bin/activate
@@ -56,3 +57,12 @@ pip install flask
 pip install flask-mysql
 
 pip3 install CrossMap
+'
+
+
+# install vcf2maf version 1.6.21 (https://github.com/mskcc/vcf2maf)
+cd $tools
+mkdir -p vcf2maf
+cd vcf2maf
+curl -L -o mskcc-vcf2maf.tar.gz https://api.github.com/repos/mskcc/vcf2maf/tarball/v1.6.21; tar -zxf mskcc-vcf2maf.tar.gz; cd mskcc-vcf2maf-*
+
