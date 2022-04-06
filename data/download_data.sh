@@ -244,8 +244,7 @@ wget -O - ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.dead.gz 
 '
 
 
-# download oncotree (version: oncotree_2021_11_02, downloaded from: http://oncotree.mskcc.org/#/home?tab=api
-
+# download oncotree (version: oncotree_2021_11_02, downloaded from: http://oncotree.mskcc.org/#/home?tab=api)
 cd $dbs
 mkdir -p cancerhotspots
 cd cancerhotspots
@@ -253,7 +252,7 @@ oncotree_name=oncotree_2021_11_02.json
 #wget -O - http://oncotree.mskcc.org/api/tumorTypes?version=oncotree_2021_11_02 > $oncotree_name
 
 
-## download CancerHotspots.org
+## download CancerHotspots.org (version date: 2017-12-15 corresponds to the release date of the publication: Accelerating Discovery of Functional Mutant Alleles in Cancer, Chang et al. (PMCID: PMC5809279 ))
 cd $dbs
 mkdir -p cancerhotspots
 cd cancerhotspots
@@ -262,9 +261,8 @@ cancerhotspotsfile=cancerhotspots.v2
 #wget -O $cancerhotspotsfile.maf.gz http://download.cbioportal.org/cancerhotspots/cancerhotspots.v2.maf.gz
 #gunzip $cancerhotspotsfile.maf.gz
 #(head -n 2  $cancerhotspotsfile.maf && tail -n +3  $cancerhotspotsfile.maf | sort -t$'\t' -f -k5,5V -k6,6n -k11,11 -k13,13) >  $cancerhotspotsfile.sorted.maf
+
 cancerhotspotssamples=$(awk -F '\t' '{print $16}' $cancerhotspotsfile.sorted.maf | sort | uniq -c | wc -l)
-
-
 python3 $tools/db_converter_cancerhotspots.py -i $cancerhotspotsfile.sorted.maf --samples $cancerhotspotssamples --oncotree $oncotree_name -o $cancerhotspotsfile.vcf
 $ngsbits/VcfSort -in $cancerhotspotsfile.vcf -out $cancerhotspotsfile.vcf
 cat $cancerhotspotsfile.vcf | $ngsbits/VcfLeftNormalize -stream -ref $data/genomes/GRCh37.fa | $ngsbits/VcfStreamSort > $cancerhotspotsfile.final.vcf
@@ -274,26 +272,23 @@ bgzip -f $cancerhotspotsfile.final.vcf
 
 $ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $data/genomes/GRCh37.fa
 
-
 ## crossmap to lift from GRCh37 to GRCh37
 CrossMap.py vcf $data/genomes/hg19ToHg38.fixed.over.chain.gz $cancerhotspotsfile.final.vcf.gz $genome $cancerhotspotsfile.final.vcf
 cat $cancerhotspotsfile.final.vcf | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > $cancerhotspotsfile.final.vcf.gz
-#rm -f $cancerhotspotsfile.final.vcf
-#rm -f $cancerhotspotsfile.vcf
+rm -f $cancerhotspotsfile.final.vcf
+rm -f $cancerhotspotsfile.vcf
+#rm -f $cancerhotspotsfile.maf
+#rm -f $cancerhotspotsfile.sorted.maf
 
 $ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $genome
 
+tabix -p vcf $cancerhotspotsfile.final.vcf.gz
 
 
-
-#fragen dazu:
-# - AG -> TC split?
-# - einige cancertype abkürzungen sind in oncotree nicht gelistet... (eg. KIRC, LIHC, LGG) andere haben abwandlungen (eg. CLL)
-# - removed lines?
-# - soll ich die zygosity auch mitbeachten? (allele_1 ist entweder die referenzbase oder die mutante)
-# - AF richtig berechnet?
-
+# TODO:
 # - Am Ende nochmal überlegen welche referenz genome verwendet werden aktuell: ucsc grch38 + ensembl grch37 + ucsc grch37 chainover grch38
+
+
 
 #mkdir -p test_vcfs
 #head cancerhotspots.v2.maf -n 2  > cancerhotspots.v2.fixed.maf
