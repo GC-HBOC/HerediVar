@@ -278,6 +278,11 @@ class Connection:
         command = "INSERT INTO pfam_legacy (old_accession_id, new_accession_id) VALUES (%s, %s)"
         self.cursor.execute(command, (old_accession_id, new_accession_id))
         self.conn.commit()
+    
+    def insert_variant_literature(self, variant_id, pmid, title, authors, journal):
+        command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher) VALUES (%s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, pmid, title, authors, journal))
+        self.conn.commit()
 
 
 

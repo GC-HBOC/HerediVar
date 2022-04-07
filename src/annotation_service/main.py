@@ -9,6 +9,7 @@ import subprocess
 import common.paths as paths
 import tempfile
 import re
+import pubmed_parser
 
 
 conn = Connection()
@@ -350,8 +351,11 @@ if __name__ == '__main__':
                             #    conn.insert_variant_annotation(variant_id, 10, maxentscan_alt)
                             pmids = vep_entry[num_vep_basic_entries+2]
                             if pmids != '':
-                                pmids = pmids.split('&')
-                                
+                                pmids = pmids.replace('&', ',')
+                                literature_entries = pubmed_parser.fetch(pmids)
+                                for paper in literature_entries: #[pmid, article_title, authors, journal]
+                                    #conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3])
+                                    pass
                 if entry.startswith("ClinVar_submissions="):
                     clinvar_submissions = entry[20:].split(',')
                 if entry.startswith("ClinVar_revstat="):

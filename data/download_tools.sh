@@ -57,12 +57,7 @@ pip install flask
 pip install flask-mysql
 
 pip3 install CrossMap
+
+pip install biopython
 '
-
-
-# install vcf2maf version 1.6.21 (https://github.com/mskcc/vcf2maf)
-cd $tools
-mkdir -p vcf2maf
-cd vcf2maf
-curl -L -o mskcc-vcf2maf.tar.gz https://api.github.com/repos/mskcc/vcf2maf/tarball/v1.6.21; tar -zxf mskcc-vcf2maf.tar.gz; cd mskcc-vcf2maf-*
 
