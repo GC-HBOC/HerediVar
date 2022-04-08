@@ -59,5 +59,6 @@ pip install flask-mysql
 pip3 install CrossMap
 
 pip install biopython
+pip install flask-paginate
 '
 

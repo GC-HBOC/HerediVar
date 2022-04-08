@@ -4,6 +4,7 @@ from os import path
 import sys
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from common.db_IO import Connection
+from flask_paginate import Pagination, get_page_args
 
 app = Flask(__name__)
 
@@ -18,6 +19,7 @@ app = Flask(__name__)
 #mysql = MySQL(app)
 
 conn = Connection()
+
 
 
 @app.route('/')
@@ -44,6 +46,17 @@ def create():
             return redirect(url_for('create'))
 
     return render_template('create.html', chrs=chrs)
+
+
+@app.route('/browse', methods=['GET'])
+def browse():
+    #page, per_page, offset = get_page_args(page_parameter='page', per_page_parameter='per_page')
+    page = int(request.args.get('page', 1))
+    per_page = 20
+    variants = conn.get_paginated_variants(page, per_page)
+    total = 100
+    pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap4')
+    return render_template('browse.html', variants=variants, page=page, per_page=per_page, pagination=pagination)
 
 
 if __name__ == '__main__':

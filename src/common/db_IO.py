@@ -284,7 +284,15 @@ class Connection:
         self.cursor.execute(command, (variant_id, pmid, title, authors, journal))
         self.conn.commit()
 
-
+    # functions specific for frontend!
+    def get_paginated_variants(self, page, page_size):
+        offset = (page - 1) * page_size
+        self.cursor.execute(
+            "SELECT chr, pos, ref, alt FROM variant ORDER BY chr, pos, ref, alt LIMIT %d, %d"
+            % (offset, page_size)
+        )    
+        result = self.cursor.fetchall()
+        return result
 
 
 
