@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+<h1>{% block title %} Variant details {% endblock %}</h1>
+
+<!--summary panel-->
+<div class="summary-panel">
+    <div class="row">
+        <div class="li-label">VCF</div>
+        <div class="li-info">{{ variant[1] }}   {{ variant[2] }}    {{ variant[3] }}    {{ variant[4] }}</div>
+    </div>
+    <div class="row">
+        <div class="li-label">TEST</div>
+        <div class="li-info">balcmleöamcöoaimeöoanx</div>
+    </div>
+
+
+</div>
+
+{% endblock %}

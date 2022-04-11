@@ -353,8 +353,8 @@ if __name__ == '__main__':
                             if pmids != '':
                                 pmids = pmids.replace('&', ',')
                                 literature_entries = pubmed_parser.fetch(pmids)
-                                for paper in literature_entries: #[pmid, article_title, authors, journal]
-                                    #conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3])
+                                for paper in literature_entries: #[pmid, article_title, authors, journal, year]
+                                    conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4])
                                     pass
                 if entry.startswith("ClinVar_submissions="):
                     clinvar_submissions = entry[20:].split(',')

@@ -22,7 +22,8 @@ def get_db_connection():
 
 
 def enquote(string):
-    return "'" + str(string) + "'"
+    string = str(string).strip("'") # remove quotes if the input string is already quoted!
+    return "'" + string + "'"
 
 
 class Connection:
@@ -46,9 +47,16 @@ class Connection:
     
 
     def get_one_variant(self, variant_id):
-        self.cursor.execute("SELECT * FROM variant WHERE id =" + str(variant_id))
+        self.cursor.execute("SELECT id,chr,pos,ref,alt FROM variant WHERE id =" + str(variant_id))
         result = self.cursor.fetchone()
         return result
+    
+    def get_variant_id(self, chr, pos, ref, alt):
+        self.cursor.execute("SELECT id FROM variant WHERE chr = " + enquote(chr) + " AND pos = " + str(pos) + " AND ref = " + enquote(ref) + " AND alt = " + enquote(alt))
+        variant_id = self.cursor.fetchone()
+        if variant_id is not None:
+            return variant_id[0]
+        return None
     
     def get_gene_id_by_hgnc_id(self, hgnc_id):
         hgnc_id = functions.trim_hgnc(hgnc_id)
@@ -279,20 +287,38 @@ class Connection:
         self.cursor.execute(command, (old_accession_id, new_accession_id))
         self.conn.commit()
     
-    def insert_variant_literature(self, variant_id, pmid, title, authors, journal):
-        command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher) VALUES (%s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, pmid, title, authors, journal))
+    def insert_variant_literature(self, variant_id, pmid, title, authors, journal, year):
+        command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher, year) VALUES (%s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, pmid, title, authors, journal, year))
         self.conn.commit()
 
     # functions specific for frontend!
-    def get_paginated_variants(self, page, page_size):
+    def get_paginated_variants(self, page, page_size, search_value = ''):
         offset = (page - 1) * page_size
-        self.cursor.execute(
-            "SELECT chr, pos, ref, alt FROM variant ORDER BY chr, pos, ref, alt LIMIT %d, %d"
-            % (offset, page_size)
-        )    
-        result = self.cursor.fetchall()
-        return result
+        if search_value == '':
+            self.cursor.execute(
+                "SELECT id,chr,pos,ref,alt FROM variant ORDER BY chr, pos, ref, alt LIMIT %d, %d"
+                % (offset, page_size)
+            )  
+            result = self.cursor.fetchall()
+
+            self.cursor.execute("SELECT COUNT(id) FROM variant")
+            num_variants = self.cursor.fetchone()
+            num_variants = num_variants[0]
+        else:
+            search_value = enquote(search_value)
+            command = "SELECT id,chr,pos,ref,alt FROM variant WHERE chr=%s OR pos=%s OR ref=%s OR alt=%s ORDER BY chr, pos, ref, alt LIMIT %d, %d" % (search_value, search_value, search_value, search_value, offset, page_size)
+            self.cursor.execute(command)
+            result = self.cursor.fetchall()
+
+            self.cursor.execute(
+                "SELECT COUNT(id) FROM variant WHERE chr=%s OR pos=%s OR ref=%s OR alt=%s" 
+                % (search_value, search_value, search_value, search_value)
+            )
+            num_variants = self.cursor.fetchone()
+            num_variants = num_variants[0]
+        return result, num_variants
+    
 
 
 
