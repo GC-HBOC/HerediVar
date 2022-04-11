@@ -1,0 +1,33 @@
+.clickable {
+    cursor: pointer;
+    color:blue;
+}
+
+table{
+    table-layout: fixed;
+}
+
+.longTextCss {
+    word-break: break-all;
+    white-space: nowrap;
+    text-overflow:ellipsis;
+    overflow: hidden;
+}
+
+abbr[title] {
+    text-decoration: none;
+}
+
+.li-label {
+    font-weight:bold;
+    float:left;
+    width: 100px;
+}
+
+.li-info {
+    margin-left: 100px;
+}
+
+.summary-panel {
+    width:50%;
+}

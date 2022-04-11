@@ -1,29 +1,52 @@
 {% extends 'base.html' %}
 
+
 {% block content %}
-<h1>{% block title %} Browse Variants {% endblock %}</h1>
+<h1> {% block title %} Browse Variants {% endblock %} </h1>
 
 <div class="container">
-    {{ pagination.links }}
+  <div id="wrapper">
+    <div style="float:left">{{ pagination.links }}</div>
+
+  <form style="float:right" method="post">
+     <div class="input-group w50">
+        <button class="input-group-text"> 
+          <svg class="bi bi-search" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
+          </svg>
+        </button>
+        <input class="form-control" type="text" placeholder="Quicksearch..." name="quicksearch">
+      </div>
+    </div>
+  </form>
+
+
     <div class="table-responsive">
       <table class="table table-hover">
         <thead>
           <tr>
-            <th>#</th>
-            <th>chr</th>
-            <th>pos</th>
-            <th>ref</th>
-            <th>alt</th>
+            <th style="width: 10%">chr</th>
+            <th style="width: 15%">pos</th>
+            <th style="width: 30%">ref</th>
+            <th style="width: 30%">alt</th>
           </tr>
         </thead>
         <tbody>
           {% for variant in variants %}
-          <tr>
-            <td>{{ loop.index + (page - 1) * per_page }}</td>
-            <td>{{ variant[0] }}</td>
+          <tr data-href="{{ url_for('variant', variant_id=variant[0]) }}" class="clickable">
+            <!--<td>{{ loop.index + (page - 1) * per_page }}</td>-->
             <td>{{ variant[1] }}</td>
             <td>{{ variant[2] }}</td>
-            <td>{{ variant[3] }}</td>
+            {% if variant[3]|length > 30 %}
+              <td class="longTextCss"><abbr title="{{ variant[3] }}">{{ variant[3] }}</abbr></td>
+            {% else %}
+              <td class="longTextCss">{{ variant[3] }}</td>
+            {% endif %}
+            {% if variant[4]|length > 30 %}
+              <td class="longTextCss"><abbr title="{{ variant[4] }}">{{ variant[4] }}</abbr></td>
+            {% else %}
+              <td class="longTextCss">{{ variant[4] }}</td>
+            {% endif %}
           </tr>
           {% endfor %}
         </tbody>
@@ -31,5 +54,7 @@
     </div>
     {{ pagination.links }}
   </div>
+
+<script src="static/js/browse.js"></script>
 
 {% endblock %}
