@@ -292,6 +292,24 @@ class Connection:
         self.cursor.execute(command, (variant_id, pmid, title, authors, journal, year))
         self.conn.commit()
 
+    
+    def get_recent_annotations(self, variant_id): # ! the ordering of the columns in the outer select statement is important and should not be changed
+        command = "SELECT title, description, version, version_date, variant_id, value, supplementary_document FROM variant_annotation INNER JOIN ( \
+                        SELECT * \
+	                        FROM annotation_type WHERE (title, version_date) IN ( \
+		                        select title, MAX(version_date) version_date from annotation_type INNER JOIN ( \
+				                    select variant_id, annotation_type_id, value, supplementary_document from variant_annotation where variant_id=%d \
+			                ) x \
+			                ON annotation_type.id = x.annotation_type_id \
+		                    GROUP BY title \
+	                    )  \
+                    ) y  \
+                    ON y.id = variant_annotation.annotation_type_id \
+                    WHERE variant_id=%d" % (variant_id, variant_id)
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return result
+
     # functions specific for frontend!
     def get_paginated_variants(self, page, page_size, search_value = ''):
         offset = (page - 1) * page_size

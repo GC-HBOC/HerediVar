@@ -2,20 +2,226 @@
 
 
 {% block content %}
-<h1>{% block title %} Variant details {% endblock %}</h1>
-
+<br>
+<h1>{% block title %} Variant Display {% endblock %}</h1>
+<br>
+<h4>Variant Identification</h4>
 <!--summary panel-->
 <div class="summary-panel">
     <div class="row">
-        <div class="li-label">VCF</div>
-        <div class="li-info">{{ variant[1] }}   {{ variant[2] }}    {{ variant[3] }}    {{ variant[4] }}</div>
+        <div class="li-label"><abbr title="Variant in variant call format (FORMAT: chromosome -> position in reference genome (GRCh38) -> reference allele -> alternative allele)">VCF</abbr></div>
+        <div class="keep-spaces li-info">{{ variant[1] }}    {{ variant[2] }}     {{ variant[3] }}     {{ variant[4] }}</div>
     </div>
     <div class="row">
-        <div class="li-label">TEST</div>
-        <div class="li-info">balcmleöamcöoaimeöoanx</div>
+        <div class="li-label"><abbr title="RSID from dbsnp">RSID</abbr></div>
+        <div class="li-info">
+            {% if 'rsid' in variant_annotations %}
+                {{variant_annotations['rsid'][4]}}
+            {% else %}
+                -
+            {% endif %}
+        </div>
     </div>
-
-
+    <div class="row">
+        <div class="li-label"><abbr title="hgvs notations for this variant">HGVS</abbr></div>
+        <div class="li-info">TODO</div>
+    </div>
+    <br>
+    <h4>Variant Information</h4>
+    <div class="row">
+        <div class="li-label"><abbr title="Pathogeneity and other scores">Change&nbsp;tolerance</abbr></div>
+        <div class="li-info">
+            <div class="li-element">
+                {% if 'cadd_scaled' in variant_annotations %}
+                    <abbr title="{{variant_annotations['cadd_scaled'][0]}}"><a class="dashed_underline">CADD:</a></abbr>&nbsp;{{variant_annotations['cadd_scaled'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">CADD:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="li-element">
+                {% if 'revel' in variant_annotations %}
+                    <abbr title="{{variant_annotations['revel'][0]}}"><a class="dashed_underline">REVEL:</a></abbr>&nbsp;{{variant_annotations['revel'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">REVEL:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="li-element">
+                {% if 'phylop_100way' in variant_annotations %}
+                    <abbr title="{{variant_annotations['phylop_100way'][0]}}"><a class="dashed_underline">phyloP:</a></abbr>&nbsp;{{variant_annotations['phylop_100way'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">phyloP:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="li-label"><abbr title="Pathogeneity and other scores">Splicing</abbr></div>
+        <div class="li-info">
+            <div class="li-element">
+                {% if 'spliceai_max_delta' in variant_annotations %}
+                    <abbr title="{{variant_annotations['spliceai_max_delta'][0]}}"><a class="dashed_underline">spliceAI max:</a></abbr>&nbsp;{{variant_annotations['spliceai_max_delta'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">spliceAI max:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="li-element">
+                {% if 'spliceai_details' in variant_annotations %}
+                    <abbr title="{{variant_annotations['spliceai_details'][0]}}"><a class="dashed_underline">spliceAI details:</a></abbr>&nbsp;{{variant_annotations['spliceai_details'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">spliceAI details:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+        </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="li-info">
+            <div class="li-element">
+                {% if 'maxentscan_ref' in variant_annotations %}
+                    <abbr title="{{variant_annotations['maxentscan_ref'][0]}}"><a class="dashed_underline">maxentscan ref:</a></abbr>&nbsp;{{variant_annotations['maxentscan_ref'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">maxentscan ref:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="li-element">
+                {% if 'maxentscan_alt' in variant_annotations %}
+                    <abbr title="{{variant_annotations['maxentscan_alt'][0]}}"><a class="dashed_underline">maxentscan alt:</a></abbr>&nbsp;{{variant_annotations['maxentscan_alt'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">maxentscan alt:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="li-label"><abbr title="gnomAD scores">gnomAD</abbr></div>
+        <div class="li-info">
+            <div class="li-element">
+                {% if 'gnomad_ac' in variant_annotations %}
+                    <abbr title="{{variant_annotations['gnomad_ac'][0]}}"><a class="dashed_underline">AC:</a></abbr>&nbsp;{{variant_annotations['gnomad_ac'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">AC:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="li-element">
+                {% if 'gnomad_af' in variant_annotations %}
+                    <abbr title="{{variant_annotations['gnomad_af'][0]}}"><a class="dashed_underline">AF:</a></abbr>&nbsp;{{variant_annotations['gnomad_af'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">AF:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="li-element">
+                {% if 'gnomad_popmax' in variant_annotations %}
+                    <abbr title="{{variant_annotations['gnomad_popmax'][0]}}"><a class="dashed_underline">popmax:</a></abbr>&nbsp;{{variant_annotations['gnomad_popmax'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">popmax:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="li-element">
+                {% if 'gnomad_hom' in variant_annotations %}
+                    <abbr title="{{variant_annotations['gnomad_hom'][0]}}"><a class="dashed_underline">#hom:</a></abbr>&nbsp;{{variant_annotations['gnomad_hom'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">#hom:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="li-element">
+                {% if 'gnomad_het' in variant_annotations %}
+                    <abbr title="{{variant_annotations['gnomad_het'][0]}}"><a class="dashed_underline">#het:</a></abbr>&nbsp;{{variant_annotations['gnomad_het'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">#het:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="li-element">
+                {% if 'gnomad_hemi' in variant_annotations %}
+                    <abbr title="{{variant_annotations['gnomad_hemi'][0]}}"><a class="dashed_underline">#hemi:</a></abbr>&nbsp;{{variant_annotations['gnomad_hemi'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">#hemi:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="li-label"><abbr title="Number of individuals from the FLOSSIES database">FLOSSIES</abbr></div>
+        <div class="li-info">
+            <div class="li-element">
+                {% if 'flossies_num_afr' in variant_annotations %}
+                    <abbr title="{{variant_annotations['flossies_num_afr'][0]}}"><a class="dashed_underline">#afr:</a></abbr>&nbsp;{{variant_annotations['flossies_num_afr'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">#afr:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="li-element">
+                {% if 'flossies_num_eur' in variant_annotations %}
+                    <abbr title="{{variant_annotations['flossies_num_eur'][0]}}"><a class="dashed_underline">#eur:</a></abbr>&nbsp;{{variant_annotations['flossies_num_eur'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">#eur:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="li-label"><abbr title="Information from the Cancerhotspots website">Cancerhotspots</abbr></div>
+        <div class="li-info">
+            <div class="li-element">
+                {% if 'cancerhotspots_cancertypes' in variant_annotations %}
+                    <abbr title="{{variant_annotations['cancerhotspots_cancertypes'][0]}}"><a class="dashed_underline">hotspots:</a></abbr>&nbsp;{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">hotspots:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="li-info">
+            <div class="li-element">
+                {% if 'cancerhotspots_ac' in variant_annotations %}
+                    <abbr title="{{variant_annotations['cancerhotspots_ac'][0]}}"><a class="dashed_underline">AC:</a></abbr>&nbsp;{{variant_annotations['cancerhotspots_ac'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">AC:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div class="li-element">
+                {% if 'cancerhotspots_af' in variant_annotations %}
+                    <abbr title="{{variant_annotations['cancerhotspots_af'][0]}}"><a class="dashed_underline">AF:</a></abbr>&nbsp;{{variant_annotations['cancerhotspots_af'][4]}}
+                {% else %}
+                    <abbr title="No information available"><a class="dashed_underline">AF:</a></abbr>&nbsp;-
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+        </div>
+    </div>
+    <br>
+    <h4>Previous Classifications</h4>
+    {% if 'brca_exchange_clinical_significance' in variant_annotations %}
+        <div class="row">
+            <div class="li-label"><abbr title="BRCA exchange classification">BRCA&nbsp;exchange</abbr></div>
+            <div class="li-info">{{variant_annotations['brca_exchange_clinical_significance'][4]}}</div>
+        </div>
+    {% endif %}
+    {% if 'arup_classification' in variant_annotations %}
+        <div class="row">
+            <div class="li-label"><abbr title="ARUP BRCA classification">ARUP&nbsp;BRCA</abbr></div>
+            <div class="li-info">{{variant_annotations['arup_classification'][4]}}</div>
+        </div>
+    {% endif %}
 </div>
+
+<script src="../static/js/variant.js"></script>
 
 {% endblock %}
