@@ -37,16 +37,8 @@
             <!--<td>{{ loop.index + (page - 1) * per_page }}</td>-->
             <td>{{ variant[1] }}</td>
             <td>{{ variant[2] }}</td>
-            {% if variant[3]|length > 30 %}
-              <td class="longTextCss"><abbr title="{{ variant[3] }}">{{ variant[3] }}</abbr></td>
-            {% else %}
-              <td class="longTextCss">{{ variant[3] }}</td>
-            {% endif %}
-            {% if variant[4]|length > 30 %}
-              <td class="longTextCss"><abbr title="{{ variant[4] }}">{{ variant[4] }}</abbr></td>
-            {% else %}
-              <td class="longTextCss">{{ variant[4] }}</td>
-            {% endif %}
+            <td class="longTextCss"><abbr title="{{ variant[3] }}">{{ variant[3] }}</abbr></td>
+            <td class="longTextCss"><abbr title="{{ variant[4] }}">{{ variant[4] }}</abbr></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -55,6 +47,6 @@
     {{ pagination.links }}
   </div>
 
-<script src="static/js/browse.js"></script>
+<script src="../static/js/browse.js"></script>
 
 {% endblock %}

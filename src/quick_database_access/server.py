@@ -89,9 +89,14 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     if variant_id is None:
         variant_id = get_variant_id(conn, chr, pos, ref, alt)
 
-    variant_oi = get_variant(conn, variant_id)
+    variant_oi = get_variant(conn, variant_id) # this redirects to 404 page if the variant was not found
+    variant_annotations = conn.get_recent_annotations(variant_id)
+    variant_annot_dict = {}
+    for annot in variant_annotations:
+        variant_annot_dict[annot[0]] = annot[1:len(annot)]
+    print(variant_annot_dict)
     conn.close()
-    return render_template('variant.html', variant=variant_oi)
+    return render_template('variant.html', variant=variant_oi, variant_annotations=variant_annot_dict)
 
 
 
