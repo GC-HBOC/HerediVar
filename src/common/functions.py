@@ -3,27 +3,31 @@ import collections
 import datetime
 import re
 import sys
+import subprocess
+import common.paths as paths
 
 def basedir():
     return os.getcwd()
 
 
 # converts one line from the variant table to a vcf record
-def variant_to_vcf(variant, path):
+def variant_to_vcf(chr, pos, ref, alt, path):
     #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
-    vcf_record = variant[1][3:] + "\t" + \
-                str(variant[2]) + "\t" + \
-                str(variant[0]) + "\t" + \
-                variant[3] + "\t" + \
-                variant[4] + "\t" + \
-                "." + "\t" + \
-                "." + "\t" + \
-                "."
+    chr_num = validate_chr(chr)
+    if not chr_num:
+        eprint("ERROR: not a valid chr number: " + str(chr) + " unable to write vcf.")
+        return False
+    if int(pos) < 0:
+        eprint("ERROR: only non negative position numbers are allowed (" + str(pos) + ")")
+        return False
+
+    vcf_record = ["chr" + str(chr_num), str(pos), '.', str(ref), str(alt), '.', '.', '.']
+    
     file = open(path, "w")
-    file.write("##fileformat=VCFv4.2\n")
-    file.write("#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO\n")
-    file.write(vcf_record)
+    write_vcf_header([], output_func = file.write, tail = "\n")
+    file.write('\t'.join(vcf_record) + '\n')
     file.close()
+    return True
 
 def read_vcf_info(path):
     file = open(path, "r")
@@ -55,13 +59,13 @@ def read_vcf_variant(path):
     return all_records
 
 
-def write_vcf_header(info_columns):
-    print("##fileformat=VCFv4.2")
-    print("##fileDate=" + datetime.datetime.today().strftime('%Y-%m-%d'))
-    print("##reference=GRCh38")
+def write_vcf_header(info_columns, output_func = print, tail = ""):
+    output_func("##fileformat=VCFv4.2" + tail)
+    output_func("##fileDate=" + datetime.datetime.today().strftime('%Y-%m-%d') + tail)
+    output_func("##reference=GRCh38" + tail)
     for info_column in info_columns:
-        print(info_column.strip())
-    print("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO")
+        output_func(info_column.strip() + tail)
+    output_func("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO" + tail)
 
 
 def trim_chr(chr):
@@ -113,3 +117,24 @@ def is_dna(strg, search=re.compile(r'[^ACGTacgt-]').search):
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
+def convert_none_infinite(x):
+    if x is None:
+        return -float('inf')
+    else:
+        return x
+
+def check_vcf(path):
+    command = [paths.ngs_bits_path + "VcfCheck",
+               "-in", path, "-lines", "0", "-ref", paths.ref_genome_path]
+    completed_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    std_out, std_err = completed_process.communicate()#[1].strip().decode("utf-8") # catch errors and warnings and convert to str
+    #vcf_errors = completed_process.communicate()[0].strip().decode("utf-8") # catch errors and warnings and convert to str
+    std_err = std_err.strip().decode("utf-8")
+    vcf_errors = std_out.strip().decode("utf-8")
+    err_msg = ""
+    if completed_process.returncode != 0:
+        err_msg = "CheckVCF runtime ERROR: " + std_err + " Code: " + str(completed_process.returncode)
+    elif len(std_err):
+        err_msg = "CheckVCF runtime WARNING: " + std_err
+    return completed_process.returncode, err_msg, vcf_errors

@@ -5,6 +5,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 import mysql.connector
 from mysql.connector import Error
 import common.functions as functions
+from operator import itemgetter
 
 
 def get_db_connection():
@@ -337,6 +338,51 @@ class Connection:
             num_variants = num_variants[0]
         return result, num_variants
     
+    def get_clinvar_variant_annotation(self, variant_id):
+        command = "SELECT * FROM clinvar_variant_annotation WHERE variant_id = " + enquote(variant_id)
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        if len(result) > 1:
+            functions.eprint("WARNING: more than one clinvar annotation for variant " + str(variant_id) + " in: get_clinvar_variant_annotation, defaulting to the first one")
+        if len(result) == 0:
+            return None
+        result = result[0]
+        return result
+    
+    def get_clinvar_submissions(self, clinvar_variant_annotation_id):
+        command = "SELECT * FROM clinvar_submission WHERE clinvar_variant_annotation_id = " + enquote(clinvar_variant_annotation_id)
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        for i in range(len(result)):
+            processed_entry = list(result[i])
+            processed_entry[5] = processed_entry[5].split(':')
+            result[i] = processed_entry
+
+        return result
+    
+    def get_variant_consequences(self, variant_id):
+        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,transcript.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags FROM transcript RIGHT JOIN ( \
+	                    SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,gene_id,exon_nr,intron_nr,source,pfam_accession,pfam_description FROM gene RIGHT JOIN ( \
+		                    SELECT * FROM variant_consequence WHERE variant_id=%d \
+	                    ) y \
+	                    ON gene.id = y.gene_id \
+                    ) x \
+                    ON transcript.name = x.transcript_name;" % (variant_id)
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+
+        result = sorted(result, key=lambda x: functions.convert_none_infinite(x[12]), reverse=True) # sort table by transcript length
+        result = sorted(result, key=lambda x: functions.convert_none_infinite(x[17]), reverse=True) # sort table by number of flags
+
+        return result
+
+    def get_variant_literature(self, variant_id, sort_year = True):
+        command = "SELECT * FROM variant_literature WHERE variant_id = " + enquote(variant_id)
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        if sort_year:
+            result = sorted(result, key=lambda x: functions.convert_none_infinite(x[6]), reverse=True)    
+        return result
 
 
 

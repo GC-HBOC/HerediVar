@@ -5,32 +5,48 @@
 <br>
 <h1>{% block title %} Variant Display {% endblock %}</h1>
 <br>
-<h4>Variant Identification</h4>
-<!--summary panel-->
-<div class="summary-panel">
-    <div class="row">
-        <div class="li-label"><abbr title="Variant in variant call format (FORMAT: chromosome -> position in reference genome (GRCh38) -> reference allele -> alternative allele)">VCF</abbr></div>
-        <div class="keep-spaces li-info">{{ variant[1] }}    {{ variant[2] }}     {{ variant[3] }}     {{ variant[4] }}</div>
-    </div>
-    <div class="row">
-        <div class="li-label"><abbr title="RSID from dbsnp">RSID</abbr></div>
-        <div class="li-info">
-            {% if 'rsid' in variant_annotations %}
-                {{variant_annotations['rsid'][4]}}
-            {% else %}
-                -
-            {% endif %}
+
+
+<div class="row" data-masonry='{"percentPosition": true }'>
+    <!--variant identification-->
+    <div class="col-sm-6 col-lg-2 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Variant Identification</h4>
+                <p class="card-text">
+                    <div class="row align-items-start">
+                        <div class="col li-label"><abbr title="Variant in variant call format (FORMAT: chromosome -> position in reference genome (GRCh38) -> reference allele -> alternative allele)">VCF</abbr></div>
+                        <div class="col li-info">{{ variant[1] }}&nbsp;&nbsp; {{ variant[2] }}&nbsp;&nbsp; {{ variant[3] }}&nbsp;&nbsp; {{ variant[4] }}</div>
+                    </div>
+                    <div class="row align-items-start">
+                        <div class="col li-label"><abbr title="RSID from dbsnp">RSID</abbr></div>
+                        <div class="col li-info">
+                            {% if 'rsid' in variant_annotations %}
+                                {{variant_annotations['rsid'][4]}}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row align-items-start">
+                        <div class="col li-label"><abbr title="hgvs notations for this variant">HGVS</abbr></div>
+                        <div class="col li-info">TODO</div>
+                    </div>
+                </p>
+            </div>
         </div>
     </div>
-    <div class="row">
-        <div class="li-label"><abbr title="hgvs notations for this variant">HGVS</abbr></div>
-        <div class="li-info">TODO</div>
-    </div>
-    <br>
-    <h4>Variant Information</h4>
-    <div class="row">
-        <div class="li-label"><abbr title="Pathogeneity and other scores">Change&nbsp;tolerance</abbr></div>
-        <div class="li-info">
+
+    <!--variant information-->
+    <div class="col-lg-3 col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Variant Information</h4>
+                <p class="card-text">
+                    
+    <div class="row align-items-start">
+        <div class="col-sm-4 li-label"><abbr title="Pathogeneity and other scores">Change&nbsp;tolerance</abbr></div>
+        <div class="col li-info">
             <div class="li-element">
                 {% if 'cadd_scaled' in variant_annotations %}
                     <abbr title="{{variant_annotations['cadd_scaled'][0]}}"><a class="dashed_underline">CADD:</a></abbr>&nbsp;{{variant_annotations['cadd_scaled'][4]}}
@@ -57,9 +73,9 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="li-label"><abbr title="Pathogeneity and other scores">Splicing</abbr></div>
-        <div class="li-info">
+    <div class="row align-items-start">
+        <div class="col-sm-4 li-label"><abbr title="Pathogeneity and other scores">Splicing</abbr></div>
+        <div class="col li-info">
             <div class="li-element">
                 {% if 'spliceai_max_delta' in variant_annotations %}
                     <abbr title="{{variant_annotations['spliceai_max_delta'][0]}}"><a class="dashed_underline">spliceAI max:</a></abbr>&nbsp;{{variant_annotations['spliceai_max_delta'][4]}}
@@ -76,11 +92,6 @@
                 {% endif %}
                 &nbsp;&nbsp;&nbsp;&nbsp;
             </div>
-        </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="li-info">
             <div class="li-element">
                 {% if 'maxentscan_ref' in variant_annotations %}
                     <abbr title="{{variant_annotations['maxentscan_ref'][0]}}"><a class="dashed_underline">maxentscan ref:</a></abbr>&nbsp;{{variant_annotations['maxentscan_ref'][4]}}
@@ -99,9 +110,9 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="li-label"><abbr title="gnomAD scores">gnomAD</abbr></div>
-        <div class="li-info">
+    <div class="row align-items-start">
+        <div class="col-sm-4 li-label"><abbr title="gnomAD scores">gnomAD</abbr></div>
+        <div class="col li-info">
             <div class="li-element">
                 {% if 'gnomad_ac' in variant_annotations %}
                     <abbr title="{{variant_annotations['gnomad_ac'][0]}}"><a class="dashed_underline">AC:</a></abbr>&nbsp;{{variant_annotations['gnomad_ac'][4]}}
@@ -152,9 +163,9 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="li-label"><abbr title="Number of individuals from the FLOSSIES database">FLOSSIES</abbr></div>
-        <div class="li-info">
+    <div class="row align-items-start">
+        <div class="col-sm-4 li-label"><abbr title="Number of individuals from the FLOSSIES database">FLOSSIES</abbr></div>
+        <div class="col li-info">
             <div class="li-element">
                 {% if 'flossies_num_afr' in variant_annotations %}
                     <abbr title="{{variant_annotations['flossies_num_afr'][0]}}"><a class="dashed_underline">#afr:</a></abbr>&nbsp;{{variant_annotations['flossies_num_afr'][4]}}
@@ -173,9 +184,9 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="li-label"><abbr title="Information from the Cancerhotspots website">Cancerhotspots</abbr></div>
-        <div class="li-info">
+    <div class="row align-items-start">
+        <div class="col-sm-4 li-label"><abbr title="Information from the Cancerhotspots website">Cancerhotspots</abbr></div>
+        <div class="col li-info">
             <div class="li-element">
                 {% if 'cancerhotspots_cancertypes' in variant_annotations %}
                     <abbr title="{{variant_annotations['cancerhotspots_cancertypes'][0]}}"><a class="dashed_underline">hotspots:</a></abbr>&nbsp;{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}
@@ -184,10 +195,6 @@
                 {% endif %}
                 &nbsp;&nbsp;&nbsp;&nbsp;
             </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="li-info">
             <div class="li-element">
                 {% if 'cancerhotspots_ac' in variant_annotations %}
                     <abbr title="{{variant_annotations['cancerhotspots_ac'][0]}}"><a class="dashed_underline">AC:</a></abbr>&nbsp;{{variant_annotations['cancerhotspots_ac'][4]}}
@@ -206,22 +213,236 @@
             </div>
         </div>
     </div>
-    <br>
-    <h4>Previous Classifications</h4>
-    {% if 'brca_exchange_clinical_significance' in variant_annotations %}
-        <div class="row">
-            <div class="li-label"><abbr title="BRCA exchange classification">BRCA&nbsp;exchange</abbr></div>
-            <div class="li-info">{{variant_annotations['brca_exchange_clinical_significance'][4]}}</div>
+    
+                </p>
+            </div>
         </div>
-    {% endif %}
-    {% if 'arup_classification' in variant_annotations %}
-        <div class="row">
-            <div class="li-label"><abbr title="ARUP BRCA classification">ARUP&nbsp;BRCA</abbr></div>
-            <div class="li-info">{{variant_annotations['arup_classification'][4]}}</div>
+    </div>
+
+    <!--previous classifications-->
+    <div class="col-sm-6 col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Previous Classifications</h4>
+                <p class="card-text">
+                {% if 'brca_exchange_clinical_significance' in variant_annotations %}
+                    <div class="row">
+                        <div class="col-sm-5 li-label"><abbr title="BRCA exchange classification">BRCA&nbsp;exchange</abbr></div>
+                        <div class="col li-info">{{variant_annotations['brca_exchange_clinical_significance'][4]}}</div>
+                    </div>
+                {% endif %}
+                
+                {% if 'arup_classification' in variant_annotations %}
+                    <div class="row">
+                        <div class="col-sm-5 li-label"><abbr title="ARUP BRCA classification">ARUP&nbsp;BRCA</abbr></div>
+                        <div class="col li-info">{{variant_annotations['arup_classification'][4]}}</div>
+                    </div>
+                {% endif %}
+                
+                {% if 'clinvar_variant_annotation' in variant_annotations %}
+                <div class="row">
+                    <div class="col-sm-5 li-label"><abbr title="ClinVar summary">ClinVar</abbr></div>
+                    <div class="col li-info">
+                        <div class="li-element">
+                                <abbr title="The review status from ClinVar"><a class="dashed_underline">review status:</a></abbr>&nbsp;{{variant_annotations['clinvar_variant_annotation'][4]}}
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                        </div>
+                        <br>
+                        <div class="li-element">
+                                <abbr title="A summary of the clinvar interpretations. The numbers in brackets display the number of ClinVar submissions reporting the specific type of interpretation."><a class="dashed_underline">interpretations:</a></abbr>&nbsp;{{variant_annotations['clinvar_variant_annotation'][3]}}
+                            &nbsp;&nbsp;&nbsp;&nbsp;
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                </p>
+            </div>
         </div>
-    {% endif %}
+    </div>
+
+<!-- clinvar submission table -->
+{% if 'clinvar_variant_annotation' in variant_annotations and clinvar_submissions|length > 0 %}
+<div class="col-lg-5 col-lg-6 mb-4">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Clinvar Submissions</h4>
+            <p class="card-text">
+                <div class="table-responsive">
+                    <table class="table table-hover scroll">
+                        <thead>
+                            <tr>
+                                <th class="sortable">interpretation</th>
+                                <th class="sortable">last evaluated</th>
+                                <th class="sortable">review status</th>
+                                <th class="sortable">submission condition</th>
+                                <th class="sortable">submitter</th>
+                                <th>comment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for submission in clinvar_submissions %}
+                            <tr>
+                                <td>{{ submission[2] }}</td>
+                                <td>{{ submission[3] }}</td>
+                                <td>{{ submission[4] }}</td>
+                                <td>
+                                    <a class="external_link" href="https://www.ncbi.nlm.nih.gov/medgen/{{submission[5][0]}}">
+                                        {{ submission[5][1] }}<nobr>&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+                                            <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                                            <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                                        </svg></nobr>
+                                    </a>
+                                </td>
+                                <td>{{ submission[6] }}</td>
+                                <td style="max-width:500px"><abbr title="{{ submission[7] }}"><div class="Nellipsis" style="max-width:500px">{{ submission[7] }}</div> </abbr></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- variant consequence table -->
+{% if variant_consequences|length > 0 %}
+<div class="col-lg-5 col-lg-6 mb-4">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Variant Consequences</h4>
+            <p class="card-text">
+                This table is sorted by length of the transcripts (ascending) and number of flags (ascending)
+                <div class="table-responsive">
+                    <table class="table table-hover scroll">
+                        <thead>
+                            <tr>
+                                <th>Transcript Name</th>
+                                <th>HGVS_C</th>
+                                <th>HGVS_P</th>
+                                <th>Consequence</th>
+                                <th>Impact</th>
+                                <th>Exon Nr.</th>
+                                <th>Intron Nr.</th>
+                                <th>Gene Symbol</th>
+                                <th>Protein Domain</th>
+                                <th>Flags</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for consequence in variant_consequences %}
+                            <tr>
+                                <td style="white-space:nowrap;">{{ consequence[0] }}</td>
+                                <td style="white-space:nowrap;">{{ consequence[1] }}</td>
+                                <td style="white-space:nowrap;">{{ consequence[2] }}</td>
+                                <td>{{ consequence[3] }}</td>
+                                <td>{{ consequence[4] }}</td>
+                                <td>{{ consequence[5] }}</td>
+                                <td>{{ consequence[6] }}</td>
+                                <td>{{ consequence[7] }}</td>
+                                {% if consequence[11] is not none %}
+                                <td>
+                                    <a class="external_link" href="https://pfam.xfam.org/family/{{ consequence[10] }}">
+                                        {{ consequence[11] }}<nobr>&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+                                            <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                                            <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                                        </svg></nobr>
+                                    </a>
+                                </td>
+                                {% else %}
+                                <td>{{ consequence[11] }}</td>
+                                {% endif %}
+                                <td>
+                                    {% if consequence[13] %}
+                                        <span class="badge bg-secondary"><abbr title="gencodetest">GENCODE basic</abbr></span>
+                                    {% endif %}
+                                    {% if consequence[14] %}
+                                        <span class="badge bg-secondary"><abbr title="MANE">MANE select</abbr></span>
+                                    {% endif %}
+                                    {% if consequence[15] %}
+                                        <span class="badge bg-secondary"><abbr title="">MANE clin</abbr></span>
+                                    {% endif %}
+                                    {% if consequence[16] %}
+                                        <span class="badge bg-secondary"><abbr title="">ensembl canonical</abbr></span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- literature table -->
+{% if literature|length > 0 %}
+<div class="col-lg-5 col-lg-6 mb-4">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Literature</h4>
+            <p class="card-text">
+                <div class="table-responsive">
+                    <table class="table table-hover scroll">
+                        <thead>
+                            <tr>
+                                <th class="sortable">Year</th>
+                                <th class="sortable">Title</th>
+                                <th class="sortable">Authors</th>
+                                <th class="sortable">Journal / Publisher</th>
+                                <th>Link</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for paper in literature %}
+                            <tr>
+                                <td>{{paper[6]}}</td>
+                                <td>{{paper[3]}}</td>
+                                <td style="max-width:500px"><abbr title="{{ paper[4] }}"><div class="Nellipsis" style="max-width:500px">{{ paper[4] }}</div> </abbr></td>
+                                <td>{{paper[5]}}</td>
+                                <td style="text-align:center;">
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/{{ paper[2] }}/">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+                                            <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                                            <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                                        </svg>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+    
 </div>
 
+
+
+<!--
+    - variant consequences nach preferred transcripts sortieren und badges (mane select, ....) anzeigen
+    gene page
+    - genids durch gennamen ersetzen in variant consequence table
+    - nobreak für bestimmte spalten
+    ~ minimale seitenbreite angeben
+    - beim variant import vcf check laufen lassen
+    variant import auch von hgvs möglich machen
+    external links karte einfügen
+    abbr beschreibungen der flags einfügen
+    variant consequence table nach refseq / ensembl filtern (mit toggle)
+    ? refseq namen zu enst umwandeln
+    add positive feedback if variant was imported successfully
+-->
+
+
 <script src="../static/js/variant.js"></script>
+<script src="../static/js/sortTable.js"></script>
 
 {% endblock %}

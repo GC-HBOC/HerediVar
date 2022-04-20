@@ -83,22 +83,6 @@ def annotate_from_vcf(config_file, input_vcf, output_vcf):
     return completed_process.returncode, err_msg
 
 
-def check_vcf(path):
-    command = [paths.ngs_bits_path + "VcfCheck",
-               "-in", path, "-lines", "0", "-ref", paths.ref_genome_path]
-    completed_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    std_out, std_err = completed_process.communicate()#[1].strip().decode("utf-8") # catch errors and warnings and convert to str
-    #vcf_errors = completed_process.communicate()[0].strip().decode("utf-8") # catch errors and warnings and convert to str
-    std_err = std_err.strip().decode("utf-8")
-    vcf_errors = std_out.strip().decode("utf-8")
-    err_msg = ""
-    if completed_process.returncode != 0:
-        err_msg = "CheckVCF runtime ERROR: " + std_err + " Code: " + str(completed_process.returncode)
-    elif len(std_err):
-        err_msg = "CheckVCF runtime WARNING: " + std_err
-    return completed_process.returncode, err_msg, vcf_errors
-
-
 def annotate_missing_spliceai(input_vcf_path, output_vcf_path):
     input_file = open(input_vcf_path, 'r')
     temp_path = tempfile.gettempdir() + "/spliceai_temp.vcf"
@@ -196,10 +180,10 @@ if __name__ == '__main__':
 
     for request_id, variant_id in pending_requests:
         err_msgs = ""
-        one_variant = conn.get_one_variant(variant_id)
+        one_variant = conn.get_one_variant(variant_id) # 0id,1chr,2pos,3ref,4alt
         print("processing request " + str(one_variant[0]) + " annotating variant: " + " ".join([str(x) for x in one_variant[1:5]]))
 
-        functions.variant_to_vcf(one_variant, one_variant_path)
+        functions.variant_to_vcf(one_variant[1], one_variant[2], one_variant[3], one_variant[4], one_variant_path)
         variant_annotated_path = temp_file_path + "/variant_annotated.vcf"
         
         ## VEP
@@ -271,7 +255,7 @@ if __name__ == '__main__':
         err_msgs = collect_error_msgs(err_msgs, err_msg_vcf_anno)
 
         print("checking validity of annotated vcf file...")
-        execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = check_vcf(one_variant_path)
+        execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(one_variant_path)
         print(vcf_errors)
         if execution_code_vcfcheck != 0:
             status = "error"
@@ -321,25 +305,26 @@ if __name__ == '__main__':
                         hgvs_p = vep_entry[2]
                         hgvs_p = hgvs_p[hgvs_p.find(':')+1:] # remove transcript name
                         transcript_name = vep_entry[0]
-                        transcript_name = transcript_name[:transcript_name.find('.')] # remove transcript version
+                        if '.' in transcript_name:
+                            transcript_name = transcript_name[:transcript_name.find('.')] # remove transcript version if it is present
                         domains = vep_entry[9]
                         pfam_acc = ''
                         if domains.count("Pfam:") >= 1:
                             pfam_acc = re.search('Pfam:(PF\d+)[&|]', domains).group(1) # grab only pfam accession id from all protein domains which were returned
                             if domains.count("Pfam:") > 1:
                                 print("WARNING: there were multiple PFAM domain ids in: " + str(domains) + ". defaulting to the first one.")
-                        #conn.insert_variant_consequence(variant_id, 
-                        #                                transcript_name, 
-                        #                                hgvs_c, 
-                        #                                hgvs_p, 
-                        #                                vep_entry[3].replace('_', ' ').replace('&', ' & '), 
-                        #                                vep_entry[4], 
-                        #                                exon_nr, 
-                        #                                intron_nr, 
-                        #                                vep_entry[7],
-                        #                                vep_entry[8],
-                        #                                consequence_source,
-                        #                                pfam_acc)
+                        conn.insert_variant_consequence(variant_id, 
+                                                        transcript_name, 
+                                                        hgvs_c, 
+                                                        hgvs_p, 
+                                                        vep_entry[3].replace('_', ' ').replace('&', ' & '), 
+                                                        vep_entry[4], 
+                                                        exon_nr, 
+                                                        intron_nr, 
+                                                        vep_entry[7],
+                                                        vep_entry[8],
+                                                        consequence_source,
+                                                        pfam_acc)
                         num_vep_basic_entries = 10
                         if not transcript_independent_saved and len(vep_entry) > num_vep_basic_entries:
                             transcript_independent_saved = True
@@ -431,7 +416,7 @@ if __name__ == '__main__':
                 else:
                     for submission in clinvar_submissions:
                         #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|5SubmittedPhenotypeInfo|7Submitter|8comment
-                        submissions = submission.replace('\\', ',').replace('_', ' ').split('|')
+                        submissions = submission.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').split('|')
                         #conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
         
 

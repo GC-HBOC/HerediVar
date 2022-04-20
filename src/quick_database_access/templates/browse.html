@@ -2,14 +2,18 @@
 
 
 {% block content %}
-<h1> {% block title %} Browse Variants {% endblock %} </h1>
 
 <div class="container">
-  <div id="wrapper">
-    <div style="float:left">{{ pagination.links }}</div>
 
-  <form style="float:right" method="post">
-     <div class="input-group w50">
+  
+<h1> {% block title %} Browse Variants {% endblock %} </h1>
+
+
+<div id="tabnav-head" class="row">
+  <div class="col">{{ pagination.links }}</div>
+
+  <form class="col-sm-3" style="float:right" method="post">
+     <div class="input-group">
         <button class="input-group-text"> 
           <svg class="bi bi-search" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
             <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
@@ -17,35 +21,41 @@
         </button>
         <input class="form-control" type="text" placeholder="Quicksearch..." name="quicksearch">
       </div>
-    </div>
   </form>
+</div>
 
 
-    <div class="table-responsive">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th style="width: 10%">chr</th>
-            <th style="width: 15%">pos</th>
-            <th style="width: 30%">ref</th>
-            <th style="width: 30%">alt</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for variant in variants %}
-          <tr data-href="{{ url_for('variant', variant_id=variant[0]) }}" class="clickable">
-            <!--<td>{{ loop.index + (page - 1) * per_page }}</td>-->
-            <td>{{ variant[1] }}</td>
-            <td>{{ variant[2] }}</td>
-            <td class="longTextCss"><abbr title="{{ variant[3] }}">{{ variant[3] }}</abbr></td>
-            <td class="longTextCss"><abbr title="{{ variant[4] }}">{{ variant[4] }}</abbr></td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {{ pagination.links }}
-  </div>
+<div class="table-responsive" style="float:below">
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th style="width: 10%">CHR</th>
+        <th style="width: 15%">POS</th>
+        <th style="width: 30%">REF</th>
+        <th style="width: 30%">ALT</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for variant in variants %}
+      <tr data-href="{{ url_for('variant', variant_id=variant[0]) }}" class="clickable" style="line-height: 28px;">
+        <!--<td>{{ loop.index + (page - 1) * per_page }}</td>-->
+        <td>{{ variant[1] }}</td>
+        <td>{{ variant[2] }}</td>
+        <td class="longTextCss" style="white-space: nowrap;"><abbr title="{{ variant[3] }}">{{ variant[3] }}</abbr></td>
+        <td class="longTextCss" style="white-space: nowrap;"><abbr title="{{ variant[4] }}">{{ variant[4] }}</abbr></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+
+<div id="tabnav-bottom">
+  <div style="float:left">{{ pagination.links }}</div>
+</div>
+
+</div>
+
 
 <script src="../static/js/browse.js"></script>
 
