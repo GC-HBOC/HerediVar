@@ -6,10 +6,12 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from common.db_IO import Connection
 from flask_paginate import Pagination
 from werkzeug.exceptions import abort
+import common.functions as functions
+import tempfile
 
 app = Flask(__name__)
 
-#app.config['SECRET_KEY'] = '8pfucoisaugfqw94hoaiddrvhe6efc5b456vvfl09'
+app.config['SECRET_KEY'] = '8pfucoisaugfqw94hoaiddrvhe6efc5b456vvfl09'
 
 #app.config["MYSQL_USER"] = "ahdoebm1"
 #app.config["MYSQL_PASSWORD"] = "20220303"
@@ -59,10 +61,18 @@ def create():
             flash('All fields are required!')
         else:
             # VALIDATE REQUEST!!!!
-            conn = Connection()
-            conn.insert_variant(chr, pos, ref, alt)
-            conn.close()
-            return redirect(url_for('create'))
+            tmp_vcf_path = tempfile.gettempdir() + "/new_variant.vcf"
+            functions.variant_to_vcf(chr, pos, ref, alt, tmp_vcf_path)
+            execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(tmp_vcf_path)
+            if execution_code_vcfcheck != 0:
+                flash(err_msg_vcfcheck)
+            elif vcf_errors.startswith("ERROR:"):
+                flash(vcf_errors)
+            else:
+                conn = Connection()
+                conn.insert_variant(chr, pos, ref, alt)
+                conn.close()
+                return redirect(url_for('create'))
 
     return render_template('create.html', chrs=chrs)
 
@@ -77,7 +87,7 @@ def browse():
     conn = Connection()
     variants, total = conn.get_paginated_variants(page, per_page, search_value)
     conn.close()
-    pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap4')
+    pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
     return render_template('browse.html', variants=variants, page=page, per_page=per_page, pagination=pagination)
 
 
@@ -94,10 +104,20 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     variant_annot_dict = {}
     for annot in variant_annotations:
         variant_annot_dict[annot[0]] = annot[1:len(annot)]
-    print(variant_annot_dict)
-    conn.close()
-    return render_template('variant.html', variant=variant_oi, variant_annotations=variant_annot_dict)
 
+    clinvar_variant_annotation = conn.get_clinvar_variant_annotation(variant_id)
+    clinvar_submissions = []
+    if clinvar_variant_annotation is not None:
+        variant_annot_dict["clinvar_variant_annotation"] = clinvar_variant_annotation
+        clinvar_variant_annotation_id = clinvar_variant_annotation[0]
+        clinvar_submissions = conn.get_clinvar_submissions(clinvar_variant_annotation_id)
+    
+    variant_consequences = conn.get_variant_consequences(variant_id)
+
+    literature = conn.get_variant_literature(variant_id)
+
+    conn.close()
+    return render_template('variant.html', variant=variant_oi, variant_annotations=variant_annot_dict, clinvar_submissions=clinvar_submissions, variant_consequences=variant_consequences, literature=literature)
 
 
 if __name__ == '__main__':

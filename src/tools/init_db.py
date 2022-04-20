@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
 
 
-    '''
+    
     ## init transcripts table
     # format info:
     #The 'type' of gene features in gff3 is:
@@ -71,12 +71,16 @@ if __name__ == '__main__':
         if line[2] == 'transcript' and 'MANE_Select' in info:
             enst = re.search('ID=[^;]*', info)
             enst = enst.group(0)
-            mane_select_transcripts.append(enst[3:enst.find('.')])
+            if '.' in enst:
+                enst = enst[3:enst.find('.')]
+            mane_select_transcripts.append(enst)
         
         if line[2] == 'transcript' and 'MANE_Plus_Clinical' in info:
             enst = re.search('ID=[^;]*', info)
             enst = enst.group(0)
-            mane_plus_clinical_transcripts.append(enst[3:enst.find('.')])
+            if '.' in enst:
+                enst = enst[3:enst.find('.')]
+            mane_plus_clinical_transcripts.append(enst)
 
     print("parsing ensembl canonical transcripts...")
     ensembl_canonical_file = open(paths.ensembl_canonical_path, 'r')
@@ -90,9 +94,10 @@ if __name__ == '__main__':
 
         if line[2] == 'Ensembl Canonical':
             enst = line[1]
-            ensembl_canonical_transcripts.append(enst[:enst.find('.')])
+            if '.' in enst:
+                enst = enst[:enst.find('.')]
+            ensembl_canonical_transcripts.append(enst)
             
-
     ensembl_transcript = open(paths.ensembl_transcript_path, 'r')
     #ensembl_transcript = open("/mnt/users/ahdoebm1/HerediVar/data/dbs/ensembl/test.gff3")
     print("initializing transcripts table...")
@@ -155,6 +160,8 @@ if __name__ == '__main__':
 
             for info_entry in info:
                 if info_entry.startswith('ID='):
+                    if '.' in info_entry: # remove version numbers and preceding transcript:
+                        info_entry = info_entry[:info_entry.find('.')]
                     transcript_name = info_entry[info_entry.find(':')+1:]
                 if info_entry.startswith('biotype='):
                     transcript_biotype = info_entry[8:]
@@ -198,8 +205,9 @@ if __name__ == '__main__':
     
 
     ensembl_transcript.close()
-    '''
     
+    
+    '''
     ## init pfam auxiliaries tables (pfam_id_mapping and pfam_legacy)
     print("initializing PFAM id mapping table...")
     pfam_id_mapping_file = open(paths.pfam_id_mapping_path, 'r')
@@ -228,6 +236,6 @@ if __name__ == '__main__':
     
     # init annotation_type table
     #conn.insert_annotation_type("gnomad_af", "Frequency of the alternate allele in samples", "float", "v3.1.2_GRCh38", "2021-10-22") 
-
+    '''
 
     conn.close()
