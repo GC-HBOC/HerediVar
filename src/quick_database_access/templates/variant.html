@@ -283,7 +283,7 @@
                             {% for submission in clinvar_submissions %}
                             <tr>
                                 <td>{{ submission[2] }}</td>
-                                <td>{{ submission[3] }}</td>
+                                <td style="white-space:nowrap;">{{ submission[3] }}</td>
                                 <td>{{ submission[4] }}</td>
                                 <td>
                                     <a class="external_link" href="https://www.ncbi.nlm.nih.gov/medgen/{{submission[5][0]}}">
@@ -307,70 +307,97 @@
 {% endif %}
 
 <!-- variant consequence table -->
+<!-- 0transcript_name,1hgvs_c,2hgvs_p,3consequence,4impact,5exon_nr,6intron_nr,7symbol,8transcript.gene_id,9source,10pfam_accession,11pfam_description,12length,13is_gencode_basic,14is_mane_select,15is_mane_plus_clinical,16is_ensembl_canonical,17total_flag -->
 {% if variant_consequences|length > 0 %}
 <div class="col-lg-5 col-lg-6 mb-4">
     <div class="card">
         <div class="card-body">
             <h4 class="card-title">Variant Consequences</h4>
             <p class="card-text">
-                This table is sorted by length of the transcripts (ascending) and number of flags (ascending)
-                <div class="table-responsive">
-                    <table class="table table-hover scroll">
-                        <thead>
-                            <tr>
-                                <th>Transcript Name</th>
-                                <th>HGVS_C</th>
-                                <th>HGVS_P</th>
-                                <th>Consequence</th>
-                                <th>Impact</th>
-                                <th>Exon Nr.</th>
-                                <th>Intron Nr.</th>
-                                <th>Gene Symbol</th>
-                                <th>Protein Domain</th>
-                                <th>Flags</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for consequence in variant_consequences %}
-                            <tr>
-                                <td style="white-space:nowrap;">{{ consequence[0] }}</td>
-                                <td style="white-space:nowrap;">{{ consequence[1] }}</td>
-                                <td style="white-space:nowrap;">{{ consequence[2] }}</td>
-                                <td>{{ consequence[3] }}</td>
-                                <td>{{ consequence[4] }}</td>
-                                <td>{{ consequence[5] }}</td>
-                                <td>{{ consequence[6] }}</td>
-                                <td>{{ consequence[7] }}</td>
-                                {% if consequence[11] is not none %}
-                                <td>
-                                    <a class="external_link" href="https://pfam.xfam.org/family/{{ consequence[10] }}">
-                                        {{ consequence[11] }}<nobr>&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
-                                            <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
-                                            <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
-                                        </svg></nobr>
-                                    </a>
-                                </td>
-                                {% else %}
-                                <td>{{ consequence[11] }}</td>
-                                {% endif %}
-                                <td>
-                                    {% if consequence[13] %}
-                                        <span class="badge bg-secondary"><abbr title="gencodetest">GENCODE basic</abbr></span>
+                Preferred transcripts are shown first (longer and more flags)
+
+
+                <ul class="nav nav-tabs" id="tabs" role="tablist"> <!-- although this uses the styles from a tablist it is essentially not a tablist as it is not linked to the tabContent div below! Changes appear through javascript-->
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="tab" type="button" role="tab" aria-selected="true" onclick="filterTable('ensembl')">Ensembl</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" type="button" role="tab" aria-selected="false" onclick="filterTable('refseq')">RefSeq</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="tabContent">
+
+                    <div class="table-responsive">
+                        <table class="table table-hover scroll" id="variantConsequenceTable">
+                            <thead>
+                                <tr>
+                                    <th>Transcript Name</th>
+                                    <th>HGVS_C</th>
+                                    <th>HGVS_P</th>
+                                    <th>Consequence</th>
+                                    <th>Impact</th>
+                                    <th>Exon Nr.</th>
+                                    <th>Intron Nr.</th>
+                                    <th>Gene Symbol</th>
+                                    <th>Protein Domain</th>
+                                    <th>Flags</th>
+                                    <th style="display:none;">Source</th>
+                                    <th style="display:none;" id="variant_consequence_length_col">Length</th>
+                                    <th style="display:none;" id="variant_consequence_numflags_col">NumFlags</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for consequence in variant_consequences %}
+                                <tr>
+                                    <td style="white-space:nowrap;">{{ consequence[0] }}</td>
+                                    <td style="white-space:nowrap;">{{ consequence[1] }}</td>
+                                    <td style="white-space:nowrap;">{{ consequence[2] }}</td>
+                                    <td>{{ consequence[3] }}</td>
+                                    <td>{{ consequence[4] }}</td>
+                                    <td>{{ consequence[5] }}</td>
+                                    <td>{{ consequence[6] }}</td>
+                                    <td>
+                                        {% if consequence[7] is not none %}
+                                            <a href="{{ url_for('gene', gene_id=consequence[8] | int) }}">{{ consequence[7] }}</a>
+                                        {% else %}
+                                            {{ consequence[7] }}
+                                        {% endif %}
+                                    </td>
+                                    {% if consequence[11] is not none %}
+                                    <td>
+                                        <a class="external_link" href="https://pfam.xfam.org/family/{{ consequence[10] }}">
+                                            {{ consequence[11] }}<nobr>&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+                                                <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+                                                <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+                                            </svg></nobr>
+                                        </a>
+                                    </td>
+                                    {% else %}
+                                    <td>{{ consequence[11] }}</td>
                                     {% endif %}
-                                    {% if consequence[14] %}
-                                        <span class="badge bg-secondary"><abbr title="MANE">MANE select</abbr></span>
-                                    {% endif %}
-                                    {% if consequence[15] %}
-                                        <span class="badge bg-secondary"><abbr title="">MANE clin</abbr></span>
-                                    {% endif %}
-                                    {% if consequence[16] %}
-                                        <span class="badge bg-secondary"><abbr title="">ensembl canonical</abbr></span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                    <td>
+                                        {% if consequence[13] %}
+                                            <span class="badge bg-secondary"><abbr title="gencodetest">GENCODE basic</abbr></span>
+                                        {% endif %}
+                                        {% if consequence[14] %}
+                                            <span class="badge bg-secondary"><abbr title="MANE">MANE select</abbr></span>
+                                        {% endif %}
+                                        {% if consequence[15] %}
+                                            <span class="badge bg-secondary"><abbr title="">MANE clin</abbr></span>
+                                        {% endif %}
+                                        {% if consequence[16] %}
+                                            <span class="badge bg-secondary"><abbr title="">ensembl canonical</abbr></span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="display:none;">{{ consequence[9] }}</td>
+                                    <td style="display:none;">{{ consequence[12] }}</td>
+                                    <td style="display:none;">{{ consequence[17] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
                 </div>
             </p>
         </div>
@@ -428,16 +455,21 @@
 
 <!--
     - variant consequences nach preferred transcripts sortieren und badges (mane select, ....) anzeigen
-    gene page
+    - gene page
     - genids durch gennamen ersetzen in variant consequence table
     - nobreak für bestimmte spalten
     ~ minimale seitenbreite angeben
     - beim variant import vcf check laufen lassen
-    variant import auch von hgvs möglich machen
+    ~ variant import auch von hgvs möglich machen
     external links karte einfügen
     abbr beschreibungen der flags einfügen
     variant consequence table nach refseq / ensembl filtern (mit toggle)
-    ? refseq namen zu enst umwandeln
+    transcript table auf gene page einfügen
+    refseq transcripts importieren + mapping table enst -> refseq
+    - umbruch der last evaluated daten verhindern in clinvar submissions table
+    - clinvar submissions standardmäßig nach last evaluated sortieren
+    - wenn variante erfolgreich hochgeladen wurde soll der link gleich angezeigt werden in der flashed message
+
     - add positive feedback if variant was imported successfully
 -->
 
