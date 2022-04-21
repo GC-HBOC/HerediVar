@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1> {% block title %} Gene Page {% endblock %} </h1>
+
+{% for entry in gene_info %}
+<div>
+    {{ entry }}
+</div>
+{% endfor %}
+
+
+</div>
+
+{% endblock %}

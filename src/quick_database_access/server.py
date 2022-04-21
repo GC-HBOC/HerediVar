@@ -54,25 +54,33 @@ def create():
     if request.method == 'POST':
         chr = request.form['chr']
         pos = request.form['pos']
-        ref = request.form['ref']
-        alt = request.form['alt']
+        ref = request.form['ref'].upper()
+        alt = request.form['alt'].upper()
 
         if not chr or not pos or not ref or not alt:
-            flash('All fields are required!')
+            flash('All fields are required!', 'alert-danger')
         else:
-            # VALIDATE REQUEST!!!!
+            # validate request
             tmp_vcf_path = tempfile.gettempdir() + "/new_variant.vcf"
             functions.variant_to_vcf(chr, pos, ref, alt, tmp_vcf_path)
             execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(tmp_vcf_path)
             if execution_code_vcfcheck != 0:
-                flash(err_msg_vcfcheck)
+                flash(err_msg_vcfcheck, 'alert-danger')
             elif vcf_errors.startswith("ERROR:"):
-                flash(vcf_errors)
+                flash(vcf_errors, 'alert-danger')
             else:
                 conn = Connection()
-                conn.insert_variant(chr, pos, ref, alt)
+                
+                is_duplicate = conn.check_variant_duplicate(chr, pos, ref, alt) # check if variant is already contained
+                if not is_duplicate:
+                    conn.insert_variant(chr, pos, ref, alt) # insert it
+                    conn.close()
+                    flash("Successfully inserted variant: " + chr + ' ' + str(pos) + ' ' + ref + ' ' + alt, "alert-success")
+                    return redirect(url_for('create'))
+                else:
+                    flash("Variant not imported: already in database!", "alert-danger")
+                
                 conn.close()
-                return redirect(url_for('create'))
 
     return render_template('create.html', chrs=chrs)
 
@@ -119,6 +127,13 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     conn.close()
     return render_template('variant.html', variant=variant_oi, variant_annotations=variant_annot_dict, clinvar_submissions=clinvar_submissions, variant_consequences=variant_consequences, literature=literature)
 
+
+@app.route('/gene/<int:gene_id>')
+def gene(gene_id):
+    conn = Connection()
+    gene_info = conn.get_gene(gene_id)
+    conn.close()
+    return render_template('gene.html', gene_info=gene_info)
 
 if __name__ == '__main__':
     app.run(debug=True)
