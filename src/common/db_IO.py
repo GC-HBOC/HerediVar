@@ -212,6 +212,8 @@ class Connection:
         self.conn.commit()
     
     def insert_variant(self, chr, pos, ref, alt):
+        ref = ref.upper()
+        alt = alt.upper()
         self.cursor.execute("INSERT INTO variant (chr, pos, ref, alt) VALUES (%s, %s, %s, %s)",
                          (chr, pos, ref, alt))
         self.conn.commit()
@@ -367,7 +369,7 @@ class Connection:
 	                    ) y \
 	                    ON gene.id = y.gene_id \
                     ) x \
-                    ON transcript.name = x.transcript_name;" % (variant_id)
+                    ON transcript.name = x.transcript_name" % (variant_id)
         self.cursor.execute(command)
         result = self.cursor.fetchall()
 
@@ -383,8 +385,22 @@ class Connection:
         if sort_year:
             result = sorted(result, key=lambda x: functions.convert_none_infinite(x[6]), reverse=True)    
         return result
+    
+    def check_variant_duplicate(self, chr, pos, ref, alt):
+        # The command checks if the length of the table returned by the subquery is empty (result = 0) or not (result = 1)
+        command = "SELECT EXISTS (SELECT * FROM variant WHERE chr = %s AND pos = %d AND ref = %s AND alt = %s)" % (enquote(chr), int(pos), enquote(ref), enquote(alt))
+        self.cursor.execute(command)
+        result = self.cursor.fetchone()[0] # get the first element as result is always a tuple
+        if result == 0:
+            return False
+        else:
+            return True
 
-
+    def get_gene(self, gene_id):
+        command = "SELECT * FROM gene WHERE id = %s" % (gene_id)
+        self.cursor.execute(command)
+        result = self.cursor.fetchone()
+        return result
 
 
 

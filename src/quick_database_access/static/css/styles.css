@@ -100,33 +100,15 @@ table.scroll th {
 }
 
 
+.bst {
+    margin-top: 25px;
+}
 
-table.tableSection {
-    display: table;
-    width: 100%;
+.sst {
+    margin-top: 10px;
 }
-  
-table.tableSection thead,
-table.tableSection tbody {
-  width: 100%;
+
+.bsb {
+    margin-bottom: 25px;
 }
-  
-table.tableSection thead {
-  overflow-y: scroll;
-  display: table;
-  table-layout: fixed;
-  width: calc(100% - 16px); /* assuming scrollbar width as 16px */
-}
-  
-table.tableSection tbody {
-  overflow: auto;
-  height: 500px;
-  display: block;
-}
-  
-table.tableSection tr {
-  width: 100%;
-  text-align: left;
-  display: table;
-  table-layout: fixed;
-}
+
