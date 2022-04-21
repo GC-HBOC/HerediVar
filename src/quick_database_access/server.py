@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, url_for, flash, redirect, session
+from flask import Flask, render_template, request, url_for, flash, redirect, session, Markup
 #from flask_mysqldb import MySQL
 from os import path
 import sys
@@ -75,7 +75,8 @@ def create():
                 if not is_duplicate:
                     conn.insert_variant(chr, pos, ref, alt) # insert it
                     conn.close()
-                    flash("Successfully inserted variant: " + chr + ' ' + str(pos) + ' ' + ref + ' ' + alt, "alert-success")
+                    flash(Markup("Successfully inserted variant: " + chr + ' ' + str(pos) + ' ' + ref + ' ' + alt + 
+                                 ' (view your variant <a href="display/chr=' + str(chr) + '&pos=' + str(pos) + '&ref=' + str(ref) + '&alt=' + str(alt) + '" class="alert-link">here</a>)'), "alert-success")
                     return redirect(url_for('create'))
                 else:
                     flash("Variant not imported: already in database!", "alert-danger")

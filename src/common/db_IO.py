@@ -6,6 +6,7 @@ import mysql.connector
 from mysql.connector import Error
 import common.functions as functions
 from operator import itemgetter
+import datetime
 
 
 def get_db_connection():
@@ -359,11 +360,12 @@ class Connection:
             processed_entry = list(result[i])
             processed_entry[5] = processed_entry[5].split(':')
             result[i] = processed_entry
-
+        
+        result = sorted(result, key=lambda x: x[3] or datetime.date(datetime.MINYEAR,1,1), reverse=True) # sort table by last evaluated date
         return result
     
     def get_variant_consequences(self, variant_id):
-        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,transcript.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags FROM transcript RIGHT JOIN ( \
+        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,x.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags FROM transcript RIGHT JOIN ( \
 	                    SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,gene_id,exon_nr,intron_nr,source,pfam_accession,pfam_description FROM gene RIGHT JOIN ( \
 		                    SELECT * FROM variant_consequence WHERE variant_id=%d \
 	                    ) y \
@@ -373,8 +375,8 @@ class Connection:
         self.cursor.execute(command)
         result = self.cursor.fetchall()
 
-        result = sorted(result, key=lambda x: functions.convert_none_infinite(x[12]), reverse=True) # sort table by transcript length
-        result = sorted(result, key=lambda x: functions.convert_none_infinite(x[17]), reverse=True) # sort table by number of flags
+        #result = sorted(result, key=lambda x: functions.convert_none_infinite(x[12]), reverse=True) # sort table by transcript length
+        #result = sorted(result, key=lambda x: functions.convert_none_infinite(x[17]), reverse=True) # sort table by number of flags
 
         return result
 
