@@ -259,6 +259,8 @@ class Connection:
 
 
     def insert_transcript(self, symbol, hgnc_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical):
+        if transcript_name is None: # abort if the transcript name is missing!
+            return
         # transcript names are here usually ENST-ids
         gene_id = None
         if symbol is None and hgnc_id is None:

@@ -138,3 +138,10 @@ def check_vcf(path):
     elif len(std_err):
         err_msg = "CheckVCF runtime WARNING: " + std_err
     return completed_process.returncode, err_msg, vcf_errors
+
+
+def find_between(s, prefix, postfix):
+    res = re.search(prefix+r'(.*?)'+postfix, s)
+    if res is not None:
+        res = res.group(1)
+    return res

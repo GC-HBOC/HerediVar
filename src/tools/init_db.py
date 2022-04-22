@@ -10,6 +10,8 @@ import re
 conn = Connection()
 
 
+
+
 if __name__ == '__main__':
     ## initialize database structure from scheme.sql
     ## REMEMBER TO UPDATE scheme.sql if any changes happened to the database structure!
@@ -56,6 +58,7 @@ if __name__ == '__main__':
     #All transcripts are linked to "exon" features.
     #Protein-coding transcripts are linked to "CDS", "five_prime_UTR", and
     #"three_prime_UTR" features.
+    '''
     print("parsing MANE transcripts...")
     mane_file = open(paths.MANE_path, 'r')
     mane_select_transcripts = []
@@ -205,7 +208,117 @@ if __name__ == '__main__':
     
 
     ensembl_transcript.close()
+    '''
+
+    is_gencode_basic = 0
+    is_mane_select = 0
+    is_mane_plus_clinical = 0
+    is_ensembl_canonical = 0
+    keep_it = True # this flag filters nested transcripts where the parent is a transcript itself
+
+    #refseq_transcript = gzip.open(paths.refseq_transcript_path, "rb")
+    refseq_transcript = open("/mnt/users/ahdoebm1/HerediVar/data/dbs/RefSeq/test", "r")
+    print("parsing refseq transcripts...")
+    parent_biotype = None
+    first_iter = True
+    for line in refseq_transcript:
+        #line = line.decode('utf8')
+        line = line.strip()
+        print(keep_it)
+        if line.startswith('#') or line == '':
+            continue
+
+        parts = line.split('\t')
+        biotype = parts[2]
+        start = int(parts[3])
+        end = int(parts[4])
+        info = parts[8].split(';')
+        
+        if 'gene' in biotype:
+            if not first_iter:
+                if keep_it:
+                    #conn.insert_transcript(symbol, hgnc_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical)
+                    #print("print from gene:")
+                    print("Symbol: " + str(symbol) + ", hgnc_id: " + str(hgnc_id) + ", transcript name: " + str(transcript_name) + ", transcript_biotype: " + str(transcript_biotype) + ", length: " + str(total_length))
+                keep_it = True
+
+            first_iter = True
+            symbol = None
+            hgnc_id = None
+            gene_id = None
+
+            parent_biotype = 'gene'
+
+            for info_entry in info:
+                if info_entry.startswith('Name='):
+                    symbol = info_entry[5:]
+                if info_entry.startswith('Dbxref='):
+                    if 'HGNC:' in info_entry:
+                        hgnc_id = functions.find_between(info_entry, 'HGNC:', '(,|$)')
+                        if ':' in hgnc_id:
+                            hgnc_id = hgnc_id[hgnc_id.rfind(':')+1:]
+                if info_entry.startswith('ID='):
+                    gene_id = info_entry[3:]
+        
+        elif (biotype in ['mRNA', 'V_gene_segment', 'D_gene_segment', 'J_gene_segment', 'C_gene_segment'] or 'transcript' in biotype or 'RNA' in biotype):
+            if not first_iter:
+                if keep_it:
+                    #conn.insert_transcript(symbol, hgnc_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical)
+                    #print("print from transcript:")
+                    print("Symbol: " + str(symbol) + ", hgnc_id: " + str(hgnc_id) + ", transcript name: " + str(transcript_name) + ", transcript_biotype: " + str(transcript_biotype) + ", length: " + str(total_length))
+                keep_it = True
+
+            total_length = 0
+            transcript_name = None
+            transcript_biotype = None
+            first_iter = False
+            transcript_id = None
+
+            if biotype == 'mRNA' or 'gene_segment' in biotype:
+                parent_biotype = 'coding_transcript'
+            else:
+                parent_biotype = 'other_transcript'
+
+            for info_entry in info:
+                if info_entry.startswith('Dbxref='): # example of such an entry: "Dbxref=GeneID:81399,Genbank:XM_017002409.2,HGNC:HGNC:15079"
+                    transcript_name =  functions.find_between(info_entry, 'Genbank:', '(,|$)')
+                    if transcript_name is not None:
+                        if '.' in transcript_name:
+                            transcript_name = transcript_name[:transcript_name.find('.')] # remove version numbers
+                if info_entry.startswith('gbkey='):
+                    transcript_biotype = info_entry[6:]
+                if info_entry.startswith('Parent='):
+                    parent_id = info_entry[7:]
+                if info_entry.startswith('ID='):
+                    transcript_id = info_entry[3:]
+            
+
+            if parent_id != gene_id:
+                print("WARNING: Found transcript which does not match its current parent! (geneid: " + str(gene_id) + ", transcript id: " + str(transcript_id) + ", parent id of transcript: " + str(parent_id))
+                keep_it = False
+            
+        elif biotype in ['exon', 'CDS']:
+            if parent_biotype == 'gene':
+                print("WARNING: no transcripts found near line: " + line)
+            if parent_biotype == 'coding_transcript' and biotype == 'CDS':
+                total_length = total_length + (end-start)
+            if parent_biotype == 'other_transcript' and biotype == 'exon':
+                total_length = total_length + (end-start)
+
+            for info_entry in info:
+                if info_entry.startswith('Parent='):
+                    parent_id = info_entry[7:]
+            if parent_id != transcript_id:
+                print("WARNING: Found " + biotype + " which does not match its current parent! (transcript id: " + str(transcript_id) + ", parent id of " + biotype + ": " + str(parent_id))
     
+    if keep_it:
+        print("last print:")
+        print("Symbol: " + str(symbol) + ", hgnc_id: " + str(hgnc_id) + ", transcript name: " + str(transcript_name) + ", transcript_biotype: " + str(transcript_biotype) + ", length: " + str(total_length))
+        #conn.insert_transcript(symbol, hgnc_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical)
+    
+
+    refseq_transcript.close()
+
     
     '''
     ## init pfam auxiliaries tables (pfam_id_mapping and pfam_legacy)
@@ -239,3 +352,5 @@ if __name__ == '__main__':
     '''
 
     conn.close()
+
+

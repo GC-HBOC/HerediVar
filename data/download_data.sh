@@ -258,7 +258,7 @@ wget -O - http://oncotree.mskcc.org/api/tumorTypes?version=oncotree_2021_11_02 >
 #mkdir -p cancerhotspots
 #cd cancerhotspots
 
-cancerhotspotsfile=cancerhotspots.v2
+#cancerhotspotsfile=cancerhotspots.v2
 #wget -O $cancerhotspotsfile.maf.gz http://download.cbioportal.org/cancerhotspots/cancerhotspots.v2.maf.gz
 #gunzip $cancerhotspotsfile.maf.gz
 #(head -n 2  $cancerhotspotsfile.maf && tail -n +3  $cancerhotspotsfile.maf | sort -t$'\t' -f -k5,5V -k6,6n -k11,11 -k13,13) >  $cancerhotspotsfile.sorted.maf
@@ -289,9 +289,20 @@ cancerhotspotsfile=cancerhotspots.v2
 
 
 
+
+
+## download refseq transcripts release 110
+cd $dbs
+mkdir -p RefSeq
+cd RefSeq
+
+#wget -O - https://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/mRNA_Prot/human.1.rna.gbff.gz > human.complete.rna.gbff.gz
+#wget -O - https://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/mRNA_Prot/human.2.rna.gbff.gz >> human.complete.rna.gbff.gz
+
+#wget https://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Homo_sapiens/annotation_releases/109/GCF_000001405.38_GRCh38.p12/GCF_000001405.38_GRCh38.p12_feature_table.txt.gz
+
+wget -O - https://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Homo_sapiens/annotation_releases/110/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.gff.gz > refseq_transcripts_110.gff.gz
+
 # TODO:
 # - Am Ende nochmal überlegen welche referenz genome verwendet werden aktuell: ucsc grch38 + ensembl grch37 + ucsc grch37 chainover grch38
-# - duplizierte einträge in variantpublication table possible
-# - update prozedur? alte varianten automatisch mit der datenbank annotieren, die geupdated wurde?
-# - andere tables versionen?
 
