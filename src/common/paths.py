@@ -36,3 +36,4 @@ ensembl_canonical_path = datadir + "ensembl/Homo_sapiens.GRCh38.105.canonical.ts
 pfam_id_mapping_path = datadir + "PFAM/pfam_id_mapping.tsv"
 pfam_legacy_path = datadir + "PFAM/pfam_legacy.tsv"
 refseq_transcript_path = datadir + "RefSeq/refseq_transcripts_110.gff.gz"
+parsing_refseq_ensembl = datadir + "RefSeq/hg38_ensembl_transcript_matches.tsv"

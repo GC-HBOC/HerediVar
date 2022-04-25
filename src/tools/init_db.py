@@ -205,10 +205,22 @@ if __name__ == '__main__':
     #print("last print:")
     #print("Symbol: " + str(symbol) + ", hgnc_id: " + str(hgnc_id) + ", transcript name: " + str(transcript_name) + ", transcript_biotype: " + str(transcript_biotype) + ", length: " + str(total_length))
     conn.insert_transcript(symbol, hgnc_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical)
-    
 
     ensembl_transcript.close()
     '''
+
+    print("parsing refseq ensembl identifier table...")
+    parsing_table = open(paths.parsing_refseq_ensembl, 'r')
+    refseq_to_ensembl = {}
+    for line in parsing_table:
+        line = line.strip()
+        if line.startswith('#') or line =='':
+            continue
+
+        parts = line.split('\t')
+        refseq_to_ensembl[parts[1]] = parts[0]
+    parsing_table.close()
+
 
     is_gencode_basic = 0
     is_mane_select = 0
@@ -216,15 +228,19 @@ if __name__ == '__main__':
     is_ensembl_canonical = 0
     keep_it = True # this flag filters nested transcripts where the parent is a transcript itself
 
-    #refseq_transcript = gzip.open(paths.refseq_transcript_path, "rb")
-    refseq_transcript = open("/mnt/users/ahdoebm1/HerediVar/data/dbs/RefSeq/test", "r")
+    refseq_transcript = gzip.open(paths.refseq_transcript_path, "rb")
+    #refseq_transcript = open("/mnt/users/ahdoebm1/HerediVar/data/dbs/RefSeq/test", "r")
+    # what is being skipped from the gff files:
+    # - any 'match' records
+    # - silencer & enhancer & promoter regions, basically any features which conatin or come from 'region' entries
+    # - any products of primary transcripts (eg. miRNAs)
+    # - additional (misc) sequence features
     print("parsing refseq transcripts...")
     parent_biotype = None
     first_iter = True
     for line in refseq_transcript:
-        #line = line.decode('utf8')
+        line = line.decode('utf8')
         line = line.strip()
-        print(keep_it)
         if line.startswith('#') or line == '':
             continue
 
@@ -234,12 +250,13 @@ if __name__ == '__main__':
         end = int(parts[4])
         info = parts[8].split(';')
         
-        if 'gene' in biotype:
+        if biotype in ['gene', 'pseudogene']:
             if not first_iter:
                 if keep_it:
-                    #conn.insert_transcript(symbol, hgnc_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical)
+                    conn.insert_transcript(symbol, hgnc_id, refseq_to_ensembl.get(transcript_name, None), transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical, transcript_name)
                     #print("print from gene:")
-                    print("Symbol: " + str(symbol) + ", hgnc_id: " + str(hgnc_id) + ", transcript name: " + str(transcript_name) + ", transcript_biotype: " + str(transcript_biotype) + ", length: " + str(total_length))
+                    #print("Symbol: " + str(symbol) + ", hgnc_id: " + str(hgnc_id) + ", transcript name: " + str(transcript_name) + ", transcript_biotype: " + str(transcript_biotype) + ", length: " + str(total_length))
+                    #pass
                 keep_it = True
 
             first_iter = True
@@ -260,12 +277,13 @@ if __name__ == '__main__':
                 if info_entry.startswith('ID='):
                     gene_id = info_entry[3:]
         
-        elif (biotype in ['mRNA', 'V_gene_segment', 'D_gene_segment', 'J_gene_segment', 'C_gene_segment'] or 'transcript' in biotype or 'RNA' in biotype):
+        elif (biotype in ['mRNA', 'V_gene_segment', 'D_gene_segment', 'J_gene_segment', 'C_gene_segment', 'transcript', 'primary_transcript'] or 'RNA' in biotype):
             if not first_iter:
                 if keep_it:
-                    #conn.insert_transcript(symbol, hgnc_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical)
+                    conn.insert_transcript(symbol, hgnc_id, refseq_to_ensembl.get(transcript_name, None), transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical, transcript_name)
                     #print("print from transcript:")
-                    print("Symbol: " + str(symbol) + ", hgnc_id: " + str(hgnc_id) + ", transcript name: " + str(transcript_name) + ", transcript_biotype: " + str(transcript_biotype) + ", length: " + str(total_length))
+                    #print("Symbol: " + str(symbol) + ", hgnc_id: " + str(hgnc_id) + ", transcript name: " + str(transcript_name) + ", transcript_biotype: " + str(transcript_biotype) + ", length: " + str(total_length))
+                    #pass
                 keep_it = True
 
             total_length = 0
@@ -312,10 +330,10 @@ if __name__ == '__main__':
                 print("WARNING: Found " + biotype + " which does not match its current parent! (transcript id: " + str(transcript_id) + ", parent id of " + biotype + ": " + str(parent_id))
     
     if keep_it:
-        print("last print:")
-        print("Symbol: " + str(symbol) + ", hgnc_id: " + str(hgnc_id) + ", transcript name: " + str(transcript_name) + ", transcript_biotype: " + str(transcript_biotype) + ", length: " + str(total_length))
-        #conn.insert_transcript(symbol, hgnc_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical)
-    
+        #print("last print:")
+        #print("Symbol: " + str(symbol) + ", hgnc_id: " + str(hgnc_id) + ", transcript name: " + str(transcript_name) + ", transcript_biotype: " + str(transcript_biotype) + ", length: " + str(total_length))
+        conn.insert_transcript(symbol, hgnc_id, refseq_to_ensembl.get(transcript_name, None), transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical, transcript_name)
+        #pass
 
     refseq_transcript.close()
 
