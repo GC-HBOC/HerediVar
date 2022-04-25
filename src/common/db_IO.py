@@ -257,25 +257,43 @@ class Connection:
             return False
     
 
-
-    def insert_transcript(self, symbol, hgnc_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical):
-        if transcript_name is None: # abort if the transcript name is missing!
+    def insert_transcript(self, symbol, hgnc_id, transcript_ensembl, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical, transcript_refseq = None):
+        if transcript_ensembl is None and transcript_refseq is None: # abort if the transcript name is missing!
             return
-        # transcript names are here usually ENST-ids
+        
+        # get the gene for the current transcript
         gene_id = None
+        transcript_biotype = transcript_biotype.replace('_', ' ')
         if symbol is None and hgnc_id is None:
-            print("WARNING: transcript: " + transcript_name + ", transcript_biotype: " + transcript_biotype + " was not imported as gene symbol and hgnc id were missing")
+            print("WARNING: transcript: " + str(transcript_ensembl) + ", transcript_biotype: " + transcript_biotype + " was not imported as gene symbol and hgnc id were missing")
             return
         if hgnc_id is not None:
             gene_id = self.get_gene_id_by_hgnc_id(hgnc_id)
         elif symbol is not None:
             gene_id = self.get_gene_id_by_symbol(symbol)
+        
+        # insert transcript
         if gene_id is not None:
-            command = "INSERT INTO transcript (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-            self.cursor.execute(command, (int(gene_id), transcript_name, transcript_biotype.replace('_', ' '), int(total_length), int(is_gencode_basic), int(is_mane_select), int(is_mane_plus_clinical), int(is_ensembl_canonical)))
+            command = ''
+            if transcript_refseq is not None and transcript_ensembl is not None:
+                self.cursor.execute("SELECT COUNT(*) FROM transcript WHERE name=" + enquote(transcript_ensembl))
+                has_ensembl = self.cursor.fetchone()[0]
+                if has_ensembl:
+                    # The command inserts a new refseq transcript while it searches for a matching ensembl transcripts (which should already be contained in the transcripts table) and copies their gencode, mane and canonical flags
+                    infos = (int(gene_id), enquote(transcript_refseq), enquote(transcript_biotype), int(total_length), enquote(transcript_ensembl))
+                    command = "INSERT INTO transcript_refseq (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) \
+	                                    (SELECT %d, %s, %s, %d, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical FROM transcript WHERE name = %s);"  % infos
+            if command == '':
+                if transcript_refseq is not None:
+                    transcript_name = transcript_refseq
+                else:
+                    transcript_name = transcript_ensembl
+                command = "INSERT INTO transcript_refseq (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) VALUES (%d, %s, %s, %d, %d, %d, %d, %d)" % (int(gene_id), enquote(transcript_name), enquote(transcript_biotype), int(total_length), int(is_gencode_basic), int(is_mane_select), int(is_mane_plus_clinical), int(is_ensembl_canonical))
+            
+            self.cursor.execute(command)
             self.conn.commit()
         else:
-            print("WARNING: transcript: " + transcript_name + ", transcript_biotype: " + transcript_biotype + " was not imported as the corresponding gene is not in the database (gene-table) " + "hgncid: " + str(hgnc_id) + ", gene symbol: " + str(symbol))
+            print("WARNING: transcript: " + str(transcript_ensembl) + "/" + str(transcript_refseq) + ", transcript_biotype: " + transcript_biotype + " was not imported as the corresponding gene is not in the database (gene-table) " + "hgncid: " + str(hgnc_id) + ", gene symbol: " + str(symbol))
 
     def insert_pfam_id_mapping(self, accession_id, description):
         # remove version numbers first
