@@ -8,6 +8,7 @@ from flask_paginate import Pagination
 from werkzeug.exceptions import abort
 import common.functions as functions
 import tempfile
+import time
 
 app = Flask(__name__)
 
@@ -74,6 +75,7 @@ def create():
                 is_duplicate = conn.check_variant_duplicate(chr, pos, ref, alt) # check if variant is already contained
                 if not is_duplicate:
                     conn.insert_variant(chr, pos, ref, alt) # insert it
+                    conn.insert_annotation_request(get_variant_id(conn, chr, pos, ref, alt), user_id=1) ########!!!! adjust user_id once login is working!
                     conn.close()
                     flash(Markup("Successfully inserted variant: " + chr + ' ' + str(pos) + ' ' + ref + ' ' + alt + 
                                  ' (view your variant <a href="display/chr=' + str(chr) + '&pos=' + str(pos) + '&ref=' + str(ref) + '&alt=' + str(alt) + '" class="alert-link">here</a>)'), "alert-success")
@@ -100,13 +102,19 @@ def browse():
     return render_template('browse.html', variants=variants, page=page, per_page=per_page, pagination=pagination)
 
 
-@app.route('/display/<int:variant_id>')
-@app.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>') # alternative urls using vcf information
+@app.route('/display/<int:variant_id>', methods=['GET', 'POST'])
+@app.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>', methods=['GET', 'POST']) # alternative urls using vcf information
 # example: http://127.0.0.1:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http://127.0.0.1:5000/display/17
 def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     conn = Connection()
+
     if variant_id is None:
         variant_id = get_variant_id(conn, chr, pos, ref, alt)
+
+    if request.method == 'POST':
+        conn.insert_annotation_request(variant_id, user_id=1) ########!!!! adjust user_id once login is working!
+        conn.close()
+        return redirect(url_for('variant', variant_id=variant_id))
 
     variant_oi = get_variant(conn, variant_id) # this redirects to 404 page if the variant was not found
     variant_annotations = conn.get_recent_annotations(variant_id)
@@ -125,8 +133,16 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
     literature = conn.get_variant_literature(variant_id)
 
+    current_annotation_status = conn.get_current_annotation_status(variant_id)
+
     conn.close()
-    return render_template('variant.html', variant=variant_oi, variant_annotations=variant_annot_dict, clinvar_submissions=clinvar_submissions, variant_consequences=variant_consequences, literature=literature)
+    return render_template('variant.html', 
+                            variant=variant_oi, 
+                            variant_annotations=variant_annot_dict, 
+                            clinvar_submissions=clinvar_submissions, 
+                            variant_consequences=variant_consequences, 
+                            literature=literature,
+                            current_annotation_status=current_annotation_status)
 
 
 @app.route('/gene/<int:gene_id>')

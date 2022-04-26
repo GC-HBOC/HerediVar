@@ -2,9 +2,32 @@
 
 
 {% block content %}
-<br>
-<h1>{% block title %} Variant Display {% endblock %}</h1>
-<br>
+<div class="bst bsb">
+    <h1>{% block title %} Variant Display {% endblock %}</h1>
+    <div style="display:flex; align-items:center;">
+        <form id="reannotate_form" name="reannotate_form" method="post" action="#">
+            <div class="form-group">
+                <span id="tooltip_reannotate_button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="">
+                    <button id="reannotate_button" type="submit" class="btn btn-outline-primary">(Re-)Annotate Variant</button>
+                </span>
+                <meta id="annotation_status" data-annotation-status="{{ current_annotation_status[4] }}">
+            </div>
+        </form>
+        {% if current_annotation_status is not none %}
+            {% if current_annotation_status[4] == 'pending' %}
+                <span class="badge rounded-pill bg-secondary" style="margin-left:10px" data-bs-toggle="tooltip" title="annotation requested at {{ current_annotation_status[3] }}">annotation requested, <br> refresh page to see if it is ready</span>
+            {% endif %}
+            {% if current_annotation_status[4] == 'success' %}
+                <span class="badge rounded-pill bg-success" style="margin-left:10px" data-bs-toggle="tooltip" title="most recent annotation finished at {{ current_annotation_status[5] }}">annotation done</span>
+            {% endif %}
+            {% if current_annotation_status[4] == 'error' %}
+                <span class="badge rounded-pill bg-danger" style="margin-left:10px" data-bs-toggle="tooltip" title="most recent annotation finished at {{ current_annotation_status[5] }} with error {{ current_annotation_status[6] }}">annotation error</span>
+            {% endif %}
+        {% endif %}
+    </div>
+
+
+</div>
 
 
 <div class="row" data-masonry='{"percentPosition": true }'>
@@ -189,7 +212,7 @@
         <div class="col li-info">
             <div class="li-element">
                 {% if 'cancerhotspots_cancertypes' in variant_annotations %}
-                    <abbr title="{{variant_annotations['cancerhotspots_cancertypes'][0]}}"><a class="dashed_underline">hotspots:</a></abbr>&nbsp;{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}{{variant_annotations['cancerhotspots_cancertypes'][4]}}
+                    <abbr title="{{variant_annotations['cancerhotspots_cancertypes'][0]}}"><a class="dashed_underline">hotspots:</a></abbr>&nbsp;{{variant_annotations['cancerhotspots_cancertypes'][4]}}
                 {% else %}
                     <abbr title="No information available"><a class="dashed_underline">hotspots:</a></abbr>&nbsp;-
                 {% endif %}
@@ -431,8 +454,8 @@
                                 <td style="max-width:500px"><abbr title="{{ paper[4] }}"><div class="Nellipsis" style="max-width:500px">{{ paper[4] }}</div> </abbr></td>
                                 <td>{{paper[5]}}</td>
                                 <td style="text-align:center;">
-                                    <a href="https://pubmed.ncbi.nlm.nih.gov/{{ paper[2] }}/">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+                                    <a class="external_link" href="https://pubmed.ncbi.nlm.nih.gov/{{ paper[2] }}/">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
                                             <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
                                             <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
                                         </svg>

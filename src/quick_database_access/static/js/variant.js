@@ -65,3 +65,22 @@ function comparer(index) {
 function getCellValue(row, index){
     return $(row).children('td').eq(index).text()
 }
+
+
+$(document).ready(function()
+{
+    $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
+
+    ////////// functionality for the reannotate button
+    $('#reannotate_button').click(function()
+    {
+        $(this).attr('disabled', true);
+        return true;
+    });
+
+    var annotation_status = $('#annotation_status').data()['annotationStatus'];
+    if (annotation_status === 'pending'){
+        $('#reannotate_button').attr('disabled', true)
+        $('#tooltip_reannotate_button').attr('title', "Wait for the current annotation to finish before submitting another one")
+    }
+});
