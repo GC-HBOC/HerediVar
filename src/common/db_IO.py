@@ -281,14 +281,14 @@ class Connection:
                 if has_ensembl:
                     # The command inserts a new refseq transcript while it searches for a matching ensembl transcripts (which should already be contained in the transcripts table) and copies their gencode, mane and canonical flags
                     infos = (int(gene_id), enquote(transcript_refseq), enquote(transcript_biotype), int(total_length), enquote(transcript_ensembl))
-                    command = "INSERT INTO transcript_refseq (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) \
+                    command = "INSERT INTO transcript (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) \
 	                                    (SELECT %d, %s, %s, %d, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical FROM transcript WHERE name = %s);"  % infos
             if command == '':
                 if transcript_refseq is not None:
                     transcript_name = transcript_refseq
                 else:
                     transcript_name = transcript_ensembl
-                command = "INSERT INTO transcript_refseq (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) VALUES (%d, %s, %s, %d, %d, %d, %d, %d)" % (int(gene_id), enquote(transcript_name), enquote(transcript_biotype), int(total_length), int(is_gencode_basic), int(is_mane_select), int(is_mane_plus_clinical), int(is_ensembl_canonical))
+                command = "INSERT INTO transcript (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) VALUES (%d, %s, %s, %d, %d, %d, %d, %d)" % (int(gene_id), enquote(transcript_name), enquote(transcript_biotype), int(total_length), int(is_gencode_basic), int(is_mane_select), int(is_mane_plus_clinical), int(is_ensembl_canonical))
             
             self.cursor.execute(command)
             self.conn.commit()
