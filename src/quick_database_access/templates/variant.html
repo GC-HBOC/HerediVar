@@ -342,10 +342,10 @@
 
                 <ul class="nav nav-tabs" id="tabs" role="tablist"> <!-- although this uses the styles from a tablist it is essentially not a tablist as it is not linked to the tabContent div below! Changes appear through javascript-->
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" data-bs-toggle="tab" type="button" role="tab" aria-selected="true" onclick="filterTable('ensembl')">Ensembl</button>
+                        <button class="nav-link active" data-bs-toggle="tab" type="button" role="tab" aria-selected="true" onclick="filterTable_one_column('ensembl', 10)">Ensembl</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" data-bs-toggle="tab" type="button" role="tab" aria-selected="false" onclick="filterTable('refseq')">RefSeq</button>
+                        <button class="nav-link" data-bs-toggle="tab" type="button" role="tab" aria-selected="false" onclick="filterTable_one_column('refseq', 10)">RefSeq</button>
                     </li>
                 </ul>
                 <div class="tab-content" id="tabContent">

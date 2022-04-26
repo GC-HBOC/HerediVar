@@ -1,8 +1,30 @@
 /////////////// The following filters and sorts the variant consequence table such that the tabs ensembl and refseq are working!
 
-filterTable("ensembl")
+filterTable_one_column("ensembl", 10)
 
-function filterTable(filter) {
+function filterTable_one_column(filter, col) {
+    var table, tr, td, cell, i;
+    filter = filter.toUpperCase();
+    table = document.getElementById("variantConsequenceTable");
+    tr = table.getElementsByTagName("tr");
+    for (i = 1; i < tr.length; i++) { // loop over rows
+        tr[i].style.display = "none"; // hide row
+    
+        td = tr[i].getElementsByTagName("td");
+        if (col <= td.length && col >= 0) {
+            cell = tr[i].getElementsByTagName("td")[col];
+            if (cell) {
+                if (cell.innerText.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                }
+            }
+        }
+    }
+    sortTable()
+}
+
+// not used atm!
+function filterTable_all_columns(filter) {
     var table, tr, td, cell, i, j;
     filter = filter.toUpperCase();
     table = document.getElementById("variantConsequenceTable");
