@@ -86,6 +86,12 @@ class Connection:
         self.cursor.execute("UPDATE annotation_queue SET status = " + status + ", finished_at = NOW(), error_message = " + error_msg + " WHERE id = " + str(row_id))
         self.conn.commit()
 
+    def get_current_annotation_status(self, variant_id):
+        # return the most recent annotation queue entry for the variant 
+        self.cursor.execute("SELECT * FROM annotation_queue WHERE variant_id = %s ORDER BY requested DESC LIMIT 1" % (enquote(variant_id)))
+        result = self.cursor.fetchone()
+        return result
+
     def get_pfam_description_by_pfam_acc(self, pfam_acc):
         pfam_acc = functions.remove_version_num(pfam_acc)
         orig_pfam_acc = pfam_acc
