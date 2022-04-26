@@ -249,6 +249,9 @@ if __name__ == '__main__':
         start = int(parts[3])
         end = int(parts[4])
         info = parts[8].split(';')
+
+        if not parts[0].startswith('NC_'): # skip all scaffolds (eg. NT_, NW)
+            continue
         
         if biotype in ['gene', 'pseudogene']:
             if not first_iter:
