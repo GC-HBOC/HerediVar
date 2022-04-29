@@ -25,10 +25,7 @@
             {% endif %}
         {% endif %}
     </div>
-
-
 </div>
-
 
 <div class="row" data-masonry='{"percentPosition": true }'>
     <!--variant identification-->
@@ -45,15 +42,11 @@
                         <div class="col li-label"><abbr title="RSID from dbsnp">RSID</abbr></div>
                         <div class="col li-info">
                             {% if 'rsid' in variant_annotations %}
-                                {{variant_annotations['rsid'][4]}}
+                                <external-link href="https://www.ncbi.nlm.nih.gov/snp/rs{{variant_annotations['rsid'][4]}}">rs{{variant_annotations['rsid'][4]}}</external-link>
                             {% else %}
                                 -
                             {% endif %}
                         </div>
-                    </div>
-                    <div class="row align-items-start">
-                        <div class="col li-label"><abbr title="hgvs notations for this variant">HGVS</abbr></div>
-                        <div class="col li-info">TODO</div>
                     </div>
                 </p>
             </div>
@@ -283,6 +276,37 @@
         </div>
     </div>
 
+    
+
+    <!-- External Links / Further Information on external websites-->
+    <div class="col-sm-6 col-lg-2 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Further Information</h4>
+                <p class="card-text">
+                    <div>
+                        <div>
+                            <external-link href="https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=chr2%3A{{variant[2]}}">UCSC</external-link>
+                        </div>
+                        <div>
+                            <external-link href="https://gnomad.broadinstitute.org/variant/{{ variant[1][3:] }}-{{ variant[2] }}-{{ variant[3] }}-{{ variant[4] }}?dataset=gnomad_r3">GnomAD</external-link>
+                        </div>
+                        <div>
+                            {% if 'rsid' in variant_annotations %}
+                                <external-link href="https://www.ncbi.nlm.nih.gov/snp/rs{{variant_annotations['rsid'][4]}}">dbSNP</external-link>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if 'clinvar_variant_annotation' in variant_annotations %}
+                                <external-link href="https://www.ncbi.nlm.nih.gov/clinvar/variation/{{ variant_annotations['clinvar_variant_annotation'][2] }}">ClinVar</external-link>
+                            {% endif %}
+                        </div>
+                    </div>
+                </p>
+            </div>
+        </div>
+    </div>
+
 <!-- clinvar submission table -->
 {% if 'clinvar_variant_annotation' in variant_annotations and clinvar_submissions|length > 0 %}
 <div class="col-lg-5 col-lg-6 mb-4">
@@ -309,12 +333,7 @@
                                 <td style="white-space:nowrap;">{{ submission[3] }}</td>
                                 <td>{{ submission[4] }}</td>
                                 <td>
-                                    <a class="external_link" href="https://www.ncbi.nlm.nih.gov/medgen/{{submission[5][0]}}">
-                                        {{ submission[5][1] }}<nobr>&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
-                                            <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
-                                            <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
-                                        </svg></nobr>
-                                    </a>
+                                    <external-link href="https://www.ncbi.nlm.nih.gov/medgen/{{submission[5][0]}}">{{ submission[5][1] }}</external-link>
                                 </td>
                                 <td>{{ submission[6] }}</td>
                                 <td style="max-width:500px"><abbr title="{{ submission[7] }}"><div class="Nellipsis" style="max-width:500px">{{ submission[7] }}</div> </abbr></td>
@@ -364,9 +383,10 @@
                                     <th>Gene Symbol</th>
                                     <th>Protein Domain</th>
                                     <th>Flags</th>
-                                    <th style="display:none;">Source</th>
-                                    <th style="display:none;" id="variant_consequence_length_col">Length</th>
-                                    <th style="display:none;" id="variant_consequence_numflags_col">NumFlags</th>
+                                    <th>google</th>
+                                    <th style="display:none;" id="variant_consequence_source_col">Source</th>
+                                    <th id="variant_consequence_length_col">Length</th>
+                                    <th id="variant_consequence_numflags_col">NumFlags</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -388,12 +408,7 @@
                                     </td>
                                     {% if consequence[11] is not none %}
                                     <td>
-                                        <a class="external_link" href="https://pfam.xfam.org/family/{{ consequence[10] }}">
-                                            {{ consequence[11] }}<nobr>&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
-                                                <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
-                                                <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
-                                            </svg></nobr>
-                                        </a>
+                                        <external-link href="https://pfam.xfam.org/family/{{ consequence[10] }}">{{ consequence[11] }}</external-link>
                                     </td>
                                     {% else %}
                                     <td>{{ consequence[11] }}</td>
@@ -412,9 +427,13 @@
                                             <span class="badge bg-secondary"><abbr title="">ensembl canonical</abbr></span>
                                         {% endif %}
                                     </td>
+                                    <td>
+                                        <variant-google-link hgvs-c="{{ consequence[1] }}" hgvs-p="{{ consequence[2] }}" gene="{{ consequence[7] }}" rsid="rs{{variant_annotations['rsid'][4]}}">google</variant-google-link>
+                                        <variant-google-link hgvs-c="{{ consequence[1] }}" hgvs-p="{{ consequence[2] }}" gene="{{ consequence[7] }}" rsid="rs{{variant_annotations['rsid'][4]}}" scholar="true">scholar</variant-google-link>
+                                    </td>
                                     <td style="display:none;">{{ consequence[9] }}</td>
-                                    <td style="display:none;">{{ consequence[12] }}</td>
-                                    <td style="display:none;">{{ consequence[17] }}</td>
+                                    <td >{{ consequence[12] }}</td>
+                                    <td >{{ consequence[17] }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -454,12 +473,7 @@
                                 <td style="max-width:500px"><abbr title="{{ paper[4] }}"><div class="Nellipsis" style="max-width:500px">{{ paper[4] }}</div> </abbr></td>
                                 <td>{{paper[5]}}</td>
                                 <td style="text-align:center;">
-                                    <a class="external_link" href="https://pubmed.ncbi.nlm.nih.gov/{{ paper[2] }}/">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
-                                            <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
-                                            <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
-                                        </svg>
-                                    </a>
+                                    <external-link href="https://pubmed.ncbi.nlm.nih.gov/{{ paper[2] }}"></external-link>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -471,7 +485,10 @@
     </div>
 </div>
 {% endif %}
-    
+
+
+
+
 </div>
 
 
@@ -499,5 +516,6 @@
 
 <script src="../static/js/variant.js"></script>
 <script src="../static/js/sortTable.js"></script>
+<script src="../static/js/utils.js"></script>
 
 {% endblock %}

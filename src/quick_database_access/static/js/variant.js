@@ -1,6 +1,6 @@
 /////////////// The following filters and sorts the variant consequence table such that the tabs ensembl and refseq are working!
 
-filterTable_one_column("ensembl", 10)
+filterTable_one_column("ensembl", 11)
 
 function filterTable_one_column(filter, col) {
     var table, tr, td, cell, i;
@@ -48,39 +48,55 @@ function filterTable_all_columns(filter) {
 
 
 function sortTable(){
-    sorter('#variant_consequence_length_col') // sort by length
-    sorter('#variant_consequence_numflags_col') // sort by num of flags
+    sorter(['#variant_consequence_numflags_col', '#variant_consequence_length_col']) // sort first by num of flags and if there is a tie sort by length
 }
 
-
-function sorter(domid){
+function sorter(colids){ // !! only insert columns from the same table
+    var indices = []
+    for (var i = 0; i < colids.length; i++) {
+        var domid = colids[i]
+        indices.push($(domid).index())
+    }
     var table = $(domid).parents('table').eq(0)
-    var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()), )
+    var rows = table.find('tr:gt(0)').toArray().sort(comparer(indices), )
     rows = rows.reverse()
     for (var i = 0; i < rows.length; i++){
         table.append(rows[i])
     }
 }
 
-function comparer(index) {
+function comparer(indices) {
     return function(a, b) {
-        var valA = getCellValue(a, index), valB = getCellValue(b, index)
+        for (var i = 0; i < indices.length; i++) {
+            var row_index = indices[i]
+            var valA = getCellValue(a, row_index)
+            var valB = getCellValue(b, row_index)
+            var result = sort_helper(valA, valB)
+            if (result !== 0) {
+                break;
+            }
+        }
 
-        // sort none at the end
-        var exceptions = [ "none" ];
-        if (exceptions.includes(valA.toString().toLowerCase())) {
-            return -1
-        }
-        if (exceptions.includes(valB.toString().toLowerCase())) {
-            return 1
-        }
+        return result
 
-        //normal case
-        if ($.isNumeric(valA) && $.isNumeric(valB)) { 
-            return valA - valB
-        } else {
-            return valA.toString().localeCompare(valB)
-        }
+    }
+}
+
+function sort_helper(valA, valB){
+    // sort none at the end
+    var exceptions = [ "none" ];
+    if (exceptions.includes(valA.toString().toLowerCase())) {
+        return -1
+    }
+    if (exceptions.includes(valB.toString().toLowerCase())) {
+        return 1
+    }
+    
+    //normal case
+    if ($.isNumeric(valA) && $.isNumeric(valB)) { 
+        return valA - valB
+    } else {
+        return valA.toString().localeCompare(valB)
     }
 }
 
@@ -89,8 +105,12 @@ function getCellValue(row, index){
 }
 
 
+
+
+
 $(document).ready(function()
 {
+    ////////// activate bootstrap tooltips
     $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
 
     ////////// functionality for the reannotate button

@@ -20,7 +20,7 @@ app.config['SECRET_KEY'] = '8pfucoisaugfqw94hoaiddrvhe6efc5b456vvfl09'
 #app.config["MYSQL_DB"] = "bioinf_heredivar_ahdoebm1"
 #app.config["MYSQL_PORT"] = 3306
 
-#mysql = MySQL(app)
+##mysql = MySQL(app)
 
 
 
@@ -125,7 +125,7 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     clinvar_variant_annotation = conn.get_clinvar_variant_annotation(variant_id)
     clinvar_submissions = []
     if clinvar_variant_annotation is not None:
-        variant_annot_dict["clinvar_variant_annotation"] = clinvar_variant_annotation
+        variant_annot_dict["clinvar_variant_annotation"] = clinvar_variant_annotation # 0id,1variant_id,2variation_id,3interpretation,4review_status,5version_date
         clinvar_variant_annotation_id = clinvar_variant_annotation[0]
         clinvar_submissions = conn.get_clinvar_submissions(clinvar_variant_annotation_id)
     
@@ -151,6 +151,7 @@ def gene(gene_id):
     gene_info = conn.get_gene(gene_id)
     conn.close()
     return render_template('gene.html', gene_info=gene_info)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
