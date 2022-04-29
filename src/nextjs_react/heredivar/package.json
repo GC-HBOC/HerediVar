@@ -1,0 +1,21 @@
+{
+  "name": "heredivar",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "eslint": "^8.14.0",
+    "eslint-plugin-react": "^7.29.4",
+    "prettier": "^2.6.2"
+  },
+  "dependencies": {
+    "serverless-mysql": "^1.5.4"
+  }
+}
