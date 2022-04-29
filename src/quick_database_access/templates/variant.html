@@ -356,15 +356,15 @@
         <div class="card-body">
             <h4 class="card-title">Variant Consequences</h4>
             <p class="card-text">
-                Preferred transcripts are shown first (longer and more flags)
-
+                Preferred transcripts are shown first (longer and more flags) <br>
+                Check Transcripts in COSMIC links, you can not search for them so there might be wrong results...
 
                 <ul class="nav nav-tabs" id="tabs" role="tablist"> <!-- although this uses the styles from a tablist it is essentially not a tablist as it is not linked to the tabContent div below! Changes appear through javascript-->
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" data-bs-toggle="tab" type="button" role="tab" aria-selected="true" onclick="filterTable_one_column('ensembl', 10)">Ensembl</button>
+                        <button class="nav-link active" data-bs-toggle="tab" type="button" role="tab" aria-selected="true" onclick="filterTable_one_column('ensembl', 11)">Ensembl</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" data-bs-toggle="tab" type="button" role="tab" aria-selected="false" onclick="filterTable_one_column('refseq', 10)">RefSeq</button>
+                        <button class="nav-link" data-bs-toggle="tab" type="button" role="tab" aria-selected="false" onclick="filterTable_one_column('refseq', 11)">RefSeq</button>
                     </li>
                 </ul>
                 <div class="tab-content" id="tabContent">
@@ -383,10 +383,10 @@
                                     <th>Gene Symbol</th>
                                     <th>Protein Domain</th>
                                     <th>Flags</th>
-                                    <th>google</th>
+                                    <th>Links</th>
                                     <th style="display:none;" id="variant_consequence_source_col">Source</th>
                                     <th id="variant_consequence_length_col">Length</th>
-                                    <th id="variant_consequence_numflags_col">NumFlags</th>
+                                    <th style="display:none;" id="variant_consequence_numflags_col">NumFlags</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -430,10 +430,13 @@
                                     <td>
                                         <variant-google-link hgvs-c="{{ consequence[1] }}" hgvs-p="{{ consequence[2] }}" gene="{{ consequence[7] }}" rsid="rs{{variant_annotations['rsid'][4]}}">google</variant-google-link>
                                         <variant-google-link hgvs-c="{{ consequence[1] }}" hgvs-p="{{ consequence[2] }}" gene="{{ consequence[7] }}" rsid="rs{{variant_annotations['rsid'][4]}}" scholar="true">scholar</variant-google-link>
+                                        {% if consequence[7] is not none and consequence[1] is not none %}
+                                            <external-link href="https://cancer.sanger.ac.uk/cosmic/search?q={{ consequence[7] }}+{{ consequence[1] | replace('>','%3E') }}">COSMIC</external-link>
+                                        {% endif %}
                                     </td>
                                     <td style="display:none;">{{ consequence[9] }}</td>
                                     <td >{{ consequence[12] }}</td>
-                                    <td >{{ consequence[17] }}</td>
+                                    <td style="display:none;">{{ consequence[17] }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -516,6 +519,5 @@
 
 <script src="../static/js/variant.js"></script>
 <script src="../static/js/sortTable.js"></script>
-<script src="../static/js/utils.js"></script>
 
 {% endblock %}
