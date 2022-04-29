@@ -37,13 +37,16 @@ class variant_google_link extends HTMLElement {
 
         link += "("
 
+        var stuff_for_braces = []
+
         var cdot = this.getAttribute("hgvs-c")
         var dotpos = cdot.indexOf(".")
         if (dotpos >= 0) {
-            const cdotparts = cdot.substring(dotpos+1).split(">") // unsafe
-            var posref = cdotparts[0]
-            var alt = cdotparts[1]
-            link += "%22" + posref + "%3E" + alt +"%22+OR+%22" + posref + "-%3E" + alt + "%22+OR+%22" + posref + "--%3E" + alt + "%22+OR+%22" + posref + "/" + alt + "%22"
+            const cdotcrop = cdot.substring(dotpos+1)
+            stuff_for_braces.push("%22" + cdotcrop.replace('>', '%3E') +"%22")
+            stuff_for_braces.push("%22" + cdotcrop.replace('>', '-%3E') + "%22")
+            stuff_for_braces.push("%22" + cdotcrop.replace('>', '--%3E') + "%22")
+            stuff_for_braces.push("%22" + cdotcrop.replace('>', '/') + "%22")
         }
         
 
@@ -56,15 +59,18 @@ class variant_google_link extends HTMLElement {
             var one_letter_pdot = pdot.replace(re, function(x) {
                 return three_to_one[x.toLowerCase()];
             });
-            link += "+OR+%22" + pdot +"%22+OR+%22" + one_letter_pdot + "%22" 
+            stuff_for_braces.push("%22" + pdot +"%22")
+            stuff_for_braces.push("%22" + one_letter_pdot + "%22")
         }
 
         var rsid = this.getAttribute("rsid")
         if (rsid !== "None") {
-            link += "+OR+%22" + rsid + "%22"
+            stuff_for_braces.push("%22" + rsid + "%22")
         }
 
+        link += stuff_for_braces.join('+OR+')
         link += ")"
+
         this.innerHTML = `
             <external-link href="` + link + `">` + this.textContent +`</external-link>
         `

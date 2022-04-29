@@ -1,4 +1,4 @@
-/////////////// The following filters and sorts the variant consequence table such that the tabs ensembl and refseq are working!
+/////////////// The following filters and sort the variant consequence table such that the tabs ensembl and refseq are working!
 
 filterTable_one_column("ensembl", 11)
 
