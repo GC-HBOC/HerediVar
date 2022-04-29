@@ -157,6 +157,6 @@ fabric.properties
 /src/tools/ngs-bits/
 /src/tools/samtools/
 /src/tools/vcf2maf/
-/src/tools/node-v16.15.0-linux-x64
-/src/nextjs_react/.parcel-cache
-/src/nextjs_react/node_modules
+/src/tools/node-v16.15.0-linux-x64/
+/src/nextjs_react/.parcel-cache/
+/src/nextjs_react/node_modules/
