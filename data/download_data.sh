@@ -224,16 +224,6 @@ tabix -p vcf spliceai_scores_2022_02_09_GRCh38.vcf.gz
 #$ngsbits/BedSort -with_name -in clinvar_cnvs_2021-12.bed -out clinvar_cnvs_2021-12.bed
 
 
-## download ARUP BRCA1 & BRCA2 (https://arup.utah.edu/database/BRCA/Variants/BRCA1.php and https://arup.utah.edu/database/BRCA/Variants/BRCA2.php)
-## Database was accessed at 01.04.2022. As there is no versioning this date was used instead of an actual version number
-: '
-cd $dbs
-mkdir -p ARUP
-cd ARUP
-wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA1.php | python3 $tools/db_converter_arup.py --reference NM_007294.3 > ARUP_BRCA_2022_04_01.tsv
-wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA2.php | python3 $tools/db_converter_arup.py --reference NM_000059.3 >> ARUP_BRCA_2022_04_01.tsv
-'
-
 ## download PFAM (last accessed at realease 35.0)
 : '
 cd $dbs
@@ -287,26 +277,51 @@ wget -O - http://oncotree.mskcc.org/api/tumorTypes?version=oncotree_2021_11_02 >
 
 
 
-
-
-
-
 ## download refseq transcripts release 110
-cd $dbs
-mkdir -p RefSeq
-cd RefSeq
-
-##wget -O - https://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/mRNA_Prot/human.1.rna.gbff.gz > human.complete.rna.gbff.gz
-##wget -O - https://ftp.ncbi.nlm.nih.gov/refseq/H_sapiens/mRNA_Prot/human.2.rna.gbff.gz >> human.complete.rna.gbff.gz
-##wget https://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Homo_sapiens/annotation_releases/109/GCF_000001405.38_GRCh38.p12/GCF_000001405.38_GRCh38.p12_feature_table.txt.gz
+#cd $dbs
+#mkdir -p RefSeq
+#cd RefSeq
 
 #wget -O - https://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Homo_sapiens/annotation_releases/110/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.gff.gz > refseq_transcripts_110.gff.gz
 
-
 ## download ensembl refseq transcript id mapping table
-wget https://github.com/imgag/ngs-bits/raw/master/src/cppNGS/Resources/hg38_ensembl_transcript_matches.tsv
+#wget https://github.com/imgag/ngs-bits/raw/master/src/cppNGS/Resources/hg38_ensembl_transcript_matches.tsv
 
 
+
+
+## download OMIM mapping table (downloaded 02.05.2022)
+: '
+cd $dbs
+mkdir -p OMIM
+cd OMIM
+
+wget https://www.omim.org/static/omim/data/mim2gene.txt
+'
+
+# download orphanet mapping table (downloaded 02.05.2022)
+: '
+cd $dbs
+mkdir -p OrphaNet
+cd OrphaNet
+
+wget http://www.orphadata.org/data/xml/en_product6.xml
+'
+
+
+
+## download ARUP BRCA1 & BRCA2 (https://arup.utah.edu/database/BRCA/Variants/BRCA1.php and https://arup.utah.edu/database/BRCA/Variants/BRCA2.php)
+## Database was accessed at 01.04.2022. As there is no versioning this date was used instead of an actual version number
+cd $dbs
+mkdir -p ARUP
+cd ARUP
+#wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA1.php | python3 $tools/db_converter_arup.py --reference NM_007294.3 > ARUP_BRCA_2022_04_01.tsv 
+#wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA2.php | python3 $tools/db_converter_arup.py --reference NM_000059.3 >> ARUP_BRCA_2022_04_01.tsv
+/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-38-gd5054098/HgvsToVcf -in test.tsv -ref $genome -out ARUP_BRCA_2022_04_01.vcf 2> warnings.txt
+
+#$ngsbits/HgvsToVcf -in test.tsv -ref $genome -out ARUP_BRCA_2022_04_01.vcf
+
+#python3 $tools/db_converter_arup.py --reference NM_007294.3 -i BRCA1.php > test.tsv 
 
 # TODO:
 # - Am Ende nochmal überlegen welche referenz genome verwendet werden aktuell: ucsc grch38 + ensembl grch37 + ucsc grch37 chainover grch38
