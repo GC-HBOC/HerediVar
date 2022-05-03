@@ -1,8 +1,8 @@
-$('.sortable').click(sorter);
+$('.sortable').click(click_sorter);
 
-function sorter(){
+function click_sorter(){
     var table = $(this).parents('table').eq(0)
-    var rows = table.find('tr:gt(0)').toArray().sort(comparer($(this).index()), )
+    var rows = table.find('tr:gt(0)').toArray().sort(click_comparer($(this).index()), )
     this.asc = !this.asc
     if (!this.asc){
         rows = rows.reverse()
@@ -12,7 +12,7 @@ function sorter(){
     }
 }
 
-function comparer(index) {
+function click_comparer(index) {
     return function(a, b) {
         var valA = getCellValue(a, index), valB = getCellValue(b, index)
         
@@ -34,6 +34,3 @@ function comparer(index) {
     }
 }
 
-function getCellValue(row, index){
-    return $(row).children('td').eq(index).text()
-}
