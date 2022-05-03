@@ -8,20 +8,24 @@ root="$(dirname `pwd`)"
 tools=$root/src/tools/
 
 
+# download xpath
+# sudo apt-get install libxml-xpath-perl
+
 #download and build VEP
 cd $tools
 #chmod 755 ./download_tools_vep.sh
 #./download_tools_vep.sh
 
 #download and build ngs-bits
-: '
-cd $tools
-git clone https://github.com/imgag/ngs-bits.git
+
+#cd $tools
+git clone --recursive https://github.com/imgag/ngs-bits.git
 cd ngs-bits
-#git checkout 2021_12 && git submodule update --recursive --init ## select stable version once project is finished!
+##git checkout 2021_12 && git submodule update --recursive --init ## select stable version once project is finished!
 make build_3rdparty
+make build_libs_release
 make build_tools_release
-'
+
 
 
 #download and build samtools
@@ -37,7 +41,6 @@ mv samtools-1.11 samtools
 '
 
 # download python
-
 
 # create venv and download packages
 : '
