@@ -6,12 +6,9 @@ if (table != null) {
 }
 
 
-
-
 $(document).ready(function()
 {
     var annotation_status = $('#annotation_status').data()['annotationStatus'];
-    console.log(annotation_status)
     if (annotation_status === 'pending'){
         $('#reannotate_button').attr('disabled', true)
         $('#tooltip_reannotate_button').attr('title', "Wait for the current annotation to finish before submitting another one")

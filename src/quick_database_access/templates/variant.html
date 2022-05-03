@@ -501,11 +501,14 @@
 {% endif %}
 
 
-
-
 </div>
 
+{% endblock %}
 
+{% block special_scripts %}
+    <script src="../static/js/sortTable.js"></script>
+    <script src="../static/js/variant.js"></script>
+{% endblock%}
 
 <!--
     - variant consequences nach preferred transcripts sortieren und badges (mane select, ....) anzeigen
@@ -526,10 +529,3 @@
 
     - add positive feedback if variant was imported successfully
 -->
-
-
-<script src="../static/js/utils.js"></script>
-<script src="../static/js/sortTable.js"></script>
-<script src="../static/js/variant.js"></script>
-
-{% endblock %}
