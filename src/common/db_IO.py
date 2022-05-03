@@ -440,8 +440,8 @@ class Connection:
         result = self.cursor.fetchone()
         return result
 
-    def get_trancsripts(self, gene_id):
-        command = "SELECT * FROM transcript WHERE gene_id = %s" % (gene_id)
+    def get_transcripts(self, gene_id):
+        command = "SELECT gene_id,name,biotype,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags FROM transcript WHERE gene_id = %s" % (gene_id)
         self.cursor.execute(command)
         result = self.cursor.fetchall()
         return result

@@ -152,7 +152,7 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 def gene(gene_id):
     conn = Connection()
     gene_info = conn.get_gene(gene_id)
-    transcripts = conn.get_transcripts(gene_id)
+    transcripts = conn.get_transcripts(gene_id) # 0gene_id,1name,2biotype,3length,4is_gencode_basic,5is_mane_select,6is_mane_plus_clinical,7is_ensembl_canonical,8total_flags
     conn.close()
     return render_template('gene.html', gene_info=gene_info, transcripts=transcripts)
 
