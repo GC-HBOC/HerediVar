@@ -174,10 +174,20 @@ class Connection:
             return None
 
 
-    def insert_gene(self, hgnc_id, symbol, name, type):
+    def insert_gene(self, hgnc_id, symbol, name, type, omim_id, orphanet_id):
         hgnc_id = functions.trim_hgnc(hgnc_id)
-        self.cursor.execute("INSERT INTO gene (hgnc_id, symbol, name, type) VALUES (%s, %s, %s, %s)", 
-                            (hgnc_id, symbol, name, type))
+        columns_with_info = "hgnc_id, symbol, name, type"
+        actual_information = (hgnc_id, symbol, name, type)
+        if omim_id != '' and omim_id is not None:
+            columns_with_info = columns_with_info + ", omim_id"
+            actual_information = actual_information + (omim_id, )
+        if orphanet_id != '' and orphanet_id is not None:
+            columns_with_info = columns_with_info + ", orphanet_id"
+            actual_information = actual_information + (orphanet_id, )
+        
+        placeholders = "%s, "*len(actual_information)
+        command = "INSERT INTO gene (" + columns_with_info + ") VALUES (" + placeholders[:len(placeholders)-2] + ")"
+        self.cursor.execute(command, actual_information)
         self.conn.commit()
     
 
@@ -424,13 +434,17 @@ class Connection:
         else:
             return True
 
-    def get_gene(self, gene_id):
+    def get_gene(self, gene_id): # return all info of a gene for the gene page
         command = "SELECT * FROM gene WHERE id = %s" % (gene_id)
         self.cursor.execute(command)
         result = self.cursor.fetchone()
         return result
 
-
+    def get_trancsripts(self, gene_id):
+        command = "SELECT * FROM transcript WHERE gene_id = %s" % (gene_id)
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return result
 
 
 

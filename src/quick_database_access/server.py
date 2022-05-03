@@ -65,26 +65,29 @@ def create():
             tmp_vcf_path = tempfile.gettempdir() + "/new_variant.vcf"
             functions.variant_to_vcf(chr, pos, ref, alt, tmp_vcf_path)
             execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(tmp_vcf_path)
-            if execution_code_vcfcheck != 0:
+            if execution_code_vcfcheck != 0: # abort if there were errors in the variant or errors during the execution of the program
                 flash(err_msg_vcfcheck, 'alert-danger')
             elif vcf_errors.startswith("ERROR:"):
                 flash(vcf_errors, 'alert-danger')
             else:
-                conn = Connection()
+                execution_code_vcfleftnormalize, err_msg_vcfleftnormalize, vcfleftnormalize_output = functions.left_align_vcf(tmp_vcf_path)
+                if execution_code_vcfleftnormalize != 0: # abort if the left normalization was unsuccessful
+                    flash(err_msg_vcfleftnormalize, 'alert-danger')
+                else: # insert variant
+                    conn = Connection()
                 
-                is_duplicate = conn.check_variant_duplicate(chr, pos, ref, alt) # check if variant is already contained
-                if not is_duplicate:
-                    conn.insert_variant(chr, pos, ref, alt) # insert it
-                    conn.insert_annotation_request(get_variant_id(conn, chr, pos, ref, alt), user_id=1) ########!!!! adjust user_id once login is working!
-                    conn.close()
-                    flash(Markup("Successfully inserted variant: " + chr + ' ' + str(pos) + ' ' + ref + ' ' + alt + 
+                    is_duplicate = conn.check_variant_duplicate(chr, pos, ref, alt) # check if variant is already contained
+                    if not is_duplicate:
+                        conn.insert_variant(chr, pos, ref, alt) # insert it
+                        conn.insert_annotation_request(get_variant_id(conn, chr, pos, ref, alt), user_id=1) ########!!!! adjust user_id once login is working!
+                        conn.close()
+                        flash(Markup("Successfully inserted variant: " + chr + ' ' + str(pos) + ' ' + ref + ' ' + alt + 
                                  ' (view your variant <a href="display/chr=' + str(chr) + '&pos=' + str(pos) + '&ref=' + str(ref) + '&alt=' + str(alt) + '" class="alert-link">here</a>)'), "alert-success")
-                    return redirect(url_for('create'))
-                else:
-                    flash("Variant not imported: already in database!", "alert-danger")
+                        return redirect(url_for('create'))
+                    else:
+                        flash("Variant not imported: already in database!!", "alert-danger")
                 
-                conn.close()
-
+                    conn.close()
     return render_template('create.html', chrs=chrs)
 
 
@@ -149,8 +152,9 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 def gene(gene_id):
     conn = Connection()
     gene_info = conn.get_gene(gene_id)
+    transcripts = conn.get_transcripts(gene_id)
     conn.close()
-    return render_template('gene.html', gene_info=gene_info)
+    return render_template('gene.html', gene_info=gene_info, transcripts=transcripts)
 
 
 if __name__ == '__main__':

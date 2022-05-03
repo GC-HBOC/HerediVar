@@ -6,6 +6,7 @@ import common.paths as paths
 import gzip
 import common.functions as functions
 import re
+import xml.etree.ElementTree as ET
 
 conn = Connection()
 
@@ -19,15 +20,59 @@ if __name__ == '__main__':
     #sql = file.read()
     #conn.cursor.execute(sql, multi=True)
 
+
+    print("parsing OMIM ids...")
+    omim = open(paths.omim_path, "r")
+    symbol_to_omim = {}
+    for line in omim:
+        if line.startswith('#') or line.strip() == '':
+            continue
+
+        parts = line.split('\t')
+        omim_id = parts[0]
+        gene_symbol = parts[3]
+        if gene_symbol is not None:
+            symbol_to_omim[gene_symbol] = omim_id
+
+    omim.close()
+
+
+    print("parsing orphanet ids...")
+    orphanet = ET.parse(paths.orphanet_path)
+    root = orphanet.getroot()
+    symbol_to_orphanet = {}
+    duplicates = []
+    for gene in root.findall(".//Gene"):
+        symbols = [gene.find('Symbol').text]
+        orphanet_id = gene.get('id')
+
+        for alias in gene.findall('.//Synonym'):
+            alias_symbol = alias.text
+            symbols.append(alias_symbol)
+
+        for symbol in symbols:
+            if symbol in duplicates:
+                continue
+            if symbol in symbol_to_orphanet and symbol_to_orphanet.get(symbol) != orphanet_id:
+                duplicates.append(symbol) # mark symbol to delete it later as it occurs mutliple times with different orphanet ids
+            symbol_to_orphanet[symbol] = orphanet_id
+        
+    for symbol in set(duplicates):
+        del symbol_to_orphanet[symbol]
+    
+            
     ## init gene table with info from HGNC tab
-    '''
     print("initializing gene table...")
     hgnc = open(paths.hgnc_path, "r")
     header = hgnc.readline()
     for line in hgnc:
         line = line.strip().split("\t")
         hgnc_id = line[0]
-        conn.insert_gene(hgnc_id = hgnc_id, symbol = line[1], name = line[2], type = line[3])
+        symbol = line[1]
+        omim_id = symbol_to_omim.get(symbol) # this is save as omim also uses hgnc to extract gene symbols
+        orphanet_id = symbol_to_orphanet.get(symbol)
+
+        conn.insert_gene(hgnc_id = hgnc_id, symbol = symbol, name = line[2], type = line[3], omim_id = omim_id, orphanet_id = orphanet_id)
 
         alt_symbols = functions.collect_info('', '', line[8].strip("\""), sep = '|')
         alt_symbols = functions.collect_info(alt_symbols, '', line[10].strip("\""), sep = '|')
@@ -35,12 +80,14 @@ if __name__ == '__main__':
         
         for symbol in alt_symbols:
             if symbol != '':
-                conn.insert_gene_alias(hgnc_id, symbol)
+                #conn.insert_gene_alias(hgnc_id, symbol)
+                pass
 
+    
     hgnc.close()
-    '''
 
     #conn.remove_duplicates("gene_alias", "alt_symbol")
+
 
 
 
@@ -209,6 +256,7 @@ if __name__ == '__main__':
     ensembl_transcript.close()
     '''
 
+    '''
     print("parsing refseq ensembl identifier table...")
     parsing_table = open(paths.parsing_refseq_ensembl, 'r')
     refseq_to_ensembl = {}
@@ -339,7 +387,7 @@ if __name__ == '__main__':
         #pass
 
     refseq_transcript.close()
-
+    '''
     
     '''
     ## init pfam auxiliaries tables (pfam_id_mapping and pfam_legacy)

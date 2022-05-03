@@ -124,21 +124,32 @@ def convert_none_infinite(x):
     else:
         return x
 
-def check_vcf(path):
-    command = [paths.ngs_bits_path + "VcfCheck",
-               "-in", path, "-lines", "0", "-ref", paths.ref_genome_path]
+def execute_command(command, process_name):
     completed_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     std_out, std_err = completed_process.communicate()#[1].strip().decode("utf-8") # catch errors and warnings and convert to str
     #vcf_errors = completed_process.communicate()[0].strip().decode("utf-8") # catch errors and warnings and convert to str
     std_err = std_err.strip().decode("utf-8")
-    vcf_errors = std_out.strip().decode("utf-8")
+    command_output = std_out.strip().decode("utf-8")
     err_msg = ""
     if completed_process.returncode != 0:
-        err_msg = "CheckVCF runtime ERROR: " + std_err + " Code: " + str(completed_process.returncode)
+        err_msg = process_name + " runtime ERROR: " + std_err + " Code: " + str(completed_process.returncode)
     elif len(std_err):
-        err_msg = "CheckVCF runtime WARNING: " + std_err
-    return completed_process.returncode, err_msg, vcf_errors
+        err_msg = process_name + " runtime WARNING: " + std_err
+    return completed_process.returncode, err_msg, command_output
 
+
+
+def check_vcf(path):
+    command = [paths.ngs_bits_path + "VcfCheck",
+               "-in", path, "-lines", "0", "-ref", paths.ref_genome_path]
+    returncode, err_msg, vcf_errors = execute_command(command, 'VcfCheck')
+    return returncode, err_msg, vcf_errors
+
+def left_align_vcf(path):
+    command = [paths.ngs_bits_path + "VcfLeftNormalize",
+               "-in", path, "-stream", "-ref", paths.ref_genome_path]
+    returncode, err_msg, command_output = execute_command(command, 'VcfLeftNormalize')
+    return returncode, err_msg, command_output
 
 def find_between(s, prefix, postfix):
     res = re.search(prefix+r'(.*?)'+postfix, s)

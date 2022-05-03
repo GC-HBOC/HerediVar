@@ -6,7 +6,8 @@ datadir = workdir + "data/dbs/"
 
 # tools
 vep_path = "/mnt/storage2/GRCh38/share/opt/ensembl-vep-release-104.3"
-ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
+ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-38-gd5054098"
+#ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
 
 
 # data
@@ -37,3 +38,5 @@ pfam_id_mapping_path = datadir + "PFAM/pfam_id_mapping.tsv"
 pfam_legacy_path = datadir + "PFAM/pfam_legacy.tsv"
 refseq_transcript_path = datadir + "RefSeq/refseq_transcripts_110.gff.gz"
 parsing_refseq_ensembl = datadir + "RefSeq/hg38_ensembl_transcript_matches.tsv"
+omim_path = datadir + "OMIM/mim2gene.txt"
+orphanet_path = datadir + "OrphaNet/en_product6.xml"
