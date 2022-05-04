@@ -315,9 +315,13 @@ wget http://www.orphadata.org/data/xml/en_product6.xml
 cd $dbs
 mkdir -p ARUP
 cd ARUP
-#wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA1.php | python3 $tools/db_converter_arup.py --reference NM_007294.3 > ARUP_BRCA_2022_04_01.tsv 
-#wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA2.php | python3 $tools/db_converter_arup.py --reference NM_000059.3 >> ARUP_BRCA_2022_04_01.tsv
-/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-38-gd5054098/HgvsToVcf -in test.tsv -ref $genome -out ARUP_BRCA_2022_04_01.vcf 2> warnings.txt
+wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA1.php | python3 $tools/db_converter_arup.py --reference NM_007294.3 > ARUP_BRCA_2022_04_01.tsv
+# IMPORTANT NOTE: The ARUP website sais that their variants for BRCA2 are on the transcript "NM_000059.3". 
+# For conversion of hgvs to vcf it is required that this transcript is contained in the NGSD database which is not the case for NM_000059.3. 
+# Thus, I searched for the corresponding ensembl transcript: ENST00000380152 (see: https://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000139618;r=13:32315086-32400268)
+wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA2.php | python3 $tools/db_converter_arup.py --reference ENST00000380152 >> ARUP_BRCA_2022_04_01.tsv
+# working hgvstovcf on server: /mnt/storage1/share/opt/ngs-bits-hg38-2022_04-38-gd5054098/HgvsToVcf
+$ngsbits/HgvsToVcf -in ARUP_BRCA_2022_04_01.tsv -ref $genome -out ARUP_BRCA_2022_04_01.vcf
 
 #$ngsbits/HgvsToVcf -in test.tsv -ref $genome -out ARUP_BRCA_2022_04_01.vcf
 
