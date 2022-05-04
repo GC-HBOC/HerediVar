@@ -296,19 +296,22 @@
                         </div>
                         {% if 'rsid' in variant_annotations %}
                         <div>
-                                <external-link href="https://www.ncbi.nlm.nih.gov/snp/rs{{variant_annotations['rsid'][4]}}">dbSNP</external-link>
+                            <external-link href="https://www.ncbi.nlm.nih.gov/snp/rs{{variant_annotations['rsid'][4]}}">dbSNP</external-link>
                         </div>
                         {% endif %}
                         {% if 'clinvar_variant_annotation' in variant_annotations %}
                         <div>
-                                <external-link href="https://www.ncbi.nlm.nih.gov/clinvar/variation/{{ variant_annotations['clinvar_variant_annotation'][2] }}">ClinVar</external-link>
+                            <external-link href="https://www.ncbi.nlm.nih.gov/clinvar/variation/{{ variant_annotations['clinvar_variant_annotation'][2] }}">ClinVar</external-link>
                         </div>
                         {% endif %}
-                        {% if 'clinvar_variant_annotation' in variant_annotations %}
-                        <div>
-                                <external-link href="https://www.ncbi.nlm.nih.gov/clinvar/variation/{{ variant_annotations['clinvar_variant_annotation'][2] }}">ClinVar</external-link>
-                        </div>
-                        {% endif %}
+                        {% for consequence in variant_consequences %}
+                            {% if consequence[0] == ENST00000269305 %}
+                            <div>
+                                <external-link href="https://mutantp53.broadinstitute.org/mutantp53grade/?query={{ consequence[2] }}">PHANTM</external-link>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+
                     </div>
                 </p>
             </div>

@@ -102,12 +102,6 @@ $(document).ready(function()
     ////////// activate bootstrap tooltips
     $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
 
-    ////////// functionality for the reannotate button
-    $('#reannotate_button').click(function()
-    {
-        $(this).attr('disabled', true);
-        return true;
-    });
 });
 
 

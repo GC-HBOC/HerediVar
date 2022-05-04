@@ -7,6 +7,7 @@ from mysql.connector import Error
 import common.functions as functions
 from operator import itemgetter
 import datetime
+import re
 
 
 def get_db_connection():
@@ -349,11 +350,12 @@ class Connection:
         self.cursor.execute(command)
         result = self.cursor.fetchall()
         return result
+    
 
     # functions specific for frontend!
-    def get_paginated_variants(self, page, page_size, search_value = ''):
+    def get_paginated_variants(self, page, page_size, query = ''):
         offset = (page - 1) * page_size
-        if search_value == '':
+        if query == '' or query is None:
             self.cursor.execute(
                 "SELECT id,chr,pos,ref,alt FROM variant ORDER BY chr, pos, ref, alt LIMIT %d, %d"
                 % (offset, page_size)
@@ -364,19 +366,93 @@ class Connection:
             num_variants = self.cursor.fetchone()
             num_variants = num_variants[0]
         else:
-            search_value = enquote(search_value)
-            command = "SELECT id,chr,pos,ref,alt FROM variant WHERE chr=%s OR pos=%s OR ref=%s OR alt=%s ORDER BY chr, pos, ref, alt LIMIT %d, %d" % (search_value, search_value, search_value, search_value, offset, page_size)
-            self.cursor.execute(command)
-            result = self.cursor.fetchall()
+            query_type, query = self.preprocess_search_query(query)
+            if query_type == 'standard':
+                result, num_variants = self.standard_search(query, offset, page_size)
+            elif query_type == 'hgvs':
+                result, num_variants = self.hgvs_search(query)
+            elif query_type == 'range':
+                result, num_variants = self.range_search(query, offset, page_size)
+            elif query_type == 'gene':
+                result, num_variants = self.gene_search(query, offset, page_size)
 
-            self.cursor.execute(
-                "SELECT COUNT(id) FROM variant WHERE chr=%s OR pos=%s OR ref=%s OR alt=%s" 
-                % (search_value, search_value, search_value, search_value)
-            )
-            num_variants = self.cursor.fetchone()
-            num_variants = num_variants[0]
         return result, num_variants
     
+    def gene_search(self, query, offset, page_size): # example: 'BARD1%gene%' (this also works with gene aliases and hgnc ids)
+        gene_id = self.get_gene_id_by_symbol(query)
+        if gene_id is None:
+            gene_id = self.get_gene_id_by_hgnc_id(query)
+        command = "SELECT DISTINCT variant_id FROM variant_consequence WHERE gene_id=" + enquote(gene_id)
+        self.cursor.execute(command)
+        variant_ids = self.cursor.fetchall()
+        variant_ids = [x[0] for x in variant_ids]
+
+        num_variants = len(variant_ids)
+
+        variant_ids_string = str(variant_ids).replace('[', '(').replace(']', ')')
+        command = "SELECT id,chr,pos,ref,alt FROM variant WHERE id IN " + variant_ids_string + " LIMIT %d, %d" % (offset, page_size)
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return result, num_variants
+
+    def range_search(self, query, offset, page_size): # example: 'chr2:214767531-214780740'
+        parts = query.split(':')
+        chr = parts[0]
+        positions = parts[1].split('-')
+        start = int(positions[0])
+        end = int(positions[1])
+        command = "SELECT id,chr,pos,ref,alt FROM variant WHERE chr=%s AND pos BETWEEN %d AND %d LIMIT %d, %d" % (enquote(chr), start, end, offset, page_size)        
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+
+        self.cursor.execute("SELECT COUNT(id) FROM variant WHERE chr=%s AND pos BETWEEN %d AND %d" % (enquote(chr), start, end))
+        num_variants = self.cursor.fetchone()
+        num_variants = num_variants[0]
+        return result, num_variants
+
+    def hgvs_search(self, query): # example: 'ENST00000260947:c.1972C>T'
+        reference_transcript, hgvs = functions.split_hgvs(query)
+        variant_id = self.get_variant_id_by_hgvs(reference_transcript, hgvs)
+        result = []
+        if variant_id is not None:
+            command = "SELECT id,chr,pos,ref,alt FROM variant WHERE id=%s" % (enquote(variant_id))
+            self.cursor.execute(command)
+            result = [self.cursor.fetchone()] # list is required for the eazy iteration in frontend
+        return result, len(result)
+
+    def standard_search(self, query, offset, page_size):
+        query = enquote(query)
+        command = "SELECT id,chr,pos,ref,alt FROM variant WHERE chr=%s OR pos=%s OR ref=%s OR alt=%s ORDER BY chr, pos, ref, alt LIMIT %d, %d" % (query, query, query, query, offset, page_size)
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+
+        self.cursor.execute(
+            "SELECT COUNT(id) FROM variant WHERE chr=%s OR pos=%s OR ref=%s OR alt=%s" 
+            % (query, query, query, query)
+        )
+        num_variants = self.cursor.fetchone()
+        num_variants = num_variants[0]
+        return result, num_variants
+
+    def preprocess_search_query(self, query):
+        res = re.search("(.*)(%.*%)", query)
+        ext = ''
+        if res is not None:
+            query = res.group(1)
+            ext = res.group(2)
+        
+        if query.startswith("HGNC:"):
+            return "gene", query[5:]
+        if "%gene%" in ext:
+            return "gene", query
+        if "c." in query or "p." in query or "%hgvs%" in ext:
+            return "hgvs", query
+        if "-" in query or "%range%" in ext:
+            return "range", query
+        return "standard", query
+
+
+
     def get_clinvar_variant_annotation(self, variant_id):
         command = "SELECT * FROM clinvar_variant_annotation WHERE variant_id = " + enquote(variant_id)
         self.cursor.execute(command)
@@ -446,6 +522,16 @@ class Connection:
         result = self.cursor.fetchall()
         return result
 
-
+    def get_variant_id_by_hgvs(self, reference_transcript, hgvs):
+        command = "SELECT variant_id FROM variant_consequence WHERE transcript_name=" + enquote(reference_transcript) 
+        if hgvs.startswith('c.'):
+            command = command + " AND hgvs_c=" + enquote(hgvs)
+        if hgvs.startswith('p.'):
+            command = command + " AND hgvs_p=" + enquote(hgvs)
+        self.cursor.execute(command)
+        result = self.cursor.fetchone()
+        if result is not None:
+            result = result[0]
+        return result
 
 
