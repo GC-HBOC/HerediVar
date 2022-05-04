@@ -9,6 +9,7 @@ from werkzeug.exceptions import abort
 import common.functions as functions
 import tempfile
 import time
+import re
 
 app = Flask(__name__)
 
@@ -21,7 +22,6 @@ app.config['SECRET_KEY'] = '8pfucoisaugfqw94hoaiddrvhe6efc5b456vvfl09'
 #app.config["MYSQL_PORT"] = 3306
 
 ##mysql = MySQL(app)
-
 
 
 
@@ -41,6 +41,26 @@ def get_variant_id(conn, chr, pos, ref, alt):
     variant_id = conn.get_variant_id(chr, pos, ref, alt)
     return variant_id
 
+def is_valid_query(search_query):
+    print(search_query)
+    if re.search("%.*%\s*%.*%", search_query):
+        flash("Search query ERROR: No multiple query types allowed in: " + search_query, 'alert-danger')
+        return False
+    if re.search('-', search_query):
+        if not re.search("chr.+:\d+-\d+", search_query): # chr2:214767531-214780740
+            flash("Search query malformed: Expecting chromosomal range search of the form: 'chr:start-end'. Query: " + search_query + " If you are looking for a gene which contains a '-' use the appropriate radio button or append '%gene%'.", 'alert-danger')
+            return False # if the range query is not exactly of this form it is malformed
+        else:
+            res = re.search("chr.+:(\d+)-(\d+)", search_query)
+            start = res.group(1)
+            end = res.group(2)
+            if start > end:
+                flash("Search query WARNING: Range search start position is larger than the end position, in: " + search_query, 'alert-danger')
+    if "%hgvs%" in search_query:
+        if not re.search(".*:[c\.|p\.]", search_query):
+            flash("Search query ERROR: malformed hgvs found in " + search_query + " expecting 'transcript:[c. OR p.]...'", 'alert-danger')
+            return False
+    return True
 
 @app.route('/')
 def base():
@@ -91,26 +111,27 @@ def create():
     return render_template('create.html', chrs=chrs)
 
 
-@app.route('/browse', methods=['GET', 'POST'])
+@app.route('/search', methods=['GET', 'POST'])
 def browse():
-    search_value = ''
+    search_query=''
     if request.method == 'POST':
-        search_value = request.form['quicksearch']
+        search_query = request.form['quicksearch']
         search_type = request.form['chosen_search_type']
-        print(search_type)
-        #if search_type != 'standard' and search_value != '':
-        #    search_value = search_value + search_type
+        if search_type != 'standard' and search_query != '' and '%' not in search_query:
+            search_query = search_query + search_type
+        if not is_valid_query(search_query):
+            return redirect(url_for('browse'))
     page = int(request.args.get('page', 1))
     per_page = 20
     conn = Connection()
-    variants, total = conn.get_paginated_variants(page, per_page, search_value)
+    variants, total = conn.get_paginated_variants(page, per_page, search_query)
     conn.close()
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
-    return render_template('browse.html', variants=variants, page=page, per_page=per_page, pagination=pagination)
+    return render_template('browse.html', variants=variants, page=page, per_page=per_page, pagination=pagination, search_query=search_query)
 
 
 @app.route('/display/<int:variant_id>', methods=['GET', 'POST'])
-@app.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>', methods=['GET', 'POST']) # alternative urls using vcf information
+@app.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>', methods=['GET', 'POST']) # alternative url using vcf information
 # example: http://127.0.0.1:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http://127.0.0.1:5000/display/17
 def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     conn = Connection()

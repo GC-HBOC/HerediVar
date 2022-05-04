@@ -386,6 +386,8 @@ class Connection:
         self.cursor.execute(command)
         variant_ids = self.cursor.fetchall()
         variant_ids = [x[0] for x in variant_ids]
+        if len(variant_ids) == 0:
+            return [], 0
 
         num_variants = len(variant_ids)
 
@@ -440,8 +442,8 @@ class Connection:
         if res is not None:
             query = res.group(1)
             ext = res.group(2)
-        
-        if query.startswith("HGNC:"):
+        query = query.strip()
+        if query.startswith(("HGNC:", "hgnc:")):
             return "gene", query[5:]
         if "%gene%" in ext:
             return "gene", query
