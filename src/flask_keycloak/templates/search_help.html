@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1> {% block title %} Search Help {% endblock %} </h1>
+
+You can filter the table of variants by:
+<ul>
+    <li>Any column (e.g. chr1, to display all variants in chromosome 1)</li>
+    <li>A gene name (or unique alias) or hgvs id. You may preprend HGNC (! select the radio button in search options or append %gene% to your query) (e. g. BARD1%gene%)</li>
+    <li>A HGVS p. or c. string (e. g. ENST00000260947:c.1972C>T)</li>
+    <li>A chromosomal range of the form: chr:start-end (e. g. chr2:214767531-214780740)</li>
+</ul>
+
+How to explicitly state what you are looking for:
+<ul>
+    <li>Search for anything in the quicksearch and the parser will try to infer what you are looking for. If this fails either click one of the radio buttons in 'Search Options' or append '%x%' to your search string while replacing x with 'gene', 'hgvs' or 'range'</li>
+    <li>It is especially useful to explicitly state '%gene%' or klick the corresponding radio button when searching for genes</li>
+</ul>
+
+</div>
+
+{% endblock %}
+

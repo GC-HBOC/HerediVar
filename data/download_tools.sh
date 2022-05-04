@@ -19,13 +19,14 @@ cd $tools
 #download and build ngs-bits
 
 #cd $tools
+: '
 git clone --recursive https://github.com/imgag/ngs-bits.git
 cd ngs-bits
 ##git checkout 2021_12 && git submodule update --recursive --init ## select stable version once project is finished!
 make build_3rdparty
 make build_libs_release
 make build_tools_release
-
+'
 
 
 #download and build samtools
@@ -65,3 +66,7 @@ pip install biopython
 pip install flask-paginate
 '
 
+cd $tools
+wget https://github.com/keycloak/keycloak/releases/download/18.0.0/keycloak-18.0.0.zip
+unzip keycloak-18.0.0.zip
+rm keycloak-18.0.0.zip
