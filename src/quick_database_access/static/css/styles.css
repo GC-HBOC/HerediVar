@@ -99,6 +99,21 @@ table.scroll th {
     cursor:pointer;
 }
 
+.defaultrow {
+    text-align:center;
+    background-color:rgb(245, 245, 245);
+    color:gray;
+}
+
+
+
+
+.pagination {
+    margin-bottom:0px;
+}
+
+
+
 
 .bst {
     margin-top: 25px;
