@@ -160,3 +160,4 @@ fabric.properties
 /src/tools/node-v16.15.0-linux-x64/
 src/nextjs_react/heredivar/.parcel-cache/
 /src/nextjs_react/heredivar/node_modules/
+/src/tools/keycloak-18.0.0
