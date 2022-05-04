@@ -5,6 +5,7 @@ import re
 import sys
 import subprocess
 import common.paths as paths
+import tempfile
 
 def basedir():
     return os.getcwd()
@@ -138,18 +139,50 @@ def execute_command(command, process_name):
     return completed_process.returncode, err_msg, command_output
 
 
-
 def check_vcf(path):
     command = [paths.ngs_bits_path + "VcfCheck",
                "-in", path, "-lines", "0", "-ref", paths.ref_genome_path]
     returncode, err_msg, vcf_errors = execute_command(command, 'VcfCheck')
     return returncode, err_msg, vcf_errors
 
+
 def left_align_vcf(path):
     command = [paths.ngs_bits_path + "VcfLeftNormalize",
                "-in", path, "-stream", "-ref", paths.ref_genome_path]
     returncode, err_msg, command_output = execute_command(command, 'VcfLeftNormalize')
     return returncode, err_msg, command_output
+
+
+def hgvsc_to_vcf(hgvs):
+    tmp_file_path = tempfile.gettempdir() + "/hgvs_to_vcf"
+
+    tmp_file = open(tmp_file_path + ".tsv", "w")
+    tmp_file.write("#reference	hgvs_c\n")
+    reference, hgvs = split_hgvs(hgvs)
+    tmp_file.write(reference + "\t" + hgvs + "\n")
+    tmp_file.close()
+
+    command = [paths.ngs_bits_path + "/HgvsToVcf", '-in', tmp_file_path + '.tsv', '-ref', paths.ref_genome_path, '-out', tmp_file_path + '.vcf']
+    returncode, err_msg, command_output = execute_command(command, "HgvsToVcf")
+    
+    tmp_file = open(tmp_file_path + '.vcf', "r")
+    for line in tmp_file: # this assumes a single-entry vcf
+        if line.strip() == '' or line.startswith('#'):
+            continue
+        parts = line.split('\t')
+        chr = parts[0]
+        pos = parts[1]
+        ref = parts[3]
+        alt = parts[4]
+    return chr, pos, ref, alt
+
+
+# function for splitting hgvs in refrence transcript and variant
+def split_hgvs(hgvs):
+    reference = hgvs[:hgvs.find(':')]
+    hgvs = hgvs[hgvs.find(':')+1:]
+    return reference, hgvs
+
 
 def find_between(s, prefix, postfix):
     res = re.search(prefix+r'(.*?)'+postfix, s)

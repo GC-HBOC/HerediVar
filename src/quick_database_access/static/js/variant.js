@@ -8,6 +8,13 @@ if (table != null) {
 
 $(document).ready(function()
 {
+    
+    ////////// functionality for the reannotate button
+    $('#reannotate_button').click(function()
+    {
+        $(this).attr('disabled', true);
+        return true;
+    });
     var annotation_status = $('#annotation_status').data()['annotationStatus'];
     if (annotation_status === 'pending'){
         $('#reannotate_button').attr('disabled', true)

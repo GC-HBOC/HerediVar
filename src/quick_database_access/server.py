@@ -96,6 +96,10 @@ def browse():
     search_value = ''
     if request.method == 'POST':
         search_value = request.form['quicksearch']
+        search_type = request.form['chosen_search_type']
+        print(search_type)
+        #if search_type != 'standard' and search_value != '':
+        #    search_value = search_value + search_type
     page = int(request.args.get('page', 1))
     per_page = 20
     conn = Connection()
@@ -132,7 +136,7 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
         clinvar_variant_annotation_id = clinvar_variant_annotation[0]
         clinvar_submissions = conn.get_clinvar_submissions(clinvar_variant_annotation_id)
     
-    variant_consequences = conn.get_variant_consequences(variant_id)
+    variant_consequences = conn.get_variant_consequences(variant_id) # 0transcript_name,1hgvs_c,2hgvs_p,3consequence,4impact,5exon_nr,6intron_nr,7symbol,8transcript.gene_id,9source,10pfam_accession,11pfam_description,12length,13is_gencode_basic,14is_mane_select,15is_mane_plus_clinical,16is_ensembl_canonical,17total_flag
 
     literature = conn.get_variant_literature(variant_id)
 
@@ -155,6 +159,11 @@ def gene(gene_id):
     transcripts = conn.get_transcripts(gene_id) # 0gene_id,1name,2biotype,3length,4is_gencode_basic,5is_mane_select,6is_mane_plus_clinical,7is_ensembl_canonical,8total_flags
     conn.close()
     return render_template('gene.html', gene_info=gene_info, transcripts=transcripts)
+
+
+@app.route('/help/search')
+def search_help():
+    return render_template('search_help.html')
 
 
 if __name__ == '__main__':
