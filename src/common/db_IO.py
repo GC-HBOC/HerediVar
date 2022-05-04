@@ -353,8 +353,10 @@ class Connection:
     
 
     # functions specific for frontend!
-    def get_paginated_variants(self, page, page_size, query = ''):
+    def get_paginated_variants(self, page, page_size, query_type = '', query = ''):
         offset = (page - 1) * page_size
+        result = []
+        num_variants = 0
         if query == '' or query is None:
             self.cursor.execute(
                 "SELECT id,chr,pos,ref,alt FROM variant ORDER BY chr, pos, ref, alt LIMIT %d, %d"
@@ -366,7 +368,6 @@ class Connection:
             num_variants = self.cursor.fetchone()
             num_variants = num_variants[0]
         else:
-            query_type, query = self.preprocess_search_query(query)
             if query_type == 'standard':
                 result, num_variants = self.standard_search(query, offset, page_size)
             elif query_type == 'hgvs':
@@ -436,22 +437,7 @@ class Connection:
         num_variants = num_variants[0]
         return result, num_variants
 
-    def preprocess_search_query(self, query):
-        res = re.search("(.*)(%.*%)", query)
-        ext = ''
-        if res is not None:
-            query = res.group(1)
-            ext = res.group(2)
-        query = query.strip()
-        if query.startswith(("HGNC:", "hgnc:")):
-            return "gene", query[5:]
-        if "%gene%" in ext:
-            return "gene", query
-        if "c." in query or "p." in query or "%hgvs%" in ext:
-            return "hgvs", query
-        if "-" in query or "%range%" in ext:
-            return "range", query
-        return "standard", query
+
 
 
 
