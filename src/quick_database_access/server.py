@@ -62,6 +62,23 @@ def is_valid_query(search_query):
             return False
     return True
 
+def preprocess_search_query(query):
+    res = re.search("(.*)(%.*%)", query)
+    ext = ''
+    if res is not None:
+        query = res.group(1)
+        ext = res.group(2)
+    query = query.strip()
+    if query.startswith(("HGNC:", "hgnc:")):
+        return "gene", query[5:]
+    if "%gene%" in ext:
+        return "gene", query
+    if "c." in query or "p." in query or "%hgvs%" in ext:
+        return "hgvs", query
+    if "-" in query or "%range%" in ext:
+        return "range", query
+    return "standard", query
+
 @app.route('/')
 def base():
     #conn.insert_variants_from_vcf("./data/NA12878_03_export_20220308_ahsturm1.vcf")
@@ -121,10 +138,11 @@ def browse():
             search_query = search_query + search_type
         if not is_valid_query(search_query):
             return redirect(url_for('browse'))
+    query_type, search_query = preprocess_search_query(search_query)
     page = int(request.args.get('page', 1))
     per_page = 20
     conn = Connection()
-    variants, total = conn.get_paginated_variants(page, per_page, search_query)
+    variants, total = conn.get_paginated_variants(page, per_page, query_type, search_query)
     conn.close()
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
     return render_template('browse.html', variants=variants, page=page, per_page=per_page, pagination=pagination, search_query=search_query)
