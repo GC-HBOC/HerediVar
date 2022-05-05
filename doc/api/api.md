@@ -57,7 +57,7 @@
 - ..
 
 
-## Familyhistory
+## Family history
 
 
 **Use case:** Get the family history for a variant
