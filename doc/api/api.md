@@ -6,7 +6,7 @@
 
 | Parameter  | Definition                                              |
 |------------|---------------------------------------------------------|
-| Url:       | https:://*[host]*/HerediCareAPI/*[version]*/seq_id_list |
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/seq_id_list |
 | Arguments: | n/a                                                     |
 | Returns:   | [XML](seq_id_list_return.xsd) with all SEQ-IDs for which a VCF reprentation of the variant exists. |
 
@@ -22,7 +22,7 @@
 
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
-| Url:       | https:://*[host]*/HerediCareAPI/*[version]*/*[seq_id]*/variant |
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/*[seq_id]*/variant |
 | Arguments: | seq_id=*[SEQ-ID]*                                         |
 | Returns:   | [XML](variant_return.xsd) with chr, pos, ref, alt, genomebuild|
 
@@ -35,7 +35,7 @@
 
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
-| Url:       | https:://*[host]*/HerediCareAPI/*[version]*/*[seq_id]*/segregation   |
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/*[seq_id]*/segregation   |
 | Arguments: | seq_id=*[SEQ-ID]*                                         |
 | Returns:   | [XML](segregation_return.xsd) with the segregation 'score'|
 
@@ -49,7 +49,7 @@
 
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
-| Url:       | https:://*[host]*/HerediCareAPI/*[version]*/*[seq_id]*/tumorpathology/  |
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/*[seq_id]*/tumorpathology/  |
 | Arguments: | seq_id=*[SEQ-ID]*                                         |
 | Returns:   | [XML](tumorpathology_return.xsd) with the tumorpathology score |
 
@@ -64,7 +64,7 @@
 
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
-| Url:       | https:://*[host]*/HerediCareAPI/*[version]*/*[seq_id]*/family_history |
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/*[seq_id]*/family_history |
 | Arguments: | seq_id=*[SEQ-ID]*                                         |
 | Returns:   | [XML](family_history_return.xsd) with the number of families showing this variant and the number of cases |
 
@@ -79,7 +79,7 @@
 
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
-| Url:       | https:://*[host]*/HerediCareAPI/*[version]*/*[seq_id]*/classifications |
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/*[seq_id]*/classifications |
 | Arguments: | seq_id=*[SEQ-ID]*                                         |
 | Returns:   | [XML](classification_return.xsd) with center, classification, comment and if it was the first classification |
 
