@@ -27,7 +27,7 @@
 | Returns:   | [XML](variant_return.xsd) with chr, pos, ref, alt, genomebuild|
 
 **Questions:**
-- 
+- ..
 
 ## Likelihood ratio for segregation
 
@@ -40,7 +40,7 @@
 | Returns:   | [XML](segregation_return.xsd) with the segregation 'score'|
 
 **Questions:**
-- 
+- ..
 
 
 ## Likelihood ratio for tumorpathology
@@ -54,7 +54,7 @@
 | Returns:   | [XML](tumorpathology_return.xsd) with the tumorpathology score |
 
 **Questions:**
-- 
+- ..
 
 
 ## Familyhistory
@@ -69,7 +69,7 @@
 | Returns:   | [XML](family_history_return.xsd) with the number of families showing this variant and the number of cases |
 
 **Questions:**
-- 
+- ..
 
 
 ## Classification
@@ -84,7 +84,7 @@
 | Returns:   | [XML](classification_return.xsd) with center, classification, comment and if it was the first classification |
 
 **Questions:**
-- 
+- ..
 
 
 ## Phenotypic data?
