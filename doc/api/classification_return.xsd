@@ -2,13 +2,13 @@
 <!-- Mit XMLSpy v2014 (x64) (http://www.altova.com) von Dr. Peter Bauer (Universitätsklinikum Tübingen) bearbeitet -->
 <!-- edited with XMLSpy v2014 (x64) (http://www.altova.com) by Dr. Peter Bauer (Universitätsklinikum Tübingen) -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:altova="http://www.altova.com/xml-schema-extensions" elementFormDefault="qualified" attributeFormDefault="unqualified" vc:minVersion="1.1">
-	<xs:element name="Classification_list">
+	<xs:element name="ClassificationList">
 		<xs:annotation>
 			<xs:documentation>List of Previous Classifications</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element name="classification" maxOccurs="unbounded">
+				<xs:element name="Classification" maxOccurs="unbounded">
 					<xs:annotation>
 						<xs:documentation>A single classification</xs:documentation>
 					</xs:annotation>
@@ -42,7 +42,7 @@
 								<xs:documentation>The comment of the submitting center for its classification</xs:documentation>
 							</xs:annotation>
 						</xs:attribute>
-						<xs:attribute name="isfirst" type="xs:boolean" use="required">
+						<xs:attribute name="is_first" type="xs:boolean" use="required">
 							<xs:annotation>
 								<xs:documentation>Booolean which states if this classification was the first one</xs:documentation>
 							</xs:annotation>
