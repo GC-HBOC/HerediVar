@@ -38,7 +38,7 @@
 |------------|-----------------------------------------------------------|
 | Url:       | https://*[host]*/HerediCareAPI/*[version]*/likelihoods   |
 | Arguments: | seq_id=*[SEQ-ID]*                                         |
-| Returns:   | [XML](likelihoods_return.xsd) with the segregation and tumorpathology 'scores'|
+| Returns:   | [XML](likelihoods_return.xsd) with the segregation and tumorpathology likelihoods|
 
 **Questions:**
 - How long does it take to compute likelihoods? --> Merge with query variant endpoint if it is fast
