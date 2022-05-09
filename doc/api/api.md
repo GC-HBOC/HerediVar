@@ -23,25 +23,11 @@
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
 | Url:       | https://*[host]*/HerediCareAPI/*[version]*/variant |
-| Arguments: | seq_id=*[SEQ-ID]*                                         |
-| Returns:   | [XML](variant_return.xsd) with: <ul><li>variant in VCF format: chr, pos, ref, alt, genomebuild</li><li>family history: the number of families showing this variant and the number of cases</li><li>previous classifications: center, classification, comment and boolean if it was the first classification (multiple possible)</li></ul>|
+| Arguments: | id=*[int:ID]*                                         |
+| Returns:   | [XML](variant_return.xsd) with: <ul><li>variant in VCF format: chr, pos, ref, alt, genomebuild</li><li>family history: the number of families showing this variant and the number of cases</li><li>previous classifications: center, classification, comment and boolean if it was the first classification (multiple possible)</li><li>likelihoods: segregation and tumorpathology likelihoods</li></ul>|
 
 **Questions:**
 - ..
-
-
-## Get Likelihoods?
-
-**Use case:** Get the likelihood for segregation and likelihood tumorpathology for a variant
-
-| Parameter  | Definition                                                |
-|------------|-----------------------------------------------------------|
-| Url:       | https://*[host]*/HerediCareAPI/*[version]*/likelihoods   |
-| Arguments: | seq_id=*[SEQ-ID]*                                         |
-| Returns:   | [XML](likelihoods_return.xsd) with the segregation and tumorpathology likelihoods|
-
-**Questions:**
-- How long does it take to compute likelihoods? --> Merge with query variant endpoint if it is fast
 
 
 ## Upload Variant
@@ -53,7 +39,7 @@
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
 | Url:       | https://*[host]*/HerediCareAPI/*[version]*/upload-classification  |
-| Arguments: | seq_id=*[SEQ-ID]*                                         |
+| Arguments: | id=*[id:ID]*                                         |
 | Receives:   | [XML](classification_upload.xsd) with class, date, pdf containing information about the classification (base-64 encoding)|
 
 **Questions:**
@@ -119,6 +105,22 @@
 
 **Questions:**
 - ..
+
+
+
+## Get Likelihoods?
+
+**Use case:** Get the likelihood for segregation and likelihood tumorpathology for a variant
+
+| Parameter  | Definition                                                |
+|------------|-----------------------------------------------------------|
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/likelihoods   |
+| Arguments: | id=*[int:ID]*                                         |
+| Returns:   | [XML](likelihoods_return.xsd) with the segregation and tumorpathology likelihoods|
+
+**Questions:**
+- How long does it take to compute likelihoods? -> Merge with query variant endpoint if it is fast
+
 -->
 
 ## Phenotypic data?
