@@ -1,4 +1,4 @@
-# HerediCare API
+# HerediCare API Endpoints
 
 ## Query SEQ-IDs
 
@@ -6,6 +6,7 @@
 
 | Parameter  | Definition                                              |
 |------------|---------------------------------------------------------|
+| Type:      | GET |
 | Url:       | https://*[host]*/HerediCareAPI/*[version]*/seq_id_list |
 | Arguments: | n/a                                                     |
 | Returns:   | [XML](seq_id_list_return.xsd) with all SEQ-IDs for which a VCF reprentation of the variant exists. |
@@ -16,34 +17,52 @@
 - Format/Type of SEQ-IDs?
 
 
-## Query Variant
+## GET: Query Variant
 
 **Use case:** Get a variant in vcf format and its annotations corresponding to a SEQ-ID.
 
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
+| Type:      | GET |
 | Url:       | https://*[host]*/HerediCareAPI/*[version]*/variant |
-| Arguments: | id=*[int:ID]*                                         |
+| Arguments: | **id**: *integer*, in query, The HerediCare Seq-ID                                         |
 | Returns:   | [XML](variant_return.xsd) with: <ul><li>variant in VCF format: chr, pos, ref, alt, genomebuild</li><li>family history: the number of families showing this variant and the number of cases</li><li>previous classifications: center, classification, comment and boolean if it was the first classification (multiple possible)</li><li>likelihoods: segregation and tumorpathology likelihoods</li></ul>|
 
 **Questions:**
 - ..
 
 
-## Upload Variant
+## Upload Classification
 
 **Use case:** Send task-force consensus classification for a variant back to HerediCare
 
-**Type:** POST
+| Parameter  | Definition                                                |
+|------------|-----------------------------------------------------------|
+| Type:      | POST |
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/upload-classification  |
+| Arguments: | <ul><li>**id**: *integer*, in query, The HerediCare Seq-ID</li><li>**classification**: *XML*, in body, An [XML](upload_classification.xsd) file with class, date, pdf containing information about the classification (base-64 encoding)</li></ul> |
+| Returns:   | n/a |
+
+**Questions:**
+- ..
+
+
+
+## Create Variant
+
+**Use case:** Create a new variant entry in HerediCare
 
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
-| Url:       | https://*[host]*/HerediCareAPI/*[version]*/upload-classification  |
-| Arguments: | id=*[int:ID]*                                         |
-| Receives:   | [XML](classification_upload.xsd) with class, date, pdf containing information about the classification (base-64 encoding)|
+| Type:      | POST |
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/upload-variant  |
+| Arguments: | **variant**: *XML*, in body, An [XML](create_variant_upload.xsd) with chr, pos, ref, alt |
+| Returns:   | [XML](create_variant_return.xsd) with new ID |
 
 **Questions:**
-- How to handle variants which lack a Seq-ID (e. g. inserted using the web frontend)?
+- ..
+
+
 
 
 
