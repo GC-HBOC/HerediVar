@@ -6,144 +6,54 @@
 
 | Parameter  | Definition                                              |
 |------------|---------------------------------------------------------|
-| Type:      | GET |
-| Url:       | https://*[host]*/HerediCareAPI/*[version]*/seq_id_list |
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/seq_id_list  |
 | Arguments: | n/a                                                     |
-| Returns:   | [XML](seq_id_list_return.xsd) with all SEQ-IDs for which a VCF reprentation of the variant exists. |
+| Returns:   | [XML](seq_id_list.xsd) with all SEQ-IDs for which a VCF reprentation of the variant exists. |
 
 **Questions:**
-- Does each SEQ-ID identify one variant? If not, we need to curate them?!
-- Can SEQ-IDs disapear/change? What do we do then?
-- Format/Type of SEQ-IDs?
+- Format of SEQ-IDs? Integer
+- SEQ-IDs can be deleted. Delete them in HerediVar as well, unless there is a classification for it.
+- Does each SEQ-ID identify one variant? We should check for duplicates!
 
 
-## GET: Query Variant
+## Query variant data and annotations
 
-**Use case:** Get a variant in vcf format and its annotations corresponding to a SEQ-ID.
+**Use case:** Get a variant in VCF-style and annotations for HerediCare.
 
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
-| Type:      | GET |
-| Url:       | https://*[host]*/HerediCareAPI/*[version]*/variant |
-| Arguments: | **id**: *integer*, in query, The HerediCare Seq-ID                                         |
-| Returns:   | [XML](variant_return.xsd) with: <ul><li>variant in VCF format: chr, pos, ref, alt, genomebuild</li><li>family history: the number of families showing this variant and the number of cases</li><li>previous classifications: center, classification, comment and boolean if it was the first classification (multiple possible)</li><li>likelihoods: segregation and tumorpathology likelihoods</li></ul>|
-
-**Questions:**
-- ..
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/variant        |
+| Arguments: | **id** (*integer/GET*): the HerediCare Seq-ID             |
+| Returns:   | [XML](variant.xsd) with: <ul><li>variant in VCF-like representation: chr, pos, ref, alt, genomebuild</li><li>family history: the number of families showing this variant and the number of cases</li><li>previous classifications: center, classification, comment and boolean if it was the first classification (multiple possible)</li></ul>|
 
 
 ## Upload Classification
 
-**Use case:** Send task-force consensus classification for a variant back to HerediCare
+**Use case:** Send consensus classification of VUS Task-Force back to HerediCare
 
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
-| Type:      | POST |
 | Url:       | https://*[host]*/HerediCareAPI/*[version]*/upload-classification  |
-| Arguments: | <ul><li>**id**: *integer*, in query, The HerediCare Seq-ID</li><li>**classification**: *XML*, in body, An [XML](upload_classification.xsd) file with class, date, pdf containing information about the classification (base-64 encoding)</li></ul> |
-| Returns:   | n/a |
-
-**Questions:**
-- ..
-
+| Arguments: | <ul><li>**id** (*integer/GET*): The HerediCare Seq-ID</li><li>**classification** (*XML/POST)*: An [XML](upload_classification.xsd) file with class, date, pdf containing information about the classification (base-64 encoding)</li></ul> |
+| Returns:   | n/a (only return code 200, 400, ...)  |
 
 
 ## Create Variant
 
-**Use case:** Create a new variant entry in HerediCare
+**Use case:** Create a new variant entry in HerediCare for variants that were created in HerediVar
 
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
-| Type:      | POST |
-| Url:       | https://*[host]*/HerediCareAPI/*[version]*/upload-variant  |
-| Arguments: | **variant**: *XML*, in body, An [XML](create_variant_upload.xsd) with chr, pos, ref, alt |
-| Returns:   | [XML](create_variant_return.xsd) with new ID |
-
-**Questions:**
-- ..
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/upload-variant |
+| Arguments: | <ul><li>**chr** (*enum/GET)*: chr, chr2, ..., chrX, chrY, chrMT</li><li>**pos** (*int/GET*): chromosomal position</li><li>**ref** (*string/GET*): reference sequence</li><li>**alt** (*string/GET*): alternative/observed sequence</li></ul>|
+| Returns:   | [XML](create_variant.xsd) with new ID |
 
 
+## Likelyhoods?
 
-
-
-<!-- 
-
-## Likelihood ratio for segregation
-
-**Use case:** Get the likelyhood for segregation for a variant
-
-| Parameter  | Definition                                                |
-|------------|-----------------------------------------------------------|
-| Url:       | https://*[host]*/HerediCareAPI/*[version]*/segregation   |
-| Arguments: | seq_id=*[SEQ-ID]*                                         |
-| Returns:   | [XML](segregation_return.xsd) with the segregation 'score'|
-
-**Questions:**
-- ..
-
-
-## Likelihood ratio for tumorpathology
-
-**Use case:** Get the likelyhood of tumorpathology for a variant
-
-| Parameter  | Definition                                                |
-|------------|-----------------------------------------------------------|
-| Url:       | https://*[host]*/HerediCareAPI/*[version]*/tumorpathology  |
-| Arguments: | seq_id=*[SEQ-ID]*                                         |
-| Returns:   | [XML](tumorpathology_return.xsd) with the tumorpathology score |
-
-**Questions:**
-- ..
-
-
-## Family history
-
-
-**Use case:** Get the family history for a variant
-
-| Parameter  | Definition                                                |
-|------------|-----------------------------------------------------------|
-| Url:       | https://*[host]*/HerediCareAPI/*[version]*/family_history |
-| Arguments: | seq_id=*[SEQ-ID]*                                         |
-| Returns:   | [XML](family_history_return.xsd) with the number of families showing this variant and the number of cases |
-
-**Questions:**
-- ..
-
-
-## Classification
-
-
-**Use case:** Get already existing classifications
-
-| Parameter  | Definition                                                |
-|------------|-----------------------------------------------------------|
-| Url:       | https://*[host]*/HerediCareAPI/*[version]*/classifications |
-| Arguments: | seq_id=*[SEQ-ID]*                                         |
-| Returns:   | [XML](classification_return.xsd) with center, classification, comment and if it was the first classification |
-
-**Questions:**
-- ..
-
-
-
-## Get Likelihoods?
-
-**Use case:** Get the likelihood for segregation and likelihood tumorpathology for a variant
-
-| Parameter  | Definition                                                |
-|------------|-----------------------------------------------------------|
-| Url:       | https://*[host]*/HerediCareAPI/*[version]*/likelihoods   |
-| Arguments: | id=*[int:ID]*                                         |
-| Returns:   | [XML](likelihoods_return.xsd) with the segregation and tumorpathology likelihoods|
-
-**Questions:**
-- How long does it take to compute likelihoods? -> Merge with query variant endpoint if it is fast
-
--->
+segregation and tumorpathology likelihoods
 
 ## Phenotypic data?
 
 Anzahl Träger BC, OC, BCOC, nicht erkrankte + age at onset/diagnosis of disease + Ethnie + Geschlecht (Personenspezifische Daten höchstens temporär, speziell für TP53 [age at onset+Tumortyp+Familie])
 ? TP53 noch prüfen ob relevant > Gunnar
-

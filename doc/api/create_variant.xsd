@@ -2,14 +2,14 @@
 <!-- Mit XMLSpy v2014 (x64) (http://www.altova.com) von Dr. Peter Bauer (Universitätsklinikum Tübingen) bearbeitet -->
 <!-- edited with XMLSpy v2014 (x64) (http://www.altova.com) by Dr. Peter Bauer (Universitätsklinikum Tübingen) -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:altova="http://www.altova.com/xml-schema-extensions" elementFormDefault="qualified" attributeFormDefault="unqualified" vc:minVersion="1.1">
-	<xs:element name="SegregationData">
+	<xs:element name="SeqId">
 		<xs:annotation>
-			<xs:documentation>Segregation data</xs:documentation>
+			<xs:documentation>A single SEQ-ID</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
-			<xs:attribute name="segregation_likelihood" type="xs:float" use="required">
+			<xs:attribute name="id" type="xs:int" use="required">
 				<xs:annotation>
-					<xs:documentation>The likelihood for segregation</xs:documentation>
+					<xs:documentation>identifier</xs:documentation>
 				</xs:annotation>
 			</xs:attribute>
 		</xs:complexType>

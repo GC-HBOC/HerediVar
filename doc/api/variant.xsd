@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Mit XMLSpy v2014 (x64) (http://www.altova.com) von Dr. Peter Bauer (Universitätsklinikum Tübingen) bearbeitet -->
+<!-- edited with XMLSpy v2014 (x64) (http://www.altova.com) by Dr. Peter Bauer (Universitätsklinikum Tübingen) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:altova="http://www.altova.com/xml-schema-extensions" elementFormDefault="qualified" attributeFormDefault="unqualified" vc:minVersion="1.1">
+	<xs:element name="Variant">
+		<xs:annotation>
+			<xs:documentation>Genetic variant in VCF format</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="Occurances">
+					<xs:annotation>
+						<xs:documentation>Occurances in HerdiCare</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:attribute name="cases_count" type="xs:int" use="required">
+							<xs:annotation>
+								<xs:documentation>Number of cases the variant occurs in</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="family_count" type="xs:int" use="required">
+							<xs:annotation>
+								<xs:documentation>Number of families the variant occurs in</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="ClassificationCenter" minOccurs="0" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation>Classifications of the variant in HerediCare by centers</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:attribute name="class" use="required">
+							<xs:annotation>
+								<xs:documentation>Classification</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:enumeration value="1"/>
+									<xs:enumeration value="2"/>
+									<xs:enumeration value="3"/>
+									<xs:enumeration value="4"/>
+									<xs:enumeration value="5"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+						<xs:attribute name="date" type="xs:date" use="required">
+							<xs:annotation>
+								<xs:documentation>Classification/submission date</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="center_name" type="xs:string" use="required">
+							<xs:annotation>
+								<xs:documentation>Center name in case the source is 'center'</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="comment" type="xs:string" use="required">
+							<xs:annotation>
+								<xs:documentation>Comments</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="ClassificationTaskForce" minOccurs="0">
+					<xs:annotation>
+						<xs:documentation>Classifications of the variant in HerediCare by VUS-Task-Force</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:attribute name="class" use="required">
+							<xs:annotation>
+								<xs:documentation>Classification</xs:documentation>
+							</xs:annotation>
+							<xs:simpleType>
+								<xs:restriction base="xs:string">
+									<xs:enumeration value="1"/>
+									<xs:enumeration value="2"/>
+									<xs:enumeration value="3"/>
+									<xs:enumeration value="4"/>
+									<xs:enumeration value="5"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+						<xs:attribute name="date" type="xs:date" use="required">
+							<xs:annotation>
+								<xs:documentation>Classification/submission date</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+						<xs:attribute name="comment" type="xs:string" use="required">
+							<xs:annotation>
+								<xs:documentation>Comments</xs:documentation>
+							</xs:annotation>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:attribute name="chr" use="required">
+				<xs:annotation>
+					<xs:documentation>chromosome</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="chr1"/>
+						<xs:enumeration value="chr2"/>
+						<xs:enumeration value="chr3"/>
+						<xs:enumeration value="chr4"/>
+						<xs:enumeration value="chr5"/>
+						<xs:enumeration value="chr6"/>
+						<xs:enumeration value="chr7"/>
+						<xs:enumeration value="chr8"/>
+						<xs:enumeration value="chr9"/>
+						<xs:enumeration value="chr10"/>
+						<xs:enumeration value="chr11"/>
+						<xs:enumeration value="chr12"/>
+						<xs:enumeration value="chr13"/>
+						<xs:enumeration value="chr14"/>
+						<xs:enumeration value="chr15"/>
+						<xs:enumeration value="chr16"/>
+						<xs:enumeration value="chr17"/>
+						<xs:enumeration value="chr18"/>
+						<xs:enumeration value="chr19"/>
+						<xs:enumeration value="chr20"/>
+						<xs:enumeration value="chr21"/>
+						<xs:enumeration value="chr22"/>
+						<xs:enumeration value="chrX"/>
+						<xs:enumeration value="chrY"/>
+						<xs:enumeration value="chrMT"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+			<xs:attribute name="pos" type="xs:int" use="required">
+				<xs:annotation>
+					<xs:documentation>chromosomal position</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute name="ref" use="required">
+				<xs:annotation>
+					<xs:documentation>reference sequence</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+			<xs:attribute name="alt" use="required">
+				<xs:annotation>
+					<xs:documentation>observed/alternate sequence</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:minLength value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+			<xs:attribute name="genome_build" use="required">
+				<xs:annotation>
+					<xs:documentation>genome build that the variant positions refer to e.g. GRCh37</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:string">
+						<xs:enumeration value="GRCh37"/>
+						<xs:enumeration value="GRCh38"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>
