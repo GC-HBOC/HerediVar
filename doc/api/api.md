@@ -48,7 +48,7 @@
 
 **Use case:** Send task-force consensus classification for a variant back to HerediCare
 
-**Type** POST
+**Type:** POST
 
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
