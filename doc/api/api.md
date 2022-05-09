@@ -44,6 +44,20 @@
 - How long does it take to compute likelihoods? --> Merge with query variant endpoint if it is fast
 
 
+## Upload Variant
+
+**Use case:** Send task-force consensus classification for a variant back to HerediCare
+
+**Type** POST
+
+| Parameter  | Definition                                                |
+|------------|-----------------------------------------------------------|
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/upload-classification  |
+| Arguments: | seq_id=*[SEQ-ID]*                                         |
+| Receives:   | [XML](classification_upload.xsd) with class, date, pdf containing information about the classification (base-64 encoding)|
+
+**Questions:**
+- How to handle variants which lack a Seq-ID (e. g. inserted using the web frontend)?
 
 
 
