@@ -13,21 +13,41 @@
 **Questions:**
 - Does each SEQ-ID identify one variant? If not, we need to curate them?!
 - Can SEQ-IDs disapear/change? What do we do then?
-- Format of SEQ-IDs?
+- Format/Type of SEQ-IDs?
 
 
-## Query variant
+## Query Variant
 
-**Use case:** Get a variant in vcf format corresponding to a SEQ-ID.
+**Use case:** Get a variant in vcf format and its annotations corresponding to a SEQ-ID.
 
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
 | Url:       | https://*[host]*/HerediCareAPI/*[version]*/variant |
 | Arguments: | seq_id=*[SEQ-ID]*                                         |
-| Returns:   | [XML](variant_return.xsd) with chr, pos, ref, alt, genomebuild|
+| Returns:   | [XML](variant_return.xsd) with: <ul><li>variant in VCF format: chr, pos, ref, alt, genomebuild</li><li>family history: the number of families showing this variant and the number of cases</li><li>previous classifications: center, classification, comment and boolean if it was the first classification (multiple possible)</li></ul>|
 
 **Questions:**
 - ..
+
+
+## Get Likelihoods?
+
+**Use case:** Get the likelihood for segregation and likelihood tumorpathology for a variant
+
+| Parameter  | Definition                                                |
+|------------|-----------------------------------------------------------|
+| Url:       | https://*[host]*/HerediCareAPI/*[version]*/likelihoods   |
+| Arguments: | seq_id=*[SEQ-ID]*                                         |
+| Returns:   | [XML](likelihoods_return.xsd) with the segregation and tumorpathology 'scores'|
+
+**Questions:**
+- How long does it take to compute likelihoods? --> Merge with query variant endpoint if it is fast
+
+
+
+
+
+<!-- 
 
 ## Likelihood ratio for segregation
 
@@ -85,7 +105,7 @@
 
 **Questions:**
 - ..
-
+-->
 
 ## Phenotypic data?
 
