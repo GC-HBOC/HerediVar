@@ -39,7 +39,7 @@
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
 | Url:       | https://*[host]*/HerediCareAPI/*[version]*/upload-classification  |
-| Arguments: | id=*[id:ID]*                                         |
+| Arguments: | id=*[int:ID]*                                         |
 | Receives:   | [XML](classification_upload.xsd) with class, date, pdf containing information about the classification (base-64 encoding)|
 
 **Questions:**
