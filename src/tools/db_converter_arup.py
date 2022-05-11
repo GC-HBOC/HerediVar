@@ -46,14 +46,14 @@ for line in input_file:
         first_line = False
     if line.startswith('<td class="cDot">'):
         cdot = re.search('cDot">(.*)[<]', line).group(1)
-        matches_deletion_insertions = re.search('(.*del).*(ins.*)', cdot)
-        if matches_deletion_insertions is not None: # check if it is an insertion deletion and remove bases between them
-            cdot = matches_deletion_insertions.group(1) + matches_deletion_insertions.group(2)
-        else: 
-            matches = re.search('dup|ins|del|inv', cdot)
-            if matches is not None: # check if it is an insertion duplication or deletion and remove bases preceding these keywords
-                cut_here = matches.end(0)
-                cdot = cdot[:cut_here]
+        #matches_deletion_insertions = re.search('(.*del).*(ins.*)', cdot)
+        #if matches_deletion_insertions is not None: # check if it is an insertion deletion and remove bases between them
+        #    cdot = matches_deletion_insertions.group(1) + matches_deletion_insertions.group(2)
+        #else: 
+        matches = re.search('dup|del', cdot)
+        if matches is not None: # check if it is an insertion duplication or deletion and remove bases preceding these keywords
+            cut_here = matches.end(0)
+            cdot = cdot[:cut_here]
         # don't do anything if the hgvs is a snv
     if line.startswith('<td class="clsf">'):
         clsf = re.search('clsf">(.*)[<]', line).group(1)
