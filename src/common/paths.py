@@ -6,8 +6,8 @@ datadir = workdir + "data/dbs/"
 
 # tools
 vep_path = "/mnt/storage2/GRCh38/share/opt/ensembl-vep-release-104.3"
-ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-38-gd5054098"
-#ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
+#ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-38-gd5054098"
+ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
 
 
 # data
@@ -28,6 +28,7 @@ submission_summary_path = datadir + "ClinVar/submission_summary_preprocessed.txt
 BRCA_exchange_path = datadir + "BRCA_exchange/BRCA_exchange_02-22-22.vcf.gz"
 FLOSSIES_path = datadir + "FLOSSIES/FLOSSIES_25-03-2022.vcf.gz"
 cancerhotspots_path = datadir + "cancerhotspots/cancerhotspots.v2.final.vcf.gz"
+arup_brca_path = datadir + "ARUP/ARUP_BRCA_2022_04_01.vcf.gz"
 
 # data for init_db
 hgnc_path = datadir + "HGNC/hgnc_complete_set.tsv"
@@ -37,6 +38,6 @@ ensembl_canonical_path = datadir + "ensembl/Homo_sapiens.GRCh38.105.canonical.ts
 pfam_id_mapping_path = datadir + "PFAM/pfam_id_mapping.tsv"
 pfam_legacy_path = datadir + "PFAM/pfam_legacy.tsv"
 refseq_transcript_path = datadir + "RefSeq/refseq_transcripts_110.gff.gz"
-parsing_refseq_ensembl = datadir + "RefSeq/hg38_ensembl_transcript_matches.tsv"
+parsing_refseq_ensembl = datadir + "mapping_tables/hg38_ensembl_transcript_matches.tsv"
 omim_path = datadir + "OMIM/mim2gene.txt"
 orphanet_path = datadir + "OrphaNet/en_product6.xml"
