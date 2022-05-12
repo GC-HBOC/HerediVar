@@ -284,7 +284,11 @@ wget -O - http://oncotree.mskcc.org/api/tumorTypes?version=oncotree_2021_11_02 >
 
 #wget -O - https://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Homo_sapiens/annotation_releases/110/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.gff.gz > refseq_transcripts_110.gff.gz
 
+
 ## download ensembl refseq transcript id mapping table
+#cd $dbs
+#mkdir -p mapping_tables
+#cd mapping_tables
 #wget https://github.com/imgag/ngs-bits/raw/master/src/cppNGS/Resources/hg38_ensembl_transcript_matches.tsv
 
 
@@ -312,6 +316,7 @@ wget http://www.orphadata.org/data/xml/en_product6.xml
 
 ## download ARUP BRCA1 & BRCA2 (https://arup.utah.edu/database/BRCA/Variants/BRCA1.php and https://arup.utah.edu/database/BRCA/Variants/BRCA2.php)
 ## Database was accessed at 01.04.2022. As there is no versioning this date was used instead of an actual version number
+: '
 cd $dbs
 mkdir -p ARUP
 cd ARUP
@@ -322,10 +327,12 @@ wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA1.php | python3 $tool
 wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA2.php | python3 $tools/db_converter_arup.py --reference ENST00000380152 >> ARUP_BRCA_2022_04_01.tsv
 # working hgvstovcf on server: /mnt/storage1/share/opt/ngs-bits-hg38-2022_04-38-gd5054098/HgvsToVcf
 $ngsbits/HgvsToVcf -in ARUP_BRCA_2022_04_01.tsv -ref $genome -out ARUP_BRCA_2022_04_01.vcf
+$ngsbits/VcfSort -in ARUP_BRCA_2022_04_01.vcf -out ARUP_BRCA_2022_04_01.vcf
+cat ARUP_BRCA_2022_04_01.vcf | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > ARUP_BRCA_2022_04_01.vcf.gz
+tabix -p vcf ARUP_BRCA_2022_04_01.vcf.gz
+'
 
-#$ngsbits/HgvsToVcf -in test.tsv -ref $genome -out ARUP_BRCA_2022_04_01.vcf
 
-#python3 $tools/db_converter_arup.py --reference NM_007294.3 -i BRCA1.php > test.tsv 
 
 # TODO:
 # - Am Ende nochmal überlegen welche referenz genome verwendet werden aktuell: ucsc grch38 + ensembl grch37 + ucsc grch37 chainover grch38
