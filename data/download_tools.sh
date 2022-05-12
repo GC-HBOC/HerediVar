@@ -64,6 +64,10 @@ pip3 install CrossMap
 
 pip install biopython
 pip install flask-paginate
+
+#pip install Flask-OIDC
+pip install authlib
+pip install blinker
 '
 
 cd $tools
