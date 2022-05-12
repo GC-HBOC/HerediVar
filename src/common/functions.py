@@ -189,3 +189,83 @@ def find_between(s, prefix, postfix):
     if res is not None:
         res = res.group(1)
     return res
+
+
+# this function actually also maps ccds numbers!
+def get_refseq_to_ensembl_transcript_dict(reverse = False):
+    parsing_table = open(paths.parsing_refseq_ensembl, 'r')
+    result = {}
+    for line in parsing_table:
+        if line.startswith('#') or line.strip() =='':
+            continue
+
+        parts = line.split('\t')
+        if not reverse:
+            value = parts[0].strip()
+            key = parts[1].strip()
+        else:
+            key = parts[0].strip()
+            value = parts[1].strip()
+        if key in result:
+            result[key] = collect_info(result[key], '', value, sep = ',')
+        else:
+            result[key] = value
+    parsing_table.close()
+    return result
+
+def get_transcript_to_gene_dict():
+    ensembl_to_refseq = get_refseq_to_ensembl_transcript_dict(reverse = True) # ccds included!
+    gene_to_ensembl_file = open(paths.gene_to_ensembl_transcript_path, 'r')
+    transcript_to_gene = {}
+    for line in gene_to_ensembl_file:
+        if line.startswith('#') or line.strip() =='':
+            continue
+
+        parts = line.split('\t')
+        gene_symbol = parts[0].strip()
+        ensembl = parts[1].strip()
+
+        if ensembl in transcript_to_gene:
+            eprint("skipping duplicated row: " + line.strip('\n'))
+            continue
+
+        transcript_to_gene[ensembl] = [gene_symbol]
+
+        refseqs = ensembl_to_refseq.get(ensembl, None)
+        # if there are no matching refseq or ccds numbers recorded skip the rest
+        if refseqs is None:
+            continue
+        refseqs = refseqs.split(',')
+
+        for alt_name in refseqs:
+            if alt_name in transcript_to_gene:
+                previous_gene = transcript_to_gene[alt_name]
+                if gene_symbol not in previous_gene:
+                    # if the previous gene symbol was a fusion gene replace it with the new gene symbol
+                    # else keep as is
+                    #if '-' in previous_gene:
+                    #    transcript_to_gene[alt_name] = gene_symbol
+                    #    continue
+                    #if '-' not in previous_gene and '-' not in gene_symbol:
+                    #eprint("multiple gene symbols for transcript " + alt_name + ': ' + gene_symbol + ' and ' + previous_gene)
+                    transcript_to_gene[alt_name].append(gene_symbol)
+                    #eprint("multiple gene symbols for transcript " + alt_name + ': ' + str(transcript_to_gene[alt_name]))
+                    continue
+            
+            transcript_to_gene[alt_name] = [gene_symbol]
+    gene_to_ensembl_file.close()
+
+    transcript_to_gene = {k: curate_transcripts(k, v) for k, v in transcript_to_gene.items()}
+
+    return transcript_to_gene
+
+# this function removes all fusion genes from a list of genes while key is just for the error messages if there is more than one gene left
+# or all genes were fusion genes!
+def curate_transcripts(key, value):
+    if len(value) > 1:
+        value = [ x for x in value if "-" not in x ]
+        if len(value) == 0:
+            eprint("all genes were fusion genes and thus removed for transcript: " + key + ' and genes: ' + str(value))
+        if len(value) > 1:
+            eprint("multiple gene symbols for transcript " + key + ": " + str(value))
+    return ','.join(value)

@@ -76,7 +76,8 @@ functions.write_vcf_header(info_headers)
 
 def write_error_file_line(line, reason):
     parts = line.split(sep)
-    cdot = parts[7].strip()
+    cdot = parts[7]
+    cdot = "".join(cdot.split()) # remove all whitespace
     reference = parts[2].strip()
     seqid = parts[0].strip()
 
@@ -85,9 +86,10 @@ def write_error_file_line(line, reason):
         cut_here = matches.end(0)
         cdot = cdot[:cut_here]
 
+
     # if hgvs or reference transcript is missing the variant is lost for sure!
     if cdot == '' or reference == '':
-        error_file.write('\t'.join([line, reason]))
+        error_file.write('\t'.join([line.strip('\n'), reason + ', missing hgvs information' + '\n']))
     else:
         hgvs_file.write('\t'.join([reference, cdot, seqid]))
         hgvs_file.write('\n')
@@ -103,7 +105,7 @@ for line in input_file:
 
     chr_num = functions.validate_chr(parts[3].strip())
     if not chr_num:
-        write_error_file_line(line, reason = 'not a valid chr or chr missing')
+        write_error_file_line(line, reason = 'missing vcfstyle information')
         continue
     chr = 'chr' + chr_num
     

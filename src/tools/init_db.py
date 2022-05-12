@@ -258,17 +258,17 @@ if __name__ == '__main__':
 
     '''
     print("parsing refseq ensembl identifier table...")
-    parsing_table = open(paths.parsing_refseq_ensembl, 'r')
-    refseq_to_ensembl = {}
-    for line in parsing_table:
-        line = line.strip()
-        if line.startswith('#') or line =='':
-            continue
+    #parsing_table = open(paths.parsing_refseq_ensembl, 'r')
+    #refseq_to_ensembl = {}
+    #for line in parsing_table:
+    #    line = line.strip()
+    #    if line.startswith('#') or line =='':
+    #        continue
 
-        parts = line.split('\t')
-        refseq_to_ensembl[parts[1]] = parts[0]
-    parsing_table.close()
-
+    #    parts = line.split('\t')
+    #    refseq_to_ensembl[parts[1]] = parts[0]
+    #parsing_table.close()
+    refseq_to_ensembl = functions.get_refseq_to_ensembl_transcript_dict()
 
     is_gencode_basic = 0
     is_mane_select = 0

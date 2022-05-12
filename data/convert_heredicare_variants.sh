@@ -22,7 +22,7 @@ cd $dbs
 mkdir -p HerediCare
 cd HerediCare
 
-: '
+: ' 
 python3 $tools/db_converter_heredicare.py -i heredicare_variants_11.05.22.tsv > heredicare_variants_11.05.22.vcf
 
 # initial sorting, probably unneccessary here
@@ -47,6 +47,7 @@ cat heredicare_variants_11.05.22_lifted.vcf | $ngsbits/VcfLeftNormalize -stream 
 $ngsbits/VcfCheck -in heredicare_variants_11.05.22_lifted.vcf.gz -ref $genome >> vcfcheck_errors.txt
 '
 
+#cut -f2 heredicare_variants_11.05.22.tsv | grep "^[^#]" | $ngsbits/GenesToApproved | grep "REPLACED" | awk '!seen[$0]++' > legacy_gene_names.tsv
 
 python3 $tools/collect_new_heredicare.py --tsv heredicare_variants_11.05.22.tsv --vcfworked heredicare_variants_11.05.22_lifted.vcf -o heredicare_variants_11.05.22_ANNOTATED.tsv
 
