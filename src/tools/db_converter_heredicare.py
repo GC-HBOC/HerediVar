@@ -81,10 +81,10 @@ def write_error_file_line(line, reason):
     reference = parts[2].strip()
     seqid = parts[0].strip()
 
-    matches = re.search('dup|del', cdot)
-    if matches is not None: # check if it is an insertion duplication or deletion and remove bases preceding these keywords
-        cut_here = matches.end(0)
-        cdot = cdot[:cut_here]
+    #matches = re.search('dup|del', cdot)
+    #if matches is not None: # check if it is an insertion duplication or deletion and remove bases preceding these keywords
+    #    cut_here = matches.end(0)
+    #    cdot = cdot[:cut_here]
 
 
     # if hgvs or reference transcript is missing the variant is lost for sure!

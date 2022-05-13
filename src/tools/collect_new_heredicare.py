@@ -21,7 +21,6 @@ parser.add_argument("-s", "--sep", default="\t", help="separating character in t
 parser.add_argument("--liftoverfailed", default="", help="path to file which is produced by crossmap which contains unmapped variants (ends with .unmap) defaults to --vcfworked path + .unmap")
 parser.add_argument("--hgvstovcffailed", default="hgvstovcf_errors.txt", help="path to file which contains the error messages from hgvs to vcf ngsbits tool (just capture the output stream in file), defaults to hgvstovcf_erros.txt")
 parser.add_argument("--hgvs", default="hgvs.tsv", help="path to file which is the input to the hgvs to vcf ngsbits file. Defaults to hgvs.tsv")
-parser.add_argument('--notparsed', default='notparsed.tsv', help="path to file which was produced by db_converter_heredicare.py which contains all variants which lack vcf information AND HGVS information. Should have fields equal to the input tsv + additional comment column")
 parser.add_argument('--vcfcheck_error', default='vcfcheck_errors.txt', help="path to file which contains the stderr of vcfcheck, defaults to vcfcheck_errors.txt")
 parser.add_argument('--legacysymbols', default='legacy_gene_names.tsv', help="path to a file which was calculated using the ngs-bits GenesToApproved tool. This file should at least contain all legacy gene names which are present in the input --tsv")
 
@@ -43,7 +42,6 @@ if liftoverfailed_path == '':
 
 hgvstovcffailed_path = args.hgvstovcffailed
 
-notparsed_path = args.notparsed
 
 vcfcheck_error_path = args.vcfcheck_error
 
@@ -59,7 +57,7 @@ for line in vcf_worked_file:
 
     parts = line.split('\t')
 
-    vcf = '\t'.join([parts[0], parts[1], parts[3], parts[4]])
+    vcf = '~'.join([parts[0].strip(), parts[1].strip(), parts[3].strip(), parts[4].strip()])
     seqid = functions.find_between(parts[7].strip(), 'seqid=', '(;|$)')
 
     if vcf in duplicate_groups:
@@ -96,7 +94,7 @@ for line in vcf_worked_file:
         comment = ''
     
     # fetch dupicates
-    vcf = '\t'.join([parts[0], parts[1], parts[3], parts[4]])
+    vcf = '~'.join([parts[0].strip(), parts[1].strip(), parts[3].strip(), parts[4].strip()])
     duplicates = duplicate_groups[vcf]
     duplicates = duplicates.replace(seqid, '').replace(',,', ',').strip(',') # remove the id itself from the duplicates
     if duplicates != '':
@@ -104,10 +102,7 @@ for line in vcf_worked_file:
 
     lifted_variants[seqid] = (chr, pos, ref, alt, comment)
 
-# 11914486	ATM	NM_001127510.1					c.423-4del			chr5	112775612	TA	T	vcf style variant calculated using ngsbits (hgvsToVcf tool);duplicates: 11914515,8854230,13492041
-# 8854230	APC	NM_000038.5	5	112111309	TA	T	c.423-16delA			chr5	112775612	TA	T	duplicates: 11914486,11914515,13492041
-# 13492041	APC	NM_001127511.2	5	112111309	TA	T	c.453-16delA			chr5	112775612	TA	T	duplicates: 11914486,11914515,8854230
-# 11914515	APC	NM_001127510.1					c.423-4del			chr5	112775612	TA	T	vcf style variant calculated using ngsbits (hgvsToVcf tool);duplicates: 11914486,8854230,13492041
+
 
 vcf_worked_file.close()
 
@@ -146,7 +141,7 @@ for line in hgvstovcffailed_file:
     if line.startswith('#') or line.startswith('-') or line.strip() == '':
         continue
     
-    cdot = functions.find_between(line, 'Warning: ', ' skipped')
+    cdot = functions.find_between(line, 'Warning: ', ' skipped').strip('\n')
     if cdot is None:
         functions.eprint("WARNING: could not find cdot in hgvs to vcf error file: " + line)
         continue
@@ -155,8 +150,9 @@ for line in hgvstovcffailed_file:
     if seqid is None:
         functions.eprint("WARNING: seqid not found for cdot: " + cdot)
         continue
-
-    comment = 'HgvsToVcf error: ' + functions.find_between(line, 'skipped: ', '$')
+    
+    seqid = seqid.strip()
+    comment = 'HgvsToVcf error: ' + functions.find_between(line, 'skipped: ', '$').strip().replace(' Please note:', '')
 
     if seqid in failed_variants:
         failed_variants[seqid] = functions.collect_info(failed_variants[seqid], '', comment)
@@ -164,6 +160,11 @@ for line in hgvstovcffailed_file:
         failed_variants[seqid] = comment
 hgvstovcffailed_file.close()
 
+
+# not used atm
+"""
+parser.add_argument('--notparsed', default='notparsed.tsv', help="path to file which was produced by db_converter_heredicare.py which contains all variants which lack vcf information AND HGVS information. Should have fields equal to the input tsv + additional comment column")
+notparsed_path = args.notparsed
 
 notparsed_file = open(notparsed_path, 'r')
 for line in notparsed_file:
@@ -179,7 +180,7 @@ for line in notparsed_file:
     else:
         failed_variants[seqid] = comment
 notparsed_file.close()
-
+"""
 
 
 vcfcheck_error_file = open(vcfcheck_error_path, 'r')
@@ -190,15 +191,19 @@ for line in vcfcheck_error_file:
 
     if line.startswith('ERROR:'):
         in_error = True
-        comment = 'vcfcheck error: ' + functions.find_between(line, 'ERROR: ', ' - ')
+        comment = 'vcfcheck error: ' + functions.find_between(line, 'ERROR: ', ' - ').strip()
     
     if line.startswith('WARNING:'):
         in_error = False
     
     if in_error and not line.startswith('ERROR:'):
         parts = line.split('\t')
-        seqid = functions.find_between(parts[7].strip(), 'seqid=', '(;|$)')
-        failed_variants[seqid] = comment
+        seqid = functions.find_between(parts[7].strip(), 'seqid=', '(;|$)').strip()
+        if seqid in failed_variants:
+            failed_variants[seqid] = functions.collect_info(failed_variants[seqid], '', comment)
+        else:
+            failed_variants[seqid] = comment
+
 vcfcheck_error_file.close()
 
 
@@ -211,8 +216,8 @@ for line in legacysymbols_file:
         continue
     
     parts = line.split('\t')
-    new_symbol = parts[0]
-    old_symbol = functions.find_between(parts[1], 'REPLACED: ', ' is')
+    new_symbol = parts[0].strip()
+    old_symbol = functions.find_between(parts[1], 'REPLACED: ', ' is').strip()
 
     if old_symbol not in legacysymbols_mapping:
         legacysymbols_mapping[old_symbol] = new_symbol
@@ -240,22 +245,31 @@ for line in original_heredicare:
 
     comment = failed_variants.get(seqid, '')
 
-    gene_symbol = parts[1]
+    gene_symbol = parts[1].strip()
     # map the gene symbol to the current version as the transcript to gene mapping table has only current gene symbols
     # we do not want to say that the gene for a transcript is wrong because it is simply outdated!
     new_gene_symbol = legacysymbols_mapping.get(gene_symbol, gene_symbol)
 
-    transcript = functions.remove_version_num(parts[2])
+    transcript = functions.remove_version_num(parts[2].strip())
     actual_gene_symbol = transcript_to_gene.get(transcript, None)
     if actual_gene_symbol is not None:
-        if new_gene_symbol not in actual_gene_symbol:
-            comment = functions.collect_info(comment, '', 'gene symbol in GEN column is wrong or outdated should be ' + actual_gene_symbol)
+        if new_gene_symbol not in actual_gene_symbol: # actual gene symbol can be a composed one of the form symbol1,symbol2,symbol3
+            comment = functions.collect_info(comment, '', 'gene symbol in GEN column is wrong should be ' + actual_gene_symbol)
 
     if lifted_variant is not None:
-        #comment = functions.collect_info(lifted_variant[len(lifted_variant)-1], '', comment)
-        lifted_variant_string = '\t'.join(lifted_variant)
+        comment = functions.collect_info(lifted_variant[len(lifted_variant)-1], '', comment)
+        lifted_variant_string = '\t'.join(lifted_variant[:len(lifted_variant)-1])
         print('\t'.join([line, lifted_variant_string, comment]))
     else:
         variant_string = '\t' * 3 # variant was not mapped to hg 38 thus, enter empty fields
         print('\t'.join([line, variant_string, comment]))
     
+
+
+
+# 11914486	ATM	NM_001127510.1					c.423-4del			chr5	112775612	TA	T	vcf style variant calculated using ngsbits (hgvsToVcf tool);duplicates: 11914515,8854230,13492041
+# 8854230	APC	NM_000038.5	5	112111309	TA	T	c.423-16delA			chr5	112775612	TA	T	duplicates: 11914486,11914515,13492041
+# 13492041	APC	NM_001127511.2	5	112111309	TA	T	c.453-16delA			chr5	112775612	TA	T	duplicates: 11914486,11914515,8854230
+# 11914515	APC	NM_001127510.1					c.423-4del			chr5	112775612	TA	T	vcf style variant calculated using ngsbits (hgvsToVcf tool);duplicates: 11914486,8854230,13492041
+
+# V	c.200C>G	11960819 -> TRANSCRIPT?

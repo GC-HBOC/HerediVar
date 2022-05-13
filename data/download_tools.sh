@@ -12,21 +12,21 @@ tools=$root/src/tools/
 # sudo apt-get install libxml-xpath-perl
 
 #download and build VEP
-cd $tools
+#cd $tools
 #chmod 755 ./download_tools_vep.sh
 #./download_tools_vep.sh
 
 #download and build ngs-bits
 
-#cd $tools
-: '
+cd $tools
+: ' '
 git clone --recursive https://github.com/imgag/ngs-bits.git
 cd ngs-bits
 ##git checkout 2021_12 && git submodule update --recursive --init ## select stable version once project is finished!
 make build_3rdparty
 make build_libs_release
 make build_tools_release
-'
+
 
 
 #download and build samtools
@@ -70,7 +70,7 @@ pip install authlib
 pip install blinker
 '
 
-cd $tools
-wget https://github.com/keycloak/keycloak/releases/download/18.0.0/keycloak-18.0.0.zip
-unzip keycloak-18.0.0.zip
-rm keycloak-18.0.0.zip
+#cd $tools
+#wget https://github.com/keycloak/keycloak/releases/download/18.0.0/keycloak-18.0.0.zip
+#unzip keycloak-18.0.0.zip
+#rm keycloak-18.0.0.zip
