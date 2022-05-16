@@ -6,8 +6,8 @@ datadir = workdir + "data/dbs/"
 
 # tools
 vep_path = "/mnt/storage2/GRCh38/share/opt/ensembl-vep-release-104.3"
-#ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-38-gd5054098"
-ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
+ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-70-g53bce65c"
+#ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
 
 
 # data

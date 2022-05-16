@@ -20,7 +20,7 @@ if __name__ == '__main__':
     #sql = file.read()
     #conn.cursor.execute(sql, multi=True)
 
-
+    '''
     print("parsing OMIM ids...")
     omim = open(paths.omim_path, "r")
     symbol_to_omim = {}
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     hgnc.close()
 
     #conn.remove_duplicates("gene_alias", "alt_symbol")
-
+    '''
 
 
 
@@ -105,7 +105,7 @@ if __name__ == '__main__':
     #All transcripts are linked to "exon" features.
     #Protein-coding transcripts are linked to "CDS", "five_prime_UTR", and
     #"three_prime_UTR" features.
-    '''
+    
     print("parsing MANE transcripts...")
     mane_file = open(paths.MANE_path, 'r')
     mane_select_transcripts = []
@@ -254,9 +254,9 @@ if __name__ == '__main__':
     conn.insert_transcript(symbol, hgnc_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical)
 
     ensembl_transcript.close()
-    '''
+    
 
-    '''
+    
     print("parsing refseq ensembl identifier table...")
     #parsing_table = open(paths.parsing_refseq_ensembl, 'r')
     #refseq_to_ensembl = {}
@@ -387,7 +387,7 @@ if __name__ == '__main__':
         #pass
 
     refseq_transcript.close()
-    '''
+    
     
     '''
     ## init pfam auxiliaries tables (pfam_id_mapping and pfam_legacy)
