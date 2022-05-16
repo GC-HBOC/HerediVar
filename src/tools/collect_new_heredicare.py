@@ -151,8 +151,13 @@ for line in hgvstovcffailed_file:
         functions.eprint("WARNING: seqid not found for cdot: " + cdot)
         continue
     
+    # filter all those erros which are caused by uncertainties. -> HGVS is valid
+    if re.search("\(.*\)_\(.*\)(del|dup|ins)", line) is not None:
+        continue
+
     seqid = seqid.strip()
     comment = 'HgvsToVcf error: ' + functions.find_between(line, 'skipped: ', '$').strip().replace(' Please note:', '')
+
 
     if seqid in failed_variants:
         failed_variants[seqid] = functions.collect_info(failed_variants[seqid], '', comment)
@@ -161,7 +166,7 @@ for line in hgvstovcffailed_file:
 hgvstovcffailed_file.close()
 
 
-# not used atm
+# not used
 """
 parser.add_argument('--notparsed', default='notparsed.tsv', help="path to file which was produced by db_converter_heredicare.py which contains all variants which lack vcf information AND HGVS information. Should have fields equal to the input tsv + additional comment column")
 notparsed_path = args.notparsed
@@ -273,3 +278,5 @@ for line in original_heredicare:
 # 11914515	APC	NM_001127510.1					c.423-4del			chr5	112775612	TA	T	vcf style variant calculated using ngsbits (hgvsToVcf tool);duplicates: 11914486,8854230,13492041
 
 # V	c.200C>G	11960819 -> TRANSCRIPT?
+
+# 11978717	ATM	NM_000051.3					c.3712_3716delTTaTT							HgvsToVcf error: couldn't transform it to valid VCF: Unsupported cDNA change '3712_3716delTTaTT'.

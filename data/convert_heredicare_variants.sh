@@ -54,7 +54,7 @@ cat heredicare_variants_11.05.22_lifted.vcf | $ngsbits/VcfLeftNormalize -stream 
 $ngsbits/VcfCheck -in heredicare_variants_11.05.22_lifted.vcf.gz -ref $genome >> vcfcheck_errors.txt
 
 
-cut -f2 heredicare_variants_11.05.22.tsv | grep "^[^#]" | $ngsbits/GenesToApproved | grep "REPLACED" | awk '!seen[$0]++' > legacy_gene_names.tsv
+#cut -f2 heredicare_variants_11.05.22.tsv | grep "^[^#]" | $ngsbits/GenesToApproved | grep "REPLACED" | awk '!seen[$0]++' > legacy_gene_names.tsv
 
 
 

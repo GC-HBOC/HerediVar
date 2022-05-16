@@ -293,13 +293,14 @@ class Connection:
         if gene_id is not None:
             command = ''
             if transcript_refseq is not None and transcript_ensembl is not None:
-                self.cursor.execute("SELECT COUNT(*) FROM transcript WHERE name=" + enquote(transcript_ensembl))
+                transcript_ensembl_list = ', '.join([enquote(x) for x in transcript_ensembl.split(',')])
+                self.cursor.execute("SELECT COUNT(*) FROM transcript WHERE name IN (" + transcript_ensembl_list + ")")
                 has_ensembl = self.cursor.fetchone()[0]
                 if has_ensembl:
                     # The command inserts a new refseq transcript while it searches for a matching ensembl transcripts (which should already be contained in the transcripts table) and copies their gencode, mane and canonical flags
-                    infos = (int(gene_id), enquote(transcript_refseq), enquote(transcript_biotype), int(total_length), enquote(transcript_ensembl))
+                    infos = (int(gene_id), enquote(transcript_refseq), enquote(transcript_biotype), int(total_length), "(" + transcript_ensembl_list + ")")
                     command = "INSERT INTO transcript (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) \
-	                                    (SELECT %d, %s, %s, %d, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical FROM transcript WHERE name = %s);"  % infos
+	                                    (SELECT %d, %s, %s, %d, SUM(is_gencode_basic) > 0, SUM(is_mane_select) > 0, SUM(is_mane_plus_clinical)  > 0, SUM(is_ensembl_canonical)  > 0 FROM transcript WHERE name IN %s);"  % infos
             if command == '':
                 if transcript_refseq is not None:
                     transcript_name = transcript_refseq
