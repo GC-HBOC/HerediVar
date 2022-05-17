@@ -334,6 +334,29 @@ tabix -p vcf ARUP_BRCA_2022_04_01.vcf.gz
 
 
 
+## download TP53 database (https://tp53.isb-cgc.org/get_tp53data#get_annot)
+cd $dbs
+mkdir -p TP53_database
+cd TP53_database
+
+# this assumes that the first line is the header line. If this is not the case remove the sed
+tp_db=GermlineDownload_r20
+wget -O - https://storage.googleapis.com/tp53-static-files/data/$tp_db.csv | sed -e "1s/^/#/" | python3 $tools/db_converter_TP53_database.py > $tp_db.vcf
+
+$ngsbits/VcfSort -in $tp_db.vcf -out $tp_db.vcf
+
+cat $tp_db.vcf | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort > $tp_db.normalized.vcf
+
+bgzip -f -c $tp_db.normalized.vcf > $tp_db.normalized.vcf.gz
+tabix -p vcf $tp_db.normalized.vcf.gz
+
+$ngsbits/VcfCheck -in $tp_db.normalized.vcf.gz -ref $genome
+
+
+rm -f $tp_db.vcf
+
+
+
 # TODO:
 # - Am Ende nochmal überlegen welche referenz genome verwendet werden aktuell: ucsc grch38 + ensembl grch37 + ucsc grch37 chainover grch38
 

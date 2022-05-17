@@ -6,8 +6,8 @@ datadir = workdir + "data/dbs/"
 
 # tools
 vep_path = "/mnt/storage2/GRCh38/share/opt/ensembl-vep-release-104.3"
-ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-70-g53bce65c"
-#ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
+#ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-70-g53bce65c/"
+ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
 
 
 # data
@@ -29,6 +29,7 @@ BRCA_exchange_path = datadir + "BRCA_exchange/BRCA_exchange_02-22-22.vcf.gz"
 FLOSSIES_path = datadir + "FLOSSIES/FLOSSIES_25-03-2022.vcf.gz"
 cancerhotspots_path = datadir + "cancerhotspots/cancerhotspots.v2.final.vcf.gz"
 arup_brca_path = datadir + "ARUP/ARUP_BRCA_2022_04_01.vcf.gz"
+tp53_db = datadir + "TP53_database/GermlineDownload_r20.normalized.vcf.gz"
 
 # data for init_db
 hgnc_path = datadir + "HGNC/hgnc_complete_set.tsv"
