@@ -8,7 +8,7 @@
         <form id="reannotate_form" name="reannotate_form" method="post" action="#">
             <div class="form-group">
                 <span id="tooltip_reannotate_button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="">
-                    <button id="reannotate_button" type="submit" class="btn btn-outline-primary">(Re-)Annotate Variant</button>
+                    <button id="reannotate_button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reannotate-modal">(Re-)Annotate Variant</button>
                 </span>
                 <meta id="annotation_status" data-annotation-status="{{ current_annotation_status[4] }}">
             </div>
@@ -26,6 +26,28 @@
         {% endif %}
     </div>
 </div>
+
+
+<!-- reannotate conformation panel (it is a bootstrap modal) -->
+<div class="modal fade" id="reannotate-modal" tabindex="-1" aria-labelledby="reannotate-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reannotate-modal-label">Confirm (Re-)Annotation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure that you want to (re-)annotate this variant?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="reannotate-submit" type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 <div class="row" data-masonry='{"percentPosition": true }'>
     <!--variant identification-->
