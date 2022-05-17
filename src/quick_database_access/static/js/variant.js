@@ -10,14 +10,22 @@ $(document).ready(function()
 {
     
     ////////// functionality for the reannotate button
-    $('#reannotate_button').click(function()
-    {
-        $(this).attr('disabled', true);
-        return true;
-    });
+    //$('#reannotate_button').click(function()
+    //{
+    //    $(this).attr('disabled', true);
+    //    return true;
+    //});
     var annotation_status = $('#annotation_status').data()['annotationStatus'];
     if (annotation_status === 'pending'){
         $('#reannotate_button').attr('disabled', true)
         $('#tooltip_reannotate_button').attr('title', "Wait for the current annotation to finish before submitting another one")
     }
+
+    $('#reannotate-submit').click(function(){
+        $('#reannotate_button').attr('disabled', true);
+        /* when the submit button in the modal is clicked, submit the form */
+       $('#reannotate_form').submit();
+    });
 });
+
+
