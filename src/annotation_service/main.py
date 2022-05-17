@@ -11,6 +11,30 @@ import tempfile
 import re
 import pubmed_parser
 
+## switches
+# external programs
+do_phylop = False
+do_spliceai = False
+
+# vep dependent
+do_vep = False
+insert_consequence = False
+insert_maxent = False
+insert_literature = True
+
+#vcf annotate from vcf
+do_dbsnp = False
+do_revel = False
+do_cadd = False
+do_clinvar = False
+do_gnomad = False
+do_brca_exchange = False
+do_flossies = False
+do_cancerhotspots = False
+do_arup = False
+do_tp53_database = True
+
+
 
 conn = Connection()
 
@@ -187,26 +211,28 @@ if __name__ == '__main__':
         variant_annotated_path = temp_file_path + "/variant_annotated.vcf"
         
         ## VEP
-        print("executing vep...")
-        execution_code_vep, err_msg_vep = annotate_vep(one_variant_path, variant_annotated_path, refseq=False)
-        update_output(one_variant_path, variant_annotated_path, execution_code_vep)
-        if execution_code_vep != 0:
-            status = "error"
-        err_msgs = collect_error_msgs(err_msgs, err_msg_vep)
+        if do_vep:
+            print("executing vep...")
+            execution_code_vep, err_msg_vep = annotate_vep(one_variant_path, variant_annotated_path, refseq=False)
+            update_output(one_variant_path, variant_annotated_path, execution_code_vep)
+            if execution_code_vep != 0:
+                status = "error"
+            err_msgs = collect_error_msgs(err_msgs, err_msg_vep)
 
-        execution_code_vep_refseq, err_msg_vep_refseq = annotate_vep(one_variant_path, variant_annotated_path, refseq=True)
-        update_output(one_variant_path, variant_annotated_path, execution_code_vep_refseq)
-        if execution_code_vep_refseq != 0:
-            status = "error"
-        err_msgs = collect_error_msgs(err_msgs, err_msg_vep_refseq)
+            execution_code_vep_refseq, err_msg_vep_refseq = annotate_vep(one_variant_path, variant_annotated_path, refseq=True)
+            update_output(one_variant_path, variant_annotated_path, execution_code_vep_refseq)
+            if execution_code_vep_refseq != 0:
+                status = "error"
+            err_msgs = collect_error_msgs(err_msgs, err_msg_vep_refseq)
 
         ## annotate variant with phylop 100-way conservation scores
-        print("annotating phyloP...")
-        execution_code_phylop, err_msg_phylop = annotate_phylop(one_variant_path, variant_annotated_path)
-        update_output(one_variant_path, variant_annotated_path, execution_code_phylop)
-        if execution_code_phylop != 0:
-            status = "error"
-        err_msgs = collect_error_msgs(err_msgs, err_msg_phylop)
+        if do_phylop:
+            print("annotating phyloP...")
+            execution_code_phylop, err_msg_phylop = annotate_phylop(one_variant_path, variant_annotated_path)
+            update_output(one_variant_path, variant_annotated_path, execution_code_phylop)
+            if execution_code_phylop != 0:
+                status = "error"
+            err_msgs = collect_error_msgs(err_msgs, err_msg_phylop)
 
 
         # create config file for vcfannotatefromvcf
@@ -215,44 +241,61 @@ if __name__ == '__main__':
         config_file = open(config_file_path, 'w')
 
         ## add rs-num from dbsnp
-        config_file.write(paths.dbsnp_path + "\tdbSNP\tRS\t\n")
+        if do_dbsnp:
+            config_file.write(paths.dbsnp_path + "\tdbSNP\tRS\t\n")
 
         ## add revel score
-        config_file.write(paths.revel_path + "\t\tREVEL\t\n")
+        if do_revel:
+            config_file.write(paths.revel_path + "\t\tREVEL\t\n")
 
         ## add spliceai precomputed scores
-        config_file.write(paths.spliceai_path + "\t\tSpliceAI\t\n")
+        if do_spliceai:
+            config_file.write(paths.spliceai_path + "\t\tSpliceAI\t\n")
 
         ## add cadd precomputed scores
-        if is_snv(one_variant):
+        if is_snv(one_variant) and do_cadd:
             config_file.write(paths.cadd_snvs_path + "\t\tCADD\t\n")
-        else:
+        elif do_cadd:
             config_file.write(paths.cadd_indels_path + "\t\tCADD\t\n")
 
         ## add clinvar annotation
-        config_file.write(paths.clinvar_path + "\tClinVar\tinpret,revstat,varid,submissions\t\n")
+        if do_clinvar:
+            config_file.write(paths.clinvar_path + "\tClinVar\tinpret,revstat,varid,submissions\t\n")
 
         ## add gnomAD annotation
-        config_file.write(paths.gnomad_path + "\tGnomAD\tAF,AC,hom,hemi,het,popmax\t\n")
-        config_file.write(paths.gnomad_m_path + "\tGnomADm\tAC_hom\t\n")
+        if do_gnomad:
+            config_file.write(paths.gnomad_path + "\tGnomAD\tAF,AC,hom,hemi,het,popmax\t\n")
+            config_file.write(paths.gnomad_m_path + "\tGnomADm\tAC_hom\t\n")
 
         ## add BRCA_exchange clinical significance
-        config_file.write(paths.BRCA_exchange_path + "\tBRCA_exchange\tclin_sig_short\t\n")
+        if do_brca_exchange:
+            config_file.write(paths.BRCA_exchange_path + "\tBRCA_exchange\tclin_sig_short\t\n")
 
         ## add FLOSSIES annotation
-        config_file.write(paths.FLOSSIES_path + "\tFLOSSIES\tnum_eur,num_afr\t\n")
+        if do_flossies:
+            config_file.write(paths.FLOSSIES_path + "\tFLOSSIES\tnum_eur,num_afr\t\n")
 
         ## add cancerhotspots annotations
-        config_file.write(paths.cancerhotspots_path + "\tcancerhotspots\tcancertypes,AC,AF\t\n")
+        if do_cancerhotspots:
+            config_file.write(paths.cancerhotspots_path + "\tcancerhotspots\tcancertypes,AC,AF\t\n")
+
+        ## add arup brca classification
+        if do_arup:
+            config_file.write(paths.arup_brca_path + "\tARUP\tclassification\t\n")
+
+        ## add TP53 database information
+        if do_tp53_database:
+            config_file.write(paths.tp53_db + "\ttp53db\tclass,bayes_del,tranactivation_class,DNE_LOF_class,DNE_class,domain_function,transactivation_class,pubmed\t")
 
         config_file.close()
 
         ## execute vcfannotatefromvcf
-        execution_code_vcf_anno, err_msg_vcf_anno = annotate_from_vcf(config_file_path, one_variant_path, variant_annotated_path)
-        update_output(one_variant_path, variant_annotated_path, execution_code_vcf_anno)
-        if execution_code_vcf_anno != 0:
-            status = "error"
-        err_msgs = collect_error_msgs(err_msgs, err_msg_vcf_anno)
+        if do_dbsnp or do_revel or do_spliceai or do_cadd or do_clinvar or do_gnomad or do_brca_exchange or do_flossies or do_cancerhotspots or do_arup or do_tp53_database:
+            execution_code_vcf_anno, err_msg_vcf_anno = annotate_from_vcf(config_file_path, one_variant_path, variant_annotated_path)
+            update_output(one_variant_path, variant_annotated_path, execution_code_vcf_anno)
+            if execution_code_vcf_anno != 0:
+                status = "error"
+            err_msgs = collect_error_msgs(err_msgs, err_msg_vcf_anno)
 
         print("checking validity of annotated vcf file...")
         execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(one_variant_path)
@@ -262,11 +305,12 @@ if __name__ == '__main__':
         err_msgs = collect_error_msgs(err_msgs, err_msg_vcfcheck)
 
         ## run SpliecAI on the variants which are not contained in the precomputed file
-        #execution_code_spliceai, err_msg_spliceai = annotate_missing_spliceai(one_variant_path, variant_annotated_path)
-        #update_output(one_variant_path, variant_annotated_path, execution_code_spliceai)
-        #if execution_code_spliceai > 0: # execution resulted in an error (we didn't execute spliceai algorithm at -1)
-        #    status = "error"
-        #err_msgs = collect_error_msgs(err_msgs, err_msg_spliceai)
+        if do_spliceai:
+            execution_code_spliceai, err_msg_spliceai = annotate_missing_spliceai(one_variant_path, variant_annotated_path)
+            update_output(one_variant_path, variant_annotated_path, execution_code_spliceai)
+            if execution_code_spliceai > 0: # execution resulted in an error (we didn't execute spliceai algorithm at -1)
+                status = "error"
+            err_msgs = collect_error_msgs(err_msgs, err_msg_spliceai)
 
 
         ## Save to database
@@ -278,6 +322,7 @@ if __name__ == '__main__':
         clv_inpret = ''
         clv_varid = ''
         clinvar_submissions = []
+        pmids = ''
         for vcf_variant_idx in range(len(info)):
             current_info = info[vcf_variant_idx].split(';')
 
@@ -313,103 +358,125 @@ if __name__ == '__main__':
                             pfam_acc = re.search('Pfam:(PF\d+)[&|]', domains).group(1) # grab only pfam accession id from all protein domains which were returned
                             if domains.count("Pfam:") > 1:
                                 print("WARNING: there were multiple PFAM domain ids in: " + str(domains) + ". defaulting to the first one.")
-                        conn.insert_variant_consequence(variant_id, 
-                                                        transcript_name, 
-                                                        hgvs_c, 
-                                                        hgvs_p, 
-                                                        vep_entry[3].replace('_', ' ').replace('&', ' & '), 
-                                                        vep_entry[4], 
-                                                        exon_nr, 
-                                                        intron_nr, 
-                                                        vep_entry[7],
-                                                        vep_entry[8],
-                                                        consequence_source,
-                                                        pfam_acc)
+                        if insert_consequence:
+                            conn.insert_variant_consequence(variant_id, 
+                                                            transcript_name, 
+                                                            hgvs_c, 
+                                                            hgvs_p, 
+                                                            vep_entry[3].replace('_', ' ').replace('&', ' & '), 
+                                                            vep_entry[4], 
+                                                            exon_nr, 
+                                                            intron_nr, 
+                                                            vep_entry[7],
+                                                            vep_entry[8],
+                                                            consequence_source,
+                                                            pfam_acc)
                         num_vep_basic_entries = 10
                         if not transcript_independent_saved and len(vep_entry) > num_vep_basic_entries:
                             transcript_independent_saved = True
                             maxentscan_ref = vep_entry[num_vep_basic_entries]
-                            #if maxentscan_ref != '':
-                            #    conn.insert_variant_annotation(variant_id, 9, maxentscan_ref)
+                            if maxentscan_ref != '' and insert_maxent:
+                                conn.insert_variant_annotation(variant_id, 9, maxentscan_ref)
                             maxentscan_alt = vep_entry[num_vep_basic_entries+1]
-                            #if maxentscan_alt != '':
-                            #    conn.insert_variant_annotation(variant_id, 10, maxentscan_alt)
-                            pmids = vep_entry[num_vep_basic_entries+2]
-                            if pmids != '':
-                                pmids = pmids.replace('&', ',')
-                                literature_entries = pubmed_parser.fetch(pmids)
-                                for paper in literature_entries: #[pmid, article_title, authors, journal, year]
-                                    conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4])
-                                    pass
-                if entry.startswith("ClinVar_submissions="):
+                            if maxentscan_alt != '' and insert_maxent:
+                                conn.insert_variant_annotation(variant_id, 10, maxentscan_alt)
+                            pmids = functions.collect_info(pmids, '', vep_entry[num_vep_basic_entries+2].replace('&', ','), sep = ',')
+                elif entry.startswith("ClinVar_submissions="):
                     clinvar_submissions = entry[20:].split(',')
-                if entry.startswith("ClinVar_revstat="):
+                elif entry.startswith("ClinVar_revstat="):
                     clv_revstat = entry[16:].replace('\\', ',').replace('_', ' ')
-                if entry.startswith("ClinVar_varid="):
+                elif entry.startswith("ClinVar_varid="):
                     clv_varid = entry[14:]
-                if entry.startswith("ClinVar_inpret="):
+                elif entry.startswith("ClinVar_inpret="):
                     clv_inpret = entry[15:].replace('\\', ',').replace('_', ' ')
-                if entry.startswith("PHYLOP="):
+                elif entry.startswith("PHYLOP="):
                     value = entry[7:]
-                    #conn.insert_variant_annotation(variant_id, 4, value)
-                if entry.startswith("dbSNP_RS="):
+                    conn.insert_variant_annotation(variant_id, 4, value)
+                elif entry.startswith("dbSNP_RS="):
                     value = entry[9:]
-                    #conn.insert_variant_annotation(variant_id, 3, value)
-                if entry.startswith("REVEL="):
+                    conn.insert_variant_annotation(variant_id, 3, value)
+                elif entry.startswith("REVEL="):
                     value = entry[6:]
-                    #conn.insert_variant_annotation(variant_id, 6, value)
-                if entry.startswith("SpliceAI="):
+                    conn.insert_variant_annotation(variant_id, 6, value)
+                elif entry.startswith("SpliceAI="):
                     values = entry[9:]
                     values = values.split('|')
-                    #conn.insert_variant_annotation(variant_id, 7, '|'.join(values[2:]))
+                    conn.insert_variant_annotation(variant_id, 7, '|'.join(values[2:]))
                     max_delta_score = max(values[2:6])
-                    #conn.insert_variant_annotation(variant_id, 8, max_delta_score)
-                if entry.startswith("CADD="):
+                    conn.insert_variant_annotation(variant_id, 8, max_delta_score)
+                elif entry.startswith("CADD="):
                     value = entry[5:]
-                    #conn.insert_variant_annotation(variant_id, 5, value)
-                if entry.startswith("GnomAD_AC="):
+                    conn.insert_variant_annotation(variant_id, 5, value)
+                elif entry.startswith("GnomAD_AC="):
                     value = entry[10:]
-                    #conn.insert_variant_annotation(variant_id, 11, value)
-                if entry.startswith("GnomAD_AF="):
+                    conn.insert_variant_annotation(variant_id, 11, value)
+                elif entry.startswith("GnomAD_AF="):
                     value = entry[10:]
-                    #conn.insert_variant_annotation(variant_id, 12, value)
-                if entry.startswith("GnomAD_hom="):
+                    conn.insert_variant_annotation(variant_id, 12, value)
+                elif entry.startswith("GnomAD_hom="):
                     value = entry[11:]
-                    #conn.insert_variant_annotation(variant_id, 13, value)
-                if entry.startswith("GnomAD_hemi="):
+                    conn.insert_variant_annotation(variant_id, 13, value)
+                elif entry.startswith("GnomAD_hemi="):
                     value = entry[12:]
-                    #conn.insert_variant_annotation(variant_id, 14, value)
-                if entry.startswith("GnomAD_het="):
+                    conn.insert_variant_annotation(variant_id, 14, value)
+                elif entry.startswith("GnomAD_het="):
                     value = entry[11:]
-                    #conn.insert_variant_annotation(variant_id, 15, value)
-                if entry.startswith("GnomAD_popmax="):
+                    conn.insert_variant_annotation(variant_id, 15, value)
+                elif entry.startswith("GnomAD_popmax="):
                     value = entry[14:]
-                    #conn.insert_variant_annotation(variant_id, 16, value)
-                if entry.startswith("GnomADm_AC_hom="):
+                    conn.insert_variant_annotation(variant_id, 16, value)
+                elif entry.startswith("GnomADm_AC_hom="):
                     value = entry[15:]
-                    #conn.insert_variant_annotation(variant_id, 17, value)
-                if entry.startswith("BRCA_exchange_clin_sig_short="):
+                    conn.insert_variant_annotation(variant_id, 17, value)
+                elif entry.startswith("BRCA_exchange_clin_sig_short="):
                     value = entry[29:].replace('_', ' ').replace(',', ';')
-                    #conn.insert_variant_annotation(variant_id, 18, value)
-                if entry.startswith("FLOSSIES_num_afr="):
+                    conn.insert_variant_annotation(variant_id, 18, value)
+                elif entry.startswith("FLOSSIES_num_afr="):
                     value = entry[17:]
-                    #conn.insert_variant_annotation(variant_id, 19, value)
-                if entry.startswith("FLOSSIES_num_eur="):
+                    conn.insert_variant_annotation(variant_id, 19, value)
+                elif entry.startswith("FLOSSIES_num_eur="):
                     value = entry[17:]
-                    #conn.insert_variant_annotation(variant_id, 20, value)
-                if entry.startswith("cancerhotspots_cancertypes="):
+                    conn.insert_variant_annotation(variant_id, 20, value)
+                elif entry.startswith("cancerhotspots_cancertypes="):
                     value = entry[27:]
-                    #conn.insert_variant_annotation(variant_id, 22, value)
-                if entry.startswith("cancerhotspots_AC="):
+                    conn.insert_variant_annotation(variant_id, 22, value)
+                elif entry.startswith("cancerhotspots_AC="):
                     value = entry[18:]
-                    #conn.insert_variant_annotation(variant_id, 23, value)
-                if entry.startswith("cancerhotspots_AF="):
+                    conn.insert_variant_annotation(variant_id, 23, value)
+                elif entry.startswith("cancerhotspots_AF="):
                     value = entry[18:]
-                    #conn.insert_variant_annotation(variant_id, 24, value)
+                    conn.insert_variant_annotation(variant_id, 24, value)
+                elif entry.startswith("ARUP_classification="):
+                    value = entry[20:]
+                    conn.insert_variant_annotation(variant_id, 21, value)
+                elif entry.startswith("tp53db_class="):
+                    value = entry[13:]
+                    conn.insert_variant_annotation(variant_id, 27, value)
+                elif entry.startswith("tp53db_bayes_del="):
+                    value = entry[17:]
+                    conn.insert_variant_annotation(variant_id, 30, value)
+                elif entry.startswith("tp53db_tranactivation_class="):
+                    value = entry[28:]
+                    conn.insert_variant_annotation(variant_id, 28, value)
+                elif entry.startswith("tp53db_DNE_LOF_class="):
+                    value = entry[21:]
+                    conn.insert_variant_annotation(variant_id, 29, value)
+                elif entry.startswith("tp53db_DNE_class="):
+                    value = entry[17:]
+                    conn.insert_variant_annotation(variant_id, 31, value)
+                elif entry.startswith("tp53db_domain_function="):
+                    value = entry[23:]
+                    conn.insert_variant_annotation(variant_id, 32, value)
+                elif entry.startswith("tp53db_transactivation_class="):
+                    value = entry[29:]
+                    conn.insert_variant_annotation(variant_id, 33, value)
+                elif entry.startswith("tp53db_pubmed="):
+                    pmids = functions.collect_info(pmids, '', entry[14:].replace('&', ','), sep = ',')
+
 
             # submit collected clinvar data to db if it exists
             if clv_varid != '' and clv_inpret != '' and clv_revstat != '':
-                #conn.insert_clinvar_variant_annotation(variant_id, clv_varid, clv_inpret, clv_revstat, '2022-03-20')
+                conn.insert_clinvar_variant_annotation(variant_id, clv_varid, clv_inpret, clv_revstat, '2022-03-20')
                 clinvar_variant_annotation_id = conn.get_clinvar_variant_annotation_id_by_variant_id(variant_id)
                 if not clinvar_variant_annotation_id:
                     err_msgs = collect_error_msgs(err_msgs, "CLINVAR_VARIANT_ANNOTATION ERROR: no or multiple clinvar variant annotation ids for variant " + str(variant_id))
@@ -417,10 +484,13 @@ if __name__ == '__main__':
                     for submission in clinvar_submissions:
                         #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|5SubmittedPhenotypeInfo|7Submitter|8comment
                         submissions = submission.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').split('|')
-                        #conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
+                        conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
+            
+            if pmids != '' and insert_literature:
+                literature_entries = pubmed_parser.fetch(pmids)
+                for paper in literature_entries: #[pmid, article_title, authors, journal, year]
+                    conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4])
         
-
-
 
         print(err_msgs)
 

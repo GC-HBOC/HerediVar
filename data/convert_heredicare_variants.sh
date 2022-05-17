@@ -29,7 +29,7 @@ cd HerediCare
 : ' '
 python3 $tools/db_converter_heredicare.py -i heredicare_variants_11.05.22.tsv > heredicare_variants_11.05.22.vcf
 
-# initial sorting, probably unneccessary here
+# initial sorting
 $ngsbits/VcfSort -in heredicare_variants_11.05.22.vcf -out heredicare_variants_11.05.22.vcf
 
 # check

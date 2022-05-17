@@ -269,3 +269,15 @@ def curate_transcripts(key, value):
         if len(value) > 1:
             eprint("multiple gene symbols for transcript " + key + ": " + str(value))
     return ','.join(value)
+
+
+def complement(seq):
+    seq = seq.upper()
+    if seq == 'NA': # considered to be missing data (as used in the TP53 database)
+        return ''
+    seq = seq.replace('A', 't')
+    seq = seq.replace('T', 'a')
+    seq = seq.replace('C', 'g')
+    seq = seq.replace('G', 'c')
+    seq = seq.upper()
+    return seq
