@@ -259,7 +259,7 @@ for line in original_heredicare:
     actual_gene_symbol = transcript_to_gene.get(transcript, None)
     if actual_gene_symbol is not None:
         if new_gene_symbol not in actual_gene_symbol: # actual gene symbol can be a composed one of the form symbol1,symbol2,symbol3
-            comment = functions.collect_info(comment, '', 'gene symbol in GEN column is wrong should be ' + actual_gene_symbol)
+            comment = functions.collect_info(comment, '', 'gene of transcript does not match gene symbol given in GEN column! The gene of transcript ' + parts[2].strip() + ' is ' + actual_gene_symbol)
 
     if lifted_variant is not None:
         comment = functions.collect_info(lifted_variant[len(lifted_variant)-1], '', comment)
