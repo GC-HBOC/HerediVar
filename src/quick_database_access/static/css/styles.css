@@ -34,6 +34,7 @@ abbr[title] {
     overflow-wrap: break-word;
     word-break: break-word;
     float:left;
+    margin-right: 20px;
 }
 
 
@@ -127,4 +128,8 @@ table.scroll th {
 
 .ssr {
     margin-right: 10px;
+}
+
+.bsr {
+    margin-right: 25px;
 }

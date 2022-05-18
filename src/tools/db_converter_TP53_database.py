@@ -28,7 +28,7 @@ sep = args.sep
 info_headers = [
     "##INFO=<ID=class,Number=.,Type=String,Description=\"Family classification: LFS = strict clinical definition of Li-Fraumeni syndrome, LFL = Li-Fraumeni like for the extended clinical definition of Li-Fraumeni, FH: family history of cancer which does not fulfil LFS or any of the LFL definitions, No FH: no family history of cancer, FH= Family history of cancer (not fulfilling the definition of LFS/LFL),  No= no family history of cancer, ?= unknown\">",
     "##INFO=<ID=bayes_del,Number=1,Type=Float,Description=\"Missense variant functional predictions by BayesDel tool (Feng 2017) used without allele frequency. Score bigger or equal to 0.16: damaging; Score smaller than 0.16: tolerated\">",
-    "##INFO=<ID=tranactivation_class,Number=.,Type=String,Description=\"Functional classification based on the overall transcriptional activity\">",
+    "##INFO=<ID=transactivation_class,Number=.,Type=String,Description=\"Functional classification based on the overall transcriptional activity\">",
     "##INFO=<ID=DNE_LOF_class,Number=.,Type=String,Description=\"Functional classification for loss of growth-suppression and dominant-negative activities based on Z-scores\">",
     "##INFO=<ID=DNE_class,Number=.,Type=String,Description=\"Dominant-negative effect on transactivation by wild-type p53. Yes: dominant-negative activity on WAF1 and RGC promoters, Moderate: dominant-negative activity on some but not all promoters, No: no dominant-negative activity on both WAF1 and RGC promoters, or none of the promoters in the large studies. \">",
     "##INFO=<ID=domain_function,Number=.,Type=String,Description=\"Function of the domain in which the mutated residue is located. \">",

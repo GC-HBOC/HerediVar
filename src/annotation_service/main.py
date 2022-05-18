@@ -285,7 +285,7 @@ if __name__ == '__main__':
 
         ## add TP53 database information
         if do_tp53_database:
-            config_file.write(paths.tp53_db + "\ttp53db\tclass,bayes_del,tranactivation_class,DNE_LOF_class,DNE_class,domain_function,transactivation_class,pubmed\t")
+            config_file.write(paths.tp53_db + "\ttp53db\tclass,bayes_del,transactivation_class,DNE_LOF_class,DNE_class,domain_function,pubmed\t")
 
         config_file.close()
 
@@ -455,9 +455,6 @@ if __name__ == '__main__':
                 elif entry.startswith("tp53db_bayes_del="):
                     value = entry[17:]
                     conn.insert_variant_annotation(variant_id, 30, value)
-                elif entry.startswith("tp53db_tranactivation_class="):
-                    value = entry[28:]
-                    conn.insert_variant_annotation(variant_id, 28, value)
                 elif entry.startswith("tp53db_DNE_LOF_class="):
                     value = entry[21:]
                     conn.insert_variant_annotation(variant_id, 29, value)
