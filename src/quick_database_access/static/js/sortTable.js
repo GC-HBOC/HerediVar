@@ -2,7 +2,8 @@ $('.sortable').click(click_sorter);
 
 function click_sorter(){
     var table = $(this).parents('table').eq(0)
-    var rows = table.find('tr:gt(0)').toArray().sort(click_comparer($(this).index()), )
+    var index = $(this).parents('th').eq(0).index()
+    var rows = table.find('tr:gt(0)').toArray().sort(click_comparer(index), )
     this.asc = !this.asc
     if (!this.asc){
         rows = rows.reverse()
@@ -15,7 +16,7 @@ function click_sorter(){
 function click_comparer(index) {
     return function(a, b) {
         var valA = getCellValue(a, index), valB = getCellValue(b, index)
-        
+
         // sort none at the end
         var exceptions = [ "none" ];
         if (exceptions.includes(valA.toString().toLowerCase())) {
