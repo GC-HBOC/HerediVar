@@ -8,13 +8,7 @@ if (table != null) {
 
 $(document).ready(function()
 {
-    
     ////////// functionality for the reannotate button
-    //$('#reannotate_button').click(function()
-    //{
-    //    $(this).attr('disabled', true);
-    //    return true;
-    //});
     var annotation_status = $('#annotation_status').data()['annotationStatus'];
     if (annotation_status === 'pending'){
         $('#reannotate_button').attr('disabled', true)
@@ -26,6 +20,11 @@ $(document).ready(function()
         /* when the submit button in the modal is clicked, submit the form */
        $('#reannotate_form').submit();
     });
+
+
+    $(".column-filter").on("keyup", function() {
+        var table = $(this).parents('table').get(0)
+        var index = $(this).parents('th').index()
+        filterTable_one_column($(this).val(), index, table, true)
+    });
 });
-
-

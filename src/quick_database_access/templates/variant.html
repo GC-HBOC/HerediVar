@@ -348,15 +348,15 @@
             <h4 class="card-title">Clinvar Submissions</h4>
             <p class="card-text">
                 <div class="table-responsive">
-                    <table class="table table-hover scroll">
+                    <table class="table table-hover scroll" id="clinvarSubmissionsTable">
                         <thead>
                             <tr>
-                                <th class="sortable">interpretation</th>
-                                <th class="sortable">last evaluated</th>
-                                <th class="sortable">review status</th>
-                                <th class="sortable">submission condition</th>
-                                <th class="sortable">submitter</th>
-                                <th>comment</th>
+                                <th><div class="sortable">interpretation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th><div class="sortable">last evaluated</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th><div class="sortable">review status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th><div class="sortable">submission condition</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th><div class="sortable">submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th>comment<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -406,16 +406,16 @@
                         <table class="table table-hover scroll" id="variantConsequenceTable">
                             <thead>
                                 <tr>
-                                    <th>Transcript Name</th>
-                                    <th>HGVS_C</th>
-                                    <th>HGVS_P</th>
-                                    <th>Consequence</th>
-                                    <th>Impact</th>
-                                    <th>Exon Nr.</th>
-                                    <th>Intron Nr.</th>
-                                    <th>Gene Symbol</th>
-                                    <th>Protein Domain</th>
-                                    <th>Flags</th>
+                                    <th>Transcript Name<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th>HGVS_C<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th>HGVS_P<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th>Consequence<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th>Impact<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th>Exon Nr.<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th>Intron Nr.<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th>Gene Symbol<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th>Protein Domain<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th>Flags<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                     <th>Links</th>
                                     <th style="display:none;" id="variant_consequence_source_col">Source</th>
                                     <th id="variant_consequence_length_col">Length</th>
@@ -494,13 +494,13 @@
             <h4 class="card-title">Literature</h4>
             <p class="card-text">
                 <div class="table-responsive">
-                    <table class="table table-hover scroll">
+                    <table class="table table-hover scroll" id="literatureTable">
                         <thead>
                             <tr>
-                                <th class="sortable">Year</th>
-                                <th class="sortable">Title</th>
-                                <th class="sortable">Authors</th>
-                                <th class="sortable">Journal / Publisher</th>
+                                <th><div class="sortable">Year</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th><div class="sortable">Title</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th><div class="sortable">Authors</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th><div class="sortable">Journal / Publisher</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                 <th>Link</th>
                             </tr>
                         </thead>

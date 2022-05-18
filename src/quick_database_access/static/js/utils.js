@@ -1,21 +1,52 @@
 /////////////// filter and sort tables according to specific columns
 
-function filterTable_one_column(filter, col, table) {
+function filterTable_one_column(filter, col, table, filter_visible = false) {
     var table, tr, td, cell, i;
     filter = filter.toUpperCase();
     tr = table.getElementsByTagName("tr");
+    remove_default_caption(table);
+    displayed = 0;
     for (i = 1; i < tr.length; i++) { // loop over rows
         tr[i].style.display = "none"; // hide row
+        if (!filter_visible) {
+            tr[i].setAttribute('is-visible', 'false')
+        }
     
         td = tr[i].getElementsByTagName("td");
         if (col <= td.length && col >= 0) {
             cell = tr[i].getElementsByTagName("td")[col];
             if (cell) {
                 if (cell.innerText.toUpperCase().indexOf(filter) > -1) {
-                    tr[i].style.display = "";
+                    if (!filter_visible) {
+                        tr[i].setAttribute('is-visible', 'true')
+                    }
+
+                    if (tr[i].getAttribute('is-visible') == 'true' || !tr[i].hasAttribute('is-visible')) {
+                        tr[i].style.display = "";
+                        displayed += 1;
+                    }
                 }
             }
         }
+    }
+
+    if (displayed == 0) {
+        add_default_caption(table)
+    }
+}
+
+function add_default_caption(table) {
+    const cap = document.createElement("caption");
+    cap.setAttribute('class', 'defaultrow');
+    cap.textContent ='Nothing to show';
+    table.appendChild(cap);
+}
+
+function remove_default_caption(table) {
+    var caps = table.getElementsByClassName('defaultrow');
+
+    while(caps[0]) {
+        caps[0].parentNode.removeChild(caps[0]);
     }
 }
 
