@@ -68,6 +68,8 @@ pip install flask-paginate
 #pip install Flask-OIDC
 pip install authlib
 pip install blinker
+
+pip install lxml
 '
 
 #cd $tools

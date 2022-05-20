@@ -13,6 +13,9 @@ ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
 # data
 ref_genome_name = "GRCh38"
 ref_genome_path = workdir + "data/genomes/GRCh38.fa"
+chainfile_path = workdir + "data/genomes/hg19ToHg38.fixed.over.chain.gz"
+
+#metadata
 gnomad_path = datadir + "gnomAD/gnomAD_genome_v3.1.2_GRCh38.vcf.gz"
 gnomad_m_path  = datadir + "gnomAD/gnomAD_genome_v3.1.mito_GRCh38.vcf.gz"
 phylop_file_path = datadir + "phyloP/hg38.phyloP100way.bw"

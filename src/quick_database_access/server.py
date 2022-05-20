@@ -206,7 +206,7 @@ def search_help():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='SRV023.img.med.uni-tuebingen.de', debug=True)
 
 
 #@app.route('/browse', methods=['GET', 'POST'])

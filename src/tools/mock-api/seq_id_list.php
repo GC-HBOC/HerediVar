@@ -1,12 +1,11 @@
 <?php
 
 require_once("utils/functions.php");
+require_once("utils/paths.php");
 
 
-$file_path = "heredicare_variants_11.05.22_ANNOTATED.tsv";
-
-$xml = new SimpleXMLElement('<xml/>');
-
+$xml = new SimpleXMLElement('<SeqIdList/>');
+//$seqid_list = $xml->addChild('SeqIdList');
 
 if (file_exists($file_path)){
     $file = file($file_path);
@@ -24,7 +23,9 @@ if (file_exists($file_path)){
 }
 
 Header('Content-type: text/xml');
-print($xml->asXML());
+$xml_string=$xml->asXML();
+
+print($xml_string);
 
 
 ?>
