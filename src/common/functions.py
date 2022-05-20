@@ -21,11 +21,11 @@ def variant_to_vcf(chr, pos, ref, alt, path):
     if int(pos) < 0:
         eprint("ERROR: only non negative position numbers are allowed (" + str(pos) + ")")
         return False
-
-    vcf_record = ["chr" + str(chr_num), str(pos), '.', str(ref), str(alt), '.', '.', '.']
+    chr = "chr" + str(chr_num)
+    vcf_record = [chr, str(pos), '.', str(ref), str(alt), '.', '.', '.']
     
     file = open(path, "w")
-    write_vcf_header([], output_func = file.write, tail = "\n")
+    write_vcf_header(["##contig=<ID=%s>"%chr], output_func = file.write, tail = "\n")
     file.write('\t'.join(vcf_record) + '\n')
     file.close()
     return True
@@ -175,7 +175,6 @@ def hgvsc_to_vcf(hgvs):
         ref = parts[3]
         alt = parts[4]
     return chr, pos, ref, alt
-
 
 # function for splitting hgvs in refrence transcript and variant
 def split_hgvs(hgvs):

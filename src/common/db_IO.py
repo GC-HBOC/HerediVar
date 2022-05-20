@@ -9,7 +9,6 @@ from operator import itemgetter
 import datetime
 import re
 
-
 def get_db_connection():
     conn = None
     try:
@@ -236,6 +235,16 @@ class Connection:
                          (chr, pos, ref, alt))
         self.conn.commit()
     
+    def insert_external_variant_id_from_vcf(self, chr, pos, ref, alt, external_id, id_source):
+        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) (SELECT id, %s, %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)" % (enquote(external_id), enquote(id_source), enquote(chr), enquote(pos), enquote(ref), enquote(alt))
+        self.cursor.execute(command)
+        self.conn.commit()
+    
+    def insert_external_variant_id_from_variant_id(self, heredivar_id, external_id, id_source):
+        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) VALUES (%s, %s, %s)" % (enquote(heredivar_id), enquote(external_id), enquote(id_source))
+        self.cursor.execute(command)
+        self.conn.commit()
+
     def insert_annotation_request(self, variant_id, user_id):
         command = "INSERT INTO annotation_queue (variant_id, status, user_id) VALUES (%s, %s, %s)"
         self.cursor.execute(command, (variant_id, "pending", user_id))
@@ -515,8 +524,10 @@ class Connection:
         command = "SELECT variant_id FROM variant_consequence WHERE transcript_name=" + enquote(reference_transcript) 
         if hgvs.startswith('c.'):
             command = command + " AND hgvs_c=" + enquote(hgvs)
-        if hgvs.startswith('p.'):
+        elif hgvs.startswith('p.'):
             command = command + " AND hgvs_p=" + enquote(hgvs)
+        else:
+            return None
         self.cursor.execute(command)
         result = self.cursor.fetchone()
         if result is not None:
@@ -524,3 +535,75 @@ class Connection:
         return result
 
 
+    def get_seqid_list(self):
+        command = "SELECT external_id FROM variant_ids WHERE id_source='heredicare'"
+        self.cursor.execute(command)
+        seqids = self.cursor.fetchall()
+        seqids = [x[0] for x in seqids]
+        return seqids
+
+    def insert_consensus_classification_from_vcf(self, chr, pos, ref, alt, consensus_classification, comment, date, evidence_document = None):
+        data = [enquote(x) for x in (consensus_classification, comment, date, evidence_document.decode(), chr, pos, ref, alt)]
+        command = "INSERT INTO consensus_classification (variant_id, classification, comment, date, evidence_document) (SELECT id, %s, %s, %s, %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)" % tuple(data)
+        self.cursor.execute(command)
+        self.conn.commit()
+    
+    def insert_consensus_classification_from_variant_id(self, variant_id, consensus_classification, comment, date, evidence_document):
+        data = [enquote(x) for x in (variant_id, consensus_classification, comment, date, evidence_document.decode())]
+        command = "INSERT INTO consensus_classification (variant_id, classification, comment, date, evidence_document) VALUES (%s, %s, %s, %s, %s)" % tuple(data)
+        self.cursor.execute(command)
+        self.conn.commit()
+    
+    def insert_heredicare_center_classification(self, variant_id, classification, center_name, comment, date):
+        data = [enquote(x) for x in (variant_id, classification, center_name, comment, date)]
+        command = "INSERT INTO heredicare_center_classification (variant_id, classification, center_name, comment, date) VALUES (%s, %s, %s, %s, %s)" % tuple(data)
+        self.cursor.execute(command)
+        self.conn.commit()
+
+    def check_heredicare_center_classification(self, variant_id, classification, center_name, comment, date): # this returns true if this classification is already in there and fals if it is not
+        data = [enquote(x) for x in (variant_id, classification, center_name, comment, date)]
+        command = "SELECT EXISTS (SELECT * FROM heredicare_center_classification WHERE variant_id = %s AND classification = %s AND center_name = %s AND comment = %s AND date = %s)" % tuple(data)
+        self.cursor.execute(command)
+        result = self.cursor.fetchone()[0]
+        if result == 0:
+            return False
+        else:
+            return True
+
+    def check_consensus_classification(self, variant_id, consensus_classification, comment, date):
+        data = [enquote(x) for x in (variant_id, consensus_classification, comment, date)]
+        command = "SELECT EXISTS (SELECT * FROM consensus_classification WHERE variant_id = %s AND classification = %s AND comment = %s AND date = %s)" % tuple(data)
+        self.cursor.execute(command)
+        result = self.cursor.fetchone()[0]
+        if result == 0:
+            return False
+        else:
+            return True
+    
+    def get_variant_id_from_external_id(self, id, id_source): #!! assumed that the external_id column contains unique entries for id, id_source pairs!
+        command = "SELECT id FROM variant_ids WHERE external_id = %s AND id_source = %s" % (enquote(id), enquote(id_source))
+        self.cursor.execute(command)
+        result = self.cursor.fetchone()[0]
+        return result
+
+    def get_consensus_classification(self, variant_id, most_recent = False):
+        command = "SELECT * FROM consensus_classification WHERE variant_id = " + enquote(variant_id)
+        if most_recent:
+            command = command  + " ORDER BY date DESC LIMIT 1"
+        self.cursor.execute(command)
+        if most_recent:
+            result = self.cursor.fetchone()
+        else:
+            result = self.cursor.fetchall()
+        return result
+    
+    def get_user_classifications(self, variant_id):
+        command = "SELECT * FROM classifications WHERE variant_id = " + enquote(variant_id)
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return result
+
+    def delete_variant(self, variant_id):
+        command = "DELETE FROM variant WHERE id =" + enquote(variant_id)
+        self.cursor.execute(command)
+        self.cursor.commit()
