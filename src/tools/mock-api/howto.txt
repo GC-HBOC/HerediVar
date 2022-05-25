@@ -1,0 +1,8 @@
+nutze zum download:
+wget --no-proxy -O - https://portal.img.med.uni-tuebingen.de/ahdoebm1/HerediCareAPI/v1/seq_id_list.php > seq_id_list.xml
+wget --no-proxy -O - https://portal.img.med.uni-tuebingen.de/ahdoebm1/HerediCareAPI/v1/variant.php?seqid=11428209 > variant.xml
+
+kopiere skripte an die richtige stelle:
+cp seq_id_list.php /mnt/users/bioinf/http/ahdoebm1/HerediCareAPI/v1/
+cp /mnt/users/ahdoebm1/HerediVar/src/tools/mock-api/variant.php /mnt/users/bioinf/http/ahdoebm1/HerediCareAPI/v1/
+cp /mnt/users/ahdoebm1/HerediVar/data/dbs/HerediCare/heredicare_variants_test.tsv /mnt/users/bioinf/http/ahdoebm1/HerediCareAPI/v1/
