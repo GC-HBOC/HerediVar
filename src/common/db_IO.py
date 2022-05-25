@@ -217,6 +217,7 @@ class Connection:
         self.conn.commit()
 
     def insert_variants_from_vcf(self, path):
+        # deprecated
         variants = functions.read_variants(path)
 
         for variant in variants:
@@ -228,11 +229,11 @@ class Connection:
                                   (chr, pos, ref, alt))
         self.conn.commit()
     
-    def insert_variant(self, chr, pos, ref, alt):
+    def insert_variant(self, chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt):
         ref = ref.upper()
         alt = alt.upper()
-        self.cursor.execute("INSERT INTO variant (chr, pos, ref, alt) VALUES (%s, %s, %s, %s)",
-                         (chr, pos, ref, alt))
+        self.cursor.execute("INSERT INTO variant (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                         (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt))
         self.conn.commit()
     
     def insert_external_variant_id_from_vcf(self, chr, pos, ref, alt, external_id, id_source):
@@ -361,6 +362,11 @@ class Connection:
         result = self.cursor.fetchall()
         return result
     
+    def get_variant_annotation(self, variant_id, annotation_type_id):
+        command = "SELECT * FROM variant_annotation WHERE variant_id = %s AND annotation_type_id = %s"
+        self.cursor.execute(command, (variant_id, annotation_type_id))
+        res = self.cursor.fetchall()
+        return res
 
     # functions specific for frontend!
     def get_paginated_variants(self, page, page_size, query_type = '', query = ''):
@@ -581,16 +587,18 @@ class Connection:
             return True
     
     def get_variant_id_from_external_id(self, id, id_source): #!! assumed that the external_id column contains unique entries for id, id_source pairs!
-        command = "SELECT id FROM variant_ids WHERE external_id = %s AND id_source = %s" % (enquote(id), enquote(id_source))
+        command = "SELECT variant_id FROM variant_ids WHERE external_id = %s AND id_source = %s" % (enquote(id), enquote(id_source))
         self.cursor.execute(command)
-        result = self.cursor.fetchone()[0]
+        result = self.cursor.fetchone()
+        if result is not None:
+            return result[0]
         return result
 
     def get_consensus_classification(self, variant_id, most_recent = False):
-        command = "SELECT * FROM consensus_classification WHERE variant_id = " + enquote(variant_id)
+        command = "SELECT * FROM consensus_classification WHERE variant_id = %s"
         if most_recent:
             command = command  + " ORDER BY date DESC LIMIT 1"
-        self.cursor.execute(command)
+        self.cursor.execute(command, (variant_id, ))
         if most_recent:
             result = self.cursor.fetchone()
         else:
@@ -598,12 +606,74 @@ class Connection:
         return result
     
     def get_user_classifications(self, variant_id):
-        command = "SELECT * FROM classifications WHERE variant_id = " + enquote(variant_id)
-        self.cursor.execute(command)
+        command = "SELECT * FROM classification WHERE variant_id = %s"
+        self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
         return result
 
     def delete_variant(self, variant_id):
-        command = "DELETE FROM variant WHERE id =" + enquote(variant_id)
+        command = "DELETE FROM variant WHERE id = %s"
+        self.cursor.execute(command, (variant_id,))
+        self.conn.commit()
+
+    def get_orig_variant(self, variant_id):
+        command = "SELECT orig_chr, orig_pos, orig_ref, orig_alt FROM variant WHERE id = %s"
+        self.cursor.execute(command, (variant_id, ))
+        res = self.cursor.fetchone()
+        return res
+
+    def insert_import_request(self, user_id):
+        command = "INSERT INTO import_queue (user_id) VALUES (%s)"
+        self.cursor.execute(command, (user_id, ))
+        self.conn.commit()
+        command = "SELECT LAST_INSERT_ID()"
         self.cursor.execute(command)
-        self.cursor.commit()
+        return self.cursor.fetchone()[0]
+    
+    def close_import_request(self, import_queue_id):
+        command = "UPDATE import_queue SET status = 'finished', finished_at = NOW() WHERE id = " + str(import_queue_id)
+        self.cursor.execute(command)
+        self.conn.commit()
+
+    def get_most_recent_import_request(self):
+        self.cursor.execute("SELECT * FROM import_queue ORDER BY requested_at DESC LIMIT 1")
+        result = self.cursor.fetchone()
+        return result
+
+    def get_external_ids_from_variant_id(self, variant_id, id_source=''):
+        command = "SELECT external_id FROM variant_ids WHERE variant_id = %s"
+        information = (variant_id,)
+        if id_source != '':
+            command = command + " AND id_source = %s"
+            information = information + (id_source, )
+        self.cursor.execute(command, information)
+        result = self.cursor.fetchall()
+        if result is None:
+            return []
+        return result
+
+    def delete_seqid(self, seqid, id_source):
+        command = "DELETE FROM variant_ids WHERE external_id = %s AND id_source = %s"
+        self.cursor.execute(command, (seqid, id_source))
+        self.conn.commit()
+
+    def update_variant_annotation(self, variant_id, annotation_type_id, value): # use with caution!
+        command = "UPDATE variant_annotation SET value = %s  WHERE variant_id = %s AND annotation_type_id = %s"
+        self.cursor.execute(command, (value, variant_id, annotation_type_id))
+        self.conn.commit()
+
+    def get_import_request(self, import_queue_id = '', date = ''):
+        command = ''
+        if import_queue_id != '':
+            command = 'SELECT * FROM import_queue WHERE id = %s'
+            information = (import_queue_id, )
+        if date != '':
+            date_parts = date.split('-')
+            information = (date_parts[0] + '-' + date_parts[1] + '-' + date_parts[2] + ' ' + date_parts[3] + ':' + date_parts[4] + ':' + date_parts[5], )
+            command = 'SELECT * FROM import_queue WHERE requested_at = %s'
+
+        if command != '':
+            self.cursor.execute(command, information)
+            res = self.cursor.fetchone()
+            return res
+        return None
