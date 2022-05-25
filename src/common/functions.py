@@ -125,7 +125,7 @@ def convert_none_infinite(x):
     else:
         return x
 
-def execute_command(command, process_name):
+def execute_command(command, process_name, use_prefix_error_log = True):
     completed_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     std_out, std_err = completed_process.communicate()#[1].strip().decode("utf-8") # catch errors and warnings and convert to str
     #vcf_errors = completed_process.communicate()[0].strip().decode("utf-8") # catch errors and warnings and convert to str
@@ -133,9 +133,13 @@ def execute_command(command, process_name):
     command_output = std_out.strip().decode("utf-8")
     err_msg = ""
     if completed_process.returncode != 0:
-        err_msg = process_name + " runtime ERROR: " + std_err + " Code: " + str(completed_process.returncode)
+        if use_prefix_error_log:
+            err_msg = process_name + " runtime ERROR: " + std_err
+        err_msg = err_msg + " Code: " + str(completed_process.returncode)
     elif len(std_err):
-        err_msg = process_name + " runtime WARNING: " + std_err
+        if use_prefix_error_log:
+            err_msg = process_name + " runtime WARNING: "
+        err_msg = err_msg + std_err
     return completed_process.returncode, err_msg, command_output
 
 
@@ -163,8 +167,12 @@ def hgvsc_to_vcf(hgvs):
     tmp_file.close()
 
     command = [paths.ngs_bits_path + "/HgvsToVcf", '-in', tmp_file_path + '.tsv', '-ref', paths.ref_genome_path, '-out', tmp_file_path + '.vcf']
-    returncode, err_msg, command_output = execute_command(command, "HgvsToVcf")
+    returncode, err_msg, command_output = execute_command(command, "HgvsToVcf", use_prefix_error_log=False)
     
+    chr = None
+    pos = None
+    ref = None
+    alt = None
     tmp_file = open(tmp_file_path + '.vcf', "r")
     for line in tmp_file: # this assumes a single-entry vcf
         if line.strip() == '' or line.startswith('#'):
@@ -174,7 +182,7 @@ def hgvsc_to_vcf(hgvs):
         pos = parts[1]
         ref = parts[3]
         alt = parts[4]
-    return chr, pos, ref, alt
+    return chr, pos, ref, alt, err_msg
 
 # function for splitting hgvs in refrence transcript and variant
 def split_hgvs(hgvs):

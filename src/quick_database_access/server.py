@@ -192,43 +192,68 @@ def download_log_file(log_file):
 def create():
     chrs = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
             'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY', 'chrMT']
-    if request.method == 'POST':
-        chr = request.form['chr']
-        pos = request.form['pos']
-        ref = request.form['ref'].upper()
-        alt = request.form['alt'].upper()
 
-        if not chr or not pos or not ref or not alt:
-            flash('All fields are required!', 'alert-danger')
-        else:
-            # validate request
-            tmp_vcf_path = tempfile.gettempdir() + "/new_variant.vcf"
-            functions.variant_to_vcf(chr, pos, ref, alt, tmp_vcf_path)
-            execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(tmp_vcf_path)
-            if execution_code_vcfcheck != 0: # abort if there were errors in the variant or errors during the execution of the program
-                flash(err_msg_vcfcheck, 'alert-danger')
-            elif vcf_errors.startswith("ERROR:"):
-                flash(vcf_errors, 'alert-danger')
+    if request.method == 'POST':
+        create_variant_from = request.args.get("type")
+        if create_variant_from == 'vcf':
+            chr = request.form['chr']
+            pos = request.form['pos']
+            ref = request.form['ref'].upper()
+            alt = request.form['alt'].upper()
+
+            if not chr or not pos or not ref or not alt:
+                flash('All fields are required!', 'alert-danger')
             else:
-                execution_code_vcfleftnormalize, err_msg_vcfleftnormalize, vcfleftnormalize_output = functions.left_align_vcf(tmp_vcf_path)
-                if execution_code_vcfleftnormalize != 0: # abort if the left normalization was unsuccessful
-                    flash(err_msg_vcfleftnormalize, 'alert-danger')
-                else: # insert variant
-                    conn = Connection()
-                
-                    is_duplicate = conn.check_variant_duplicate(chr, pos, ref, alt) # check if variant is already contained
-                    if not is_duplicate:
-                        conn.insert_variant(chr, pos, ref, alt) # insert it
-                        conn.insert_annotation_request(get_variant_id(conn, chr, pos, ref, alt), user_id=1) ########!!!! adjust user_id once login is working!
-                        conn.close()
-                        flash(Markup("Successfully inserted variant: " + chr + ' ' + str(pos) + ' ' + ref + ' ' + alt + 
-                                 ' (view your variant <a href="display/chr=' + str(chr) + '&pos=' + str(pos) + '&ref=' + str(ref) + '&alt=' + str(alt) + '" class="alert-link">here</a>)'), "alert-success")
-                        return redirect(url_for('create'))
-                    else:
-                        flash("Variant not imported: already in database!!", "alert-danger")
-                
-                    conn.close()
+                was_successful = validate_and_insert(chr, pos, ref, alt)
+                if was_successful:
+                    return redirect('create')
+
+        if create_variant_from == 'hgvsc':
+            hgvsc = request.form['hgvsc']
+            if not hgvsc:
+                flash('You need to provide a HGVS c-dot string!', 'alert-danger')
+            else:
+                print(hgvsc)
+                chr, pos, ref, alt, possible_errors = functions.hgvsc_to_vcf(hgvsc)
+                print(possible_errors)
+                if possible_errors != '':
+                    flash(possible_errors, "alert-danger")
+                else:
+                    was_successful = validate_and_insert(chr, pos, ref, alt)
+                    if was_successful:
+                        return redirect('create')
+
     return render_template('create.html', chrs=chrs)
+
+
+
+def validate_and_insert(chr, pos, ref, alt):
+    was_successful = False
+    # validate request
+    tmp_vcf_path = tempfile.gettempdir() + "/new_variant.vcf"
+    functions.variant_to_vcf(chr, pos, ref, alt, tmp_vcf_path)
+    execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(tmp_vcf_path)
+    if execution_code_vcfcheck != 0: # abort if there were errors in the variant or errors during the execution of the program
+        flash(err_msg_vcfcheck, 'alert-danger')
+    elif vcf_errors.startswith("ERROR:"):
+        flash(vcf_errors, 'alert-danger')
+    else:
+        execution_code_vcfleftnormalize, err_msg_vcfleftnormalize, vcfleftnormalize_output = functions.left_align_vcf(tmp_vcf_path)
+        if execution_code_vcfleftnormalize != 0: # abort if the left normalization was unsuccessful
+            flash(err_msg_vcfleftnormalize, 'alert-danger')
+        else: # insert variant
+            conn = Connection()
+            is_duplicate = conn.check_variant_duplicate(chr, pos, ref, alt) # check if variant is already contained
+            if not is_duplicate:
+                conn.insert_variant(chr, pos, ref, alt, chr, pos, ref, alt) # insert it -> original variant = actual variant because variant import is only allowed from grch38
+                conn.insert_annotation_request(get_variant_id(conn, chr, pos, ref, alt), user_id=1) ########!!!! adjust user_id once login is working!
+                flash(Markup("Successfully inserted variant: " + chr + ' ' + str(pos) + ' ' + ref + ' ' + alt + 
+                            ' (view your variant <a href="display/chr=' + str(chr) + '&pos=' + str(pos) + '&ref=' + str(ref) + '&alt=' + str(alt) + '" class="alert-link">here</a>)'), "alert-success")
+                was_successful = True
+            else:
+                flash("Variant not imported: already in database!!", "alert-danger")
+            conn.close()
+    return was_successful
 
 
 @app.route('/search', methods=['GET', 'POST'])

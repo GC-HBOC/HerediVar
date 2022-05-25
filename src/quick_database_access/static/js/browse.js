@@ -11,7 +11,7 @@ $(document).ready(function($){
     
     $('input[name="search_type"]').on('click', function() {
         var newSearchPlaceholder = $(this).parent().find('label').text()
-        if (newSearchPlaceholder !== "Quicksearch") {
+        if (newSearchPlaceholder !== "Quick search") {
             newSearchPlaceholder += ' search...'
         } else {
             newSearchPlaceholder += '...'
