@@ -109,6 +109,30 @@ table.scroll th {
 
 
 
+.vertical-lines-table {
+    border-collapse: collapse;
+  }
+  .vertical-lines-table td {
+    border: 2px solid rgb(180, 180, 180);
+  }
+  .vertical-lines-table tr:first-child th {
+    border-top: 0;
+  }
+  .vertical-lines-table tr:last-child td {
+    border-bottom: 0;
+  }
+  .vertical-lines-table tr td:first-child,
+  .vertical-lines-table tr th:first-child {
+    border-left: 0;
+  }
+  .vertical-lines-table tr td:last-child,
+  .vertical-lines-table tr th:last-child {
+    border-right: 0;
+  }
+
+
+
+
 .pagination {
     margin-bottom:0px;
 }

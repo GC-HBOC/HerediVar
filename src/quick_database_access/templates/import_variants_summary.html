@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1 class="bst"> {% block title %} Summary of variant import {% endblock %} </h1>
+
+<div class="sst">
+    This page provides a summary of the variant import from HerediCare requested <u>{{ requested_at }}</u>. This import finished <u>{{ finished_at }}</u>.
+</div>
+    
+    <div class="table-responsive bst">
+        <table class="table vertical-lines-table">
+            <thead>
+                <tr>
+                    <th>
+                        <div class="text-muted" style="text-align: center;">Variants found that are not yet <br> contained in HerediVar:</div>
+                        <div class="display-2 d-flex justify-content-center"><strong>{{ num_heredicare_exclusive }}</strong></div>
+                        <div class="text-muted" style="text-align: center;">From these,</div>
+                    </th>
+                    <th>
+                        <div class="text-muted" style="text-align: center;">Variants only found in HerediVar and thus <br> deleted from HerediCare:</div>
+                        <div class="display-2 d-flex justify-content-center"><strong>{{ num_heredivar_exclusive }}</strong></div>
+                        <div class="text-muted" style="text-align: center;">From these,</div>
+                    </th>
+                    <th>
+                        <div class="text-muted" style="text-align: center;">Variants contained both, in HerediVar and HerediCare (these were checked for new annotations): </div>
+                        <div class="display-2 d-flex justify-content-center"><strong>{{ num_heredivar_and_heredicare }}</strong></div>
+                        <div class="text-muted" style="text-align: center;">From these,</div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="display-4  d-flex justify-content-center"><strong>{{ num_new_variants }}</strong></div>
+                        <div class="text-muted" style="text-align: center;">variants were imported to HerediVar without errors, while</div>
+                        <div class="display-4  d-flex justify-content-center"><strong>{{ num_error_new_variants }}</strong></div>
+                        <div class="text-muted" style="text-align: center;">were erroneous. To learn more about these errors, please <a href="{{ url_for('download_log_file', log_file=log_file) }}">download the log file</a>.</div>
+                        <div class="display-4  d-flex justify-content-center"><strong>{{ num_duplicate_variants }}</strong></div>
+                        <div class="text-muted" style="text-align: center;">new variants were found which are already in HerediVar, but have another seqid in HerediCare (this is a duplicated variant). Metadata from these duplicates were appended to existing metadata if there were new ones.</div>
+                    </td>
+                    <td>
+                        <div class="display-4 d-flex justify-content-center"><strong>{{ num_deleted_variants }}</strong></div>
+                        <div class="text-muted" style="text-align: center;">variants and their corresponding metadata were removed safely from HerediVar.</div>
+                        <div class="display-4 d-flex justify-content-center"><strong>{{ num_rejected_to_delete_variants }}</strong></div>
+                        <div class="text-muted" style="text-align: center;">variants were not deleted from HerediVar, because they had user-specific or consensus classifications.</div>
+                    </td>
+                    <td>
+                        <div class="display-4 d-flex justify-content-center"><strong>{{ num_variants_new_annotations }}</strong></div>
+                        <div class="text-muted" style="text-align: center;">variants received updates to their annotations.</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="d-flex justify-content-end">
+        <a href="{{ url_for('download_log_file', log_file=log_file) }}"><button class="btn btn-primary bst">download log</button></a>
+    </div>
+    
+
+</div>
+
+
+{% endblock %}
+
+{% block special_scripts %}
+{% endblock %}

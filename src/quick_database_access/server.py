@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, url_for, flash, redirect, session, Markup
+from flask import Flask, render_template, request, url_for, flash, redirect, session, Markup, send_from_directory
 #from flask_mysqldb import MySQL
 from os import path
 import sys
@@ -8,13 +8,14 @@ from flask_paginate import Pagination
 from werkzeug.exceptions import abort
 import common.functions as functions
 import tempfile
-import time
 import re
+import fetch_heredicare_variants as heredicare
+from datetime import datetime
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = '8pfucoisaugfqw94hoaiddrvhe6efc5b456vvfl09'
-
+app.config['LOGS_FOLDER'] = 'logs/'
 #app.config["MYSQL_USER"] = "ahdoebm1"
 #app.config["MYSQL_PASSWORD"] = "20220303"
 #app.config["MYSQL_HOST"] = "SRV018.img.med.uni-tuebingen.de"
@@ -82,7 +83,109 @@ def preprocess_search_query(query):
 @app.route('/')
 def base():
     #conn.insert_variants_from_vcf("./data/NA12878_03_export_20220308_ahsturm1.vcf")
-    return render_template('base.html')
+    return render_template('index.html')
+
+
+@app.route('/import-variants', methods=('GET', 'POST'))
+def import_variants():
+    conn = Connection()
+    most_recent_import_request = conn.get_most_recent_import_request()
+    if most_recent_import_request is None:
+        status = 'finished'
+    else:
+        status = most_recent_import_request[3]
+    conn.close()
+
+    if request.method == 'POST' and status == 'finished':
+        conn = Connection()
+        import_queue_id = conn.insert_import_request(user_id = 1) ##### change user_id once login is ready!!!
+        requested_at = conn.get_import_request(import_queue_id = import_queue_id)[2]
+        requested_at = datetime.strptime(str(requested_at), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
+        conn.close()
+
+        heredicare.process_all(log_file_date = requested_at)
+        log_file_path = heredicare.get_log_file_path()
+        date = log_file_path.strip('.log').split(':')[1].split('-')
+
+        conn = Connection()
+        conn.close_import_request(import_queue_id)
+        conn.close()
+        return redirect(url_for('import_summary', year=date[0], month=date[1], day=date[2], hour=date[3], minute=date[4], second=date[5]))
+
+    return render_template('import_variants.html', most_recent_import_request=most_recent_import_request)
+
+
+
+@app.route('/import-variants/summary?date=<string:year>-<string:month>-<string:day>-<string:hour>-<string:minute>-<string:second>')
+def import_summary(year, month, day, hour, minute, second):
+    logs_folder = path.join(app.root_path, app.config['LOGS_FOLDER'])
+    requested_at = '-'.join([year, month, day, hour, minute, second])
+    log_file = 'heredicare_import:' + requested_at + '.log'
+    try:
+        import_log_file = open(path.join(logs_folder, log_file), 'r')
+    except:
+        abort(404) # redirect to 404 page if the log file does not exist!
+    num_new_variants = 0
+    num_deleted_variants = 0
+    num_error_new_variants = 0
+    num_variants_new_annotations = 0
+    num_rejected_to_delete_variants = 0
+    num_duplicate_variants = 0
+
+    num_heredivar_exclusive = 0
+    num_heredicare_exclusive = 0
+    num_heredivar_and_heredicare = 0
+    for line in import_log_file:
+        if '~~s0~~' in line:
+            num_new_variants += 1 #functions.find_between(line, 'a total of ', ' seqids were')
+        if '~~s1~~' in line:
+            num_deleted_variants += 1
+        if '~~e2~~' in line:
+            num_error_new_variants += 1
+        if '~~i8~~' in line:
+            num_variants_new_annotations += 1
+        if '~~i2~~' in line:
+            num_rejected_to_delete_variants += 1
+        if '~~i1~~' in line:
+            num_duplicate_variants += 1
+
+        if '~~i5~~' in line:
+            num_heredivar_exclusive = functions.find_between(line, 'a total of ', ' seqids were')
+        if '~~i6~~' in line:
+            num_heredicare_exclusive = functions.find_between(line, 'a total of ', ' seqids were')
+        if '~~i7~~' in line:
+            num_heredivar_and_heredicare = functions.find_between(line, 'a total of ', ' seqids were')
+    
+    conn = Connection()
+    finished_at = conn.get_import_request(date = requested_at)[4]
+    print(finished_at)
+    conn.close()
+    requested_at = datetime.strptime(requested_at, '%Y-%m-%d-%H-%M-%S').strftime('%Y-%m-%d %H:%M:%S')
+    print(requested_at)
+    return render_template('import_variants_summary.html', 
+                            num_new_variants=num_new_variants,
+                            num_deleted_variants=num_deleted_variants, 
+                            num_error_new_variants=num_error_new_variants, 
+                            num_variants_new_annotations=num_variants_new_annotations,
+                            num_rejected_to_delete_variants=num_rejected_to_delete_variants,
+                            num_heredivar_exclusive=num_heredivar_exclusive,
+                            num_heredicare_exclusive=num_heredicare_exclusive,
+                            num_heredivar_and_heredicare=num_heredivar_and_heredicare,
+                            num_duplicate_variants=num_duplicate_variants,
+                            requested_at=requested_at,
+                            finished_at=finished_at,
+                            log_file = log_file)
+
+
+@app.route('/import-variants/summary/download?file=<string:log_file>')
+def download_log_file(log_file):
+    logs_folder = path.join(app.root_path, app.config['LOGS_FOLDER'])
+    return send_from_directory(directory=logs_folder, path='', filename=log_file) 
+
+
+# überprüfe nochmal dass alles die summe aus dem oben ist
+# idee: alle 1000 Varianten ein zwischen-report (der anzeigt wo das programm gerade ist) anzeigen und am ende ein redirect auf die summary page?
+
 
 
 @app.route('/create', methods=('GET', 'POST'))
