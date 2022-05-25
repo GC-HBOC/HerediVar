@@ -27,8 +27,13 @@ if (file_exists($file_path)) {
 
             // add some mock data
             $occurances = $variant->addChild('Occurances');
-            $occurances->addAttribute('cases_count', 69); // actual data missing atm
-            $occurances->addAttribute('family_count', 42); // actual data missing atm
+            if ($current_seqid == '11334923'){
+                $occurances->addAttribute('cases_count', 65);
+                $occurances->addAttribute('family_count', 423547);
+            } else {
+                $occurances->addAttribute('cases_count', 69);
+                $occurances->addAttribute('family_count', 42);
+            }
 
             $classification_center = $variant->addChild('ClassificationCenter');
             $classification_center->addAttribute('class', 5);
