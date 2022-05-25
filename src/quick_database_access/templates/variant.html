@@ -3,12 +3,12 @@
 
 {% block content %}
 <div class="bst bsb">
-    <h1>{% block title %} Variant Display {% endblock %}</h1>
+    <h1>{% block title %} Variant display {% endblock %}</h1>
     <div style="display:flex; align-items:center;">
         <form id="reannotate_form" name="reannotate_form" method="post" action="#">
             <div class="form-group">
                 <span id="tooltip_reannotate_button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="">
-                    <button id="reannotate_button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reannotate-modal">(Re-)Annotate Variant</button>
+                    <button id="reannotate_button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reannotate-modal">(Re-)Annotate variant</button>
                 </span>
                 <meta id="annotation_status" data-annotation-status="{{ current_annotation_status[4] }}">
             </div>
@@ -33,7 +33,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="reannotate-modal-label">Confirm (Re-)Annotation</h5>
+                <h5 class="modal-title" id="reannotate-modal-label">Confirm (re-)annotation</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -54,7 +54,7 @@
     <div class="col-sm-6 col-lg-2 mb-4">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Variant Identification</h4>
+                <h4 class="card-title">Variant identification</h4>
                 <p class="card-text">
                     <div class="row align-items-start">
                         <div class="col li-label"><abbr title="Variant in variant call format (FORMAT: chromosome -> position in reference genome (GRCh38) -> reference allele -> alternative allele)">VCF</abbr></div>
@@ -79,134 +79,112 @@
     <div class="col-lg-3 col-lg-4 mb-4">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Variant Information</h4>
+                <h4 class="card-title">Variant information</h4>
                 <p class="card-text">
-                    
+    
+    {% if 'cadd_scaled' in variant_annotations or 'revel' in variant_annotations or 'phylop_100way' in variant_annotations %}
     <div class="row align-items-start">
         <div class="col-sm-4 li-label"><abbr title="Pathogeneity and other scores">Change&nbsp;tolerance</abbr></div>
         <div class="col li-info">
+            {% if 'cadd_scaled' in variant_annotations %}
             <div class="li-element">
-                {% if 'cadd_scaled' in variant_annotations %}
                     <abbr title="{{variant_annotations['cadd_scaled'][0]}}"><a class="dashed_underline">CADD:</a></abbr>&nbsp;{{variant_annotations['cadd_scaled'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">CADD:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
+            {% if 'revel' in variant_annotations %}
             <div class="li-element">
-                {% if 'revel' in variant_annotations %}
                     <abbr title="{{variant_annotations['revel'][0]}}"><a class="dashed_underline">REVEL:</a></abbr>&nbsp;{{variant_annotations['revel'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">REVEL:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
+            {% if 'phylop_100way' in variant_annotations %}
             <div class="li-element">
-                {% if 'phylop_100way' in variant_annotations %}
                     <abbr title="{{variant_annotations['phylop_100way'][0]}}"><a class="dashed_underline">phyloP:</a></abbr>&nbsp;{{variant_annotations['phylop_100way'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">phyloP:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
         </div>
     </div>
+    {% endif %}
+    {% if 'spliceai_max_delta' in variant_annotations or 'spliceai_details' in variant_annotations or 'maxentscan_ref' in variant_annotations or 'maxentscan_alt' in variant_annotations %}
     <div class="row align-items-start">
-        <div class="col-sm-4 li-label"><abbr title="Pathogeneity and other scores">Splicing</abbr></div>
+        <div class="col-sm-4 li-label"><abbr title="Various splicing related scores">Splicing</abbr></div>
         <div class="col li-info">
+            {% if 'spliceai_max_delta' in variant_annotations %}
             <div class="li-element">
-                {% if 'spliceai_max_delta' in variant_annotations %}
                     <abbr title="{{variant_annotations['spliceai_max_delta'][0]}}"><a class="dashed_underline">spliceAI max:</a></abbr>&nbsp;{{variant_annotations['spliceai_max_delta'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">spliceAI max:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
+            {% if 'spliceai_details' in variant_annotations %}
             <div class="li-element">
-                {% if 'spliceai_details' in variant_annotations %}
                     <abbr title="{{variant_annotations['spliceai_details'][0]}}"><a class="dashed_underline">spliceAI details:</a></abbr>&nbsp;{{variant_annotations['spliceai_details'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">spliceAI details:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
+            {% if 'maxentscan_ref' in variant_annotations %}
             <div class="li-element">
-                {% if 'maxentscan_ref' in variant_annotations %}
                     <abbr title="{{variant_annotations['maxentscan_ref'][0]}}"><a class="dashed_underline">maxentscan ref:</a></abbr>&nbsp;{{variant_annotations['maxentscan_ref'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">maxentscan ref:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
+            {% if 'maxentscan_alt' in variant_annotations %}
             <div class="li-element">
-                {% if 'maxentscan_alt' in variant_annotations %}
                     <abbr title="{{variant_annotations['maxentscan_alt'][0]}}"><a class="dashed_underline">maxentscan alt:</a></abbr>&nbsp;{{variant_annotations['maxentscan_alt'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">maxentscan alt:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
         </div>
     </div>
+    {% endif %}
+    {% if 'gnomad_ac' in variant_annotations or 'gnomad_af' in variant_annotations or 'gnomad_popmax' in variant_annotations or 'gnomad_hom' in variant_annotations or 'gnomad_het' in variant_annotations or 'gnomad_hemi' in variant_annotations %}
     <div class="row align-items-start">
         <div class="col-sm-4 li-label"><abbr title="gnomAD scores">gnomAD</abbr></div>
         <div class="col li-info">
+            {% if 'gnomad_ac' in variant_annotations %}
             <div class="li-element">
-                {% if 'gnomad_ac' in variant_annotations %}
                     <abbr title="{{variant_annotations['gnomad_ac'][0]}}"><a class="dashed_underline">AC:</a></abbr>&nbsp;{{variant_annotations['gnomad_ac'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">AC:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
+            {% if 'gnomad_af' in variant_annotations %}
             <div class="li-element">
-                {% if 'gnomad_af' in variant_annotations %}
                     <abbr title="{{variant_annotations['gnomad_af'][0]}}"><a class="dashed_underline">AF:</a></abbr>&nbsp;{{variant_annotations['gnomad_af'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">AF:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
+            {% if 'gnomad_popmax' in variant_annotations %}
             <div class="li-element">
-                {% if 'gnomad_popmax' in variant_annotations %}
                     <abbr title="{{variant_annotations['gnomad_popmax'][0]}}"><a class="dashed_underline">popmax:</a></abbr>&nbsp;{{variant_annotations['gnomad_popmax'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">popmax:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
+            {% if 'gnomad_hom' in variant_annotations %}
             <div class="li-element">
-                {% if 'gnomad_hom' in variant_annotations %}
                     <abbr title="{{variant_annotations['gnomad_hom'][0]}}"><a class="dashed_underline">#hom:</a></abbr>&nbsp;{{variant_annotations['gnomad_hom'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">#hom:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
+            {% if 'gnomad_het' in variant_annotations %}
             <div class="li-element">
-                {% if 'gnomad_het' in variant_annotations %}
                     <abbr title="{{variant_annotations['gnomad_het'][0]}}"><a class="dashed_underline">#het:</a></abbr>&nbsp;{{variant_annotations['gnomad_het'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">#het:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
+            {% if 'gnomad_hemi' in variant_annotations %}
             <div class="li-element">
-                {% if 'gnomad_hemi' in variant_annotations %}
                     <abbr title="{{variant_annotations['gnomad_hemi'][0]}}"><a class="dashed_underline">#hemi:</a></abbr>&nbsp;{{variant_annotations['gnomad_hemi'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">#hemi:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
         </div>
     </div>
+    {% endif %}
+    {% if 'flossies_num_afr' in variant_annotations or 'flossies_num_eur' in variant_annotations %}
     <div class="row align-items-start">
         <div class="col-sm-4 li-label"><abbr title="Number of individuals from the FLOSSIES database">FLOSSIES</abbr></div>
         <div class="col li-info">
+            {% if 'flossies_num_afr' in variant_annotations %}
             <div class="li-element">
-                {% if 'flossies_num_afr' in variant_annotations %}
                     <abbr title="{{variant_annotations['flossies_num_afr'][0]}}"><a class="dashed_underline">#afr:</a></abbr>&nbsp;{{variant_annotations['flossies_num_afr'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">#afr:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
+            {% if 'flossies_num_eur' in variant_annotations %}
             <div class="li-element">
-                {% if 'flossies_num_eur' in variant_annotations %}
                     <abbr title="{{variant_annotations['flossies_num_eur'][0]}}"><a class="dashed_underline">#eur:</a></abbr>&nbsp;{{variant_annotations['flossies_num_eur'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">#eur:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
         </div>
     </div>
+    {% endif %}
     {% if 'tp53db_class' in variant_annotations or 'tp53db_bayes_del' in variant_annotations or 'tp53db_DNE_LOF_class' in variant_annotations or 'tp53db_DNE_class' in variant_annotations or 'tp53db_domain_function' in variant_annotations or 'tp53db_transactivation_class' in variant_annotations%}
     <div class="row align-items-start">
         <div class="col-sm-4 li-label"><abbr title="Information from the Cancerhotspots website">TP53 database</abbr></div>
@@ -247,32 +225,28 @@
         </div>
     </div>
     {% endif %}
+    {% if 'cancerhotspots_cancertypes' in variant_annotations or 'cancerhotspots_ac' in variant_annotations or 'cancerhotspots_af' in variant_annotations %}
     <div class="row align-items-start">
         <div class="col-sm-4 li-label"><abbr title="Information from the Cancerhotspots website">Cancerhotspots</abbr></div>
         <div class="col li-info">
+            {% if 'cancerhotspots_cancertypes' in variant_annotations %}
             <div class="li-element">
-                {% if 'cancerhotspots_cancertypes' in variant_annotations %}
                     <abbr title="{{variant_annotations['cancerhotspots_cancertypes'][0]}}"><a class="dashed_underline">hotspots:</a></abbr>&nbsp;{{variant_annotations['cancerhotspots_cancertypes'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">hotspots:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
+            {% if 'cancerhotspots_ac' in variant_annotations %}
             <div class="li-element">
-                {% if 'cancerhotspots_ac' in variant_annotations %}
                     <abbr title="{{variant_annotations['cancerhotspots_ac'][0]}}"><a class="dashed_underline">AC:</a></abbr>&nbsp;{{variant_annotations['cancerhotspots_ac'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">AC:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
+            {% if 'cancerhotspots_af' in variant_annotations %}
             <div class="li-element">
-                {% if 'cancerhotspots_af' in variant_annotations %}
                     <abbr title="{{variant_annotations['cancerhotspots_af'][0]}}"><a class="dashed_underline">AF:</a></abbr>&nbsp;{{variant_annotations['cancerhotspots_af'][4]}}
-                {% else %}
-                    <abbr title="No information available"><a class="dashed_underline">AF:</a></abbr>&nbsp;-
-                {% endif %}
             </div>
+            {% endif %}
         </div>
     </div>
+    {% endif %}
     
                 </p>
             </div>
@@ -283,7 +257,7 @@
     <div class="col-sm-6 col-lg-4 mb-4">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Previous Classifications</h4>
+                <h4 class="card-title">Previous classifications</h4>
                 <p class="card-text">
                 {% if 'brca_exchange_clinical_significance' in variant_annotations %}
                     <div class="row">
@@ -305,12 +279,10 @@
                     <div class="col li-info">
                         <div class="li-element">
                                 <abbr title="The review status from ClinVar"><a class="dashed_underline">review status:</a></abbr>&nbsp;{{variant_annotations['clinvar_variant_annotation'][4]}}
-                            &nbsp;&nbsp;&nbsp;&nbsp;
                         </div>
                         <br>
                         <div class="li-element">
-                                <abbr title="A summary of the clinvar interpretations. The numbers in brackets display the number of ClinVar submissions reporting the specific type of interpretation."><a class="dashed_underline">interpretations:</a></abbr>&nbsp;{{variant_annotations['clinvar_variant_annotation'][3]}}
-                            &nbsp;&nbsp;&nbsp;&nbsp;
+                                <abbr title="A summary of the ClinVar interpretations. The numbers in brackets display the number of ClinVar submissions reporting the specific type of interpretation."><a class="dashed_underline">interpretations:</a></abbr>&nbsp;{{variant_annotations['clinvar_variant_annotation'][3]}}
                         </div>
                     </div>
                 </div>
@@ -326,7 +298,7 @@
     <div class="col-sm-6 col-lg-2 mb-4">
         <div class="card">
             <div class="card-body">
-                <h4 class="card-title">Further Information</h4>
+                <h4 class="card-title">Further information</h4>
                 <p class="card-text">
                     <div>
                         <div>
@@ -362,57 +334,16 @@
         </div>
     </div>
 
-<!-- clinvar submission table -->
-{% if 'clinvar_variant_annotation' in variant_annotations and clinvar_submissions|length > 0 %}
-<div class="col-lg-5 col-lg-6 mb-4">
-    <div class="card">
-        <div class="card-body">
-            <h4 class="card-title">Clinvar Submissions</h4>
-            <p class="card-text">
-                <div class="table-responsive">
-                    <table class="table table-hover scroll" id="clinvarSubmissionsTable">
-                        <thead>
-                            <tr>
-                                <th><div class="sortable">interpretation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                <th><div class="sortable">last evaluated</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                <th><div class="sortable">review status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                <th><div class="sortable">submission condition</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                <th><div class="sortable">submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                <th>comment<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for submission in clinvar_submissions %}
-                            <tr>
-                                <td>{{ submission[2] }}</td>
-                                <td style="white-space:nowrap;">{{ submission[3] }}</td>
-                                <td>{{ submission[4] }}</td>
-                                <td>
-                                    <external-link href="https://www.ncbi.nlm.nih.gov/medgen/{{submission[5][0]}}">{{ submission[5][1] }}</external-link>
-                                </td>
-                                <td>{{ submission[6] }}</td>
-                                <td style="max-width:500px"><abbr title="{{ submission[7] }}"><div class="Nellipsis" style="max-width:500px">{{ submission[7] }}</div> </abbr></td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </p>
-        </div>
-    </div>
-</div>
-{% endif %}
-
 <!-- variant consequence table -->
 <!-- 0transcript_name,1hgvs_c,2hgvs_p,3consequence,4impact,5exon_nr,6intron_nr,7symbol,8transcript.gene_id,9source,10pfam_accession,11pfam_description,12length,13is_gencode_basic,14is_mane_select,15is_mane_plus_clinical,16is_ensembl_canonical,17total_flag -->
 {% if variant_consequences|length > 0 %}
 <div class="col-lg-5 col-lg-6 mb-4">
     <div class="card">
         <div class="card-body">
-            <h4 class="card-title">Variant Consequences</h4>
+            <h4 class="card-title">Variant consequences</h4>
             <p class="card-text">
                 Preferred transcripts are shown first (longer and more flags) <br>
-                Check Transcripts in COSMIC links, you can not search for them so there might be wrong results...
+                COSMIC links might be broken, as you can not search for them, so there might be wrong results...
 
                 <ul class="nav nav-tabs" id="tabs" role="tablist"> <!-- although this uses the styles from a tablist it is essentially not a tablist as it is not linked to the tabContent div below! Changes appear through javascript-->
                     <li class="nav-item" role="presentation">
@@ -507,6 +438,49 @@
     </div>
 </div>
 {% endif %}
+
+
+<!-- clinvar submission table -->
+{% if 'clinvar_variant_annotation' in variant_annotations and clinvar_submissions|length > 0 %}
+<div class="col-lg-5 col-lg-6 mb-4">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Clinvar submissions</h4>
+            <p class="card-text">
+                <div class="table-responsive">
+                    <table class="table table-hover scroll" id="clinvarSubmissionsTable">
+                        <thead>
+                            <tr>
+                                <th><div class="sortable">Interpretation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th><div class="sortable">Last evaluated</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th><div class="sortable">Review status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th><div class="sortable">Submission condition</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th>Comment<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for submission in clinvar_submissions %}
+                            <tr>
+                                <td>{{ submission[2] }}</td>
+                                <td style="white-space:nowrap;">{{ submission[3] }}</td>
+                                <td>{{ submission[4] }}</td>
+                                <td>
+                                    <external-link href="https://www.ncbi.nlm.nih.gov/medgen/{{submission[5][0]}}">{{ submission[5][1] }}</external-link>
+                                </td>
+                                <td>{{ submission[6] }}</td>
+                                <td style="max-width:500px"><abbr title="{{ submission[7] }}"><div class="Nellipsis" style="max-width:500px">{{ submission[7] }}</div> </abbr></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 
 <!-- literature table -->
 {% if literature|length > 0 %}

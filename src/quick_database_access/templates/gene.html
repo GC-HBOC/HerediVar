@@ -6,15 +6,15 @@
 <div class="container">
 
   
-<h1> {% block title %} Gene report for {{ gene_info[2] }} {% endblock %} </h1>
+<h1 class="bst"> {% block title %} Gene report for {{ gene_info[2] }} {% endblock %} </h1>
 
 <div style="width:40%">
     <div class="row align-items-start">
-        <div class="col li-label"><abbr title="someinfo">HGNC ID</abbr></div>
+        <div class="col li-label"><abbr title="someinfo">HGNC-ID</abbr></div>
         <div class="col li-info"><external-link href="https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:{{ gene_info[1] }}">{{ gene_info[1] }}</external-link></div>
     </div>
     <div class="row align-items-start">
-        <div class="col li-label"><abbr title="someinfo">Gene Symbol</abbr></div>
+        <div class="col li-label"><abbr title="someinfo">Gene symbol</abbr></div>
         <div class="col li-info">{{ gene_info[2] }}</div>
     </div>
     <div class="row align-items-start">
@@ -49,7 +49,7 @@
 
 
 <!--transcripts table-->
-<div class="col-lg-5 col-lg-6 mb-4">
+<div class="col-lg-5 col-lg-6 mb-4 bst">
     <div class="card">
         <div class="card-body">
             <h4 class="card-title">Transcripts</h4>
@@ -71,7 +71,7 @@
                         <table class="table table-hover scroll" id="transcriptTable">
                             <thead>
                                 <tr>
-                                    <th>Transcript Name</th>
+                                    <th>Transcript name</th>
                                     <th>Biotype</th>
                                     <th id="transcripts_length_col">Length</th>
                                     <th>Flags</th>
