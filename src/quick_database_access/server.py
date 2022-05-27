@@ -38,7 +38,6 @@ def get_variant(conn, variant_id):
 def get_variant_id(conn, chr, pos, ref, alt):
     if chr is None or pos is None or ref is None or alt is None:
         abort(404)
-    
     variant_id = conn.get_variant_id(chr, pos, ref, alt)
     return variant_id
 
@@ -62,6 +61,94 @@ def is_valid_query(search_query):
             flash("Search query ERROR: malformed hgvs found in " + search_query + " expecting 'transcript:[c. OR p.]...'", 'alert-danger')
             return False
     return True
+
+def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
+    was_successful = True
+    # validate request
+    tmp_file_path = tempfile.gettempdir() + "/new_variant.vcf"
+    tmp_vcfcheck_out_path = tempfile.gettempdir() + "/frontend_variant_import_vcf_errors.txt"
+    functions.variant_to_vcf(chr, pos, ref, alt, tmp_file_path)
+    
+
+    command = ['/mnt/users/ahdoebm1/HerediVar/src/quick_database_access/scripts/preprocess_variant.sh', '-i', tmp_file_path, '-o', tmp_vcfcheck_out_path]
+
+    if genome_build == 'GRCh37':
+        command.append('-l') # enable liftover
+        
+    returncode, err_msg, command_output = functions.execute_command(command, 'preprocess_variant')
+    #print(err_msg)
+    #print(command_output)
+    
+    if returncode != 0:
+        flash(err_msg, 'alert-danger')
+        was_successful = False
+        return was_successful
+    vcfcheck_errors = open(tmp_vcfcheck_out_path + '.pre', 'r').read()
+    if 'ERROR:' in vcfcheck_errors:
+        flash(vcfcheck_errors.replace('\n', ' '), 'alert-danger')
+        was_successful = False
+        return was_successful
+    if genome_build == 'GRCh37':
+        unmapped_variants_vcf = open(tmp_file_path + '.lifted.unmap', 'r')
+        unmapped_variant = None
+        for line in unmapped_variants_vcf:
+            if line.startswith('#') or line.strip() == '':
+                continue
+            unmapped_variant = line
+            break
+        unmapped_variants_vcf.close()
+        if unmapped_variant is not None:
+            flash('ERROR: could not lift variant ' + unmapped_variant, ' alert-danger')
+            was_successful = False
+            return was_successful
+    vcfcheck_errors = open(tmp_vcfcheck_out_path + '.post', 'r').read()
+    if 'ERROR:' in vcfcheck_errors:
+        flash(vcfcheck_errors.replace('\n', ' '), 'alert-danger')
+        was_successful = False
+        return was_successful
+
+    if was_successful:
+        variant = functions.read_vcf_variant(tmp_file_path)[0] # accessing only the first element of the returned list is save because we process only one variant at a time
+        new_chr = variant.CHROM
+        new_pos = variant.POS
+        new_ref = variant.REF
+        new_alt = variant.ALT
+
+        conn = Connection()
+        is_duplicate = conn.check_variant_duplicate(new_chr, new_pos, new_ref, new_alt) # check if variant is already contained
+        if not is_duplicate:
+            conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chr, pos, ref, alt) # insert it -> original variant = actual variant because variant import is only allowed from grch38
+            conn.insert_annotation_request(get_variant_id(conn, new_chr, new_pos, new_ref, new_alt), user_id=1) ########!!!! adjust user_id once login is working!
+            flash(Markup("Successfully inserted variant: " + new_chr + ' ' + str(new_pos) + ' ' + new_ref + ' ' + new_alt + 
+                        ' (view your variant <a href="display/chr=' + str(new_chr) + '&pos=' + str(new_pos) + '&ref=' + str(new_ref) + '&alt=' + str(new_alt) + '" class="alert-link">here</a>)'), "alert-success")
+        else:
+            flash("Variant not imported: already in database!!", "alert-danger")
+            was_successful = False
+        conn.close()
+
+    #execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(tmp_vcf_path, genome_build)
+    #if execution_code_vcfcheck != 0: # abort if there were errors in the variant or errors during the execution of the program
+    #    flash(err_msg_vcfcheck, 'alert-danger')
+    #elif vcf_errors.startswith("ERROR:"):
+    #    flash(vcf_errors, 'alert-danger')
+    #else:
+    #    execution_code_vcfleftnormalize, err_msg_vcfleftnormalize, vcfleftnormalize_output = functions.left_align_vcf(tmp_vcf_path, genome_build)
+    #    if execution_code_vcfleftnormalize != 0: # abort if the left normalization was unsuccessful
+    #        flash(err_msg_vcfleftnormalize, 'alert-danger')
+    #    else: # insert variant
+    #        conn = Connection()
+    #        is_duplicate = conn.check_variant_duplicate(chr, pos, ref, alt) # check if variant is already contained
+    #        if not is_duplicate:
+    #            conn.insert_variant(chr, pos, ref, alt, chr, pos, ref, alt) # insert it -> original variant = actual variant because variant import is only allowed from grch38
+    #            conn.insert_annotation_request(get_variant_id(conn, chr, pos, ref, alt), user_id=1) ########!!!! adjust user_id once login is working!
+    #            flash(Markup("Successfully inserted variant: " + chr + ' ' + str(pos) + ' ' + ref + ' ' + alt + 
+    #                        ' (view your variant <a href="display/chr=' + str(chr) + '&pos=' + str(pos) + '&ref=' + str(ref) + '&alt=' + str(alt) + '" class="alert-link">here</a>)'), "alert-success")
+    #            was_successful = True
+    #        else:
+    #            flash("Variant not imported: already in database!!", "alert-danger")
+    #        conn.close()
+    return was_successful
+
 
 def preprocess_search_query(query):
     res = re.search("(.*)(%.*%)", query)
@@ -183,7 +270,6 @@ def download_log_file(log_file):
     return send_from_directory(directory=logs_folder, path='', filename=log_file) 
 
 
-# überprüfe nochmal dass alles die summe aus dem oben ist
 # idee: alle 1000 Varianten ein zwischen-report (der anzeigt wo das programm gerade ist) anzeigen und am ende ein redirect auf die summary page?
 
 
@@ -197,63 +283,41 @@ def create():
         create_variant_from = request.args.get("type")
         if create_variant_from == 'vcf':
             chr = request.form['chr']
-            pos = request.form['pos']
-            ref = request.form['ref'].upper()
-            alt = request.form['alt'].upper()
+            pos = ''.join(request.form['pos'].split())
+            ref = request.form['ref'].upper().strip()
+            alt = request.form['alt'].upper().strip()
 
-            if not chr or not pos or not ref or not alt:
+            if not chr or not pos or not ref or not alt or 'genome' not in request.form:
                 flash('All fields are required!', 'alert-danger')
             else:
-                was_successful = validate_and_insert(chr, pos, ref, alt)
-                if was_successful:
-                    return redirect('create')
+                try:
+                    if int(pos) < 0:
+                        flash('ERROR: Negative genomic position given, but must be positive.', 'alert-danger')
+                    else:
+                        genome_build = genome_build = request.form['genome']
+                        was_successful = validate_and_insert_variant(chr, pos, ref, alt, genome_build)
+                        if was_successful:
+                            return redirect('create')
+                except:
+                    flash('ERROR: Genomic position is not a valid integer.', 'alert-danger')
+
 
         if create_variant_from == 'hgvsc':
             hgvsc = request.form['hgvsc']
             if not hgvsc:
                 flash('You need to provide a HGVS c-dot string!', 'alert-danger')
             else:
-                print(hgvsc)
                 chr, pos, ref, alt, possible_errors = functions.hgvsc_to_vcf(hgvsc)
-                print(possible_errors)
                 if possible_errors != '':
                     flash(possible_errors, "alert-danger")
                 else:
-                    was_successful = validate_and_insert(chr, pos, ref, alt)
+                    was_successful = validate_and_insert_variant(chr, pos, ref, alt, 'GRCh38')
                     if was_successful:
                         return redirect('create')
 
     return render_template('create.html', chrs=chrs)
 
 
-
-def validate_and_insert(chr, pos, ref, alt):
-    was_successful = False
-    # validate request
-    tmp_vcf_path = tempfile.gettempdir() + "/new_variant.vcf"
-    functions.variant_to_vcf(chr, pos, ref, alt, tmp_vcf_path)
-    execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(tmp_vcf_path)
-    if execution_code_vcfcheck != 0: # abort if there were errors in the variant or errors during the execution of the program
-        flash(err_msg_vcfcheck, 'alert-danger')
-    elif vcf_errors.startswith("ERROR:"):
-        flash(vcf_errors, 'alert-danger')
-    else:
-        execution_code_vcfleftnormalize, err_msg_vcfleftnormalize, vcfleftnormalize_output = functions.left_align_vcf(tmp_vcf_path)
-        if execution_code_vcfleftnormalize != 0: # abort if the left normalization was unsuccessful
-            flash(err_msg_vcfleftnormalize, 'alert-danger')
-        else: # insert variant
-            conn = Connection()
-            is_duplicate = conn.check_variant_duplicate(chr, pos, ref, alt) # check if variant is already contained
-            if not is_duplicate:
-                conn.insert_variant(chr, pos, ref, alt, chr, pos, ref, alt) # insert it -> original variant = actual variant because variant import is only allowed from grch38
-                conn.insert_annotation_request(get_variant_id(conn, chr, pos, ref, alt), user_id=1) ########!!!! adjust user_id once login is working!
-                flash(Markup("Successfully inserted variant: " + chr + ' ' + str(pos) + ' ' + ref + ' ' + alt + 
-                            ' (view your variant <a href="display/chr=' + str(chr) + '&pos=' + str(pos) + '&ref=' + str(ref) + '&alt=' + str(alt) + '" class="alert-link">here</a>)'), "alert-success")
-                was_successful = True
-            else:
-                flash("Variant not imported: already in database!!", "alert-danger")
-            conn.close()
-    return was_successful
 
 
 @app.route('/search', methods=['GET', 'POST'])

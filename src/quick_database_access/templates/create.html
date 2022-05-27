@@ -29,7 +29,7 @@
             
                 <div class="form-group sst">
                     <label for="Position" class="form-label">Chromosomal position</label>
-                    <input type="number" name="pos" id="Position"
+                    <input type="text" name="pos" pattern="[0-9 ]+" id="Position"
                            placeholder="pos" class="form-control"
                            value="{{ request.form['pos'] }}" required>
                     </input>
@@ -59,6 +59,18 @@
                         Please provide an alternative sequence!
                     </div>
                 </div>
+
+                <div class="form-group sst">
+                    <label for="reference-genome" class="form-label">Reference genome build</label>
+                    <select class="form-select" name="genome" id="reference-genome" required>
+                        <option value="" {% if ('GRCh38' != request.form['genome'] and 'GRCh37' != request.form['genome']) %} selected="selected" {% endif %} disabled hidden>Choose reference genome build</option>
+                        <option value="GRCh38" style="color:black;" {% if ('GRCh38' == request.form['genome']) %} selected="selected" {% endif %}>GRCh38 (hg38)</option>
+                        <option value="GRCh37" style="color:black;" {% if ('GRCh37' == request.form['genome']) %} selected="selected" {% endif %}>GRCh37 (hg19)</option>
+                   </select>
+                   <div class="invalid-feedback">
+                       Please select a reference genome build.
+                   </div>
+               </div>
             
             
                 <div class="form-group sst">
@@ -91,3 +103,7 @@
 <script src="../static/js/formValidator.js"></script>
 
 {% endblock %}
+
+{% block special_scripts %}
+    <script src="../static/js/create.js"></script>
+{% endblock%}

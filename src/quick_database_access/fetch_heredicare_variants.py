@@ -114,7 +114,8 @@ def process_new_seqids(seqids):
             log_file.write('Code: ~~' + get_log_code('error import') + '~~ ' +"ERROR: input vcf contains errors: " + vcfcheck_errors.replace('\n', ' ') + ' \n')
             continue
         if reference_genome_build == 'GRCh37':
-            if '[INFO]  Failed to map: 0' not in err_msg:
+            unmapped_variant = functions.read_vcf_variant(tmp_file_path + '.lifted.unmap')
+            if len(unmapped_variant) > 0:
                 log_file.write('Code: ~~' + get_log_code('error import') + '~~ ' +"ERROR: could not lift variant: " + orig_chr + ' ' + str(orig_pos) + ' ' + orig_ref + ' ' + orig_alt + ' \n')
                 continue
         vcfcheck_errors = open(tmp_vcfcheck_out_path + '.post', 'r').read()
