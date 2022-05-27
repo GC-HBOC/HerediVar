@@ -143,16 +143,26 @@ def execute_command(command, process_name, use_prefix_error_log = True):
     return completed_process.returncode, err_msg, command_output
 
 
-def check_vcf(path):
+def check_vcf(path, ref_genome = 'GRCh38'):
+    genome_path = ''
+    if ref_genome == 'GRCh37':
+        genome_path = paths.ref_genome_path_grch37
+    elif ref_genome == 'GRCh38': 
+        genome_path = paths.ref_genome_path
     command = [paths.ngs_bits_path + "VcfCheck",
-               "-in", path, "-lines", "0", "-ref", paths.ref_genome_path]
+               "-in", path, "-lines", "0", "-ref", genome_path]
     returncode, err_msg, vcf_errors = execute_command(command, 'VcfCheck')
     return returncode, err_msg, vcf_errors
 
 
-def left_align_vcf(path):
+def left_align_vcf(path, ref_genome = 'GRCh38'):
+    genome_path = ''
+    if ref_genome == 'GRCh37':
+        genome_path = paths.ref_genome_path_grch37
+    elif ref_genome == 'GRCh38': 
+        genome_path = paths.ref_genome_path
     command = [paths.ngs_bits_path + "VcfLeftNormalize",
-               "-in", path, "-stream", "-ref", paths.ref_genome_path]
+               "-in", path, "-stream", "-ref", genome_path]
     returncode, err_msg, command_output = execute_command(command, 'VcfLeftNormalize')
     return returncode, err_msg, command_output
 
