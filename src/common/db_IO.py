@@ -155,9 +155,13 @@ class Connection:
             else:
                 print("WARNING: there was no row in the gene table for symbol " + str(symbol) + ". geneid will be empty even though symbol was given. Error occured during insertion of variant consequence: " + str(variant_id) + ", " + str(transcript_name) + ", " + str(hgvs_c) + ", " +str(hgvs_p) + ", " +str(consequence) + ", " + str(impact) + ", " + str(exon_nr) + ", " + str(intron_nr) + ", " + str(hgnc_id) + ", " + str(symbol) + ", " + str(consequence_source))
         placeholders = "%s, "*len(actual_information)
-        command = "INSERT INTO variant_consequence (" + columns_with_info + ") VALUES (" + placeholders[:len(placeholders)-2] + ")"
+        placeholders = placeholders[:len(placeholders)-2]
+        #command = "INSERT INTO variant_consequence (" + columns_with_info + ") VALUES (" + placeholders + ")"
+        command = "INSERT INTO variant_consequence (" + columns_with_info + ") \
+                    SELECT " + placeholders +  " WHERE NOT EXISTS (SELECT * FROM variant_consequence \
+                        WHERE " + columns_with_info.replace(', ', '=%s AND ') + '=%s ' + " LIMIT 1)"
         #print(command)
-        self.cursor.execute(command, actual_information)
+        self.cursor.execute(command, actual_information + actual_information)
         self.conn.commit()
 
     def get_gene_id_by_symbol(self, symbol):
@@ -212,8 +216,11 @@ class Connection:
     
     def insert_variant_annotation(self, variant_id, annotation_type_id, value, supplementary_document = None):
         # supplementary documents are not supported yet! see: https://stackoverflow.com/questions/10729824/how-to-insert-blob-and-clob-files-in-mysql
-        command = "INSERT INTO variant_annotation (variant_id, annotation_type_id, value) VALUES (%s, %s, %s)"
-        self.cursor.execute(command, (variant_id, annotation_type_id, value))
+        #command = "INSERT INTO variant_annotation (variant_id, annotation_type_id, value) VALUES (%s, %s, %s)"
+        command = "INSERT INTO variant_annotation (`variant_id`, `annotation_type_id`, `value`) \
+                   SELECT %s, %s, %s WHERE NOT EXISTS (SELECT * FROM variant_annotation \
+                        WHERE `variant_id`=%s AND `annotation_type_id`=%s AND `value`=%s LIMIT 1)"
+        self.cursor.execute(command, (variant_id, annotation_type_id, value, variant_id, annotation_type_id, value))
         self.conn.commit()
 
     def insert_variants_from_vcf(self, path):
@@ -251,9 +258,9 @@ class Connection:
         self.cursor.execute(command, (variant_id, "pending", user_id))
         self.conn.commit()
     
-    def insert_clinvar_variant_annotation(self, variant_id, variation_id, interpretation, review_status, version_date):
-        command = "INSERT INTO clinvar_variant_annotation (variant_id, variation_id, interpretation, review_status, version_date) VALUES (%s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, variation_id, interpretation, review_status, version_date))
+    def insert_clinvar_variant_annotation(self, variant_id, variation_id, interpretation, review_status):
+        command = "INSERT INTO clinvar_variant_annotation (variant_id, variation_id, interpretation, review_status) VALUES (%s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, variation_id, interpretation, review_status))
         self.conn.commit()
 
     def insert_clinvar_submission(self, clinvar_variant_annotation_id, interpretation, last_evaluated, review_status, condition, submitter, comment):
@@ -271,17 +278,17 @@ class Connection:
         self.conn.commit()
 
     def get_clinvar_variant_annotation_id_by_variant_id(self, variant_id):
-        command = "SELECT a.id,a.variant_id,a.version_date \
-                    FROM clinvar_variant_annotation a \
-                    INNER JOIN ( \
-                        SELECT variant_id, max(version_date) AS version_date FROM clinvar_variant_annotation GROUP BY variant_id \
-                    ) b ON a.variant_id = b.variant_id AND a.variant_id = " + enquote(variant_id) + " AND a.version_date = b.version_date"
-        self.cursor.execute(command)
-        result = self.cursor.fetchall()
-        if len(result) == 1:
-            return result[0][0]
-        else:
-            return False
+        #command = "SELECT a.id,a.variant_id,a.version_date \
+        #            FROM clinvar_variant_annotation a \
+        #            INNER JOIN ( \
+        #                SELECT variant_id, max(version_date) AS version_date FROM clinvar_variant_annotation GROUP BY variant_id \
+        #            ) b ON a.variant_id = b.variant_id AND a.variant_id = " + enquote(variant_id) + " AND a.version_date = b.version_date"
+        command = "SELECT id FROM clinvar_variant_annotation WHERE variant_id=%s"
+        self.cursor.execute(command, (variant_id, ))
+        result = self.cursor.fetchone()
+        if result is not None:
+            return result[0]
+        return None
     
 
     def insert_transcript(self, symbol, hgnc_id, transcript_ensembl, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical, transcript_refseq = None):
@@ -340,8 +347,16 @@ class Connection:
         self.conn.commit()
     
     def insert_variant_literature(self, variant_id, pmid, title, authors, journal, year):
-        command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher, year) VALUES (%s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, pmid, title, authors, journal, year))
+        #command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher, year) VALUES (%s, %s, %s, %s, %s, %s)"
+        command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher, year) \
+                    SELECT %s, %s, %s, %s, %s, %s WHERE NOT EXISTS (SELECT * FROM variant_literature \
+                        WHERE `variant_id`=%s AND `pmid`=%s LIMIT 1)"
+        self.cursor.execute(command, (variant_id, pmid, title, authors, journal, year, variant_id, pmid))
+        self.conn.commit()
+
+    def clean_clinvar(self, variant_id):
+        command = "DELETE FROM clinvar_variant_annotation WHERE variant_id = %s"
+        self.cursor.execute(command, (variant_id, ))
         self.conn.commit()
 
     
@@ -367,6 +382,12 @@ class Connection:
         self.cursor.execute(command, (variant_id, annotation_type_id))
         res = self.cursor.fetchall()
         return res
+
+    def get_all_valid_variant_ids(self):
+        command = "SELECT id FROM variant"
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        return [x[0] for x in res]
 
     # functions specific for frontend!
     def get_paginated_variants(self, page, page_size, query_type = '', query = ''):

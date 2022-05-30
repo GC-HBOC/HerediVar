@@ -15,25 +15,25 @@ import datetime
 
 ## switches
 # external programs
-do_phylop = False
-do_spliceai = False
+do_phylop = True
+do_spliceai = True
 
 # vep dependent
-do_vep = False
-insert_consequence = False
-insert_maxent = False
+do_vep = True
+insert_consequence = True
+insert_maxent = True
 insert_literature = True
 
 #vcf annotate from vcf
-do_dbsnp = False
-do_revel = False
-do_cadd = False
-do_clinvar = False
-do_gnomad = False
-do_brca_exchange = False
-do_flossies = False
-do_cancerhotspots = False
-do_arup = False
+do_dbsnp = True
+do_revel = True
+do_cadd = True
+do_clinvar = True
+do_gnomad = True
+do_brca_exchange = True
+do_flossies = True
+do_cancerhotspots = True
+do_arup = True
 do_tp53_database = True
 
 
@@ -210,8 +210,8 @@ if __name__ == '__main__':
         print("processing request " + str(one_variant[0]) + " annotating variant: " + " ".join([str(x) for x in one_variant[1:5]]))
 
         seqids = conn.get_external_ids_from_variant_id(variant_id, id_source='heredicare')
-        log_file_date = datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
-        log_file_path = path.join(path.dirname(path.abspath(__file__)),  'logs/heredicare_update:' + log_file_date + '.log')
+        #log_file_date = datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
+        log_file_path = path.join(path.dirname(path.abspath(__file__)),  'logs/heredicare_update.log')
         heredicare.update_specific_seqids(log_file_path, seqids)
         #look for error code: s1 (deleted variant)
         log_file = open(log_file_path, 'r')
@@ -221,7 +221,7 @@ if __name__ == '__main__':
                 deleted_variant = True
         log_file.close()
         if deleted_variant:
-            continue
+            continue # stop annotation if it was deleted!
 
 
         functions.variant_to_vcf(one_variant[1], one_variant[2], one_variant[3], one_variant[4], one_variant_path)
@@ -490,10 +490,11 @@ if __name__ == '__main__':
 
             # submit collected clinvar data to db if it exists
             if clv_varid != '' and clv_inpret != '' and clv_revstat != '':
-                conn.insert_clinvar_variant_annotation(variant_id, clv_varid, clv_inpret, clv_revstat, '2022-03-20')
+                conn.clean_clinvar(variant_id) # remove all clinvar information of this variant from database and insert it again -> only the most recent clinvar annotaion is saved in database!
+                conn.insert_clinvar_variant_annotation(variant_id, clv_varid, clv_inpret, clv_revstat)
                 clinvar_variant_annotation_id = conn.get_clinvar_variant_annotation_id_by_variant_id(variant_id)
-                if not clinvar_variant_annotation_id:
-                    err_msgs = collect_error_msgs(err_msgs, "CLINVAR_VARIANT_ANNOTATION ERROR: no or multiple clinvar variant annotation ids for variant " + str(variant_id))
+                if clinvar_variant_annotation_id is None:
+                    err_msgs = collect_error_msgs(err_msgs, "CLINVAR_VARIANT_ANNOTATION ERROR: no variant annotation ids for variant " + str(variant_id))
                 else:
                     for submission in clinvar_submissions:
                         #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|5SubmittedPhenotypeInfo|7Submitter|8comment
