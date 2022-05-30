@@ -198,6 +198,9 @@ def import_variants():
 
         conn = Connection()
         conn.close_import_request(import_queue_id)
+        variant_ids = conn.get_all_valid_variant_ids()
+        for variant_id in variant_ids:
+            conn.insert_annotation_request(variant_id, user_id=1) ###### change user_id once login is ready!!!!!!!
         conn.close()
         return redirect(url_for('import_summary', year=date[0], month=date[1], day=date[2], hour=date[3], minute=date[4], second=date[5]))
 
@@ -383,6 +386,12 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
     current_annotation_status = conn.get_current_annotation_status(variant_id)
 
+    seqids = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
+    if len(seqids) > 1:
+        has_multiple_seqids = True
+    else:
+        has_multiple_seqids = False
+
     conn.close()
     return render_template('variant.html', 
                             variant=variant_oi, 
@@ -390,7 +399,8 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             clinvar_submissions=clinvar_submissions, 
                             variant_consequences=variant_consequences, 
                             literature=literature,
-                            current_annotation_status=current_annotation_status)
+                            current_annotation_status=current_annotation_status,
+                            has_multiple_seqids=has_multiple_seqids)
 
 
 @app.route('/deleted_variant_info')
