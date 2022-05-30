@@ -9,7 +9,7 @@ from werkzeug.exceptions import abort
 import common.functions as functions
 import tempfile
 import re
-import fetch_heredicare_variants as heredicare
+import annotation_service.fetch_heredicare_variants as heredicare
 from datetime import datetime
 
 app = Flask(__name__)
@@ -190,7 +190,9 @@ def import_variants():
         requested_at = datetime.strptime(str(requested_at), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
         conn.close()
 
-        heredicare.process_all(log_file_date = requested_at)
+        logs_folder = path.join(app.root_path, app.config['LOGS_FOLDER'])
+        log_file_path = logs_folder + 'heredicare_import:' + requested_at + '.log'
+        heredicare.process_all(log_file_path)
         log_file_path = heredicare.get_log_file_path()
         date = log_file_path.strip('.log').split(':')[1].split('-')
 
@@ -349,12 +351,20 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     if variant_id is None:
         variant_id = get_variant_id(conn, chr, pos, ref, alt)
 
+    
     if request.method == 'POST':
-        conn.insert_annotation_request(variant_id, user_id=1) ########!!!! adjust user_id once login is working!
-        conn.close()
-        return redirect(url_for('variant', variant_id=variant_id))
+        current_annotation_status = conn.get_current_annotation_status(variant_id)
+        if current_annotation_status is None or current_annotation_status[4] != 'pending':
+            conn.insert_annotation_request(variant_id, user_id=1) ########!!!! adjust user_id once login is working!
+            conn.close()
+            return redirect(url_for('variant', variant_id=variant_id, from_reannotate='True'))
 
-    variant_oi = get_variant(conn, variant_id) # this redirects to 404 page if the variant was not found
+    if request.args.get('from_reannotate', 'False') == 'True':
+        variant_oi = conn.get_one_variant(variant_id)
+        if variant_oi is None:
+            return redirect(url_for('deleted_variant'))
+    else:
+        variant_oi = get_variant(conn, variant_id) # this redirects to 404 page if the variant was not found
     variant_annotations = conn.get_recent_annotations(variant_id)
     variant_annot_dict = {}
     for annot in variant_annotations:
@@ -381,6 +391,11 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             variant_consequences=variant_consequences, 
                             literature=literature,
                             current_annotation_status=current_annotation_status)
+
+
+@app.route('/deleted_variant_info')
+def deleted_variant():
+    return render_template('deleted_variant.html')
 
 
 @app.route('/gene/<int:gene_id>')

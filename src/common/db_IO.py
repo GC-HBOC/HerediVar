@@ -650,11 +650,11 @@ class Connection:
         result = self.cursor.fetchall()
         if result is None:
             return []
-        return result
+        return [x[0] for x in result]
 
-    def delete_seqid(self, seqid, id_source):
+    def delete_external_id(self, external_id, id_source):
         command = "DELETE FROM variant_ids WHERE external_id = %s AND id_source = %s"
-        self.cursor.execute(command, (seqid, id_source))
+        self.cursor.execute(command, (external_id, id_source))
         self.conn.commit()
 
     def update_variant_annotation(self, variant_id, annotation_type_id, value): # use with caution!

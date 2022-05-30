@@ -10,6 +10,8 @@ import common.paths as paths
 import tempfile
 import re
 import pubmed_parser
+import fetch_heredicare_variants as heredicare
+import datetime
 
 ## switches
 # external programs
@@ -206,6 +208,21 @@ if __name__ == '__main__':
         err_msgs = ""
         one_variant = conn.get_one_variant(variant_id) # 0id,1chr,2pos,3ref,4alt
         print("processing request " + str(one_variant[0]) + " annotating variant: " + " ".join([str(x) for x in one_variant[1:5]]))
+
+        seqids = conn.get_external_ids_from_variant_id(variant_id, id_source='heredicare')
+        log_file_date = datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
+        log_file_path = path.join(path.dirname(path.abspath(__file__)),  'logs/heredicare_update:' + log_file_date + '.log')
+        heredicare.update_specific_seqids(log_file_path, seqids)
+        #look for error code: s1 (deleted variant)
+        log_file = open(log_file_path, 'r')
+        deleted_variant = False
+        for line in log_file:
+            if '~~s1~~' in line:
+                deleted_variant = True
+        log_file.close()
+        if deleted_variant:
+            continue
+
 
         functions.variant_to_vcf(one_variant[1], one_variant[2], one_variant[3], one_variant[4], one_variant_path)
         variant_annotated_path = temp_file_path + "/variant_annotated.vcf"
