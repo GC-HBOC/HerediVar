@@ -4,10 +4,9 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common.db_IO import Connection
 import common.functions as functions
+from common.pdf_generator import pdf_gen
 import tempfile
-import datetime
-from pdf_generator import pdf_gen
-from heredicare_interface import heredicare_interface
+from annotation_service.heredicare_interface import heredicare_interface
 
 
 log_file_path = ''
@@ -19,7 +18,7 @@ def get_log_file_path():
     global log_file_path
     return log_file_path
 
-def init(log_file_date):
+def init(f):
     global log_file_path
     global log_file
     global conn
@@ -28,9 +27,7 @@ def init(log_file_date):
     global cases_count_dict
 
     os.environ['NO_PROXY'] = 'portal.img.med.uni-tuebingen.de'
-
-    rootdir = os.path.dirname(__file__)
-    log_file_path = rootdir + "/logs/heredicare_import:" + log_file_date + '.log' #datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S') + '.log' #
+    log_file_path = f #datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S') + '.log' #
     log_file = open(log_file_path, 'w')
     conn = Connection()
 
@@ -45,17 +42,17 @@ def endit():
     log_file.close()
     conn.close()
 
-def compare_seq_id_lists():
+def compare_seq_id_lists(seqids_heredicare, seqids_heredivar):
     global log_file
-    global conn
-    global heredicare_api
+    #global conn
+    #global heredicare_api
 
-    execution_code, seqids_heredicare = heredicare_api.get_heredicare_seqid_list()
-    if execution_code != 0:
-        log_file.write('Code: ~~' + get_log_code('xml of incorrect format') + '~~ ' +"FATAL ERROR: heredicare seq_id_list endpoint returned xml of wrong format! Import aborted.... \n")
-        return [], [], []
+    #execution_code, seqids_heredicare = heredicare_api.get_heredicare_seqid_list()
+    #if execution_code != 0:
+    #    log_file.write('Code: ~~' + get_log_code('xml of incorrect format') + '~~ ' +"FATAL ERROR: heredicare seq_id_list endpoint returned xml of wrong format! Import aborted.... \n")
+    #    return [], [], []
 
-    seqids_heredivar = conn.get_seqid_list()
+    #seqids_heredivar = conn.get_seqid_list()
 
     seqids_heredicare = set(seqids_heredicare)
     seqids_heredivar = set(seqids_heredivar)
@@ -96,7 +93,7 @@ def process_new_seqids(seqids):
 
         # perform preprocessing
         functions.variant_to_vcf(orig_chr, orig_pos, orig_ref, orig_alt, tmp_file_path)
-        command = ['/mnt/users/ahdoebm1/HerediVar/src/quick_database_access/scripts/preprocess_variant.sh', '-i', tmp_file_path, '-o', tmp_vcfcheck_out_path]
+        command = ['/mnt/users/ahdoebm1/HerediVar/src/common/scripts/preprocess_variant.sh', '-i', tmp_file_path, '-o', tmp_vcfcheck_out_path]
 
         if reference_genome_build == 'GRCh37':
             command.append('-l') # enable liftover
@@ -158,7 +155,7 @@ def process_deleted_seqids(seqids):
         variant_id = conn.get_variant_id_from_external_id(seqid, 'heredicare')
         all_seqids_for_variant = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
         if len(all_seqids_for_variant) > 1:
-            conn.delete_seqid(seqid)
+            conn.delete_external_id(seqid, 'heredicare')
             log_file.write('Code: ~~' + get_log_code('deleted seqid') + '~~ ' +"SUCCESS: deleted seqid: " + str(seqid) + ' for variant id: ' + str(variant_id) + ' \n')
         else:
             if conn.get_consensus_classification(variant_id, most_recent = True) is not None:
@@ -333,20 +330,47 @@ def get_log_code(log_type):
         return 's6'
 
 
-def process_all(log_file_date):
 
-    init(log_file_date)
+def process_all(log_file_path):
+    global heredicare_api
+    global conn
 
-    intersection, heredivar_exclusive_variants, heredicare_exclusive_variants = compare_seq_id_lists()
-    #print(heredivar_exclusive_variants)
-    #print(heredicare_exclusive_variants)
-    #print(intersection)
+    init(log_file_path)
 
-    process_new_seqids(heredicare_exclusive_variants)
-    process_deleted_seqids(heredivar_exclusive_variants)
-    process_existing_seq_ids(intersection)
+    execution_code, seqids_heredicare = heredicare_api.get_heredicare_seqid_list()
+    if execution_code != 0:
+        log_file.write('Code: ~~' + get_log_code('xml of incorrect format') + '~~ ' +"FATAL ERROR: heredicare seq_id_list endpoint returned xml of wrong format! Import aborted.... \n")
+    else:
+        seqids_heredivar = conn.get_seqid_list()
+
+        intersection, heredivar_exclusive_variants, heredicare_exclusive_variants = compare_seq_id_lists(seqids_heredicare, seqids_heredivar)
+        #print(heredivar_exclusive_variants)
+        #print(heredicare_exclusive_variants)
+        #print(intersection)
+
+        process_new_seqids(heredicare_exclusive_variants)
+        process_deleted_seqids(heredivar_exclusive_variants)
+        process_existing_seq_ids(intersection)
 
 
+
+    endit()
+
+
+def update_specific_seqids(log_file_path, seqids):
+    global heredicare_api
+
+    init(log_file_path)
+
+    execution_code, seqids_heredicare = heredicare_api.get_heredicare_seqid_list()
+    if execution_code != 0:
+        log_file.write('Code: ~~' + get_log_code('xml of incorrect format') + '~~ ' +"FATAL ERROR: heredicare seq_id_list endpoint returned xml of wrong format! Import aborted.... \n")
+    else:
+        intersection, heredivar_exclusive_variants, heredicare_exclusive_variants = compare_seq_id_lists(seqids_heredicare, seqids)
+
+        process_deleted_seqids(heredivar_exclusive_variants)
+        process_existing_seq_ids(intersection)
+    
 
     endit()
 

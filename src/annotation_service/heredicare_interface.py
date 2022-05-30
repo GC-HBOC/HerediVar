@@ -1,11 +1,10 @@
 
-import tempfile
 import requests
-from xml_validator import xml_validator
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common.functions as functions
+from common.xml_validator import xml_validator
 
 
 class heredicare_interface:
