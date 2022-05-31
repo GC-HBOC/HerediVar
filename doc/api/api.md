@@ -27,7 +27,7 @@ The schema files for the returned/uploaded XML documents can be found in this fo
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
 | Url:       | https://*[host]*/HerediCareAPI/*[version]*/variant        |
-| Arguments: | **id** (*integer/GET*): the HerediCare Seq-ID             |
+| Arguments: | **id** (*integer/GET*): the HerediCare VID             |
 | Returns:   | [XML](variant.png) with: <ul><li>variant in VCF-like representation: chr, pos, ref, alt, genomebuild</li><li>family history: the number of families showing this variant and the number of cases</li><li>previous classifications: center, classification, comment and boolean if it was the first classification (multiple possible)</li></ul>|
 
 
@@ -38,7 +38,7 @@ The schema files for the returned/uploaded XML documents can be found in this fo
 | Parameter  | Definition                                                |
 |------------|-----------------------------------------------------------|
 | Url:       | https://*[host]*/HerediCareAPI/*[version]*/upload-classification  |
-| Arguments: | <ul><li>**id** (*integer/GET*): The HerediCare Seq-ID</li><li>**classification** (*XML/POST)*: An [XML](upload_classification.png) file with class, date, pdf containing information about the classification (base-64 encoding)</li></ul> |
+| Arguments: | <ul><li>**id** (*integer/GET*): The HerediCare VID</li><li>**classification** (*XML/POST)*: An [XML](upload_classification.png) file with class, date, pdf containing information about the classification (base-64 encoding)</li></ul> |
 | Returns:   | n/a (only return code 200, 400, ...)  |
 
 
