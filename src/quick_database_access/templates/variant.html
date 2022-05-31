@@ -81,11 +81,11 @@
                 <h4 class="card-title">Variant identification</h4>
                 <p class="card-text">
                     <div class="row align-items-start">
-                        <div class="col li-label"><abbr title="Variant in variant call format (FORMAT: chromosome -> position in reference genome (GRCh38) -> reference allele -> alternative allele)">VCF</abbr></div>
+                        <div class="col li-label"><abbr title="Variant in VCF style (FORMAT: chromosome -> position in reference genome (GRCh38) -> reference allele -> alternative allele)">VCF</abbr></div>
                         <div class="col li-info">{{ variant[1] }}&nbsp;&nbsp; {{ variant[2] }}&nbsp;&nbsp; {{ variant[3] }}&nbsp;&nbsp; {{ variant[4] }}</div>
                     </div>
                     <div class="row align-items-start">
-                        <div class="col li-label"><abbr title="RSID from dbsnp">RSID</abbr></div>
+                        <div class="col li-label"><abbr title="RSID from dbSNP">RSID</abbr></div>
                         <div class="col li-info">
                             {% if 'rsid' in variant_annotations %}
                                 <external-link href="https://www.ncbi.nlm.nih.gov/snp/rs{{variant_annotations['rsid'][4]}}">rs{{variant_annotations['rsid'][4]}}</external-link>
@@ -211,7 +211,7 @@
     {% endif %}
     {% if 'tp53db_class' in variant_annotations or 'tp53db_bayes_del' in variant_annotations or 'tp53db_DNE_LOF_class' in variant_annotations or 'tp53db_DNE_class' in variant_annotations or 'tp53db_domain_function' in variant_annotations or 'tp53db_transactivation_class' in variant_annotations%}
     <div class="row align-items-start">
-        <div class="col-sm-4 li-label"><abbr title="Information from the Cancerhotspots website">TP53 database</abbr></div>
+        <div class="col-sm-4 li-label"><abbr title="Information from the TP53 database. This is only visible for variants within the TP53 gene.">TP53 database</abbr></div>
         <div class="col li-info">
             <div class="li-element">
                 {% if 'tp53db_class' in variant_annotations %}
@@ -311,21 +311,21 @@
                 <p class="card-text">
                 {% if 'brca_exchange_clinical_significance' in variant_annotations %}
                     <div class="row">
-                        <div class="col-sm-5 li-label"><abbr title="BRCA exchange classification">BRCA&nbsp;exchange</abbr></div>
+                        <div class="col-sm-5 li-label"><abbr title="BRCA exchange classification as found online on their website">BRCA&nbsp;exchange</abbr></div>
                         <div class="col li-info">{{variant_annotations['brca_exchange_clinical_significance'][4]}}</div>
                     </div>
                 {% endif %}
                 
                 {% if 'arup_classification' in variant_annotations %}
                     <div class="row">
-                        <div class="col-sm-5 li-label"><abbr title="ARUP BRCA classification">ARUP&nbsp;BRCA</abbr></div>
+                        <div class="col-sm-5 li-label"><abbr title="ARUP BRCA classification as found online on their website">ARUP&nbsp;BRCA</abbr></div>
                         <div class="col li-info">{{variant_annotations['arup_classification'][4]}}</div>
                     </div>
                 {% endif %}
                 
                 {% if 'clinvar_variant_annotation' in variant_annotations %}
                 <div class="row">
-                    <div class="col-sm-5 li-label"><abbr title="ClinVar summary">ClinVar</abbr></div>
+                    <div class="col-sm-5 li-label"><abbr title="A summary of the submissions found in ClinVar. More information and individual submissions can be found in the ClinVar submission table on this site.">ClinVar</abbr></div>
                     <div class="col li-info">
                         <div class="li-element">
                                 <abbr title="The review status from ClinVar"><a class="dashed_underline">review status:</a></abbr>&nbsp;{{variant_annotations['clinvar_variant_annotation'][4]}}
@@ -340,22 +340,22 @@
 
                 {% if consensus_classification is not none%}
                 <div class="row">
-                    <div class="col-sm-5 li-label"><abbr title="VUS task-force consensus classification details">consensus&nbsp;classification</abbr></div>
+                    <div class="col-sm-5 li-label"><abbr title="Details about the VUS task-force consensus classification.">consensus&nbsp;classification</abbr></div>
                     <div class="col li-info">
                         <div class="li-element">
-                            <abbr title="The classification"><a class="dashed_underline">class:</a></abbr>&nbsp;{{consensus_classification[2]}}
+                            <abbr title="The class itself. Can be 1, 2, 3, 4 or 5 resembling not pathogenic to malignant, respectively."><a class="dashed_underline">class:</a></abbr>&nbsp;{{consensus_classification[2]}}
                         </div>
                         <br>
                         <div class="li-element">
-                            <abbr title="A comment about the classification"><a class="dashed_underline">comment:</a></abbr>&nbsp;{{consensus_classification[3]}}
+                            <abbr title="More details about the classification."><a class="dashed_underline">comment:</a></abbr>&nbsp;{{consensus_classification[3]}}
                         </div>
                         <br>
                         <div class="li-element">
-                            <abbr title="When was the classification issued"><a class="dashed_underline">date:</a></abbr>&nbsp;{{consensus_classification[4]}}
+                            <abbr title="The date when the classification was issued."><a class="dashed_underline">date:</a></abbr>&nbsp;{{consensus_classification[4]}}
                         </div>
                         <br>
                         <div class="li-element">
-                            <abbr title="download the evidence document"><a href="{{url_for('download_evidence_document', variant_id=consensus_classification[1])}}">download</a></abbr>
+                            <abbr title="Download the evidence document."><a href="{{url_for('download_evidence_document', variant_id=consensus_classification[1])}}">download evidence</a></abbr>
                         </div>
                     </div>
                 </div>
@@ -474,16 +474,16 @@
                                     {% endif %}
                                     <td>
                                         {% if consequence[13] %}
-                                            <span class="badge bg-secondary"><abbr title="gencodetest">GENCODE basic</abbr></span>
+                                            <span class="badge bg-secondary"><abbr title="This flag describes a subset of representative transcripts of the GENCODE set of genes.">GENCODE basic</abbr></span>
                                         {% endif %}
                                         {% if consequence[14] %}
-                                            <span class="badge bg-secondary"><abbr title="MANE">MANE select</abbr></span>
+                                            <span class="badge bg-secondary"><abbr title="Each MANE (Matched Annotation from the NCBI and EMBL-EBI) transcript represents an exact match in exonic regions between a Refseq transcript and its counterpart in the Ensembl/GENCODE. The MANE Select set consists of one transcript at each protein-coding locus across the genome that is representative of biology at that locus. This set is useful as a universal standard for clinical reporting. MANE Select transcripts are identified using computational methods complemented by manual review and discussion.">MANE select</abbr></span>
                                         {% endif %}
                                         {% if consequence[15] %}
-                                            <span class="badge bg-secondary"><abbr title="">MANE clin</abbr></span>
+                                            <span class="badge bg-secondary"><abbr title="Each MANE (Matched Annotation from the NCBI and EMBL-EBI) transcript represents an exact match in exonic regions between a Refseq transcript and its counterpart in the Ensembl/GENCODE. The MANE Plus Clinical set includes additional transcripts for genes where MANE Select alone is not sufficient to report all pathogenic or likely pathogenic clinical variants available in public resources.">MANE clin</abbr></span>
                                         {% endif %}
                                         {% if consequence[16] %}
-                                            <span class="badge bg-secondary"><abbr title="">ensembl canonical</abbr></span>
+                                            <span class="badge bg-secondary"><abbr title="The Ensembl Canonical transcript is a single, representative transcript identified at every locus using different transcript-traits like the highest coverage of conserved exons, highest expression, longest coding sequence and is represented in other key resources, such as NCBI and UniProt.">ensembl canonical</abbr></span>
                                         {% endif %}
                                     </td>
                                     <td>
