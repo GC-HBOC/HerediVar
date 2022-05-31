@@ -4,20 +4,20 @@ This page describes that API implemented by HerediCare that is used by HerediVar
 
 The schema files for the returned/uploaded XML documents can be found in this folder as well.
 
-## Query SEQ-IDs
+## Query VIDs
 
-**Use case:** Query all SEQ-IDs (i.e. variant identifiers) from HerediCare.
+**Use case:** Query all VIDs (i.e. variant identifiers) from HerediCare.
 
 | Parameter  | Definition                                              |
 |------------|---------------------------------------------------------|
 | Url:       | https://*[host]*/HerediCareAPI/*[version]*/seq_id_list  |
 | Arguments: | n/a                                                     |
-| Returns:   | [XML](seq_id_list.png) with all SEQ-IDs for which a VCF reprentation of the variant exists. |
+| Returns:   | [XML](seq_id_list.png) with all VIDs for which a VCF reprentation of the variant exists. |
 
 **Questions:**
-- Format of SEQ-IDs? Integer
-- SEQ-IDs can be deleted. Delete them in HerediVar as well, unless there is a classification for it.
-- Does each SEQ-ID identify one variant? We should check for duplicates!
+- Format of VIDs? Integer
+- VIDs can be deleted. Delete them in HerediVar as well, unless there is a classification for it.
+- Does each VID identify one variant? We should check for duplicates!
 
 
 ## Query variant data and annotations
