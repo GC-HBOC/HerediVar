@@ -2,15 +2,15 @@
 <!-- Mit XMLSpy v2014 (x64) (http://www.altova.com) von Dr. Peter Bauer (Universitätsklinikum Tübingen) bearbeitet -->
 <!-- edited with XMLSpy v2014 (x64) (http://www.altova.com) by Dr. Peter Bauer (Universitätsklinikum Tübingen) -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:altova="http://www.altova.com/xml-schema-extensions" elementFormDefault="qualified" attributeFormDefault="unqualified" vc:minVersion="1.1">
-	<xs:element name="SeqIdList">
+	<xs:element name="VIdList">
 		<xs:annotation>
-			<xs:documentation>List of SEQ-IDs</xs:documentation>
+			<xs:documentation>List of VIDs</xs:documentation>
 		</xs:annotation>
 		<xs:complexType>
 			<xs:sequence>
-				<xs:element name="SeqId" maxOccurs="unbounded">
+				<xs:element name="VId" maxOccurs="unbounded">
 					<xs:annotation>
-						<xs:documentation>A single SEQ-ID</xs:documentation>
+						<xs:documentation>A single VID</xs:documentation>
 					</xs:annotation>
 					<xs:complexType>
 						<xs:attribute name="id" type="xs:int" use="required">

@@ -209,10 +209,10 @@ if __name__ == '__main__':
         one_variant = conn.get_one_variant(variant_id) # 0id,1chr,2pos,3ref,4alt
         print("processing request " + str(one_variant[0]) + " annotating variant: " + " ".join([str(x) for x in one_variant[1:5]]))
 
-        seqids = conn.get_external_ids_from_variant_id(variant_id, id_source='heredicare')
+        vids = conn.get_external_ids_from_variant_id(variant_id, id_source='heredicare')
         #log_file_date = datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
         log_file_path = path.join(path.dirname(path.abspath(__file__)),  'logs/heredicare_update.log')
-        heredicare.update_specific_seqids(log_file_path, seqids)
+        heredicare.update_specific_vids(log_file_path, vids)
         #look for error code: s1 (deleted variant)
         log_file = open(log_file_path, 'r')
         deleted_variant = False

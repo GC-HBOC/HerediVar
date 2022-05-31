@@ -4,8 +4,8 @@ require_once("utils/functions.php");
 require_once("utils/paths.php");
 
 
-$xml = new SimpleXMLElement('<SeqIdList/>');
-//$seqid_list = $xml->addChild('SeqIdList');
+$xml = new SimpleXMLElement('<VIdList/>');
+//$vid_list = $xml->addChild('VIdList');
 
 if (file_exists($file_path)){
     $file = file($file_path);
@@ -15,10 +15,10 @@ if (file_exists($file_path)){
         if ($line=="" | startsWith($line, '#')) continue;
         
         $parts = explode("\t", $line);
-        $seqid = $parts[0];
+        $vid = $parts[0];
 
-        $seqid_entry = $xml->addChild('SeqId');
-        $seqid_entry->addAttribute('id', $seqid);
+        $vid_entry = $xml->addChild('VId');
+        $vid_entry->addAttribute('id', $vid);
     }
 }
 

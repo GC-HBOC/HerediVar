@@ -231,7 +231,7 @@ def import_summary(year, month, day, hour, minute, second):
     num_heredivar_and_heredicare = 0
     for line in import_log_file:
         if '~~s0~~' in line:
-            num_new_variants += 1 #functions.find_between(line, 'a total of ', ' seqids were')
+            num_new_variants += 1 #functions.find_between(line, 'a total of ', ' vids were')
         if '~~s1~~' in line:
             num_deleted_variants += 1
         if '~~e2~~' in line:
@@ -244,11 +244,11 @@ def import_summary(year, month, day, hour, minute, second):
             num_duplicate_variants += 1
 
         if '~~i5~~' in line:
-            num_heredivar_exclusive = functions.find_between(line, 'a total of ', ' seqids were')
+            num_heredivar_exclusive = functions.find_between(line, 'a total of ', ' vids were')
         if '~~i6~~' in line:
-            num_heredicare_exclusive = functions.find_between(line, 'a total of ', ' seqids were')
+            num_heredicare_exclusive = functions.find_between(line, 'a total of ', ' vids were')
         if '~~i7~~' in line:
-            num_heredivar_and_heredicare = functions.find_between(line, 'a total of ', ' seqids were')
+            num_heredivar_and_heredicare = functions.find_between(line, 'a total of ', ' vids were')
     
     conn = Connection()
     finished_at = conn.get_import_request(date = requested_at)[4]
@@ -388,11 +388,11 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
     current_annotation_status = conn.get_current_annotation_status(variant_id)
 
-    seqids = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
-    if len(seqids) > 1:
-        has_multiple_seqids = True
+    vids = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
+    if len(vids) > 1:
+        has_multiple_vids = True
     else:
-        has_multiple_seqids = False
+        has_multiple_vids = False
 
     consensus_classification = conn.get_consensus_classification(variant_id, most_recent=True)
     if len(consensus_classification) == 1:
@@ -414,7 +414,7 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             variant_consequences=variant_consequences, 
                             literature=literature,
                             current_annotation_status=current_annotation_status,
-                            has_multiple_seqids=has_multiple_seqids,
+                            has_multiple_vids=has_multiple_vids,
                             consensus_classification=consensus_classification,
                             user_classifications=user_classifications)
 
