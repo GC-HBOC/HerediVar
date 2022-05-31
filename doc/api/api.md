@@ -12,7 +12,7 @@ The schema files for the returned/uploaded XML documents can be found in this fo
 |------------|---------------------------------------------------------|
 | Url:       | https://*[host]*/HerediCareAPI/*[version]*/vid_list  |
 | Arguments: | n/a                                                     |
-| Returns:   | [XML](seq_id_list.png) with all VIDs for which a VCF reprentation of the variant exists. |
+| Returns:   | [XML](vid_list.png) with all VIDs for which a VCF reprentation of the variant exists. |
 
 **Questions:**
 - Format of VIDs? Integer
