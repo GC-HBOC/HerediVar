@@ -72,7 +72,7 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
     functions.variant_to_vcf(chr, pos, ref, alt, tmp_file_path)
     
 
-    command = ['/mnt/users/ahdoebm1/HerediVar/src/quick_database_access/scripts/preprocess_variant.sh', '-i', tmp_file_path, '-o', tmp_vcfcheck_out_path]
+    command = ['/mnt/users/ahdoebm1/HerediVar/src/common/scripts/preprocess_variant.sh', '-i', tmp_file_path, '-o', tmp_vcfcheck_out_path]
 
     if genome_build == 'GRCh37':
         command.append('-l') # enable liftover
@@ -277,8 +277,6 @@ def download_log_file(log_file):
     return send_from_directory(directory=logs_folder, path='', filename=log_file) 
 
 
-# idee: alle 1000 Varianten ein zwischen-report (der anzeigt wo das programm gerade ist) anzeigen und am ende ein redirect auf die summary page?
-
 
 
 @app.route('/create', methods=('GET', 'POST'))
@@ -310,11 +308,12 @@ def create():
 
 
         if create_variant_from == 'hgvsc':
+            reference_transcript = request.form['transcript']
             hgvsc = request.form['hgvsc']
-            if not hgvsc:
-                flash('You need to provide a HGVS c-dot string!', 'alert-danger')
+            if not hgvsc or not reference_transcript:
+                flash('All fields are required!', 'alert-danger')
             else:
-                chr, pos, ref, alt, possible_errors = functions.hgvsc_to_vcf(hgvsc)
+                chr, pos, ref, alt, possible_errors = functions.hgvsc_to_vcf(reference_transcript + ':' + hgvsc)
                 if possible_errors != '':
                     flash(possible_errors, "alert-danger")
                 else:
@@ -349,14 +348,13 @@ def browse():
 
 @app.route('/display/<int:variant_id>', methods=['GET', 'POST'])
 @app.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>', methods=['GET', 'POST']) # alternative url using vcf information
-# example: http://127.0.0.1:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http://127.0.0.1:5000/display/17
+# example: http://srv023.img.med.uni-tuebingen.de:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http://srv023.img.med.uni-tuebingen.de:5000/display/17
 def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     conn = Connection()
 
     if variant_id is None:
         variant_id = get_variant_id(conn, chr, pos, ref, alt)
 
-    
     if request.method == 'POST':
         current_annotation_status = conn.get_current_annotation_status(variant_id)
         if current_annotation_status is None or current_annotation_status[4] != 'pending':
@@ -404,7 +402,6 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     user_classifications = conn.get_user_classifications(variant_id)
     if len(user_classifications) == 0:
         user_classifications = None
-
 
     conn.close()
     return render_template('variant.html', 
