@@ -158,7 +158,8 @@ def process_deleted_vids(vids):
             conn.delete_external_id(vid, 'heredicare')
             log_file.write('Code: ~~' + get_log_code('deleted vid') + '~~ ' +"SUCCESS: deleted vid: " + str(vid) + ' for variant id: ' + str(variant_id) + ' \n')
         else:
-            if conn.get_consensus_classification(variant_id, most_recent = True) is not None:
+            consensus_classification = conn.get_consensus_classification(variant_id, most_recent = True)
+            if len(consensus_classification) > 0:
                 log_file.write('Code: ~~' + get_log_code('rejected delete') + '~~ ' +"INFO: did not delete variant with id: " + str(variant_id) + ' because there is an existing consensus classification' + ' \n')
                 continue
             user_classifications = conn.get_user_classifications(variant_id)
