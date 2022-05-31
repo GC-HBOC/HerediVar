@@ -2,47 +2,63 @@
 
 
 {% block content %}
+
+
 <div class="bst bsb">
-    <h1>{% block title %} Variant display {% endblock %}</h1>
-    <div style="display:flex; align-items:center;">
-        <form id="reannotate_form" name="reannotate_form" method="post" action="#">
-            <div class="form-group">
-                <span id="tooltip_reannotate_button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="">
-                    <button id="reannotate_button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reannotate-modal">(Re-)Annotate variant</button>
-                </span>
-                <meta id="annotation_status" data-annotation-status="{{ current_annotation_status[4] }}">
+    
+    <div class="d-flex align-items-center">
+        <div>
+            <h1>{% block title %} Variant display {% endblock %}</h1>
+            <div class="d-flex align-items-center">
+                <form id="reannotate_form" name="reannotate_form" method="post" action="#">
+                    <div class="form-group">
+                        <span id="tooltip_reannotate_button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="">
+                            <button id="reannotate_button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reannotate-modal">(Re-)Annotate variant</button>
+                        </span>
+                        <meta id="annotation_status" data-annotation-status="{{ current_annotation_status[4] }}">
+                    </div>
+                </form>
+                <div>
+                    {% if current_annotation_status is not none %}
+                    {% if current_annotation_status[4] == 'pending' %}
+                        <span class="badge rounded-pill bg-secondary" style="margin-left:10px" data-bs-toggle="tooltip" title="annotation requested at {{ current_annotation_status[3] }}">annotation requested, <br> refresh page to see if it is ready</span>
+                    {% endif %}
+                    {% if current_annotation_status[4] == 'success' %}
+                        <span class="badge rounded-pill bg-success" style="margin-left:10px" data-bs-toggle="tooltip" title="most recent annotation finished at {{ current_annotation_status[5] }}">annotation done</span>
+                    {% endif %}
+                    {% if current_annotation_status[4] == 'error' %}
+                        <span class="badge rounded-pill bg-danger" style="margin-left:10px" data-bs-toggle="tooltip" title="most recent annotation finished at {{ current_annotation_status[5] }} with error {{ current_annotation_status[6] }}">annotation error</span>
+                    {% endif %}
+                    {% endif %}
+                </div>
             </div>
-        </form>
-        {% if current_annotation_status is not none %}
-            {% if current_annotation_status[4] == 'pending' %}
-                <span class="badge rounded-pill bg-secondary" style="margin-left:10px" data-bs-toggle="tooltip" title="annotation requested at {{ current_annotation_status[3] }}">annotation requested, <br> refresh page to see if it is ready</span>
-            {% endif %}
-            {% if current_annotation_status[4] == 'success' %}
-                <span class="badge rounded-pill bg-success" style="margin-left:10px" data-bs-toggle="tooltip" title="most recent annotation finished at {{ current_annotation_status[5] }}">annotation done</span>
-            {% endif %}
-            {% if current_annotation_status[4] == 'error' %}
-                <span class="badge rounded-pill bg-danger" style="margin-left:10px" data-bs-toggle="tooltip" title="most recent annotation finished at {{ current_annotation_status[5] }} with error {{ current_annotation_status[6] }}">annotation error</span>
-            {% endif %}
-        {% endif %}
-        {% if has_multiple_seqids %}
-        <span id="tooltip_reannotate_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip" title="Multiple VIDs in HerediCare for this Variant. Thus, the family- and case counts for this variant might be inaccurate!">
-            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="red" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
-                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
-            </svg>
-        </span>
-        {% endif %}
+        </div>
+
+        <div class="ms-auto bsr" align="center">
+            <div>
+                <strong>consensus <br> classification</strong>
+            </div>
+            <div style="font-size:5em; line-height: 0.85;">
+                {% if consensus_classification is not none %}
+                    {{ consensus_classification[2] }}
+                {% else %}
+                    -
+                {% endif %}
+            </div>
+        </div>
+
     </div>
 </div>
 
 
 
-<!-- reannotate conformation panel (it is a bootstrap modal) -->
+<!-- reannotate confirmation panel (it is a bootstrap modal) -->
 <div class="modal fade" id="reannotate-modal" tabindex="-1" aria-labelledby="reannotate-modal-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="reannotate-modal-label">Confirm (re-)annotation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 Are you sure that you want to (re-)annotate this variant?
@@ -255,6 +271,32 @@
         </div>
     </div>
     {% endif %}
+    {% if 'heredicare_cases_count' in variant_annotations or 'heredicare_family_count' in variant_annotations %}
+    <div class="row align-items-start">
+        <div class="col-sm-4 li-label">
+            {% if has_multiple_seqids %}
+            <span id="tooltip_exclamation_mark" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Multiple VIDs in HerediCare for this Variant. Thus, the family- and case counts for this variant might be inaccurate!">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="red" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+            </span>
+            {% endif %}
+            <abbr title="Information from HerediCare">HerediCare</abbr>
+        </div>
+        <div class="col li-info">
+            {% if 'heredicare_cases_count' in variant_annotations %}
+            <div class="li-element">
+                    <abbr title="{{variant_annotations['heredicare_cases_count'][0]}}"><a class="dashed_underline">cases count:</a></abbr>&nbsp;{{variant_annotations['heredicare_cases_count'][4]}}
+            </div>
+            {% endif %}
+            {% if 'heredicare_family_count' in variant_annotations %}
+            <div class="li-element">
+                    <abbr title="{{variant_annotations['heredicare_family_count'][0]}}"><a class="dashed_underline">family count:</a></abbr>&nbsp;{{variant_annotations['heredicare_family_count'][4]}}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
     
                 </p>
             </div>
@@ -291,6 +333,29 @@
                         <br>
                         <div class="li-element">
                                 <abbr title="A summary of the ClinVar interpretations. The numbers in brackets display the number of ClinVar submissions reporting the specific type of interpretation."><a class="dashed_underline">interpretations:</a></abbr>&nbsp;{{variant_annotations['clinvar_variant_annotation'][3]}}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if consensus_classification is not none%}
+                <div class="row">
+                    <div class="col-sm-5 li-label"><abbr title="VUS task-force consensus classification details">consensus&nbsp;classification</abbr></div>
+                    <div class="col li-info">
+                        <div class="li-element">
+                            <abbr title="The classification"><a class="dashed_underline">class:</a></abbr>&nbsp;{{consensus_classification[2]}}
+                        </div>
+                        <br>
+                        <div class="li-element">
+                            <abbr title="A comment about the classification"><a class="dashed_underline">comment:</a></abbr>&nbsp;{{consensus_classification[3]}}
+                        </div>
+                        <br>
+                        <div class="li-element">
+                            <abbr title="When was the classification issued"><a class="dashed_underline">date:</a></abbr>&nbsp;{{consensus_classification[4]}}
+                        </div>
+                        <br>
+                        <div class="li-element">
+                            <abbr title="download the evidence document"><a href="{{url_for('download_evidence_document', variant_id=consensus_classification[1])}}">download</a></abbr>
                         </div>
                     </div>
                 </div>
@@ -440,6 +505,42 @@
                         </table>
                     </div>
 
+                </div>
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+<!-- user classification table -->
+{% if user_classifications is not none %}
+<div class="col-lg-5 col-lg-6 mb-4">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">User specific classifications</h4>
+            <p class="card-text">
+                <div class="table-responsive">
+                    <table class="table table-hover scroll" id="userClassificationsTable">
+                        <thead>
+                            <tr>
+                                <th><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th><div class="sortable">User</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th style="width: 100%;"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for classification in user_classifications %}
+                            <tr>
+                                <td>{{ classification[1] }}</td>
+                                <td>{{ classification[3] }}</td>
+                                <td style="white-space:nowrap;">{{ classification[5] }}</td>
+                                <td>{{ classification[4] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </p>
         </div>

@@ -276,7 +276,8 @@ def insert_missing_meta_information(variant_id, meta_info, is_duplicate, seqid, 
         date = task_force.get('date')
         comment = task_force.get('comment')
         if not is_duplicate or (not conn.check_consensus_classification(variant_id, consensus_classification, comment, date)):
-            path_to_report = 'default_heredicare_report.pdf'
+            root = os.path.dirname(os.path.abspath(__file__))
+            path_to_report = os.path.join(root, 'imported_consensus_classification_reports', 'default_heredicare_report.pdf')
             gen = pdf_gen(path_to_report)
             gen.generate_default_report(reason="it was imported from HerediCare")
             evidence_document_base64 = gen.get_base64_encoding()
@@ -351,9 +352,7 @@ def process_all(log_file_path):
         process_new_seqids(heredicare_exclusive_variants)
         process_deleted_seqids(heredivar_exclusive_variants)
         process_existing_seq_ids(intersection)
-
-
-
+        
     endit()
 
 
