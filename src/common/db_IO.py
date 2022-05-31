@@ -615,19 +615,16 @@ class Connection:
             return result[0]
         return result
 
-    def get_consensus_classification(self, variant_id, most_recent = False):
+    def get_consensus_classification(self, variant_id, most_recent = False): # it is possible to have multiple consensus classifications for the same variant if it is a duplicate in HerediCare and both have a consensus classification
         command = "SELECT * FROM consensus_classification WHERE variant_id = %s"
         if most_recent:
             command = command  + " ORDER BY date DESC LIMIT 1"
         self.cursor.execute(command, (variant_id, ))
-        if most_recent:
-            result = self.cursor.fetchone()
-        else:
-            result = self.cursor.fetchall()
+        result = self.cursor.fetchall()
         return result
     
     def get_user_classifications(self, variant_id):
-        command = "SELECT * FROM classification WHERE variant_id = %s"
+        command = "SELECT * FROM user_classification WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
         return result

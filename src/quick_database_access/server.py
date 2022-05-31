@@ -11,11 +11,13 @@ import tempfile
 import re
 import annotation_service.fetch_heredicare_variants as heredicare
 from datetime import datetime
+from common.pdf_generator import pdf_gen
 
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = '8pfucoisaugfqw94hoaiddrvhe6efc5b456vvfl09'
-app.config['LOGS_FOLDER'] = 'logs/'
+app.config['LOGS_FOLDER'] = 'downloads/logs/'
+app.config['CONSENSUS_CLASSIFICATION_REPORT_FOLDER'] = 'downloads/consensus_classification_reports/'
 #app.config["MYSQL_USER"] = "ahdoebm1"
 #app.config["MYSQL_PASSWORD"] = "20220303"
 #app.config["MYSQL_HOST"] = "SRV018.img.med.uni-tuebingen.de"
@@ -392,6 +394,18 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     else:
         has_multiple_seqids = False
 
+    consensus_classification = conn.get_consensus_classification(variant_id, most_recent=True)
+    if len(consensus_classification) == 1:
+        consensus_classification = consensus_classification[0]
+    else:
+        consensus_classification = None
+
+    
+    user_classifications = conn.get_user_classifications(variant_id)
+    if len(user_classifications) == 0:
+        user_classifications = None
+
+
     conn.close()
     return render_template('variant.html', 
                             variant=variant_oi, 
@@ -400,8 +414,29 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             variant_consequences=variant_consequences, 
                             literature=literature,
                             current_annotation_status=current_annotation_status,
-                            has_multiple_seqids=has_multiple_seqids)
+                            has_multiple_seqids=has_multiple_seqids,
+                            consensus_classification=consensus_classification,
+                            user_classifications=user_classifications)
 
+
+@app.route('/download_evidence_document/<int:variant_id>')
+def download_evidence_document(variant_id):
+    conn = Connection()
+    consensus_classification = conn.get_consensus_classification(variant_id, most_recent=True)
+    conn.close()
+    if consensus_classification is None:
+        abort(404)
+    consensus_classification = consensus_classification[0]
+    b_64_report = consensus_classification[5]
+
+    report_folder = path.join(app.root_path, app.config['CONSENSUS_CLASSIFICATION_REPORT_FOLDER'])
+    report_filename = 'consensus_classification_report_' + str(variant_id) + '.pdf'
+    report_path = path.join(report_folder, report_filename)
+    if not path.isfile(report_path):
+        generator = pdf_gen(report_path)
+        generator.base64_to_file(base64_string = b_64_report)
+    
+    return send_from_directory(directory=report_folder, path='', filename=report_filename)
 
 @app.route('/deleted_variant_info')
 def deleted_variant():
