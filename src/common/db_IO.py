@@ -562,12 +562,12 @@ class Connection:
         return result
 
 
-    def get_seqid_list(self):
+    def get_vid_list(self):
         command = "SELECT external_id FROM variant_ids WHERE id_source='heredicare'"
         self.cursor.execute(command)
-        seqids = self.cursor.fetchall()
-        seqids = [x[0] for x in seqids]
-        return seqids
+        vids = self.cursor.fetchall()
+        vids = [x[0] for x in vids]
+        return vids
 
     def insert_consensus_classification_from_vcf(self, chr, pos, ref, alt, consensus_classification, comment, date, evidence_document = None):
         data = [enquote(x) for x in (consensus_classification, comment, date, evidence_document.decode(), chr, pos, ref, alt)]

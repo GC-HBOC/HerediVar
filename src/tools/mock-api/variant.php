@@ -4,20 +4,20 @@
 require_once("utils/functions.php");
 require_once("utils/paths.php");
 
-$seqid_request = $_GET['seqid'];
+$vid_request = $_GET['id'];
 
 $variant = new SimpleXMLElement('<Variant/>');
 
 if (file_exists($file_path)) {
     $file = file($file_path);
-    foreach($file as $line) { // search for the seqid in that file
+    foreach($file as $line) { // search for the vid in that file
         $line = trim($line);
         if ($line=="" | startsWith($line, '#')) continue;
         
         $parts = explode("\t", $line);
-        $current_seqid = $parts[0];
+        $current_vid = $parts[0];
 
-        if ($current_seqid == $seqid_request) {
+        if ($current_vid == $vid_request) {
             // capture vcf style in attributes of variant
             $variant->addAttribute('chr', 'chr'.trim($parts[3]));
             $variant->addAttribute('pos', trim($parts[4]));
@@ -27,7 +27,7 @@ if (file_exists($file_path)) {
 
             // add some mock data
             $occurances = $variant->addChild('Occurances');
-            if ($current_seqid == '11334923'){
+            if ($current_vid == '11334923'){
                 $occurances->addAttribute('cases_count', 65);
                 $occurances->addAttribute('family_count', 423547);
             } else {

@@ -13,26 +13,26 @@ class heredicare_interface:
         self.variant_validator = xml_validator('/mnt/users/ahdoebm1/HerediVar/doc/api/variant.xsd')
 
 
-    def get_heredicare_seqid_list(self):
+    def get_heredicare_vid_list(self):
         execution_code = 0 # everything worked well
-        list_validator = xml_validator('/mnt/users/ahdoebm1/HerediVar/doc/api/seq_id_list.xsd')
-        seq_id_list_request = requests.get(self.base_url + 'seq_id_list.php')
-        #res = validator.validate('/mnt/users/ahdoebm1/HerediVar/src/tools/mock-api/seq_id_list.xml')
-        seq_id_list_xml = seq_id_list_request.text
-        is_valid = list_validator.validate(seq_id_list_xml)
+        list_validator = xml_validator('/mnt/users/ahdoebm1/HerediVar/doc/api/vid_list.xsd')
+        v_id_list_request = requests.get(self.base_url + 'vid_list.php')
+        #res = validator.validate('/mnt/users/ahdoebm1/HerediVar/src/tools/mock-api/vid_list.xml')
+        v_id_list_xml = v_id_list_request.text
+        is_valid = list_validator.validate(v_id_list_xml)
 
         if not is_valid:
             execution_code = 1 # fatal error: returned xml is not valid
             return execution_code, []
     
-        seqid_obj = list_validator.object_from_string(seq_id_list_xml)
-        seqids_heredicare = []
-        for seqid in seqid_obj.SeqId:
-            seqids_heredicare.append(seqid.get('id'))
+        vid_obj = list_validator.object_from_string(v_id_list_xml)
+        vids_heredicare = []
+        for vid in vid_obj.VId:
+            vids_heredicare.append(vid.get('id'))
     
-        return execution_code, seqids_heredicare
+        return execution_code, vids_heredicare
     
-    def get_variant(self, seqid):
+    def get_variant(self, vid):
         execution_code = 0
         chr = ''
         pos = ''
@@ -41,7 +41,7 @@ class heredicare_interface:
         reference_genome_build = ''
         heredicare_variant = None
 
-        variant_request = requests.get(self.base_url + 'variant.php?seqid=' + str(seqid))
+        variant_request = requests.get(self.base_url + 'variant.php?id=' + str(vid))
         variant_xml = variant_request.text
 
         # get orig variant
