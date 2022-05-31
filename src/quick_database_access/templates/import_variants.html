@@ -12,7 +12,7 @@
 <div class="bst" style="display:flex; align-items:center;">
     <form id="import-variants-form" name="import-variants-form" method="post" action="#">
         <div class="form-group">
-            <span id="tooltip-import-variants-button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="testtst">
+            <span id="tooltip-import-variants-button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button invokes a mass-import of all variants in HerediCare. After updating all HerediCare variants it submits a reannotation request of all variants in HerediVar.">
                 <button id="import-variants-button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#import-variants-modal">IMPORT & UPDATE</button>
             </span>
             <meta id="annotation_status" data-annotation-status="{{ most_recent_import_request[3] }}">
@@ -38,7 +38,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure that you want to import/update all variants & corresponding meta-information from HerediCare?
+                Are you sure that you want to import & update all variants & corresponding meta-information in HerediVar from HerediCare with subsequent reannotation of all variants in HerediVar?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
