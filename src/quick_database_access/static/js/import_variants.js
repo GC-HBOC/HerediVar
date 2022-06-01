@@ -8,4 +8,10 @@ $(document).ready(function()
        $('#import-variants-form').submit();
     });
 
+    $('#reannotate-variants-submit').click(function(){
+        $('#reannotate-variantsbutton').attr('disabled', true);
+        /* when the submit button in the modal is clicked, submit the form */
+       $('#reannotate-variants-form').submit();
+    });
+
 });

@@ -177,34 +177,40 @@ def base():
 
 @app.route('/import-variants', methods=('GET', 'POST'))
 def import_variants():
-    conn = Connection()
-    most_recent_import_request = conn.get_most_recent_import_request()
-    if most_recent_import_request is None:
-        status = 'finished'
-    else:
-        status = most_recent_import_request[3]
-    conn.close()
+    if request.method == 'POST':
+        request_type = request.args.get("type")
+        if request_type == 'update_variants':
+            conn = Connection()
+            most_recent_import_request = conn.get_most_recent_import_request()
+            if most_recent_import_request is None:
+                status = 'finished'
+            else:
+                status = most_recent_import_request[3]
 
-    if request.method == 'POST' and status == 'finished':
-        conn = Connection()
-        import_queue_id = conn.insert_import_request(user_id = 1) ##### change user_id once login is ready!!!
-        requested_at = conn.get_import_request(import_queue_id = import_queue_id)[2]
-        requested_at = datetime.strptime(str(requested_at), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
-        conn.close()
+            if status == 'finished':
+                import_queue_id = conn.insert_import_request(user_id = 1) ##### change user_id once login is ready!!!
+                requested_at = conn.get_import_request(import_queue_id = import_queue_id)[2]
+                requested_at = datetime.strptime(str(requested_at), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
 
-        logs_folder = path.join(app.root_path, app.config['LOGS_FOLDER'])
-        log_file_path = logs_folder + 'heredicare_import:' + requested_at + '.log'
-        heredicare.process_all(log_file_path)
-        log_file_path = heredicare.get_log_file_path()
-        date = log_file_path.strip('.log').split(':')[1].split('-')
+                logs_folder = path.join(app.root_path, app.config['LOGS_FOLDER'])
+                log_file_path = logs_folder + 'heredicare_import:' + requested_at + '.log'
+                heredicare.process_all(log_file_path)
+                log_file_path = heredicare.get_log_file_path()
+                date = log_file_path.strip('.log').split(':')[1].split('-')
 
-        conn = Connection()
-        conn.close_import_request(import_queue_id)
-        variant_ids = conn.get_all_valid_variant_ids()
-        for variant_id in variant_ids:
-            conn.insert_annotation_request(variant_id, user_id=1) ###### change user_id once login is ready!!!!!!!
-        conn.close()
-        return redirect(url_for('import_summary', year=date[0], month=date[1], day=date[2], hour=date[3], minute=date[4], second=date[5]))
+                conn.close_import_request(import_queue_id)
+                conn.close()
+                return redirect(url_for('import_summary', year=date[0], month=date[1], day=date[2], hour=date[3], minute=date[4], second=date[5]))
+
+        elif request_type == 'reannotate':
+            conn = Connection()
+            variant_ids = conn.get_all_valid_variant_ids()
+            for variant_id in variant_ids:
+                conn.insert_annotation_request(variant_id, user_id=1) ###### change user_id once login is ready!!!!!!!
+            conn.close()
+
+            flash('Variant reannotation requested. It will be computed in the background.', 'alert-success')
+        
 
     return render_template('import_variants.html', most_recent_import_request=most_recent_import_request)
 

@@ -253,9 +253,12 @@ class Connection:
         self.cursor.execute(command)
         self.conn.commit()
 
-    def insert_annotation_request(self, variant_id, user_id):
-        command = "INSERT INTO annotation_queue (variant_id, status, user_id) VALUES (%s, %s, %s)"
-        self.cursor.execute(command, (variant_id, "pending", user_id))
+    def insert_annotation_request(self, variant_id, user_id): # this inserts only if there is not an annotation request for this variant which is still pending
+        #command = "INSERT INTO annotation_queue (variant_id, status, user_id) VALUES (%s, %s, %s)"
+        command = "INSERT INTO annotation_queue (`variant_id`, `user_id`) \
+                    SELECT %s, %s WHERE NOT EXISTS (SELECT * FROM annotation_queue \
+	                    WHERE `variant_id`=%s AND `status`='pending' LIMIT 1)"
+        self.cursor.execute(command, (variant_id, user_id, variant_id))
         self.conn.commit()
     
     def insert_clinvar_variant_annotation(self, variant_id, variation_id, interpretation, review_status):
