@@ -409,6 +409,10 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     if len(user_classifications) == 0:
         user_classifications = None
 
+    heredicare_center_classifications = conn.get_heredicare_center_classifications(variant_id)
+    if len(heredicare_center_classifications) == 0:
+        heredicare_center_classifications = None
+
     conn.close()
     return render_template('variant.html', 
                             variant=variant_oi, 
@@ -419,7 +423,8 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             current_annotation_status=current_annotation_status,
                             has_multiple_vids=has_multiple_vids,
                             consensus_classification=consensus_classification,
-                            user_classifications=user_classifications)
+                            user_classifications=user_classifications,
+                            heredicare_center_classifications=heredicare_center_classifications)
 
 
 @app.route('/download_evidence_document/<int:variant_id>')
