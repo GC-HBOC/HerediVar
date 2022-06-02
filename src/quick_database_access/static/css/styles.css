@@ -92,7 +92,7 @@ table.scroll th {
     position: -webkit-sticky;
     top: 0;
     z-index: 5;
-    background:rgb(158, 158, 158);
+    background:rgb(196, 196, 196);
     border-bottom: 2px solid rgb(255, 255, 255);
 }
 
@@ -106,6 +106,15 @@ table.scroll th {
     color:gray;
 }
 
+
+.card-subcaption {
+    font-weight: bold;
+    font-size: 1.5em;
+}
+
+.classification-gradient {
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.499019676229867) 20%, rgba(255,255,255,0.633473457742472) 40%, rgba(255,255,255,1) 100%);
+}
 
 
 
@@ -153,6 +162,11 @@ table.scroll th {
 
 .ssr {
     margin-right: 10px;
+}
+
+.classiconposition {
+    margin-right: 6em;
+    margin-bottom: 1.5em;
 }
 
 .bsr {
