@@ -377,6 +377,34 @@
                     {% endif %}
                     {% endif %}
 
+                    {% if heredicare_center_classifications is not none %}
+                    <li class="list-group-item card-subcaption">HerediCare center classifications</li>
+                    <div class="row bst bsl">
+                        <div class="table-responsive">
+                            <table class="table table-hover scroll" id="heredicareCenterClassificationsTable">
+                                <thead>
+                                    <tr>
+                                        <th><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th><div class="sortable">Center</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th style="width: 100%;"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for classification in heredicare_center_classifications %}
+                                    <tr>
+                                        <td>{{ classification[1] }}</td>
+                                        <td>{{ classification[3] }}</td>
+                                        <td style="white-space:nowrap;">{{ classification[5] }}</td>
+                                        <td>{{ classification[4] }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     {% if 'clinvar_variant_annotation' in variant_annotations %}
                     <li class="list-group-item card-subcaption">ClinVar classifications</li>
                     <!-- CLINVAR -->
