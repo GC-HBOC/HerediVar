@@ -12,7 +12,7 @@
                 <form id="reannotate_form" name="reannotate_form" method="post" action="#">
                     <div class="form-group">
                         <span id="tooltip_reannotate_button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="">
-                            <button id="reannotate_button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reannotate-modal">(Re-)Annotate variant</button>
+                            <button id="reannotate_button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reannotate-modal">(Re-)Annotate</button>
                         </span>
                         <meta id="annotation_status" data-annotation-status="{{ current_annotation_status[4] }}">
                     </div>
@@ -30,6 +30,9 @@
                     {% endif %}
                     {% endif %}
                 </div>
+                <span id="tooltip_classify_button" class="d-inline-block ssl" tabindex="0">
+                    <a id="classify_button" type="button" class="btn btn-outline-primary" href="{{url_for('classify', variant_id = variant[0])}}">Classify</a>
+                </span>
             </div>
         </div>
 
@@ -46,26 +49,7 @@
                     -
                 </div>
             {% endif %}
-            
-
         </div>
-
-
-    <!--
-        <div class="ms-auto bsr" align="center" >
-            <div class="display-6">
-                <strong>class</strong>
-            </div>
-            <div id="class-number-display" style="font-size:5em; line-height: 0.85;">
-                {% if consensus_classification is not none %}
-                    {{ consensus_classification[2] }}
-                {% else %}
-                    -
-                {% endif %}
-            </div>
-        </div>
-    -->
-
     </div>
 </div>
 
@@ -259,7 +243,7 @@
             </div>
             <div class="li-element">
                 {% if 'tp53db_transactivation_class' in variant_annotations %}
-                    <abbr title="{{variant_annotations['tp53db_class'][0]}}"><a class="dashed_underline">class:</a></abbr>&nbsp;{{variant_annotations['tp53db_class'][4]}}
+                    <abbr title="{{variant_annotations['tp53db_transactivation_class'][0]}}"><a class="dashed_underline">class:</a></abbr>&nbsp;{{variant_annotations['tp53db_transactivation_class'][4]}}
                 {% endif %}
             </div>
             <div class="li-element">
@@ -665,9 +649,9 @@
 {% endblock %}
 
 {% block special_scripts %}
-    <script src="../static/js/sortTable.js"></script>
-    <script src="../static/js/variant.js"></script>
-    <script src="../static/js/colors.js"></script>
+    <script src="/static/js/sortTable.js"></script>
+    <script src="/static/js/variant.js"></script>
+    <script src="/static/js/colors.js"></script>
 {% endblock%}
 
 <!--
