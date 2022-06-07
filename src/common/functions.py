@@ -6,6 +6,8 @@ import sys
 import subprocess
 import common.paths as paths
 import tempfile
+import base64
+import io
 
 def basedir():
     return os.getcwd()
@@ -298,3 +300,17 @@ def complement(seq):
     seq = seq.replace('G', 'c')
     seq = seq.upper()
     return seq
+
+def get_base64_encoding(path):
+    with open(path, "rb") as pdf_file:
+        encoded_string = base64.b64encode(pdf_file.read())
+        return encoded_string
+
+def buffer_to_base64(buffer):
+    return base64.b64encode(buffer.getvalue())
+
+def base64_to_file(base64_string, path):
+    file_64_decode = base64.b64decode(base64_string) 
+    file_result = open(path, 'wb') 
+    file_result.write(file_64_decode)
+    file_result.close()

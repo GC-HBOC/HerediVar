@@ -525,7 +525,7 @@ class Connection:
         self.cursor.execute(command)
         result = self.cursor.fetchall()
         if sort_year:
-            result = sorted(result, key=lambda x: functions.convert_none_infinite(x[6]), reverse=True)    
+            result = sorted(result, key=lambda x: functions.convert_none_infinite(x[6]), reverse=True)
         return result
     
     def check_variant_duplicate(self, chr, pos, ref, alt):
@@ -572,16 +572,18 @@ class Connection:
         vids = [x[0] for x in vids]
         return vids
 
-    def insert_consensus_classification_from_vcf(self, chr, pos, ref, alt, consensus_classification, comment, date, evidence_document = None):
-        data = [enquote(x) for x in (consensus_classification, comment, date, evidence_document.decode(), chr, pos, ref, alt)]
-        command = "INSERT INTO consensus_classification (variant_id, classification, comment, date, evidence_document) (SELECT id, %s, %s, %s, %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)" % tuple(data)
-        self.cursor.execute(command)
+    def insert_consensus_classification_from_vcf(self, chr, pos, ref, alt, consensus_classification, comment, date = "CURDATE()", evidence_document = None):
+        if date != "CURDATE()":
+            date = enquote(date)
+        command = "INSERT INTO consensus_classification (variant_id, classification, comment, date, evidence_document) (SELECT id, %s, %s, " + date + ", %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)"
+        self.cursor.execute(command, (consensus_classification, comment, evidence_document.decode(), chr, pos, ref, alt))
         self.conn.commit()
     
-    def insert_consensus_classification_from_variant_id(self, variant_id, consensus_classification, comment, date, evidence_document):
-        data = [enquote(x) for x in (variant_id, consensus_classification, comment, date, evidence_document.decode())]
-        command = "INSERT INTO consensus_classification (variant_id, classification, comment, date, evidence_document) VALUES (%s, %s, %s, %s, %s)" % tuple(data)
-        self.cursor.execute(command)
+    def insert_consensus_classification_from_variant_id(self, variant_id, consensus_classification, comment, date = "CURDATE()", evidence_document = None):
+        if date != "CURDATE()":
+            date = enquote(date)
+        command = "INSERT INTO consensus_classification (variant_id, classification, comment, date, evidence_document) VALUES (%s, %s, %s, " + date + ", %s)"
+        self.cursor.execute(command, (variant_id, consensus_classification, comment, evidence_document.decode()))
         self.conn.commit()
     
     def insert_heredicare_center_classification(self, variant_id, classification, center_name, comment, date):
@@ -630,7 +632,15 @@ class Connection:
         command = "SELECT * FROM user_classification WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
+        result = sorted(result, key=lambda x: functions.convert_none_infinite(x[5]), reverse=True)
         return result
+
+    def insert_user_classification(self, variant_id, classification, user_id, comment, date = "CURDATE()"):
+        if date != "CURDATE()":
+            date = enquote(date)
+        command = "INSERT INTO user_classification (variant_id, classification, user_id, comment, date) VALUES (%s, %s, %s, %s," + date + ")"
+        self.cursor.execute(command, (variant_id, classification, user_id, comment))
+        self.conn.commit()
 
     def delete_variant(self, variant_id):
         command = "DELETE FROM variant WHERE id = %s"
@@ -698,3 +708,10 @@ class Connection:
             res = self.cursor.fetchone()
             return res
         return None
+
+    def get_heredicare_center_classifications(self, variant_id):
+        command = 'SELECT * FROM heredicare_center_classification WHERE variant_id = %s'
+        self.cursor.execute(command, (variant_id, ))
+        result = self.cursor.fetchall()
+        result = sorted(result, key=lambda x: functions.convert_none_infinite(x[5]), reverse=True)
+        return result

@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+
+    <h1 class="bst">{% block title %} Submit a new consensus classification {% endblock %}</h1>
+
+    <form id="classifyForm" class="needs-validation" method="post" novalidate>
+
+        
+          
+            <div class="form-group sst">
+                <label for="class" class="form-label">Class</label>
+                <select class="form-select" name="class" id="class" required>
+                    <option value="1" selected="selected">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+               </select>
+               <div class="invalid-feedback">
+                   Please select a classification
+               </div>
+            </div>
+
+            <label class="form-label sst" for="">Choose information which are relevant for the classification (these will be included in the pdf report):</label>
+            <!-- cadd -->
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" name="include_cadd" id="include_cadd" {% if 'cadd_scaled' not in variant_annotations %}disabled{% endif %}></input>
+                <label for="include_cadd" class="form-check-label">CADD score</label>
+            </div>
+
+            <!-- revel -->
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" name="include_revel" id="include_revel" {% if 'revel' not in variant_annotations %}disabled{% endif %}></input>
+                <label for="include_revel" class="form-check-label">REVEL score</label>
+            </div>
+
+            <!-- phylop -->
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" name="include_phylop" id="include_phylop" {% if 'phylop_100way' not in variant_annotations %}disabled{% endif %}></input>
+                <label for="include_phylop" class="form-check-label">PhyloP 100way score</label>
+            </div>
+
+            <!-- spliceai -->
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" name="include_spliceai_max_delta" id="include_spliceai_max_delta" {% if 'spliceai_max_delta' not in variant_annotations %}disabled{% endif %}></input>
+                <label for="include_spliceai_max_delta" class="form-check-label">SpliceAI max delta</label>
+            </div>
+
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" name="include_spliceai_details" id="include_spliceai_details" {% if 'spliceai_details' not in variant_annotations %}disabled{% endif %}></input>
+                <label for="include_spliceai_details" class="form-check-label">SpliceAI details</label>
+            </div>
+            
+            <!-- maxentscan -->
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" name="include_maxentscan_ref" id="include_maxentscan_ref" {% if 'maxentscan_ref' not in variant_annotations %}disabled{% endif %}></input>
+                <label for="include_maxentscan_ref" class="form-check-label">MaxEntScan ref</label>
+            </div>
+
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" name="include_maxentscan_alt" id="include_maxentscan_alt" {% if 'maxentscan_alt' not in variant_annotations %}disabled{% endif %}></input>
+                <label for="include_maxentscan_alt" class="form-check-label">MaxEntScan alt</label>
+            </div>
+
+            <!-- gnomad -->
+            <div class="form-group">
+                <label class="form-check-label expandible-list" data-bs-toggle="collapse" role="button" href="#gnomadoptions" aria-expanded="false" show aria-controls="gnomadoptions">
+                    <input class="form-check-input" type="checkbox" data-toggle="collapse" data-target="#gnomadoptions" aria-expanded="false" aria-controls="gnomadoptions"  name="include_gnomad" id="include_gnomad"  {% if 'gnomad_ac' not in variant_annotations and 'gnomad_af' not in variant_annotations and 'gnomad_popmax' not in variant_annotations and 'gnomad_hom' not in variant_annotations and 'gnomad_het' not in variant_annotations and 'gnomad_hemi' not in variant_annotations %}disabled{% endif %}></input>
+                    GnomAD
+                </label>
+                <div class="collapse" id="gnomadoptions">
+                    <div class="card card-body">
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_gnomad_ac" id="include_gnomad_ac" {% if 'gnomad_ac' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_gnomad_ac" class="form-check-label">AC</label>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_gnomad_af" id="include_gnomad_af" {% if 'gnomad_af' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_gnomad_af" class="form-check-label">AF</label>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_gnomad_popmax" id="include_gnomad_popmax" {% if 'gnomad_popmax' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_gnomad_popmax" class="form-check-label">Popmax</label>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_gnomad_hom" id="include_gnomad_hom" {% if 'gnomad_hom' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_gnomad_hom" class="form-check-label">Num homozygotes</label>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_gnomad_het" id="include_gnomad_het" {% if 'gnomad_het' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_gnomad_het" class="form-check-label">Num heterozygotes</label>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_gnomad_hemi" id="include_gnomad_hemi" {% if 'gnomad_hemi' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_gnomad_hemi" class="form-check-label">Num hemizygotes</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- flossies -->
+            <div class="form-group">
+                <label class="form-check-label expandible-list" data-bs-toggle="collapse" role="button" href="#flossiesoptions" aria-expanded="false" show aria-controls="flossiesoptions">
+                    <input class="form-check-input" type="checkbox" data-toggle="collapse" data-target="#flossiesoptions" aria-expanded="false" aria-controls="flossiesoptions"  name="include_flossies" id="include_flossies"  {% if 'flossies_num_afr' not in variant_annotations and 'flossies_num_eur' not in variant_annotations %}disabled{% endif %}></input>
+                    FLOSSIES
+                </label>
+                <div class="collapse" id="flossiesoptions">
+                    <div class="card card-body">
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_flossies_num_afr" id="include_flossies_num_afr" {% if 'flossies_num_afr' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_flossies_num_afr" class="form-check-label">Num african</label>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_flossies_num_eur" id="include_flossies_num_eur" {% if 'flossies_num_eur' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_flossies_num_eur" class="form-check-label">Num european</label>
+                        </div>
+            
+                    </div>
+                </div>
+            </div>
+
+            <!-- tp53db -->
+            <div class="form-group">
+                <label class="form-check-label expandible-list" data-bs-toggle="collapse" role="button" href="#tpdboptions" aria-expanded="false" show aria-controls="tpdboptions">
+                    <input class="form-check-input" type="checkbox" data-toggle="collapse" data-target="#tpdboptions" aria-expanded="false" aria-controls="tpdboptions"  name="include_tpdb" id="include_tpdb"  {% if 'tp53db_class' not in variant_annotations and 'tp53db_bayes_del' not in variant_annotations and 'tp53db_DNE_LOF_class' not in variant_annotations and 'tp53db_DNE_class' not in variant_annotations and 'tp53db_domain_function' not in variant_annotations and 'tp53db_transactivation_class' not in variant_annotations %}disabled{% endif %}></input>
+                    TP53 db
+                </label>
+                <div class="collapse" id="tpdboptions">
+                    <div class="card card-body">
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_tp53db_class" id="include_tp53db_class" {% if 'tp53db_class' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_tp53db_class" class="form-check-label">class</label>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_tp53db_bayes_del" id="include_tp53db_bayes_del" {% if 'tp53db_bayes_del' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_tp53db_bayes_del" class="form-check-label">Bayes del</label>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_tp53db_DNE_LOF_class" id="include_tp53db_DNE_LOF_class" {% if 'tp53db_DNE_LOF_class' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_tp53db_DNE_LOF_class" class="form-check-label">DNE LOF class</label>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_tp53db_DNE_class" id="include_tp53db_DNE_class" {% if 'tp53db_DNE_class' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_tp53db_DNE_class" class="form-check-label">DNE class</label>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_tp53db_domain_function" id="include_tp53db_domain_function" {% if 'tp53db_domain_function' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_tp53db_domain_function" class="form-check-label">Domain function</label>
+                        </div>
+                        <div class="form-group">
+                            <input class="form-check-input" type="checkbox" name="include_tp53db_transactivation_class" id="include_tp53db_transactivation_class" {% if 'tp53db_transactivation_class' not in variant_annotations %}disabled{% else %}checked{% endif %}></input>
+                            <label for="include_tp53db_transactivation_class" class="form-check-label">Transactivation class</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- cancerhotspots -->
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" name="include_cancerhotspots_cancertypes" id="include_cancerhotspots_cancertypes" {% if 'cancerhotspots_cancertypes' not in variant_annotations %}disabled{% endif %}></input>
+                <label for="include_cancerhotspots_cancertypes" class="form-check-label">Cancerhotspots cancertypes</label>
+            </div>
+
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" name="include_cancerhotspots_ac" id="include_cancerhotspots_ac" {% if 'cancerhotspots_ac' not in variant_annotations %}disabled{% endif %}></input>
+                <label for="include_cancerhotspots_ac" class="form-check-label">Cancerhotspots AC</label>
+            </div>
+
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" name="include_cancerhotspots_af" id="include_cancerhotspots_af" {% if 'cancerhotspots_af' not in variant_annotations %}disabled{% endif %}></input>
+                <label for="include_cancerhotspots_af" class="form-check-label">Cancerhotspots AF</label>
+            </div>
+
+            <!-- heredicare -->
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" name="include_heredicare_cases_count" id="include_heredicare_cases_count" {% if 'heredicare_cases_count' not in variant_annotations %}disabled{% endif %}></input>
+                <label for="include_heredicare_cases_count" class="form-check-label">HerediCare cases count</label>
+            </div>
+
+            <div class="form-group">
+                <input class="form-check-input" type="checkbox" name="include_heredicare_family_count" id="include_heredicare_family_count" {% if 'heredicare_family_count' not in variant_annotations %}disabled{% endif %}></input>
+                <label for="include_heredicare_family_count" class="form-check-label">HerediCare cases count</label>
+            </div>
+
+
+            <div class="form-group sst">
+                <label for="comment" class="form-label">Comment</label>
+                <input type="text" name="comment"
+                       placeholder="comment" class="form-control"
+                       value="{{ request.form['comment'] }}" id="comment" required>
+                </input>
+                <div class="invalid-feedback">
+                    Please provide a comment describing more about the reasons for this classification.
+                </div>
+            </div>
+
+            <div class="form-group sst">
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </div>
+
+
+
+        
+    </form> 
+
+
+
+{% endblock %}
+
+{% block special_scripts %}
+    <script src="/static/js/formValidator.js"></script>
+    <script src="/static/js/consensus_classify.js"></script>
+{% endblock%}

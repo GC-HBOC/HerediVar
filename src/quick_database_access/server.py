@@ -12,6 +12,7 @@ import re
 import annotation_service.fetch_heredicare_variants as heredicare
 from datetime import datetime
 from common.pdf_generator import pdf_gen
+import io
 
 app = Flask(__name__)
 
@@ -441,14 +442,156 @@ def download_evidence_document(variant_id):
     report_filename = 'consensus_classification_report_' + str(variant_id) + '.pdf'
     report_path = path.join(report_folder, report_filename)
     if not path.isfile(report_path):
-        generator = pdf_gen(report_path)
-        generator.base64_to_file(base64_string = b_64_report)
+        functions.base64_to_file(base64_string = b_64_report, path = report_path)
     
     return send_from_directory(directory=report_folder, path='', filename=report_filename)
 
 @app.route('/deleted_variant_info')
 def deleted_variant():
     return render_template('deleted_variant.html')
+
+
+
+
+@app.route('/classify/<int:variant_id>', methods=['GET', 'POST'])
+def classify(variant_id):
+    return render_template('classify.html', variant_id=variant_id)
+
+
+@app.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])
+def consensus_classify(variant_id):
+    conn = Connection()
+    variant_annotations = conn.get_recent_annotations(variant_id)
+    variant_annot_dict = {}
+    for annot in variant_annotations:
+        variant_annot_dict[annot[0]] = annot[1:len(annot)]
+
+    if request.method == 'POST':
+        classification = request.form['class']
+        comment = request.form['comment']
+
+        if not comment:
+            flash('You must provide a comment!', 'alert-danger')
+        else:
+            variant_oi = get_variant(conn, variant_id)
+
+            current_date = datetime.today().strftime('%Y-%m-%d')
+
+            buffer = io.BytesIO()
+            generator = pdf_gen(buffer)
+            generator.add_title('Report for variant: ' + str(variant_oi[1]) + '-' + str(variant_oi[2]) + '-' + str(variant_oi[3]) + '-' + str(variant_oi[4]))
+            generator.add_variant_info(classification, current_date, comment)
+            generator.add_spacer()
+            if 'include_cadd' in request.form:
+                generator.add_relevant_information("CADD scaled: ", variant_annot_dict['cadd_scaled'][4])
+            if 'include_revel' in request.form:
+                generator.add_relevant_information("REVEL: ", variant_annot_dict['revel'][4])
+            if 'include_phylop' in request.form:
+                generator.add_relevant_information("PhyloP 100w: ", variant_annot_dict['phylop_100way'][4])
+            if 'include_spliceai_max_delta' in request.form:
+                generator.add_relevant_information("SpliceAI max delta: ", variant_annot_dict['spliceai_max_delta'][4])
+            if 'include_spliceai_details' in request.form:
+                generator.add_relevant_information("SpliceAI details: ", variant_annot_dict['spliceai_details'][4])
+            if 'include_maxentscan_ref' in request.form:
+                generator.add_relevant_information("MaxEntScan ref: ", variant_annot_dict['maxentscan_ref'][4])
+            if 'include_maxentscan_alt' in request.form:
+                generator.add_relevant_information("MaxEntScan alt: ", variant_annot_dict['maxentscan_alt'][4])
+            
+            if 'include_gnomad' in request.form:
+                if 'include_gnomad_ac' in request.form:
+                    generator.add_relevant_information("AC: ", variant_annot_dict['gnomad_ac'][4])
+                if 'include_gnomad_af' in request.form:
+                    generator.add_relevant_information("AF: ", variant_annot_dict['gnomad_af'][4])
+                if 'include_gnomad_popmax' in request.form:
+                    generator.add_relevant_information("Popmax: ", variant_annot_dict['gnomad_popmax'][4])
+                if 'include_gnomad_hom' in request.form:
+                    generator.add_relevant_information("Number homozygotes: ", variant_annot_dict['gnomad_hom'][4])
+                if 'include_gnomad_het' in request.form:
+                    generator.add_relevant_information("Number heterozygotes", variant_annot_dict['gnomad_het'][4])
+                if 'include_gnomad_hemi' in request.form:
+                    generator.add_relevant_information("Number hemizyogtes", variant_annot_dict['gnomad_hemi'][4])
+            if 'include_flossies' in request.form:
+                if 'include_flossies_num_afr' in request.form:
+                    generator.add_relevant_information("Number african", variant_annot_dict['flossies_num_afr'][4])
+                if 'include_flossies_num_eur' in request.form:
+                    generator.add_relevant_information("Number european", variant_annot_dict['flossies_num_eur'][4])
+            
+            if 'include_tpdb' in request.form:
+                if 'include_tp53db_class' in request.form:
+                    generator.add_relevant_information("Class: ", variant_annot_dict['tp53db_class'][4])
+                if 'include_tp53db_bayes_del' in request.form:
+                    generator.add_relevant_information("Bayes del: ", variant_annot_dict['tp53db_bayes_del'][4])
+                if 'include_tp53db_DNE_LOF_class' in request.form:
+                    generator.add_relevant_information("DNE LOF class: ", variant_annot_dict['tp53db_DNE_LOF_class'][4])
+                if 'include_tp53db_DNE_class' in request.form:
+                    generator.add_relevant_information("DNE class: ", variant_annot_dict['tp53db_DNE_class'][4])
+                if 'include_tp53db_domain_function' in request.form:
+                    generator.add_relevant_information("Domain function", variant_annot_dict['tp53db_domain_function'][4])
+                if 'include_tp53db_transactivation_class' in request.form:
+                    generator.add_relevant_information("Transactivation class", variant_annot_dict['tp53db_transactivation_class'][4])
+            if 'include_cancerhotspots_cancertypes' in request.form:
+                generator.add_relevant_information("Cancerhotspots cancertypes: ", variant_annot_dict['cancerhotspots_cancertypes'][4])
+            if 'include_cancerhotspots_ac' in request.form:
+                generator.add_relevant_information("Cancerthotspots AC: ", variant_annot_dict['cancerhotspots_ac'][4])
+            if 'include_cancerhotspots_af' in request.form:
+                generator.add_relevant_information("Cancerhotspots AF: ", variant_annot_dict['cancerhotspots_af'][4])
+            if 'include_heredicare_cases_count' in request.form:
+                generator.add_relevant_information("HerediCare cases count: ", variant_annot_dict['heredicare_cases_count'][4])
+            if 'include_heredicare_family_count' in request.form:
+                generator.add_relevant_information("Heredicare family count: ", variant_annot_dict['heredicare_family_count'][4])
+                
+            generator.save_pdf()
+
+            buffer.seek(io.SEEK_SET)
+            evidence_b64 = functions.buffer_to_base64(buffer)
+            #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/quick_database_access/downloads/consensus_classification_reports/testreport.pdf')
+
+            #conn.insert_consensus_classification_from_variant_id(variant_id, classification, comment, date = current_date, evidence_document=evidence_b64)
+            flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+        conn.close()
+        return redirect(url_for('consensus_classify', variant_id=variant_id))
+
+    conn.close()
+    return render_template('consensus_classify.html', variant_annotations = variant_annot_dict)
+
+@app.route('/classify/<int:variant_id>/user', methods=['GET', 'POST'])
+def user_classify(variant_id):
+    if request.method == 'POST':
+        classification = request.form['class']
+        comment = request.form['comment']
+        conn = Connection()
+        conn.insert_user_classification(variant_id, classification, 1, comment) # UPDATE USER ID ONCE LOGIN IS READY!!!!!
+        conn.close()
+        flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+        return redirect(url_for('classify', variant_id = variant_id))
+
+    return render_template('user_classify.html')
+
+
+
+'''
+@app.route('/classification_report/<int:variant_id>')
+def classification_report(variant_id):
+    conn = Connection()
+
+    variant_oi = get_variant(conn, variant_id)
+    classification = '5'
+    comment = "blabla some comment blablabla"
+    today_date = datetime.today().strftime('%Y-%m-%d')
+    classification_details = [classification, comment, today_date]
+
+    variant_annotations = conn.get_recent_annotations(variant_id)
+    variant_annot_dict = {}
+    for annot in variant_annotations:
+        variant_annot_dict[annot[0]] = annot[1:len(annot)]
+
+    source_html = render_template('consensus_classification_report.html', variant=variant_oi, classification_details=classification_details, variant_annotations = variant_annot_dict)
+
+    import common.test
+    common.test.convert_html_to_pdf(source_html, '/mnt/users/ahdoebm1/HerediVar/src/quick_database_access/downloads/consensus_classification_reports/testreport.pdf')
+    conn.close()
+    return source_html
+'''
 
 
 @app.route('/gene/<int:gene_id>')
@@ -466,7 +609,7 @@ def search_help():
 
 
 if __name__ == '__main__':
-    app.run(host='SRV023.img.med.uni-tuebingen.de', debug=True)
+    app.run(host='SRV018.img.med.uni-tuebingen.de', debug=True)
 
 
 #@app.route('/browse', methods=['GET', 'POST'])

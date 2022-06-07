@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+
+    <h1 class="bst">{% block title %} Classify variant {{variant_id}} {% endblock %}</h1>
+
+    <form id="classifyForm" class="needs-validation" method="post" >
+
+    <div class="d-flex">
+        <a class="btn btn-primary bsr" href="{{ url_for('user_classify', variant_id = variant_id) }}">user</a>
+        <a class="btn btn-primary" href="{{ url_for('consensus_classify', variant_id = variant_id) }}">consensus</a>
+    </div>
+
+        
+    </form> 
+
+
+
+{% endblock %}
+
+{% block special_scripts %}
+    <script src="/static/js/formValidator.js"></script>
+{% endblock%}

@@ -281,7 +281,7 @@ def insert_missing_meta_information(variant_id, meta_info, is_duplicate, vid, ch
             path_to_report = os.path.join(root, 'imported_consensus_classification_reports', 'default_heredicare_report.pdf')
             gen = pdf_gen(path_to_report)
             gen.generate_default_report(reason="it was imported from HerediCare")
-            evidence_document_base64 = gen.get_base64_encoding()
+            evidence_document_base64 = functions.get_base64_encoding(path_to_report)
             conn.insert_consensus_classification_from_variant_id(variant_id, consensus_classification, comment, date, evidence_document_base64)
             updated_meta_info = True
             log_file.write('Code: ~~' + get_log_code('imported variant classification') + '~~ ' +"SUCCESS: imported new consensus classification from heredicare: " + str(consensus_classification) + ' ' + str(date) + ' ' + str(comment) + ". For variant: " + str(variant_id) + ' ' + chr + ' ' + str(pos) + ' ' + ref + ' ' + alt + ' \n')
