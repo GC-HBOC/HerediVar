@@ -1,0 +1,11 @@
+{% if idToken %}
+<pre>
+{{ idToken  }}
+</pre>
+<a href="/logout">logout</a>
+{% else %}
+<a href="/login">login</a>
+{% endif %}
+
+<a href="{{ url_for('api', _external=True) }}">API</a>
+<a href="{{ url_for('testprotect', _external=True) }}">testprotect</a>
