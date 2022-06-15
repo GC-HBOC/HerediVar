@@ -407,12 +407,9 @@ def variant(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
     
     user_classifications = conn.get_user_classifications(variant_id)
-    if len(user_classifications) == 0:
-        user_classifications = None
 
     heredicare_center_classifications = conn.get_heredicare_center_classifications(variant_id)
-    if len(heredicare_center_classifications) == 0:
-        heredicare_center_classifications = None
+
 
     conn.close()
     return render_template('variant.html', 
@@ -465,6 +462,17 @@ def consensus_classify(variant_id):
     variant_annot_dict = {}
     for annot in variant_annotations:
         variant_annot_dict[annot[0]] = annot[1:len(annot)]
+    
+    literature = conn.get_variant_literature(variant_id)
+    user_classifications = conn.get_user_classifications(variant_id)
+    heredicare_center_classifications = conn.get_heredicare_center_classifications(variant_id)
+
+    clinvar_variant_annotation = conn.get_clinvar_variant_annotation(variant_id)
+    clinvar_submissions = []
+    if clinvar_variant_annotation is not None:
+        clinvar_variant_annotation_id = clinvar_variant_annotation[0]
+        clinvar_submissions = conn.get_clinvar_submissions(clinvar_variant_annotation_id)
+
 
     if request.method == 'POST':
         classification = request.form['class']
@@ -479,9 +487,11 @@ def consensus_classify(variant_id):
 
             buffer = io.BytesIO()
             generator = pdf_gen(buffer)
-            generator.add_title('Report for variant: ' + str(variant_oi[1]) + '-' + str(variant_oi[2]) + '-' + str(variant_oi[3]) + '-' + str(variant_oi[4]))
-            generator.add_variant_info(classification, current_date, comment)
-            generator.add_spacer()
+            generator.add_title('Classification report')
+            v = str(variant_oi[1]) + '-' + str(variant_oi[2]) + '-' + str(variant_oi[3]) + '-' + str(variant_oi[4])
+            generator.add_variant_info(v, classification, current_date, comment)
+            generator.add_subtitle("Relevant scores:")
+            # basic information & scores:
             if 'include_cadd' in request.form:
                 generator.add_relevant_information("CADD scaled: ", variant_annot_dict['cadd_scaled'][4])
             if 'include_revel' in request.form:
@@ -539,12 +549,56 @@ def consensus_classify(variant_id):
                 generator.add_relevant_information("HerediCare cases count: ", variant_annot_dict['heredicare_cases_count'][4])
             if 'include_heredicare_family_count' in request.form:
                 generator.add_relevant_information("Heredicare family count: ", variant_annot_dict['heredicare_family_count'][4])
+            
+            # literature
+            literature_ids = [x.replace('include_literature_', '') for x in request.form.keys() if x.startswith('include_literature')] # get selected literature ids
+            if len(literature_ids) > 0:
+                literature_oi = [str(x[2]) for x in literature if str(x[0]) in literature_ids] # collect relevant information for plotting to pdf
+                generator.add_subtitle("Relevant PubMed IDs:")
+                generator.add_relevant_literature(literature_oi)
+
+
+            # user classifications
+            user_classification_ids = [x.replace('include_user_classification_', '') for x in request.form.keys() if x.startswith('include_user_classification_')] # get selected user classification ids
+            if len(user_classification_ids) > 0:
+                include_user_classifications = True
+                user_classifications_oi = [[x[1], x[3], x[5], x[4]] for x in user_classifications if str(x[0]) in user_classification_ids] # collect relevant information for plotting to pdf
+            else:
+                include_user_classifications = False
                 
+
+            # heredicare center classifications
+            center_classification_ids = [x.replace('include_heredicare_center_classification_', '') for x in request.form.keys() if x.startswith('include_heredicare_center_classification_')] # get selected user classification ids
+            if len(center_classification_ids) > 0:
+                include_center_classifications = True
+                center_classifications_oi = [[x[1], x[3], x[5], x[4]] for x in heredicare_center_classifications if str(x[0]) in center_classification_ids] # collect relevant information for plotting to pdf
+            else:
+                include_center_classifications = False
+
+            # clinvar submissions 
+            clinvar_submission_ids = [x.replace('include_clinvar_', '') for x in request.form.keys() if x.startswith('include_clinvar_')] # get selected user classification ids
+            if len(clinvar_submission_ids) > 0:
+                include_clinvar_submissions = True
+                clinvar_submissions_oi = [[x[2], x[3], x[4], x[5][1], x[6]] for x in clinvar_submissions if str(x[0]) in clinvar_submission_ids] # collect relevant information for plotting to pdf
+            else:
+                include_clinvar_submissions = False
+                
+            
+            if include_user_classifications or include_center_classifications or include_clinvar_submissions:
+                generator.add_subtitle("Relevant classifications:")
+            if include_user_classifications:
+                generator.add_relevant_classifications(user_classifications_oi, ('Class', 'User', 'Date', 'Comment'), [6, 10, 11, 70])
+            if include_center_classifications:
+                generator.add_relevant_classifications(center_classifications_oi, ('Class', 'Center', 'Date', 'Comment'), [6, 10, 11, 70])
+            if include_clinvar_submissions:
+                generator.add_relevant_classifications(clinvar_submissions_oi, ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter'), [30, 30, 20, 20, 30])
+
+
             generator.save_pdf()
 
             buffer.seek(io.SEEK_SET)
             evidence_b64 = functions.buffer_to_base64(buffer)
-            #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/quick_database_access/downloads/consensus_classification_reports/testreport.pdf')
+            functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/quick_database_access/downloads/consensus_classification_reports/testreport.pdf')
 
             #conn.insert_consensus_classification_from_variant_id(variant_id, classification, comment, date = current_date, evidence_document=evidence_b64)
             flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
@@ -552,7 +606,7 @@ def consensus_classify(variant_id):
         return redirect(url_for('consensus_classify', variant_id=variant_id))
 
     conn.close()
-    return render_template('consensus_classify.html', variant_annotations = variant_annot_dict)
+    return render_template('consensus_classify.html', variant_annotations = variant_annot_dict, literature=literature, user_classifications = user_classifications, heredicare_center_classifications=heredicare_center_classifications, clinvar_submissions=clinvar_submissions)
 
 @app.route('/classify/<int:variant_id>/user', methods=['GET', 'POST'])
 def user_classify(variant_id):
