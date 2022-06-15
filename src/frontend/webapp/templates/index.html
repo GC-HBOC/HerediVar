@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1> {% block title %} Welcome to HerediVar {% endblock %} </h1>
+
+<div>
+    <a href="{{url_for('auth.testprotect')}}">testprotect</a>
+    <a href="{{url_for('auth.rightsreq')}}">rightsreq</a>
+    <!--<a href="http://SRV018.img.med.uni-tuebingen.de/realms/HerediVar/protocol/openid-connect/registrations?client_id=flask-frontend&response_type=code&scope=openid email&client_secret=NRLzlQfotGy9W8hkuYFm3T48Bjnti15k"></a>-->
+</div>
+
+</div>
+
+
+{% endblock %}
+
+{% block special_scripts %}
+{% endblock %}
