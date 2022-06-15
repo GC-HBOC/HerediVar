@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1 class="bst"> {% block title %} OOPS... An HTML error occured! {% endblock %} </h1>
+
+<div class="bst">
+
+
+    <div class="bst">
+        Error code:
+        <div class="display-1">{{code}}</div>
+    </div>
+
+    <div class="bst">
+        Description: {{text}}
+    </div>
+    
+
+    
+</div>
+
+</div>
+
+{% endblock %}
+
