@@ -17,6 +17,7 @@ import datetime
 # external programs
 do_phylop = True
 do_spliceai = True
+do_hexplorer = True
 
 # vep dependent
 do_vep = True
@@ -169,6 +170,12 @@ def annotate_spliceai_algorithm(input_vcf_path, output_vcf_path):
     return completed_process.returncode, err_msg
 
 
+def annotate_hexplorer(input_vcf_path, output_vcf_path):
+    command = [paths.ngs_bits_path + "Hexplorer", "-vcf", "-in", input_vcf_path, "-out", output_vcf_path]
+    returncode, err_msg, command_output = functions.execute_command(command, process_name = "hexplorer")
+    return returncode, err_msg
+
+
 
 
 def collect_error_msgs(msg1, msg2):
@@ -250,7 +257,15 @@ if __name__ == '__main__':
             if execution_code_phylop != 0:
                 status = "error"
             err_msgs = collect_error_msgs(err_msgs, err_msg_phylop)
-
+        
+        ## annotate variant with hexplorer splicing scores (Hexplorer score + HBond score)
+        if do_hexplorer:
+            print("annotation hexplorer scores...")
+            execution_code_hexplorer, err_msg_hexplorer = annotate_hexplorer(one_variant_path, variant_annotated_path)
+            update_output(one_variant_path, variant_annotated_path, execution_code_hexplorer)
+            if execution_code_hexplorer != 0:
+                status = "error"
+            err_msgs = collect_error_msgs(err_msgs, err_msg_hexplorer)
 
         # create config file for vcfannotatefromvcf
         print("annotating from vcf resources...")
