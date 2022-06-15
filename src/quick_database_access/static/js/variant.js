@@ -21,13 +21,6 @@ $(document).ready(function()
        $('#reannotate_form').submit();
     });
 
-    ////////// functionality for column filters in tables
-    $(".column-filter").on("keyup", function() {
-        var table = $(this).parents('table').get(0)
-        var index = $(this).parents('th').index()
-        filterTable_one_column($(this).val(), index, table, true)
-    });
-
     //$('.classification-gradient').css({'background': 'linear-gradient(90deg, ' + class5ColorRGB + ' 0%, rgba(170,240,170,1) 20%, rgba(190,250,190,1) 40%, rgba(255,255,255,1) 100%)'});
     //$('.classification-gradient').css({'background': 'linear-gradient(90deg, rgba(149,149,149,0.5) 0%, rgba(195,195,195,0.5) 20%, rgba(232,232,232,0.5) 40%, rgba(255,255,255,1) 100%)'});
     

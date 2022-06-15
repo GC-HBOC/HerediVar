@@ -133,6 +133,13 @@ $(document).ready(function()
     ////////// activate bootstrap tooltips
     $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
 
+    ////////// functionality for column filters in tables
+    $(".column-filter").on("keyup", function() {
+        var table = $(this).parents('table').get(0)
+        var index = $(this).parents('th').index()
+        filterTable_one_column($(this).val(), index, table, true)
+    });
+
 });
 
 

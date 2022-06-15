@@ -4,9 +4,10 @@ $(document).ready(function()
     var dropdowns = $('.expandible-list')
     for (var i = 0; i < dropdowns.length; i++) {
         var dropdown = dropdowns[i]
-        var selected = $(dropdown).children('input').is(':checked');
+        var selected = $(dropdown).is(':checked');
+        console.log(selected)
         if (selected) {
-            var dest = $(dropdown).attr('collapse_link')
+            var dest = $(dropdown).attr('href')
             $(dest).collapse("show");
         }
     }
@@ -14,9 +15,11 @@ $(document).ready(function()
     // disable checkboxes if animation is going on for the expandible lists
     // this prevents that double clicking the checkbox makes collapse and checkbox asynchronous!
     $('.collapse').on('show.bs.collapse hide.bs.collapse', function() {
-        $('.expandible-list').children('input').prop('disabled', true);
+        $('.expandible-list').prop('disabled', true);
     }).on('shown.bs.collapse hidden.bs.collapse', function() {
-        $('.expandible-list').children('input').prop('disabled', false);
+        $('.expandible-list').prop('disabled', false);
     });
+
+    
 
 });
