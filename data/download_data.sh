@@ -335,6 +335,7 @@ tabix -p vcf ARUP_BRCA_2022_04_01.vcf.gz
 
 
 ## download TP53 database (https://tp53.isb-cgc.org/get_tp53data#get_annot)
+: '
 cd $dbs
 mkdir -p TP53_database
 cd TP53_database
@@ -354,6 +355,7 @@ $ngsbits/VcfCheck -in $tp_db.normalized.vcf.gz -ref $genome
 
 
 rm -f $tp_db.vcf
+'
 
 
 
