@@ -1,9 +1,0 @@
-$(document).ready(function(){
-    $("input").focus(function(){
-        $(this).parent().removeClass("was-validated");
-    });
-    $("input").blur(function(){
-        $(this).parent().addClass("was-validated");
-        $(".form-control:valid").parent().removeClass("was-validated");
-    });
-  });

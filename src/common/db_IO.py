@@ -253,12 +253,12 @@ class Connection:
         self.cursor.execute(command)
         self.conn.commit()
 
-    def insert_annotation_request(self, variant_id, user_id): # this inserts only if there is not an annotation request for this variant which is still pending
+    def insert_annotation_request(self, variant_id, username): # this inserts only if there is not an annotation request for this variant which is still pending
         #command = "INSERT INTO annotation_queue (variant_id, status, user_id) VALUES (%s, %s, %s)"
         command = "INSERT INTO annotation_queue (`variant_id`, `user_id`) \
-                    SELECT %s, %s WHERE NOT EXISTS (SELECT * FROM annotation_queue \
+                    SELECT %s, (SELECT id FROM user WHERE username=%s) WHERE NOT EXISTS (SELECT * FROM annotation_queue \
 	                    WHERE `variant_id`=%s AND `status`='pending' LIMIT 1)"
-        self.cursor.execute(command, (variant_id, user_id, variant_id))
+        self.cursor.execute(command, (variant_id, username, variant_id))
         self.conn.commit()
     
     def insert_clinvar_variant_annotation(self, variant_id, variation_id, interpretation, review_status):
@@ -572,18 +572,18 @@ class Connection:
         vids = [x[0] for x in vids]
         return vids
 
-    def insert_consensus_classification_from_vcf(self, chr, pos, ref, alt, consensus_classification, comment, date = "CURDATE()", evidence_document = None):
+    def insert_consensus_classification_from_vcf(self, username, chr, pos, ref, alt, consensus_classification, comment, date = "CURDATE()", evidence_document = None):
         if date != "CURDATE()":
             date = enquote(date)
-        command = "INSERT INTO consensus_classification (variant_id, classification, comment, date, evidence_document) (SELECT id, %s, %s, " + date + ", %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)"
-        self.cursor.execute(command, (consensus_classification, comment, evidence_document.decode(), chr, pos, ref, alt))
+        command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document) (SELECT (SELECT id FROM user WHERE username=%s) id, %s, %s, " + date + ", %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)"
+        self.cursor.execute(command, (username, consensus_classification, comment, evidence_document.decode(), chr, pos, ref, alt))
         self.conn.commit()
     
-    def insert_consensus_classification_from_variant_id(self, variant_id, consensus_classification, comment, date = "CURDATE()", evidence_document = None):
+    def insert_consensus_classification_from_variant_id(self, username, variant_id, consensus_classification, comment, date = "CURDATE()", evidence_document = None):
         if date != "CURDATE()":
             date = enquote(date)
-        command = "INSERT INTO consensus_classification (variant_id, classification, comment, date, evidence_document) VALUES (%s, %s, %s, " + date + ", %s)"
-        self.cursor.execute(command, (variant_id, consensus_classification, comment, evidence_document.decode()))
+        command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document) VALUES ((SELECT id FROM user WHERE username = %s )%s, %s, %s, " + date + ", %s)"
+        self.cursor.execute(command, (username, variant_id, consensus_classification, comment, evidence_document.decode()))
         self.conn.commit()
     
     def insert_heredicare_center_classification(self, variant_id, classification, center_name, comment, date):
@@ -626,20 +626,23 @@ class Connection:
             command = command  + " ORDER BY date DESC LIMIT 1"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
+        print(result)
         return result
     
     def get_user_classifications(self, variant_id):
         command = "SELECT * FROM user_classification WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
+        if len(result) == 0:
+            return None
         result = sorted(result, key=lambda x: functions.convert_none_infinite(x[5]), reverse=True)
         return result
 
-    def insert_user_classification(self, variant_id, classification, user_id, comment, date = "CURDATE()"):
+    def insert_user_classification(self, variant_id, classification, username, comment, date = "CURDATE()"):
         if date != "CURDATE()":
             date = enquote(date)
-        command = "INSERT INTO user_classification (variant_id, classification, user_id, comment, date) VALUES (%s, %s, %s, %s," + date + ")"
-        self.cursor.execute(command, (variant_id, classification, user_id, comment))
+        command = "INSERT INTO user_classification (variant_id, classification, user_id, comment, date) VALUES (%s, %s, (SELECT id FROM user WHERE username=%s), %s," + date + ")"
+        self.cursor.execute(command, (variant_id, classification, username, comment))
         self.conn.commit()
 
     def delete_variant(self, variant_id):
@@ -653,9 +656,9 @@ class Connection:
         res = self.cursor.fetchone()
         return res
 
-    def insert_import_request(self, user_id):
-        command = "INSERT INTO import_queue (user_id) VALUES (%s)"
-        self.cursor.execute(command, (user_id, ))
+    def insert_import_request(self, username):
+        command = "INSERT INTO import_queue (user_id) SELECT id FROM user WHERE username=%s"
+        self.cursor.execute(command, (username, ))
         self.conn.commit()
         command = "SELECT LAST_INSERT_ID()"
         self.cursor.execute(command)
@@ -713,5 +716,16 @@ class Connection:
         command = 'SELECT * FROM heredicare_center_classification WHERE variant_id = %s'
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
+        if len(result) == 0:
+            return None
         result = sorted(result, key=lambda x: functions.convert_none_infinite(x[5]), reverse=True)
         return result
+    
+    def insert_user(self, username, first_name, last_name, affiliation):
+        #command = "INSERT INTO user (username, first_name, last_name, affiliation) \
+        #            SELECT %s WHERE NOT EXISTS (SELECT * FROM user \
+        #                WHERE `username`=%s LIMIT 1)"
+        command = "INSERT INTO user (username, first_name, last_name, affiliation) VALUES (%s, %s, %s, %s) ON DUPLICATE KEY UPDATE first_name=%s, last_name=%s, affiliation=%s"
+        self.cursor.execute(command, (username, first_name, last_name, affiliation, first_name, last_name, affiliation))
+        self.conn.commit()
+
