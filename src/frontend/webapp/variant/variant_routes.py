@@ -145,7 +145,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
         consensus_classification = None
 
     
-    user_classifications = conn.get_user_classifications(variant_id)
+    user_classifications = conn.get_user_classifications(variant_id) # 0user_classification_id,1classification,2variant_id,3user_id,4comment,5date,6user_id,7username,8first_name,9last_name,10affiliation
 
     heredicare_center_classifications = conn.get_heredicare_center_classifications(variant_id)
 

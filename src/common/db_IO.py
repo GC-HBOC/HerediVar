@@ -633,7 +633,8 @@ class Connection:
         return result
     
     def get_user_classifications(self, variant_id):
-        command = "SELECT * FROM user_classification WHERE variant_id = %s"
+        #command = "SELECT * FROM user_classification WHERE variant_id = %s"
+        command = "SELECT * FROM user_classification a INNER JOIN (SELECT * FROM user) b ON a.user_id = b.id WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
         if len(result) == 0:

@@ -341,6 +341,7 @@
                                     <tr>
                                         <th><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">User</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th style="width: 100%;"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                     </tr>
@@ -349,7 +350,8 @@
                                     {% for classification in user_classifications %}
                                     <tr>
                                         <td>{{ classification[1] }}</td>
-                                        <td>{{ classification[3] }}</td>
+                                        <td>{{ classification[8] + ' ' + classification[9] }}</td>
+                                        <td>{{ classification[10] }}</td>
                                         <td style="white-space:nowrap;">{{ classification[5] }}</td>
                                         <td>{{ classification[4] }}</td>
                                     </tr>
