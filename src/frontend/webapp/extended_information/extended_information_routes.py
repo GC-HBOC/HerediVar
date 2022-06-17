@@ -3,6 +3,7 @@ import sys
 from os import path
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 from common.db_IO import Connection
+from ..utils import require_login
 
 
 extended_information_blueprint = Blueprint(
@@ -11,6 +12,7 @@ extended_information_blueprint = Blueprint(
 )
 
 @extended_information_blueprint.route('/gene/<int:gene_id>')
+@require_login
 def gene(gene_id):
     conn = Connection()
     gene_info = conn.get_gene(gene_id)

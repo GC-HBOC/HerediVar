@@ -575,14 +575,18 @@ class Connection:
     def insert_consensus_classification_from_vcf(self, username, chr, pos, ref, alt, consensus_classification, comment, date = "CURDATE()", evidence_document = None):
         if date != "CURDATE()":
             date = enquote(date)
-        command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document) (SELECT (SELECT id FROM user WHERE username=%s) id, %s, %s, " + date + ", %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)"
+        if evidence_document is None:
+            return
+        command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document) (SELECT (SELECT id FROM user WHERE username=%s), id, %s, %s, " + date + ", %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)"
         self.cursor.execute(command, (username, consensus_classification, comment, evidence_document.decode(), chr, pos, ref, alt))
         self.conn.commit()
     
     def insert_consensus_classification_from_variant_id(self, username, variant_id, consensus_classification, comment, date = "CURDATE()", evidence_document = None):
         if date != "CURDATE()":
             date = enquote(date)
-        command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document) VALUES ((SELECT id FROM user WHERE username = %s )%s, %s, %s, " + date + ", %s)"
+        if evidence_document is None:
+            return
+        command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document) VALUES ((SELECT id FROM user WHERE username = %s ), %s, %s, %s, " + date + ", %s)"
         self.cursor.execute(command, (username, variant_id, consensus_classification, comment, evidence_document.decode()))
         self.conn.commit()
     
@@ -626,7 +630,6 @@ class Connection:
             command = command  + " ORDER BY date DESC LIMIT 1"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
-        print(result)
         return result
     
     def get_user_classifications(self, variant_id):

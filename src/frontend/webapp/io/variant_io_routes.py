@@ -7,6 +7,7 @@ from werkzeug.exceptions import abort
 import common.functions as functions
 import annotation_service.fetch_heredicare_variants as heredicare
 from datetime import datetime
+from ..utils import require_permission, require_login
 
 variant_io_blueprint = Blueprint(
     'variant_io',
@@ -14,6 +15,7 @@ variant_io_blueprint = Blueprint(
 )
 
 @variant_io_blueprint.route('/import-variants', methods=('GET', 'POST'))
+@require_permission
 def import_variants():
     conn = Connection()
     most_recent_import_request = conn.get_most_recent_import_request()
@@ -56,6 +58,7 @@ def import_variants():
 
 
 @variant_io_blueprint.route('/import-variants/summary?date=<string:year>-<string:month>-<string:day>-<string:hour>-<string:minute>-<string:second>')
+@require_login
 def import_summary(year, month, day, hour, minute, second):
     logs_folder = path.join(path.dirname(current_app.root_path), current_app.config['LOGS_FOLDER'])
     requested_at = '-'.join([year, month, day, hour, minute, second])

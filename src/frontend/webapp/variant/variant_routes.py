@@ -22,6 +22,7 @@ variant_blueprint = Blueprint(
 
 
 @variant_blueprint.route('/search', methods=['GET', 'POST'])
+@require_login
 def search():
     search_query=''
     if request.method == 'POST':
@@ -43,6 +44,7 @@ def search():
 
 
 @variant_blueprint.route('/create', methods=('GET', 'POST'))
+@require_login
 def create():
     chrs = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
             'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY', 'chrMT']
@@ -92,6 +94,7 @@ def create():
 @variant_blueprint.route('/display/<int:variant_id>', methods=['GET', 'POST'])
 @variant_blueprint.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>', methods=['GET', 'POST']) # alternative url using vcf information
 # example: http://srv023.img.med.uni-tuebingen.de:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http://srv023.img.med.uni-tuebingen.de:5000/display/17
+@require_login
 def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     conn = Connection()
 
@@ -101,7 +104,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     if request.method == 'POST':
         current_annotation_status = conn.get_current_annotation_status(variant_id)
         if current_annotation_status is None or current_annotation_status[4] != 'pending':
-            conn.insert_annotation_request(variant_id, user_id=1) ########!!!! adjust user_id once login is working!
+            conn.insert_annotation_request(variant_id, session.get('user').get('preferred_username'))
             conn.close()
             return redirect(url_for('variant.display', variant_id=variant_id, from_reannotate='True'))
 
@@ -163,11 +166,13 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
 
 @variant_blueprint.route('/classify/<int:variant_id>', methods=['GET', 'POST'])
+@require_login
 def classify(variant_id):
     return render_template('variant/classify.html', variant_id=variant_id)
 
 
 @variant_blueprint.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])
+@require_permission
 def consensus_classify(variant_id):
     conn = Connection()
     variant_annotations = conn.get_recent_annotations(variant_id)
@@ -195,7 +200,7 @@ def consensus_classify(variant_id):
         else:
             variant_oi = get_variant(conn, variant_id)
 
-            current_date = datetime.today().strftime('%Y-%m-%d')
+            current_date = datetime.datetime.today().strftime('%Y-%m-%d')
 
             buffer = io.BytesIO()
             generator = pdf_gen(buffer)
@@ -310,7 +315,7 @@ def consensus_classify(variant_id):
 
             buffer.seek(io.SEEK_SET)
             evidence_b64 = functions.buffer_to_base64(buffer)
-            #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/quick_database_access/downloads/consensus_classification_reports/testreport.pdf')
+            #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/frontend/downloads/consensus_classification_reports/testreport.pdf')
 
             conn.insert_consensus_classification_from_variant_id(session.get('user').get('preferred_username'), variant_id, classification, comment, date = current_date, evidence_document=evidence_b64)
             flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
@@ -321,6 +326,7 @@ def consensus_classify(variant_id):
     return render_template('variant/consensus_classify.html', variant_annotations = variant_annot_dict, literature=literature, user_classifications = user_classifications, heredicare_center_classifications=heredicare_center_classifications, clinvar_submissions=clinvar_submissions)
 
 @variant_blueprint.route('/classify/<int:variant_id>/user', methods=['GET', 'POST'])
+@require_login
 def user_classify(variant_id):
     if request.method == 'POST':
         classification = request.form['class']
