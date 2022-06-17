@@ -310,7 +310,10 @@ def buffer_to_base64(buffer):
     return base64.b64encode(buffer.getvalue())
 
 def base64_to_file(base64_string, path):
-    file_64_decode = base64.b64decode(base64_string) 
+    file_64_decode = decode_base64(base64_string) 
     file_result = open(path, 'wb') 
     file_result.write(file_64_decode)
     file_result.close()
+
+def decode_base64(base64_string):
+    return base64.b64decode(base64_string) 
