@@ -67,7 +67,7 @@ def create():
                         genome_build = genome_build = request.form['genome']
                         was_successful = validate_and_insert_variant(chr, pos, ref, alt, genome_build)
                         if was_successful:
-                            return redirect('variant.create')
+                            return redirect(url_for('variant.create'))
                 except:
                     flash('ERROR: Genomic position is not a valid integer.', 'alert-danger')
 
@@ -84,7 +84,7 @@ def create():
                 else:
                     was_successful = validate_and_insert_variant(chr, pos, ref, alt, 'GRCh38')
                     if was_successful:
-                        return redirect('variant.create')
+                        return redirect(url_for('variant.create'))
 
     return render_template('variant/create.html', chrs=chrs)
 
@@ -304,9 +304,9 @@ def consensus_classify(variant_id):
             if include_user_classifications or include_center_classifications or include_clinvar_submissions:
                 generator.add_subtitle("Relevant classifications:")
             if include_user_classifications:
-                generator.add_relevant_classifications(user_classifications_oi, ('Class', 'User', 'Date', 'Comment'), [6, 10, 11, 55])
+                generator.add_relevant_classifications(user_classifications_oi, ('Class', 'User', 'Date', 'Comment'), [6, 10, 11, 60])
             if include_center_classifications:
-                generator.add_relevant_classifications(center_classifications_oi, ('Class', 'Center', 'Date', 'Comment'), [6, 10, 11, 55])
+                generator.add_relevant_classifications(center_classifications_oi, ('Class', 'Center', 'Date', 'Comment'), [6, 10, 11, 60])
             if include_clinvar_submissions:
                 generator.add_relevant_classifications(clinvar_submissions_oi, ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter'), [12, 30, 20, 20, 25])
 

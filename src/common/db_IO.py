@@ -236,12 +236,14 @@ class Connection:
                                   (chr, pos, ref, alt))
         self.conn.commit()
     
-    def insert_variant(self, chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt):
+    def insert_variant(self, chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, username):
         ref = ref.upper()
         alt = alt.upper()
         self.cursor.execute("INSERT INTO variant (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                          (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt))
         self.conn.commit()
+        variant_id = self.get_variant_id(chr, pos, ref, alt)
+        self.insert_annotation_request(variant_id, username)
     
     def insert_external_variant_id_from_vcf(self, chr, pos, ref, alt, external_id, id_source):
         command = "INSERT INTO variant_ids (variant_id, external_id, id_source) (SELECT id, %s, %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)" % (enquote(external_id), enquote(id_source), enquote(chr), enquote(pos), enquote(ref), enquote(alt))
