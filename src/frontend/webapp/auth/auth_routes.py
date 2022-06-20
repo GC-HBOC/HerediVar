@@ -24,18 +24,6 @@ auth_blueprint = Blueprint(
 )
 
 
-@auth_blueprint.route('/testprotect')
-@require_login
-def testprotect():
-    return 'you need to login to see this'
-    
-
-@auth_blueprint.route('/rightsreq')
-@require_permission
-def rightsreq():
-    return 'This content can only be seen by priviliged users'
-
-
 
 @auth_blueprint.route('/login')
 def login():

@@ -304,11 +304,11 @@ def consensus_classify(variant_id):
             if include_user_classifications or include_center_classifications or include_clinvar_submissions:
                 generator.add_subtitle("Relevant classifications:")
             if include_user_classifications:
-                generator.add_relevant_classifications(user_classifications_oi, ('Class', 'User', 'Date', 'Comment'), [6, 10, 11, 70])
+                generator.add_relevant_classifications(user_classifications_oi, ('Class', 'User', 'Date', 'Comment'), [6, 10, 11, 55])
             if include_center_classifications:
-                generator.add_relevant_classifications(center_classifications_oi, ('Class', 'Center', 'Date', 'Comment'), [6, 10, 11, 70])
+                generator.add_relevant_classifications(center_classifications_oi, ('Class', 'Center', 'Date', 'Comment'), [6, 10, 11, 55])
             if include_clinvar_submissions:
-                generator.add_relevant_classifications(clinvar_submissions_oi, ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter'), [30, 30, 20, 20, 30])
+                generator.add_relevant_classifications(clinvar_submissions_oi, ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter'), [12, 30, 20, 20, 25])
 
 
             generator.save_pdf()

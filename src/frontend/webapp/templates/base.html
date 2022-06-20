@@ -48,7 +48,8 @@
                       {{ session.get('user').get('preferred_username')}}
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown" style="min-width: 1rem;">
-                      <li><a class="dropdown-item" href="#">Profile</a></li>
+                      <li><a class="dropdown-item" href="http://srv018.img.med.uni-tuebingen.de:5050/realms/HerediVar/account/#/personal-info">Profile</a></li>
+                      <li><a class="dropdown-item" href="#">My lists</a></li>
                       <li><a class="dropdown-item" href="#">Feedback</a></li>
                       <li><hr class="dropdown-divider"></li>
                       <li><a class="dropdown-item" href="{{url_for('auth.logout')}}">logout</a></li>
