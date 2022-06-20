@@ -316,4 +316,7 @@ def base64_to_file(base64_string, path):
     file_result.close()
 
 def decode_base64(base64_string):
-    return base64.b64decode(base64_string) 
+    return base64.b64decode(base64_string)
+
+def make_vcf_safe(text):
+    return text.replace(' ', '_').replace(';', ',')
