@@ -13,23 +13,25 @@ log_file_path = ''
 log_file = None
 conn = None
 heredicare_api = None
+username = ''
 
 def get_log_file_path():
     global log_file_path
     return log_file_path
 
-def init(f):
+def init(f, u):
     global log_file_path
     global log_file
     global conn
     global heredicare_api
-    global family_count_dict
-    global cases_count_dict
+    global username
 
     os.environ['NO_PROXY'] = 'portal.img.med.uni-tuebingen.de'
     log_file_path = f #datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S') + '.log' #
     log_file = open(log_file_path, 'w')
     conn = Connection()
+
+    username = u
 
     heredicare_api = heredicare_interface()
 
@@ -72,6 +74,7 @@ def process_new_vids(vids):
     global log_file
     global conn
     global heredicare_api
+    global username
 
     tmp_file_path = tempfile.gettempdir() + "/heredicare_variant_import.vcf"
     tmp_vcfcheck_out_path = tempfile.gettempdir() + "/heredicare_variant_import_vcf_errors.txt"
@@ -130,7 +133,8 @@ def process_new_vids(vids):
         is_duplicate = conn.check_variant_duplicate(new_chr, new_pos, new_ref, new_alt)
         print('is duplicate: ' + str(is_duplicate))
         if not is_duplicate:
-            conn.insert_variant(new_chr, new_pos, new_ref, new_alt, orig_chr, orig_pos, orig_ref, orig_alt)
+
+            conn.insert_variant(new_chr, new_pos, new_ref, new_alt, orig_chr, orig_pos, orig_ref, orig_alt, username)
             log_file.write('Code: ~~' + get_log_code('inserted new variant') + '~~ ' +"SUCCESS: imported variant: " + new_chr + ' ' + str(new_pos) + ' ' + new_ref + ' ' + new_alt + ' \n')
         else:
             log_file.write('Code: ~~' + get_log_code('discovered duplicate') + '~~ ' +"INFO: discovered variant which is already in heredivar but vid is unknown (this is a duplicate): " + new_chr + ' ' + str(new_pos) + ' ' + new_ref + ' ' + new_alt + ' ' + str(vid) + ' \n')
@@ -333,11 +337,11 @@ def get_log_code(log_type):
 
 
 
-def process_all(log_file_path):
+def process_all(log_file_path, username):
     global heredicare_api
     global conn
 
-    init(log_file_path)
+    init(log_file_path, username)
 
     execution_code, vids_heredicare = heredicare_api.get_heredicare_vid_list()
     if execution_code != 0:
