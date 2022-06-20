@@ -33,6 +33,9 @@
                 <span id="tooltip_classify_button" class="d-inline-block ssl" tabindex="0">
                     <a id="classify_button" type="button" class="btn btn-outline-primary" href="{{url_for('variant.classify', variant_id = variant[0])}}">Classify</a>
                 </span>
+                <span id="tooltip_export_button" class="d-inline-block ssl" tabindex="0">
+                    <a id="classify_button" type="button" class="btn btn-outline-primary" href="{{url_for('download.variant', variant_id = variant[0], format='vcf')}}">Export to VCF</a>
+                </span>
             </div>
         </div>
 
