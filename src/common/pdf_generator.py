@@ -28,7 +28,7 @@ class pdf_gen:
         self.col2width = self.width - self.col1width
         self.subtitle_style = ParagraphStyle("subtitle", fontName=self.font, fontSize=13, spaceAfter=5, spaceBefore=15)
         self.title_style = ParagraphStyle("title", fontName=self.font, fontSize=20, spaceAfter=20)
-        self.table_style = [('NOSPLIT', (0,1), (1,2)), ('LINEBELOW', (0, 0), (-1, 0), 1, colors.gray)]
+        self.table_style = [('NOSPLIT', (0,1), (1,2)), ('LINEBELOW', (0, 0), (-1, 0), 1, colors.gray), ('VALIGN', (0, 0), (-1, -1), 'TOP')]
 
 
     def add_title(self, title):
