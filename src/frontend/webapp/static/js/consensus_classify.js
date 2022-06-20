@@ -23,3 +23,12 @@ $(document).ready(function()
     
 
 });
+
+
+function toggle_all(source, select_group) {
+    checkboxes = document.querySelectorAll('input[name^="' + select_group + '"]');
+    //console.log(checkboxes)
+    for(var i=0, n=checkboxes.length;i<n;i++) {
+        checkboxes[i].checked = source.checked;
+    }
+}
