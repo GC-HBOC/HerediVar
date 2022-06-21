@@ -237,3 +237,16 @@ def user_classify(variant_id):
 
     return render_template('variant/user_classify.html')
 
+
+@variant_blueprint.route('/display/<int:variant_id>/consensus_classification_history')
+@require_login
+def consensus_classification_history(variant_id):
+    conn = Connection()
+    consensus_classifications = conn.get_consensus_classification(variant_id)
+    conn.close()
+    most_recent_consensus_classification = [x for x in consensus_classifications if x[6] == 1][0]
+    other_consensus_classifications = [x for x in consensus_classifications if x[6] == 0]
+    if consensus_classifications is None:
+        return redirect(url_for('doc.error', code=str(404), text="No consensus classifications for this variant")) # redirect to error page
+    return render_template('variant/classification_history.html', most_recent_consensus_classification=most_recent_consensus_classification, other_consensus_classifications=other_consensus_classifications)
+

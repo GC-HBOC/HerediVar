@@ -130,6 +130,14 @@ function getCellValue(row, index){
 
 $(document).ready(function()
 {
+    // add default row to all empty tables
+    $(".table").map(function() {
+        var nrows = $(this).find("tbody").find("tr").length
+        if (nrows === 0) {
+            add_default_caption($(this).get(0))
+        }
+    });
+
     ////////// activate bootstrap tooltips
     $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
 
@@ -139,6 +147,39 @@ $(document).ready(function()
         var index = $(this).parents('th').index()
         filterTable_one_column($(this).val(), index, table, true)
     });
+
+    // coloring of consensus classification
+    var consensus_classification = document.getElementById('consensusClassificationDIV').textContent.trim()
+    switch (consensus_classification) {
+        case '5':
+            base_color = class5ColorRGB
+            console.log(base_color)
+            break;
+        case '4':
+            base_color = class4ColorRGB
+            break;
+        case '3':
+            base_color = class3ColorRGB
+            break;
+        case '2':
+            base_color = class2ColorRGB
+            break;
+        case '1':
+            base_color = class1ColorRGB
+            break;
+        default:
+            base_color = noClassRGB
+    }
+    $('.classification-gradient').css({'background-color': base_color});
+    $('#class-label').css({'color': base_color});
+
+    if (["1", "2", "3", "4", "5"].includes(consensus_classification)) {
+        tooltip_text = "This variant has been classified by the VUS task-force with the class " + consensus_classification
+    } else {
+        tooltip_text = "This variant has not been classified by the VUS task-force yet."
+    }
+
+    $('#class-label-tooltip-container').attr('title', tooltip_text);
 
 });
 
