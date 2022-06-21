@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+
+
+    <div class="d-flex">
+        <h1 class="bst">{% block title %} Consensus classification history {% endblock %}</h1>
+        <div class="ms-auto" style="margin-top:2em; margin-right:4em; margin-bottom:1em">
+            {{ macros.render_consensus_classification_label(most_recent_consensus_classification[3]) }}
+        </div>
+    </div>
+
+
+    <div class="card-subcaption">
+        Current consensus classification
+    </div>
+
+    {{ macros.draw_most_recent_consensus_classification(most_recent_consensus_classification) }}
+
+
+    <div class="card-subcaption">
+        Previous consensus classifications
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover" id="historyTable" style="table-layout: auto;">
+            <thead>
+                <tr>
+                    <th><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th>Evidence document</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for classification in other_consensus_classifications %}
+                
+                <tr {% if classification[6] == '1' %}class="classification-gradient"{%endif%}>
+                    <td>{{classification[3]}}</td>
+                    <td style="white-space:nowrap;">{{classification[5]}}</td>
+                    <td style="width:100%">{{ classification[4] }}</td>
+                    <td><a href="{{url_for('download.evidence_document', consensus_classification_id=classification[0]) }}">download</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+{% endblock %}
+
+{% block special_scripts %}
+<script src="/static/js/sortTable.js"></script>
+<script src="/static/js/colors.js"></script>
+{% endblock%}

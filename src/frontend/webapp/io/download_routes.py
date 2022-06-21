@@ -14,19 +14,18 @@ download_blueprint = Blueprint(
 )
 
 # downloads
-@download_blueprint.route('/download_evidence_document/<int:variant_id>')
+@download_blueprint.route('/download_evidence_document/<int:consensus_classification_id>')
 @require_login
-def evidence_document(variant_id):
+def evidence_document(consensus_classification_id):
     conn = Connection()
-    consensus_classification = conn.get_consensus_classification(variant_id, most_recent=True)
+    consensus_classification = conn.get_evidence_document(consensus_classification_id)
     conn.close()
     if consensus_classification is None:
         abort(404)
-    consensus_classification = consensus_classification[0]
-    b_64_report = consensus_classification[6]
+    b_64_report = consensus_classification[0]
 
     #report_folder = path.join(path.dirname(current_app.root_path), current_app.config['CONSENSUS_CLASSIFICATION_REPORT_FOLDER'])
-    report_filename = 'consensus_classification_report_' + str(variant_id) + '.pdf'
+    report_filename = 'consensus_classification_report_' + str(consensus_classification_id) + '.pdf'
     #report_path = path.join(report_folder, report_filename)
     #functions.base64_to_file(base64_string = b_64_report, path = report_path)
 

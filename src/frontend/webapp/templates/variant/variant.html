@@ -39,20 +39,19 @@
             </div>
         </div>
 
-        <div id="class-label" class="ms-auto classiconposition" >
-            <svg id="class-label-tooltip-container" xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor" viewBox="0 0 250 250" style="position: absolute; z-index:1;" data-bs-toggle="tooltip" title="" data-bs-placement="left">
-                <path d="M212.5,172.3c-16.9,31.1-49.8,52.2-87.6,52.2c-54.9,0-99.5-44.6-99.5-99.5c0-54.9,44.6-99.5,99.5-99.5   c38.3,0,71.6,21.8,88.2,53.6h28C222.9,32.8,177.7,0,125,0C56.1,0,0,56.1,0,125c0,68.9,56.1,125,125,125c52.2,0,97-32.2,115.7-77.7   H212.5z"/>
-            </svg>
-            {% if 'consensus_classification' in annotations %}
-                <div id="consensusClassificationDIV" fill="currentColor" style="font-size:5em; line-height: 0.85; position: relative; left: 0.36em; top: 0.15em">
-                    {{ annotations['consensus_classification'][3] }}
-                </div>
-            {% else %}
-                <div id="consensusClassificationDIV" fill="currentColor" style="font-size:5em; line-height: 0.85; position: relative; left: 0.41em; top: 0.15em">
-                    -
-                </div>
-            {% endif %}
+        <!-- consensus classification label  at the top right -->
+        {% if 'consensus_classification' in annotations %}
+            {% set _consensus_class = annotations['consensus_classification'][3] %}
+        {% else %}
+            {% set _consensus_class = '-' %}
+        {% endif %}
+
+        <div class="ms-auto" style="margin-right: 6em; margin-bottom: 1.5em;">
+            {{ macros.render_consensus_classification_label(_consensus_class) }}
         </div>
+        
+
+
     </div>
 </div>
 
@@ -321,18 +320,11 @@
                     <li class="list-group-item card-subcaption">HerediVar classifications</li>
                     <!-- HEREDIVAR -->
                     {% if 'consensus_classification' in annotations %}
-                    <div class="row bsl bsb sst classification-gradient">
-                        <abbr title="Details about the VUS task-force consensus classification.">Consensus&nbsp;classification:</abbr>
-                        <div>
-                            <abbr class="bsl" title="The class itself. Can be 1, 2, 3, 4 or 5 resembling not pathogenic to malignant, respectively."><a class="dashed_underline">class:</a></abbr>&nbsp;{{annotations['consensus_classification'][3]}}
-
-                            <abbr class="bsl" title="More details about the classification."><a class="dashed_underline">comment:</a></abbr>&nbsp;{{annotations['consensus_classification'][4]}}
-
-                            <abbr class="bsl" title="The date when the classification was issued."><a class="dashed_underline">date:</a></abbr>&nbsp;{{annotations['consensus_classification'][5]}}
-
-                            <abbr class="bsl" title="Download the evidence document."><a href="{{url_for('download.evidence_document', variant_id=variant[0]) }}">download evidence</a></abbr>
-                        </div>
+                    <div class="row bsl bsb sst">
+                        {{ macros.draw_most_recent_consensus_classification(annotations['consensus_classification']) }}
+                        <a href="{{ url_for('variant.consensus_classification_history', variant_id=variant[0]) }}">view consensus classification history</a>
                     </div>
+                    
                     {% endif %}
                     <!-- user classification table -->
                     {% if 'user_classifications' in annotations %}

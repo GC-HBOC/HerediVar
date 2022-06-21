@@ -639,14 +639,22 @@ class Connection:
             return result[0]
         return result
 
-    def get_consensus_classification(self, variant_id, most_recent = False): # it is possible to have multiple consensus classifications for the same variant if it is a duplicate in HerediCare and both have a consensus classification
-        command = "SELECT * FROM consensus_classification WHERE variant_id = %s"
+    def get_consensus_classification(self, variant_id, most_recent = False): # it is possible to have multiple consensus classifications
+        command = "SELECT id,user_id,variant_id,classification,comment,date,is_recent FROM consensus_classification WHERE variant_id = %s"
         if most_recent:
             command = command  + " AND is_recent = '1'"
+        else:
+            command = command + " ORDER BY DATE(date) DESC, is_recent DESC"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
         if len(result) == 0:
             return None
+        return result
+    
+    def get_evidence_document(self, consensus_classificatoin_id):
+        command = "SELECT evidence_document FROM consensus_classification WHERE id = %s"
+        self.cursor.execute(command, (consensus_classificatoin_id, ))
+        result = self.cursor.fetchone()
         return result
     
     def get_user_classifications(self, variant_id):

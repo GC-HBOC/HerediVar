@@ -44,11 +44,11 @@ class pdf_gen:
         self.add_spacer()
 
     def add_variant_info(self, variant, classification, date, comment, rsid):
-        tablevalues = [("comment", Paragraph(comment)), ("date", Paragraph(date)), ("class", Paragraph(classification)), ("variant", Paragraph(variant))]
+        tablevalues = [("variant", Paragraph(variant)), ("class", Paragraph(classification)), ("date", Paragraph(date)), ("comment", Paragraph(comment))]
         if rsid is not None:
             rsid = 'rs' + str(rsid)
             tablevalues.append(("rsid", Paragraph(rsid)))
-        tab = Table(tablevalues, hAlign='LEFT')
+        tab = Table(tablevalues, style=[('VALIGN', (0, 0), (-1, -1), 'TOP')], hAlign='LEFT', colWidths=[3*cm, self.width-3*cm])
         self.story.append(tab)
     
     def add_spacer(self):
