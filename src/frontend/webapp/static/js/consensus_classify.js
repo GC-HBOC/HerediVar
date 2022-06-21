@@ -1,6 +1,13 @@
 
 $(document).ready(function()
 {
+    $('#submit-submit').click(function(){
+        $('#submit-button').attr('disabled', true);
+        /* when the submit button in the modal is clicked, submit the form */
+       $('#classifyForm').submit();
+    });
+
+    // not used ATM
     var dropdowns = $('.expandible-list')
     for (var i = 0; i < dropdowns.length; i++) {
         var dropdown = dropdowns[i]
@@ -20,11 +27,11 @@ $(document).ready(function()
         $('.expandible-list').prop('disabled', false);
     });
 
-    
-
 });
 
 
+// not used atm
+// this toggles all checkboxes with specified selecT_group prefix in their name attribute
 function toggle_all(source, select_group) {
     checkboxes = document.querySelectorAll('input[name^="' + select_group + '"]');
     //console.log(checkboxes)

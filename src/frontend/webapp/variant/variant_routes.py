@@ -142,7 +142,6 @@ def classify(variant_id):
 @require_permission
 def consensus_classify(variant_id):
 
-
     if request.method == 'POST':
         classification = request.form['class']
         comment = request.form['comment']
@@ -215,8 +214,14 @@ def consensus_classify(variant_id):
             flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
             conn.close()
         return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
-
-    return render_template('variant/consensus_classify.html')
+    
+    conn = Connection()
+    if conn.get_consensus_classification(variant_id, most_recent=True) is not None:
+        has_consensus = True
+    else:
+        has_consensus = False
+    conn.close()
+    return render_template('variant/consensus_classify.html', has_consensus=has_consensus)
 
 @variant_blueprint.route('/classify/<int:variant_id>/user', methods=['GET', 'POST'])
 @require_login
