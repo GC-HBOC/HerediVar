@@ -152,5 +152,3 @@ def preprocess_search_query(query):
 
 
 
-def get_all_variant_annotations(variant_id):
-    pass

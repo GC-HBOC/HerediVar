@@ -19,16 +19,18 @@ class pdf_gen:
             self.y = y
 
     def __init__(self, buffer):
-        self.doc = SimpleDocTemplate(buffer, pagesize=A4)
+        self.doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=1*cm, leftMargin=1*cm, topMargin=1*cm, bottomMargin=1*cm)
         self.font = "Times-Roman"
         self.story = []
         self.width = self.doc.width
         self.height = self.doc.height
         self.col1width = 5 * cm
         self.col2width = self.width - self.col1width
-        self.subtitle_style = ParagraphStyle("subtitle", fontName=self.font, fontSize=13, spaceAfter=5, spaceBefore=15)
-        self.title_style = ParagraphStyle("title", fontName=self.font, fontSize=20, spaceAfter=20)
+        self.subtitle_style = ParagraphStyle("subtitle", fontName=self.font, fontSize=15, spaceAfter=5, spaceBefore=15)
+        self.title_style = ParagraphStyle("title", fontName=self.font, fontSize=17, spaceAfter=30)
+        self.table_text_style = ParagraphStyle("table_text", fontName=self.font, fontSize=8)
         self.table_style = [('NOSPLIT', (0,1), (1,2)), ('LINEBELOW', (0, 0), (-1, 0), 1, colors.gray), ('VALIGN', (0, 0), (-1, -1), 'TOP')]
+        self.table_text_head_style = ParagraphStyle("table_head", fontName=self.font, fontSize = 10)
 
 
     def add_title(self, title):
@@ -41,8 +43,12 @@ class pdf_gen:
         self.story.append(Paragraph(subtitle, self.subtitle_style))
         self.add_spacer()
 
-    def add_variant_info(self, variant, classification, date, comment):
-        tab = Table([("comment", comment), ("date", date), ("class", classification), ("variant", variant)], hAlign='LEFT')
+    def add_variant_info(self, variant, classification, date, comment, rsid):
+        tablevalues = [("comment", Paragraph(comment)), ("date", Paragraph(date)), ("class", Paragraph(classification)), ("variant", Paragraph(variant))]
+        if rsid is not None:
+            rsid = 'rs' + str(rsid)
+            tablevalues.append(("rsid", Paragraph(rsid)))
+        tab = Table(tablevalues, hAlign='LEFT')
         self.story.append(tab)
     
     def add_spacer(self):
@@ -52,7 +58,7 @@ class pdf_gen:
         self.story.append(Spacer(self.width, 0.3*cm))
     
     def add_relevant_information(self, title, value):
-        tab = Table([(title, value)], colWidths=[self.col1width, self.col2width], hAlign='LEFT')
+        tab = Table([(title, Paragraph(value))], colWidths=[self.col1width, self.col2width], hAlign='LEFT')
         self.story.append(tab)
     
     def add_relevant_literature(self, literature_oi):
@@ -60,11 +66,17 @@ class pdf_gen:
         self.story.append(Paragraph(pmids))
     
     def add_relevant_classifications(self, classifications, headers, colwidths): # colwidths in number of chars it is more like a maximal colwidth
-        classifications = [[self.prepare_text(str(y), colwidth)[0] for y, colwidth in zip(x, colwidths)] for x in classifications]
-        classifications.append(list(headers))
-        classifications.reverse()
-        tab = Table(classifications, hAlign='LEFT', style=self.table_style ,repeatRows=1)
+        #classifications = [[self.prepare_text(str(y), colwidth)[0] for y, colwidth in zip(x, colwidths)] for x in classifications]
+        classifications = [[Paragraph(str(y), self.table_text_style) for y in x] for x in classifications]
+        colwidths = [x*cm for x in colwidths]
+
+        classifications.insert(0,[Paragraph(str(x), self.table_text_head_style) for x in headers])
+        tab = Table(classifications, hAlign='LEFT', style=self.table_style, repeatRows=1, colWidths=colwidths)
         self.story.append(tab)
+
+    
+    def add_text(self, text):
+        self.story.append(Paragraph(text, ParagraphStyle("basic", spaceBefore=0.2*cm, spaceAfter=0.2*cm)))
     
     
     def prepare_text(self, text, n=75):
