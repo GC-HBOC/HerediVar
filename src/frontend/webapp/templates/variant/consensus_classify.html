@@ -35,7 +35,11 @@
             </div>
 
             <div class="form-group sst bsb">
-                <button type="submit" class="btn btn-primary">Submit</button>
+                {% if not has_consensus %}
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                {% else %}
+                    <button id="submit-button" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#submit-modal">Submit</button>
+                {% endif %}
             </div>
 
 
@@ -43,6 +47,25 @@
         
     </form> 
 
+<!-- modal -->
+<div class="modal fade" id="submit-modal" tabindex="-1" aria-labelledby="submit-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="submit-modal-label">WARNING</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                There is already a consensus classification for this variant. Submitting a new consensus classification will invalidate the previous one. <br>
+                A history of all consensus classifications can be accessed through the variant display page.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="submit-submit" type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 {% endblock %}
