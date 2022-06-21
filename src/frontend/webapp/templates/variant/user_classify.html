@@ -25,10 +25,9 @@
 
             <div class="form-group sst">
                 <label for="comment" class="form-label">Comment</label>
-                <input type="text" name="comment"
+                <textarea type="text" name="comment"
                        placeholder="comment" class="form-control"
-                       value="{{ request.form['comment'] }}" id="comment" maxlength="2500" required>
-                </input>
+                       value="{{ request.form['comment'] }}" id="comment" maxlength="2500" required></textarea>
                 <div class="invalid-feedback">
                     Please provide a comment describing more about the reasons for this classification.
                 </div>

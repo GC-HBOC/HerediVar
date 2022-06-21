@@ -43,9 +43,9 @@
             <svg id="class-label-tooltip-container" xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor" viewBox="0 0 250 250" style="position: absolute; z-index:1;" data-bs-toggle="tooltip" title="" data-bs-placement="left">
                 <path d="M212.5,172.3c-16.9,31.1-49.8,52.2-87.6,52.2c-54.9,0-99.5-44.6-99.5-99.5c0-54.9,44.6-99.5,99.5-99.5   c38.3,0,71.6,21.8,88.2,53.6h28C222.9,32.8,177.7,0,125,0C56.1,0,0,56.1,0,125c0,68.9,56.1,125,125,125c52.2,0,97-32.2,115.7-77.7   H212.5z"/>
             </svg>
-            {% if consensus_classification is not none %}
+            {% if 'consensus_classification' in annotations %}
                 <div id="consensusClassificationDIV" fill="currentColor" style="font-size:5em; line-height: 0.85; position: relative; left: 0.36em; top: 0.15em">
-                    {{ consensus_classification[3] }}
+                    {{ annotations['consensus_classification'][3] }}
                 </div>
             {% else %}
                 <div id="consensusClassificationDIV" fill="currentColor" style="font-size:5em; line-height: 0.85; position: relative; left: 0.41em; top: 0.15em">
@@ -93,8 +93,8 @@
                     <div class="row align-items-start">
                         <div class="col li-label"><abbr title="RSID from dbSNP">RSID</abbr></div>
                         <div class="col li-info">
-                            {% if 'rsid' in variant_annotations %}
-                                <external-link href="https://www.ncbi.nlm.nih.gov/snp/rs{{variant_annotations['rsid'][4]}}">rs{{variant_annotations['rsid'][4]}}</external-link>
+                            {% if 'rsid' in annotations %}
+                                <external-link href="https://www.ncbi.nlm.nih.gov/snp/rs{{annotations['rsid'][4]}}">rs{{annotations['rsid'][4]}}</external-link>
                             {% else %}
                                 -
                             {% endif %}
@@ -112,141 +112,141 @@
                 <h4 class="card-title">Variant information</h4>
                 <p class="card-text">
     
-    {% if 'cadd_scaled' in variant_annotations or 'revel' in variant_annotations or 'phylop_100way' in variant_annotations %}
+    {% if 'cadd_scaled' in annotations or 'revel' in annotations or 'phylop_100way' in annotations %}
     <div class="row align-items-start">
         <div class="col-sm-4 li-label"><abbr title="Pathogeneity and other scores">Change&nbsp;tolerance</abbr></div>
         <div class="col li-info">
-            {% if 'cadd_scaled' in variant_annotations %}
+            {% if 'cadd_scaled' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['cadd_scaled'][0]}}"><a class="dashed_underline">CADD:</a></abbr>&nbsp;{{variant_annotations['cadd_scaled'][4]}}
+                    <abbr title="{{annotations['cadd_scaled'][0]}}"><a class="dashed_underline">CADD:</a></abbr>&nbsp;{{annotations['cadd_scaled'][4]}}
             </div>
             {% endif %}
-            {% if 'revel' in variant_annotations %}
+            {% if 'revel' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['revel'][0]}}"><a class="dashed_underline">REVEL:</a></abbr>&nbsp;{{variant_annotations['revel'][4]}}
+                    <abbr title="{{annotations['revel'][0]}}"><a class="dashed_underline">REVEL:</a></abbr>&nbsp;{{annotations['revel'][4]}}
             </div>
             {% endif %}
-            {% if 'phylop_100way' in variant_annotations %}
+            {% if 'phylop_100way' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['phylop_100way'][0]}}"><a class="dashed_underline">phyloP:</a></abbr>&nbsp;{{variant_annotations['phylop_100way'][4]}}
+                    <abbr title="{{annotations['phylop_100way'][0]}}"><a class="dashed_underline">phyloP:</a></abbr>&nbsp;{{annotations['phylop_100way'][4]}}
             </div>
             {% endif %}
         </div>
     </div>
     {% endif %}
-    {% if 'spliceai_max_delta' in variant_annotations or 'spliceai_details' in variant_annotations or 'maxentscan_ref' in variant_annotations or 'maxentscan_alt' in variant_annotations %}
+    {% if 'spliceai_max_delta' in annotations or 'spliceai_details' in annotations or 'maxentscan_ref' in annotations or 'maxentscan_alt' in annotations %}
     <div class="row align-items-start">
         <div class="col-sm-4 li-label"><abbr title="Various splicing related scores">Splicing</abbr></div>
         <div class="col li-info">
-            {% if 'spliceai_max_delta' in variant_annotations %}
+            {% if 'spliceai_max_delta' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['spliceai_max_delta'][0]}}"><a class="dashed_underline">spliceAI max:</a></abbr>&nbsp;{{variant_annotations['spliceai_max_delta'][4]}}
+                    <abbr title="{{annotations['spliceai_max_delta'][0]}}"><a class="dashed_underline">spliceAI max:</a></abbr>&nbsp;{{annotations['spliceai_max_delta'][4]}}
             </div>
             {% endif %}
-            {% if 'spliceai_details' in variant_annotations %}
+            {% if 'spliceai_details' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['spliceai_details'][0]}}"><a class="dashed_underline">spliceAI details:</a></abbr>&nbsp;{{variant_annotations['spliceai_details'][4]}}
+                    <abbr title="{{annotations['spliceai_details'][0]}}"><a class="dashed_underline">spliceAI details:</a></abbr>&nbsp;{{annotations['spliceai_details'][4]}}
             </div>
             {% endif %}
-            {% if 'maxentscan_ref' in variant_annotations %}
+            {% if 'maxentscan_ref' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['maxentscan_ref'][0]}}"><a class="dashed_underline">maxentscan ref:</a></abbr>&nbsp;{{variant_annotations['maxentscan_ref'][4]}}
+                    <abbr title="{{annotations['maxentscan_ref'][0]}}"><a class="dashed_underline">maxentscan ref:</a></abbr>&nbsp;{{annotations['maxentscan_ref'][4]}}
             </div>
             {% endif %}
-            {% if 'maxentscan_alt' in variant_annotations %}
+            {% if 'maxentscan_alt' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['maxentscan_alt'][0]}}"><a class="dashed_underline">maxentscan alt:</a></abbr>&nbsp;{{variant_annotations['maxentscan_alt'][4]}}
+                    <abbr title="{{annotations['maxentscan_alt'][0]}}"><a class="dashed_underline">maxentscan alt:</a></abbr>&nbsp;{{annotations['maxentscan_alt'][4]}}
             </div>
             {% endif %}
         </div>
     </div>
     {% endif %}
-    {% if 'gnomad_ac' in variant_annotations or 'gnomad_af' in variant_annotations or 'gnomad_popmax' in variant_annotations or 'gnomad_hom' in variant_annotations or 'gnomad_het' in variant_annotations or 'gnomad_hemi' in variant_annotations %}
+    {% if 'gnomad_ac' in annotations or 'gnomad_af' in annotations or 'gnomad_popmax' in annotations or 'gnomad_hom' in annotations or 'gnomad_het' in annotations or 'gnomad_hemi' in annotations %}
     <div class="row align-items-start">
         <div class="col-sm-4 li-label"><abbr title="gnomAD scores">gnomAD</abbr></div>
         <div class="col li-info">
-            {% if 'gnomad_ac' in variant_annotations %}
+            {% if 'gnomad_ac' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['gnomad_ac'][0]}}"><a class="dashed_underline">AC:</a></abbr>&nbsp;{{variant_annotations['gnomad_ac'][4]}}
+                    <abbr title="{{annotations['gnomad_ac'][0]}}"><a class="dashed_underline">AC:</a></abbr>&nbsp;{{annotations['gnomad_ac'][4]}}
             </div>
             {% endif %}
-            {% if 'gnomad_af' in variant_annotations %}
+            {% if 'gnomad_af' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['gnomad_af'][0]}}"><a class="dashed_underline">AF:</a></abbr>&nbsp;{{variant_annotations['gnomad_af'][4]}}
+                    <abbr title="{{annotations['gnomad_af'][0]}}"><a class="dashed_underline">AF:</a></abbr>&nbsp;{{annotations['gnomad_af'][4]}}
             </div>
             {% endif %}
-            {% if 'gnomad_popmax' in variant_annotations %}
+            {% if 'gnomad_popmax' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['gnomad_popmax'][0]}}"><a class="dashed_underline">popmax:</a></abbr>&nbsp;{{variant_annotations['gnomad_popmax'][4]}}
+                    <abbr title="{{annotations['gnomad_popmax'][0]}}"><a class="dashed_underline">popmax:</a></abbr>&nbsp;{{annotations['gnomad_popmax'][4]}}
             </div>
             {% endif %}
-            {% if 'gnomad_hom' in variant_annotations %}
+            {% if 'gnomad_hom' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['gnomad_hom'][0]}}"><a class="dashed_underline">#hom:</a></abbr>&nbsp;{{variant_annotations['gnomad_hom'][4]}}
+                    <abbr title="{{annotations['gnomad_hom'][0]}}"><a class="dashed_underline">#hom:</a></abbr>&nbsp;{{annotations['gnomad_hom'][4]}}
             </div>
             {% endif %}
-            {% if 'gnomad_het' in variant_annotations %}
+            {% if 'gnomad_het' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['gnomad_het'][0]}}"><a class="dashed_underline">#het:</a></abbr>&nbsp;{{variant_annotations['gnomad_het'][4]}}
+                    <abbr title="{{annotations['gnomad_het'][0]}}"><a class="dashed_underline">#het:</a></abbr>&nbsp;{{annotations['gnomad_het'][4]}}
             </div>
             {% endif %}
-            {% if 'gnomad_hemi' in variant_annotations %}
+            {% if 'gnomad_hemi' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['gnomad_hemi'][0]}}"><a class="dashed_underline">#hemi:</a></abbr>&nbsp;{{variant_annotations['gnomad_hemi'][4]}}
+                    <abbr title="{{annotations['gnomad_hemi'][0]}}"><a class="dashed_underline">#hemi:</a></abbr>&nbsp;{{annotations['gnomad_hemi'][4]}}
             </div>
             {% endif %}
         </div>
     </div>
     {% endif %}
-    {% if 'flossies_num_afr' in variant_annotations or 'flossies_num_eur' in variant_annotations %}
+    {% if 'flossies_num_afr' in annotations or 'flossies_num_eur' in annotations %}
     <div class="row align-items-start">
         <div class="col-sm-4 li-label"><abbr title="Number of individuals from the FLOSSIES database">FLOSSIES</abbr></div>
         <div class="col li-info">
-            {% if 'flossies_num_afr' in variant_annotations %}
+            {% if 'flossies_num_afr' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['flossies_num_afr'][0]}}"><a class="dashed_underline">#afr:</a></abbr>&nbsp;{{variant_annotations['flossies_num_afr'][4]}}
+                    <abbr title="{{annotations['flossies_num_afr'][0]}}"><a class="dashed_underline">#afr:</a></abbr>&nbsp;{{annotations['flossies_num_afr'][4]}}
             </div>
             {% endif %}
-            {% if 'flossies_num_eur' in variant_annotations %}
+            {% if 'flossies_num_eur' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['flossies_num_eur'][0]}}"><a class="dashed_underline">#eur:</a></abbr>&nbsp;{{variant_annotations['flossies_num_eur'][4]}}
+                    <abbr title="{{annotations['flossies_num_eur'][0]}}"><a class="dashed_underline">#eur:</a></abbr>&nbsp;{{annotations['flossies_num_eur'][4]}}
             </div>
             {% endif %}
         </div>
     </div>
     {% endif %}
-    {% if 'tp53db_class' in variant_annotations or 'tp53db_bayes_del' in variant_annotations or 'tp53db_DNE_LOF_class' in variant_annotations or 'tp53db_DNE_class' in variant_annotations or 'tp53db_domain_function' in variant_annotations or 'tp53db_transactivation_class' in variant_annotations%}
+    {% if 'tp53db_class' in annotations or 'tp53db_bayes_del' in annotations or 'tp53db_DNE_LOF_class' in annotations or 'tp53db_DNE_class' in annotations or 'tp53db_domain_function' in annotations or 'tp53db_transactivation_class' in annotations%}
     <div class="row align-items-start">
         <div class="col-sm-4 li-label"><abbr title="Information from the TP53 database. This is only visible for variants within the TP53 gene.">TP53 database</abbr></div>
         <div class="col li-info">
             <div class="li-element">
-                {% if 'tp53db_class' in variant_annotations %}
-                    <abbr title="{{variant_annotations['tp53db_class'][0]}}"><a class="dashed_underline">class:</a></abbr>&nbsp;{{variant_annotations['tp53db_class'][4]}}
+                {% if 'tp53db_class' in annotations %}
+                    <abbr title="{{annotations['tp53db_class'][0]}}"><a class="dashed_underline">class:</a></abbr>&nbsp;{{annotations['tp53db_class'][4]}}
                 {% endif %}
             </div>
             <div class="li-element">
-                {% if 'tp53db_bayes_del' in variant_annotations %}
-                    <abbr title="{{variant_annotations['tp53db_bayes_del'][0]}}"><a class="dashed_underline">Bayes Del:</a></abbr>&nbsp;{{variant_annotations['tp53db_bayes_del'][4]}}
+                {% if 'tp53db_bayes_del' in annotations %}
+                    <abbr title="{{annotations['tp53db_bayes_del'][0]}}"><a class="dashed_underline">Bayes Del:</a></abbr>&nbsp;{{annotations['tp53db_bayes_del'][4]}}
                 {% endif %}
             </div>
             <div class="li-element">
-                {% if 'tp53db_DNE_LOF_class' in variant_annotations %}
-                    <abbr title="{{variant_annotations['tp53db_DNE_LOF_class'][0]}}"><a class="dashed_underline">DNE LOF class:</a></abbr>&nbsp;{{variant_annotations['tp53db_DNE_LOF_class'][4]}}
+                {% if 'tp53db_DNE_LOF_class' in annotations %}
+                    <abbr title="{{annotations['tp53db_DNE_LOF_class'][0]}}"><a class="dashed_underline">DNE LOF class:</a></abbr>&nbsp;{{annotations['tp53db_DNE_LOF_class'][4]}}
                 {% endif %}
             </div>
             <div class="li-element">
-                {% if 'tp53db_DNE_class' in variant_annotations %}
-                    <abbr title="{{variant_annotations['tp53db_DNE_class'][0]}}"><a class="dashed_underline">DNE class:</a></abbr>&nbsp;{{variant_annotations['tp53db_DNE_class'][4]}}
+                {% if 'tp53db_DNE_class' in annotations %}
+                    <abbr title="{{annotations['tp53db_DNE_class'][0]}}"><a class="dashed_underline">DNE class:</a></abbr>&nbsp;{{annotations['tp53db_DNE_class'][4]}}
                 {% endif %}
             </div>
             <div class="li-element">
-                {% if 'tp53db_domain_function' in variant_annotations %}
-                    <abbr title="{{variant_annotations['tp53db_domain_function'][0]}}"><a class="dashed_underline">domain function:</a></abbr>&nbsp;{{variant_annotations['tp53db_domain_function'][4]}}
+                {% if 'tp53db_domain_function' in annotations %}
+                    <abbr title="{{annotations['tp53db_domain_function'][0]}}"><a class="dashed_underline">domain function:</a></abbr>&nbsp;{{annotations['tp53db_domain_function'][4]}}
                 {% endif %}
             </div>
             <div class="li-element">
-                {% if 'tp53db_transactivation_class' in variant_annotations %}
-                    <abbr title="{{variant_annotations['tp53db_transactivation_class'][0]}}"><a class="dashed_underline">class:</a></abbr>&nbsp;{{variant_annotations['tp53db_transactivation_class'][4]}}
+                {% if 'tp53db_transactivation_class' in annotations %}
+                    <abbr title="{{annotations['tp53db_transactivation_class'][0]}}"><a class="dashed_underline">class:</a></abbr>&nbsp;{{annotations['tp53db_transactivation_class'][4]}}
                 {% endif %}
             </div>
             <div class="li-element">
@@ -255,29 +255,29 @@
         </div>
     </div>
     {% endif %}
-    {% if 'cancerhotspots_cancertypes' in variant_annotations or 'cancerhotspots_ac' in variant_annotations or 'cancerhotspots_af' in variant_annotations %}
+    {% if 'cancerhotspots_cancertypes' in annotations or 'cancerhotspots_ac' in annotations or 'cancerhotspots_af' in annotations %}
     <div class="row align-items-start">
         <div class="col-sm-4 li-label"><abbr title="Information from the Cancerhotspots website">Cancerhotspots</abbr></div>
         <div class="col li-info">
-            {% if 'cancerhotspots_cancertypes' in variant_annotations %}
+            {% if 'cancerhotspots_cancertypes' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['cancerhotspots_cancertypes'][0]}}"><a class="dashed_underline">hotspots:</a></abbr>&nbsp;{{variant_annotations['cancerhotspots_cancertypes'][4]}}
+                    <abbr title="{{annotations['cancerhotspots_cancertypes'][0]}}"><a class="dashed_underline">hotspots:</a></abbr>&nbsp;{{annotations['cancerhotspots_cancertypes'][4]}}
             </div>
             {% endif %}
-            {% if 'cancerhotspots_ac' in variant_annotations %}
+            {% if 'cancerhotspots_ac' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['cancerhotspots_ac'][0]}}"><a class="dashed_underline">AC:</a></abbr>&nbsp;{{variant_annotations['cancerhotspots_ac'][4]}}
+                    <abbr title="{{annotations['cancerhotspots_ac'][0]}}"><a class="dashed_underline">AC:</a></abbr>&nbsp;{{annotations['cancerhotspots_ac'][4]}}
             </div>
             {% endif %}
-            {% if 'cancerhotspots_af' in variant_annotations %}
+            {% if 'cancerhotspots_af' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['cancerhotspots_af'][0]}}"><a class="dashed_underline">AF:</a></abbr>&nbsp;{{variant_annotations['cancerhotspots_af'][4]}}
+                    <abbr title="{{annotations['cancerhotspots_af'][0]}}"><a class="dashed_underline">AF:</a></abbr>&nbsp;{{annotations['cancerhotspots_af'][4]}}
             </div>
             {% endif %}
         </div>
     </div>
     {% endif %}
-    {% if 'heredicare_cases_count' in variant_annotations or 'heredicare_family_count' in variant_annotations %}
+    {% if 'heredicare_cases_count' in annotations or 'heredicare_family_count' in annotations %}
     <div class="row align-items-start">
         <div class="col-sm-4 li-label">
             {% if has_multiple_vids %}
@@ -290,14 +290,14 @@
             <abbr title="Information from HerediCare">HerediCare</abbr>
         </div>
         <div class="col li-info">
-            {% if 'heredicare_cases_count' in variant_annotations %}
+            {% if 'heredicare_cases_count' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['heredicare_cases_count'][0]}}"><a class="dashed_underline">cases count:</a></abbr>&nbsp;{{variant_annotations['heredicare_cases_count'][4]}}
+                    <abbr title="{{annotations['heredicare_cases_count'][0]}}"><a class="dashed_underline">cases count:</a></abbr>&nbsp;{{annotations['heredicare_cases_count'][4]}}
             </div>
             {% endif %}
-            {% if 'heredicare_family_count' in variant_annotations %}
+            {% if 'heredicare_family_count' in annotations %}
             <div class="li-element">
-                    <abbr title="{{variant_annotations['heredicare_family_count'][0]}}"><a class="dashed_underline">family count:</a></abbr>&nbsp;{{variant_annotations['heredicare_family_count'][4]}}
+                    <abbr title="{{annotations['heredicare_family_count'][0]}}"><a class="dashed_underline">family count:</a></abbr>&nbsp;{{annotations['heredicare_family_count'][4]}}
             </div>
             {% endif %}
         </div>
@@ -317,25 +317,25 @@
             <div class="card-body">
                 <ul class="list-group list-group-flush">
                     
-                    {% if consensus_classification is not none or user_classifications is not none %}
+                    {% if 'consensus_classification' in annotations or 'user_classifications' in annotations %}
                     <li class="list-group-item card-subcaption">HerediVar classifications</li>
                     <!-- HEREDIVAR -->
-                    {% if consensus_classification is not none%}
+                    {% if 'consensus_classification' in annotations %}
                     <div class="row bsl bsb sst classification-gradient">
                         <abbr title="Details about the VUS task-force consensus classification.">Consensus&nbsp;classification:</abbr>
                         <div>
-                            <abbr class="bsl" title="The class itself. Can be 1, 2, 3, 4 or 5 resembling not pathogenic to malignant, respectively."><a class="dashed_underline">class:</a></abbr>&nbsp;{{consensus_classification[3]}}
+                            <abbr class="bsl" title="The class itself. Can be 1, 2, 3, 4 or 5 resembling not pathogenic to malignant, respectively."><a class="dashed_underline">class:</a></abbr>&nbsp;{{annotations['consensus_classification'][3]}}
 
-                            <abbr class="bsl" title="More details about the classification."><a class="dashed_underline">comment:</a></abbr>&nbsp;{{consensus_classification[4]}}
+                            <abbr class="bsl" title="More details about the classification."><a class="dashed_underline">comment:</a></abbr>&nbsp;{{annotations['consensus_classification'][4]}}
 
-                            <abbr class="bsl" title="The date when the classification was issued."><a class="dashed_underline">date:</a></abbr>&nbsp;{{consensus_classification[5]}}
+                            <abbr class="bsl" title="The date when the classification was issued."><a class="dashed_underline">date:</a></abbr>&nbsp;{{annotations['consensus_classification'][5]}}
 
-                            <abbr class="bsl" title="Download the evidence document."><a href="{{url_for('download.evidence_document', variant_id=consensus_classification[2])}}">download evidence</a></abbr>
+                            <abbr class="bsl" title="Download the evidence document."><a href="{{url_for('download.evidence_document', variant_id=variant[0]) }}">download evidence</a></abbr>
                         </div>
                     </div>
                     {% endif %}
                     <!-- user classification table -->
-                    {% if user_classifications is not none %}
+                    {% if 'user_classifications' in annotations %}
                     <div class="row bsl">
                         <abbr title="Details about previous user classifications">User&nbsp;classifications:</abbr>
                         <div class="table-responsive">
@@ -350,7 +350,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for classification in user_classifications %}
+                                    {% for classification in annotations['user_classifications'] %}
                                     <tr>
                                         <td>{{ classification[1] }}</td>
                                         <td>{{ classification[8] + ' ' + classification[9] }}</td>
@@ -366,7 +366,7 @@
                     {% endif %}
                     {% endif %}
 
-                    {% if heredicare_center_classifications is not none %}
+                    {% if 'heredicare_center_classifications' in annotations %}
                     <li class="list-group-item card-subcaption">HerediCare center classifications</li>
                     <div class="row bst bsl">
                         <div class="table-responsive">
@@ -380,7 +380,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for classification in heredicare_center_classifications %}
+                                    {% for classification in annotations['heredicare_center_classifications'] %}
                                     <tr>
                                         <td>{{ classification[1] }}</td>
                                         <td>{{ classification[3] }}</td>
@@ -394,20 +394,20 @@
                     </div>
                     {% endif %}
 
-                    {% if 'clinvar_variant_annotation' in variant_annotations %}
+                    {% if 'clinvar_variant_annotation' in annotations %}
                     <li class="list-group-item card-subcaption">ClinVar classifications</li>
                     <!-- CLINVAR -->
                     <div class="row bsl sst bsb">
                         <div>
-                            <abbr title="The review status from ClinVar"><a class="dashed_underline">review status:</a></abbr>&nbsp;{{variant_annotations['clinvar_variant_annotation'][4]}}
+                            <abbr title="The review status from ClinVar"><a class="dashed_underline">review status:</a></abbr>&nbsp;{{annotations['clinvar_variant_annotation'][4]}}
                         </div>
 
                         <div>
-                            <abbr title="A summary of the ClinVar interpretations. The numbers in brackets display the number of ClinVar submissions reporting the specific type of interpretation."><a class="dashed_underline">interpretation summary:</a></abbr>&nbsp;{{variant_annotations['clinvar_variant_annotation'][3]}}
+                            <abbr title="A summary of the ClinVar interpretations. The numbers in brackets display the number of ClinVar submissions reporting the specific type of interpretation."><a class="dashed_underline">interpretation summary:</a></abbr>&nbsp;{{annotations['clinvar_variant_annotation'][3]}}
                         </div>
                     </div>
                     <!-- clinvar submission table -->
-                    {% if clinvar_submissions|length > 0 %}
+                    {% if 'clinvar_submissions' in annotations %}
                     <div class="row bsl">
                         <div class="table-responsive">
                             <table class="table table-hover scroll" id="clinvarSubmissionsTable">
@@ -422,7 +422,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for submission in clinvar_submissions %}
+                                    {% for submission in annotations['clinvar_submissions'] %}
                                     <tr>
                                         <td>{{ submission[2] }}</td>
                                         <td style="white-space:nowrap;">{{ submission[3] }}</td>
@@ -441,19 +441,19 @@
                     {% endif %}
                     {% endif %}
 
-                    {% if 'brca_exchange_clinical_significance' in variant_annotations %}
+                    {% if 'brca_exchange_clinical_significance' in annotations %}
                     <li class="list-group-item card-subcaption">BRCA exchange classification</li>
                     <!-- BRCA-EXCHANGE -->
                     <div class="row bsl">
-                        {{variant_annotations['brca_exchange_clinical_significance'][4]}}
+                        {{annotations['brca_exchange_clinical_significance'][4]}}
                     </div>
                     {% endif %}
 
-                    {% if 'arup_classification' in variant_annotations %}
+                    {% if 'arup_classification' in annotations %}
                     <li class="list-group-item card-subcaption">ARUP BRCA classification</li>
                     <!-- ARUP -->
                     <div class="row bsl">
-                        {{variant_annotations['arup_classification'][4]}}
+                        {{annotations['arup_classification'][4]}}
                     </div>
                     {% endif %}
 
@@ -465,7 +465,7 @@
 
 <!-- variant consequence table -->
 <!-- 0transcript_name,1hgvs_c,2hgvs_p,3consequence,4impact,5exon_nr,6intron_nr,7symbol,8transcript.gene_id,9source,10pfam_accession,11pfam_description,12length,13is_gencode_basic,14is_mane_select,15is_mane_plus_clinical,16is_ensembl_canonical,17total_flag -->
-{% if variant_consequences|length > 0 %}
+{% if 'variant_consequences' in annotations %}
 <div class="col-lg-5 col-lg-6 mb-4">
     <div class="card">
         <div class="card-body">
@@ -505,7 +505,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for consequence in variant_consequences %}
+                                {% for consequence in annotations['variant_consequences'] %}
                                 <tr>
                                     <td style="white-space:nowrap;">{{ consequence[0] }}</td>
                                     <td style="white-space:nowrap;">{{ consequence[1] }}</td>
@@ -543,8 +543,8 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <variant-google-link hgvs-c="{{ consequence[1] }}" hgvs-p="{{ consequence[2] }}" gene="{{ consequence[7] }}" rsid="{{ variant_annotations['rsid'][4] if 'rsid' in variant_annotations else none }}">google</variant-google-link>
-                                        <variant-google-link hgvs-c="{{ consequence[1] }}" hgvs-p="{{ consequence[2] }}" gene="{{ consequence[7] }}" rsid="{{ variant_annotations['rsid'][4] if 'rsid' in variant_annotations else none }}" scholar="true">scholar</variant-google-link>
+                                        <variant-google-link hgvs-c="{{ consequence[1] }}" hgvs-p="{{ consequence[2] }}" gene="{{ consequence[7] }}" rsid="{{ annotations['rsid'][4] if 'rsid' in annotations else none }}">google</variant-google-link>
+                                        <variant-google-link hgvs-c="{{ consequence[1] }}" hgvs-p="{{ consequence[2] }}" gene="{{ consequence[7] }}" rsid="{{ annotations['rsid'][4] if 'rsid' in annotations else none }}" scholar="true">scholar</variant-google-link>
                                         {% if consequence[7] is not none and consequence[1] is not none %}
                                             <external-link href="https://cancer.sanger.ac.uk/cosmic/search?q={{ consequence[7] }}+{{ consequence[1] | replace('>','%3E') }}">COSMIC</external-link>
                                         {% endif %}
@@ -570,7 +570,7 @@
 
 
 <!-- literature table -->
-{% if literature|length > 0 %}
+{% if 'literature' in annotations %}
 <div class="col-lg-5 col-lg-6 mb-4">
     <div class="card">
         <div class="card-body">
@@ -588,7 +588,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for paper in literature %}
+                            {% for paper in annotations['literature'] %}
                             <tr>
                                 <td>{{paper[6]}}</td>
                                 <td>{{paper[3]}}</td>
@@ -624,23 +624,25 @@
                         <div>
                             <external-link href="https://varsome.com/security-validation/?next=/variant/hg19/{{ variant[1][3:] }}:{{ variant[2] }}:{{ variant[3] }}:{{ variant[4] }}">VarSome</external-link>
                         </div>
-                        {% if 'rsid' in variant_annotations %}
+                        {% if 'rsid' in annotations %}
                         <div>
-                            <external-link href="https://www.ncbi.nlm.nih.gov/snp/rs{{variant_annotations['rsid'][4]}}">dbSNP</external-link>
+                            <external-link href="https://www.ncbi.nlm.nih.gov/snp/rs{{annotations['rsid'][4]}}">dbSNP</external-link>
                         </div>
                         {% endif %}
-                        {% if 'clinvar_variant_annotation' in variant_annotations %}
+                        {% if 'clinvar_variant_annotation' in annotations %}
                         <div>
-                            <external-link href="https://www.ncbi.nlm.nih.gov/clinvar/variation/{{ variant_annotations['clinvar_variant_annotation'][2] }}">ClinVar</external-link>
+                            <external-link href="https://www.ncbi.nlm.nih.gov/clinvar/variation/{{ annotations['clinvar_variant_annotation'][2] }}">ClinVar</external-link>
                         </div>
                         {% endif %}
-                        {% for consequence in variant_consequences %}
-                            {% if consequence[0] == ENST00000269305 %} <!-- This transcript is the recommended one for TP53 (see https://www.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000141510;r=17:7661779-7687538) and encodes the alpha isoform for this gene -->
-                            <div>
-                                <external-link href="https://mutantp53.broadinstitute.org/mutantp53grade/?query={{ consequence[2] }}">PHANTM</external-link>
-                            </div>
-                            {% endif %}
-                        {% endfor %}
+                        {% if 'variant_consequences' in annotations %}
+                            {% for consequence in annotations['variant_consequences'] %}
+                                {% if consequence[0] == ENST00000269305 %} <!-- This transcript is the recommended one for TP53 (see https://www.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000141510;r=17:7661779-7687538) and encodes the alpha isoform for this gene -->
+                                <div>
+                                    <external-link href="https://mutantp53.broadinstitute.org/mutantp53grade/?query={{ consequence[2] }}">PHANTM</external-link>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
 
                     </div>
                 </p>

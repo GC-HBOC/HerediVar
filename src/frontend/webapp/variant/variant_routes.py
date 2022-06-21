@@ -101,8 +101,8 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     if variant_id is None:
         variant_id = get_variant_id(conn, chr, pos, ref, alt)
 
+    current_annotation_status = conn.get_current_annotation_status(variant_id)
     if request.method == 'POST':
-        current_annotation_status = conn.get_current_annotation_status(variant_id)
         if current_annotation_status is None or current_annotation_status[4] != 'pending':
             conn.insert_annotation_request(variant_id, session.get('user').get('preferred_username'))
             conn.close()
@@ -114,54 +114,21 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
             return redirect(url_for('doc.deleted_variant'))
     else:
         variant_oi = get_variant(conn, variant_id) # this redirects to 404 page if the variant was not found
-    variant_annotations = conn.get_recent_annotations(variant_id)
-    variant_annot_dict = {}
-    for annot in variant_annotations:
-        variant_annot_dict[annot[0]] = annot[1:len(annot)]
-
-    clinvar_variant_annotation = conn.get_clinvar_variant_annotation(variant_id)
-    clinvar_submissions = []
-    if clinvar_variant_annotation is not None:
-        variant_annot_dict["clinvar_variant_annotation"] = clinvar_variant_annotation # 0id,1variant_id,2variation_id,3interpretation,4review_status,5version_date
-        clinvar_variant_annotation_id = clinvar_variant_annotation[0]
-        clinvar_submissions = conn.get_clinvar_submissions(clinvar_variant_annotation_id)
     
-    variant_consequences = conn.get_variant_consequences(variant_id) # 0transcript_name,1hgvs_c,2hgvs_p,3consequence,4impact,5exon_nr,6intron_nr,7symbol,8transcript.gene_id,9source,10pfam_accession,11pfam_description,12length,13is_gencode_basic,14is_mane_select,15is_mane_plus_clinical,16is_ensembl_canonical,17total_flag
-
-    literature = conn.get_variant_literature(variant_id)
-
-    current_annotation_status = conn.get_current_annotation_status(variant_id)
-
     vids = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
     if len(vids) > 1:
         has_multiple_vids = True
     else:
         has_multiple_vids = False
-
-    consensus_classification = conn.get_consensus_classification(variant_id, most_recent=True)
-    if len(consensus_classification) == 1:
-        consensus_classification = consensus_classification[0]
-    else:
-        consensus_classification = None
-
     
-    user_classifications = conn.get_user_classifications(variant_id) # 0user_classification_id,1classification,2variant_id,3user_id,4comment,5date,6user_id,7username,8first_name,9last_name,10affiliation
-
-    heredicare_center_classifications = conn.get_heredicare_center_classifications(variant_id)
-
+    annotations = conn.get_all_variant_annotations(variant_id)
 
     conn.close()
     return render_template('variant/variant.html', 
                             variant=variant_oi, 
-                            variant_annotations=variant_annot_dict, 
-                            clinvar_submissions=clinvar_submissions, 
-                            variant_consequences=variant_consequences, 
-                            literature=literature,
+                            annotations = annotations,
                             current_annotation_status=current_annotation_status,
-                            has_multiple_vids=has_multiple_vids,
-                            consensus_classification=consensus_classification,
-                            user_classifications=user_classifications,
-                            heredicare_center_classifications=heredicare_center_classifications)
+                            has_multiple_vids=has_multiple_vids)
 
 
 
@@ -174,21 +141,6 @@ def classify(variant_id):
 @variant_blueprint.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])
 @require_permission
 def consensus_classify(variant_id):
-    conn = Connection()
-    variant_annotations = conn.get_recent_annotations(variant_id)
-    variant_annot_dict = {}
-    for annot in variant_annotations:
-        variant_annot_dict[annot[0]] = annot[1:len(annot)]
-    
-    literature = conn.get_variant_literature(variant_id)
-    user_classifications = conn.get_user_classifications(variant_id)
-    heredicare_center_classifications = conn.get_heredicare_center_classifications(variant_id)
-
-    clinvar_variant_annotation = conn.get_clinvar_variant_annotation(variant_id)
-    clinvar_submissions = []
-    if clinvar_variant_annotation is not None:
-        clinvar_variant_annotation_id = clinvar_variant_annotation[0]
-        clinvar_submissions = conn.get_clinvar_submissions(clinvar_variant_annotation_id)
 
 
     if request.method == 'POST':
@@ -198,6 +150,9 @@ def consensus_classify(variant_id):
         if not comment:
             flash('You must provide a comment!', 'alert-danger')
         else:
+            conn = Connection()
+            annotations = conn.get_all_variant_annotations(variant_id)
+            annotations.pop('consensus_classification', None)
             variant_oi = get_variant(conn, variant_id)
 
             current_date = datetime.datetime.today().strftime('%Y-%m-%d')
@@ -206,111 +161,50 @@ def consensus_classify(variant_id):
             generator = pdf_gen(buffer)
             generator.add_title('Classification report')
             v = str(variant_oi[1]) + '-' + str(variant_oi[2]) + '-' + str(variant_oi[3]) + '-' + str(variant_oi[4])
-            generator.add_variant_info(v, classification, current_date, comment)
-            generator.add_subtitle("Relevant scores:")
-            # basic information & scores:
-            if 'include_cadd' in request.form:
-                generator.add_relevant_information("CADD scaled: ", variant_annot_dict['cadd_scaled'][4])
-            if 'include_revel' in request.form:
-                generator.add_relevant_information("REVEL: ", variant_annot_dict['revel'][4])
-            if 'include_phylop' in request.form:
-                generator.add_relevant_information("PhyloP 100w: ", variant_annot_dict['phylop_100way'][4])
-            if 'include_spliceai_max_delta' in request.form:
-                generator.add_relevant_information("SpliceAI max delta: ", variant_annot_dict['spliceai_max_delta'][4])
-            if 'include_spliceai_details' in request.form:
-                generator.add_relevant_information("SpliceAI details: ", variant_annot_dict['spliceai_details'][4])
-            if 'include_maxentscan_ref' in request.form:
-                generator.add_relevant_information("MaxEntScan ref: ", variant_annot_dict['maxentscan_ref'][4])
-            if 'include_maxentscan_alt' in request.form:
-                generator.add_relevant_information("MaxEntScan alt: ", variant_annot_dict['maxentscan_alt'][4])
+            rsid = annotations.pop('rsid', None)[4]
+            generator.add_variant_info(v, classification, current_date, comment, rsid)
+        
+
+            #literature
+            literature = annotations.pop('literature', None)
+
+
+            # classifications
+            user_classifications = annotations.pop('user_classifications', None)
+            clinvar_submissions = annotations.pop('clinvar_submissions', None)
+            heredicare_center_classifications = annotations.pop('heredicare_center_classifications', None)
+        
+            # consequences
+            variant_consequences = annotations.pop('variant_consequences', None)
+
+            # basic information
+            generator.add_subtitle("Scores & annotations:")
+            for key in annotations:
+                generator.add_relevant_information(key, str(annotations[key][4]))
+
+            if variant_consequences is not None:
+                generator.add_subtitle("Variant consequences:")
+                generator.add_text("Flags column: first number = is_gencode_basic, second number: is_mane_select, third number: is_mane_plus_clinical, fourth number: is_ensembl_canonical")
+                generator.add_relevant_classifications([[x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[11], str(x[13]) + str(x[14]) + str(x[15]) + str(x[16])] for x in variant_consequences], 
+                    ('Transcript Name', 'HGVSc', 'HGVSp', 'Consequence', 'Impact', 'Exon Nr.', 'Intron Nr.', 'Gene Symbol', 'Protein Domain', 'Flags'), [3, 2, 2, 3, 1.5, 1.2, 1.3, 1.5, 1.6, 1.5])
             
-            if 'include_gnomad' in request.form:
-                if 'include_gnomad_ac' in request.form:
-                    generator.add_relevant_information("AC: ", variant_annot_dict['gnomad_ac'][4])
-                if 'include_gnomad_af' in request.form:
-                    generator.add_relevant_information("AF: ", variant_annot_dict['gnomad_af'][4])
-                if 'include_gnomad_popmax' in request.form:
-                    generator.add_relevant_information("Popmax: ", variant_annot_dict['gnomad_popmax'][4])
-                if 'include_gnomad_hom' in request.form:
-                    generator.add_relevant_information("Number homozygotes: ", variant_annot_dict['gnomad_hom'][4])
-                if 'include_gnomad_het' in request.form:
-                    generator.add_relevant_information("Number heterozygotes", variant_annot_dict['gnomad_het'][4])
-                if 'include_gnomad_hemi' in request.form:
-                    generator.add_relevant_information("Number hemizyogtes", variant_annot_dict['gnomad_hemi'][4])
-            if 'include_flossies' in request.form:
-                if 'include_flossies_num_afr' in request.form:
-                    generator.add_relevant_information("Number african", variant_annot_dict['flossies_num_afr'][4])
-                if 'include_flossies_num_eur' in request.form:
-                    generator.add_relevant_information("Number european", variant_annot_dict['flossies_num_eur'][4])
+            if literature is not None:
+                generator.add_subtitle("PubMed IDs:")
+                generator.add_relevant_literature([str(x[2]) for x in literature])
             
-            if 'include_tpdb' in request.form:
-                if 'include_tp53db_class' in request.form:
-                    generator.add_relevant_information("Class: ", variant_annot_dict['tp53db_class'][4])
-                if 'include_tp53db_bayes_del' in request.form:
-                    generator.add_relevant_information("Bayes del: ", variant_annot_dict['tp53db_bayes_del'][4])
-                if 'include_tp53db_DNE_LOF_class' in request.form:
-                    generator.add_relevant_information("DNE LOF class: ", variant_annot_dict['tp53db_DNE_LOF_class'][4])
-                if 'include_tp53db_DNE_class' in request.form:
-                    generator.add_relevant_information("DNE class: ", variant_annot_dict['tp53db_DNE_class'][4])
-                if 'include_tp53db_domain_function' in request.form:
-                    generator.add_relevant_information("Domain function", variant_annot_dict['tp53db_domain_function'][4])
-                if 'include_tp53db_transactivation_class' in request.form:
-                    generator.add_relevant_information("Transactivation class", variant_annot_dict['tp53db_transactivation_class'][4])
-            if 'include_cancerhotspots_cancertypes' in request.form:
-                generator.add_relevant_information("Cancerhotspots cancertypes: ", variant_annot_dict['cancerhotspots_cancertypes'][4])
-            if 'include_cancerhotspots_ac' in request.form:
-                generator.add_relevant_information("Cancerthotspots AC: ", variant_annot_dict['cancerhotspots_ac'][4])
-            if 'include_cancerhotspots_af' in request.form:
-                generator.add_relevant_information("Cancerhotspots AF: ", variant_annot_dict['cancerhotspots_af'][4])
-            if 'include_heredicare_cases_count' in request.form:
-                generator.add_relevant_information("HerediCare cases count: ", variant_annot_dict['heredicare_cases_count'][4])
-            if 'include_heredicare_family_count' in request.form:
-                generator.add_relevant_information("Heredicare family count: ", variant_annot_dict['heredicare_family_count'][4])
+            if user_classifications is not None or clinvar_submissions is not None or heredicare_center_classifications is not None:
+                generator.add_subtitle("Previous classifications:")
+            if user_classifications is not None:
+                generator.add_text("HerediVar user classifications:")
+                generator.add_relevant_classifications([[x[1], x[8] + ' ' + x[9], x[10], x[5], x[4]] for x in user_classifications], ('Class', 'User', 'Affiliation', 'Date', 'Comment'), [1.2, 2, 2, 2, 11.5])
+            if heredicare_center_classifications is not None:
+                generator.add_text("HerediCare center classifications:")
+                generator.add_relevant_classifications([[x[1], x[3], x[5], x[4]] for x in heredicare_center_classifications], ('Class', 'Center', 'Date', 'Comment'),  [2, 2, 2, 12])
+            if clinvar_submissions is not None:
+                generator.add_text("ClinVar submissions:")
+                generator.add_relevant_classifications([[x[2], x[3], x[4], x[5][1], x[6], x[7]] for x in clinvar_submissions], ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter', 'Comment'), [1.5, 2, 2, 2, 2, 9])
             
-            # literature
-            literature_ids = [x.replace('include_literature_', '') for x in request.form.keys() if x.startswith('include_literature')] # get selected literature ids
-            if len(literature_ids) > 0:
-                literature_oi = [str(x[2]) for x in literature if str(x[0]) in literature_ids] # collect relevant information for plotting to pdf
-                generator.add_subtitle("Relevant PubMed IDs:")
-                generator.add_relevant_literature(literature_oi)
-
-
-            # user classifications
-            user_classification_ids = [x.replace('include_user_classification_', '') for x in request.form.keys() if x.startswith('include_user_classification_')] # get selected user classification ids
-            if len(user_classification_ids) > 0:
-                include_user_classifications = True
-                user_classifications_oi = [[x[1], x[3], x[5], x[4]] for x in user_classifications if str(x[0]) in user_classification_ids] # collect relevant information for plotting to pdf
-            else:
-                include_user_classifications = False
-                
-
-            # heredicare center classifications
-            center_classification_ids = [x.replace('include_heredicare_center_classification_', '') for x in request.form.keys() if x.startswith('include_heredicare_center_classification_')] # get selected user classification ids
-            if len(center_classification_ids) > 0:
-                include_center_classifications = True
-                center_classifications_oi = [[x[1], x[3], x[5], x[4]] for x in heredicare_center_classifications if str(x[0]) in center_classification_ids] # collect relevant information for plotting to pdf
-            else:
-                include_center_classifications = False
-
-            # clinvar submissions 
-            clinvar_submission_ids = [x.replace('include_clinvar_', '') for x in request.form.keys() if x.startswith('include_clinvar_')] # get selected user classification ids
-            if len(clinvar_submission_ids) > 0:
-                include_clinvar_submissions = True
-                clinvar_submissions_oi = [[x[2], x[3], x[4], x[5][1], x[6]] for x in clinvar_submissions if str(x[0]) in clinvar_submission_ids] # collect relevant information for plotting to pdf
-            else:
-                include_clinvar_submissions = False
-                
             
-            if include_user_classifications or include_center_classifications or include_clinvar_submissions:
-                generator.add_subtitle("Relevant classifications:")
-            if include_user_classifications:
-                generator.add_relevant_classifications(user_classifications_oi, ('Class', 'User', 'Date', 'Comment'), [6, 10, 11, 60])
-            if include_center_classifications:
-                generator.add_relevant_classifications(center_classifications_oi, ('Class', 'Center', 'Date', 'Comment'), [6, 10, 11, 60])
-            if include_clinvar_submissions:
-                generator.add_relevant_classifications(clinvar_submissions_oi, ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter'), [12, 30, 20, 20, 25])
-
-
             generator.save_pdf()
 
             buffer.seek(io.SEEK_SET)
@@ -319,11 +213,10 @@ def consensus_classify(variant_id):
 
             conn.insert_consensus_classification_from_variant_id(session.get('user').get('preferred_username'), variant_id, classification, comment, date = current_date, evidence_document=evidence_b64)
             flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
-        conn.close()
+            conn.close()
         return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
 
-    conn.close()
-    return render_template('variant/consensus_classify.html', variant_annotations = variant_annot_dict, literature=literature, user_classifications = user_classifications, heredicare_center_classifications=heredicare_center_classifications, clinvar_submissions=clinvar_submissions)
+    return render_template('variant/consensus_classify.html')
 
 @variant_blueprint.route('/classify/<int:variant_id>/user', methods=['GET', 'POST'])
 @require_login

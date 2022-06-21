@@ -498,12 +498,15 @@ class Connection:
         command = "SELECT * FROM clinvar_submission WHERE clinvar_variant_annotation_id = " + enquote(clinvar_variant_annotation_id)
         self.cursor.execute(command)
         result = self.cursor.fetchall()
+        if len(result) == 0:
+            return None
         for i in range(len(result)):
             processed_entry = list(result[i])
             processed_entry[5] = processed_entry[5].split(':')
             result[i] = processed_entry
         
         result = sorted(result, key=lambda x: x[3] or datetime.date(datetime.MINYEAR,1,1), reverse=True) # sort table by last evaluated date
+
         return result
     
     def get_variant_consequences(self, variant_id):
@@ -519,13 +522,16 @@ class Connection:
 
         #result = sorted(result, key=lambda x: functions.convert_none_infinite(x[12]), reverse=True) # sort table by transcript length
         #result = sorted(result, key=lambda x: functions.convert_none_infinite(x[17]), reverse=True) # sort table by number of flags
-
+        if len(result) == 0:
+            return None
         return result
 
     def get_variant_literature(self, variant_id, sort_year = True):
         command = "SELECT * FROM variant_literature WHERE variant_id = " + enquote(variant_id)
         self.cursor.execute(command)
         result = self.cursor.fetchall()
+        if len(result) == 0:
+            return None
         if sort_year:
             result = sorted(result, key=lambda x: functions.convert_none_infinite(x[6]), reverse=True)
         return result
@@ -575,6 +581,7 @@ class Connection:
         return vids
 
     def insert_consensus_classification_from_vcf(self, username, chr, pos, ref, alt, consensus_classification, comment, date = "CURDATE()", evidence_document = None):
+        self.invalidate_previous_consensus_classifications(self.get_one_variant(chr, pos, ref, alt)[0])
         if date != "CURDATE()":
             date = enquote(date)
         if evidence_document is None:
@@ -584,12 +591,18 @@ class Connection:
         self.conn.commit()
     
     def insert_consensus_classification_from_variant_id(self, username, variant_id, consensus_classification, comment, date = "CURDATE()", evidence_document = None):
+        self.invalidate_previous_consensus_classifications(variant_id)
         if date != "CURDATE()":
             date = enquote(date)
         if evidence_document is None:
             return
         command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document) VALUES ((SELECT id FROM user WHERE username = %s ), %s, %s, %s, " + date + ", %s)"
         self.cursor.execute(command, (username, variant_id, consensus_classification, comment, evidence_document.decode()))
+        self.conn.commit()
+    
+    def invalidate_previous_consensus_classifications(self, variant_id):
+        command = "UPDATE consensus_classification SET is_recent = '0' WHERE variant_id = %s"
+        self.cursor.execute(command, (variant_id,))
         self.conn.commit()
     
     def insert_heredicare_center_classification(self, variant_id, classification, center_name, comment, date):
@@ -629,9 +642,11 @@ class Connection:
     def get_consensus_classification(self, variant_id, most_recent = False): # it is possible to have multiple consensus classifications for the same variant if it is a duplicate in HerediCare and both have a consensus classification
         command = "SELECT * FROM consensus_classification WHERE variant_id = %s"
         if most_recent:
-            command = command  + " ORDER BY date DESC LIMIT 1"
+            command = command  + " AND is_recent = '1'"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
+        if len(result) == 0:
+            return None
         return result
     
     def get_user_classifications(self, variant_id):
@@ -734,4 +749,38 @@ class Connection:
         command = "INSERT INTO user (username, first_name, last_name, affiliation) VALUES (%s, %s, %s, %s) ON DUPLICATE KEY UPDATE first_name=%s, last_name=%s, affiliation=%s"
         self.cursor.execute(command, (username, first_name, last_name, affiliation, first_name, last_name, affiliation))
         self.conn.commit()
+
+    def get_all_variant_annotations(self, variant_id):
+        variant_annotations = self.get_recent_annotations(variant_id)
+        variant_annot_dict = {}
+        for annot in variant_annotations:
+            variant_annot_dict[annot[0]] = annot[1:len(annot)]
+
+        clinvar_variant_annotation = self.get_clinvar_variant_annotation(variant_id)
+        if clinvar_variant_annotation is not None:
+            variant_annot_dict["clinvar_variant_annotation"] = clinvar_variant_annotation # 0id,1variant_id,2variation_id,3interpretation,4review_status,5version_date
+            clinvar_variant_annotation_id = clinvar_variant_annotation[0]
+            variant_annot_dict['clinvar_submissions'] = self.get_clinvar_submissions(clinvar_variant_annotation_id)
+
+        variant_consequences = self.get_variant_consequences(variant_id) # 0transcript_name,1hgvs_c,2hgvs_p,3consequence,4impact,5exon_nr,6intron_nr,7symbol,8transcript.gene_id,9source,10pfam_accession,11pfam_description,12length,13is_gencode_basic,14is_mane_select,15is_mane_plus_clinical,16is_ensembl_canonical,17total_flag
+        if variant_consequences is not None:
+            variant_annot_dict['variant_consequences'] = variant_consequences
+
+        literature = self.get_variant_literature(variant_id)
+        if literature is not None:
+            variant_annot_dict['literature'] = literature
+
+        consensus_classification = self.get_consensus_classification(variant_id, most_recent=True)
+        if consensus_classification is not None:
+            variant_annot_dict['consensus_classification'] = consensus_classification[0]
+
+        user_classifications = self.get_user_classifications(variant_id) # 0user_classification_id,1classification,2variant_id,3user_id,4comment,5date,6user_id,7username,8first_name,9last_name,10affiliation
+        if user_classifications is not None:
+            variant_annot_dict['user_classifications'] = user_classifications
+
+        heredicare_center_classifications = self.get_heredicare_center_classifications(variant_id)
+        if heredicare_center_classifications is not None:
+            variant_annot_dict['heredicare_center_classifications'] = heredicare_center_classifications
+    
+        return variant_annot_dict
 
