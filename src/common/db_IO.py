@@ -75,7 +75,7 @@ class Connection:
         self.cursor.close()
 
     def get_pending_requests(self):
-        self.cursor.execute("SELECT id,variant_id FROM annotation_queue WHERE status = 'pending'")
+        self.cursor.execute("SELECT id,variant_id,user_id FROM annotation_queue WHERE status = 'pending'")
         pending_variant_ids = self.cursor.fetchall()
         return pending_variant_ids
 
@@ -350,6 +350,17 @@ class Connection:
         command = "INSERT INTO pfam_legacy (old_accession_id, new_accession_id) VALUES (%s, %s)"
         self.cursor.execute(command, (old_accession_id, new_accession_id))
         self.conn.commit()
+    
+    def insert_task_force_protein_domain(self, chromsome, start, end, description, source):
+        command = "INSERT INTO task_force_protein_domains (chr, start, end, description, source) VALUES (%s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (chromsome, start, end, description, source))
+        self.conn.commit()
+    
+    def get_task_force_protein_domains(self, chromosome, variant_start, variant_end):
+        command = "SELECT * FROM task_force_protein_domains WHERE chr = %s and ((start <= %s) and (%s <= end))"
+        self.cursor.execute(command, (chromosome, variant_end, variant_start))
+        result = self.cursor.fetchall()
+        return result
     
     def insert_variant_literature(self, variant_id, pmid, title, authors, journal, year):
         #command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher, year) VALUES (%s, %s, %s, %s, %s, %s)"
@@ -757,6 +768,12 @@ class Connection:
         command = "INSERT INTO user (username, first_name, last_name, affiliation) VALUES (%s, %s, %s, %s) ON DUPLICATE KEY UPDATE first_name=%s, last_name=%s, affiliation=%s"
         self.cursor.execute(command, (username, first_name, last_name, affiliation, first_name, last_name, affiliation))
         self.conn.commit()
+    
+    def get_user(self, user_id):
+        command = "SELECT * FROM user WHERE id=%s"
+        self.cursor.execute(command, (user_id,))
+        result = self.cursor.fetchone()
+        return result
 
     def get_all_variant_annotations(self, variant_id):
         variant_annotations = self.get_recent_annotations(variant_id)

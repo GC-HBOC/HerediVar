@@ -361,10 +361,10 @@ def process_all(log_file_path, username):
     endit()
 
 
-def update_specific_vids(log_file_path, vids):
+def update_specific_vids(log_file_path, vids, username):
     global heredicare_api
 
-    init(log_file_path)
+    init(log_file_path, username)
 
     execution_code, vids_heredicare = heredicare_api.get_heredicare_vid_list()
     if execution_code != 0:

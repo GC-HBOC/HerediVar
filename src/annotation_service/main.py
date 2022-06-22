@@ -14,29 +14,35 @@ import fetch_heredicare_variants as heredicare
 import datetime
 
 ## switches
+
+# heredicare annotations
+do_heredicare = False
+
 # external programs
-do_phylop = True
-do_spliceai = True
-do_hexplorer = True
+do_phylop =  False
+do_spliceai =  False
+do_hexplorer = False
 
 # vep dependent
-do_vep = True
-insert_consequence = True
-insert_maxent = True
-insert_literature = True
+do_vep =  False
+insert_consequence =  False
+insert_maxent =  False
+insert_literature =  False
 
 #vcf annotate from vcf
-do_dbsnp = True
-do_revel = True
-do_cadd = True
-do_clinvar = True
-do_gnomad = True
-do_brca_exchange = True
-do_flossies = True
-do_cancerhotspots = True
-do_arup = True
-do_tp53_database = True
+do_dbsnp =  False
+do_revel =  False
+do_cadd =  False
+do_clinvar =  False
+do_gnomad =  False
+do_brca_exchange =  False
+do_flossies =  False
+do_cancerhotspots =  False
+do_arup =  False
+do_tp53_database =  False
 
+# additional annotations
+do_task_force_protein_domains = True
 
 
 conn = Connection()
@@ -211,24 +217,25 @@ if __name__ == '__main__':
 
     status = "success"
 
-    for request_id, variant_id in pending_requests:
+    for request_id, variant_id, user_id in pending_requests:
         err_msgs = ""
         one_variant = conn.get_one_variant(variant_id) # 0id,1chr,2pos,3ref,4alt
         print("processing request " + str(one_variant[0]) + " annotating variant: " + " ".join([str(x) for x in one_variant[1:5]]))
 
-        vids = conn.get_external_ids_from_variant_id(variant_id, id_source='heredicare')
-        #log_file_date = datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
-        log_file_path = path.join(path.dirname(path.abspath(__file__)),  'logs/heredicare_update.log')
-        heredicare.update_specific_vids(log_file_path, vids)
-        #look for error code: s1 (deleted variant)
-        log_file = open(log_file_path, 'r')
-        deleted_variant = False
-        for line in log_file:
-            if '~~s1~~' in line:
-                deleted_variant = True
-        log_file.close()
-        if deleted_variant:
-            continue # stop annotation if it was deleted!
+        if do_heredicare:
+            vids = conn.get_external_ids_from_variant_id(variant_id, id_source='heredicare')
+            #log_file_date = datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
+            log_file_path = path.join(path.dirname(path.abspath(__file__)),  'logs/heredicare_update.log')
+            heredicare.update_specific_vids(log_file_path, vids, conn.get_user(user_id)[1])
+            #look for error code: s1 (deleted variant)
+            log_file = open(log_file_path, 'r')
+            deleted_variant = False
+            for line in log_file:
+                if '~~s1~~' in line:
+                    deleted_variant = True
+            log_file.close()
+            if deleted_variant:
+                continue # stop annotation if it was deleted!
 
 
         functions.variant_to_vcf(one_variant[1], one_variant[2], one_variant[3], one_variant[4], one_variant_path)
@@ -329,12 +336,12 @@ if __name__ == '__main__':
                 status = "error"
             err_msgs = collect_error_msgs(err_msgs, err_msg_vcf_anno)
 
-        print("checking validity of annotated vcf file...")
-        execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(one_variant_path)
-        print(vcf_errors)
-        if execution_code_vcfcheck != 0:
-            status = "error"
-        err_msgs = collect_error_msgs(err_msgs, err_msg_vcfcheck)
+            print("checking validity of annotated vcf file...")
+            execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(one_variant_path)
+            print(vcf_errors)
+            if execution_code_vcfcheck != 0:
+                status = "error"
+            err_msgs = collect_error_msgs(err_msgs, err_msg_vcfcheck)
 
         ## run SpliecAI on the variants which are not contained in the precomputed file
         if do_spliceai:
@@ -513,7 +520,8 @@ if __name__ == '__main__':
                 else:
                     for submission in clinvar_submissions:
                         #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|5SubmittedPhenotypeInfo|7Submitter|8comment
-                        submissions = submission.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').split('|')
+                        submissions = submission.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').replace('&', ';').split('|')
+                        print(submissions)
                         conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
             
             if pmids != '' and insert_literature:
@@ -521,6 +529,15 @@ if __name__ == '__main__':
                 for paper in literature_entries: #[pmid, article_title, authors, journal, year]
                     conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4])
         
+
+        # annotate vus task force protein domains
+        if do_task_force_protein_domains:
+            task_force_protein_domains = conn.get_task_force_protein_domains(one_variant[1], one_variant[2], int(one_variant[2]) + len(one_variant[4]))
+            for domain in task_force_protein_domains:
+                conn.insert_variant_annotation(variant_id, 36, domain[4])
+                conn.insert_variant_annotation(variant_id, 37, domain[5])
+
+
 
         print(err_msgs)
 

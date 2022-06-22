@@ -122,6 +122,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
         has_multiple_vids = False
     
     annotations = conn.get_all_variant_annotations(variant_id)
+    print(annotations)
 
     conn.close()
     return render_template('variant/variant.html', 
