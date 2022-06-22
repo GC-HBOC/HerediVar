@@ -50,10 +50,8 @@ def convert_row_to_string(variationid, row):
       + str(row['ReportedPhenotypeInfo']).replace('|', ' ') + '|' \
        + str(row['Submitter']).replace('|', ' ') + '|' + functions.collect_info(description, '', explanation_of_interpretation, sep = ' - ').replace('|', ' ')
 
-    result.replace(' ', '_')
-    result.replace('\\', '/')
-    result.replace(';', '&')
-    return result.replace(',', '\\')
+    result = result.replace(' ', '_').replace('\\', '/').replace(';', '&').replace(',', '\\')
+    return result
 
 
 # write vcf header
