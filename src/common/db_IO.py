@@ -684,6 +684,24 @@ class Connection:
         command = "INSERT INTO user_classification (variant_id, classification, user_id, comment, date) VALUES (%s, %s, (SELECT id FROM user WHERE username=%s), %s," + date + ")"
         self.cursor.execute(command, (variant_id, classification, username, comment))
         self.conn.commit()
+    
+    def update_user_classification(self, user_classification_id, classification, comment, date= "CURDATE()"):
+        if date != "CURDATE()":
+            date = enquote(date)
+        command = "UPDATE user_classification SET classification = %s, comment = %s, date = " + date + " WHERE id = %s"
+        self.cursor.execute(command, (classification, comment, user_classification_id))
+        self.conn.commit()
+    
+    def get_user_classification_by_username(self, username, variant_id = None):
+        actual_information = (username, )
+        command = "SELECT * FROM user_classification WHERE user_id = (SELECT id FROM user WHERE username=%s)"
+        if variant_id is not None:
+            command = command + " AND variant_id = %s"
+            actual_information = actual_information + (variant_id, )
+        command = command + " ORDER BY DATE(date) DESC LIMIT 1" # probably not neccessary
+        self.cursor.execute(command, actual_information)
+        result = self.cursor.fetchone()
+        return result
 
     def delete_variant(self, variant_id):
         command = "DELETE FROM variant WHERE id = %s"
