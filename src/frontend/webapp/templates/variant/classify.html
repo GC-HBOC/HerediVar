@@ -6,9 +6,20 @@
     <h1 class="bst">{% block title %} Classify variant {{variant_id}} {% endblock %}</h1>
 
 
-    <div class="d-flex">
-        <a class="btn btn-primary bsr" href="{{ url_for('variant.user_classify', variant_id = variant_id) }}">user</a>
-        <a class="btn btn-primary" href="{{ url_for('variant.consensus_classify', variant_id = variant_id) }}">consensus</a>
+
+
+    <div class="bst">
+        <div class="d-flex">
+            <div class="card-subcaption">To submit a new user classification or update your previous classification klick</div>
+            <a class="btn btn-primary bsl" href="{{ url_for('variant.user_classify', variant_id = variant_id) }}">here</a>
+        </div>
+
+        <hr>
+        <div class="d-flex">
+            <div class="card-subcaption" >To submit a new consensus classification (only for priviliged users) klick</div>
+            <a class="btn btn-primary bsl" href="{{ url_for('variant.consensus_classify', variant_id = variant_id) }}">here</a>
+        </div>
+
     </div>
 
 
