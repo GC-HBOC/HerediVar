@@ -89,8 +89,6 @@ def create():
     return render_template('variant/create.html', chrs=chrs)
 
 
-
-
 @variant_blueprint.route('/display/<int:variant_id>', methods=['GET', 'POST'])
 @variant_blueprint.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>', methods=['GET', 'POST']) # alternative url using vcf information
 # example: http://srv023.img.med.uni-tuebingen.de:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http://srv023.img.med.uni-tuebingen.de:5000/display/17
@@ -130,7 +128,6 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             annotations = annotations,
                             current_annotation_status=current_annotation_status,
                             has_multiple_vids=has_multiple_vids)
-
 
 
 @variant_blueprint.route('/classify/<int:variant_id>', methods=['GET', 'POST'])
@@ -214,7 +211,7 @@ def consensus_classify(variant_id):
             conn.insert_consensus_classification_from_variant_id(session.get('user').get('preferred_username'), variant_id, classification, comment, date = current_date, evidence_document=evidence_b64)
             flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
             conn.close()
-        return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
+        return redirect(url_for('variant.classify', variant_id=variant_id))
     
     conn = Connection()
     if conn.get_consensus_classification(variant_id, most_recent=True) is not None:
@@ -223,20 +220,6 @@ def consensus_classify(variant_id):
         has_consensus = False
     conn.close()
     return render_template('variant/consensus_classify.html', has_consensus=has_consensus)
-
-@variant_blueprint.route('/classify/<int:variant_id>/user', methods=['GET', 'POST'])
-@require_login
-def user_classify(variant_id):
-    if request.method == 'POST':
-        classification = request.form['class']
-        comment = request.form['comment']
-        conn = Connection()
-        conn.insert_user_classification(variant_id, classification, session.get('user').get('preferred_username'), comment) # UPDATE USER ID ONCE LOGIN IS READY!!!!!
-        conn.close()
-        flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
-        return redirect(url_for('variant.classify', variant_id = variant_id))
-
-    return render_template('variant/user_classify.html')
 
 
 @variant_blueprint.route('/display/<int:variant_id>/consensus_classification_history')
@@ -251,3 +234,39 @@ def consensus_classification_history(variant_id):
         return redirect(url_for('doc.error', code=str(404), text="No consensus classifications for this variant")) # redirect to error page
     return render_template('variant/classification_history.html', most_recent_consensus_classification=most_recent_consensus_classification, other_consensus_classifications=other_consensus_classifications)
 
+
+@variant_blueprint.route('/classify/<int:variant_id>/user', methods=['GET', 'POST'])
+@require_login
+def user_classify(variant_id):
+    conn = Connection()
+    user_classification = conn.get_user_classification_by_username(session['user']['preferred_username'], variant_id)
+    # default values
+    previous_classification = 1
+    previous_comment = ''
+    has_classification = False
+    if user_classification is not None:
+        previous_classification=user_classification[1]
+        previous_comment=user_classification[4]
+        has_classification = True
+
+    if request.method == 'POST':
+        classification = request.form['class']
+        comment = request.form['comment'].strip()
+        if classification:
+            previous_classification = classification
+        if comment:
+            previous_comment = comment
+        if not comment or not classification:
+            flash("All fields are required!", "alert-danger")
+        else:
+            if user_classification is not None: # user already has a classification for this variant -> he requests an update
+                conn.update_user_classification(user_classification[0], classification, comment)
+                flash(Markup("Successfully updated user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+            else: # user does not yet have a classification for this variant -> he wants to create a new one
+                conn.insert_user_classification(variant_id, classification, session['user']['preferred_username'], comment) # UPDATE USER ID ONCE LOGIN IS READY!!!!!
+                conn.close()
+                flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+            return redirect(url_for('variant.classify', variant_id = variant_id))
+    conn.close()
+
+    return render_template('variant/user_classify.html', previous_classification=int(previous_classification), previous_comment=previous_comment, has_classification=has_classification)
