@@ -33,7 +33,7 @@ insert_literature =  False
 do_dbsnp =  False
 do_revel =  False
 do_cadd =  False
-do_clinvar =  False
+do_clinvar =  True
 do_gnomad =  False
 do_brca_exchange =  False
 do_flossies =  False
@@ -42,7 +42,7 @@ do_arup =  False
 do_tp53_database =  False
 
 # additional annotations
-do_task_force_protein_domains = True
+do_task_force_protein_domains = False
 
 
 conn = Connection()
