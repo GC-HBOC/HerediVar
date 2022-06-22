@@ -302,6 +302,24 @@
         </div>
     </div>
     {% endif %}
+
+    {% if 'task_force_protein_domain_source' in annotations or 'task_force_protein_domain' in annotations %}
+    <div class="row align-items-start">
+        <div class="col-sm-4 li-label"><abbr title="Information from a hand-crafted protein domain table.">Task-Force protein domains</abbr></div>
+        <div class="col li-info">
+            {% if 'task_force_protein_domain' in annotations %}
+            <div class="li-element">
+                    <abbr title="{{annotations['task_force_protein_domain'][0]}}"><a class="dashed_underline">domain:</a></abbr>&nbsp;{{annotations['task_force_protein_domain'][4]}}
+            </div>
+            {% endif %}
+            {% if 'task_force_protein_domain_source' in annotations %}
+            <div class="li-element">
+                    <abbr title="{{annotations['task_force_protein_domain_source'][0]}}"><a class="dashed_underline">source:</a></abbr>&nbsp;{{annotations['task_force_protein_domain_source'][4]}}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
     
                 </p>
             </div>

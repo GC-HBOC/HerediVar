@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
 
 
-    
+    '''
     ## init transcripts table
     # format info:
     #The 'type' of gene features in gff3 is:
@@ -387,8 +387,9 @@ if __name__ == '__main__':
         #pass
 
     refseq_transcript.close()
-    
-    
+    '''
+
+
     '''
     ## init pfam auxiliaries tables (pfam_id_mapping and pfam_legacy)
     print("initializing PFAM id mapping table...")
@@ -419,6 +420,36 @@ if __name__ == '__main__':
     # init annotation_type table
     #conn.insert_annotation_type("gnomad_af", "Frequency of the alternate allele in samples", "float", "v3.1.2_GRCh38", "2021-10-22") 
     '''
+
+
+    ## init VUS task force protein domains table (no download for this one, it was sent by mail)
+    print("initializing VUS-Task-Force protein domain table")
+    task_force_protein_domains_file = open(paths.task_force_protein_domains_path)
+    for line in task_force_protein_domains_file:
+        line = line.strip()
+        if line.startswith('#') or line == '':
+            continue
+
+        parts = line.split('\t')
+
+        description = parts[1].strip('\"')
+        chromosome = parts[2]
+        chr_num = functions.validate_chr(chromosome)
+        if not chr_num:
+            print('skipping protein domain because of unsupported chromosome')
+            continue
+        chromosome = 'chr' + chr_num
+        start = parts[3]
+        end = parts[4]
+        if end < start:
+            temp = end
+            end = start
+            start = temp
+        source = parts[7].strip('\"')
+
+        conn.insert_task_force_protein_domain(chromosome, start, end, description, source)
+
+
 
     conn.close()
 

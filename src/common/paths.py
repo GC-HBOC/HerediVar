@@ -45,6 +45,7 @@ pfam_legacy_path = datadir + "PFAM/pfam_legacy.tsv"
 refseq_transcript_path = datadir + "RefSeq/refseq_transcripts_110.gff.gz"
 omim_path = datadir + "OMIM/mim2gene.txt"
 orphanet_path = datadir + "OrphaNet/en_product6.xml"
+task_force_protein_domains_path = datadir + "task-force_protein_domains/Proteindomänen VUS-Task-Force_2022_final.tsv"
 
 # further data
 parsing_refseq_ensembl = datadir + "mapping_tables/hg38_ensembl_transcript_matches.tsv"

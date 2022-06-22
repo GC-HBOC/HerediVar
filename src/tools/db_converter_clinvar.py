@@ -45,13 +45,14 @@ def convert_row_to_string(variationid, row):
     else:
         explanation_of_interpretation = "ExplanationOfInterpretation: " + explanation_of_interpretation
 
-    result = str(variationid) + '|' + str(row['ClinicalSignificance']) + '|' \
-     + last_evaluated + '|' + str(row['ReviewStatus']) + '|' \
-      + str(row['ReportedPhenotypeInfo']) + '|' \
-       + str(row['Submitter']) + '|' + functions.collect_info(description, '', explanation_of_interpretation, sep = ' - ')
+    result = str(variationid).replace('|', ' ') + '|' + str(row['ClinicalSignificance']).replace('|', ' ') + '|' \
+     + last_evaluated + '|' + str(row['ReviewStatus']).replace('|', ' ') + '|' \
+      + str(row['ReportedPhenotypeInfo']).replace('|', ' ') + '|' \
+       + str(row['Submitter']).replace('|', ' ') + '|' + functions.collect_info(description, '', explanation_of_interpretation, sep = ' - ').replace('|', ' ')
 
     result.replace(' ', '_')
     result.replace('\\', '/')
+    result.replace(';', '&')
     return result.replace(',', '\\')
 
 
@@ -59,7 +60,7 @@ def convert_row_to_string(variationid, row):
 info_headers = ["##INFO=<ID=inpret,Number=.,Type=String,Description=\"Interpretation / clinical significance of the variant. Format: CLNSIG|CLNSIGCONF\">",
                 "##INFO=<ID=revstat,Number=.,Type=String,Description=\"Review status of the variant\">",
                 "##INFO=<ID=varid,Number=1,Type=String,Description=\"The ClinVar variation identifier\">",
-                "##INFO=<ID=submissions,Number=.,Type=String,Description=\"All submissions listed in ClinVar delimited by ','. All ',' in the original sequence were replaced with '\\' and spaces were replaced by '_' Format: VariationID|ClinicalSignificance|LastEvaluated|ReviewStatus|CollectionMethod|SubmittedPhenotypeInfo|OriginCounts|Submitter|ExplanationOfInterpretation\">"]
+                "##INFO=<ID=submissions,Number=.,Type=String,Description=\"All submissions listed in ClinVar delimited by ','. All ',' in the original sequence were replaced with '\\' and spaces were replaced by '_' Format: VariationID|ClinicalSignificance|LastEvaluated|ReviewStatus|SubmittedPhenotypeInfo|Submitter|ExplanationOfInterpretation\">"]
 functions.write_vcf_header(info_headers)
 
 for line in input_file:
