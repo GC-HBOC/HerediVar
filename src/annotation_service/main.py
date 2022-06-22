@@ -521,7 +521,6 @@ if __name__ == '__main__':
                     for submission in clinvar_submissions:
                         #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|5SubmittedPhenotypeInfo|7Submitter|8comment
                         submissions = submission.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').replace('&', ';').split('|')
-                        print(submissions)
                         conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
             
             if pmids != '' and insert_literature:
@@ -536,7 +535,6 @@ if __name__ == '__main__':
             for domain in task_force_protein_domains:
                 conn.insert_variant_annotation(variant_id, 36, domain[4])
                 conn.insert_variant_annotation(variant_id, 37, domain[5])
-
 
 
         print(err_msgs)
