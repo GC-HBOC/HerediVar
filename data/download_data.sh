@@ -202,9 +202,9 @@ tabix -p vcf spliceai_scores_2022_02_09_GRCh38.vcf.gz
 
 
 ## download ClinVar (https://www.ncbi.nlm.nih.gov/clinvar/)
-#cd $dbs
-#mkdir -p ClinVar
-#cd ClinVar
+cd $dbs
+mkdir -p ClinVar
+cd ClinVar
 
 ## submissions table for 'Submitted interpretations and evidence' table from website
 #wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz

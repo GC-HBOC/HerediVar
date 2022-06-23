@@ -30,11 +30,14 @@
                     {% endif %}
                     {% endif %}
                 </div>
-                <span id="tooltip_classify_button" class="d-inline-block ssl" tabindex="0">
-                    <a id="classify_button" type="button" class="btn btn-outline-primary" href="{{url_for('variant.classify', variant_id = variant[0])}}">Classify</a>
+                <span id="tooltip_user_classify_button" class="d-inline-block ssl" tabindex="0" title="Submit a new user classification or edit your previous classification if you already have one.">
+                    <a id="user_classify_button" type="button" class="btn btn-outline-primary" href="{{url_for('variant.user_classify', variant_id = variant[0])}}">User classify</a>
+                </span>
+                <span id="tooltip_consensus_classify_button" class="d-inline-block ssl" tabindex="0" title="Submit a new consensus classification">
+                    <a id="consensus_classify_button" type="button" class="btn btn-outline-primary" href="{{url_for('variant.consensus_classify', variant_id = variant[0])}}">Consensus classify</a>
                 </span>
                 <span id="tooltip_export_button" class="d-inline-block ssl" tabindex="0">
-                    <a id="classify_button" type="button" class="btn btn-outline-primary" href="{{url_for('download.variant', variant_id = variant[0], format='vcf')}}">Export to VCF</a>
+                    <a id="export_button" type="button" class="btn btn-outline-primary" href="{{url_for('download.variant', variant_id = variant[0], format='vcf')}}">Export to VCF</a>
                 </span>
             </div>
         </div>
