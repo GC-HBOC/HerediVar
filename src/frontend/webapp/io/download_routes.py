@@ -70,99 +70,84 @@ def variant(variant_id):
 def get_variant_vcf_line(variant_id, conn):
     variant_oi = conn.get_one_variant(variant_id)
 
-
-    variant_annotations = conn.get_recent_annotations(variant_id)
-    variant_annot_dict = {}
-    for annot in variant_annotations:
-        variant_annot_dict[annot[0]] = annot[1:len(annot)]
-
-    clinvar_variant_annotation = conn.get_clinvar_variant_annotation(variant_id)
-    clinvar_submissions = []
-    if clinvar_variant_annotation is not None:
-        clinvar_variant_annotation_id = clinvar_variant_annotation[0]
-        clinvar_submissions = conn.get_clinvar_submissions(clinvar_variant_annotation_id)
-    
-    variant_consequences = conn.get_variant_consequences(variant_id) # 0transcript_name,1hgvs_c,2hgvs_p,3consequence,4impact,5exon_nr,6intron_nr,7symbol,8transcript.gene_id,9source,10pfam_accession,11pfam_description,12length,13is_gencode_basic,14is_mane_select,15is_mane_plus_clinical,16is_ensembl_canonical,17total_flag
-
-    literature = conn.get_variant_literature(variant_id)
-
-    consensus_classification = conn.get_consensus_classification(variant_id, most_recent=True)
-    if len(consensus_classification) == 1:
-        consensus_classification = consensus_classification[0]
-    else:
-        consensus_classification = None
-
-    
-    user_classifications = conn.get_user_classifications(variant_id) # 0user_classification_id,1classification,2variant_id,3user_id,4comment,5date,6user_id,7username,8first_name,9last_name,10affiliation
-
-    heredicare_center_classifications = conn.get_heredicare_center_classifications(variant_id)
+    annotations = conn.get_all_variant_annotations(variant_id)
     
     #"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO"
     variant_vcf = '\t'.join((str(variant_oi[1]), str(variant_oi[2]), str(variant_oi[0]), str(variant_oi[3]), str(variant_oi[4]), '.', '.'))
 
     info = ''
     info_headers = []
-    for key in variant_annot_dict:
-        content = variant_annot_dict[key]
-        new_info_header = '##INFO=<ID=' + key + ',Number=.,Type=String,Description="' + content[0] + ' version: ' + content[1] + ' version_date: ' + content[2].strftime('%Y-%m-%d') + '">\n'
-        info_headers.append(new_info_header)
+    for key in annotations:
+        if key == 'clinvar_submissions':
+            info_headers.append('##INFO=<ID=clinvar,Number=.,Type=String,Description="An & separated list of clinvar submissions. Format:interpretation|last_evaluated|review_status|submission_condition|submitter|comment">\n')
+            all_submission_strings = ''
+            for submission in annotations[key]:
+                submission_date = submission[3]
+                if submission_date is not None:
+                    submission_date = submission_date.strftime('%Y-%m-%d')
+                else:
+                    submission_date = str(submission_date)
+                current_submission_string = '|'.join([submission[2], submission_date, submission[4], submission[5][0] + ':' + submission[5][1], submission[6], str(submission[7])])
+                current_submission_string = functions.make_vcf_safe(current_submission_string)
+                all_submission_strings = functions.collect_info(all_submission_strings, '', current_submission_string, sep = '&')
+            info = functions.collect_info(info, 'clinvar=', all_submission_strings)
+        
+        elif key == 'clinvar_variant_annotation':
+            content = annotations[key]
+            new_info_header = '##INFO=<ID=clinvar_summary,Number=1,Type=String,Description="summary of the clinvar submissions">\n'
+            info_headers.append(new_info_header)
+            value = content[4] + ':' + content[3]
+            value = functions.make_vcf_safe(value)
+            info = functions.collect_info(info, 'clinvar_summary=', value)
 
-        value = content[4]
-        content = functions.make_vcf_safe(value)
-        info = functions.collect_info(info, key + '=', value)
-    
-    if len(clinvar_submissions) > 0:
-        info_headers.append('##INFO=<ID=clinvar,Number=.,Type=String,Description="An & separated list of clinvar submissions. Format:interpretation|last_evaluated|review_status|submission_condition|submitter|comment">\n')
-        all_submission_strings = ''
-        for submission in clinvar_submissions:
-            submission_date = submission[3]
-            if submission_date is not None:
-                submission_date = submission_date.strftime('%Y-%m-%d')
-            else:
-                submission_date = str(submission_date)
-            current_submission_string = '|'.join([submission[2], submission_date, submission[4], submission[5][0] + ':' + submission[5][1], submission[6], str(submission[7])])
-            current_submission_string = functions.make_vcf_safe(current_submission_string)
-            all_submission_strings = functions.collect_info(all_submission_strings, '', current_submission_string, sep = '&')
-        info = functions.collect_info(info, 'clinvar=', all_submission_strings)
-    
-    if len(variant_consequences) > 0:
-        info_headers.append('##INFO=<ID=consequences,Number=.,Type=String,Description="An & separated list of variant consequences from vep. Format:Transcript|hgvsc|hgvsp,consequence|impact|exonnr|intronnr|genesymbol|proteindomain|isgencodebasic|ismaneselect|ismaneplusclinical|isensemblcanonical">\n')
-        all_consequence_strings = ''
-        for consequence in variant_consequences:
-            consequence = [str(x) for x in consequence]
-            current_consequence_string = '|'.join(consequence[0:8] + consequence[13:17])
-            current_consequence_string = functions.make_vcf_safe(current_consequence_string)
-            all_consequence_strings = functions.collect_info(all_consequence_strings, '', current_consequence_string, sep = '&')
-        info = functions.collect_info(info, 'consequences=', all_consequence_strings)
 
-    if len(literature) > 0:
-        info_headers.append('##INFO=<ID=pubmed,Number=.,Type=String,Description="An & separated list of pubmed ids relevant for this variant.">\n')
-        all_pubmed_ids = ''
-        for entry in literature:
-            all_pubmed_ids = functions.collect_info(all_pubmed_ids, '', entry[2], sep='&')
-        info = functions.collect_info(info, 'pubmed=', all_pubmed_ids)
     
-    if consensus_classification is not None:
-        info_headers.append('##INFO=<ID=consensus_classification,Number=1,Type=Integer,Description="The consensus classification by the VUS task force.">\n')
-        info = functions.collect_info(info, 'consensus_classification=', consensus_classification[3])
-    
-    if user_classifications is not None:
-        info_headers.append('##INFO=<ID=user_classifications,Number=.,Type=String,Description="Classifications by individual users of HerediVar. Format:class|user|comment|date">\n')
-        all_user_classifications = ''
-        for classification in user_classifications:
-            current_user_classification = '|'.join([classification[1], classification[8] + '_' + classification[9], classification[4], classification[5].strftime('%Y-%m-%d')])
-            current_user_classification = functions.make_vcf_safe(current_user_classification)
-            all_user_classifications = functions.collect_info(all_user_classifications, '', current_user_classification, sep = '&')
-        info = functions.collect_info(info, 'user_classifications=', all_user_classifications)
+        elif key == 'variant_consequences':
+            info_headers.append('##INFO=<ID=consequences,Number=.,Type=String,Description="An & separated list of variant consequences from vep. Format:Transcript|hgvsc|hgvsp,consequence|impact|exonnr|intronnr|genesymbol|proteindomain|isgencodebasic|ismaneselect|ismaneplusclinical|isensemblcanonical">\n')
+            all_consequence_strings = ''
+            for consequence in annotations['variant_consequences']:
+                consequence = [str(x) for x in consequence]
+                current_consequence_string = '|'.join(consequence[0:8] + consequence[13:17])
+                current_consequence_string = functions.make_vcf_safe(current_consequence_string)
+                all_consequence_strings = functions.collect_info(all_consequence_strings, '', current_consequence_string, sep = '&')
+            info = functions.collect_info(info, 'consequences=', all_consequence_strings)
 
-    if heredicare_center_classifications is not None:
-        info_headers.append('##INFO=<ID=heredicare_center_classifications,Number=.,Type=String,Description="An & separated list of the variant classifications from centers imported from HerediCare. Format:class|center|comment|date">\n')
-        all_center_classifications = ''
-        for classification in heredicare_center_classifications:
-            current_center_classification = '|'.join([classification[1], classification[3], classification[4], classification[5].strftime('%Y-%m-%d')])
-            current_center_classification = functions.make_vcf_safe(current_center_classification)
-            all_center_classifications = functions.collect_info(all_center_classifications, '', current_center_classification, sep = '&')
-        info = functions.collect_info(info, 'heredicare_center_classifications=', all_center_classifications)
+        elif key == 'literature':
+            info_headers.append('##INFO=<ID=pubmed,Number=.,Type=String,Description="An & separated list of pubmed ids relevant for this variant.">\n')
+            all_pubmed_ids = ''
+            for entry in annotations['literature']:
+                all_pubmed_ids = functions.collect_info(all_pubmed_ids, '', entry[2], sep='&')
+            info = functions.collect_info(info, 'pubmed=', all_pubmed_ids)
+    
+        elif key == 'consensus_classification':
+            info_headers.append('##INFO=<ID=consensus_classification,Number=1,Type=Integer,Description="The consensus classification by the VUS task force.">\n')
+            info = functions.collect_info(info, 'consensus_classification=', annotations['consensus_classification'][3])
+    
+        elif key == 'user_classifications':
+            info_headers.append('##INFO=<ID=user_classifications,Number=.,Type=String,Description="Classifications by individual users of HerediVar. Format:class|user|comment|date">\n')
+            all_user_classifications = ''
+            for classification in annotations['user_classifications']:
+                current_user_classification = '|'.join([classification[1], classification[8] + '_' + classification[9], classification[4], classification[5].strftime('%Y-%m-%d')])
+                current_user_classification = functions.make_vcf_safe(current_user_classification)
+                all_user_classifications = functions.collect_info(all_user_classifications, '', current_user_classification, sep = '&')
+            info = functions.collect_info(info, 'user_classifications=', all_user_classifications)
+
+        elif key == 'heredicare_center_classifications':
+            info_headers.append('##INFO=<ID=heredicare_center_classifications,Number=.,Type=String,Description="An & separated list of the variant classifications from centers imported from HerediCare. Format:class|center|comment|date">\n')
+            all_center_classifications = ''
+            for classification in annotations['heredicare_center_classifications']:
+                current_center_classification = '|'.join([classification[1], classification[3], classification[4], classification[5].strftime('%Y-%m-%d')])
+                current_center_classification = functions.make_vcf_safe(current_center_classification)
+                all_center_classifications = functions.collect_info(all_center_classifications, '', current_center_classification, sep = '&')
+            info = functions.collect_info(info, 'heredicare_center_classifications=', all_center_classifications)
+        
+        else: # scores and other non-special values
+            content = annotations[key]
+            new_info_header = '##INFO=<ID=' + key + ',Number=.,Type=String,Description="' + content[0] + ' version: ' + content[1] + ' version_date: ' + content[2].strftime('%Y-%m-%d') + '">\n'
+            info_headers.append(new_info_header)
+            value = content[4]
+            value = functions.make_vcf_safe(value)
+            info = functions.collect_info(info, key + '=', value)
 
     if info == '':
         info = '.'
