@@ -130,12 +130,6 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             has_multiple_vids=has_multiple_vids)
 
 
-@variant_blueprint.route('/classify/<int:variant_id>', methods=['GET', 'POST'])
-@require_login
-def classify(variant_id):
-    return render_template('variant/classify.html', variant_id=variant_id)
-
-
 @variant_blueprint.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])
 @require_permission
 def consensus_classify(variant_id):
