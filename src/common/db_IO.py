@@ -28,6 +28,8 @@ def enquote(string):
     return "'" + string + "'"
 
 
+
+
 class Connection:
     def __init__(self):
         self.conn = get_db_connection()
@@ -405,34 +407,55 @@ class Connection:
         res = self.cursor.fetchall()
         return [x[0] for x in res]
 
+    def get_variants_page(self, offset, page_size, variant_ids_oi = 'ALL', additional_constraints='', additional_actual_info = ()):
+        command = "SELECT id,chr,pos,ref,alt FROM variant"
+        actual_information = ()
+        if variant_ids_oi != 'ALL':
+            command = command + " WHERE id IN %s"
+            actual_information = actual_information + (variant_ids_oi, )
+        if additional_constraints.strip() != '':
+            if 'WHERE' not in command:
+                command = command + " WHERE "
+            else:
+                command = command + ' AND '
+            command = command + additional_constraints
+            actual_information = actual_information + additional_actual_info
+        command = command + " ORDER BY chr, pos, ref, alt LIMIT %d, %d"
+        actual_information = actual_information + (offset, page_size)
+        self.cursor.execute(command % actual_information)  
+        result = self.cursor.fetchall()
+        return result
+
+
     # functions specific for frontend!
-    def get_paginated_variants(self, page, page_size, query_type = '', query = ''):
+    # variant_ids_oi should be a string in this form: (variant_id1, variant_id2, variant_id3)
+    def get_paginated_variants(self, page, page_size, query_type = '', query = '', variant_ids_oi = 'ALL'):
         offset = (page - 1) * page_size
         result = []
         num_variants = 0
         if query == '' or query is None:
-            self.cursor.execute(
-                "SELECT id,chr,pos,ref,alt FROM variant ORDER BY chr, pos, ref, alt LIMIT %d, %d"
-                % (offset, page_size)
-            )  
-            result = self.cursor.fetchall()
-
-            self.cursor.execute("SELECT COUNT(id) FROM variant")
+            result = self.get_variants_page(offset, page_size, variant_ids_oi)
+            
+            command = "SELECT COUNT(id) FROM variant"
+            if variant_ids_oi != 'ALL':
+                command = command + " WHERE id IN %s" % (variant_ids_oi, )
+            self.cursor.execute(command)
             num_variants = self.cursor.fetchone()
             num_variants = num_variants[0]
         else:
             if query_type == 'standard':
-                result, num_variants = self.standard_search(query, offset, page_size)
+                result, num_variants = self.standard_search(query, offset, page_size, variant_ids_oi)
             elif query_type == 'hgvs':
-                result, num_variants = self.hgvs_search(query)
+                result, num_variants = self.hgvs_search(query, variant_ids_oi)
             elif query_type == 'range':
-                result, num_variants = self.range_search(query, offset, page_size)
+                result, num_variants = self.range_search(query, offset, page_size, variant_ids_oi)
             elif query_type == 'gene':
-                result, num_variants = self.gene_search(query, offset, page_size)
+                result, num_variants = self.gene_search(query, offset, page_size, variant_ids_oi)
 
         return result, num_variants
     
-    def gene_search(self, query, offset, page_size): # example: 'BARD1%gene%' (this also works with gene aliases and hgnc ids)
+    def gene_search(self, query, offset, page_size, variant_ids_oi): # example: 'BARD1%gene%' (this also works with gene aliases and hgnc ids)
+        # get a list of all variants with the specified gene
         gene_id = self.get_gene_id_by_symbol(query)
         if gene_id is None:
             gene_id = self.get_gene_id_by_hgnc_id(query)
@@ -440,54 +463,64 @@ class Connection:
         self.cursor.execute(command)
         variant_ids = self.cursor.fetchall()
         variant_ids = [x[0] for x in variant_ids]
-        if len(variant_ids) == 0:
+
+        # subset all variants with the specified gene by the given variant_ids_oi
+        if variant_ids_oi != 'ALL':
+            variant_ids_oi = set(functions.variant_id_string_to_list(variant_ids_oi)) & set(variant_ids) # get only the variant ids which are in the incoming variant_ids_oi
+            num_variants = len(variant_ids_oi)
+            variant_ids_oi = functions.variant_id_list_to_string(list(variant_ids_oi))
+        else: # keep every variant
+            variant_ids_oi = functions.variant_id_list_to_string(variant_ids)
+            num_variants = len(variant_ids)
+        
+        # if there are no variants with the specified gene abort & return empty
+        if variant_ids_oi == '()':
             return [], 0
+        
+        result = self.get_variants_page(offset, page_size, variant_ids_oi)
 
-        num_variants = len(variant_ids)
-
-        variant_ids_string = str(variant_ids).replace('[', '(').replace(']', ')')
-        command = "SELECT id,chr,pos,ref,alt FROM variant WHERE id IN " + variant_ids_string + " LIMIT %d, %d" % (offset, page_size)
-        self.cursor.execute(command)
-        result = self.cursor.fetchall()
         return result, num_variants
 
-    def range_search(self, query, offset, page_size): # example: 'chr2:214767531-214780740'
+
+
+    def range_search(self, query, offset, page_size, variant_ids_oi): # example: 'chr2:214767531-214780740'
         parts = query.split(':')
         chr = parts[0]
         positions = parts[1].split('-')
         start = int(positions[0])
         end = int(positions[1])
-        command = "SELECT id,chr,pos,ref,alt FROM variant WHERE chr=%s AND pos BETWEEN %d AND %d LIMIT %d, %d" % (enquote(chr), start, end, offset, page_size)        
-        self.cursor.execute(command)
-        result = self.cursor.fetchall()
+        result = self.get_variants_page(offset, page_size, variant_ids_oi, additional_constraints='chr=%s AND pos BETWEEN %d AND %d', additional_actual_info=(enquote(chr), start, end))
 
         self.cursor.execute("SELECT COUNT(id) FROM variant WHERE chr=%s AND pos BETWEEN %d AND %d" % (enquote(chr), start, end))
         num_variants = self.cursor.fetchone()
         num_variants = num_variants[0]
         return result, num_variants
 
-    def hgvs_search(self, query): # example: 'ENST00000260947:c.1972C>T'
+    def hgvs_search(self, query, variant_ids_oi): # example: 'ENST00000260947:c.1972C>T'
         reference_transcript, hgvs = functions.split_hgvs(query)
         variant_id = self.get_variant_id_by_hgvs(reference_transcript, hgvs)
         result = []
         if variant_id is not None:
-            command = "SELECT id,chr,pos,ref,alt FROM variant WHERE id=%s" % (enquote(variant_id))
-            self.cursor.execute(command)
-            result = [self.cursor.fetchone()] # list is required for the eazy iteration in frontend
+            result = self.get_variants_page(0, 1, variant_ids_oi, additional_constraints="(id=%s)", additional_actual_info=(enquote(variant_id), ))
+
+            if len(result) == 0:
+                return [], 0
         return result, len(result)
 
-    def standard_search(self, query, offset, page_size):
+    def standard_search(self, query, offset, page_size, variant_ids_oi):
         query = enquote(query)
-        command = "SELECT id,chr,pos,ref,alt FROM variant WHERE chr=%s OR pos=%s OR ref=%s OR alt=%s ORDER BY chr, pos, ref, alt LIMIT %d, %d" % (query, query, query, query, offset, page_size)
-        self.cursor.execute(command)
-        result = self.cursor.fetchall()
 
-        self.cursor.execute(
-            "SELECT COUNT(id) FROM variant WHERE chr=%s OR pos=%s OR ref=%s OR alt=%s" 
-            % (query, query, query, query)
-        )
+        result = self.get_variants_page(offset, page_size, variant_ids_oi, additional_constraints="(chr=%s OR pos=%s OR ref=%s OR alt=%s)", additional_actual_info=(query, query, query, query))
+
+        command = "SELECT COUNT(id) FROM variant WHERE chr=%s OR pos=%s OR ref=%s OR alt=%s"
+        actual_information = (query, query, query, query)
+        if variant_ids_oi != 'ALL':
+            command = command + " AND id IN %s"
+            actual_information = actual_information + (variant_ids_oi, )
+        self.cursor.execute(command % actual_information)
         num_variants = self.cursor.fetchone()
         num_variants = num_variants[0]
+
         return result, num_variants
 
 
@@ -792,6 +825,64 @@ class Connection:
         self.cursor.execute(command, (user_id,))
         result = self.cursor.fetchone()
         return result
+    
+    def get_user_id(self, username):
+        command = "SELECT id FROM user WHERE username=%s"
+        self.cursor.execute(command, (username, ))
+        result = self.cursor.fetchone()[0]
+        return result
+
+    def insert_user_variant_list(self, user_id, list_name):
+        command = "INSERT INTO user_variant_lists (user_id, name) VALUES (%s, %s)"
+        self.cursor.execute(command, (user_id, list_name))
+        self.conn.commit()
+
+    # if you set a variant id the result will contain information if this variant is contained in the list or not (list[3] != None ==> variant is conatined in list)
+    def get_lists_for_user(self, user_id, variant_id = None):
+        command = "SELECT * FROM user_variant_lists"
+        actual_information = ()
+        if variant_id is not None:
+            command = command + " LEFT JOIN (SELECT list_id FROM list_variants WHERE variant_id=%s) x ON user_variant_lists.id = x.list_id"
+            actual_information = actual_information + (variant_id, )
+        command = command + " WHERE user_id = %s ORDER BY id ASC"
+        actual_information = actual_information + (user_id, )
+        self.cursor.execute(command, actual_information)
+        result = self.cursor.fetchall()
+        return result
+    
+    def add_variant_to_list(self, list_id, variant_id):
+        command = "INSERT INTO list_variants (list_id, variant_id) \
+                    SELECT %s, %s WHERE NOT EXISTS (SELECT * FROM list_variants \
+                        WHERE `list_id`=%s AND `variant_id`=%s LIMIT 1)"
+        self.cursor.execute(command, (list_id, variant_id, list_id, variant_id))
+        self.conn.commit()
+
+    def get_variant_ids_from_list(self, list_id):
+        command = "SELECT variant_id FROM list_variants WHERE list_id = %s"
+        self.cursor.execute(command, (list_id, ))
+        result = self.cursor.fetchall()
+        result = [x[0] for x in result] # extract variant_id
+        return result
+    
+    # list_id to get the right list
+    # user_id for security such that you can not edit lists which were not made by you
+    # list_name is the value which will be updated
+    def update_user_variant_list(self, list_id, user_id, new_list_name):
+        command = "UPDATE user_variant_lists SET name = %s WHERE id = %s AND user_id = %s"
+        self.cursor.execute(command, (new_list_name, list_id, user_id))
+        self.conn.commit()
+
+    
+    def check_user_list_ownership(self, user_id, list_id):
+        command = "SELECT EXISTS (SELECT * FROM user_variant_lists WHERE user_id = %s AND id = %s)"
+        self.cursor.execute(command, (user_id, list_id))
+        result = self.cursor.fetchone()
+        result = result[0]
+        if result == 1:
+            return True
+        else:
+            return False
+    
 
     def get_all_variant_annotations(self, variant_id):
         variant_annotations = self.get_recent_annotations(variant_id)

@@ -101,7 +101,12 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
     current_annotation_status = conn.get_current_annotation_status(variant_id)
     if request.method == 'POST':
-        if current_annotation_status is None or current_annotation_status[4] != 'pending':
+        user_action = request.args.get('action')
+        if user_action == 'add_to_list':
+            list_id = request.form['add-to-list']
+            conn.add_variant_to_list(list_id, variant_id) # MAYBE add a check that this list belongs to you!
+            return redirect(url_for('variant.display', variant_id=variant_id))
+        if user_action == 'reannotate' and (current_annotation_status is None or current_annotation_status[4] != 'pending'):
             conn.insert_annotation_request(variant_id, session.get('user').get('preferred_username'))
             conn.close()
             return redirect(url_for('variant.display', variant_id=variant_id, from_reannotate='True'))
@@ -120,14 +125,16 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
         has_multiple_vids = False
     
     annotations = conn.get_all_variant_annotations(variant_id)
-    print(annotations)
+
+    lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
     conn.close()
     return render_template('variant/variant.html', 
                             variant=variant_oi, 
                             annotations = annotations,
                             current_annotation_status=current_annotation_status,
-                            has_multiple_vids=has_multiple_vids)
+                            has_multiple_vids=has_multiple_vids,
+                            lists = lists)
 
 
 @variant_blueprint.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])

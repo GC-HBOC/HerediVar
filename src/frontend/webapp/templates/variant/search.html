@@ -8,81 +8,8 @@
   
 <h1 class="bst"> {% block title %} Browse variants {% endblock %} </h1>
 
-
-<div id="tabnav-head" class="row align-items-end bst">
-  <div class="col">{{ pagination.links }}</div>
-
-  <form id="search_form" class="col-sm-3" style="float:right" method="post">
-     <div class="input-group">
-        <button class="input-group-text"> 
-          <svg class="bi bi-search" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"></path>
-          </svg>
-        </button>
-        <input id="searchbar" class="form-control" type="text" placeholder="Quick search..." name="quicksearch" value="{{ search_query }}">
-      </div>
-      <input class="input-group" id="chosen_search_type" name="chosen_search_type" style="display:none" value="TEST">
-
-  </form>
-
-  <div>
-    <a data-bs-toggle="collapse" style="float:right" href="#advanced_search" role="button" aria-expanded="false" aria-controls="advanced_search">
-      Search options
-    </a>
-    <a class="ssr" href="{{url_for('doc.search_help')}}" style="float:right" >Help</a>
-  </div>
-  <div class="collapse" id="advanced_search">
-    <div class="card card-body">
-      <div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" name="search_type" id="inlineRadio0" value="standard" checked>
-          <label class="form-check-label" for="inlineRadio0">Quick search</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" name="search_type" id="inlineRadio1" value="%gene%">
-          <label class="form-check-label" for="inlineRadio1">Gene</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" name="search_type" id="inlineRadio2" value="%hgvs%">
-          <label class="form-check-label" for="inlineRadio2">HGVS</label>
-        </div>
-        <div class="form-check form-check-inline">
-          <input class="form-check-input" type="radio" name="search_type" id="inlineRadio3" value="%range%">
-          <label class="form-check-label" for="inlineRadio3">Range</label>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-
-<div class="table-responsive" style="float:below">
-  <table class="table table-hover">
-    <thead>
-      <tr>
-        <th style="width: 10%">CHR</th>
-        <th style="width: 15%">POS</th>
-        <th style="width: 30%">REF</th>
-        <th style="width: 30%">ALT</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for variant in variants %}
-      <tr data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable" style="line-height: 28px;">
-        <!--<td>{{ loop.index + (page - 1) * per_page }}</td>-->
-        <td>{{ variant[1] }}</td>
-        <td>{{ variant[2] }}</td>
-        <td class="longTextCss" style="white-space: nowrap;"><abbr title="{{ variant[3] }}">{{ variant[3] }}</abbr></td>
-        <td class="longTextCss" style="white-space: nowrap;"><abbr title="{{ variant[4] }}">{{ variant[4] }}</abbr></td>
-      </tr>
-      {% endfor %}
-      {% if variants | length == 0 %}
-        <!--<td colspan="4" class="defaultrow">No results found</td>-->
-        <caption class="defaultrow">No variants found</caption>
-      {% endif %}
-    </tbody>
-  </table>
+<div id="list-content" class="sst" style="width:100%;">
+  {{ macros.draw_paginated_variant_table(pagination, variants) }}
 </div>
 
 
@@ -93,8 +20,5 @@
 </div>
 
 
-
-
-<script src="/static/js/browse.js"></script>
 
 {% endblock %}

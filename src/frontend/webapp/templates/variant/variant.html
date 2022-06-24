@@ -9,7 +9,7 @@
         <div>
             <h1>{% block title %} Variant display {% endblock %}</h1>
             <div class="d-flex align-items-center">
-                <form id="reannotate_form" name="reannotate_form" method="post" action="#">
+                <form id="reannotate_form" action="{{ url_for('variant.display', variant_id=variant[0], action='reannotate') }}" name="reannotate_form" method="post" action="#">
                     <div class="form-group">
                         <span id="tooltip_reannotate_button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="">
                             <button id="reannotate_button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reannotate-modal">(Re-)Annotate</button>
@@ -30,14 +30,28 @@
                     {% endif %}
                     {% endif %}
                 </div>
-                <span id="tooltip_user_classify_button" class="d-inline-block ssl" tabindex="0" title="Submit a new user classification or edit your previous classification if you already have one.">
+                <span id="tooltip_user_classify_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip"  title="Submit a new user classification or edit your previous classification if you already have one.">
                     <a id="user_classify_button" type="button" class="btn btn-outline-primary" href="{{url_for('variant.user_classify', variant_id = variant[0])}}">User classify</a>
                 </span>
-                <span id="tooltip_consensus_classify_button" class="d-inline-block ssl" tabindex="0" title="Submit a new consensus classification">
+                <span id="tooltip_consensus_classify_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip"  title="Submit a new consensus classification">
                     <a id="consensus_classify_button" type="button" class="btn btn-outline-primary" href="{{url_for('variant.consensus_classify', variant_id = variant[0])}}">Consensus classify</a>
                 </span>
-                <span id="tooltip_export_button" class="d-inline-block ssl" tabindex="0">
-                    <a id="export_button" type="button" class="btn btn-outline-primary" href="{{url_for('download.variant', variant_id = variant[0], format='vcf')}}">Export to VCF</a>
+                <span id="tooltip_export_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip" >
+                    <a id="export_button" type="button" class="btn btn-outline-primary" href="{{url_for('download.variant', variant_id = variant[0])}}">Export to VCF</a>
+                </span>
+                <span id="tooltip_export_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip"  title="Select a list to add this variant to it. If a list is highlighted in blue the current variant is already in that list">
+
+                    <form id="add-to-list-form" action="{{ url_for('variant.display', variant_id=variant[0], action='add_to_list') }}" method="post" novalidate>
+                       <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">Add to list</button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                            {% for list in lists %}
+                                <li><button class="dropdown-item {% if list[3] is not none %}active{% endif %}" name="add-to-list" value="{{ list[0] }}" type="submit">{{ list[2] }}</button></li>
+                            {% endfor %}
+                        </ul>
+                      </div>
+                    </form>
+
                 </span>
             </div>
         </div>

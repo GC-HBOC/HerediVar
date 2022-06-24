@@ -1,4 +1,4 @@
-from flask import Blueprint, abort, current_app, send_from_directory, send_file, request
+from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for
 from os import path
 import sys
 from ..utils import require_login
@@ -7,6 +7,9 @@ import common.functions as functions
 from common.db_IO import Connection
 import io
 import datetime
+import tempfile
+from shutil import copyfileobj
+
 
 download_blueprint = Blueprint(
     'download',
@@ -43,27 +46,41 @@ def log_file(log_file):
     return send_from_directory(directory=logs_folder, path='', filename=log_file)
 
 
-@download_blueprint.route('/variant/<int:variant_id>/download')
+@download_blueprint.route('/download/variant/<int:variant_id>')
 @require_login
 def variant(variant_id):
-    download_format = request.args.get('format')
+    conn = Connection()
+    variant_vcf, info_headers = get_variant_vcf_line(variant_id, conn)
+    conn.close()
 
-    if download_format == 'vcf':
-        conn = Connection()
-        variant_vcf, info_headers = get_variant_vcf_line(variant_id, conn)
-        conn.close()
+    helper = io.StringIO()
+    functions.write_vcf_header(info_headers, helper.write, tail='\n')
+    helper.write(variant_vcf + '\n')
 
-        helper = io.StringIO()
-        functions.write_vcf_header(info_headers, helper.write, tail='\n')
-        helper.write(variant_vcf + '\n')
+    buffer = io.BytesIO()
+    buffer.write(helper.getvalue().encode())
+    buffer.seek(0)
 
-        buffer = io.BytesIO()
-        buffer.write(helper.getvalue().encode())
-        buffer.seek(0)
 
-        helper.close()
+    temp_file_path = tempfile.gettempdir() + "/variant_download.vcf"
+    with open(temp_file_path, 'w') as tf:
+        helper.seek(0)
+        copyfileobj(helper, tf)
+    helper.close()
 
-        return send_file(buffer, as_attachment=True, attachment_filename="variant_" + str(variant_id) + ".vcf", mimetype="text/vcf")
+    returncode, err_msg, vcf_errors = functions.check_vcf(temp_file_path)
+
+    if returncode != 0:
+        flash("ERROR: VCF could not be checked! Reason: " + err_msg, "alert-danger")
+        return redirect(url_for('variant.display', variant_id=variant_id))
+    if vcf_errors != '':
+        for line in vcf_errors.split('\n'):
+            if line.startswith('WARNING') or line.startswith('ERROR'):
+                flash("The generated VCF contains errors: " + line, "alert-warning")
+                flash("Ask an admin to fix this issue!", "alert-danger")
+                return redirect(url_for('variant.display', variant_id=variant_id))
+
+    return send_file(buffer, as_attachment=True, attachment_filename="variant_" + str(variant_id) + ".vcf", mimetype="text/vcf")
 
 
 
@@ -79,7 +96,7 @@ def get_variant_vcf_line(variant_id, conn):
     info_headers = []
     for key in annotations:
         if key == 'clinvar_submissions':
-            info_headers.append('##INFO=<ID=clinvar,Number=.,Type=String,Description="An & separated list of clinvar submissions. Format:interpretation|last_evaluated|review_status|submission_condition|submitter|comment">\n')
+            info_headers.append('##INFO=<ID=clinvar_submissions,Number=.,Type=String,Description="An & separated list of clinvar submissions. Format:interpretation|last_evaluated|review_status|submission_condition|submitter|comment">\n')
             all_submission_strings = ''
             for submission in annotations[key]:
                 submission_date = submission[3]
@@ -90,18 +107,16 @@ def get_variant_vcf_line(variant_id, conn):
                 current_submission_string = '|'.join([submission[2], submission_date, submission[4], submission[5][0] + ':' + submission[5][1], submission[6], str(submission[7])])
                 current_submission_string = functions.make_vcf_safe(current_submission_string)
                 all_submission_strings = functions.collect_info(all_submission_strings, '', current_submission_string, sep = '&')
-            info = functions.collect_info(info, 'clinvar=', all_submission_strings)
+            info = functions.collect_info(info, 'clinvar_submissions=', all_submission_strings)
         
         elif key == 'clinvar_variant_annotation':
             content = annotations[key]
-            new_info_header = '##INFO=<ID=clinvar_summary,Number=1,Type=String,Description="summary of the clinvar submissions">\n'
+            new_info_header = '##INFO=<ID=clinvar_summary,Number=.,Type=String,Description="summary of the clinvar submissions">\n'
             info_headers.append(new_info_header)
             value = content[4] + ':' + content[3]
             value = functions.make_vcf_safe(value)
             info = functions.collect_info(info, 'clinvar_summary=', value)
 
-
-    
         elif key == 'variant_consequences':
             info_headers.append('##INFO=<ID=consequences,Number=.,Type=String,Description="An & separated list of variant consequences from vep. Format:Transcript|hgvsc|hgvsp,consequence|impact|exonnr|intronnr|genesymbol|proteindomain|isgencodebasic|ismaneselect|ismaneplusclinical|isensemblcanonical">\n')
             all_consequence_strings = ''
@@ -120,8 +135,10 @@ def get_variant_vcf_line(variant_id, conn):
             info = functions.collect_info(info, 'pubmed=', all_pubmed_ids)
     
         elif key == 'consensus_classification':
-            info_headers.append('##INFO=<ID=consensus_classification,Number=1,Type=Integer,Description="The consensus classification by the VUS task force.">\n')
-            info = functions.collect_info(info, 'consensus_classification=', annotations['consensus_classification'][3])
+            info_headers.append('##INFO=<ID=consensus_classification_class,Number=1,Type=Integer,Description="The consensus classification by the VUS-task-force.">\n')
+            info = functions.collect_info(info, 'consensus_classification_class=', annotations['consensus_classification'][3])
+            info_headers.append('##INFO=<ID=consensus_classification_comment,Number=1,Type=String,Description="The comment for the consensus classification by the VUS-task-force">\n')
+            info = functions.collect_info(info, 'consensus_classification_comment=', functions.make_vcf_safe(annotations['consensus_classification'][3]))
     
         elif key == 'user_classifications':
             info_headers.append('##INFO=<ID=user_classifications,Number=.,Type=String,Description="Classifications by individual users of HerediVar. Format:class|user|comment|date">\n')

@@ -54,6 +54,8 @@ def auth():
 
     if token_response:
         user_info = token_response['userinfo']
+        conn = Connection()
+        user_info['user_id'] = conn.get_user_id(user_info['preferred_username'])
 
         # init the session
         session['user'] = user_info

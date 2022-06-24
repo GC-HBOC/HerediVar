@@ -144,7 +144,6 @@ def execute_command(command, process_name, use_prefix_error_log = True):
         err_msg = err_msg + std_err
     return completed_process.returncode, err_msg, command_output
 
-
 def check_vcf(path, ref_genome = 'GRCh38'):
     genome_path = ''
     if ref_genome == 'GRCh37':
@@ -155,7 +154,6 @@ def check_vcf(path, ref_genome = 'GRCh38'):
                "-in", path, "-lines", "0", "-ref", genome_path]
     returncode, err_msg, vcf_errors = execute_command(command, 'VcfCheck')
     return returncode, err_msg, vcf_errors
-
 
 def left_align_vcf(path, ref_genome = 'GRCh38'):
     genome_path = ''
@@ -209,6 +207,11 @@ def find_between(s, prefix, postfix):
         res = res.group(1)
     return res
 
+def variant_id_list_to_string(variant_ids):
+    return str(variant_ids).replace('[', '(').replace(']', ')')
+
+def variant_id_string_to_list(variant_ids):
+    return [int(x) for x in variant_ids.strip('(').strip(')').split(',')]
 
 # this function actually also maps ccds numbers!
 def get_refseq_to_ensembl_transcript_dict(reverse = False):
