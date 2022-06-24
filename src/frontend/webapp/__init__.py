@@ -37,6 +37,7 @@ def create_app(object_name):
     from .extended_information import create_module as extended_information_create_module
     from .io import create_module as io_create_module
     from .auth import create_module as auth_create_module
+    from .user import create_module as user_create_module
 
     main_create_module(app)
     variant_create_module(app)
@@ -44,5 +45,6 @@ def create_app(object_name):
     doc_create_module(app)
     extended_information_create_module(app)
     auth_create_module(app)
+    user_create_module(app)
 
     return app

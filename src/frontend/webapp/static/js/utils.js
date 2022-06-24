@@ -148,7 +148,9 @@ $(document).ready(function()
         filterTable_one_column($(this).val(), index, table, true)
     });
 
-
+    $("*[data-href]").on('click', function () {
+        window.location = $(this).data("href");
+    });
 });
 
 
