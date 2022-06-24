@@ -33,10 +33,10 @@ def my_lists():
 
     search_query=''
 
-
-    is_list_owner = conn.check_user_list_ownership(user_id, view_list_id)
-    if not is_list_owner:
-        return redirect(url_for('doc.error', code='403', text='No permission to view this variant list!'))
+    if view_list_id is not None:
+        is_list_owner = conn.check_user_list_ownership(user_id, view_list_id)
+        if not is_list_owner:
+            return redirect(url_for('doc.error', code='403', text='No permission to view this variant list!'))
 
     #user = session['user']['given_name'] + ' ' + session['user']['family_name']
     if request.method == 'POST':
