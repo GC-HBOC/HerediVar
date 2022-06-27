@@ -39,10 +39,9 @@
                 </table>
             </div>
 
-
-
         </div>
 
+        <div id="current-list-id" style="display:none" >{{ request.args.get('view') }}</div>
 
         <div id="list-content" class="sst bsl" style="width:100%;">
             {% if view_list_id is not none %}
@@ -51,7 +50,15 @@
                 {% set redirect_uri = url_for('user.my_lists', type='search') %}
             {% endif %}
             {{ macros.draw_paginated_variant_table(pagination, variants, redirect_uri) }}
+
+            {% if request.args.get('view') is not none and variants|length > 0 %}
+            <div class="d-flex justify-content-end">
+                <button data-href="{{ url_for('download.variant', list_id=request.args.get('view')) }}" class="btn btn-primary">Export list to VCF</button>
+            </div>
+            {% endif %}
         </div>
+
+
     </div>
 
 
@@ -75,9 +82,16 @@
                     <input type='hidden' id="list-id" name="list-id" value="">
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button id="list-modal-submit" type="submit" class="btn btn-primary"></button>
+            <div class="d-flex modal-footer">
+                <div class="flex-grow-1">
+                    <button id="list-modal-submit-delete" type="submit" class="btn btn-danger">Delete list</button>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+                <div>
+                    <button id="list-modal-submit" type="submit" class="btn btn-primary"></button>
+                </div>
             </div>
         </div>
     </div>

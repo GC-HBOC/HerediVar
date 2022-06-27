@@ -132,27 +132,30 @@
   
   
   <div class="table-responsive" style="float:below">
-    <table class="table table-hover">
-      <thead>
+    <table class="table table-hover" id="variantTable">
+      <thead id="variantTableHead">
         <tr>
+          <th style="display:none;">id</th>
           <th style="width: 10%">CHR</th>
           <th style="width: 15%">POS</th>
           <th style="width: 30%">REF</th>
           <th style="width: 30%">ALT</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="variantTableBody">
         {% for variant in variants %}
-        <tr data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable" style="line-height: 28px;">
-          <td>{{ variant[1] }}</td>
-          <td>{{ variant[2] }}</td>
-          <td class="longTextCss" style="white-space: nowrap;"><abbr title="{{ variant[3] }}">{{ variant[3] }}</abbr></td>
-          <td class="longTextCss" style="white-space: nowrap;"><abbr title="{{ variant[4] }}">{{ variant[4] }}</abbr></td>
+        <tr style="line-height: 28px;">
+          <td style="display:none;">{{ variant[0] }}</td>
+          <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable" style="white-space: nowrap;">{{ variant[1] }}</td>
+          <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable" style="white-space: nowrap;">{{ variant[2] }}</td>
+          <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss"><abbr title="{{ variant[3] }}">{{ variant[3] }}</abbr></td>
+          <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss"><abbr title="{{ variant[4] }}">{{ variant[4] }}</abbr></td>
+          </td>
         </tr>
         {% endfor %}
         {% if variants | length == 0 %}
           <!--<td colspan="4" class="defaultrow">No results found</td>-->
-          <caption class="defaultrow">No variants found</caption>
+          <caption class="defaultrow">Nothing to show</caption>
         {% endif %}
       </tbody>
     </table>

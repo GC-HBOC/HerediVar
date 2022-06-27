@@ -882,7 +882,16 @@ class Connection:
             return True
         else:
             return False
-    
+
+    def delete_variant_from_list(self, list_id, variant_id):
+        command = "DELETE FROM list_variants WHERE list_id=%s AND variant_id=%s"
+        self.cursor.execute(command, (list_id, variant_id))
+        self.conn.commit() 
+
+    def delete_user_variant_list(self, list_id):
+        command = "DELETE FROM user_variant_lists WHERE id = %s"
+        self.cursor.execute(command, (list_id, ))
+        self.conn.commit()
 
     def get_all_variant_annotations(self, variant_id):
         variant_annotations = self.get_recent_annotations(variant_id)
