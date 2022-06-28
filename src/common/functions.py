@@ -8,6 +8,9 @@ import common.paths as paths
 import tempfile
 import base64
 import io
+import urllib.parse as urlparse
+from urllib.parse import urlencode
+
 
 def basedir():
     return os.getcwd()
@@ -207,11 +210,6 @@ def find_between(s, prefix, postfix):
         res = res.group(1)
     return res
 
-def variant_id_list_to_string(variant_ids):
-    return str(variant_ids).replace('[', '(').replace(']', ')')
-
-def variant_id_string_to_list(variant_ids):
-    return [int(x) for x in variant_ids.strip('(').strip(')').split(',')]
 
 # this function actually also maps ccds numbers!
 def get_refseq_to_ensembl_transcript_dict(reverse = False):
@@ -323,3 +321,13 @@ def decode_base64(base64_string):
 
 def make_vcf_safe(text):
     return text.replace(' ', '_').replace(';', ',')
+
+# new_params should be a dict
+def add_args_to_url(url, new_params):
+    url_parts = list(urlparse.urlparse(url))
+    query = dict(urlparse.parse_qsl(url_parts[4]))
+    query.update(new_params)
+
+    url_parts[4] = urlencode(query)
+
+    return urlparse.urlunparse(url_parts)
