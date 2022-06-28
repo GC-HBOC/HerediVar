@@ -19,8 +19,7 @@ variant_blueprint = Blueprint(
 )
 
 
-
-
+'''
 @variant_blueprint.route('/search', methods=['GET', 'POST'])
 @require_login
 def search():
@@ -33,13 +32,51 @@ def search():
         if not is_valid_query(search_query):
             return redirect(url_for('variant.search'))
     query_type, search_query = preprocess_search_query(search_query)
-    page = int(request.args.get('page', 1))
+    page = int(request.args.get('page', 0))
     per_page = 20
     conn = Connection()
     variants, total = conn.get_paginated_variants(page, per_page, query_type, search_query)
     conn.close()
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
     return render_template('variant/search.html', variants=variants, page=page, per_page=per_page, pagination=pagination, search_query=search_query)
+'''
+
+@variant_blueprint.route('/search', methods=['GET', 'POST'])
+@require_login
+def search():
+
+    genes = request.args.get('genes', '')
+    ranges = request.args.get('ranges', '')
+    consensus = request.args.get('consensus', '')
+    variant_ids_oi = request.args.get('variant_ids_oi', '')
+    hgvs = request.args.get('hgvs', '')
+
+
+    page = int(request.args.get('page', 1))
+    per_page = 20
+    conn = Connection()
+    variants, total = conn.get_variants_page_merged(page, per_page, user_id=session['user']['user_id'], ranges=ranges, genes = genes, consensus=consensus, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
+    conn.close()
+    pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
+    return render_template('variant/search.html', variants=variants, page=page, per_page=per_page, pagination=pagination)
+
+
+#http://srv018.img.med.uni-tuebingen.de:5000/search?ranges=chr1%3A0-9999999999999%3Bchr2%3A0-99999999999999999999%3BchrMT%3A0-9999999999999999
+@variant_blueprint.route('/advanced-search', methods=['GET', 'POST']) # CDH1  chr1:10295758-17027834; chr11:108229378-108229378
+@require_login
+def advanced_search():
+    if request.method == 'POST':
+        genes = request.form.get('genes', '')
+        ranges = request.form.get('ranges', '')
+        consensus = request.form.getlist('consensus')
+        consensus = ';'.join(consensus)
+        hgvs = request.form.get('hgvs', '')
+        variant_ids_oi = request.args.get('variant_ids_oi', '')
+        next = request.args.get('next', url_for('main.index'))
+        next = functions.add_args_to_url(next, {'genes':genes, 'ranges':ranges, 'consensus':consensus, 'hgvs':hgvs, 'variant_ids_oi':variant_ids_oi})
+        return redirect(next)
+
+    return render_template('variant/advanced_search.html')
 
 
 
@@ -159,7 +196,9 @@ def consensus_classify(variant_id):
             generator = pdf_gen(buffer)
             generator.add_title('Classification report')
             v = str(variant_oi[1]) + '-' + str(variant_oi[2]) + '-' + str(variant_oi[3]) + '-' + str(variant_oi[4])
-            rsid = annotations.pop('rsid', None)[4]
+            rsid = annotations.pop('rsid', None)
+            if rsid is not None:
+                rsid = rsid[4]
             generator.add_variant_info(v, classification, current_date, comment, rsid)
         
 
@@ -212,7 +251,7 @@ def consensus_classify(variant_id):
             conn.insert_consensus_classification_from_variant_id(session.get('user').get('preferred_username'), variant_id, classification, comment, date = current_date, evidence_document=evidence_b64)
             flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
             conn.close()
-        return redirect(url_for('variant.classify', variant_id=variant_id))
+        return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
     
     conn = Connection()
     if conn.get_consensus_classification(variant_id, most_recent=True) is not None:

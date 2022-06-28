@@ -31,7 +31,6 @@ def my_lists():
     per_page = 20
     total = 0
 
-    search_query=''
 
     if view_list_id == '':
         return redirect(url_for('doc.error', code='404', text='The requested variant list id was missing.'))
@@ -76,13 +75,8 @@ def my_lists():
 
         # actions on variant list view
         if request_type == 'search':
-            search_query = request.form['quicksearch']
-            search_type = request.form['chosen_search_type']
-            if search_type != 'standard' and search_query != '' and '%' not in search_query:
-                search_query = search_query + search_type
-            if not is_valid_query(search_query):
-                conn.close()
-                return redirect(url_for('user.my_lists', view=view_list_id))
+            pass
+
         if request_type == 'delete_variant':
             variant_id_to_delete = request.args['variant_id']
             conn.delete_variant_from_list(view_list_id, variant_id_to_delete)
@@ -93,18 +87,20 @@ def my_lists():
 
 
 
-    query_type, search_query = preprocess_search_query(search_query)
 
-
+    genes = request.args.get('genes', '')
+    ranges = request.args.get('ranges', '')
+    consensus = request.args.get('consensus', '')
+    variant_ids_oi = request.args.get('variant_ids_oi', '')
+    hgvs = request.args.get('hgvs', '')
     if view_list_id is not None:
         variant_ids_oi = conn.get_variant_ids_from_list(view_list_id) # need to check if this list belongs the currently logged in user!
-        variant_ids_oi = functions.variant_id_list_to_string(variant_ids_oi)
-        if variant_ids_oi != '()':
-            variants, total = conn.get_paginated_variants(page, per_page, query_type, search_query, variant_ids_oi=variant_ids_oi)
+        variant_ids_oi = ';'.join(variant_ids_oi)
+        if variant_ids_oi != '':
+            variants, total = conn.get_variants_page_merged(page, per_page, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
 
 
-    print(user_lists)
     
     conn.close()
     return render_template('user/my_lists.html', 
@@ -113,5 +109,4 @@ def my_lists():
                             page=page, 
                             per_page=per_page, 
                             pagination=pagination, 
-                            search_query=search_query,
                             view_list_id=view_list_id)

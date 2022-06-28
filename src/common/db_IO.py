@@ -27,6 +27,10 @@ def enquote(string):
     string = str(string).strip("'") # remove quotes if the input string is already quoted!
     return "'" + string + "'"
 
+def enbrace(string):
+    #string = str(string).strip("(").strip(")")
+    string = "(" + string + ")"
+    return string
 
 
 
@@ -407,123 +411,129 @@ class Connection:
         res = self.cursor.fetchall()
         return [x[0] for x in res]
 
-    def get_variants_page(self, offset, page_size, variant_ids_oi = 'ALL', additional_constraints='', additional_actual_info = ()):
-        command = "SELECT id,chr,pos,ref,alt FROM variant"
-        actual_information = ()
-        if variant_ids_oi != 'ALL':
-            command = command + " WHERE id IN %s"
-            actual_information = actual_information + (variant_ids_oi, )
-        if additional_constraints.strip() != '':
-            if 'WHERE' not in command:
-                command = command + " WHERE "
-            else:
-                command = command + ' AND '
-            command = command + additional_constraints
-            actual_information = actual_information + additional_actual_info
-        command = command + " ORDER BY chr, pos, ref, alt LIMIT %d, %d"
-        actual_information = actual_information + (offset, page_size)
-        self.cursor.execute(command % actual_information)  
-        result = self.cursor.fetchall()
-        return result
 
-
-    # functions specific for frontend!
-    # variant_ids_oi should be a string in this form: (variant_id1, variant_id2, variant_id3)
-    def get_paginated_variants(self, page, page_size, query_type = '', query = '', variant_ids_oi = 'ALL'):
-        offset = (page - 1) * page_size
-        result = []
-        num_variants = 0
-        if query == '' or query is None:
-            result = self.get_variants_page(offset, page_size, variant_ids_oi)
-            
-            command = "SELECT COUNT(id) FROM variant"
-            if variant_ids_oi != 'ALL':
-                command = command + " WHERE id IN %s" % (variant_ids_oi, )
-            self.cursor.execute(command)
-            num_variants = self.cursor.fetchone()
-            num_variants = num_variants[0]
+    def add_constraints_to_command(self, command, constraints, operator = 'AND'):
+        if 'WHERE' not in command:
+            command = command + " WHERE "
         else:
-            if query_type == 'standard':
-                result, num_variants = self.standard_search(query, offset, page_size, variant_ids_oi)
-            elif query_type == 'hgvs':
-                result, num_variants = self.hgvs_search(query, variant_ids_oi)
-            elif query_type == 'range':
-                result, num_variants = self.range_search(query, offset, page_size, variant_ids_oi)
-            elif query_type == 'gene':
-                result, num_variants = self.gene_search(query, offset, page_size, variant_ids_oi)
-
-        return result, num_variants
+            command = command + ' ' + operator + ' '
+        command = command + constraints
+        return command
     
-    def gene_search(self, query, offset, page_size, variant_ids_oi): # example: 'BARD1%gene%' (this also works with gene aliases and hgnc ids)
-        # get a list of all variants with the specified gene
-        gene_id = self.get_gene_id_by_symbol(query)
-        if gene_id is None:
-            gene_id = self.get_gene_id_by_hgnc_id(query)
-        command = "SELECT DISTINCT variant_id FROM variant_consequence WHERE gene_id=" + enquote(gene_id)
-        self.cursor.execute(command)
-        variant_ids = self.cursor.fetchall()
-        variant_ids = [x[0] for x in variant_ids]
-
-        # subset all variants with the specified gene by the given variant_ids_oi
-        if variant_ids_oi != 'ALL':
-            variant_ids_oi = set(functions.variant_id_string_to_list(variant_ids_oi)) & set(variant_ids) # get only the variant ids which are in the incoming variant_ids_oi
-            num_variants = len(variant_ids_oi)
-            variant_ids_oi = functions.variant_id_list_to_string(list(variant_ids_oi))
-        else: # keep every variant
-            variant_ids_oi = functions.variant_id_list_to_string(variant_ids)
-            num_variants = len(variant_ids)
-        
-        # if there are no variants with the specified gene abort & return empty
-        if variant_ids_oi == '()':
-            return [], 0
-        
-        result = self.get_variants_page(offset, page_size, variant_ids_oi)
-
-        return result, num_variants
-
-
-
-    def range_search(self, query, offset, page_size, variant_ids_oi): # example: 'chr2:214767531-214780740'
-        parts = query.split(':')
+    def preprocess_range(self, range_constraint):
+        parts = range_constraint.split(':')
         chr = parts[0]
         positions = parts[1].split('-')
         start = int(positions[0])
         end = int(positions[1])
-        result = self.get_variants_page(offset, page_size, variant_ids_oi, additional_constraints='chr=%s AND pos BETWEEN %d AND %d', additional_actual_info=(enquote(chr), start, end))
+        return chr, start, end
 
-        self.cursor.execute("SELECT COUNT(id) FROM variant WHERE chr=%s AND pos BETWEEN %d AND %d" % (enquote(chr), start, end))
+    def convert_to_gene_id(self, string):
+        gene_id = self.get_gene_id_by_symbol(string)
+        if gene_id is None:
+            gene_id = self.get_gene_id_by_hgnc_id(string)
+        return gene_id # can return none
+    
+    def preprocess_query_string(self, query):
+        query = ''.join(re.split('[ \r\f\v]', query)) # remove whitespace except for newline and tab
+        query = re.split('[;,\n]', query)
+        query = [x for x in query if x != '']
+        return query
+    
+    # this function adds additional columns to the variant table (ie. gene symbol, gene_id)
+    def finalize_search_query(self, command):
+        prefix = '''
+            SELECT id, chr, pos, ref, alt, gene_id, symbol, classification, user_classification FROM (
+	            SELECT id, chr, pos, ref, alt, gene_id, symbol, classification FROM (
+		            SELECT id, chr, pos, ref, alt, group_concat(gene_id SEPARATOR '; ') as gene_id, group_concat(symbol SEPARATOR '; ') as symbol FROM (
+			            SELECT * FROM (
+        '''
+        postfix = '''
+			    ) a
+			    LEFT JOIN (
+				    SELECT DISTINCT variant_id, gene_id FROM variant_consequence WHERE gene_id IS NOT NULL) b ON a.id=b.variant_id
+		        ) c LEFT JOIN (
+			        SELECT id AS gene_id_2, symbol FROM gene WHERE id
+		    ) d ON c.gene_id=d.gene_id_2 
+		        GROUP BY id, chr, pos, ref, alt
+	        ) e LEFT JOIN (
+	            SELECT variant_id, classification FROM consensus_classification WHERE is_recent=1) f ON e.id = f.variant_id
+            ) g LEFT JOIN (
+	            SELECT variant_id, classification as user_classification FROM user_classification WHERE user_id = %s) h ON g.id = h.variant_id ORDER BY chr, pos, ref, alt;
+        '''
+        command = prefix + command + postfix
+        return command
+
+    def get_variants_page_merged(self, page, page_size, user_id, ranges = '', genes = '', consensus = '', hgvs = '', variant_ids_oi = ''):
+        # get one page of variants determined by offset & pagesize
+        offset = (page - 1) * page_size
+        prefix = "SELECT id, chr, pos, ref, alt FROM variant"
+        postfix = ""
+        actual_information = ()
+        if ranges != '':
+            new_constraints = []
+            ranges = self.preprocess_query_string(ranges)
+            for range_constraint in ranges:
+                chr, start, end = self.preprocess_range(range_constraint)
+                new_constraints.append("(chr=%s AND pos BETWEEN %s AND %s)")
+                actual_information += (chr, start, end)
+            new_constraints = ' OR '.join(new_constraints)
+            new_constraints = enbrace(new_constraints)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if genes != '':
+            genes = self.preprocess_query_string(genes)
+            genes = [self.convert_to_gene_id(x) for x in genes]
+            placeholders = ["%s"] * len(genes)
+            placeholders = ', '.join(placeholders)
+            placeholders = enbrace(placeholders)
+            new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE gene_id IN " + placeholders + ")"
+            actual_information += tuple(genes)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if consensus != '':
+            consensus = self.preprocess_query_string(consensus)
+            placeholders = ["%s"] * len(consensus)
+            placeholders = ', '.join(placeholders)
+            placeholders = enbrace(placeholders)
+            new_constraints = "id IN (SELECT variant_id FROM consensus_classification WHERE classification IN " + placeholders + " AND is_recent = 1)"
+            actual_information += tuple(consensus)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if hgvs != '':
+            hgvs = self.preprocess_query_string(hgvs)
+            all_variants = []
+            for hgvs_string in hgvs:
+                reference_transcript, hgvs = functions.split_hgvs(hgvs_string)
+                variant_id = self.get_variant_id_by_hgvs(reference_transcript, hgvs)
+                all_variants.append(variant_id)
+            placeholders = ["%s"] * len(all_variants)
+            placeholders = ', '.join(placeholders)
+            placeholders = enbrace(placeholders)
+            new_constraints = "id IN " + placeholders
+            actual_information += tuple(all_variants)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if variant_ids_oi != '':
+            variant_ids_oi = self.preprocess_query_string(variant_ids_oi)
+            placeholders = ["%s"] * len(variant_ids_oi)
+            placeholders = ', '.join(placeholders)
+            placeholders = enbrace(placeholders)
+            new_constraints = "id IN " + placeholders
+            actual_information += tuple(variant_ids_oi)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        command = prefix + postfix + " ORDER BY chr, pos, ref, alt LIMIT %s, %s"
+        actual_information += (offset, page_size)
+        command = self.finalize_search_query(command)
+        actual_information += (user_id, ) # this is required to get the user-classifications of the currently logged in user for the variants
+        #print(command % actual_information)
+        self.cursor.execute(command, actual_information)
+        variants = self.cursor.fetchall()
+
+        # get number of variants
+        prefix = "SELECT COUNT(id) FROM variant"
+        command = prefix + postfix
+        self.cursor.execute(command, actual_information[:len(actual_information)-3])
         num_variants = self.cursor.fetchone()
-        num_variants = num_variants[0]
-        return result, num_variants
-
-    def hgvs_search(self, query, variant_ids_oi): # example: 'ENST00000260947:c.1972C>T'
-        reference_transcript, hgvs = functions.split_hgvs(query)
-        variant_id = self.get_variant_id_by_hgvs(reference_transcript, hgvs)
-        result = []
-        if variant_id is not None:
-            result = self.get_variants_page(0, 1, variant_ids_oi, additional_constraints="(id=%s)", additional_actual_info=(enquote(variant_id), ))
-
-            if len(result) == 0:
-                return [], 0
-        return result, len(result)
-
-    def standard_search(self, query, offset, page_size, variant_ids_oi):
-        query = enquote(query)
-
-        result = self.get_variants_page(offset, page_size, variant_ids_oi, additional_constraints="(chr=%s OR pos=%s OR ref=%s OR alt=%s)", additional_actual_info=(query, query, query, query))
-
-        command = "SELECT COUNT(id) FROM variant WHERE chr=%s OR pos=%s OR ref=%s OR alt=%s"
-        actual_information = (query, query, query, query)
-        if variant_ids_oi != 'ALL':
-            command = command + " AND id IN %s"
-            actual_information = actual_information + (variant_ids_oi, )
-        self.cursor.execute(command % actual_information)
-        num_variants = self.cursor.fetchone()
-        num_variants = num_variants[0]
-
-        return result, num_variants
-
-
+        if num_variants is None:
+            return [], 0
+        return variants, num_variants[0]
 
 
 
@@ -861,7 +871,7 @@ class Connection:
         command = "SELECT variant_id FROM list_variants WHERE list_id = %s"
         self.cursor.execute(command, (list_id, ))
         result = self.cursor.fetchall()
-        result = [x[0] for x in result] # extract variant_id
+        result = [str(x[0]) for x in result] # extract variant_id
         return result
     
     # list_id to get the right list
