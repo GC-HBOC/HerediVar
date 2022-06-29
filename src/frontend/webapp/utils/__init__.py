@@ -100,8 +100,7 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
         conn = Connection()
         is_duplicate = conn.check_variant_duplicate(new_chr, new_pos, new_ref, new_alt) # check if variant is already contained
         if not is_duplicate:
-            username = session['user']['preferred_username']
-            conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chr, pos, ref, alt, username) # insert it -> original variant = actual variant because variant import is only allowed from grch38
+            conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chr, pos, ref, alt, user_id = session['user']['user_id']) # insert it -> original variant = actual variant because variant import is only allowed from grch38
             flash(Markup("Successfully inserted variant: " + new_chr + ' ' + str(new_pos) + ' ' + new_ref + ' ' + new_alt + 
                         ' (view your variant <a href="display/chr=' + str(new_chr) + '&pos=' + str(new_pos) + '&ref=' + str(new_ref) + '&alt=' + str(new_alt) + '" class="alert-link">here</a>)'), "alert-success")
         else:

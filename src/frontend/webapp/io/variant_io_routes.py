@@ -30,7 +30,7 @@ def import_variants():
 
 
             if status == 'finished':
-                import_queue_id = conn.insert_import_request(username = session.get('user').get('preferred_username'))
+                import_queue_id = conn.insert_import_request(username = session['user']['user_id'])
                 requested_at = conn.get_import_request(import_queue_id = import_queue_id)[2]
                 requested_at = datetime.strptime(str(requested_at), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
 
@@ -48,7 +48,7 @@ def import_variants():
             conn = Connection()
             variant_ids = conn.get_all_valid_variant_ids()
             for variant_id in variant_ids:
-                conn.insert_annotation_request(variant_id, username = session.get('user').get('preferred_username'))
+                conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
 
             flash('Variant reannotation requested. It will be computed in the background.', 'alert-success')
         

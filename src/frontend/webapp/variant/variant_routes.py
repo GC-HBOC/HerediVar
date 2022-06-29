@@ -144,7 +144,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
             conn.add_variant_to_list(list_id, variant_id) # MAYBE add a check that this list belongs to you!
             return redirect(url_for('variant.display', variant_id=variant_id))
         if user_action == 'reannotate' and (current_annotation_status is None or current_annotation_status[4] != 'pending'):
-            conn.insert_annotation_request(variant_id, session.get('user').get('preferred_username'))
+            conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
             conn.close()
             return redirect(url_for('variant.display', variant_id=variant_id, from_reannotate='True'))
 
@@ -248,7 +248,7 @@ def consensus_classify(variant_id):
             evidence_b64 = functions.buffer_to_base64(buffer)
             #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/frontend/downloads/consensus_classification_reports/testreport.pdf')
 
-            conn.insert_consensus_classification_from_variant_id(session.get('user').get('preferred_username'), variant_id, classification, comment, date = current_date, evidence_document=evidence_b64)
+            conn.insert_consensus_classification_from_variant_id(session['user']['user_id'], variant_id, classification, comment, date = current_date, evidence_document=evidence_b64)
             flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
             conn.close()
         return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
@@ -303,7 +303,7 @@ def user_classify(variant_id):
                 conn.update_user_classification(user_classification[0], classification, comment)
                 flash(Markup("Successfully updated user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
             else: # user does not yet have a classification for this variant -> he wants to create a new one
-                conn.insert_user_classification(variant_id, classification, session['user']['preferred_username'], comment) # UPDATE USER ID ONCE LOGIN IS READY!!!!!
+                conn.insert_user_classification(variant_id, classification, session['user']['user_id'], comment) # UPDATE USER ID ONCE LOGIN IS READY!!!!!
                 conn.close()
                 flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
             return redirect(url_for('variant.classify', variant_id = variant_id))
