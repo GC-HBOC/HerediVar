@@ -1,3 +1,4 @@
+from turtle import down
 from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for, session
 from os import path
 import sys
@@ -216,3 +217,11 @@ def get_variant_vcf_line(variant_id, conn):
 
 
     return variant_vcf + '\t' + info, info_headers
+
+
+@download_blueprint.route('/testattack')
+def testattack():
+    conn = Connection()
+    res = conn.get_variant_id("asdfasdf' OR id < 100 OR chr = 'sdfgsdfg", 214730440, 'G', 'A')
+    conn.close()
+    return str(res)

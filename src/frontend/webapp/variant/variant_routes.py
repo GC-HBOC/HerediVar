@@ -233,7 +233,7 @@ def consensus_classify(variant_id):
             evidence_b64 = functions.buffer_to_base64(buffer)
             #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/frontend/downloads/consensus_classification_reports/testreport.pdf')
 
-            conn.insert_consensus_classification_from_variant_id(session['user']['user_id'], variant_id, classification, comment, date = current_date, evidence_document=evidence_b64)
+            conn.insert_consensus_classification_from_variant_id(session['user']['user_id'], variant_id, classification, comment, evidence_document=evidence_b64, date = current_date)
             flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
             conn.close()
         return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
@@ -284,14 +284,15 @@ def user_classify(variant_id):
         if not comment or not classification:
             flash("All fields are required!", "alert-danger")
         else:
+            current_date = datetime.datetime.today().strftime('%Y-%m-%d')
             if user_classification is not None: # user already has a classification for this variant -> he requests an update
-                conn.update_user_classification(user_classification[0], classification, comment)
+                conn.update_user_classification(user_classification[0], classification, comment, date = current_date)
                 flash(Markup("Successfully updated user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
             else: # user does not yet have a classification for this variant -> he wants to create a new one
-                conn.insert_user_classification(variant_id, classification, session['user']['user_id'], comment) # UPDATE USER ID ONCE LOGIN IS READY!!!!!
+                conn.insert_user_classification(variant_id, classification, session['user']['user_id'], comment, date = current_date)
                 conn.close()
                 flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
-            return redirect(url_for('variant.classify', variant_id = variant_id))
+            return redirect(url_for('variant.user_classify', variant_id = variant_id))
     conn.close()
 
     return render_template('variant/user_classify.html', previous_classification=int(previous_classification), previous_comment=previous_comment, has_classification=has_classification)

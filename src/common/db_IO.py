@@ -49,18 +49,22 @@ class Connection:
 
     # This function removes ALL occurances of duplicated items
     def remove_duplicates(self, table, unique_column):
-        command = "DELETE FROM " + table + " WHERE " + unique_column + " IN (SELECT * FROM (SELECT " + unique_column + " FROM " + table + " GROUP BY " + unique_column + " HAVING (COUNT(*) > 1)) AS A)"
-        self.cursor.execute(command)
+        #command = "DELETE FROM " + table + " WHERE " + unique_column + " IN (SELECT * FROM (SELECT " + unique_column + " FROM " + table + " GROUP BY " + unique_column + " HAVING (COUNT(*) > 1)) AS A)"
+        command = "DELETE FROM %s WHERE %s IN (SELECT * FROM (SELECT %s FROM %s GROUP BY %s HAVING (COUNT(*) > 1)) AS A)"
+        self.cursor.execute(command, (table, unique_column, unique_column, table, unique_column))
         self.conn.commit()
     
 
     def get_one_variant(self, variant_id):
-        self.cursor.execute("SELECT id,chr,pos,ref,alt FROM variant WHERE id =" + str(variant_id))
+        command = "SELECT id,chr,pos,ref,alt FROM variant WHERE id = %s"
+        self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchone()
         return result
     
     def get_variant_id(self, chr, pos, ref, alt):
-        self.cursor.execute("SELECT id FROM variant WHERE chr = " + enquote(chr) + " AND pos = " + str(pos) + " AND ref = " + enquote(ref) + " AND alt = " + enquote(alt))
+        #command = "SELECT id FROM variant WHERE chr = " + enquote(chr) + " AND pos = " + str(pos) + " AND ref = " + enquote(ref) + " AND alt = " + enquote(alt)
+        command = "SELECT id FROM variant WHERE chr = %s AND pos = %s AND ref = %s AND alt = %s"
+        self.cursor.execute(command, (chr, pos, ref, alt))
         variant_id = self.cursor.fetchone()
         if variant_id is not None:
             return variant_id[0]
@@ -68,7 +72,8 @@ class Connection:
     
     def get_gene_id_by_hgnc_id(self, hgnc_id):
         hgnc_id = functions.trim_hgnc(hgnc_id)
-        self.cursor.execute("SELECT id FROM gene WHERE hgnc_id = " + enquote(hgnc_id))
+        command = "SELECT id FROM gene WHERE hgnc_id = %s"
+        self.cursor.execute(command, (hgnc_id, ))
         result = self.cursor.fetchall()
         if len(result) > 1:
             print("WARNING: there were multiple gene ids for hgnc id " + str(hgnc_id))
@@ -89,12 +94,14 @@ class Connection:
         error_msg = enquote(error_msg.replace("\n", " "))
         status = enquote(status)
         #print("UPDATE annotation_queue SET status = " + status + ", finished_at = " + time.strftime('%Y-%m-%d %H:%M:%S') + ", error_message = " + error_msg + " WHERE id = " + str(row_id))
-        self.cursor.execute("UPDATE annotation_queue SET status = " + status + ", finished_at = NOW(), error_message = " + error_msg + " WHERE id = " + str(row_id))
+        command = "UPDATE annotation_queue SET status = %s, finished_at = NOW(), error_message = %s WHERE id = %s"
+        self.cursor.execute(command, (status, error_msg, row_id))
         self.conn.commit()
 
     def get_current_annotation_status(self, variant_id):
         # return the most recent annotation queue entry for the variant 
-        self.cursor.execute("SELECT * FROM annotation_queue WHERE variant_id = %s ORDER BY requested DESC LIMIT 1" % (enquote(variant_id)))
+        command = "SELECT * FROM annotation_queue WHERE variant_id = %s ORDER BY requested DESC LIMIT 1"
+        self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchone()
         return result
 
@@ -104,12 +111,12 @@ class Connection:
         found_description = False
         
         while not found_description:
-            command = "SELECT accession_id,description FROM pfam_id_mapping WHERE accession_id = " + enquote(pfam_acc)
-            self.cursor.execute(command)
+            command = "SELECT accession_id,description FROM pfam_id_mapping WHERE accession_id = %s"
+            self.cursor.execute(command, (pfam_acc, ))
             pfam_description = self.cursor.fetchone()
             if pfam_description is None:
-                command = "SELECT old_accession_id,new_accession_id FROM pfam_legacy WHERE old_accession_id = " + enquote(pfam_acc)
-                self.cursor.execute(command)
+                command = "SELECT old_accession_id,new_accession_id FROM pfam_legacy WHERE old_accession_id = %s"
+                self.cursor.execute(command, (pfam_acc))
                 pfam_description = self.cursor.fetchone()
                 if pfam_description is not None:
                     if pfam_description[1] == 'removed':
@@ -171,11 +178,12 @@ class Connection:
         self.conn.commit()
 
     def get_gene_id_by_symbol(self, symbol):
-        command = "SELECT id,symbol FROM gene WHERE symbol=" + enquote(symbol)
-        self.cursor.execute(command)
+        command = "SELECT id,symbol FROM gene WHERE symbol=%s"
+        self.cursor.execute(command, (symbol, ))
         res = self.cursor.fetchone()
         if res is None:
-            self.cursor.execute("SELECT gene_id,alt_symbol FROM gene_alias WHERE alt_symbol=" + enquote(symbol))
+            command = "SELECT gene_id,alt_symbol FROM gene_alias WHERE alt_symbol=%s"
+            self.cursor.execute(command, (symbol, ))
             res = self.cursor.fetchone() # ! each symbol is only contained once and all duplicates were removed
         if res is not None:
             gene_id = res[0]
@@ -204,16 +212,16 @@ class Connection:
     def insert_gene_alias(self, hgnc_id, symbol):
         gene_id = self.get_gene_id_by_hgnc_id(hgnc_id)
         if gene_id is not None:
-            self.cursor.execute("INSERT INTO gene_alias (gene_id, alt_symbol) VALUES (%s, %s)",
-                            (gene_id, symbol))
+            command = "INSERT INTO gene_alias (gene_id, alt_symbol) VALUES (%s, %s)"
+            self.cursor.execute(command, (gene_id, symbol))
             self.conn.commit()
         else:
             print("WARNING: there was no row in the gene table for hgnc_id " + str(hgnc_id) + ". Error occured during insertion of gene alias " + str(symbol))
 
 
     def insert_annotation_type(self, name, description, value_type, version, version_date):
-        command = "SELECT id FROM annotation_type WHERE name =" + enquote(name) + " AND version = " + enquote(version) + " AND version_date = " + enquote(version_date)
-        self.cursor.execute(command)
+        command = "SELECT id FROM annotation_type WHERE name = %s AND version = %s AND version_date = %s"
+        self.cursor.execute(command, (name, version, version_date))
         result = self.cursor.fetchall()
         if len(result) == 0:
             command = "INSERT INTO annotation_type (name, description, value_type, version, version_date) VALUES (%s, %s, %s, %s, %s)"
@@ -238,27 +246,27 @@ class Connection:
             pos = variant.POS
             ref = variant.REF
             alt = variant.ALT
-            self.cursor().execute("INSERT INTO variant (chr, pos, ref, alt) VALUES (%s, %s, %s, %s)",
-                                  (chr, pos, ref, alt))
+            command = "INSERT INTO variant (chr, pos, ref, alt) VALUES (%s, %s, %s, %s)"
+            self.cursor().execute(command, (chr, pos, ref, alt))
         self.conn.commit()
     
     def insert_variant(self, chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, user_id):
         ref = ref.upper()
         alt = alt.upper()
-        self.cursor.execute("INSERT INTO variant (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                         (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt))
+        command = "INSERT INTO variant (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt))
         self.conn.commit()
         variant_id = self.get_variant_id(chr, pos, ref, alt)
         self.insert_annotation_request(variant_id, user_id)
     
     def insert_external_variant_id_from_vcf(self, chr, pos, ref, alt, external_id, id_source):
-        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) (SELECT id, %s, %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)" % (enquote(external_id), enquote(id_source), enquote(chr), enquote(pos), enquote(ref), enquote(alt))
-        self.cursor.execute(command)
+        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) (SELECT id, %s, %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)"
+        self.cursor.execute(command, (external_id, id_source, chr, pos, ref, alt))
         self.conn.commit()
     
     def insert_external_variant_id_from_variant_id(self, heredivar_id, external_id, id_source):
-        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) VALUES (%s, %s, %s)" % (enquote(heredivar_id), enquote(external_id), enquote(id_source))
-        self.cursor.execute(command)
+        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) VALUES (%s, %s, %s)"
+        self.cursor.execute(command, (heredivar_id, external_id, id_source))
         self.conn.commit()
 
     def insert_annotation_request(self, variant_id, user_id): # this inserts only if there is not an annotation request for this variant which is still pending
@@ -321,22 +329,25 @@ class Connection:
         if gene_id is not None:
             command = ''
             if transcript_refseq is not None and transcript_ensembl is not None:
-                transcript_ensembl_list = ', '.join([enquote(x) for x in transcript_ensembl.split(',')])
-                self.cursor.execute("SELECT COUNT(*) FROM transcript WHERE name IN (" + transcript_ensembl_list + ")")
+                #transcript_ensembl_list = ', '.join([enquote(x) for x in transcript_ensembl.split(',')])
+                transcript_ensembl_list = transcript_ensembl.split(',')
+                transcript_ensembl_placeholders = ', '.join(['%s'] * len(transcript_ensembl_list))
+                self.cursor.execute("SELECT COUNT(*) FROM transcript WHERE name IN (" + transcript_ensembl_placeholders + ")", tuple(transcript_ensembl_list))
                 has_ensembl = self.cursor.fetchone()[0]
                 if has_ensembl:
                     # The command inserts a new refseq transcript while it searches for a matching ensembl transcripts (which should already be contained in the transcripts table) and copies their gencode, mane and canonical flags
-                    infos = (int(gene_id), enquote(transcript_refseq), enquote(transcript_biotype), int(total_length), "(" + transcript_ensembl_list + ")")
+                    infos = (gene_id, transcript_refseq, transcript_biotype, total_length) + tuple(transcript_ensembl_list)
                     command = "INSERT INTO transcript (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) \
-	                                    (SELECT %d, %s, %s, %d, SUM(is_gencode_basic) > 0, SUM(is_mane_select) > 0, SUM(is_mane_plus_clinical)  > 0, SUM(is_ensembl_canonical)  > 0 FROM transcript WHERE name IN %s);"  % infos
+	                                    (SELECT %s, %s, %s, %s, SUM(is_gencode_basic) > 0, SUM(is_mane_select) > 0, SUM(is_mane_plus_clinical)  > 0, SUM(is_ensembl_canonical)  > 0 FROM transcript WHERE name IN (" + transcript_ensembl_placeholders + "));"
             if command == '':
                 if transcript_refseq is not None:
                     transcript_name = transcript_refseq
                 else:
                     transcript_name = transcript_ensembl
-                command = "INSERT INTO transcript (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) VALUES (%d, %s, %s, %d, %d, %d, %d, %d)" % (int(gene_id), enquote(transcript_name), enquote(transcript_biotype), int(total_length), int(is_gencode_basic), int(is_mane_select), int(is_mane_plus_clinical), int(is_ensembl_canonical))
+                infos = (gene_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical)
+                command = "INSERT INTO transcript (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
             
-            self.cursor.execute(command)
+            self.cursor.execute(command, infos)
             self.conn.commit()
         else:
             print("WARNING: transcript: " + str(transcript_ensembl) + "/" + str(transcript_refseq) + ", transcript_biotype: " + transcript_biotype + " was not imported as the corresponding gene is not in the database (gene-table) " + "hgncid: " + str(hgnc_id) + ", gene symbol: " + str(symbol))
@@ -387,15 +398,15 @@ class Connection:
                         SELECT * \
 	                        FROM annotation_type WHERE (title, version_date) IN ( \
 		                        select title, MAX(version_date) version_date from annotation_type INNER JOIN ( \
-				                    select variant_id, annotation_type_id, value, supplementary_document from variant_annotation where variant_id=%d \
+				                    select variant_id, annotation_type_id, value, supplementary_document from variant_annotation where variant_id=%s \
 			                ) x \
 			                ON annotation_type.id = x.annotation_type_id \
 		                    GROUP BY title \
 	                    )  \
                     ) y  \
                     ON y.id = variant_annotation.annotation_type_id \
-                    WHERE variant_id=%d" % (variant_id, variant_id)
-        self.cursor.execute(command)
+                    WHERE variant_id=%s"
+        self.cursor.execute(command, (variant_id, variant_id))
         result = self.cursor.fetchall()
         return result
     
@@ -412,7 +423,7 @@ class Connection:
         return [x[0] for x in res]
 
 
-    def add_constraints_to_command(self, command, constraints, operator = 'AND'):
+    def add_constraints_to_command(self, command, constraints, operator = 'AND'): # constraints should not contain actual data, but rather %s placeholders!!!
         if 'WHERE' not in command:
             command = command + " WHERE "
         else:
@@ -436,7 +447,7 @@ class Connection:
     
     def preprocess_query_string(self, query):
         query = ''.join(re.split('[ \r\f\v]', query)) # remove whitespace except for newline and tab
-        query = re.split('[;,\n]', query)
+        query = re.split('[;,\n\t]', query)
         query = [x for x in query if x != '']
         return query
     
@@ -538,8 +549,8 @@ class Connection:
 
 
     def get_clinvar_variant_annotation(self, variant_id):
-        command = "SELECT * FROM clinvar_variant_annotation WHERE variant_id = " + enquote(variant_id)
-        self.cursor.execute(command)
+        command = "SELECT * FROM clinvar_variant_annotation WHERE variant_id = %s"
+        self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
         if len(result) > 1:
             functions.eprint("WARNING: more than one clinvar annotation for variant " + str(variant_id) + " in: get_clinvar_variant_annotation, defaulting to the first one")
@@ -549,8 +560,8 @@ class Connection:
         return result
     
     def get_clinvar_submissions(self, clinvar_variant_annotation_id):
-        command = "SELECT * FROM clinvar_submission WHERE clinvar_variant_annotation_id = " + enquote(clinvar_variant_annotation_id)
-        self.cursor.execute(command)
+        command = "SELECT * FROM clinvar_submission WHERE clinvar_variant_annotation_id = %s"
+        self.cursor.execute(command, (clinvar_variant_annotation_id, ))
         result = self.cursor.fetchall()
         if len(result) == 0:
             return None
@@ -566,12 +577,12 @@ class Connection:
     def get_variant_consequences(self, variant_id):
         command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,x.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags FROM transcript RIGHT JOIN ( \
 	                    SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,gene_id,exon_nr,intron_nr,source,pfam_accession,pfam_description FROM gene RIGHT JOIN ( \
-		                    SELECT * FROM variant_consequence WHERE variant_id=%d \
+		                    SELECT * FROM variant_consequence WHERE variant_id=%s \
 	                    ) y \
 	                    ON gene.id = y.gene_id \
                     ) x \
-                    ON transcript.name = x.transcript_name" % (variant_id)
-        self.cursor.execute(command)
+                    ON transcript.name = x.transcript_name"
+        self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
 
         #result = sorted(result, key=lambda x: functions.convert_none_infinite(x[12]), reverse=True) # sort table by transcript length
@@ -581,8 +592,8 @@ class Connection:
         return result
 
     def get_variant_literature(self, variant_id, sort_year = True):
-        command = "SELECT * FROM variant_literature WHERE variant_id = " + enquote(variant_id)
-        self.cursor.execute(command)
+        command = "SELECT * FROM variant_literature WHERE variant_id = %s"
+        self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
         if len(result) == 0:
             return None
@@ -592,8 +603,8 @@ class Connection:
     
     def check_variant_duplicate(self, chr, pos, ref, alt):
         # The command checks if the length of the table returned by the subquery is empty (result = 0) or not (result = 1)
-        command = "SELECT EXISTS (SELECT * FROM variant WHERE chr = %s AND pos = %d AND ref = %s AND alt = %s)" % (enquote(chr), int(pos), enquote(ref), enquote(alt))
-        self.cursor.execute(command)
+        command = "SELECT EXISTS (SELECT * FROM variant WHERE chr = %s AND pos = %s AND ref = %s AND alt = %s)"
+        self.cursor.execute(command, (chr, pos, ref, alt))
         result = self.cursor.fetchone()[0] # get the first element as result is always a tuple
         if result == 0:
             return False
@@ -601,26 +612,29 @@ class Connection:
             return True
 
     def get_gene(self, gene_id): # return all info of a gene for the gene page
-        command = "SELECT * FROM gene WHERE id = %s" % (gene_id)
-        self.cursor.execute(command)
+        command = "SELECT * FROM gene WHERE id = %s"
+        self.cursor.execute(command, (gene_id, ))
         result = self.cursor.fetchone()
         return result
 
     def get_transcripts(self, gene_id):
-        command = "SELECT gene_id,name,biotype,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags FROM transcript WHERE gene_id = %s" % (gene_id)
-        self.cursor.execute(command)
+        command = "SELECT gene_id,name,biotype,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags FROM transcript WHERE gene_id = %s"
+        self.cursor.execute(command, (gene_id, ))
         result = self.cursor.fetchall()
         return result
 
     def get_variant_id_by_hgvs(self, reference_transcript, hgvs):
-        command = "SELECT variant_id FROM variant_consequence WHERE transcript_name=" + enquote(reference_transcript) 
+        command = "SELECT variant_id FROM variant_consequence WHERE transcript_name=%s"
+        actual_information = (reference_transcript, )
         if hgvs.startswith('c.'):
-            command = command + " AND hgvs_c=" + enquote(hgvs)
+            command = command + " AND hgvs_c= %s"
+            actual_information += (hgvs, )
         elif hgvs.startswith('p.'):
-            command = command + " AND hgvs_p=" + enquote(hgvs)
+            command = command + " AND hgvs_p=%s"
+            actual_information += (hgvs, )
         else:
             return None
-        self.cursor.execute(command)
+        self.cursor.execute(command, actual_information)
         result = self.cursor.fetchone()
         if result is not None:
             result = result[0]
@@ -646,14 +660,10 @@ class Connection:
         self.conn.commit()
     '''
     
-    def insert_consensus_classification_from_variant_id(self, user_id, variant_id, consensus_classification, comment, date = "CURDATE()", evidence_document = None):
+    def insert_consensus_classification_from_variant_id(self, user_id, variant_id, consensus_classification, comment, evidence_document, date):
         self.invalidate_previous_consensus_classifications(variant_id)
-        if date != "CURDATE()":
-            date = enquote(date)
-        if evidence_document is None:
-            return
-        command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document) VALUES (%s, %s, %s, %s, " + date + ", %s)"
-        self.cursor.execute(command, (user_id, variant_id, consensus_classification, comment, evidence_document.decode()))
+        command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document) VALUES (%s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (user_id, variant_id, consensus_classification, comment, date, evidence_document.decode()))
         self.conn.commit()
     
     def invalidate_previous_consensus_classifications(self, variant_id):
@@ -662,15 +672,13 @@ class Connection:
         self.conn.commit()
     
     def insert_heredicare_center_classification(self, variant_id, classification, center_name, comment, date):
-        data = [enquote(x) for x in (variant_id, classification, center_name, comment, date)]
-        command = "INSERT INTO heredicare_center_classification (variant_id, classification, center_name, comment, date) VALUES (%s, %s, %s, %s, %s)" % tuple(data)
-        self.cursor.execute(command)
+        command = "INSERT INTO heredicare_center_classification (variant_id, classification, center_name, comment, date) VALUES (%s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, classification, center_name, comment, date))
         self.conn.commit()
 
     def check_heredicare_center_classification(self, variant_id, classification, center_name, comment, date): # this returns true if this classification is already in there and fals if it is not
-        data = [enquote(x) for x in (variant_id, classification, center_name, comment, date)]
-        command = "SELECT EXISTS (SELECT * FROM heredicare_center_classification WHERE variant_id = %s AND classification = %s AND center_name = %s AND comment = %s AND date = %s)" % tuple(data)
-        self.cursor.execute(command)
+        command = "SELECT EXISTS (SELECT * FROM heredicare_center_classification WHERE variant_id = %s AND classification = %s AND center_name = %s AND comment = %s AND date = %s)"
+        self.cursor.execute(command, (variant_id, classification, center_name, comment, date))
         result = self.cursor.fetchone()[0]
         if result == 0:
             return False
@@ -678,9 +686,8 @@ class Connection:
             return True
 
     def check_consensus_classification(self, variant_id, consensus_classification, comment, date):
-        data = [enquote(x) for x in (variant_id, consensus_classification, comment, date)]
-        command = "SELECT EXISTS (SELECT * FROM consensus_classification WHERE variant_id = %s AND classification = %s AND comment = %s AND date = %s)" % tuple(data)
-        self.cursor.execute(command)
+        command = "SELECT EXISTS (SELECT * FROM consensus_classification WHERE variant_id = %s AND classification = %s AND comment = %s AND date = %s)"
+        self.cursor.execute(command, (variant_id, consensus_classification, comment, date))
         result = self.cursor.fetchone()[0]
         if result == 0:
             return False
@@ -688,8 +695,8 @@ class Connection:
             return True
     
     def get_variant_id_from_external_id(self, id, id_source): #!! assumed that the external_id column contains unique entries for id, id_source pairs!
-        command = "SELECT variant_id FROM variant_ids WHERE external_id = %s AND id_source = %s" % (enquote(id), enquote(id_source))
-        self.cursor.execute(command)
+        command = "SELECT variant_id FROM variant_ids WHERE external_id = %s AND id_source = %s"
+        self.cursor.execute(command, (id, id_source))
         result = self.cursor.fetchone()
         if result is not None:
             return result[0]
@@ -723,18 +730,14 @@ class Connection:
         result = sorted(result, key=lambda x: functions.convert_none_infinite(x[5]), reverse=True)
         return result
 
-    def insert_user_classification(self, variant_id, classification, user_id, comment, date = "CURDATE()"):
-        if date != "CURDATE()":
-            date = enquote(date)
-        command = "INSERT INTO user_classification (variant_id, classification, user_id, comment, date) VALUES (%s, %s, %s, %s," + date + ")"
-        self.cursor.execute(command, (variant_id, classification, user_id, comment))
+    def insert_user_classification(self, variant_id, classification, user_id, comment, date):
+        command = "INSERT INTO user_classification (variant_id, classification, user_id, comment, date) VALUES (%s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, classification, user_id, comment, date))
         self.conn.commit()
     
-    def update_user_classification(self, user_classification_id, classification, comment, date= "CURDATE()"):
-        if date != "CURDATE()":
-            date = enquote(date)
-        command = "UPDATE user_classification SET classification = %s, comment = %s, date = " + date + " WHERE id = %s"
-        self.cursor.execute(command, (classification, comment, user_classification_id))
+    def update_user_classification(self, user_classification_id, classification, comment, date):
+        command = "UPDATE user_classification SET classification = %s, comment = %s, date = %s WHERE id = %s"
+        self.cursor.execute(command, (classification, comment, date, user_classification_id))
         self.conn.commit()
     
     def get_user_classification_by_username(self, username, variant_id = None):
@@ -768,8 +771,8 @@ class Connection:
         return self.cursor.fetchone()[0]
     
     def close_import_request(self, import_queue_id):
-        command = "UPDATE import_queue SET status = 'finished', finished_at = NOW() WHERE id = " + str(import_queue_id)
-        self.cursor.execute(command)
+        command = "UPDATE import_queue SET status = 'finished', finished_at = NOW() WHERE id = %s"
+        self.cursor.execute(command, (import_queue_id, ))
         self.conn.commit()
 
     def get_most_recent_import_request(self):
@@ -938,4 +941,3 @@ class Connection:
             variant_annot_dict['heredicare_center_classifications'] = heredicare_center_classifications
     
         return variant_annot_dict
-
