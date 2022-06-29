@@ -48,7 +48,6 @@ def require_login(f):
             refresh_status_code = refresh_token()
             # if the refresh token is expired as well promt a new login by invalidating the client session
             if refresh_status_code != 200:
-                print(request.url)
                 return redirect(url_for('auth.logout', auto_logout='True', next_logout=url_for('auth.login', next_login=request.url))) # logout and return to login page! with next= page which you wanted to access in the first place
         
         return f(*args, **kwargs)
@@ -67,7 +66,7 @@ def require_permission(f):
         header = {'Authorization': f'Bearer {token.get("access_token")}'}
         resp = requests.post(url, data=data, headers=header)
         if resp.status_code != 200:
-            return redirect(url_for('doc.error', code=str(resp.status_code), text=resp.text)) # redirect to error page
+            abort(resp.status_code)
         return f(*args, **kwargs)
     return decorated_function
 

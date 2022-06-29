@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1 class="bst"> {% block title %} An HTML error occured! {% endblock %} </h1>
+
+<div class="bst">
+
+
+    <div class="bst">
+        Error code:
+        <div class="display-1">500: Internal Server Error</div>
+    </div>
+
+    <div class="bst">
+        Description: This was most likely caused by a programming error or because the server is currently overloaded. You can try to access the resource later or report a bug.
+    </div>
+    
+
+    
+</div>
+
+</div>
+
+{% endblock %}
+
