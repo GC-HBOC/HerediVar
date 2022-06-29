@@ -23,9 +23,3 @@ def search_help():
 def deleted_variant():
     return render_template('doc/deleted_variant.html')
 
-
-@doc_blueprint.route('/html_error')
-def error():
-    code = request.args.get('code', '0')
-    text = request.args.get('text', 'missing description')
-    return render_template('doc/html_error.html', code=code, text=text)
