@@ -45,11 +45,13 @@
 
         <div id="list-content" class="sst bsl" style="width:100%;">
             {% if view_list_id is not none %}
-                {% set redirect_uri = url_for('user.my_lists', view=view_list_id, type='search') %}
+                {{ macros.draw_paginated_variant_table(pagination, variants) }}
             {% else %}
-                {% set redirect_uri = url_for('user.my_lists', type='search') %}
+                <div class="display-5" style="text-align:center;">
+                    Please select a list to view its content!
+                </div>
             {% endif %}
-            {{ macros.draw_paginated_variant_table(pagination, variants, redirect_uri) }}
+            
 
             {% if request.args.get('view') is not none and variants|length > 0 %}
             <div class="d-flex justify-content-end">
