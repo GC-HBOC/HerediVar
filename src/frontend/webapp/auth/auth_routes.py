@@ -54,12 +54,7 @@ def auth():
 
     if token_response:
         user_info = token_response['userinfo']
-        conn = Connection()
-        user_info['user_id'] = conn.get_user_id(user_info['preferred_username'])
-
-        # init the session
-        session['user'] = user_info
-        session['tokenResponse'] = token_response
+        
 
         # save user to database - this is only to record which user made which actions in the database and has nothing to do with authenitication
         username = user_info['preferred_username']
@@ -71,8 +66,12 @@ def auth():
             return redirect(url_for('auth.logout', auto_logout='True'))
         conn = Connection()
         conn.insert_user(username, first_name, last_name, affiliation) # this inserts only if the user is not already in the database and updates the information if the information changed (except for username this one has to stay)
+        user_info['user_id'] = conn.get_user_id(user_info['preferred_username'])
         conn.close()
 
+        # init the session
+        session['user'] = user_info
+        session['tokenResponse'] = token_response
 
         return redirect(request.args.get('next_login', url_for('main.index')))
     
