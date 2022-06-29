@@ -33,12 +33,12 @@ def my_lists():
 
 
     if view_list_id == '':
-        return redirect(url_for('doc.error', code='404', text='The requested variant list id was missing.'))
+        return abort(404)
 
     if view_list_id is not None:
         is_list_owner = conn.check_user_list_ownership(user_id, view_list_id)
         if not is_list_owner:
-            return redirect(url_for('doc.error', code='403', text='No permission to view this variant list!'))
+            return abort(403)
 
     #user = session['user']['given_name'] + ' ' + session['user']['family_name']
     if request.method == 'POST':
@@ -57,7 +57,7 @@ def my_lists():
             if list_id is not None:
                 is_list_owner = conn.check_user_list_ownership(user_id, list_id)
                 if not is_list_owner:
-                    return redirect(url_for('doc.error', code='403', text='No permission!'))
+                    return abort('403')
             conn.update_user_variant_list(list_id, user_id, list_name)
             flash("Successfully changed list name to \"" + list_name + "\"", "alert-success")
             conn.close()
@@ -67,7 +67,7 @@ def my_lists():
             if list_id is not None:
                 is_list_owner = conn.check_user_list_ownership(user_id, list_id)
                 if not is_list_owner:
-                    return redirect(url_for('doc.error', code='403', text='No permission!'))
+                    return abort('403')
             conn.delete_user_variant_list(list_id)
             flash("Successfully removed list", "alert-success")
             conn.close()
@@ -90,9 +90,10 @@ def my_lists():
 
     genes = request.args.get('genes', '')
     ranges = request.args.get('ranges', '')
-    consensus = request.args.get('consensus', '')
-    variant_ids_oi = request.args.get('variant_ids_oi', '')
+    consensus = request.args.getlist('consensus')
+    consensus = ';'.join(consensus)
     hgvs = request.args.get('hgvs', '')
+    variant_ids_oi = request.args.get('variant_ids_oi', '')
     if view_list_id is not None:
         variant_ids_oi = conn.get_variant_ids_from_list(view_list_id) # need to check if this list belongs the currently logged in user!
         variant_ids_oi = ';'.join(variant_ids_oi)

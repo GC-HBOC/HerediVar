@@ -41,15 +41,18 @@ def search():
     return render_template('variant/search.html', variants=variants, page=page, per_page=per_page, pagination=pagination, search_query=search_query)
 '''
 
-@variant_blueprint.route('/search', methods=['GET', 'POST'])
+
+#http://srv018.img.med.uni-tuebingen.de:5000/search?ranges=chr1%3A0-9999999999999%3Bchr2%3A0-99999999999999999999%3BchrMT%3A0-9999999999999999
+@variant_blueprint.route('/search')  # CDH1  chr1:10295758-17027834; chr11:108229378-108229378
 @require_login
 def search():
 
     genes = request.args.get('genes', '')
     ranges = request.args.get('ranges', '')
-    consensus = request.args.get('consensus', '')
-    variant_ids_oi = request.args.get('variant_ids_oi', '')
+    consensus = request.args.getlist('consensus')
+    consensus = ';'.join(consensus)
     hgvs = request.args.get('hgvs', '')
+    variant_ids_oi = request.args.get('variant_ids_oi', '')
 
 
     page = int(request.args.get('page', 1))
@@ -59,24 +62,6 @@ def search():
     conn.close()
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
     return render_template('variant/search.html', variants=variants, page=page, per_page=per_page, pagination=pagination)
-
-
-#http://srv018.img.med.uni-tuebingen.de:5000/search?ranges=chr1%3A0-9999999999999%3Bchr2%3A0-99999999999999999999%3BchrMT%3A0-9999999999999999
-@variant_blueprint.route('/advanced-search', methods=['GET', 'POST']) # CDH1  chr1:10295758-17027834; chr11:108229378-108229378
-@require_login
-def advanced_search():
-    if request.method == 'POST':
-        genes = request.form.get('genes', '')
-        ranges = request.form.get('ranges', '')
-        consensus = request.form.getlist('consensus')
-        consensus = ';'.join(consensus)
-        hgvs = request.form.get('hgvs', '')
-        variant_ids_oi = request.args.get('variant_ids_oi', '')
-        next = request.args.get('next', url_for('main.index'))
-        next = functions.add_args_to_url(next, {'genes':genes, 'ranges':ranges, 'consensus':consensus, 'hgvs':hgvs, 'variant_ids_oi':variant_ids_oi})
-        return redirect(next)
-
-    return render_template('variant/advanced_search.html')
 
 
 

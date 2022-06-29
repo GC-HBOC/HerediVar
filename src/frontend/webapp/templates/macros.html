@@ -82,14 +82,87 @@
 {% endmacro %}
 
 
-{% macro draw_paginated_variant_table(pagination, variants, next=url_for('variant.search')) %}
+{% macro draw_paginated_variant_table(pagination, variants) %}
 <div id="tabnav-head" class="row align-items-end">
     <div class="col">{{ pagination.links }}</div>
 
     <div class="col">
-      <a class="ssl" style="float:right" href="{{ url_for('variant.advanced_search', next=next) }}">Search</a>
-      <a class="ssl" style="float:right" href="{{ next }}">Clear filters</a>
+      <a data-bs-toggle="collapse" id="searchOptionsToggle" style="float:right" href="#advanced_search" role="button" aria-expanded="false" aria-controls="advanced_search">
+        Search options
+      </a>
+      <a class="ssr" style="float:right" href="{{ url_for(request.url_rule.endpoint) }}">Clear filters</a>
     </div>
+
+    <div class="collapse" id="advanced_search">
+        <div class="card card-body">
+
+            <div>
+                <form action="" method="GET" novalidate>
+        
+                    <div class="form-group sst">
+                        <label for="genes" class="form-label">Genes</label>
+                        <textarea type="text" name="genes" id="genes"
+                               placeholder="BRCA1; BARD1; ..." class="form-control"
+                               >{{ request.args.get('genes', '') }}</textarea>
+                    </div>
+        
+                    <div class="form-group sst">
+                        <label for="ranges" class="form-label">Ranges</label>
+                        <textarea type="text" name="ranges" id="ranges"
+                               placeholder="chr1:10295758-17027834; chr11:108229378-108229378; ..." class="form-control"
+                               >{{ request.args.get('ranges', '') }}</textarea>
+                    </div>
+        
+                    <div class="form-group sst">
+                        <label for="hgvs" class="form-label">c.HGVS</label>
+                        <textarea type="text" name="hgvs" id="hgvs"
+                               placeholder="ENST00000260947:c.1972C>T; ..." class="form-control"
+                               >{{ request.args.get('hgvs', '') }}</textarea>
+                    </div>
+        
+                    <div class="form-group sst">
+                        {% set selected_consensus = request.args.getlist('consensus') %}
+                        <label for="consensus-select" class="form-label">Consensus Classification</label>
+                        <div id="consensus-select" class="d-flex">
+                            <div class="form-check bsr">
+                                <input class="form-check-input" type="checkbox" value="1" id="consensus" name="consensus" {% if '1' in selected_consensus %}checked{% endif %}>
+                                <label class="form-check-label" for="flexCheckDefault">1</label>
+                            </div>
+                            <div class="form-check bsr">
+                                <input class="form-check-input" type="checkbox" value="2" id="consensus" name="consensus" {% if '2' in selected_consensus %}checked{% endif %}>
+                                <label class="form-check-label" for="flexCheckDefault">2</label>
+                            </div>
+                            <div class="form-check bsr">
+                                <input class="form-check-input" type="checkbox" value="3" id="consensus" name="consensus" {% if '3' in selected_consensus %}checked{% endif %}>
+                                <label class="form-check-label" for="flexCheckDefault">3</label>
+                            </div>
+                            <div class="form-check bsr">
+                                <input class="form-check-input" type="checkbox" value="4" id="consensus" name="consensus" {% if '4' in selected_consensus %}checked{% endif %}>
+                                <label class="form-check-label" for="flexCheckDefault">4</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="5" id="consensus" name="consensus" {% if '5' in selected_consensus %}checked{% endif %}>
+                                <label class="form-check-label" for="flexCheckDefault">5</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if request.args.get('view') is not none %}
+                        <input type="hidden" name="view" id="view" value="{{request.args.get('view')}}">
+                    {% endif %}
+                    
+        
+                    <div class="d-flex sst justify-content-end align-items-center">
+                        <div>
+                            <a class="ssr" href="{{url_for('doc.search_help')}}" style="float:right" >Help</a>
+                        </div>
+                        <button style="float:right" class="btn btn-primary" type="submit">search</button>
+                    </div>
+        
+                </form>
+            </div>
+        
+        </div>
 
 </div>
   
@@ -103,9 +176,9 @@
           <th style="width: 15%">POS</th>
           <th style="width: 30%">REF</th>
           <th style="width: 30%">ALT</th>
-          <th style="width: 8%">GENE</th>
-          <th style="width:4%;">PCL</th>
-          <th style="width:4%;">CCL</th>
+          <th style="width: 10%; text-align:center;">GENE</th>
+          <th style="width:9%; text-align:center;">User classification</th>
+          <th style="width:9%; text-align: center;">Consensus classification</th>
         </tr>
       </thead>
       <tbody id="variantTableBody">
@@ -117,9 +190,15 @@
           <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss"><abbr title="{{ variant[3] }}">{{ variant[3] }}</abbr></td>
           <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss"><abbr title="{{ variant[4] }}">{{ variant[4] }}</abbr></td>
           {% if variant[6] is not none %}
-            <td data-href="{{ url_for('extended_information.gene', gene_id=variant[5] | int) }}" class="clickable longTextCss"><abbr title="{{ variant[6] }}">{{ variant[6] }}</abbr></td>
+            {% set symbols = variant[6].split(';') %}
+            {% set gene_ids = variant[5].split(';') %}
+            <td style="text-align:center;">
+            {% for i in range(symbols|length) %}
+                <a href="{{ url_for('extended_information.gene', gene_id=gene_ids[i] | int) }}">{{ symbols[i] }}</a>
+            {% endfor %}
+            </td>
           {% else %}
-            <td>-</td>
+            <td style="text-align:center;">-</td>
           {% endif %}
           <td style="text-align:center;">{% if variant[8] is not none %} {{ variant[8] }} {% else %}-{%endif%}</td>
           <td style="text-align:center;">{% if variant[7] is not none %} {{ variant[7] }} {% else %}-{%endif%}</td>
@@ -133,5 +212,27 @@
     </table>
   </div>
 
+  <script>
+      $(document).ready(function () {
+        //save id of collapse to local cookie if it is shown
+        $("#advanced_search").on('show.bs.collapse', function () {
+            var active = 'advanced_search';
+            localStorage.setItem('expandedSearchOptions', active);
+          //  alert(active);
+        });
+        // delte it again if it is not shown anymore
+        $("#advanced_search").on('hide.bs.collapse', function () {
+            localStorage.removeItem('expandedSearchOptions');
+        });
+        // get the value from the cookie & update collapse accordingly
+        var last = localStorage.getItem('expandedSearchOptions');
+        if (last != null) {
+            //remove default collapse settings
+            $("#advanced_search").removeClass('show');
+            //show collapse
+            $("#" + last).addClass("show");
+        }
+    });
+  </script>
 
 {% endmacro %}
