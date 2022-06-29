@@ -217,11 +217,3 @@ def get_variant_vcf_line(variant_id, conn):
 
 
     return variant_vcf + '\t' + info, info_headers
-
-
-@download_blueprint.route('/testattack')
-def testattack():
-    conn = Connection()
-    res = conn.get_variant_id("asdfasdf' OR id < 100 OR chr = 'sdfgsdfg", 214730440, 'G', 'A')
-    conn.close()
-    return str(res)

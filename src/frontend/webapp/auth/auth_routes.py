@@ -73,7 +73,7 @@ def auth():
         session['user'] = user_info
         session['tokenResponse'] = token_response
 
-        return redirect(request.args.get('next_login', url_for('main.index')))
+        return save_redirect(request.args.get('next_login', url_for('main.index')))
     
     flash('ERROR: could not fetch user information from authentication server!', 'alert-danger')
     return redirect(url_for('main.index'))
@@ -102,7 +102,7 @@ def logout():
     if not auto_logout:
         flash("Successfully logged out!", "alert-success")
 
-    return redirect(request.args.get('next_logout', url_for('main.index')))
+    return save_redirect(request.args.get('next_logout', url_for('main.index')))
 
 
 @auth_blueprint.route('/register')

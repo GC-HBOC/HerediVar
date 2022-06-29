@@ -12,6 +12,7 @@ from functools import wraps
 from flask_session import Session
 from redis import Redis
 from authlib.oauth2.rfc7636 import create_s256_code_challenge
+from urllib.parse import urlparse, urljoin
 
 
 # a decorator which redirects to the login page if the user is not logged in. 
@@ -91,4 +92,6 @@ def refresh_token():
         session['tokenResponse'] = new_token
 
     return status_code
+
+
 
