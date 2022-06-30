@@ -154,15 +154,11 @@ def preprocess_search_query(query):
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
-    print(str(test_url))
-    print(str(ref_url))
     allowed_schemes = ('http')
     if current_app.config['TLS']:
         allowed_schemes = ('https')
     is_same_scheme = test_url.scheme in allowed_schemes
     is_same_netloc = ref_url.netloc == test_url.netloc
-    print(is_same_netloc)
-    print(is_same_scheme)
     return is_same_scheme and is_same_netloc
            
 

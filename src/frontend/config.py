@@ -28,7 +28,8 @@ class Config(object):
 
 
 class ProdConfig(Config):
-    pass
+    TLS = True
+    DEBUG = False
 
 
 class DevConfig(Config):

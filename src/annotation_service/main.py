@@ -21,7 +21,7 @@ do_heredicare = False
 # external programs
 do_phylop =  False
 do_spliceai =  False
-do_hexplorer = False
+do_hexplorer = True
 
 # vep dependent
 do_vep =  False
@@ -33,7 +33,7 @@ insert_literature =  False
 do_dbsnp =  False
 do_revel =  False
 do_cadd =  False
-do_clinvar =  True
+do_clinvar =  False
 do_gnomad =  False
 do_brca_exchange =  False
 do_flossies =  False
@@ -177,7 +177,7 @@ def annotate_spliceai_algorithm(input_vcf_path, output_vcf_path):
 
 
 def annotate_hexplorer(input_vcf_path, output_vcf_path):
-    command = [paths.ngs_bits_path + "Hexplorer", "-vcf", "-in", input_vcf_path, "-out", output_vcf_path]
+    command = [paths.ngs_bits_path + "VcfAnnotateHexplorer", "-in", input_vcf_path, "-out", output_vcf_path, "-ref", paths.ref_genome_path]
     returncode, err_msg, command_output = functions.execute_command(command, process_name = "hexplorer")
     return returncode, err_msg
 
@@ -267,7 +267,7 @@ if __name__ == '__main__':
         
         ## annotate variant with hexplorer splicing scores (Hexplorer score + HBond score)
         if do_hexplorer:
-            print("annotation hexplorer scores...")
+            print("annotating hexplorer scores...")
             execution_code_hexplorer, err_msg_hexplorer = annotate_hexplorer(one_variant_path, variant_annotated_path)
             update_output(one_variant_path, variant_annotated_path, execution_code_hexplorer)
             if execution_code_hexplorer != 0:
@@ -508,6 +508,43 @@ if __name__ == '__main__':
                     conn.insert_variant_annotation(variant_id, 33, value)
                 elif entry.startswith("tp53db_pubmed="):
                     pmids = functions.collect_info(pmids, '', entry[14:].replace('&', ','), sep = ',')
+                
+                elif entry.startswith("hexplorer_delta="):
+                    value = entry[16:]
+                    conn.insert_variant_annotation(variant_id, 39, value)
+                elif entry.startswith("hexplorer_wt="):
+                    value = entry[13:]
+                    conn.insert_variant_annotation(variant_id, 41, value)
+                elif entry.startswith("hexplorer_mut="):
+                    value = entry[14:]
+                    conn.insert_variant_annotation(variant_id, 40, value)
+                elif entry.startswith("hexplorer_delta_rev="):
+                    value = entry[20:]
+                    conn.insert_variant_annotation(variant_id, 42, value)
+                elif entry.startswith("hexplorer_wt_rev="):
+                    value = entry[17:]
+                    conn.insert_variant_annotation(variant_id, 44, value)
+                elif entry.startswith("hexplorer_mut_rev="):
+                    value = entry[18:]
+                    conn.insert_variant_annotation(variant_id, 43, value)
+                elif entry.startswith("max_hbond_delta="):
+                    value = entry[16:]
+                    conn.insert_variant_annotation(variant_id, 45, value)
+                elif entry.startswith("max_hbond_wt="):
+                    value = entry[13:]
+                    conn.insert_variant_annotation(variant_id, 47, value)
+                elif entry.startswith("max_hbond_mut="):
+                    value = entry[14:]
+                    conn.insert_variant_annotation(variant_id, 46, value)
+                elif entry.startswith("max_hbond_delta_rev="):
+                    value = entry[20:]
+                    conn.insert_variant_annotation(variant_id, 48, value)
+                elif entry.startswith("max_hbond_wt_rev="):
+                    value = entry[17:]
+                    conn.insert_variant_annotation(variant_id, 50, value)
+                elif entry.startswith("max_hbond_mut_rev="):
+                    value = entry[18:]
+                    conn.insert_variant_annotation(variant_id, 49, value)
 
 
             # submit collected clinvar data to db if it exists
