@@ -146,7 +146,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     else:
         has_multiple_vids = False
     
-    annotations = conn.get_all_variant_annotations(variant_id)
+    annotations = conn.get_all_variant_annotations(variant_id, group_output=True)
 
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 

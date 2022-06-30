@@ -101,6 +101,7 @@
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">Variant identification</h4>
+                <hr>
                 <p class="card-text">
                     <div class="row align-items-start">
                         <div class="col li-label"><abbr title="Variant in VCF style (FORMAT: chromosome -> position in reference genome (GRCh38) -> reference allele -> alternative allele)">VCF</abbr></div>
@@ -127,217 +128,45 @@
             <div class="card-body">
                 <h4 class="card-title">Variant information</h4>
                 <p class="card-text">
-    
-    {% if 'cadd_scaled' in annotations or 'revel' in annotations or 'phylop_100way' in annotations %}
-    <div class="row align-items-start">
-        <div class="col-sm-4 li-label"><abbr title="Pathogeneity and other scores">Change&nbsp;tolerance</abbr></div>
-        <div class="col li-info">
-            {% if 'cadd_scaled' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['cadd_scaled'][0]}}"><a class="dashed_underline">CADD:</a></abbr>&nbsp;{{annotations['cadd_scaled'][4]}}
-            </div>
-            {% endif %}
-            {% if 'revel' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['revel'][0]}}"><a class="dashed_underline">REVEL:</a></abbr>&nbsp;{{annotations['revel'][4]}}
-            </div>
-            {% endif %}
-            {% if 'phylop_100way' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['phylop_100way'][0]}}"><a class="dashed_underline">phyloP:</a></abbr>&nbsp;{{annotations['phylop_100way'][4]}}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-    {% if 'spliceai_max_delta' in annotations or 'spliceai_details' in annotations or 'maxentscan_ref' in annotations or 'maxentscan_alt' in annotations %}
-    <div class="row align-items-start">
-        <div class="col-sm-4 li-label"><abbr title="Various splicing related scores">Splicing</abbr></div>
-        <div class="col li-info">
-            {% if 'spliceai_max_delta' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['spliceai_max_delta'][0]}}"><a class="dashed_underline">spliceAI max:</a></abbr>&nbsp;{{annotations['spliceai_max_delta'][4]}}
-            </div>
-            {% endif %}
-            {% if 'spliceai_details' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['spliceai_details'][0]}}"><a class="dashed_underline">spliceAI details:</a></abbr>&nbsp;{{annotations['spliceai_details'][4]}}
-            </div>
-            {% endif %}
-            {% if 'maxentscan_ref' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['maxentscan_ref'][0]}}"><a class="dashed_underline">maxentscan ref:</a></abbr>&nbsp;{{annotations['maxentscan_ref'][4]}}
-            </div>
-            {% endif %}
-            {% if 'maxentscan_alt' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['maxentscan_alt'][0]}}"><a class="dashed_underline">maxentscan alt:</a></abbr>&nbsp;{{annotations['maxentscan_alt'][4]}}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-    {% if 'gnomad_ac' in annotations or 'gnomad_af' in annotations or 'gnomad_popmax' in annotations or 'gnomad_hom' in annotations or 'gnomad_het' in annotations or 'gnomad_hemi' in annotations %}
-    <div class="row align-items-start">
-        <div class="col-sm-4 li-label"><abbr title="gnomAD scores">gnomAD</abbr></div>
-        <div class="col li-info">
-            {% if 'gnomad_ac' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['gnomad_ac'][0]}}"><a class="dashed_underline">AC:</a></abbr>&nbsp;{{annotations['gnomad_ac'][4]}}
-            </div>
-            {% endif %}
-            {% if 'gnomad_af' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['gnomad_af'][0]}}"><a class="dashed_underline">AF:</a></abbr>&nbsp;{{annotations['gnomad_af'][4]}}
-            </div>
-            {% endif %}
-            {% if 'gnomad_popmax' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['gnomad_popmax'][0]}}"><a class="dashed_underline">popmax:</a></abbr>&nbsp;{{annotations['gnomad_popmax'][4]}}
-            </div>
-            {% endif %}
-            {% if 'gnomad_hom' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['gnomad_hom'][0]}}"><a class="dashed_underline">#hom:</a></abbr>&nbsp;{{annotations['gnomad_hom'][4]}}
-            </div>
-            {% endif %}
-            {% if 'gnomad_het' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['gnomad_het'][0]}}"><a class="dashed_underline">#het:</a></abbr>&nbsp;{{annotations['gnomad_het'][4]}}
-            </div>
-            {% endif %}
-            {% if 'gnomad_hemi' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['gnomad_hemi'][0]}}"><a class="dashed_underline">#hemi:</a></abbr>&nbsp;{{annotations['gnomad_hemi'][4]}}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-    {% if 'flossies_num_afr' in annotations or 'flossies_num_eur' in annotations %}
-    <div class="row align-items-start">
-        <div class="col-sm-4 li-label"><abbr title="Number of individuals from the FLOSSIES database">FLOSSIES</abbr></div>
-        <div class="col li-info">
-            {% if 'flossies_num_afr' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['flossies_num_afr'][0]}}"><a class="dashed_underline">#afr:</a></abbr>&nbsp;{{annotations['flossies_num_afr'][4]}}
-            </div>
-            {% endif %}
-            {% if 'flossies_num_eur' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['flossies_num_eur'][0]}}"><a class="dashed_underline">#eur:</a></abbr>&nbsp;{{annotations['flossies_num_eur'][4]}}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-    {% if 'tp53db_class' in annotations or 'tp53db_bayes_del' in annotations or 'tp53db_DNE_LOF_class' in annotations or 'tp53db_DNE_class' in annotations or 'tp53db_domain_function' in annotations or 'tp53db_transactivation_class' in annotations%}
-    <div class="row align-items-start">
-        <div class="col-sm-4 li-label"><abbr title="Information from the TP53 database. This is only visible for variants within the TP53 gene.">TP53 database</abbr></div>
-        <div class="col li-info">
-            <div class="li-element">
-                {% if 'tp53db_class' in annotations %}
-                    <abbr title="{{annotations['tp53db_class'][0]}}"><a class="dashed_underline">class:</a></abbr>&nbsp;{{annotations['tp53db_class'][4]}}
-                {% endif %}
-            </div>
-            <div class="li-element">
-                {% if 'tp53db_bayes_del' in annotations %}
-                    <abbr title="{{annotations['tp53db_bayes_del'][0]}}"><a class="dashed_underline">Bayes Del:</a></abbr>&nbsp;{{annotations['tp53db_bayes_del'][4]}}
-                {% endif %}
-            </div>
-            <div class="li-element">
-                {% if 'tp53db_DNE_LOF_class' in annotations %}
-                    <abbr title="{{annotations['tp53db_DNE_LOF_class'][0]}}"><a class="dashed_underline">DNE LOF class:</a></abbr>&nbsp;{{annotations['tp53db_DNE_LOF_class'][4]}}
-                {% endif %}
-            </div>
-            <div class="li-element">
-                {% if 'tp53db_DNE_class' in annotations %}
-                    <abbr title="{{annotations['tp53db_DNE_class'][0]}}"><a class="dashed_underline">DNE class:</a></abbr>&nbsp;{{annotations['tp53db_DNE_class'][4]}}
-                {% endif %}
-            </div>
-            <div class="li-element">
-                {% if 'tp53db_domain_function' in annotations %}
-                    <abbr title="{{annotations['tp53db_domain_function'][0]}}"><a class="dashed_underline">domain function:</a></abbr>&nbsp;{{annotations['tp53db_domain_function'][4]}}
-                {% endif %}
-            </div>
-            <div class="li-element">
-                {% if 'tp53db_transactivation_class' in annotations %}
-                    <abbr title="{{annotations['tp53db_transactivation_class'][0]}}"><a class="dashed_underline">class:</a></abbr>&nbsp;{{annotations['tp53db_transactivation_class'][4]}}
-                {% endif %}
-            </div>
-            <div class="li-element">
-                <external-link href="https://tp53.isb-cgc.org/search_germline_mut">link</external-link>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-    {% if 'cancerhotspots_cancertypes' in annotations or 'cancerhotspots_ac' in annotations or 'cancerhotspots_af' in annotations %}
-    <div class="row align-items-start">
-        <div class="col-sm-4 li-label"><abbr title="Information from the Cancerhotspots website">Cancerhotspots</abbr></div>
-        <div class="col li-info">
-            {% if 'cancerhotspots_cancertypes' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['cancerhotspots_cancertypes'][0]}}"><a class="dashed_underline">hotspots:</a></abbr>&nbsp;{{annotations['cancerhotspots_cancertypes'][4]}}
-            </div>
-            {% endif %}
-            {% if 'cancerhotspots_ac' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['cancerhotspots_ac'][0]}}"><a class="dashed_underline">AC:</a></abbr>&nbsp;{{annotations['cancerhotspots_ac'][4]}}
-            </div>
-            {% endif %}
-            {% if 'cancerhotspots_af' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['cancerhotspots_af'][0]}}"><a class="dashed_underline">AF:</a></abbr>&nbsp;{{annotations['cancerhotspots_af'][4]}}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-    {% if 'heredicare_cases_count' in annotations or 'heredicare_family_count' in annotations %}
-    <div class="row align-items-start">
-        <div class="col-sm-4 li-label">
-            {% if has_multiple_vids %}
-            <span id="tooltip_exclamation_mark" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Multiple VIDs in HerediCare for this variant. Thus, the family- and case counts for this variant might be inaccurate!">
-                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="red" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
-                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
-                </svg>
-            </span>
-            {% endif %}
-            <abbr title="Information from HerediCare">HerediCare</abbr>
-        </div>
-        <div class="col li-info">
-            {% if 'heredicare_cases_count' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['heredicare_cases_count'][0]}}"><a class="dashed_underline">cases count:</a></abbr>&nbsp;{{annotations['heredicare_cases_count'][4]}}
-            </div>
-            {% endif %}
-            {% if 'heredicare_family_count' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['heredicare_family_count'][0]}}"><a class="dashed_underline">family count:</a></abbr>&nbsp;{{annotations['heredicare_family_count'][4]}}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
+                    <div>
+                        <table class="table" style="table-layout: auto;">
+                            <hr>
+                            <tbody>
+                                {% set standard_annotations = annotations['standard_annotations'] %}
+                                {% for annotation_group in standard_annotations %}
+                                    <tr style="margin-top:100;">
+                                        <td class="li-label" style="white-space: nowrap;">{{ annotation_group }}</td>
+                                        <td>
+                                            {% set current_annotations = standard_annotations[annotation_group] %}
+                                            {% for annotation_type in current_annotations %}
 
-    {% if 'task_force_protein_domain_source' in annotations or 'task_force_protein_domain' in annotations %}
-    <div class="row align-items-start">
-        <div class="col-sm-4 li-label"><abbr title="Information from a hand-crafted protein domain table.">Task-Force protein domains</abbr></div>
-        <div class="col li-info">
-            {% if 'task_force_protein_domain' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['task_force_protein_domain'][0]}}"><a class="dashed_underline">domain:</a></abbr>&nbsp;{{annotations['task_force_protein_domain'][4]}}
-            </div>
-            {% endif %}
-            {% if 'task_force_protein_domain_source' in annotations %}
-            <div class="li-element">
-                    <abbr title="{{annotations['task_force_protein_domain_source'][0]}}"><a class="dashed_underline">source:</a></abbr>&nbsp;{{annotations['task_force_protein_domain_source'][4]}}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
-    
+                                                {% if annotation_type == 'hexplorer' or annotation_type == 'hexplorer_rev' or annotation_type == 'max_hbond' or annotation_type == 'max_hbond_rev' %}
+                                                    {{ macros.draw_hexplorer_score(annotation_type + '_delta', current_annotations[annotation_type], current_annotations.get(annotation_type + '_wt'), current_annotations.get(annotation_type + '_mut')) }}
+                                                {% else %}
+                                                {% if 'heredicare' in annotation_type %}
+                                                    <div>
+                                                    {% if has_multiple_vids  %}
+                                                        {{ macros.draw_exclamation_mark('Multiple VIDs in HerediCare for this variant. Thus, these counts might be inaccurate!') }}
+                                                    {% endif %}
+                                                        <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ annotation_type }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
+                                                    </div>
+                                                {% else %}
+                                                {% if '_mut' not in annotation_type and '_wt' not in annotation_type %}
+                                                    <div>
+                                                        <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ annotation_type }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
+                                                    </div>
+                                                {% endif %}
+                                                {% endif %}
+                                                {% endif %}
+
+                                            {% endfor %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
                 </p>
             </div>
         </div>
@@ -497,6 +326,7 @@
     <div class="card">
         <div class="card-body">
             <h4 class="card-title">Variant consequences</h4>
+            <hr>
             <p class="card-text">
                 Preferred transcripts are shown first (longer and more flags) <br>
                 COSMIC links might be broken, as you can not search for them, so there might be wrong results...
@@ -602,6 +432,7 @@
     <div class="card">
         <div class="card-body">
             <h4 class="card-title">Literature</h4>
+            <hr>
             <p class="card-text">
                 <div class="table-responsive">
                     <table class="table table-hover scroll" id="literatureTable">

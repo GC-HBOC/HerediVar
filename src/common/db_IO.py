@@ -394,7 +394,7 @@ class Connection:
 
     
     def get_recent_annotations(self, variant_id): # ! the ordering of the columns in the outer select statement is important and should not be changed
-        command = "SELECT title, description, version, version_date, variant_id, value, supplementary_document FROM variant_annotation INNER JOIN ( \
+        command = "SELECT title, description, version, version_date, variant_id, value, supplementary_document, group_name FROM variant_annotation INNER JOIN ( \
                         SELECT * \
 	                        FROM annotation_type WHERE (title, version_date) IN ( \
 		                        select title, MAX(version_date) version_date from annotation_type INNER JOIN ( \
@@ -908,12 +908,31 @@ class Connection:
         self.cursor.execute(command, (list_id, ))
         self.conn.commit()
 
-    def get_all_variant_annotations(self, variant_id):
+    def get_all_variant_annotations(self, variant_id, group_output=False):
         variant_annotations = self.get_recent_annotations(variant_id)
+        standard_annotations = {} # used for grouping hierarchy: 'standard_annotations' -> group -> annotation_label
         variant_annot_dict = {}
-        for annot in variant_annotations:
-            variant_annot_dict[annot[0]] = annot[1:len(annot)]
 
+        if group_output: # all groups are grouped into one dictionary except for the special group 'None' which is inserted as key directly into variant_annot_dict
+            for annot in variant_annotations:
+                current_group = annot[7]
+                if current_group == 'None':
+                    variant_annot_dict[annot[0]] = annot[1:len(annot)]
+                    continue
+                if current_group in standard_annotations:
+                    updated_annots = standard_annotations[current_group]
+                    updated_annots[annot[0]] = annot[1:len(annot)]
+                    standard_annotations[current_group] = updated_annots
+                else:
+                    standard_annotations[current_group] = {annot[0]: annot[1:len(annot)]}
+            variant_annot_dict['standard_annotations'] = standard_annotations
+        else:
+            for annot in variant_annotations:
+                variant_annot_dict[annot[0]] = annot[1:len(annot)]
+            
+        
+        
+        
         clinvar_variant_annotation = self.get_clinvar_variant_annotation(variant_id)
         if clinvar_variant_annotation is not None:
             variant_annot_dict["clinvar_variant_annotation"] = clinvar_variant_annotation # 0id,1variant_id,2variation_id,3interpretation,4review_status,5version_date
@@ -939,5 +958,7 @@ class Connection:
         heredicare_center_classifications = self.get_heredicare_center_classifications(variant_id)
         if heredicare_center_classifications is not None:
             variant_annot_dict['heredicare_center_classifications'] = heredicare_center_classifications
+        
+        #print(variant_annot_dict['standard_annotations'])
     
         return variant_annot_dict

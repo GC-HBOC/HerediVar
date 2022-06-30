@@ -37,6 +37,7 @@ def my_lists():
 
     if view_list_id is not None:
         is_list_owner = conn.check_user_list_ownership(user_id, view_list_id)
+        print(is_list_owner)
         if not is_list_owner:
             return abort(403)
 
