@@ -230,11 +230,12 @@ class Connection:
     
     def insert_variant_annotation(self, variant_id, annotation_type_id, value, supplementary_document = None):
         # supplementary documents are not supported yet! see: https://stackoverflow.com/questions/10729824/how-to-insert-blob-and-clob-files-in-mysql
-        #command = "INSERT INTO variant_annotation (variant_id, annotation_type_id, value) VALUES (%s, %s, %s)"
-        command = "INSERT INTO variant_annotation (`variant_id`, `annotation_type_id`, `value`) \
-                   SELECT %s, %s, %s WHERE NOT EXISTS (SELECT * FROM variant_annotation \
-                        WHERE `variant_id`=%s AND `annotation_type_id`=%s AND `value`=%s LIMIT 1)"
-        self.cursor.execute(command, (variant_id, annotation_type_id, value, variant_id, annotation_type_id, value))
+        #command = "INSERT INTO variant_annotation (`variant_id`, `annotation_type_id`, `value`) \
+        #           SELECT %s, %s, %s WHERE NOT EXISTS (SELECT * FROM variant_annotation \
+        #                WHERE `variant_id`=%s AND `annotation_type_id`=%s AND `value`=%s LIMIT 1)"
+        #self.cursor.execute(command, (variant_id, annotation_type_id, value, variant_id, annotation_type_id, value))
+        command = "INSERT INTO variant_annotation (`variant_id`, `annotation_type_id`, `value`) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE `value`=%s"
+        self.cursor.execute(command, (variant_id, annotation_type_id, value, value))
         self.conn.commit()
 
     def insert_variants_from_vcf(self, path):
@@ -450,6 +451,14 @@ class Connection:
         query = re.split('[;,\n\t]', query)
         query = [x for x in query if x != '']
         return query
+
+    
+    def get_variant_more_info(self, variant_id):
+        command = "SELECT * FROM variant WHERE id = %s"
+        command = self.finalize_search_query(command)
+        self.cursor.execute(command, (variant_id, 1))
+        result = self.cursor.fetchone()
+        return result
     
     # this function adds additional columns to the variant table (ie. gene symbol, gene_id)
     def finalize_search_query(self, command):
@@ -929,9 +938,6 @@ class Connection:
         else:
             for annot in variant_annotations:
                 variant_annot_dict[annot[0]] = annot[1:len(annot)]
-            
-        
-        
         
         clinvar_variant_annotation = self.get_clinvar_variant_annotation(variant_id)
         if clinvar_variant_annotation is not None:

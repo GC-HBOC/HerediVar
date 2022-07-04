@@ -8,6 +8,10 @@ import common.functions as functions
 import annotation_service.fetch_heredicare_variants as heredicare
 from datetime import datetime
 from ..utils import require_permission, require_login
+import jsonschema
+import os
+import json
+import requests
 
 variant_io_blueprint = Blueprint(
     'variant_io',
@@ -117,3 +121,193 @@ def import_summary(year, month, day, hour, minute, second):
                             requested_at=requested_at,
                             finished_at=finished_at,
                             log_file = log_file)
+
+
+
+
+@variant_io_blueprint.route('/submit_clinvar/<int:variant_id>', methods=['GET', 'POST'])
+@require_permission
+def submit_clinvar(variant_id):
+    # get relevant information
+    conn = Connection()
+    consensus_classification = conn.get_consensus_classification(variant_id, most_recent=True)
+    if consensus_classification is None:
+        flash("There is no consensus classification for this variant! Please create one before submitting to ClinVar!", "alert-danger")
+        return redirect(url_for('variant.display', variant_id  =variant_id))
+    else:
+        consensus_classification = consensus_classification[0]
+    variant_oi = conn.get_variant_more_info(variant_id)
+    genes = variant_oi[6]
+    if genes is None:
+        genes = []
+    else:
+        genes = genes.split(';')
+    conn.close
+
+    orphanet_json = requests.get("https://api.orphacode.org/EN/ClinicalEntity", headers={'apiKey': 'HerediVar'})
+    orphanet_json = json.loads(orphanet_json.text)
+    orphanet_codes = {}
+    for entry in orphanet_json:
+        if entry['Status'] == 'Active':
+            orpha_code = entry['ORPHAcode']
+            preferred_term = entry['Preferred term']
+            #orpha_definition = entry['Definition']
+            orphanet_codes[orpha_code] = preferred_term
+
+    #from collections import OrderedDict
+    #orphanet_codes = OrderedDict(sorted(orphanet_codes.items(), key=lambda t: t[1]))
+    
+    orphanet_codes = list(orphanet_codes.items())
+    orphanet_codes = [str(x[1]) + ': ' + str(x[0]) for x in orphanet_codes]
+    #print(orphanet_codes)
+
+    if request.method == 'POST':
+        selected_condition = request.form['condition']
+        selected_gene = request.form.get('gene', None)
+        if not selected_condition:
+            flash("All fields are required!", "alert-danger")
+        elif selected_condition not in orphanet_codes:
+            flash("The selected condition contains errors. It MUST be one of the provided autocomplete values.", 'alert-danger')
+        else:
+            # submit to clinvar api
+            base_url = 'https://submit.ncbi.nlm.nih.gov/api/v1/submissions/?dry-run=true'
+            api_key = os.environ.get('CLINVAR_API_KEY')
+            headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
+
+            schema = json.loads(open("/mnt/users/ahdoebm1/HerediVar/clinvar_submission_schema.json").read())
+
+            selected_condition_orphanet_id = str(selected_condition.split(': ')[1])
+            data = get_clinvar_submission_json(variant_oi, consensus_classification, selected_gene, selected_condition_orphanet_id)
+
+    
+            try:
+                jsonschema.validate(instance = data, schema = schema)
+            except jsonschema.exceptions.ValidationError as ex:
+                abort(500, 'There is an error in the JSON for ClinVar api submission!' + str(ex))
+
+
+            postable_data = {
+                "actions": [{
+                    "type": "AddData",
+                    "targetDb": "clinvar",
+                    "data": {"content": data}
+                }]
+            }
+
+            resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
+            if resp.status_code == 200:
+                flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
+                return redirect(url_for('variant.display', variant_id=variant_id))
+            flash("There was an error during submission to clinvar. It ended with status code: " + str(resp.status_code), "alert-danger")
+    
+
+    # the orphanet codes have to be in a dictionary so that they are parsable as a list by JSON.parse!
+    data = {
+        'orphanet_codes': orphanet_codes
+    }
+    return render_template('variant_io/submit_clinvar.html', data = data, genes=genes)
+
+
+def class_to_text(classification):
+    classification = str(classification)
+    if classification == '1':
+        return 'Benign'
+    if classification == '2':
+        return 'Likely Benign'
+    if classification == '3':
+        return 'Uncertain significance'
+    if classification == '4':
+        return 'Likely pathogenic'
+    if classification == '5':
+        return 'Pathogenic'
+
+
+def get_clinvar_submission_json(variant_oi, consensus_classification, selected_gene, selected_condition_orphanet_id):
+    # required fields: 
+    # clinvarSubmission > clinicalSignificance > clinicalSignificanceDescription (one of: "Pathogenic", "Likely pathogenic", "Uncertain significance", "Likely benign", "Benign", "Pathogenic, low penetrance", "Uncertain risk allele", "Likely pathogenic, low penetrance", "Established risk allele", "Likely risk allele", "affects", "association", "drug response", "confers sensitivity", "protective", "other", "not provided")
+    # clinvarSubmission > clinicalSignificance > comment
+    # clinvarSubmission > clinicalSignificance > customAssertionScore (ACMG) !!! requires assertion method as well
+    # clinvarSubmission > clinicalSignificance > dateLastEvaluated
+
+    # clinvarSubmission > conditionSet > condition > id (hereditary breast cancer)
+    # clinvarSubmission > conditionSet > condition > db (OMIM)
+
+    # clinvarSubmission > localID (HerediVar variant_id)
+
+    # clinvarSubmission > observedIn > affectedStatus (not provided??)
+    # clinvarSubmission > observedIn > alleleOrigin (not applicable??)
+    # clinvarSubmission > observedIn > collectionMethod (curation: For variants that were not directly observed by the submitter, but were interpreted by curation of multiple sources, including clinical testing laboratory reports, publications, private case data, and public databases.)
+    
+    # clinvarSubmission > variantSet > variant > chromosomeCoordinates > alternateAllele (vcf alt field if up to 50nt long variant!)
+    # clinvarSubmission > variantSet > variant > assembly (GRCh38)
+    # clinvarSubmission > variantSet > variant > chromosome (Values are 1-22, X, Y, and MT)
+    # clinvarSubmission > variantSet > variant > referenceAllele (vcf ref field)
+    # clinvarSubmission > variantSet > variant > start (vcf pos field: 1-based coordinates)
+    # clinvarSubmission > variantSet > variant > stop (vcf pos field + length of variant)
+
+    data = {}
+    clinvar_submission = []
+    clinvar_submission_properties = {}
+
+    assertion_criteria = {}
+    citation = {'db':'PubMed', 'id': '25741868'}
+    assertion_criteria['citation'] = citation
+    assertion_criteria['method'] = 'ACMG Guidelines, 2015'
+    clinvar_submission_properties['assertionCriteria'] = assertion_criteria
+    
+    clinical_significance = {}
+    clinical_significance['clinicalSignificanceDescription'] = class_to_text(consensus_classification[3])
+    clinical_significance['comment'] = consensus_classification[4]
+    clinical_significance['customAssertionScore'] = 0
+    clinical_significance['dateLastEvaluated'] = consensus_classification[5].strftime('%Y-%m-%d')
+    clinvar_submission_properties['clinicalSignificance'] =  clinical_significance
+
+    condition_set = {}
+    condition = []
+    condition.append({'id': selected_condition_orphanet_id, 'db': 'Orphanet'}) #(https://www.omim.org/entry/114480)
+    condition_set['condition'] = condition
+    clinvar_submission_properties['conditionSet'] =  condition_set
+
+    clinvar_submission_properties['localID'] =  str(variant_oi[0])
+
+    observed_in = []
+
+    observed_in_properties = {}
+    observed_in_properties['affectedStatus'] = 'not provided'
+    observed_in_properties['alleleOrigin'] = 'germline'
+    observed_in_properties['collectionMethod'] = 'curation'
+    observed_in.append(observed_in_properties)
+    clinvar_submission_properties['observedIn'] =  observed_in
+
+    clinvar_submission_properties['recordStatus'] =  'novel'
+    clinvar_submission_properties['releaseStatus'] =  'public'
+
+    variant_set = {}
+    variant = []
+    variant_properties = {}
+
+
+
+    # id,chr,pos,ref,alt
+    variant_properties['chromosomeCoordinates'] = {'alternateAllele': variant_oi[4], 
+                                                   'assembly': 'GRCh38', 
+                                                   'chromosome': variant_oi[1].strip('chr'), 
+                                                   'referenceAllele': variant_oi[3], 
+                                                   'start': variant_oi[2],
+                                                   'stop': int(variant_oi[2]) + len(variant_oi[3])-1}
+
+    if selected_gene is not None:
+        gene = []
+        gene_properties = {'symbol': selected_gene}
+        gene.append(gene_properties)
+        variant_properties['gene'] = gene
+    
+    variant.append(variant_properties)
+    variant_set['variant'] = variant
+    clinvar_submission_properties['variantSet'] =  variant_set
+
+    clinvar_submission.append(clinvar_submission_properties)
+
+    data['clinvarSubmission'] = clinvar_submission
+    print(data)
+    return data

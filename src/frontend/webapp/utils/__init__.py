@@ -8,6 +8,7 @@ sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath
 from common.db_IO import Connection
 import common.functions as functions
 from .decorators import *
+from urllib.parse import urlparse, urljoin
 
 
 def get_variant(conn, variant_id):
