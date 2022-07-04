@@ -11,7 +11,7 @@ def internal_server_error(e):
 
     if original is None:
         # triggered if abort(500) is called
-        return render_template("errorhandlers/500.html"), 500
+        return render_template("errorhandlers/500_unhandled.html", e=e), 500
 
     # all other unhandled errors
     return render_template("errorhandlers/500_unhandled.html", e=original), 500

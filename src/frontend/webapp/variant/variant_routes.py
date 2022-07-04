@@ -10,6 +10,8 @@ from common.db_IO import Connection
 import io
 from common.pdf_generator import pdf_gen
 
+
+
 variant_blueprint = Blueprint(
     'variant',
     __name__
@@ -86,7 +88,7 @@ def create():
                     if int(pos) < 0:
                         flash('ERROR: Negative genomic position given, but must be positive.', 'alert-danger')
                     else:
-                        genome_build = genome_build = request.form['genome']
+                        genome_build = request.form['genome']
                         was_successful = validate_and_insert_variant(chr, pos, ref, alt, genome_build)
                         if was_successful:
                             return redirect(url_for('variant.create'))
@@ -296,3 +298,4 @@ def user_classify(variant_id):
     conn.close()
 
     return render_template('variant/user_classify.html', previous_classification=int(previous_classification), previous_comment=previous_comment, has_classification=has_classification)
+

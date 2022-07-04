@@ -1,6 +1,7 @@
-from flask import Flask
+from flask import Flask, request, url_for, current_app, redirect
 from authlib.integrations.flask_client import OAuth
 from flask_session import Session # alternatives: flask-caching, flask-kvsesssion
+from urllib.parse import urlparse, urljoin
 
 oauth = OAuth()
 sess = Session()
