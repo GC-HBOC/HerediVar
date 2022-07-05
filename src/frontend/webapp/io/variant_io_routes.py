@@ -34,13 +34,14 @@ def import_variants():
 
 
             if status == 'finished':
-                import_queue_id = conn.insert_import_request(username = session['user']['user_id'])
+                import_queue_id = conn.insert_import_request(user_id = session['user']['user_id'])
                 requested_at = conn.get_import_request(import_queue_id = import_queue_id)[2]
                 requested_at = datetime.strptime(str(requested_at), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
 
                 logs_folder = path.join(path.dirname(current_app.root_path), current_app.config['LOGS_FOLDER'])
                 log_file_path = logs_folder + 'heredicare_import:' + requested_at + '.log'
-                heredicare.process_all(log_file_path)
+                heredicare.process_all(log_file_path, user_id=session['user']['user_id'])
+                print('yo')
                 log_file_path = heredicare.get_log_file_path()
                 date = log_file_path.strip('.log').split(':')[1].split('-')
 
@@ -60,7 +61,7 @@ def import_variants():
     return render_template('variant_io/import_variants.html', most_recent_import_request=most_recent_import_request)
 
 
-
+#http://srv018.img.med.uni-tuebingen.de:5000/import-variants/summary%3Fdate%3D2022-06-15-11-44-25
 @variant_io_blueprint.route('/import-variants/summary?date=<string:year>-<string:month>-<string:day>-<string:hour>-<string:minute>-<string:second>')
 @require_login
 def import_summary(year, month, day, hour, minute, second):

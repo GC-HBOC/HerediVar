@@ -493,51 +493,56 @@ class Connection:
         if ranges != '':
             new_constraints = []
             ranges = self.preprocess_query_string(ranges)
-            for range_constraint in ranges:
-                chr, start, end = self.preprocess_range(range_constraint)
-                new_constraints.append("(chr=%s AND pos BETWEEN %s AND %s)")
-                actual_information += (chr, start, end)
-            new_constraints = ' OR '.join(new_constraints)
-            new_constraints = enbrace(new_constraints)
-            postfix = self.add_constraints_to_command(postfix, new_constraints)
+            if len(ranges) > 0:
+                for range_constraint in ranges:
+                    chr, start, end = self.preprocess_range(range_constraint)
+                    new_constraints.append("(chr=%s AND pos BETWEEN %s AND %s)")
+                    actual_information += (chr, start, end)
+                new_constraints = ' OR '.join(new_constraints)
+                new_constraints = enbrace(new_constraints)
+                postfix = self.add_constraints_to_command(postfix, new_constraints)
         if genes != '':
             genes = self.preprocess_query_string(genes)
-            genes = [self.convert_to_gene_id(x) for x in genes]
-            placeholders = ["%s"] * len(genes)
-            placeholders = ', '.join(placeholders)
-            placeholders = enbrace(placeholders)
-            new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE gene_id IN " + placeholders + ")"
-            actual_information += tuple(genes)
-            postfix = self.add_constraints_to_command(postfix, new_constraints)
+            if len(genes) > 0:
+                genes = [self.convert_to_gene_id(x) for x in genes]
+                placeholders = ["%s"] * len(genes)
+                placeholders = ', '.join(placeholders)
+                placeholders = enbrace(placeholders)
+                new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE gene_id IN " + placeholders + ")"
+                actual_information += tuple(genes)
+                postfix = self.add_constraints_to_command(postfix, new_constraints)
         if consensus != '':
             consensus = self.preprocess_query_string(consensus)
-            placeholders = ["%s"] * len(consensus)
-            placeholders = ', '.join(placeholders)
-            placeholders = enbrace(placeholders)
-            new_constraints = "id IN (SELECT variant_id FROM consensus_classification WHERE classification IN " + placeholders + " AND is_recent = 1)"
-            actual_information += tuple(consensus)
-            postfix = self.add_constraints_to_command(postfix, new_constraints)
+            if len(consensus) > 0:
+                placeholders = ["%s"] * len(consensus)
+                placeholders = ', '.join(placeholders)
+                placeholders = enbrace(placeholders)
+                new_constraints = "id IN (SELECT variant_id FROM consensus_classification WHERE classification IN " + placeholders + " AND is_recent = 1)"
+                actual_information += tuple(consensus)
+                postfix = self.add_constraints_to_command(postfix, new_constraints)
         if hgvs != '':
             hgvs = self.preprocess_query_string(hgvs)
-            all_variants = []
-            for hgvs_string in hgvs:
-                reference_transcript, hgvs = functions.split_hgvs(hgvs_string)
-                variant_id = self.get_variant_id_by_hgvs(reference_transcript, hgvs)
-                all_variants.append(variant_id)
-            placeholders = ["%s"] * len(all_variants)
-            placeholders = ', '.join(placeholders)
-            placeholders = enbrace(placeholders)
-            new_constraints = "id IN " + placeholders
-            actual_information += tuple(all_variants)
-            postfix = self.add_constraints_to_command(postfix, new_constraints)
+            if len(hgvs) > 0:
+                all_variants = []
+                for hgvs_string in hgvs:
+                    reference_transcript, hgvs = functions.split_hgvs(hgvs_string)
+                    variant_id = self.get_variant_id_by_hgvs(reference_transcript, hgvs)
+                    all_variants.append(variant_id)
+                placeholders = ["%s"] * len(all_variants)
+                placeholders = ', '.join(placeholders)
+                placeholders = enbrace(placeholders)
+                new_constraints = "id IN " + placeholders
+                actual_information += tuple(all_variants)
+                postfix = self.add_constraints_to_command(postfix, new_constraints)
         if variant_ids_oi != '':
             variant_ids_oi = self.preprocess_query_string(variant_ids_oi)
-            placeholders = ["%s"] * len(variant_ids_oi)
-            placeholders = ', '.join(placeholders)
-            placeholders = enbrace(placeholders)
-            new_constraints = "id IN " + placeholders
-            actual_information += tuple(variant_ids_oi)
-            postfix = self.add_constraints_to_command(postfix, new_constraints)
+            if len(variant_ids_oi) > 0:
+                placeholders = ["%s"] * len(variant_ids_oi)
+                placeholders = ', '.join(placeholders)
+                placeholders = enbrace(placeholders)
+                new_constraints = "id IN " + placeholders
+                actual_information += tuple(variant_ids_oi)
+                postfix = self.add_constraints_to_command(postfix, new_constraints)
         command = prefix + postfix + " ORDER BY chr, pos, ref, alt LIMIT %s, %s"
         actual_information += (offset, page_size)
         command = self.finalize_search_query(command)
