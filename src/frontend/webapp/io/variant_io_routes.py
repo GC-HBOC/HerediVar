@@ -147,19 +147,16 @@ def submit_clinvar(variant_id):
 
     orphanet_json = requests.get("https://api.orphacode.org/EN/ClinicalEntity", headers={'apiKey': 'HerediVar'})
     orphanet_json = json.loads(orphanet_json.text)
-    orphanet_codes = {}
+    orphanet_codes = []
     for entry in orphanet_json:
         if entry['Status'] == 'Active':
             orpha_code = entry['ORPHAcode']
             preferred_term = entry['Preferred term']
             #orpha_definition = entry['Definition']
-            orphanet_codes[orpha_code] = preferred_term
-
-    #from collections import OrderedDict
-    #orphanet_codes = OrderedDict(sorted(orphanet_codes.items(), key=lambda t: t[1]))
+            orphanet_codes.append(preferred_term + ': ' + str(orpha_code))
     
-    orphanet_codes = list(orphanet_codes.items())
-    orphanet_codes = [str(x[1]) + ': ' + str(x[0]) for x in orphanet_codes]
+    #orphanet_codes = list(orphanet_codes.items())
+    #orphanet_codes = [str(x[1]) + ': ' + str(x[0]) for x in orphanet_codes]
     #print(orphanet_codes)
 
     if request.method == 'POST':
@@ -214,7 +211,7 @@ def class_to_text(classification):
     if classification == '1':
         return 'Benign'
     if classification == '2':
-        return 'Likely Benign'
+        return 'Likely benign'
     if classification == '3':
         return 'Uncertain significance'
     if classification == '4':

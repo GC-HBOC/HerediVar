@@ -6,7 +6,7 @@
 
     <form action="" autocomplete="off" method="post" class="needs-validation bst" novalidate>
         <div class="form-group sst">
-            <label for="condition" class="form-label">Condition</label>
+            <label for="condition" class="form-label">Orphanet condition</label>
             <div class="autocomplete" style="width:100%">
                 <input value="{{ request.form['condition'] }}" id="condition" class="form-control" type="text" name="condition" placeholder="select a condition... start searching by typing">
             </div>
@@ -17,10 +17,13 @@
 
         <div class="form-group sst">
             <label for="gene" class="form-label">Gene</label>
-            <select class="form-select" name="gene" id="gene" required>
+            <select class="form-select" name="gene" id="gene" {% if genes | length == 0 %}disabled{% endif %}>
                 {% for gene in genes %}
                    <option value="{{ gene }}" {% if (gene == request.form['gene']) %} selected="selected" {% endif %}> {{ gene }} </option>
                 {% endfor %}
+                {% if genes | length == 0 %}
+                    <option value="None"> None available </option>
+                {% endif %}
            </select>
         </div>
 
