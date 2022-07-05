@@ -208,7 +208,6 @@ input {
 }
 .autocomplete-items {
   position: absolute;
-  border: 1px solid #d4d4d4;
   border-bottom: none;
   border-top: none;
   z-index: 99;
@@ -216,6 +215,9 @@ input {
   top: 100%;
   left: 0;
   right: 0;
+  overflow-y: scroll;
+  height: 30em;
+  background-color: #f0f0f0;
 }
 .autocomplete-items div {
   padding: 10px;

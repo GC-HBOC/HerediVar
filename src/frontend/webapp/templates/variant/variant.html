@@ -36,10 +36,13 @@
                 <span id="tooltip_consensus_classify_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip"  title="Submit a new consensus classification">
                     <a id="consensus_classify_button" type="button" class="btn btn-outline-primary" href="{{url_for('variant.consensus_classify', variant_id = variant[0])}}">Consensus classify</a>
                 </span>
-                <span id="tooltip_export_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip" >
-                    <a id="export_button" type="button" class="btn btn-outline-primary" href="{{url_for('download.variant', variant_id = variant[0])}}">Export to VCF</a>
+                <span id="tooltip_vcf_export_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip" title="Download this variant & all annotations as VCF.">
+                    <a id="vcf_export_button" type="button" class="btn btn-outline-primary" href="{{url_for('download.variant', variant_id = variant[0])}}">Export to VCF</a>
                 </span>
-                <span id="tooltip_export_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip"  title="Select a list to add this variant to it. If a list is highlighted in blue the current variant is already in that list">
+                <span id="tooltip_clinvar_export_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip" title="Submit the consensus classification of this variant to ClinVar.">
+                    <a id="clinvar_export_button" type="button" class="btn btn-outline-primary" href="{{url_for('variant_io.submit_clinvar', variant_id = variant[0])}}">Submit to ClinVar</a>
+                </span>
+                <span id="tooltip_add_to_list_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip"  title="Select a list to add this variant to it. If a list is highlighted in blue the current variant is already in that list">
 
                     <form id="add-to-list-form" action="{{ url_for('variant.display', variant_id=variant[0], action='add_to_list') }}" method="post" novalidate>
                        <div class="dropdown">
@@ -151,10 +154,15 @@
                                                         <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ annotation_type }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
                                                     </div>
                                                 {% else %}
-                                                {% if '_mut' not in annotation_type and '_wt' not in annotation_type %}
+                                                {% if 'spliceai_max_delta' == annotation_type %}
+                                                    <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ annotation_type }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
+                                                    <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-trigger="focus" data-bs-content="{{ current_annotations['spliceai_details'][0] }} <br/> {{ current_annotations['spliceai_details'][4] }}">details</a>
+                                                {% else %}
+                                                {% if '_mut' not in annotation_type and '_wt' not in annotation_type and 'spliceai_details' not in annotation_type %}
                                                     <div style="word-break: break-all;">
                                                         <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ annotation_type }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
                                                     </div>
+                                                {% endif %}
                                                 {% endif %}
                                                 {% endif %}
                                                 {% endif %}
