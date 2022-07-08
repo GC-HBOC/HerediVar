@@ -118,6 +118,36 @@ table.scroll th {
 
 
 
+
+
+
+.btn-test {
+    color: #ac0000;
+    background-color: #ffffff;
+    border-color: #ac0000; /*set the color you want here*/
+}
+.btn-test:hover {
+    color: rgb(255, 255, 255);
+    background-color: rgb(255, 122, 122);
+    border-color: #ac0000; /*set the color you want here*/
+}
+.btn-test:focus, .btn-test:active, .btn-test:checked:active, .btn-test:checked, .btn-test.active, .btn-test:active:focus, .open>.dropdown-toggle.btn-test {
+    color: rgb(255, 255, 255);
+    background-color: #ff0000 !important;
+    border-color: #ac0000 !important; /*set the color you want here*/
+}
+
+
+.light-red-hover:hover {
+
+    filter: brightness(120%);
+}
+
+
+
+
+
+
 .vertical-lines-table {
     border-collapse: collapse;
   }

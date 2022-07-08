@@ -42,6 +42,21 @@
                 <span id="tooltip_clinvar_export_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip" title="Submit the consensus classification of this variant to ClinVar.">
                     <a id="clinvar_export_button" type="button" class="btn btn-outline-primary" href="{{url_for('variant_io.submit_clinvar', variant_id = variant[0])}}">Submit to ClinVar</a>
                 </span>
+                <div> 
+                    {% set status = clinvar_submission['status'] %}
+                    {% if status in ['processed'] %}
+                        <span class="badge rounded-pill bg-success" style="margin-left:10px" data-bs-toggle="tooltip" title="most recent ClinVar yielded an error at {{ clinvar_submission['date'] }} with error message: {{ clinvar_submission['message'] }}">ClinVar success</span>
+                    {% endif %}
+                    {% if status in ['error'] %}
+                        <span class="badge rounded-pill bg-danger" style="margin-left:10px" data-bs-toggle="tooltip" title="most recent annotation finished at {{ clinvar_submission['date'] }}">ClinVar error</span>
+                    {% endif %}
+                    {% if status in ['submitted', 'processing'] %}
+                        <span class="badge rounded-pill bg-secondary" style="margin-left:10px" data-bs-toggle="tooltip" title="most recent annotation last updated at {{ clinvar_submission['date'] }}">ClinVar {{ status }}</span>
+                    {% endif %}
+                    {% if status is none %}
+                        <span class="badge rounded-pill bg-secondary" style="margin-left:10px" data-bs-toggle="tooltip" title="this variant was not yet submitted to ClinVar">no ClinVar submission</span>
+                    {% endif %}
+                </div>
                 <span id="tooltip_add_to_list_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip"  title="Select a list to add this variant to it. If a list is highlighted in blue the current variant is already in that list">
 
                     <form id="add-to-list-form" action="{{ url_for('variant.display', variant_id=variant[0], action='add_to_list') }}" method="post" novalidate>

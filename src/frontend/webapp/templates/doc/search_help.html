@@ -11,14 +11,26 @@
 <div class="bst">
     <strong>You can filter the table of variants by:</strong>
     <ul>
-        <li>Any column (e.g. chr1, to display all variants in chromosome 1)</li>
-        <li>A gene name (or unique alias) or HGVS-ID. You may preprend HGNC (! select the radio button in search options or append %gene% to your query) (e. g. BARD1%gene%)</li>
-        <li>A HGVS p. or c. string (e. g. ENST00000260947:c.1972C>T)</li>
+        <li>A gene name (or unique alias) or HGVS-ID. You may preprend HGNC (e. g. BARD1)</li>
+        <li>A HGVS c. string. Beware that you must specify a transcript for this to work (e. g. ENST00000260947:c.1972C>T)</li>
         <li>A chromosomal range of the form: chr:start-end (e. g. chr2:214767531-214780740)</li>
         <li>A consensus classification</li>
     </ul>
-    <div>If multiple constraints are selected they are joint with 'AND'. This means that if you choose to search for BARD1 in the genes and select consensus classification 1 you will get all variants from BARD1 which are classified as with 1.</div>
+    <div >If multiple constraints are selected they are joint with 'AND'. This means that if you choose to search for BARD1 in the genes and select consensus classification 1 you will get all variants from BARD1 which are classified with 1.</div>
+    <div class="sst">You can separate multiple genes, HGVS or chromosomal ranges in their respective fields either with semicolons (';'), commas (','), tabulators or newlines. It is also possible to have a combination of them.</div>
 </div>
+
+<div class="bst">
+    <strong>Meaning of the classification:</strong>
+    <ul>
+        <li>1: Benign</li>
+        <li>2: Likely benign</li>
+        <li>3: Uncertain significance</li>
+        <li>4: Likely pathogenic</li>
+        <li>5: Pathogenic</li>
+    </ul>
+</div>
+
 
 
 </div>

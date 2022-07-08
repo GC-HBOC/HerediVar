@@ -15,33 +15,8 @@ from common.pdf_generator import pdf_gen
 variant_blueprint = Blueprint(
     'variant',
     __name__
-    #template_folder='templates',
-    #static_folder='static',
-    #static_url_path='/webapp/variant/static'
 )
 
-
-'''
-@variant_blueprint.route('/search', methods=['GET', 'POST'])
-@require_login
-def search():
-    search_query=''
-    if request.method == 'POST':
-        search_query = request.form['quicksearch']
-        search_type = request.form['chosen_search_type']
-        if search_type != 'standard' and search_query != '' and '%' not in search_query:
-            search_query = search_query + search_type
-        if not is_valid_query(search_query):
-            return redirect(url_for('variant.search'))
-    query_type, search_query = preprocess_search_query(search_query)
-    page = int(request.args.get('page', 0))
-    per_page = 20
-    conn = Connection()
-    variants, total = conn.get_paginated_variants(page, per_page, query_type, search_query)
-    conn.close()
-    pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
-    return render_template('variant/search.html', variants=variants, page=page, per_page=per_page, pagination=pagination, search_query=search_query)
-'''
 
 
 #http://srv018.img.med.uni-tuebingen.de:5000/search?ranges=chr1%3A0-9999999999999%3Bchr2%3A0-99999999999999999999%3BchrMT%3A0-9999999999999999
@@ -50,12 +25,30 @@ def search():
 def search():
 
     genes = request.args.get('genes', '')
+    genes = preprocess_query(genes)
+    if genes is None:
+        flash("You have an error in your genes query(s). Results are not filtered by genes.", "alert-danger")
+
     ranges = request.args.get('ranges', '')
+    ranges = preprocess_query(ranges, pattern= "chr.+:\d+-\d+")
+    if ranges is None:
+        flash("You have an error in your range query(s). Please check the syntax! Results are not filtered by ranges.", "alert-danger")
+    
     consensus = request.args.getlist('consensus')
     consensus = ';'.join(consensus)
-    hgvs = request.args.get('hgvs', '')
-    variant_ids_oi = request.args.get('variant_ids_oi', '')
+    consensus = preprocess_query(consensus, '[12345]?')
+    if consensus is None:
+        flash("You have an error in your consensus class query(s). It must consist of a number between 1-5. Results are not filtered by consensus classification.", "alert-danger")
 
+    hgvs = request.args.get('hgvs', '')
+    hgvs = preprocess_query(hgvs, pattern = ".+:c\.\d+[ACGTNacgtn]+>\d+[ACGTNacgtn]+")
+    if hgvs is None:
+        flash("You have an error in your hgvs query(s). Please check the syntax! Results are not filtered by hgvs.", "alert-danger")
+
+    variant_ids_oi = request.args.get('variant_ids_oi', '')
+    variant_ids_oi = preprocess_query(variant_ids_oi, '\d*')
+    if variant_ids_oi is None:
+        flash("You have an error in your variant id query(s). It must contain only numbers. Results are not filtered by variants.", "alert-danger")
 
     page = int(request.args.get('page', 1))
     per_page = 20
@@ -152,11 +145,46 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
+
+    clinvar_submission_id = conn.get_external_ids_from_variant_id(variant_id, id_source="clinvar_submission")
+    clinvar_submission = {'status': None, 'date': None, 'message': None}
+    if len(clinvar_submission_id) > 1: # this should not happen!
+        clinvar_submission_id = clinvar_submission_id[len(clinvar_submission_id) - 1]
+        flash("WARNING: There are multiple clinvar submission ids for this variant. There is probably an old clinvar submission somewhere in the system which should be deleted. Using " + str(clinvar_submission_id) + " now.", "alert-warning")
+    if len(clinvar_submission_id) == 1: # variant was already submitted to clinvar
+        clinvar_submission_id = clinvar_submission_id[0]
+        api_key = os.environ.get('CLINVAR_API_KEY')
+        headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
+        resp = get_clinvar_submission_status(clinvar_submission_id, headers = headers)
+        if resp.status_code not in [200]:
+            conn.close()
+            raise RuntimeError("Status check failed:\n" + resp.content.decode("UTF-8"))
+        response_content = resp.json()['actions'][0]
+        clinvar_submission_status = response_content['status']
+        clinvar_submission['status'] = clinvar_submission_status
+        if clinvar_submission_status in ['submitted', 'processing']:
+            clinvar_submission_date = response_content['updated']
+            clinvar_submission['date'] = clinvar_submission_date.replace('T', '\n').replace('Z', '')
+        else:
+            clinvar_submission_file_url = response_content['responses'][0]['files'][0]['url']
+            submission_file_response = requests.get(clinvar_submission_file_url, headers = headers)
+            if submission_file_response.status_code != 200:
+                raise RuntimeError("Status check failed:" + "\n" + clinvar_submission_file_url + "\n" + submission_file_response.content.decode("UTF-8"))
+            submission_file_response = submission_file_response.json()
+            clinvar_submission_date = submission_file_response['submissionDate']
+            clinvar_submission['date'] = clinvar_submission_date
+            if clinvar_submission_status == 'error':
+                clinvar_submission_messages = submission_file_response['submissions'][0]['errors'][0]['output']['errors']
+                clinvar_submission_messages = [x['userMessage'] for x in clinvar_submission_messages]
+                clinvar_submission_message = ';'.join(clinvar_submission_messages)
+                clinvar_submission['message'] = clinvar_submission_message
+
     conn.close()
     return render_template('variant/variant.html', 
                             variant=variant_oi, 
                             annotations = annotations,
                             current_annotation_status=current_annotation_status,
+                            clinvar_submission = clinvar_submission,
                             has_multiple_vids=has_multiple_vids,
                             lists = lists)
 
@@ -299,3 +327,9 @@ def user_classify(variant_id):
 
     return render_template('variant/user_classify.html', previous_classification=int(previous_classification), previous_comment=previous_comment, has_classification=has_classification)
 
+@variant_blueprint.route('/classify/<int:variant_id>/acmg', methods=['GET', 'POST'])
+@require_login
+def acmg_classify(variant_id):
+    if request.method == 'POST':
+        print(request.form['pvs1'])
+    return render_template('variant/acmg.html')

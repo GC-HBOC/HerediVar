@@ -4,11 +4,14 @@
 <div class="container">
     <h1 class="bst">{% block title %} Submit consensus classification to ClinVar {% endblock %}</h1>
 
+    <div class="bst">The most recent consensus classification for this variant will be submitted to ClinVar:</div>
+    <div>{{ variant[1] }}&nbsp;&nbsp; {{ variant[2] }}&nbsp;&nbsp; {{ variant[3] }}&nbsp;&nbsp; {{ variant[4] }}</div>
+
     <form action="" autocomplete="off" method="post" class="needs-validation bst" novalidate>
         <div class="form-group sst">
-            <label for="condition" class="form-label">Orphanet condition</label>
+            <label for="condition" class="form-label">Condition (From <external-link href="https://www.orpha.net">Orphanet</external-link>)</label>
             <div class="autocomplete" style="width:100%">
-                <input value="{{ request.form['condition'] }}" id="condition" class="form-control" type="text" name="condition" placeholder="select a condition... start searching by typing">
+                <input value="{{ request.form['condition'] }}" id="condition" class="form-control" type="text" name="condition" placeholder="Select an Orphanet disease condition... start search by typing">
             </div>
             <div class="invalid-feedback">
                 Please select a condition
@@ -22,7 +25,7 @@
                    <option value="{{ gene }}" {% if (gene == request.form['gene']) %} selected="selected" {% endif %}> {{ gene }} </option>
                 {% endfor %}
                 {% if genes | length == 0 %}
-                    <option value="None"> None available </option>
+                    <option value="None"> There is no gene associated to the variant consequences. Submission will be without gene. </option>
                 {% endif %}
            </select>
         </div>
