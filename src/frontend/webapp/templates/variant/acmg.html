@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="bst">{% block title %} Submit consensus classification to ClinVar {% endblock %}</h1>
+
+    <form action="" autocomplete="off" method="post" class="needs-validation bst" novalidate>
+
+        <div class="col-sm-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex">
+                        <div class="ssr">
+                            <div class="form-group">
+                                <input type="checkbox" class="btn-check" id="pvs1" name="pvs1" value="TEST" autocomplete="off" onchange="button_select_action(this)">
+                                <label class="btn btn-outline-danger light-red-hover" for="pvs1">PVS1</label>
+                            </div>
+                        </div>
+                        <div class="ssr">
+                            <div class="form-group">
+                                <input type="checkbox" class="btn-check" id="ps1" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="ps1">PS1</label>
+                            </div>
+                            <div class="form-group">
+                                <input type="checkbox" class="btn-check" id="ps2" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="ps2">PS2</label>
+                            </div>
+                            <div class="form-group">
+                                <input type="checkbox" class="btn-check" id="ps3" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="ps3">PS3</label>
+                            </div>
+                            <div class="form-group">
+                                <input type="checkbox" class="btn-check" id="ps4" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="ps4">PS4</label>
+                            </div>
+                        </div>
+                        <div class="ssr">
+                            <div class="form-group">
+                                <input type="checkbox" class="btn-check" id="pm1" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="pm1">PM1</label>
+                            </div>
+                            <div class="form-group">
+                                <input type="checkbox" class="btn-check" id="pm2" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="pm2">PM2</label>
+                            </div>
+                            <div class="form-group">
+                                <input type="checkbox" class="btn-check" id="pm3" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="pm3">PM3</label>
+                            </div>
+                            <div class="form-group">
+                                <input type="checkbox" class="btn-check" id="pm4" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="pm4">PM4</label>
+                            </div>
+                            <div class="form-group">
+                                <input type="checkbox" class="btn-check" id="pm5" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="pm5">PM5</label>
+                            </div>
+                            <div class="form-group">
+                                <input type="checkbox" class="btn-check" id="pm6" autocomplete="off">
+                                <label class="btn btn-outline-primary" for="pm6">PM6</label>
+                            </div>
+                        </div>
+                    </div>
+    
+    
+    
+                </div>
+    
+            </div>
+    
+        </div>
+        
+        <button class="bst btn btn-primary" type="submit">Submit classification</button>
+    </form>
+
+    <div id="criteria_container">
+        <div id="criteria_description"></div>
+        <input type="text" id="criteria_evidence" placeholder="insert evidence...">
+        <div id="additional_content"></div>
+        <button class="btn btn-primary">Select criterium</button>
+    </div>
+      
+</div>
+
+
+{% endblock %}
+
+{% block special_scripts %}
+<script src="/static/js/formValidator.js"></script>
+<script src="/static/js/acmg.js"></script>
+{% endblock%}

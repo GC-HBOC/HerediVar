@@ -260,14 +260,21 @@ class Connection:
         variant_id = self.get_variant_id(chr, pos, ref, alt)
         self.insert_annotation_request(variant_id, user_id)
     
-    def insert_external_variant_id_from_vcf(self, chr, pos, ref, alt, external_id, id_source):
-        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) (SELECT id, %s, %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)"
-        self.cursor.execute(command, (external_id, id_source, chr, pos, ref, alt))
-        self.conn.commit()
+    #def insert_external_variant_id_from_vcf(self, chr, pos, ref, alt, external_id, id_source):
+    #    command = "INSERT INTO variant_ids (variant_id, external_id, id_source) (SELECT id, %s, %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)"
+    #    self.cursor.execute(command, (external_id, id_source, chr, pos, ref, alt))
+    #    self.conn.commit()
     
-    def insert_external_variant_id_from_variant_id(self, heredivar_id, external_id, id_source):
-        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) VALUES (%s, %s, %s)"
-        self.cursor.execute(command, (heredivar_id, external_id, id_source))
+    def insert_external_variant_id_from_variant_id(self, variant_id, external_id, id_source):
+        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) VALUES (%s, %s, %s) \
+                    SELECT %s, %s, %s WHERE NOT EXISTS (SELECT * FROM annotation_queue \
+	                    WHERE `variant_id`=%s AND `external_id`=%s AND `source`=%s LIMIT 1)"
+        self.cursor.execute(command, (variant_id, external_id, id_source, variant_id, external_id, id_source))
+        self.conn.commit()
+
+    def insert_update_external_variant_id(self, variant_id, external_id, id_source):
+        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE external_id=%s"
+        self.cursor.execute(command, (variant_id, external_id, id_source, external_id))
         self.conn.commit()
 
     def insert_annotation_request(self, variant_id, user_id): # this inserts only if there is not an annotation request for this variant which is still pending
@@ -434,8 +441,12 @@ class Connection:
     
     def preprocess_range(self, range_constraint):
         parts = range_constraint.split(':')
+        if len(parts) != 2:
+            return None, None, None
         chr = parts[0]
         positions = parts[1].split('-')
+        if len(positions) != 2:
+            return None, None, None
         start = int(positions[0])
         end = int(positions[1])
         return chr, start, end
@@ -446,12 +457,6 @@ class Connection:
             gene_id = self.get_gene_id_by_hgnc_id(string)
         return gene_id # can return none
     
-    def preprocess_query_string(self, query):
-        query = ''.join(re.split('[ \r\f\v]', query)) # remove whitespace except for newline and tab
-        query = re.split('[;,\n\t]', query)
-        query = [x for x in query if x != '']
-        return query
-
     
     def get_variant_more_info(self, variant_id):
         command = "SELECT * FROM variant WHERE id = %s"
@@ -484,65 +489,55 @@ class Connection:
         command = prefix + command + postfix
         return command
 
-    def get_variants_page_merged(self, page, page_size, user_id, ranges = '', genes = '', consensus = '', hgvs = '', variant_ids_oi = ''):
+    def get_variants_page_merged(self, page, page_size, user_id, ranges = None, genes = None, consensus = None, hgvs = None, variant_ids_oi = None):
         # get one page of variants determined by offset & pagesize
         offset = (page - 1) * page_size
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
         postfix = ""
         actual_information = ()
-        if ranges != '':
+        if ranges is not None and len(ranges) > 0: # if it is None this means it was not specified or there was an error. If it has len == 0 it means that there was no error but the user did not specify any 
             new_constraints = []
-            ranges = self.preprocess_query_string(ranges)
-            if len(ranges) > 0:
-                for range_constraint in ranges:
-                    chr, start, end = self.preprocess_range(range_constraint)
-                    new_constraints.append("(chr=%s AND pos BETWEEN %s AND %s)")
-                    actual_information += (chr, start, end)
-                new_constraints = ' OR '.join(new_constraints)
-                new_constraints = enbrace(new_constraints)
-                postfix = self.add_constraints_to_command(postfix, new_constraints)
-        if genes != '':
-            genes = self.preprocess_query_string(genes)
-            if len(genes) > 0:
-                genes = [self.convert_to_gene_id(x) for x in genes]
-                placeholders = ["%s"] * len(genes)
-                placeholders = ', '.join(placeholders)
-                placeholders = enbrace(placeholders)
-                new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE gene_id IN " + placeholders + ")"
-                actual_information += tuple(genes)
-                postfix = self.add_constraints_to_command(postfix, new_constraints)
-        if consensus != '':
-            consensus = self.preprocess_query_string(consensus)
-            if len(consensus) > 0:
-                placeholders = ["%s"] * len(consensus)
-                placeholders = ', '.join(placeholders)
-                placeholders = enbrace(placeholders)
-                new_constraints = "id IN (SELECT variant_id FROM consensus_classification WHERE classification IN " + placeholders + " AND is_recent = 1)"
-                actual_information += tuple(consensus)
-                postfix = self.add_constraints_to_command(postfix, new_constraints)
-        if hgvs != '':
-            hgvs = self.preprocess_query_string(hgvs)
-            if len(hgvs) > 0:
-                all_variants = []
-                for hgvs_string in hgvs:
-                    reference_transcript, hgvs = functions.split_hgvs(hgvs_string)
-                    variant_id = self.get_variant_id_by_hgvs(reference_transcript, hgvs)
-                    all_variants.append(variant_id)
-                placeholders = ["%s"] * len(all_variants)
-                placeholders = ', '.join(placeholders)
-                placeholders = enbrace(placeholders)
-                new_constraints = "id IN " + placeholders
-                actual_information += tuple(all_variants)
-                postfix = self.add_constraints_to_command(postfix, new_constraints)
-        if variant_ids_oi != '':
-            variant_ids_oi = self.preprocess_query_string(variant_ids_oi)
-            if len(variant_ids_oi) > 0:
-                placeholders = ["%s"] * len(variant_ids_oi)
-                placeholders = ', '.join(placeholders)
-                placeholders = enbrace(placeholders)
-                new_constraints = "id IN " + placeholders
-                actual_information += tuple(variant_ids_oi)
-                postfix = self.add_constraints_to_command(postfix, new_constraints)
+            for range_constraint in ranges:
+                chr, start, end = self.preprocess_range(range_constraint)
+                new_constraints.append("(chr=%s AND pos BETWEEN %s AND %s)")
+                actual_information += (chr, start, end)
+            new_constraints = ' OR '.join(new_constraints)
+            new_constraints = enbrace(new_constraints)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if genes is not None and len(genes) > 0:
+            genes = [self.convert_to_gene_id(x) for x in genes]
+            placeholders = ["%s"] * len(genes)
+            placeholders = ', '.join(placeholders)
+            placeholders = enbrace(placeholders)
+            new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE gene_id IN " + placeholders + ")"
+            actual_information += tuple(genes)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if consensus is not None and len(consensus) > 0:
+            placeholders = ["%s"] * len(consensus)
+            placeholders = ', '.join(placeholders)
+            placeholders = enbrace(placeholders)
+            new_constraints = "id IN (SELECT variant_id FROM consensus_classification WHERE classification IN " + placeholders + " AND is_recent = 1)"
+            actual_information += tuple(consensus)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if hgvs is not None and len(hgvs) > 0:
+            all_variants = []
+            for hgvs_string in hgvs:
+                reference_transcript, hgvs = functions.split_hgvs(hgvs_string)
+                variant_id = self.get_variant_id_by_hgvs(reference_transcript, hgvs)
+                all_variants.append(variant_id)
+            placeholders = ["%s"] * len(all_variants)
+            placeholders = ', '.join(placeholders)
+            placeholders = enbrace(placeholders)
+            new_constraints = "id IN " + placeholders
+            actual_information += tuple(all_variants)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if variant_ids_oi is not None and len(variant_ids_oi) > 0:
+            placeholders = ["%s"] * len(variant_ids_oi)
+            placeholders = ', '.join(placeholders)
+            placeholders = enbrace(placeholders)
+            new_constraints = "id IN " + placeholders
+            actual_information += tuple(variant_ids_oi)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
         command = prefix + postfix + " ORDER BY chr, pos, ref, alt LIMIT %s, %s"
         actual_information += (offset, page_size)
         command = self.finalize_search_query(command)

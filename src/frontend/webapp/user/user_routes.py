@@ -37,7 +37,7 @@ def my_lists():
 
     if view_list_id is not None:
         is_list_owner = conn.check_user_list_ownership(user_id, view_list_id)
-        print(is_list_owner)
+        #print(is_list_owner)
         if not is_list_owner:
             return abort(403)
 
@@ -90,19 +90,38 @@ def my_lists():
 
 
     genes = request.args.get('genes', '')
+    genes = preprocess_query(genes)
+    if genes is None:
+        flash("You have an error in your genes query(s). Results are not filtered by genes.", "alert-danger")
+
     ranges = request.args.get('ranges', '')
+    ranges = preprocess_query(ranges, pattern= "chr.+:\d+-\d+")
+    if ranges is None:
+        flash("You have an error in your range query(s). Please check the syntax! Results are not filtered by ranges.", "alert-danger")
+    
     consensus = request.args.getlist('consensus')
     consensus = ';'.join(consensus)
+    consensus = preprocess_query(consensus, '[12345]?')
+    if consensus is None:
+        flash("You have an error in your consensus class query(s). It must consist of a number between 1-5. Results are not filtered by consensus classification.", "alert-danger")
+
     hgvs = request.args.get('hgvs', '')
+    hgvs = preprocess_query(hgvs, pattern = ".+:c\.\d+[ACGTNacgtn]+>\d+[ACGTNacgtn]+")
+    if hgvs is None:
+        flash("You have an error in your hgvs query(s). Please check the syntax! Results are not filtered by hgvs.", "alert-danger")
+
     variant_ids_oi = request.args.get('variant_ids_oi', '')
+    variant_ids_oi = preprocess_query(variant_ids_oi, '\d*')
+    if variant_ids_oi is None:
+        flash("You have an error in your variant id query(s). It must contain only numbers. Results are not filtered by variants.", "alert-danger")
+
+
+
     if view_list_id is not None:
-        variant_ids_oi = conn.get_variant_ids_from_list(view_list_id) # need to check if this list belongs the currently logged in user!
-        variant_ids_oi = ';'.join(variant_ids_oi)
-        if variant_ids_oi != '':
+        variant_ids_oi = conn.get_variant_ids_from_list(view_list_id)
+        if len(variant_ids_oi) > 0:
             variants, total = conn.get_variants_page_merged(page, per_page, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
-
-
     
     conn.close()
     return render_template('user/my_lists.html', 

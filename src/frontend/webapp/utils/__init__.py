@@ -167,3 +167,25 @@ def save_redirect(target):
     if not target or not is_safe_url(target):
         return redirect(url_for('main.index')) # maybe use abort() here??
     return redirect(target) # url is save to redirect to!
+
+
+def preprocess_query(query, pattern = '.*'):
+    query = ''.join(re.split('[ \r\f\v]', query)) # remove whitespace except for newline and tab
+    pattern = re.compile("^(%s[;,\t\n]*)*$" % (pattern, ))
+    result = pattern.match(query)
+    #print(result.group(0))
+    if result is None:
+        return None # means that there is an error!
+    # split into list
+    query = re.split('[;,\n\t]', query)
+    query = [x for x in query if x != '']
+    return query
+
+
+def get_clinvar_submission_status(clinvar_submission_id, headers): # SUB11770209
+    base_url = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions/%s/actions/" % (clinvar_submission_id, )
+    print(base_url)
+    resp = requests.get(base_url, headers = headers)
+    #print(resp)
+    print(resp.json())
+    return resp

@@ -7,7 +7,7 @@ from werkzeug.exceptions import abort
 import common.functions as functions
 import annotation_service.fetch_heredicare_variants as heredicare
 from datetime import datetime
-from ..utils import require_permission, require_login
+from ..utils import require_permission, require_login, get_clinvar_submission_status
 import jsonschema
 import os
 import json
@@ -129,11 +129,16 @@ def import_summary(year, month, day, hour, minute, second):
 @variant_io_blueprint.route('/submit_clinvar/<int:variant_id>', methods=['GET', 'POST'])
 @require_permission
 def submit_clinvar(variant_id):
+    # header definition for clinvar submissions
+    api_key = os.environ.get('CLINVAR_API_KEY')
+    headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
+
     # get relevant information
     conn = Connection()
     consensus_classification = conn.get_consensus_classification(variant_id, most_recent=True)
     if consensus_classification is None:
         flash("There is no consensus classification for this variant! Please create one before submitting to ClinVar!", "alert-danger")
+        conn.close()
         return redirect(url_for('variant.display', variant_id  =variant_id))
     else:
         consensus_classification = consensus_classification[0]
@@ -143,8 +148,53 @@ def submit_clinvar(variant_id):
         genes = []
     else:
         genes = genes.split(';')
-    conn.close
+    
 
+    # we have to check that the submission is completed, because only completed submissions receive an accession identifier. 
+    # It would be problematic if one submitted the same variant a second time before the first one is
+    # finished. Because we would get two accession identifiers!
+    clinvar_submission_id = conn.get_external_ids_from_variant_id(variant_id, id_source="clinvar_submission")
+    if len(clinvar_submission_id) > 1: # this should not happen!
+        clinvar_submission_id = clinvar_submission_id[len(clinvar_submission_id) - 1]
+        flash("WARNING: There are multiple clinvar submission ids for this variant. There is probably an old clinvar submission somewhere in the system which should be deleted. Using " + str(clinvar_submission_id) + " now.", "alert-warning")
+    if len(clinvar_submission_id) == 1: # variant was already submitted to clinvar
+        clinvar_submission_id = clinvar_submission_id[0]
+        resp = get_clinvar_submission_status(clinvar_submission_id, headers = headers)
+        if resp.status_code not in [200]:
+            flash("ERROR: could not check status of clinvar submission id: " + str(clinvar_submission_id) + " , status code: " + str(resp.status_code) + ". Error message: " + resp.content.decode("UTF-8"), "alert-danger")
+            conn.close()
+            raise RuntimeError("ERROR: could not check status of clinvar submission id: " + str(clinvar_submission_id) + "\n Status code: " + str(resp.status_code) + "\n Error message: " + resp.content.decode("UTF-8"))
+        response_content = resp.json()['actions'][0]
+        submission_status = response_content['status']
+        if submission_status in ['submitted', 'processing']:
+            flash("WARNING: there is still a " + submission_status + " clinvar submission. Please wait until it is finished before making updates to the previous one.", "alert-warning")
+            conn.close()
+            return redirect(url_for('variant.display', variant_id=variant_id))
+
+        # if we have a finished clinvar submission we first fetch the accession id and insert that to the database
+        # the clinvar accession id is required to make updates to previous submissions
+        if submission_status == 'processed':
+            clinvar_submission_file_url = response_content['responses'][0]['files'][0]['url']
+            submission_file_response = requests.get(clinvar_submission_file_url, headers = headers)
+            if submission_file_response.status_code != 200:
+                conn.close()
+                raise RuntimeError("Status check failed:" + "\n" + clinvar_submission_file_url + "\n" + submission_file_response.content.decode("UTF-8"))
+            submission_file_response = submission_file_response.json()
+            clinvar_accession = submission_file_response['submissions'][0]['identifiers']['clinvarAccession']
+            conn.insert_external_variant_id_from_variant_id(variant_id, external_id = clinvar_accession, id_source = "clinvar_accession")
+
+
+    # now we fetch the clinvar accession from the database and check for inconsistencies
+    clinvar_accession = conn.get_external_ids_from_variant_id(variant_id, id_source="clinvar_accession")
+    if len(clinvar_accession) > 1: # this should not happen!
+        clinvar_accession = clinvar_accession[len(clinvar_accession) - 1]
+        flash("WARNING: There are multiple clinvar accession ids for this variant. It was probably submitted multiple times to ClinVar. This should be investigated! Using " + str(clinvar_accession) + " now.", "alert-warning")
+    elif len(clinvar_accession) == 0:
+        clinvar_accession = None
+    else:
+        clinvar_accession = clinvar_accession[0]
+
+    # fetch orphanet entities for the autocomplete search bar
     orphanet_json = requests.get("https://api.orphacode.org/EN/ClinicalEntity", headers={'apiKey': 'HerediVar'})
     orphanet_json = json.loads(orphanet_json.text)
     orphanet_codes = []
@@ -168,14 +218,13 @@ def submit_clinvar(variant_id):
             flash("The selected condition contains errors. It MUST be one of the provided autocomplete values.", 'alert-danger')
         else:
             # submit to clinvar api
-            base_url = 'https://submit.ncbi.nlm.nih.gov/api/v1/submissions/?dry-run=true'
-            api_key = os.environ.get('CLINVAR_API_KEY')
-            headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
+            #base_url = 'https://submit.ncbi.nlm.nih.gov/api/v1/submissions/?dry-run=true'
+            base_url = 'https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions'
 
             schema = json.loads(open("/mnt/users/ahdoebm1/HerediVar/clinvar_submission_schema.json").read())
 
             selected_condition_orphanet_id = str(selected_condition.split(': ')[1])
-            data = get_clinvar_submission_json(variant_oi, consensus_classification, selected_gene, selected_condition_orphanet_id)
+            data = get_clinvar_submission_json(variant_oi, consensus_classification, selected_gene, selected_condition_orphanet_id, clinvar_accession)
 
     
             try:
@@ -193,17 +242,27 @@ def submit_clinvar(variant_id):
             }
 
             resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
-            if resp.status_code == 200:
+            #print(resp)
+            #print(resp.json())
+            clinvar_submission_id = resp.json()['id']
+            conn.insert_update_external_variant_id(variant_id, external_id = clinvar_submission_id, id_source = "clinvar_submission") # save the new submission id to the database
+
+
+            if resp.status_code == 200 or resp.status_code == 201:
                 flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
+                conn.close()
                 return redirect(url_for('variant.display', variant_id=variant_id))
-            flash("There was an error during submission to clinvar. It ended with status code: " + str(resp.status_code), "alert-danger")
+            flash("There was an error during submission to ClinVar. It ended with status code: " + str(resp.status_code), "alert-danger")
     
 
-    # the orphanet codes have to be in a dictionary so that they are parsable as a list by JSON.parse!
+    # the orphanet codes have to be in a dictionary so that they are parsable as a list by JSON.parse in javascript!
     data = {
         'orphanet_codes': orphanet_codes
     }
-    return render_template('variant_io/submit_clinvar.html', data = data, genes=genes)
+    
+    conn.close()
+    return render_template('variant_io/submit_clinvar.html', variant = variant_oi[0:5], data = data, genes=genes)
+
 
 
 def class_to_text(classification):
@@ -220,7 +279,7 @@ def class_to_text(classification):
         return 'Pathogenic'
 
 
-def get_clinvar_submission_json(variant_oi, consensus_classification, selected_gene, selected_condition_orphanet_id):
+def get_clinvar_submission_json(variant_oi, consensus_classification, selected_gene, selected_condition_orphanet_id, clinvar_accession = None):
     # required fields: 
     # clinvarSubmission > clinicalSignificance > clinicalSignificanceDescription (one of: "Pathogenic", "Likely pathogenic", "Uncertain significance", "Likely benign", "Benign", "Pathogenic, low penetrance", "Uncertain risk allele", "Likely pathogenic, low penetrance", "Established risk allele", "Likely risk allele", "affects", "association", "drug response", "confers sensitivity", "protective", "other", "not provided")
     # clinvarSubmission > clinicalSignificance > comment
@@ -259,6 +318,10 @@ def get_clinvar_submission_json(variant_oi, consensus_classification, selected_g
     clinical_significance['customAssertionScore'] = 0
     clinical_significance['dateLastEvaluated'] = consensus_classification[5].strftime('%Y-%m-%d')
     clinvar_submission_properties['clinicalSignificance'] =  clinical_significance
+
+    if clinvar_accession is not None:
+        clinvar_submission_properties['clinvarAccession'] = str(clinvar_accession)
+
 
     condition_set = {}
     condition = []
