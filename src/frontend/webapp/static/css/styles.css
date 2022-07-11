@@ -120,27 +120,120 @@ table.scroll th {
 
 
 
-
-.btn-test {
-    color: #ac0000;
+.btn-red {
+    color: #960000;
     background-color: #ffffff;
-    border-color: #ac0000; /*set the color you want here*/
+    border-color: #d8d8d8;
 }
-.btn-test:hover {
+.btn-red:hover {
     color: rgb(255, 255, 255);
-    background-color: rgb(255, 122, 122);
-    border-color: #ac0000; /*set the color you want here*/
+    background-color: #9c0000 !important;
+    border-color: #d8d8d8 !important;
 }
-.btn-test:focus, .btn-test:active, .btn-test:checked:active, .btn-test:checked, .btn-test.active, .btn-test:active:focus, .open>.dropdown-toggle.btn-test {
+.btn-red:focus, .btn-red.focus, .btn-red:active:focus, .open>.dropdown-toggle.btn-red, input[type=checkbox]:checked + label.btn-red {
     color: rgb(255, 255, 255);
-    background-color: #ff0000 !important;
-    border-color: #ac0000 !important; /*set the color you want here*/
+    background-color: #960000 !important;
+    border-color: #d8d8d8 !important;
+}
+.btn-orange {
+    color: #ff7300;
+    background-color: #ffffff;
+    border-color: #d8d8d8;
+}
+.btn-orange:hover {
+    color: rgb(255, 255, 255);
+    background-color: #ff8017 !important;
+    border-color: #d8d8d8 !important;
+}
+.btn-orange:focus, .btn-orange.focus, .btn-orange:active:focus, .open>.dropdown-toggle.btn-orange, input[type=checkbox]:checked + label.btn-orange {
+    color: rgb(255, 255, 255);
+    background-color: #ff7300 !important;
+    border-color: #d8d8d8 !important;
+}
+.btn-yellow {
+    color: #d8be19;
+    background-color: #ffffff;
+    border-color: #d8d8d8;
+}
+.btn-yellow:hover {
+    color: rgb(255, 255, 255);
+    background-color: #dbc114 !important;
+    border-color: #d8d8d8 !important;
+}
+.btn-yellow:focus, .btn-yellow.focus, .btn-yellow:active:focus, .open>.dropdown-toggle.btn-yellow, input[type=checkbox]:checked + label.btn-yellow {
+    color: rgb(255, 255, 255);
+    background-color: #f1d620 !important;
+    border-color: #d8d8d8 !important;
+}
+.btn-green {
+    color: #108800;
+    background-color: #ffffff;
+    border-color: #d8d8d8;
+}
+.btn-green:hover {
+    color: rgb(255, 255, 255);
+    background-color: #108800 !important;
+    border-color: #d8d8d8 !important;
+}
+.btn-green:focus, .btn-green.focus, .btn-green:active:focus, .open>.dropdown-toggle.btn-green, input[type=checkbox]:checked + label.btn-green {
+    color: rgb(255, 255, 255);
+    background-color: #108800 !important;
+    border-color: #d8d8d8 !important;
+}
+.btn-blue {
+    color: #1db5cf;
+    background-color: #ffffff;
+    border-color: #d8d8d8;
+}
+.btn-blue:hover {
+    color: rgb(255, 255, 255);
+    background-color: rgb(23, 173, 199) !important;
+    border-color: #d8d8d8 !important;
+}
+.btn-blue:focus, .btn-blue.focus, .btn-blue:active:focus, .open>.dropdown-toggle.btn-blue, input[type=checkbox]:checked + label.btn-blue {
+    color: rgb(255, 255, 255);
+    background-color: #1db5cf !important;
+    border-color: #d8d8d8 !important;
+}
+.btn-purple {
+    color: #6f15a3;
+    background-color: #ffffff;
+    border-color: #d8d8d8;
+}
+.btn-purple:hover {
+    color: rgb(255, 255, 255);
+    background-color: #7e0dc0 !important;
+    border-color: #d8d8d8 !important;
+}
+.btn-purple:focus, .btn-purple.focus, .btn-purple:active:focus, .open>.dropdown-toggle.btn-purple, input[type=checkbox]:checked + label.btn-purple {
+    color: rgb(255, 255, 255);
+    background-color: #6f15a3 !important;
+    border-color: #d8d8d8 !important;
+}
+.btn-darkblue {
+    color: #000d58;
+    background-color: #ffffff;
+    border-color: #d8d8d8;
+}
+.btn-darkblue:hover {
+    color: rgb(255, 255, 255);
+    background-color: #000f64 !important;
+    border-color: #d8d8d8 !important;
+}
+.btn-darkblue:focus, .btn-darkblue.focus, .btn-darkblue:active:focus, .open>.dropdown-toggle.btn-darkblue, input[type=checkbox]:checked + label.btn-darkblue {
+    color: rgb(255, 255, 255);
+    background-color: #000d58 !important;
+    border-color: #d8d8d8 !important;
 }
 
 
-.light-red-hover:hover {
-
-    filter: brightness(120%);
+.acmg-button {
+    width:5em;
+    font-weight:bold;
+}
+.light-hover:hover {
+    filter: brightness(130%);
+    border-color: #979797 !important;
 }
 
 

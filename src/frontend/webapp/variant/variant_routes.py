@@ -331,5 +331,19 @@ def user_classify(variant_id):
 @require_login
 def acmg_classify(variant_id):
     if request.method == 'POST':
-        print(request.form['pvs1'])
+        acmg_mask = request.form.get('acmg-mask')
+        conn = Connection()
+        data_to_insert = {}
+        for criterium in request.form:
+            if criterium != 'acmg-mask':
+                evidence = request.form[criterium]
+                data_to_insert[criterium] = evidence
+                if not evidence:
+                    flash("you must provide evidence for each criterium!", "alert-danger")
+                    conn.close()
+                    return render_template('variant/acmg.html')
+        for criterium in data_to_insert:
+            evidence = data_to_insert[criterium]
+            #conn.insert_acmg_criterium(variant_id, criterium, acmg_mask, evidence)
+    conn.close()
     return render_template('variant/acmg.html')

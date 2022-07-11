@@ -10,6 +10,7 @@ import io
 import datetime
 import tempfile
 from shutil import copyfileobj
+import json
 
 
 download_blueprint = Blueprint(
@@ -217,3 +218,17 @@ def get_variant_vcf_line(variant_id, conn):
 
 
     return variant_vcf + '\t' + info, info_headers
+
+
+@download_blueprint.route('/get_acmg_class/<int:variant_id>')
+@require_login
+def get_acmg_class(variant_id):
+    conn = Connection()
+    current_agmc = conn.get_acmg_criteria_for_variant(variant_id)
+    conn.close()
+
+    final_class = criteria_to_class(current_agmc)
+    return final_class
+
+def criteria_to_class(acmg):
+    return None

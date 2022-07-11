@@ -2,82 +2,201 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="bst">{% block title %} Submit consensus classification to ClinVar {% endblock %}</h1>
+    <h1 class="bst">{% block title %} Create classification from ACMG guidelines {% endblock %}</h1>
 
-    <form action="" autocomplete="off" method="post" class="needs-validation bst" novalidate>
+    <div class="d-flex bst">
 
-        <div class="col-sm-4">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex">
-                        <div class="ssr">
-                            <div class="form-group">
-                                <input type="checkbox" class="btn-check" id="pvs1" name="pvs1" value="TEST" autocomplete="off" onchange="button_select_action(this)">
-                                <label class="btn btn-outline-danger light-red-hover" for="pvs1">PVS1</label>
+        <form action="" id="acmg-form" autocomplete="off" method="post" novalidate>
+            <div class="form-group">
+                <label for="acmg-mask" class="form-label">ACMG mask</label>
+                <select class="form-select" name="acmg-mask" id="acmg-mask" required>
+                    <option value="standard">standard (none)</option>
+                    <option value="TP53">TP53</option>
+                    <option value="CDH1">CDH1</option>
+                    <option value="task-force">task-force</option>
+               </select>
+               <div class="invalid-feedback">
+                   Please provide a chromosome!
+               </div>
+           </div>
+
+            <div class="d-flex bst">
+                <div class="card">
+                    <h4 class="card-header">Pathogenic criteria</h4>
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="ssr">
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="pvs1" name="pvs1" value="evidencePVS1" autocomplete="off" onchange="button_select_action(this)">
+                                    <label class="btn btn-red light-hover acmg-button" for="pvs1">PVS1</label>
+                                </div>
                             </div>
-                        </div>
-                        <div class="ssr">
-                            <div class="form-group">
-                                <input type="checkbox" class="btn-check" id="ps1" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="ps1">PS1</label>
+                            <div class="ssr">
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="ps1" name="ps1" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-orange light-hover acmg-button" for="ps1">PS1</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="ps2" name="ps2" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn  btn-orange light-hover acmg-button" for="ps2">PS2</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="ps3" name="ps3" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn  btn-orange light-hover acmg-button" for="ps3">PS3</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="ps4" name="ps4" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn  btn-orange light-hover acmg-button" for="ps4">PS4</label>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <input type="checkbox" class="btn-check" id="ps2" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="ps2">PS2</label>
+                            <div class="ssr">
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="pm1" name="pm1" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-yellow light-hover acmg-button" for="pm1">PM1</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="pm2" name="pm2" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-yellow light-hover acmg-button" for="pm2">PM2</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="pm3" name="pm3" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-yellow light-hover acmg-button" for="pm3">PM3</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="pm4" name="pm4" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-yellow light-hover acmg-button" for="pm4">PM4</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="pm5" name="pm5" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-yellow light-hover acmg-button" for="pm5">PM5</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="pm6" name="pm6" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-yellow light-hover acmg-button" for="pm6">PM6</label>
+                                </div>
                             </div>
-                            <div class="form-group">
-                                <input type="checkbox" class="btn-check" id="ps3" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="ps3">PS3</label>
-                            </div>
-                            <div class="form-group">
-                                <input type="checkbox" class="btn-check" id="ps4" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="ps4">PS4</label>
-                            </div>
-                        </div>
-                        <div class="ssr">
-                            <div class="form-group">
-                                <input type="checkbox" class="btn-check" id="pm1" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="pm1">PM1</label>
-                            </div>
-                            <div class="form-group">
-                                <input type="checkbox" class="btn-check" id="pm2" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="pm2">PM2</label>
-                            </div>
-                            <div class="form-group">
-                                <input type="checkbox" class="btn-check" id="pm3" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="pm3">PM3</label>
-                            </div>
-                            <div class="form-group">
-                                <input type="checkbox" class="btn-check" id="pm4" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="pm4">PM4</label>
-                            </div>
-                            <div class="form-group">
-                                <input type="checkbox" class="btn-check" id="pm5" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="pm5">PM5</label>
-                            </div>
-                            <div class="form-group">
-                                <input type="checkbox" class="btn-check" id="pm6" autocomplete="off">
-                                <label class="btn btn-outline-primary" for="pm6">PM6</label>
+                            
+                            <div class="ssr">
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="pp1" name="pp1" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-green light-hover acmg-button" for="pp1">PP1</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="pp2" name="pp2" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-green light-hover acmg-button" for="pp2">PP2</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="pp3" name="pp3" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-green light-hover acmg-button" for="pp3">PP3</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="pp4" name="pp4" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-green light-hover acmg-button" for="pp4">PP4</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="pp5" name="pp5" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-green light-hover acmg-button" for="pp5">PP5</label>
+                                </div>
                             </div>
                         </div>
                     </div>
-    
-    
-    
                 </div>
     
-            </div>
     
-        </div>
-        
-        <button class="bst btn btn-primary" type="submit">Submit classification</button>
-    </form>
+                <div class="card">
+                    <h4 class="card-header">Benign criteria</h4>
+                    <div class="card-body">
+                        <div class="d-flex">
+                            <div class="ssr">
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="bp1" name="bp1" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-blue light-hover acmg-button" for="bp1">BP1</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="bp2" name="bp2" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-blue light-hover acmg-button" for="bp2">BP2</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="bp3" name="bp3" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-blue light-hover acmg-button" for="bp3">BP3</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="bp4" name="bp4" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-blue light-hover acmg-button" for="bp4">BP4</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="bp5" name="bp5" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-blue light-hover acmg-button" for="bp5">BP5</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="bp6" name="bp6" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-blue light-hover acmg-button" for="bp6">BP6</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="bp7" name="bp7" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-blue light-hover acmg-button" for="bp7">BP7</label>
+                                </div>
+                            </div>
+                            <div class="ssr">
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="bs1" name="bs1" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-purple light-hover acmg-button" for="bs1">BS1</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="bs2" name="bs2" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-purple light-hover acmg-button" for="bs2">BS2</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="bs3" name="bs3" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-purple light-hover acmg-button" for="bs3">BS3</label>
+                                </div>
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="bs4" name="bs4" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-purple light-hover acmg-button" for="bs4">BS4</label>
+                                </div>
+                            </div>
+                            <div class="ssr">
+                                <div class="form-group">
+                                    <input type="checkbox" class="btn-check" id="ba1" name="ba1" autocomplete="off" value="" onchange="button_select_action(this)">
+                                    <label class="btn btn-darkblue light-hover acmg-button" for="ba1">BA1</label>
+                                </div>
+                            </div>
 
-    <div id="criteria_container">
-        <div id="criteria_description"></div>
-        <input type="text" id="criteria_evidence" placeholder="insert evidence...">
-        <div id="additional_content"></div>
-        <button class="btn btn-primary">Select criterium</button>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="card">
+                    <div class="card-body">
+                        <button id="submit-acmg-form" class="bst btn btn-primary" type="submit">Submit classification</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+    </div>
+
+
+    <div class="d-flex bst">
+        <div id="criteria_container" class="card">
+            
+            <div class="card-body" style="width:50em;">
+                <h4 class="card-title" id="criteria_title">Please select a criterion</h4>
+                <hr>
+                <div id="button_container" hidden>
+                    <div class="sst">Description:</div>
+                    <div id="criteria_description" class="sst" style="white-space: pre-line;"></div>
+                    <input type="text" id="criteria_evidence" class="form-control sst" placeholder="insert evidence...">
+                    <div id="additional_content" class="sst"></div>
+                    <hr>
+                    <button id="select_criterium_button" type="button" class="btn btn-primary sst" data-bs-trigger="manual" data-bs-container="body" data-bs-toggle="popover" data-bs-placement="right" data-bs-content="you must provide evidence in order to select this criterion">
+                        Toggle criterium
+                    </button>
+                </div>
+
+            </div>
+        </div>
     </div>
       
 </div>
