@@ -968,3 +968,8 @@ class Connection:
         #print(variant_annot_dict['standard_annotations'])
     
         return variant_annot_dict
+
+
+    def insert_acmg_criterium(self, variant_id, criterium, acmg_mask, evidence):
+        # TODO
+        return ''
