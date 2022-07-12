@@ -330,20 +330,69 @@ def user_classify(variant_id):
 @variant_blueprint.route('/classify/<int:variant_id>/acmg', methods=['GET', 'POST'])
 @require_login
 def acmg_classify(variant_id):
+    conn = Connection()
+
+    user_id = session['user']['user_id']
+    # fetch previous acmg classifications (could be multiple because of different masks)
+    # 0id, 1variant_id, 2user_id, 3mask, 4date
+    previous_acmg_classifications = conn.get_user_acmg_classification(variant_id, user_id)
+    # extract mask and convert to mask->acmg_classification_id dict
+    masks_with_info = {}
+    for entry in previous_acmg_classifications:
+        mask_key = entry[3]
+        if mask_key in masks_with_info:
+            raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", mask: " + mask + ", user_id: " + str(user_id))
+        masks_with_info[mask_key] = {'classification_id':entry[0], 'date':entry[4].strftime('%Y-%m-%d'), 'selected_criteria':conn.get_acmg_criteria(entry[0])}
+    
+    print(masks_with_info)
+
     if request.method == 'POST':
-        acmg_mask = request.form.get('acmg-mask')
-        conn = Connection()
-        data_to_insert = {}
+        mask = request.form.get('mask')
+
+        # test if the current user already has an acmg classification for this mask
+        if mask not in masks_with_info:
+            conn.insert_user_acmg_classification(variant_id, user_id, mask)
+            acmg_classification_id = conn.get_user_acmg_classification(variant_id, user_id, mask=mask)[0]
+        else:
+            acmg_classification_id = masks_with_info[mask]['classification_id']
+        print(acmg_classification_id)
+
+        
+        new_criteria = {}
         for criterium in request.form:
-            if criterium != 'acmg-mask':
+            if criterium != 'mask':
                 evidence = request.form[criterium]
-                data_to_insert[criterium] = evidence
+                new_criteria[criterium] = evidence
                 if not evidence:
                     flash("you must provide evidence for each criterium!", "alert-danger")
                     conn.close()
                     return render_template('variant/acmg.html')
-        for criterium in data_to_insert:
-            evidence = data_to_insert[criterium]
-            #conn.insert_acmg_criterium(variant_id, criterium, acmg_mask, evidence)
+        
+        previous_criteria = conn.get_acmg_criteria(acmg_classification_id)
+        previous_criteria_dict = {}
+        for entry in previous_criteria:
+            criterium_key = entry[2]
+            previous_criteria_dict[criterium_key] = entry[0]
+
+        
+        for criterium in new_criteria:
+            evidence = new_criteria[criterium]
+            # insert new criteria
+            if criterium not in previous_criteria_dict:
+                conn.insert_acmg_criterium(acmg_classification_id, criterium, evidence)
+            # update records if they were present before
+            elif criterium in previous_criteria_dict:
+                conn.update_acmg_criterium(previous_criteria_dict[criterium], evidence)
+        
+        
+        # delete unselected criterium tags
+        criteria_to_delete = [x for x in previous_criteria_dict if x not in new_criteria]
+        for criterium in criteria_to_delete:
+            conn.delete_acmg_criterium(previous_criteria_dict[criterium])
+
+
+        conn.close()
+        return redirect(url_for('variant.acmg_classify', variant_id = variant_id))
+
     conn.close()
-    return render_template('variant/acmg.html')
+    return render_template('variant/acmg.html', masks_with_info=masks_with_info)

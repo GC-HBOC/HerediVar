@@ -43,6 +43,100 @@ function update_criteria_evidence_dom(criteria_evidence_dom, previous_evidence) 
     criteria_evidence_dom.value = previous_evidence
 }
 
+$('#select_criterium_button').on('click', function(e){
+    const criterium_to_select = $(this)[0].value;
+    var criterium_to_select_dom = document.getElementById(criterium_to_select)
+    if (document.getElementById('criteria_evidence').value.trim() == '' && !criterium_to_select_dom.checked) { 
+        $(this).popover('show')
+    } else { // only select criterium if there is evidence
+        $(this).popover('hide')
+        criterium_to_select_dom.checked = !criterium_to_select_dom.checked
+        update_classification_preview()
+    }
+})
+
+function get_currently_checked_criteria() {
+    var result = []
+    var all_buttons = document.querySelectorAll('.btn-check')
+    for (var i = 0; i < all_buttons.length; i++) {
+        var current_button = all_buttons[i];
+        if (current_button.checked) {
+            result.push(current_button.id)
+        }
+    }
+    return result
+}
+
+$('#submit-acmg-form').on('click', function(e){
+    save_criteria() // this is important to save the last edited criteria. Otherwise the user needs to first select some other criterium to save the progress
+})
+
+function revert_criteria_container() {
+    document.getElementById('criteria_title').textContent = "Please select a criterion";
+    document.getElementById('button_container').hidden = true;
+    document.getElementById('criteria_description').textContent = "";
+    document.getElementById('criteria_evidence').value = "";
+    document.getElementById('additional_content').innerHTML = "";
+}
+
+function revert_buttons() {
+    var all_buttons = document.querySelectorAll('.btn-check')
+    for (var i = 0; i < all_buttons.length; i++) {
+        var current_button = all_buttons[i];
+        current_button.checked = false;
+        current_button.value = ""
+    }
+}
+
+function revert_previous_obj() {
+    previous_obj = null;
+}
+
+function preselect_from_previous_selection() {
+    revert_criteria_container()
+    revert_buttons()
+    revert_previous_obj()
+    const mask = document.getElementById('mask').value
+    const current_mask_with_info = masks_with_info[mask]
+    
+    if (typeof current_mask_with_info !== "undefined") { // only preselect if there is data for it
+        selected_criteria = current_mask_with_info['selected_criteria']
+        for(var i = 0; i < selected_criteria.length; i++) {
+            var current_data = selected_criteria[i];
+            var current_criterium = current_data[2];
+            var current_evidence = current_data[3];
+            var selected_button = document.getElementById(current_criterium.toLowerCase());
+            selected_button.value = current_evidence;
+            selected_button.checked = true;
+        }
+    }
+    update_classification_preview()
+}
+// call the function once to preselect on page load
+preselect_from_previous_selection()
+
+
+
+function preselect_from_data(){
+    // TODO!!
+}
+
+
+// selected criteria is an array of criteria ids
+function update_classification_preview() {
+    var selected_criteria = get_currently_checked_criteria();
+    selected_criteria = selected_criteria.join('+')
+    fetch('/calculate_acmg_class?selected_classes='+selected_criteria).then(function (response) {
+        return response.json();
+    }).then(function (text) {
+        const final_class = text.final_class
+        document.getElementById('classification_preview').textContent = final_class
+    });
+}
+
+
+
+
 function update_criteria_description(div, id) {
     //var criteria = ['pvs1', 'ps1', 'ps2', 'ps3', 'ps4', 'pm1', 'pm2', 'pm3', 'pm4', 'pm5', 'pm6', 'pp1', 'pp2', 'pp3', 'pp4', 'pp5', 'ba1', 'bs1', 'bs2', 'bs3', 'bs4', 'bp1', 'bp2', 'bp3', 'bp4', 'bp5', 'bp6', 'bp7']
     var text = ""
@@ -182,22 +276,8 @@ function update_criteria_description(div, id) {
     div.textContent = text
 }
 
-function select_criterium(obj) {
-    
-}
 
 
-$('#select_criterium_button').on('click', function(e){
-    const criterium_to_select = $(this)[0].value;
-    var criterium_to_select_dom = document.getElementById(criterium_to_select)
-    if (document.getElementById('criteria_evidence').value.trim() == '' && !criterium_to_select_dom.checked) { 
-        $(this).popover('show')
-    } else { // only select criterium if there is evidence
-        $(this).popover('hide')
-        criterium_to_select_dom.checked = !criterium_to_select_dom.checked
-    }
-    
-})
 
 
 var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))

@@ -970,6 +970,60 @@ class Connection:
         return variant_annot_dict
 
 
-    def insert_acmg_criterium(self, variant_id, criterium, acmg_mask, evidence):
-        # TODO
-        return ''
+    ### ACMG classification functions
+    # each user can have one acmg classification per mask
+    def insert_user_acmg_classification(self, variant_id, user_id, mask):
+        command = "INSERT INTO acmg_classification (variant_id, mask, date, is_consensus) VALUES (%s, %s, %s, 0)"
+        curdate = datetime.datetime.today().strftime('%Y-%m-%d')
+        self.cursor.execute(command, (variant_id, mask, curdate))
+        self.conn.commit()
+
+        command = "INSERT INTO acmg_user_classification (acmg_classification_id, user_id) VALUES ((SELECT id FROM acmg_classification WHERE variant_id=%s AND mask=%s AND is_consensus=0), %s)"
+        self.cursor.execute(command, (variant_id, mask, user_id))
+        self.conn.commit()
+    
+    def get_user_acmg_classification(self, variant_id, user_id, mask = 'all'):
+        inner_command = "SELECT id as classification_id, variant_id, mask, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=0"
+        actual_information = (variant_id, )
+        if mask != 'all':
+            inner_command += " AND mask=%s"
+            actual_information += (mask, )
+        
+        command = "SELECT classification_id, variant_id, user_id, mask, date FROM acmg_user_classification a INNER JOIN \
+	                    (" + inner_command + ") b \
+	                    ON a.acmg_classification_id = b.classification_id \
+                    WHERE user_id=%s"
+        actual_information += (user_id, )
+        self.cursor.execute(command, actual_information)
+        result = self.cursor.fetchall()
+        if len(result) == 1:
+            return result
+        if len(result) > 1:
+            raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", mask: " + mask + ", user_id: " + str(user_id) + "\n The result was: " + str(result))
+        return None # no user classification for these criteria
+
+
+    def insert_acmg_criterium(self, acmg_classification_id, criterium, evidence):
+        command = "INSERT INTO acmg_criteria (acmg_classification_id, criterium, evidence) VALUES (%s, %s, %s)"
+        actual_information = (acmg_classification_id, criterium, evidence)
+        self.cursor.execute(command, actual_information)
+        self.conn.commit()
+
+    def update_acmg_criterium(self, acmg_criterium_id, updated_evidence):
+        command = "UPDATE acmg_criteria SET evidence=%s WHERE id=%s"
+        self.cursor.execute(command, (updated_evidence, acmg_criterium_id))
+        self.conn.commit()
+
+    def delete_acmg_criterium(self, acmg_criterium_id):
+        command = "DELETE FROM acmg_criteria WHERE id=%s"
+        self.cursor.execute(command, (acmg_criterium_id, ))
+        self.conn.commit()
+
+    def get_acmg_criteria(self, acmg_classification_id):
+        command = "SELECT * FROM acmg_criteria WHERE acmg_classification_id=%s"
+        self.cursor.execute(command, (acmg_classification_id, ))
+        result = self.cursor.fetchall()
+        return result
+
+
+#
