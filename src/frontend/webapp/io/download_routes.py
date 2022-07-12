@@ -1,5 +1,5 @@
 from turtle import down
-from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for, session
+from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for, session, jsonify
 from os import path
 import sys
 from ..utils import require_login
@@ -10,7 +10,6 @@ import io
 import datetime
 import tempfile
 from shutil import copyfileobj
-import json
 
 
 download_blueprint = Blueprint(
@@ -220,15 +219,84 @@ def get_variant_vcf_line(variant_id, conn):
     return variant_vcf + '\t' + info, info_headers
 
 
-@download_blueprint.route('/get_acmg_class/<int:variant_id>')
+# this route listens on get parameter: "selected_classes=acb&abc&abc&...."
+# example
+@download_blueprint.route('/calculate_acmg_class')
 @require_login
-def get_acmg_class(variant_id):
-    conn = Connection()
-    current_agmc = conn.get_acmg_criteria_for_variant(variant_id)
-    conn.close()
+def calculate_acmg_class():
+    selected_classes = request.args.get('selected_classes')
+    selected_classes = selected_classes.split(' ')
+    class_counts = get_class_counts(selected_classes)
 
-    final_class = criteria_to_class(current_agmc)
-    return final_class
+    print(class_counts)
 
-def criteria_to_class(acmg):
-    return None
+    possible_classes = set()
+
+    # numbering comments are nubmers from the official ACMG paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4544753/ (TABLE 5)
+    # pathogenic
+    if class_counts['pvs'] == 1: # 1
+        if class_counts['ps'] >= 1 or class_counts['pm'] >= 2 or (class_counts['pm'] == 1 and class_counts['pp'] == 1) or class_counts['pp'] >= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] >= 2: # 2 
+        possible_classes.add(5)
+    if class_counts['ps'] == 1: # 3
+        if class_counts['pm'] >= 3 or (class_counts['pm'] == 2 and class_counts['pp'] >= 2) or (class_counts['pm'] == 1 and class_counts['pp'] >= 4):
+            possible_classes.add(5)
+    
+    # likely pathogenic
+    if class_counts['pvs'] == 1 and class_counts['pm'] == 1: # 1
+        possible_classes.add(4)
+    if class_counts['ps'] == 1 and (1 <= class_counts['pm'] <= 2): # 2
+        possible_classes.add(4)
+    if class_counts['ps'] == 1 and class_counts['pp'] >= 2: # 3
+        possible_classes.add(4)
+    if class_counts['pm'] >= 3: # 4
+        possible_classes.add(4)
+    if class_counts['pm'] == 2 and class_counts['pp'] >= 2: # 5
+        possible_classes.add(4)
+    if class_counts['pm'] == 1 and class_counts['pp'] >= 4: # 6
+        possible_classes.add(4)
+
+    # benign
+    if class_counts['ba'] == 1: # 1
+        possible_classes.add(1)
+    if class_counts['bs'] >=2: # 2
+        possible_classes.add(1)
+    
+    # likely benign
+    if class_counts['bs'] == 1 and class_counts['bp'] == 1: # 1
+        possible_classes.add(2)
+    if class_counts['bp'] >= 2: # 2
+        possible_classes.add(2)
+
+    print(list(possible_classes))
+
+    # uncertain significance if criteria for benign and pathogenic are contradictory
+    if (1 in possible_classes or 2 in possible_classes) and (4 in possible_classes or 5 in possible_classes):
+        final_class = 3
+
+    # choose the one with higher significance if there are different pathogenic possibilities
+    elif 4 in possible_classes and 5 in possible_classes:
+        final_class = 5
+
+    # choose the one with higher significance if there are different benign possibilities
+    elif 1 in possible_classes and 2 in possible_classes:
+        final_class = 2
+
+    # if there is only one possibility choose it
+    elif len(possible_classes) == 1:
+        final_class = list(possible_classes)[0]
+
+    # uncertain significance if no other criteria match
+    elif len(possible_classes) == 0:
+        final_class = 3
+
+    result = {'final_class': final_class}
+    return jsonify(result)
+
+
+def get_class_counts(data):
+    result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'ba':0}
+    for key in result:
+        result[key] = sum(key in x for x in data)
+    return result

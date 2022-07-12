@@ -4,13 +4,13 @@
 <div class="container">
     <h1 class="bst">{% block title %} Create classification from ACMG guidelines {% endblock %}</h1>
 
-    <div class="d-flex bst">
+    <div class="d-flex justify-content-center bst">
 
         <form action="" id="acmg-form" autocomplete="off" method="post" novalidate>
             <div class="form-group">
-                <label for="acmg-mask" class="form-label">ACMG mask</label>
-                <select class="form-select" name="acmg-mask" id="acmg-mask" required>
-                    <option value="standard">standard (none)</option>
+                <label for="mask" class="form-label">ACMG mask</label>
+                <select class="form-select" name="mask" id="mask" onchange="preselect_from_previous_selection()" required>
+                    <option value="none">standard (none)</option>
                     <option value="TP53">TP53</option>
                     <option value="CDH1">CDH1</option>
                     <option value="task-force">task-force</option>
@@ -27,7 +27,7 @@
                         <div class="d-flex">
                             <div class="ssr">
                                 <div class="form-group">
-                                    <input type="checkbox" class="btn-check" id="pvs1" name="pvs1" value="evidencePVS1" autocomplete="off" onchange="button_select_action(this)">
+                                    <input type="checkbox" class="btn-check" id="pvs1" name="pvs1" value="" autocomplete="off" onchange="button_select_action(this)">
                                     <label class="btn btn-red light-hover acmg-button" for="pvs1">PVS1</label>
                                 </div>
                             </div>
@@ -169,7 +169,9 @@
                 
                 <div class="card">
                     <div class="card-body">
-                        <button id="submit-acmg-form" class="bst btn btn-primary" type="submit">Submit classification</button>
+                        <div>Classification based on selected criteria</div>
+                        <div class="display-3" style="font-weight:bold; text-align:center;" id="classification_preview"></div>
+                        <div style="text-align:center;"><button id="submit-acmg-form" class="bst btn btn-primary" type="submit">Submit classification</button></div>
                     </div>
                 </div>
             </div>
@@ -178,11 +180,11 @@
     </div>
 
 
-    <div class="d-flex bst">
+    <div class="d-flex justify-content-center bst">
         <div id="criteria_container" class="card">
             
             <div class="card-body" style="width:50em;">
-                <h4 class="card-title" id="criteria_title">Please select a criterion</h4>
+                <h4 class="card-title" id="criteria_title"></h4>
                 <hr>
                 <div id="button_container" hidden>
                     <div class="sst">Description:</div>
@@ -200,6 +202,14 @@
     </div>
       
 </div>
+
+
+<!-- this extracts the flask data and makes them available to the scripts -->
+<script>
+    const masks_with_info = JSON.parse('{{masks_with_info | tojson | safe}}');
+    
+    //const orphanet_codes = flaskData.orphanet_codes;
+</script>
 
 
 {% endblock %}
