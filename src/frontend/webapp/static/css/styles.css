@@ -123,17 +123,18 @@ table.scroll th {
 .btn-red {
     color: #960000;
     background-color: #ffffff;
+    background: white;
     border-color: #d8d8d8;
 }
 .btn-red:hover {
     color: rgb(255, 255, 255);
-    background-color: #9c0000 !important;
-    border-color: #d8d8d8 !important;
+    background-color: #9c0000;
+    border-color: #d8d8d8;
 }
 .btn-red:focus, .btn-red.focus, .btn-red:active:focus, .open>.dropdown-toggle.btn-red, input[type=checkbox]:checked + label.btn-red {
     color: rgb(255, 255, 255);
-    background-color: #960000 !important;
-    border-color: #d8d8d8 !important;
+    background-color: #960000;
+    border-color: #d8d8d8;
 }
 .btn-orange {
     color: #ff7300;
@@ -142,13 +143,13 @@ table.scroll th {
 }
 .btn-orange:hover {
     color: rgb(255, 255, 255);
-    background-color: #ff8017 !important;
-    border-color: #d8d8d8 !important;
+    background-color: #ff8017;
+    border-color: #d8d8d8;
 }
 .btn-orange:focus, .btn-orange.focus, .btn-orange:active:focus, .open>.dropdown-toggle.btn-orange, input[type=checkbox]:checked + label.btn-orange {
     color: rgb(255, 255, 255);
-    background-color: #ff7300 !important;
-    border-color: #d8d8d8 !important;
+    background-color: #ff7300;
+    border-color: #d8d8d8;
 }
 .btn-yellow {
     color: #d8be19;
@@ -157,13 +158,13 @@ table.scroll th {
 }
 .btn-yellow:hover {
     color: rgb(255, 255, 255);
-    background-color: #dbc114 !important;
-    border-color: #d8d8d8 !important;
+    background-color: #dbc114;
+    border-color: #d8d8d8;
 }
 .btn-yellow:focus, .btn-yellow.focus, .btn-yellow:active:focus, .open>.dropdown-toggle.btn-yellow, input[type=checkbox]:checked + label.btn-yellow {
     color: rgb(255, 255, 255);
-    background-color: #f1d620 !important;
-    border-color: #d8d8d8 !important;
+    background-color: #f1d620;
+    border-color: #d8d8d8;
 }
 .btn-green {
     color: #108800;
@@ -172,13 +173,13 @@ table.scroll th {
 }
 .btn-green:hover {
     color: rgb(255, 255, 255);
-    background-color: #108800 !important;
-    border-color: #d8d8d8 !important;
+    background-color: #108800;
+    border-color: #d8d8d8;
 }
 .btn-green:focus, .btn-green.focus, .btn-green:active:focus, .open>.dropdown-toggle.btn-green, input[type=checkbox]:checked + label.btn-green {
     color: rgb(255, 255, 255);
-    background-color: #108800 !important;
-    border-color: #d8d8d8 !important;
+    background-color: #108800;
+    border-color: #d8d8d8;
 }
 .btn-blue {
     color: #1db5cf;
@@ -187,13 +188,13 @@ table.scroll th {
 }
 .btn-blue:hover {
     color: rgb(255, 255, 255);
-    background-color: rgb(23, 173, 199) !important;
-    border-color: #d8d8d8 !important;
+    background-color: rgb(23, 173, 199);
+    border-color: #d8d8d8;
 }
 .btn-blue:focus, .btn-blue.focus, .btn-blue:active:focus, .open>.dropdown-toggle.btn-blue, input[type=checkbox]:checked + label.btn-blue {
     color: rgb(255, 255, 255);
-    background-color: #1db5cf !important;
-    border-color: #d8d8d8 !important;
+    background-color: #1db5cf;
+    border-color: #d8d8d8;
 }
 .btn-purple {
     color: #6f15a3;
@@ -202,13 +203,13 @@ table.scroll th {
 }
 .btn-purple:hover {
     color: rgb(255, 255, 255);
-    background-color: #7e0dc0 !important;
-    border-color: #d8d8d8 !important;
+    background-color: #7e0dc0;
+    border-color: #d8d8d8;
 }
 .btn-purple:focus, .btn-purple.focus, .btn-purple:active:focus, .open>.dropdown-toggle.btn-purple, input[type=checkbox]:checked + label.btn-purple {
     color: rgb(255, 255, 255);
-    background-color: #6f15a3 !important;
-    border-color: #d8d8d8 !important;
+    background-color: #6f15a3;
+    border-color: #d8d8d8;
 }
 .btn-darkblue {
     color: #000d58;
@@ -217,19 +218,23 @@ table.scroll th {
 }
 .btn-darkblue:hover {
     color: rgb(255, 255, 255);
-    background-color: #000f64 !important;
-    border-color: #d8d8d8 !important;
+    background-color: #000f64;
+    border-color: #d8d8d8;
 }
 .btn-darkblue:focus, .btn-darkblue.focus, .btn-darkblue:active:focus, .open>.dropdown-toggle.btn-darkblue, input[type=checkbox]:checked + label.btn-darkblue {
     color: rgb(255, 255, 255);
-    background-color: #000d58 !important;
-    border-color: #d8d8d8 !important;
+    background-color: #000d58;
+    border-color: #d8d8d8;
 }
 
 
 .acmg-button {
     width:5em;
     font-weight:bold;
+}
+.btn-check:disabled + label.btn {
+    color: rgb(170, 170, 170);
+    background-color: rgb(230, 230, 230);
 }
 .light-hover:hover {
     filter: brightness(130%);

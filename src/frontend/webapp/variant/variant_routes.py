@@ -352,43 +352,55 @@ def acmg_classify(variant_id):
         # test if the current user already has an acmg classification for this mask
         if mask not in masks_with_info:
             conn.insert_user_acmg_classification(variant_id, user_id, mask)
-            acmg_classification_id = conn.get_user_acmg_classification(variant_id, user_id, mask=mask)[0]
+            acmg_classification_id = conn.get_user_acmg_classification(variant_id, user_id, mask=mask)[0][0]
         else:
             acmg_classification_id = masks_with_info[mask]['classification_id']
-        print(acmg_classification_id)
 
-        
+
+        # the new criteria should be collected first because we do not want to save any information if
+        # there is missing information. To ensure that we first inspect the submission for completeness
+        # this should later be done by is_valid_acmg!!!!!!!!!
         new_criteria = {}
         for criterium in request.form:
-            if criterium != 'mask':
+            if criterium != 'mask' and '_strength' not in criterium:
                 evidence = request.form[criterium]
-                new_criteria[criterium] = evidence
+                strength = request.form[criterium + '_strength']
+                new_criteria[criterium] = {'evidence':evidence, 'strength':strength}
                 if not evidence:
                     flash("you must provide evidence for each criterium!", "alert-danger")
                     conn.close()
                     return render_template('variant/acmg.html')
         
+
         previous_criteria = conn.get_acmg_criteria(acmg_classification_id)
-        previous_criteria_dict = {}
+        previous_criteria_dict = {} # convert to dict criterium->criterium_id
         for entry in previous_criteria:
             criterium_key = entry[2]
             previous_criteria_dict[criterium_key] = entry[0]
-
         
+        acmg_classification_got_update = False
         for criterium in new_criteria:
-            evidence = new_criteria[criterium]
+            evidence = new_criteria[criterium]['evidence']
+            strength = new_criteria[criterium]['strength']
             # insert new criteria
             if criterium not in previous_criteria_dict:
-                conn.insert_acmg_criterium(acmg_classification_id, criterium, evidence)
+                conn.insert_acmg_criterium(acmg_classification_id, criterium, strength, evidence)
+                acmg_classification_got_update = True
             # update records if they were present before
             elif criterium in previous_criteria_dict:
-                conn.update_acmg_criterium(previous_criteria_dict[criterium], evidence)
+                conn.update_acmg_criterium(previous_criteria_dict[criterium], strength, evidence)
+                acmg_classification_got_update = True
         
         
         # delete unselected criterium tags
         criteria_to_delete = [x for x in previous_criteria_dict if x not in new_criteria]
         for criterium in criteria_to_delete:
             conn.delete_acmg_criterium(previous_criteria_dict[criterium])
+            acmg_classification_got_update = True
+        
+        # make sure that the date corresponds to the date last edited!
+        if acmg_classification_got_update:
+            conn.update_acmg_classification_date(acmg_classification_id)
 
 
         conn.close()
@@ -396,3 +408,9 @@ def acmg_classify(variant_id):
 
     conn.close()
     return render_template('variant/acmg.html', masks_with_info=masks_with_info)
+
+
+def is_valid_acmg():
+    # this function should check if the selected criteria do not collide given a mask
+    # it should also ensure that the strength properties are valid 
+    return
