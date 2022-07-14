@@ -996,22 +996,25 @@ class Connection:
         actual_information += (user_id, )
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
-        if len(result) == 1:
-            return result
-        if len(result) > 1:
+        if len(result) > 1 and mask != 'all':
             raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", mask: " + mask + ", user_id: " + str(user_id) + "\n The result was: " + str(result))
-        return None # no user classification for these criteria
+        return result
 
+    def update_acmg_classification_date(self, acmg_classification_id):
+        curdate = datetime.datetime.today().strftime('%Y-%m-%d')
+        command = "UPDATE acmg_classification SET DATE=%s WHERE id=%s"
+        self.cursor.execute(command, (curdate, acmg_classification_id))
+        self.conn.commit()
 
-    def insert_acmg_criterium(self, acmg_classification_id, criterium, evidence):
-        command = "INSERT INTO acmg_criteria (acmg_classification_id, criterium, evidence) VALUES (%s, %s, %s)"
-        actual_information = (acmg_classification_id, criterium, evidence)
+    def insert_acmg_criterium(self, acmg_classification_id, criterium, strength, evidence):
+        command = "INSERT INTO acmg_criteria (acmg_classification_id, criterium, strength, evidence) VALUES (%s, %s, %s, %s)"
+        actual_information = (acmg_classification_id, criterium, strength, evidence)
         self.cursor.execute(command, actual_information)
         self.conn.commit()
 
-    def update_acmg_criterium(self, acmg_criterium_id, updated_evidence):
-        command = "UPDATE acmg_criteria SET evidence=%s WHERE id=%s"
-        self.cursor.execute(command, (updated_evidence, acmg_criterium_id))
+    def update_acmg_criterium(self, acmg_criterium_id, updated_strength, updated_evidence):
+        command = "UPDATE acmg_criteria SET strength=%s, evidence=%s WHERE id=%s"
+        self.cursor.execute(command, (updated_strength, updated_evidence, acmg_criterium_id))
         self.conn.commit()
 
     def delete_acmg_criterium(self, acmg_criterium_id):
