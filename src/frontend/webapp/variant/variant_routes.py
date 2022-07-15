@@ -431,13 +431,7 @@ def classify(variant_id):
         mask = request.form['mask']
 
         # test if the acmg classification is valid
-        criteria = {}
-        non_criterium_form_fields = ['mask', 'classification_type', 'final_class', 'comment', 'strength_select']
-        for criterium in request.form:
-            if criterium not in non_criterium_form_fields and '_strength' not in criterium:
-                evidence = request.form[criterium]
-                strength = request.form[criterium + '_strength']
-                criteria[criterium] = {'evidence':evidence, 'strength':strength}
+        criteria = extract_criteria_from_request(request.form)
 
         is_valid, message = is_valid_acmg(criteria, mask)
         if not is_valid: 
@@ -507,19 +501,30 @@ def consensus_classify(variant_id):
 
 
     if request.method == 'POST':
-        pass
+        mask = request.form['mask']
+        criteria = extract_criteria_from_request(request.form)
+
+        is_valid, message = is_valid_acmg(criteria, mask)
+        if not is_valid: 
+            flash(message, "alert-danger")
+        else:
+            conn.insert_consensus_acmg_classification(variant_id, mask)
+            acmg_classification_id = conn.get_consensus_acmg_classification(variant_id, mask=mask, most_recent=True)[0][0]
+            handle_acmg_classification(acmg_classification_id, criteria, conn)
+            do_redirect=True
+
+    conn.close()
+    if do_redirect: # do redirect if one of the submissions was successful
+        return redirect(url_for('variant.classify', variant_id = variant_id))
+    else:
+        return render_template('variant/classify.html', 
+                                classification_type='consensus',
+                                variant_oi=variant_oi,
+                                masks_with_info={}, 
+                                previous_classification=previous_classification)
 
 
-    return render_template('variant/classify.html', 
-                            classification_type='consensus',
-                            variant_oi=variant_oi,
-                            masks_with_info={}, 
-                            previous_classification=previous_classification)
-
-
-def handle_classification_submit() :
-    ####### classification based on classification mask submit 
-    mask = request.form['mask']
+def extract_criteria_from_request(request_obj):
     # test if the acmg classification is valid
     criteria = {}
     non_criterium_form_fields = ['mask', 'classification_type', 'final_class', 'comment', 'strength_select']
@@ -528,32 +533,5 @@ def handle_classification_submit() :
             evidence = request.form[criterium]
             strength = request.form[criterium + '_strength']
             criteria[criterium] = {'evidence':evidence, 'strength':strength}
-    is_valid, message = is_valid_acmg(criteria, mask)
-    if not is_valid: 
-        # the user can still insert a user/consensus classification even if the classification mask based classification is invalid
-        # The front end usually takes care that the submission is in a valid format.
-        # However an attacker might submit invalid data which is filtered out here
-        # Nice: The user can make a user/consensus classification without the need to also submit a classification mask based classification
-        # This behaviour can be changed by uncommenting the two lines after the flash statement
-        flash(message, "alert-danger")
-        #conn.close()
-        #return render_template('variant/classify.html', masks_with_info=masks_with_info, previous_classification=previous_classification)
-    else:
-        # test if the current user already has an acmg classification for this mask
-        if mask not in masks_with_info:
-            conn.insert_user_acmg_classification(variant_id, user_id, mask)
-            acmg_classification_id = conn.get_user_acmg_classification(variant_id, user_id, mask=mask)[0][0]
-        else:
-            acmg_classification_id = masks_with_info[mask]['classification_id']
-        handle_acmg_classification(acmg_classification_id, criteria, conn)
-        do_redirect=True
-    
-    ######## user/consensus classification submit
-    classification = request.form['final_class']
-    comment = request.form['comment'].strip()
-    possible_classifications = ["1","2","3","4","5"]
-    if comment and (str(classification) in possible_classifications):
-        handle_user_classification(variant_id, user_id, previous_classification, classification, comment, conn)
-        do_redirect = True
-    else:
-        flash("Please provide comment & class to submit a user/consensus classification", "alert-danger")
+    return criteria
+
