@@ -749,9 +749,9 @@ class Connection:
         self.cursor.execute(command, (classification, comment, date, user_classification_id))
         self.conn.commit()
     
-    def get_user_classification_by_username(self, username, variant_id = None):
-        actual_information = (username, )
-        command = "SELECT * FROM user_classification WHERE user_id = (SELECT id FROM user WHERE username=%s)"
+    def get_user_classification(self, user_id, variant_id = None):
+        actual_information = (user_id, )
+        command = "SELECT * FROM user_classification WHERE user_id = %s"
         if variant_id is not None:
             command = command + " AND variant_id = %s"
             actual_information = actual_information + (variant_id, )
