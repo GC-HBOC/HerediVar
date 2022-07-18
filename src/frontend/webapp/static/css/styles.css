@@ -229,8 +229,12 @@ table.scroll th {
 
 
 .acmg-button {
-    width:5em;
+    width:6em;
+    height:2.5em;
+    line-height:1.8em;
     font-weight:bold;
+    font-size:larger;
+    text-align:center;
 }
 .btn-check:disabled + label.btn {
     color: rgb(170, 170, 170);
@@ -240,7 +244,11 @@ table.scroll th {
     filter: brightness(130%);
     border-color: #979797 !important;
 }
-
+.count_label {
+    position:relative; 
+    left:0.3em; 
+    height:0;
+}
 
 
 

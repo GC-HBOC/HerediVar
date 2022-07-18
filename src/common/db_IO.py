@@ -775,9 +775,7 @@ class Connection:
         command = "INSERT INTO import_queue (user_id) VALUES (%s)"
         self.cursor.execute(command, (user_id, ))
         self.conn.commit()
-        command = "SELECT LAST_INSERT_ID()"
-        self.cursor.execute(command)
-        return self.cursor.fetchone()[0]
+        return self.get_last_insert_id()
     
     def close_import_request(self, import_queue_id):
         command = "UPDATE import_queue SET status = 'finished', finished_at = NOW() WHERE id = %s"
@@ -969,20 +967,30 @@ class Connection:
     
         return variant_annot_dict
 
+    def get_last_insert_id(self):
+        command = "SELECT LAST_INSERT_ID()"
+        self.cursor.execute(command)
+        return self.cursor.fetchone()[0]
 
     ### ACMG classification functions
-    # each user can have one acmg classification per mask
-    def insert_user_acmg_classification(self, variant_id, user_id, mask):
-        command = "INSERT INTO acmg_classification (variant_id, mask, date, is_consensus) VALUES (%s, %s, %s, 0)"
+    # this function is mainly for internal use. Use insert_user_classification or insert_consensus_classification instead
+    def insert_acmg_classification(self, variant_id, mask, is_consensus):
+        command = "INSERT INTO acmg_classification (variant_id, mask, date, is_consensus) VALUES (%s, %s, %s, %s)"
         curdate = datetime.datetime.today().strftime('%Y-%m-%d')
-        self.cursor.execute(command, (variant_id, mask, curdate))
+        self.cursor.execute(command, (variant_id, mask, curdate, is_consensus))
         self.conn.commit()
 
-        command = "INSERT INTO acmg_user_classification (acmg_classification_id, user_id) VALUES ((SELECT id FROM acmg_classification WHERE variant_id=%s AND mask=%s AND is_consensus=0), %s)"
-        self.cursor.execute(command, (variant_id, mask, user_id))
+        return self.get_last_insert_id()
+
+    # each user can have one acmg classification per mask
+    def insert_user_acmg_classification(self, variant_id, user_id, mask):
+        acmg_classification_id = self.insert_acmg_classification(variant_id, mask, 0)
+
+        command = "INSERT INTO acmg_user_classification (acmg_classification_id, user_id) VALUES (%s, %s)"
+        self.cursor.execute(command, (acmg_classification_id, user_id))
         self.conn.commit()
     
-    def get_user_acmg_classification(self, variant_id, user_id, mask = 'all'):
+    def get_user_acmg_classification(self, variant_id, user_id = 'all', mask = 'all'):
         inner_command = "SELECT id as classification_id, variant_id, mask, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=0"
         actual_information = (variant_id, )
         if mask != 'all':
@@ -991,14 +999,57 @@ class Connection:
         
         command = "SELECT classification_id, variant_id, user_id, mask, date FROM acmg_user_classification a INNER JOIN \
 	                    (" + inner_command + ") b \
-	                    ON a.acmg_classification_id = b.classification_id \
-                    WHERE user_id=%s"
-        actual_information += (user_id, )
+	                    ON a.acmg_classification_id = b.classification_id"
+
+        if user_id != 'all':
+            command += ' WHERE user_id=%s'
+            actual_information += (user_id, )
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
         if len(result) > 1 and mask != 'all':
             raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", mask: " + mask + ", user_id: " + str(user_id) + "\n The result was: " + str(result))
         return result
+
+
+    def insert_consensus_acmg_classification(self, variant_id, mask):
+        acmg_classification_id = self.insert_acmg_classification(variant_id, mask, 1)
+
+        self.invalidate_previous_acmg_consensus_classifications(variant_id)
+
+        command = "INSERT INTO acmg_consensus_classification (acmg_classification_id, is_recent) VALUES (%s, %s)"
+        self.cursor.execute(command, (acmg_classification_id, 1))
+        self.conn.commit()
+        return acmg_classification_id
+
+
+
+    def invalidate_previous_acmg_consensus_classifications(self, variant_id):
+        command = "UPDATE acmg_consensus_classification SET is_recent = %s WHERE acmg_classification_id IN (SELECT id FROM acmg_classification WHERE variant_id=%s AND is_consensus=1)"
+        self.cursor.execute(command, (0, variant_id))
+        self.conn.commit()
+
+    
+    def get_consensus_acmg_classification(self, variant_id, mask = 'all', most_recent=True):
+        command = "SELECT id, variant_id, mask, date, is_consensus FROM acmg_consensus_classification a INNER JOIN \
+	                    (SELECT id as inner_id, variant_id, mask, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=1) b \
+	                ON a.acmg_classification_id = b.inner_id "
+
+        inner_command = "SELECT id as classification_id, variant_id, mask, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=1"
+        actual_information = (variant_id, )
+        if mask != 'all':
+            inner_command += " AND mask=%s"
+            actual_information += (mask, )
+        
+        command = "SELECT classification_id, variant_id, is_recent, mask, date FROM acmg_consensus_classification a INNER JOIN \
+	                    (" + inner_command + ") b \
+	                    ON a.acmg_classification_id = b.classification_id"
+        if most_recent:
+            command += " WHERE is_recent=1"
+
+        self.cursor.execute(command, actual_information)
+        result = self.cursor.fetchall()
+        return result
+
 
     def update_acmg_classification_date(self, acmg_classification_id):
         curdate = datetime.datetime.today().strftime('%Y-%m-%d')
