@@ -280,20 +280,8 @@ def consensus_classify(variant_id):
     return render_template('variant/consensus_classify.html', has_consensus=has_consensus)
 '''
 
-@variant_blueprint.route('/display/<int:variant_id>/consensus_classification_history')
-@require_login
-def consensus_classification_history(variant_id):
-    conn = Connection()
-    consensus_classifications = conn.get_consensus_classification(variant_id)
-    conn.close()
-    most_recent_consensus_classification = [x for x in consensus_classifications if x[6] == 1][0]
-    other_consensus_classifications = [x for x in consensus_classifications if x[6] == 0]
-    if consensus_classifications is None:
-        abort(404) # redirect to error page
-    return render_template('variant/classification_history.html', most_recent_consensus_classification=most_recent_consensus_classification, other_consensus_classifications=other_consensus_classifications)
 
-
-
+''''
 @variant_blueprint.route('/classify/<int:variant_id>/user', methods=['GET', 'POST'])
 @require_login
 def user_classify(variant_id):
@@ -330,7 +318,7 @@ def user_classify(variant_id):
     conn.close()
 
     return render_template('variant/user_classify.html', previous_classification=int(previous_classification), previous_comment=previous_comment, has_classification=has_classification)
-
+'''
 
 
 
@@ -415,7 +403,7 @@ def classify(variant_id):
     conn = Connection()
 
     user_id = session['user']['user_id']
-    masks_with_info = get_masks_with_info(variant_id, user_id, conn)
+    masks_with_info = {user_id: get_masks_with_info(variant_id, user_id, conn)}
     previous_classification = get_previous_user_classification(variant_id, user_id, conn)
 
     variant_oi = conn.get_variant_more_info(variant_id)
@@ -445,23 +433,23 @@ def classify(variant_id):
             #return render_template('variant/classify.html', masks_with_info=masks_with_info, previous_classification=previous_classification)
         else:
             # test if the current user already has an acmg classification for this mask
-            if mask not in masks_with_info:
+            if mask not in masks_with_info[user_id]:
                 conn.insert_user_acmg_classification(variant_id, user_id, mask)
                 acmg_classification_id = conn.get_user_acmg_classification(variant_id, user_id, mask=mask)[0][0]
             else:
-                acmg_classification_id = masks_with_info[mask]['classification_id']
+                acmg_classification_id = masks_with_info[user_id][mask]['classification_id']
             handle_acmg_classification(acmg_classification_id, criteria, conn)
             do_redirect=True
         
-        ######## user/consensus classification submit
+        ######## user classification submit
         classification = request.form['final_class']
         comment = request.form['comment'].strip()
         possible_classifications = ["1","2","3","4","5"]
-        if comment and (str(classification) in possible_classifications):
+        if not comment and (str(classification) not in possible_classifications):
+            flash("Please provide comment & class to submit a user classification", "alert-danger")
+        else:
             handle_user_classification(variant_id, user_id, previous_classification, classification, comment, conn)
             do_redirect = True
-        else:
-            flash("Please provide comment & class to submit a user/consensus classification", "alert-danger")
 
     conn.close()
     if do_redirect: # do redirect if one of the submissions was successful
@@ -472,6 +460,140 @@ def classify(variant_id):
                                 variant_oi=variant_oi, 
                                 masks_with_info=masks_with_info, 
                                 previous_classification=previous_classification)
+
+
+@variant_blueprint.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])
+@require_permission
+def consensus_classify(variant_id):
+    conn = Connection()
+
+    variant_oi = conn.get_variant_more_info(variant_id)
+    previous_classification = get_default_previous_classification() # keep empty because we always submit a new consensus classification 
+    masks_with_info = {} # keep empty because this is used to preselect from previous classify submission
+
+    # get dict of all previous user classifications
+    user_acmg_classification = conn.get_user_acmg_classification(variant_id, user_id='all', mask='all')
+    for classification in user_acmg_classification:
+        current_user_id = classification[2]
+        current_masks_with_info = get_masks_with_info(variant_id, current_user_id, conn)
+        masks_with_info[current_user_id] = current_masks_with_info
+
+    print(masks_with_info)
+
+    do_redirect=False
+    if request.method == 'POST':
+        ######## classification mask based classification submit
+        mask = request.form['mask']
+        criteria = extract_criteria_from_request(request.form)
+
+        is_valid, message = is_valid_acmg(criteria, mask)
+        if not is_valid: 
+            flash(message, "alert-danger")
+        else:
+            acmg_classification_id = conn.insert_consensus_acmg_classification(variant_id, mask)
+            #acmg_classification_id = conn.get_consensus_acmg_classification(variant_id, mask=mask, most_recent=True)[0][0]
+            handle_acmg_classification(acmg_classification_id, criteria, conn)
+            do_redirect=True
+
+        ######## consensus classification submit
+        classification = request.form['final_class']
+        comment = request.form['comment'].strip()
+        possible_classifications = ["1","2","3","4","5"]
+
+        if comment and (str(classification) in possible_classifications):
+            handle_consensus_classification(variant_id, classification, comment, conn)
+            flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+            do_redirect = True
+        else:
+            flash("Please provide comment & class to submit a consensus classification", "alert-danger")
+
+    conn.close()
+    if do_redirect: # do redirect if one of the submissions was successful
+        return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
+    else:
+        return render_template('variant/classify.html', 
+                                classification_type='consensus',
+                                variant_oi=variant_oi,
+                                masks_with_info=masks_with_info,
+                                previous_classification=previous_classification)
+
+
+def handle_consensus_classification(variant_id, classification, comment, conn):
+    ## get relevant information
+    annotations = conn.get_all_variant_annotations(variant_id)
+    annotations.pop('consensus_classification', None)
+    variant_oi = get_variant(conn, variant_id)
+    current_date = datetime.datetime.today().strftime('%Y-%m-%d')
+
+    ## compute pdf containing all annotations
+    evidence_b64 = get_evidence_pdf(variant_oi, annotations, classification, comment, current_date)
+
+    #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/frontend/downloads/consensus_classification_reports/testreport.pdf')
+    conn.insert_consensus_classification_from_variant_id(session['user']['user_id'], variant_id, classification, comment, evidence_document=evidence_b64, date = current_date)
+    
+
+def get_evidence_pdf(variant_oi, annotations, classification, comment, current_date):
+    buffer = io.BytesIO()
+    generator = pdf_gen(buffer)
+    generator.add_title('Classification report')
+    v = str(variant_oi[1]) + '-' + str(variant_oi[2]) + '-' + str(variant_oi[3]) + '-' + str(variant_oi[4])
+    rsid = annotations.pop('rsid', None)
+    if rsid is not None:
+        rsid = rsid[4]
+    generator.add_variant_info(v, classification, current_date, comment, rsid)
+
+    #literature
+    literature = annotations.pop('literature', None)
+    # classifications
+    user_classifications = annotations.pop('user_classifications', None)
+    clinvar_submissions = annotations.pop('clinvar_submissions', None)
+    heredicare_center_classifications = annotations.pop('heredicare_center_classifications', None)
+
+    # consequences
+    variant_consequences = annotations.pop('variant_consequences', None)
+    # basic information
+    generator.add_subtitle("Scores & annotations:")
+    for key in annotations:
+        generator.add_relevant_information(key, str(annotations[key][4]))
+    if variant_consequences is not None:
+        generator.add_subtitle("Variant consequences:")
+        generator.add_text("Flags column: first number = is_gencode_basic, second number: is_mane_select, third number: is_mane_plus_clinical, fourth number: is_ensembl_canonical")
+        generator.add_relevant_classifications([[x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[11], str(x[13]) + str(x[14]) + str(x[15]) + str(x[16])] for x in variant_consequences], 
+            ('Transcript Name', 'HGVSc', 'HGVSp', 'Consequence', 'Impact', 'Exon Nr.', 'Intron Nr.', 'Gene Symbol', 'Protein Domain', 'Flags'), [3, 2, 2, 3, 1.5, 1.2, 1.3, 1.5, 1.6, 1.5])
+    
+    if literature is not None:
+        generator.add_subtitle("PubMed IDs:")
+        generator.add_relevant_literature([str(x[2]) for x in literature])
+    
+    if user_classifications is not None or clinvar_submissions is not None or heredicare_center_classifications is not None:
+        generator.add_subtitle("Previous classifications:")
+    if user_classifications is not None:
+        generator.add_text("HerediVar user classifications:")
+        generator.add_relevant_classifications([[x[1], x[8] + ' ' + x[9], x[10], x[5], x[4]] for x in user_classifications], ('Class', 'User', 'Affiliation', 'Date', 'Comment'), [1.2, 2, 2, 2, 11.5])
+    if heredicare_center_classifications is not None:
+        generator.add_text("HerediCare center classifications:")
+        generator.add_relevant_classifications([[x[1], x[3], x[5], x[4]] for x in heredicare_center_classifications], ('Class', 'Center', 'Date', 'Comment'),  [2, 2, 2, 12])
+    if clinvar_submissions is not None:
+        generator.add_text("ClinVar submissions:")
+        generator.add_relevant_classifications([[x[2], x[3], x[4], x[5][1], x[6], x[7]] for x in clinvar_submissions], ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter', 'Comment'), [1.5, 2, 2, 2, 2, 9])
+    
+    generator.save_pdf()
+    buffer.seek(io.SEEK_SET)
+    evidence_b64 = functions.buffer_to_base64(buffer)
+    return evidence_b64
+
+
+
+def extract_criteria_from_request(request_obj):
+    # test if the acmg classification is valid
+    criteria = {}
+    non_criterium_form_fields = ['mask', 'classification_type', 'final_class', 'comment', 'strength_select']
+    for criterium in request_obj:
+        if criterium not in non_criterium_form_fields and '_strength' not in criterium:
+            evidence = request_obj[criterium]
+            strength = request_obj[criterium + '_strength']
+            criteria[criterium] = {'evidence':evidence, 'strength':strength}
+    return criteria
 
 
 def is_valid_acmg(criteria, mask):
@@ -491,47 +613,14 @@ def is_valid_acmg(criteria, mask):
     return is_valid, message
 
 
-@variant_blueprint.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])
-@require_permission
-def consensus_classify(variant_id):
+@variant_blueprint.route('/display/<int:variant_id>/consensus_classification_history')
+@require_login
+def consensus_classification_history(variant_id):
     conn = Connection()
-
-    variant_oi = conn.get_variant_more_info(variant_id)
-    previous_classification = get_default_previous_classification()
-
-
-    if request.method == 'POST':
-        mask = request.form['mask']
-        criteria = extract_criteria_from_request(request.form)
-
-        is_valid, message = is_valid_acmg(criteria, mask)
-        if not is_valid: 
-            flash(message, "alert-danger")
-        else:
-            conn.insert_consensus_acmg_classification(variant_id, mask)
-            acmg_classification_id = conn.get_consensus_acmg_classification(variant_id, mask=mask, most_recent=True)[0][0]
-            handle_acmg_classification(acmg_classification_id, criteria, conn)
-            do_redirect=True
-
+    consensus_classifications = conn.get_consensus_classification(variant_id)
     conn.close()
-    if do_redirect: # do redirect if one of the submissions was successful
-        return redirect(url_for('variant.classify', variant_id = variant_id))
-    else:
-        return render_template('variant/classify.html', 
-                                classification_type='consensus',
-                                variant_oi=variant_oi,
-                                masks_with_info={}, 
-                                previous_classification=previous_classification)
-
-
-def extract_criteria_from_request(request_obj):
-    # test if the acmg classification is valid
-    criteria = {}
-    non_criterium_form_fields = ['mask', 'classification_type', 'final_class', 'comment', 'strength_select']
-    for criterium in request.form:
-        if criterium not in non_criterium_form_fields and '_strength' not in criterium:
-            evidence = request.form[criterium]
-            strength = request.form[criterium + '_strength']
-            criteria[criterium] = {'evidence':evidence, 'strength':strength}
-    return criteria
-
+    most_recent_consensus_classification = [x for x in consensus_classifications if x[6] == 1][0]
+    other_consensus_classifications = [x for x in consensus_classifications if x[6] == 0]
+    if consensus_classifications is None:
+        abort(404) # redirect to error page
+    return render_template('variant/classification_history.html', most_recent_consensus_classification=most_recent_consensus_classification, other_consensus_classifications=other_consensus_classifications)

@@ -43,9 +43,140 @@ function update_info_panel(id, previous_evidence) {
     var select_criterium_button = document.getElementById('select_criterium_check')
     update_select_criterium_button(select_criterium_button, id)
 
+
+    
+    if (classification_type === 'consensus') {
+        add_user_acmg_classification_details(id)
+    }
+
     if (criteria_with_strength_selects.includes(id)) {
         add_strength_selection(id)
     }
+
+
+}
+
+function add_user_acmg_classification_details(criterium_id) {
+    const mask = document.getElementById('mask').value
+    var additional_content = document.getElementById('additional_content')
+    const new_subcaption = create_subcaption("User selections:")
+    additional_content.appendChild(new_subcaption)
+
+    // add the table
+    const tab = create_user_acmg_details_table()
+    additional_content.appendChild(tab)
+    for (var user_id in masks_with_info) {
+        var current_masks_with_info = masks_with_info[user_id]
+        var mask_with_info = current_masks_with_info[mask]
+        var current_date = mask_with_info['date']
+        var selected_criteria = mask_with_info['selected_criteria'] // (28, 4, 'bs1', 'bs', 'fdsaf')
+        for (var i in selected_criteria) {
+            var criterium = selected_criteria[i]
+            var current_criterium_id = criterium[2]
+            var current_strength = criterium[3]
+            var current_evidence = criterium[4]
+            if (current_criterium_id === criterium_id) {
+                var new_row = create_row_user_acmg_details(user_id, criterium_strength_to_description(current_strength), current_evidence, current_date)
+                document.getElementById('user_acmg_details').appendChild(new_row)
+            }
+        }
+    }
+    add_functionality_to_table()
+}
+
+function add_functionality_to_table() {
+    // add default row to all empty tables
+    $(".table").map(function() {
+        var nrows = $(this).find("tbody").find("tr").length
+        if (nrows === 0) {
+            add_default_caption($(this).get(0))
+        }
+    });
+    ////////// functionality for column filters in tables
+    $(".column-filter").on("keyup", function() {
+        console.log('TEST')
+        var table = $(this).parents('table').get(0)
+        var index = $(this).parents('th').index()
+        filterTable_one_column($(this).val(), index, table, true)
+    });
+
+    $('.sortable').click(click_sorter);
+}
+
+function create_row_user_acmg_details(user, strength, evidence, date) {
+    var new_row = document.createElement('tr')
+    new_row.appendChild(create_table_data(user))
+    new_row.appendChild(create_table_data(strength))
+    new_row.appendChild(create_table_data(evidence))
+    new_row.appendChild(create_table_data(date))
+    new_row.appendChild(create_table_data('copy...')) // TODO
+    return new_row
+}
+
+function create_table_data(text) {
+    var new_td = document.createElement('td')
+    new_td.appendChild(document.createTextNode(text))
+    return new_td
+}
+
+function create_user_acmg_details_table() {
+    var table_container = document.createElement('div')
+    table_container.classList.add('table-responsive')
+
+    var table = document.createElement('table')
+    table.classList.add('table')
+    table.classList.add('table-hover')
+    table.classList.add('scroll')
+    table_container.appendChild(table)
+
+    var header = document.createElement('thead')
+    var header_row = document.createElement('tr')
+    header_row.appendChild(create_sortable_header('User'))
+    header_row.appendChild(create_sortable_header('Strength'))
+    var evidence_header = create_sortable_header('Evidence')
+    evidence_header.setAttribute('style', 'width:100%')
+    header_row.appendChild(evidence_header)
+    header_row.appendChild(create_sortable_header('Date'))
+    header_row.appendChild(create_non_sortable_header('Copy evidence'))
+    header.appendChild(header_row)
+    table.appendChild(header)
+
+    var body = document.createElement('tbody')
+    body.id = "user_acmg_details"
+    table.appendChild(body)
+    return table_container
+}
+
+function create_non_sortable_header(text) {
+    var new_th = document.createElement('th')
+    new_th.innerText = text
+    return new_th
+}
+
+function create_sortable_header(text) {
+    var new_th = document.createElement('th')
+    
+    var title = document.createElement('div')
+    title.classList.add('sortable')
+    title.innerText = text
+    new_th.appendChild(title)
+
+    var searchbar = document.createElement('input')
+    searchbar.type = 'text'
+    searchbar.classList.add('form-control')
+    searchbar.classList.add('form-control-sm')
+    searchbar.classList.add('column-filter')
+    searchbar.classList.add('sst')
+    searchbar.setAttribute('placeholder', 'search...')
+    new_th.appendChild(searchbar)
+    return new_th
+}
+
+function create_subcaption(text) {
+    var new_subcaption = document.createElement('h5')
+    new_subcaption.appendChild(document.createTextNode(text))
+    new_subcaption.classList.add('bst')
+    return new_subcaption
 }
 
 function update_criteria_description(div, id) {
@@ -66,47 +197,22 @@ function update_select_criterium_button(select_criterium_button, id) {
 
 function add_strength_selection(criterium_id) {
     var additional_content = document.getElementById('additional_content');
+    const new_subcaption = create_subcaption('Strength:')
+    additional_content.appendChild(new_subcaption)
     if (criterium_id[0] === 'p') {
-        additional_content.innerHTML = `
-        <h5 class="bst">Strength:</h5>
-        <div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="strength_select" id="pp_radio" value="pp" onclick="update_criterium_strength(this, '` + criterium_id + `')">
-                <label class="form-check-label" for="pp_radio">supporting</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="strength_select" id="pm_radio" value="pm" onclick="update_criterium_strength(this, '` + criterium_id + `')">
-                <label class="form-check-label" for="pm_radio">moderate</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="strength_select" id="ps_radio" value="ps" onclick="update_criterium_strength(this, '` + criterium_id + `')">
-                <label class="form-check-label" for="ps_radio">strong</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="strength_select" id="pvs_radio" value="pvs" onclick="update_criterium_strength(this, '` + criterium_id + `')">
-                <label class="form-check-label" for="pvs_radio">very strong</label>
-            </div>
-        </div>
-        `
+        var container = document.createElement('div')
+        container.appendChild(create_strength_ratio(criterium_id, 'pp'))
+        container.appendChild(create_strength_ratio(criterium_id, 'pm'))
+        container.appendChild(create_strength_ratio(criterium_id, 'ps'))
+        container.appendChild(create_strength_ratio(criterium_id, 'pvs'))
+        additional_content.appendChild(container)
     } else {
         if (criterium_id[0] === 'b') {
-            additional_content.innerHTML = `
-            <h5 class="bst">Strength:</h5>
-            <div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="strength_select" id="bp_radio" value="bp" onclick="update_criterium_strength(this, '` + criterium_id + `')">
-                    <label class="form-check-label" for="bp_radio">supporting</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="strength_select" id="bs_radio" value="bs" onclick="update_criterium_strength(this, '` + criterium_id + `')">
-                    <label class="form-check-label" for="bs_radio">strong</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="strength_select" id="ba_radio" value="ba" onclick="update_criterium_strength(this, '` + criterium_id + `')">
-                    <label class="form-check-label" for="ba_radio">stand-alone</label>
-                </div>
-            </div>
-            `
+            var container = document.createElement('div')
+            container.appendChild(create_strength_ratio(criterium_id, 'bp'))
+            container.appendChild(create_strength_ratio(criterium_id, 'bs'))
+            container.appendChild(create_strength_ratio(criterium_id, 'ba'))
+            additional_content.appendChild(container)
         }
     }
     // preselect
@@ -114,6 +220,53 @@ function add_strength_selection(criterium_id) {
     document.getElementById(preselected_strength + '_radio').checked = true
 }
 
+function create_strength_ratio(criterium_id, criterium_strength) {
+    var container = document.createElement('div')
+    container.classList.add('form-check')
+    container.classList.add('form-check-inline')
+
+    var radio = document.createElement('input')
+    radio.classList.add('form-check-input')
+    radio.type = 'radio'
+    radio.name = 'strength_select'
+    radio.id = criterium_strength + '_radio'
+    radio.value = criterium_strength
+    radio.onclick = function() {update_criterium_strength(this, criterium_id)}
+    container.appendChild(radio)
+
+    var label = document.createElement('label')
+    label.classList.add('form-check-label')
+    label.setAttribute('for', radio.id)
+    label.innerText = criterium_strength_to_description(criterium_strength)
+    container.appendChild(label)
+    return container
+}
+
+
+function criterium_strength_to_description(criterium_strength) {
+    criterium_strength = criterium_strength.toLowerCase()
+    if (criterium_strength == 'pvs') {
+        return 'very strong'
+    }
+    if (criterium_strength == 'ps') {
+        return 'strong'
+    }
+    if (criterium_strength == 'pm') {
+        return 'medium'
+    }
+    if (criterium_strength == 'pp') {
+        return 'supporting'
+    }
+    if (criterium_strength == 'bp') {
+        return 'supporting'
+    }
+    if (criterium_strength == 'bs') {
+        return 'strong'
+    }
+    if (criterium_strength == 'ba') {
+        return 'stand-alone'
+    }
+}
 
 
 // this submits the classification(s)
@@ -151,13 +304,34 @@ function mask_select_action() {
     revert_all()
     const mask = document.getElementById('mask').value
     set_default_strengths(default_strengths[mask])
-    preselect_from_previous_selection(mask)
     set_activatable_property(not_activateable_buttons[mask])
     enable_disable_buttons(not_activateable_buttons[mask], true)
 
+    if (classification_type === 'user') {
+        preselect_from_previous_selection(mask)
+    }
+    if (classification_type === 'consensus') {
+        set_user_selection_counts(mask)
+    }
+    
     update_classification_preview()
     update_reference_link(mask)
     update_last_submitted_date(mask)
+}
+
+function set_user_selection_counts(mask) {
+    for (var user_id in masks_with_info) {
+        var current_masks_with_info = masks_with_info[user_id]
+        var mask_with_info = current_masks_with_info[mask]
+        var selected_criteria = mask_with_info['selected_criteria']
+        for (var i in selected_criteria) {
+            var criterium = selected_criteria[i]
+            var criterium_id = criterium[2]
+            var count_label = document.getElementById('users_selected_' + criterium_id)
+            count_label.innerText = parseInt(count_label.innerText) + 1
+            count_label.hidden = false;
+        }
+    }
 }
 
 function set_default_strengths(strengths) {
@@ -171,7 +345,8 @@ function set_default_strengths(strengths) {
 }
 
 function preselect_from_previous_selection(mask) {
-    const current_mask_with_info = masks_with_info[mask]
+    const user_id = Object.keys(masks_with_info)[0]
+    const current_mask_with_info = masks_with_info[user_id][mask]
     if (typeof current_mask_with_info !== "undefined") { // only preselect if there is data for it
         selected_criteria = current_mask_with_info['selected_criteria']
         for(var i = 0; i < selected_criteria.length; i++) {
@@ -251,11 +426,21 @@ function revert_previous_obj() {
     previous_obj = null;
 }
 
+function revert_count_labels() {
+    var all_count_labels = document.querySelectorAll('.count_label')
+    for (var i in all_count_labels) {
+        var current_count_label = all_count_labels[i]
+        current_count_label.innerText = '0'
+        current_count_label.hidden = true
+    }
+}
+
 function revert_all() {
     //revert_strength_selects()
     revert_criteria_container()
     revert_buttons()
     revert_previous_obj()
+    revert_count_labels()
 }
 
 
