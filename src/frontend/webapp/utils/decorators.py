@@ -59,18 +59,23 @@ def require_permission(f):
     @require_login
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        token = session['tokenResponse']
-        issuer = current_app.config['ISSUER']
-
-        url = f'{issuer}/protocol/openid-connect/token'
-        data = {'grant_type':'urn:ietf:params:oauth:grant-type:uma-ticket', 'audience':current_app.config['CLIENTID']}
-        header = {'Authorization': f'Bearer {token.get("access_token")}'}
-        resp = requests.post(url, data=data, headers=header)
-        if resp.status_code != 200:
-            abort(resp.status_code)
+        grant_access, status_code = request_uma_ticket()
+        if not grant_access:
+            abort(status_code)
         return f(*args, **kwargs)
     return decorated_function
 
+
+def request_uma_ticket():
+    token = session['tokenResponse']
+    issuer = current_app.config['ISSUER']
+    url = f'{issuer}/protocol/openid-connect/token'
+    data = {'grant_type':'urn:ietf:params:oauth:grant-type:uma-ticket', 'audience':current_app.config['CLIENTID']}
+    header = {'Authorization': f'Bearer {token.get("access_token")}'}
+    resp = requests.post(url, data=data, headers=header)
+    if resp.status_code != 200:
+        return False, resp.status_code
+    return True, 200
 
 # not exactly a decorator, but a helper function for them
 # this function uses the refresh token to get a new access token and returns the status code from this call

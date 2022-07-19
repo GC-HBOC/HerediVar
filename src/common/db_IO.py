@@ -974,30 +974,30 @@ class Connection:
 
     ### ACMG classification functions
     # this function is mainly for internal use. Use insert_user_classification or insert_consensus_classification instead
-    def insert_acmg_classification(self, variant_id, mask, is_consensus):
-        command = "INSERT INTO acmg_classification (variant_id, mask, date, is_consensus) VALUES (%s, %s, %s, %s)"
+    def insert_acmg_classification(self, variant_id, scheme, is_consensus):
+        command = "INSERT INTO acmg_classification (variant_id, scheme, date, is_consensus) VALUES (%s, %s, %s, %s)"
         curdate = datetime.datetime.today().strftime('%Y-%m-%d')
-        self.cursor.execute(command, (variant_id, mask, curdate, is_consensus))
+        self.cursor.execute(command, (variant_id, scheme, curdate, is_consensus))
         self.conn.commit()
 
         return self.get_last_insert_id()
 
-    # each user can have one acmg classification per mask
-    def insert_user_acmg_classification(self, variant_id, user_id, mask):
-        acmg_classification_id = self.insert_acmg_classification(variant_id, mask, 0)
+    # each user can have one acmg classification per scheme
+    def insert_user_acmg_classification(self, variant_id, user_id, scheme):
+        acmg_classification_id = self.insert_acmg_classification(variant_id, scheme, 0)
 
         command = "INSERT INTO acmg_user_classification (acmg_classification_id, user_id) VALUES (%s, %s)"
         self.cursor.execute(command, (acmg_classification_id, user_id))
         self.conn.commit()
     
-    def get_user_acmg_classification(self, variant_id, user_id = 'all', mask = 'all'):
-        inner_command = "SELECT id as classification_id, variant_id, mask, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=0"
+    def get_user_acmg_classification(self, variant_id, user_id = 'all', scheme = 'all'):
+        inner_command = "SELECT id as classification_id, variant_id, scheme, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=0"
         actual_information = (variant_id, )
-        if mask != 'all':
-            inner_command += " AND mask=%s"
-            actual_information += (mask, )
+        if scheme != 'all':
+            inner_command += " AND scheme=%s"
+            actual_information += (scheme, )
         
-        command = "SELECT classification_id, variant_id, user_id, mask, date FROM acmg_user_classification a INNER JOIN \
+        command = "SELECT classification_id, variant_id, user_id, scheme, date FROM acmg_user_classification a INNER JOIN \
 	                    (" + inner_command + ") b \
 	                    ON a.acmg_classification_id = b.classification_id"
 
@@ -1006,13 +1006,13 @@ class Connection:
             actual_information += (user_id, )
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
-        if len(result) > 1 and mask != 'all':
-            raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", mask: " + mask + ", user_id: " + str(user_id) + "\n The result was: " + str(result))
+        if len(result) > 1 and scheme != 'all':
+            raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme + ", user_id: " + str(user_id) + "\n The result was: " + str(result))
         return result
 
 
-    def insert_consensus_acmg_classification(self, variant_id, mask):
-        acmg_classification_id = self.insert_acmg_classification(variant_id, mask, 1)
+    def insert_consensus_acmg_classification(self, variant_id, scheme):
+        acmg_classification_id = self.insert_acmg_classification(variant_id, scheme, 1)
 
         self.invalidate_previous_acmg_consensus_classifications(variant_id)
 
@@ -1029,18 +1029,18 @@ class Connection:
         self.conn.commit()
 
     
-    def get_consensus_acmg_classification(self, variant_id, mask = 'all', most_recent=True):
-        command = "SELECT id, variant_id, mask, date, is_consensus FROM acmg_consensus_classification a INNER JOIN \
-	                    (SELECT id as inner_id, variant_id, mask, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=1) b \
+    def get_consensus_acmg_classification(self, variant_id, scheme = 'all', most_recent=True):
+        command = "SELECT id, variant_id, scheme, date, is_consensus FROM acmg_consensus_classification a INNER JOIN \
+	                    (SELECT id as inner_id, variant_id, scheme, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=1) b \
 	                ON a.acmg_classification_id = b.inner_id "
 
-        inner_command = "SELECT id as classification_id, variant_id, mask, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=1"
+        inner_command = "SELECT id as classification_id, variant_id, scheme, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=1"
         actual_information = (variant_id, )
-        if mask != 'all':
-            inner_command += " AND mask=%s"
-            actual_information += (mask, )
+        if scheme != 'all':
+            inner_command += " AND scheme=%s"
+            actual_information += (scheme, )
         
-        command = "SELECT classification_id, variant_id, is_recent, mask, date FROM acmg_consensus_classification a INNER JOIN \
+        command = "SELECT classification_id, variant_id, is_recent, scheme, date FROM acmg_consensus_classification a INNER JOIN \
 	                    (" + inner_command + ") b \
 	                    ON a.acmg_classification_id = b.classification_id"
         if most_recent:

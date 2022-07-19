@@ -335,18 +335,18 @@ def get_previous_user_classification(variant_id, user_id, conn):
         return get_default_previous_classification()
 
 
-def get_masks_with_info(variant_id, user_id, conn):
-    # fetch previous acmg classifications (could be multiple because of different masks)
-    # 0id, 1variant_id, 2user_id, 3mask, 4date
+def get_schemes_with_info(variant_id, user_id, conn):
+    # fetch previous acmg classifications (could be multiple because of different schemes)
+    # 0id, 1variant_id, 2user_id, 3scheme, 4date
     previous_acmg_classifications = conn.get_user_acmg_classification(variant_id, user_id)
-    # extract mask and convert to mask->acmg_classification_id dict
-    masks_with_info = {}
+    # extract scheme and convert to scheme->acmg_classification_id dict
+    schemes_with_info = {}
     for entry in previous_acmg_classifications:
-        mask_key = entry[3]
-        if mask_key in masks_with_info:
-            raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", mask: " + mask_key + ", user_id: " + str(user_id))
-        masks_with_info[mask_key] = {'classification_id':entry[0], 'date':entry[4].strftime('%Y-%m-%d'), 'selected_criteria':conn.get_acmg_criteria(entry[0])}
-    return masks_with_info
+        scheme_key = entry[3]
+        if scheme_key in schemes_with_info:
+            raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme_key + ", user_id: " + str(user_id))
+        schemes_with_info[scheme_key] = {'classification_id':entry[0], 'date':entry[4].strftime('%Y-%m-%d'), 'selected_criteria':conn.get_acmg_criteria(entry[0])}
+    return schemes_with_info
     
 def get_default_previous_classification():
     return {'has_classification': False, 'class': 3, 'comment':'', 'id':None}
@@ -382,7 +382,7 @@ def handle_acmg_classification(acmg_classification_id, criteria, conn):
     # make sure that the date corresponds to the date last edited!
     if acmg_classification_got_update:
         conn.update_acmg_classification_date(acmg_classification_id)
-        flash("Successfully inserted/updated classification based on classification mask", 'alert-success')
+        flash("Successfully inserted/updated classification based on classification scheme", 'alert-success')
             
 
 def handle_user_classification(variant_id, user_id, previous_classification, new_classification, new_comment, conn):
@@ -403,54 +403,50 @@ def classify(variant_id):
     conn = Connection()
 
     user_id = session['user']['user_id']
-    masks_with_info = {user_id: get_masks_with_info(variant_id, user_id, conn)}
+    schemes_with_info = {user_id: get_schemes_with_info(variant_id, user_id, conn)}
     previous_classification = get_previous_user_classification(variant_id, user_id, conn)
 
     variant_oi = conn.get_variant_more_info(variant_id)
     print(variant_oi)
 
-    print(masks_with_info)
+    print(schemes_with_info)
 
     do_redirect = False
 
+    is_admin, status_code = request_uma_ticket() # checks if the user has rights to access the consensus classification
+
     if request.method == 'POST':
         
-        ####### classification based on classification mask submit 
-        mask = request.form['mask']
+        ####### classification based on classification scheme submit 
+        scheme = request.form['scheme']
 
-        # test if the acmg classification is valid
-        criteria = extract_criteria_from_request(request.form)
-
-        is_valid, message = is_valid_acmg(criteria, mask)
-        if not is_valid: 
-            # the user can still insert a user/consensus classification even if the classification mask based classification is invalid
-            # The front end usually takes care that the submission is in a valid format.
-            # However an attacker might submit invalid data which is filtered out here
-            # Nice: The user can make a user/consensus classification without the need to also submit a classification mask based classification
-            # This behaviour can be changed by uncommenting the two lines after the flash statement
-            flash(message, "alert-danger")
-            #conn.close()
-            #return render_template('variant/classify.html', masks_with_info=masks_with_info, previous_classification=previous_classification)
-        else:
-            # test if the current user already has an acmg classification for this mask
-            if mask not in masks_with_info[user_id]:
-                conn.insert_user_acmg_classification(variant_id, user_id, mask)
-                acmg_classification_id = conn.get_user_acmg_classification(variant_id, user_id, mask=mask)[0][0]
-            else:
-                acmg_classification_id = masks_with_info[user_id][mask]['classification_id']
-            handle_acmg_classification(acmg_classification_id, criteria, conn)
-            do_redirect=True
-        
-        ######## user classification submit
         classification = request.form['final_class']
         comment = request.form['comment'].strip()
         possible_classifications = ["1","2","3","4","5"]
-        if not comment and (str(classification) not in possible_classifications):
-            flash("Please provide comment & class to submit a user classification", "alert-danger")
-        else:
+
+        # test if the input is valid
+        criteria = extract_criteria_from_request(request.form)
+        scheme_classification_is_valid, message = is_valid_acmg(criteria, scheme)
+        user_classification_is_valid = (str(classification) in possible_classifications) and comment
+        
+        # actually submit the data to the database
+        if (not scheme_classification_is_valid) and (scheme != 'none'): # error in scheme
+            flash(message, "alert-danger")
+        if not user_classification_is_valid: # error in user classification
+            flash("Please provide comment & class to submit a user classification!", "alert-danger")
+        if scheme_classification_is_valid and (scheme != 'none') and user_classification_is_valid: # only if both are valid submit the scheme classification
+            # test if the current user already has an acmg classification for this scheme
+            if scheme not in schemes_with_info[user_id]:
+                conn.insert_user_acmg_classification(variant_id, user_id, scheme)
+                acmg_classification_id = conn.get_user_acmg_classification(variant_id, user_id, scheme=scheme)[0][0]
+            else:
+                acmg_classification_id = schemes_with_info[user_id][scheme]['classification_id']
+            handle_acmg_classification(acmg_classification_id, criteria, conn)
+        if user_classification_is_valid and ((scheme_classification_is_valid and scheme != 'none') or (scheme == 'none')): # we want to submit the user classification if scheme is none
             handle_user_classification(variant_id, user_id, previous_classification, classification, comment, conn)
             do_redirect = True
 
+    # either redirect or show the webpage depending on success of submission / page reload
     conn.close()
     if do_redirect: # do redirect if one of the submissions was successful
         return redirect(url_for('variant.classify', variant_id = variant_id))
@@ -458,8 +454,9 @@ def classify(variant_id):
         return render_template('variant/classify.html',
                                 classification_type='user',
                                 variant_oi=variant_oi, 
-                                masks_with_info=masks_with_info, 
-                                previous_classification=previous_classification)
+                                schemes_with_info=schemes_with_info, 
+                                previous_classification=previous_classification,
+                                is_admin=is_admin)
 
 
 @variant_blueprint.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])
@@ -469,43 +466,46 @@ def consensus_classify(variant_id):
 
     variant_oi = conn.get_variant_more_info(variant_id)
     previous_classification = get_default_previous_classification() # keep empty because we always submit a new consensus classification 
-    masks_with_info = {} # keep empty because this is used to preselect from previous classify submission
+    schemes_with_info = {} # keep empty because this is used to preselect from previous classify submission
 
     # get dict of all previous user classifications
-    user_acmg_classification = conn.get_user_acmg_classification(variant_id, user_id='all', mask='all')
+    user_acmg_classification = conn.get_user_acmg_classification(variant_id, user_id='all', scheme='all')
     for classification in user_acmg_classification:
         current_user_id = classification[2]
-        current_masks_with_info = get_masks_with_info(variant_id, current_user_id, conn)
-        masks_with_info[current_user_id] = current_masks_with_info
+        current_schemes_with_info = get_schemes_with_info(variant_id, current_user_id, conn)
+        current_schemes_with_info['user'] = conn.get_user(current_user_id)
+        schemes_with_info[current_user_id] = current_schemes_with_info
 
-    print(masks_with_info)
+    print(schemes_with_info)
 
     do_redirect=False
     if request.method == 'POST':
-        ######## classification mask based classification submit
-        mask = request.form['mask']
-        criteria = extract_criteria_from_request(request.form)
+        ####### classification based on classification scheme submit 
+        scheme = request.form['scheme']
 
-        is_valid, message = is_valid_acmg(criteria, mask)
-        if not is_valid: 
-            flash(message, "alert-danger")
-        else:
-            acmg_classification_id = conn.insert_consensus_acmg_classification(variant_id, mask)
-            #acmg_classification_id = conn.get_consensus_acmg_classification(variant_id, mask=mask, most_recent=True)[0][0]
-            handle_acmg_classification(acmg_classification_id, criteria, conn)
-            do_redirect=True
-
-        ######## consensus classification submit
         classification = request.form['final_class']
         comment = request.form['comment'].strip()
         possible_classifications = ["1","2","3","4","5"]
 
-        if comment and (str(classification) in possible_classifications):
+        # test if the input is valid
+        criteria = extract_criteria_from_request(request.form)
+        scheme_classification_is_valid, message = is_valid_acmg(criteria, scheme)
+        user_classification_is_valid = (str(classification) in possible_classifications) and comment
+        
+        # actually submit the data to the database
+        if (not scheme_classification_is_valid) and (scheme != 'none'): # error in scheme
+            flash(message, "alert-danger")
+        if not user_classification_is_valid: # error in user classification
+            flash("Please provide comment & class to submit a consensus classification", "alert-danger")
+        if scheme_classification_is_valid and (scheme != 'none') and user_classification_is_valid: # only if both are valid submit the scheme classification
+            acmg_classification_id = conn.insert_consensus_acmg_classification(variant_id, scheme)
+            #acmg_classification_id = conn.get_consensus_acmg_classification(variant_id, scheme=scheme, most_recent=True)[0][0]
+            handle_acmg_classification(acmg_classification_id, criteria, conn)
+        if user_classification_is_valid and ((scheme_classification_is_valid and scheme != 'none') or (scheme == 'none')):
             handle_consensus_classification(variant_id, classification, comment, conn)
             flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
             do_redirect = True
-        else:
-            flash("Please provide comment & class to submit a consensus classification", "alert-danger")
+
 
     conn.close()
     if do_redirect: # do redirect if one of the submissions was successful
@@ -514,8 +514,9 @@ def consensus_classify(variant_id):
         return render_template('variant/classify.html', 
                                 classification_type='consensus',
                                 variant_oi=variant_oi,
-                                masks_with_info=masks_with_info,
-                                previous_classification=previous_classification)
+                                schemes_with_info=schemes_with_info,
+                                previous_classification=previous_classification,
+                                is_admin=True)
 
 
 def handle_consensus_classification(variant_id, classification, comment, conn):
@@ -587,7 +588,7 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
 def extract_criteria_from_request(request_obj):
     # test if the acmg classification is valid
     criteria = {}
-    non_criterium_form_fields = ['mask', 'classification_type', 'final_class', 'comment', 'strength_select']
+    non_criterium_form_fields = ['scheme', 'classification_type', 'final_class', 'comment', 'strength_select']
     for criterium in request_obj:
         if criterium not in non_criterium_form_fields and '_strength' not in criterium:
             evidence = request_obj[criterium]
@@ -596,19 +597,19 @@ def extract_criteria_from_request(request_obj):
     return criteria
 
 
-def is_valid_acmg(criteria, mask):
+def is_valid_acmg(criteria, scheme):
     is_valid = True
     message = ''
     # ensure that at least one criterium is selected
     if len(criteria) == 0:
         is_valid = False
-        message = "You must select at least one of the classification mask criteria to submit a classification mask based classification. The classification mask based classification was not submitted."
+        message = "You must select at least one of the classification scheme criteria to submit a classification scheme based classification. The classification scheme based classification was not submitted."
 
     # ensure that the strength properties are valid
 
-    # ensure that no criteria are selected that can't be selected following the mask
+    # ensure that no criteria are selected that can't be selected following the scheme
 
-    # ensure that no mutually exclusive criteria are selected (also dependent on mask)
+    # ensure that no mutually exclusive criteria are selected (also dependent on scheme)
     
     return is_valid, message
 

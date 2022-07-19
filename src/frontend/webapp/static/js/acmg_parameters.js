@@ -2,13 +2,13 @@
 const criteria_with_strength_selects = ['pp1', 'ps1', 'bp1']
 // this dictionary contains the links for the reference articles of the acmg specifications (masks)
 const reference_links = {
-    'none': ' https://pubmed.ncbi.nlm.nih.gov/25741868/',
-    'TP53': 'https://pubmed.ncbi.nlm.nih.gov/33300245/',
-    'CDH1': 'https://pubmed.ncbi.nlm.nih.gov/30311375/',
+    'acmg_standard': ' https://pubmed.ncbi.nlm.nih.gov/25741868/',
+    'acmg_TP53': 'https://pubmed.ncbi.nlm.nih.gov/33300245/',
+    'acmg_CDH1': 'https://pubmed.ncbi.nlm.nih.gov/30311375/',
     'task-force': '#'
 }
 // this dictionary contains all buttons which should be disabled if one if them is activated
-// !! you need to add both directions for this to work properly
+// !! this is unidirectional
 // SPECIFIC FOR TP53 spec: PS4 not applicable when BA1 or BS1 are present, PM1 disables pm5
 const disable_groups = {
     // very strong pathogenic
@@ -40,17 +40,17 @@ const disable_groups = {
     'bp6': [],
     'bp7': [],
     // strong benign
-    'bs1': [],
+    'bs1': ['ps4'],
     'bs2': [],
     'bs3': [],
     'bs4': ['pp1'],
     // stand alone benign
-    'ba1': []
+    'ba1': ['ps4']
 }
 
 // this dict contains the default strengths for each mask
 const default_strengths = {
-    'none': {
+    'acmg_standard': {
         // very strong pathogenic
         'pvs1': 'pvs',
         // strong pathogenic
@@ -66,7 +66,7 @@ const default_strengths = {
         // stand alone benign
         'ba1': 'ba'
     },
-    'TP53': {
+    'acmg_TP53': {
         // very strong pathogenic
         'pvs1': 'pvs',
         // strong pathogenic
@@ -82,7 +82,7 @@ const default_strengths = {
         // stand alone benign
         'ba1': 'ba'
     },
-    'CDH1': {
+    'acmg_CDH1': {
         // very strong pathogenic
         'pvs1': 'pvs',
         // strong pathogenic
@@ -94,7 +94,7 @@ const default_strengths = {
         // supporting benign
         'bp1': 'bp', 'bp2': 'bp', 'bp3': 'bp', 'bp4': 'bp', 'bp5': 'bp', 'bp6': 'bp', 'bp7': 'bp',
         // strong benign
-        'bs1': 'bs', 'bs2': 'bs', 'bs3': 'bs', 'bs4': 'bs',
+        'bs1': 'ba', 'bs2': 'bs', 'bs3': 'bs', 'bs4': 'bs',
         // stand alone benign
         'ba1': 'ba'
     },
@@ -118,9 +118,9 @@ const default_strengths = {
 
 // this dict contains all criteria which should be disabled for a specific mask
 const not_activateable_buttons = {
-    'none': [],
-    'TP53': ['pm3', 'pm4', 'pp2', 'pp4', 'pp5', 'bp1', 'bp3', 'bp5', 'bp6'], // this is in disable group and if it is in not activateable buttons as well it will stay disabled: , 'bs4'
-    'CDH1': [],
+    'acmg_standard': [],
+    'acmg_TP53': ['pm3', 'pm4', 'pp2', 'pp4', 'pp5', 'bp1', 'bp3', 'bp5', 'bp6'], // this is in disable group and if it is in not activateable buttons as well it will stay disabled: , 'bs4'
+    'acmg_CDH1': ['pm1', 'pm3', 'pm5', 'pp2', 'pp4', 'pp5', 'bp1', 'bp3', 'bp6'],
     'task-force': []
 }
 
@@ -129,7 +129,7 @@ const not_activateable_buttons = {
 
 // this dictionary contains all criteria descriptions depending on mask 
 const criteria_descriptions = {
-    'none': {
+    'acmg_standard': {
         // very strong pathogenic
         "pvs1":
             `Null variant (nonsense, frameshift, canonical +/-1 or 2 splice sites, initiation \
@@ -264,7 +264,7 @@ const criteria_descriptions = {
             predict no impact to the splice consensus sequence nor the creation of a \
             new splice site AND the nucleotide is not highly conserved."
     },
-    'TP53': {
+    'acmg_TP53': {
         // very strong pathogenic
         "pvs1":
             "Null variant (nonsense, frameshift, canonical ±1 or 2 splice sites, initiation codon,\
@@ -458,7 +458,207 @@ const criteria_descriptions = {
             Same description with the following additions: \r\n\
                 - Splicing should be ruled out using a metapredictor. \r\n\
                 - If a new alternate site is predicted, compare strength to native site in interpretation."
+    },
+
+    'acmg_CDH1': {
+        // very strong pathogenic
+        "pvs1":
+            "Null variant (nonsense, frameshift, canonical ±1 or 2 splice sites, initiation codon,\
+            single or multiexon deletion) in a gene where LOF is a known mechanism of disease \r\n\r\n\
+                - Very strong: Per ClinGen SVI guidelines with the exception of canonical splice sites \r\n\
+                - Strong: Per ClinGen SVI guidelines. Use the strong strength of evidence for canonical splice sites. \r\n\
+                caveat: \r\n\
+                 CDH1 exonic deletions or tandem duplications of in-frame exon truncations in NMD-resistant \
+                 zone located upstream the most 3' well characterized pathogenic variant c.2506G>T (p.Glu836Ter). \
+                 Use moderate strength if premature stop is downstream of this variant \r\n \
+                - Moderate: Per ClinGen SVI guidelines. \r\n\
+                caveats: \r\n \
+                1. G to non-G variants disrupting the last nucleotide of an exon \r\n\
+                2. Canonical splice sites located in exons demonstrated experimentally to result in in-frame partial skipping/insertion (e.g., Exon 3 donor site) \
+                - Supporting: Per ClinGen SVI guidelines. \r\n\r\n\
+            Additional comment: \r\n \
+                RNA analysis is recommended for splicing alterations, and if the RNA evidence does not support the prediction, the strength should be updated \
+                PP3 cannot be applied for canonical splice sites",
+        
+        // strong pathogenic
+        "ps1":
+            "Same amino acid change as a previously established pathogenic variant \
+            regardless of nucleotide change. \r\n\r\n\
+                Example:	Val->Leu caused by either G>C or G>T in the same codon \r\n\
+                Caveat:	Beware of changes that impact splicing rather than at the amino acid/protein level \r\n\r\n\
+            Additional comment: \r\n\
+                Variant must not impact splicing.",
+        "ps2":
+            "De novo (both maternity and paternity confirmed) in a patient with the \
+            disease and no family history. \r\n \r\n\
+            Strength specifications: \r\n\
+                - Very strong: ≥2 patients with DGC and/or LBC w/parental confirmation \
+                - Strong: 1 patient with DGC and/or LBC w/parental confirmation \r\n\
+                Additional comment: \r\n\
+                    Use ClinGen's de novo point system for a highly specific phenotype (see Table S2 from \
+                    original publication linked at the top of the page)",
+        "ps3":
+            "Well-established in vitro or in vivo functional studies supportive of a \
+            damaging effect on the gene or gene product. \r\n\r\n\
+            Strength specifications: \r\n\
+                - Strong: RNA assay demonstrating abnormal out-of-frame transcripts \r\n\
+                - Supporting: RNA assay demonstrating abnormal in-frame transcripts \r\n\
+            Additional comment: \r\n\
+                This rule can only be applied to demonstrate splicing defects.",
+        "ps4":
+            "The prevalence of the variant in affected individuals is significantly \
+            increased compared to the prevalence in controls. \r\n\r\n\
+            Strength specifications: \r\n\
+                - Very strong: 16 families meet HDGC criteria \r\n\
+                - Strong: 4 families meet HDGC criteria \r\n\
+                - Moderate: 2 families meet HDGC criteria \r\n\
+                - Supporting: 1 family meets HDGC criteria \r\n\r\n\
+            Additional comment: \r\n\
+                This rule assumes 30% penetrance in individuals with pathogenic variants. For example, \
+                if the variant in observed in 3 families, at least one of those families need to meet \
+                criteria for HDGC in order to apply this rule. PS4 cannot be applied to variants that meet BS1 or BA1",
+        
+        // moderate pathogenic
+        "pm1":
+            "Excluded.",
+        "pm2":
+            "Absent from controls (or at extremely low frequency if recessive)\
+            in Exome Sequencing Project, 1000 Genomes or ExAC. \r\n\r\n\
+            <1/100,000 alleles in gnomAD cohort; if present in ≥2 individuals, must be present in \
+            <1/50,000 alleles within a sub-population \r\n\r\n\
+            Additional comment: \r\n\
+                Use gnomAD to determine allele frequency. Beware of technical limitations that \
+                can inaccurately represent allele frequency in this population database",
+        "pm3":
+            "Excluded",
+        "pm4":
+            "Protein length changes due to in-frame deletions/insertions in a non-repeat \
+            region or stop-loss variants. \r\n\r\n\
+            Additional comment: \r\n\
+                No rule specification proposed. Variant example - CDH1 c.2647T>C (p.Ter883Glnext*29)",
+        "pm5":
+            "Excluded",
+        "pm6":
+            "Assumed de novo, but without confirmation of paternity and maternity. \r\n\r\n\
+            Strength specification: \r\n\
+                - Very strong: ≥4 patients with DGC and/or LBC w/o parental confirmation \r\n\
+                - Strong: ≥2 patients with DGC and/or LBC w/o parental confirmation \r\n\
+                - Moderate: 1 patient with DGC and/or LBC w/o parental confirmation \r\n\r\n\
+            Additional comment: \r\n\
+                Use ClinGen's de novo point system for a highly specific phenotype (See Table S2 \
+                of original publication linked at the top of this page)",
+        
+        // supporting pathogenic
+        'pp1':
+            "Co-segregation with disease in multiple affected family members in a gene \
+            definitively known to cause the disease. \r\n\r\n\
+            Strength specification: \r\n\
+                - Strong: ≥7 meioses across ≥2 families \r\n\
+                - Moderate: 5-6 meioses across ≥1 families \r\n\
+                - Supporting: 3-4 meioses across ≥1 families \r\n\r\n\
+            Additional comment: \r\n\
+                Based strength of rule code on number of meioses across one or more families.",
+        "pp2":
+            "Excluded",
+        "pp3":
+            "Multiple lines of computational evidence support a deleterious effect on \
+            the gene or gene product (conservation, evolutionary, splicing impact, etc). \r\n\r\n\
+            Strength specification: \r\n\
+                - Moderate: Variants affecting the same splice site as a well-characterized variant with \
+                similar or worse in silico/RNA predictions \r\n\
+                - Supporting: At least 3 in silico splicing predictors in agreement (.Human Splicing \
+                Finder (HSF), Maximum Entropy (MaxEnt), Berkeley Drosophilia Genome Project (BDGP), or ESEfinder) \r\n\r\n\
+            Additional comment: \r\n\
+                Rule code is only for non-canonical splicing variants. Code also does not apply to last \
+                nucleotide of exon 3 (c.387G). Do not use protein-based computational prediction models for missense variants",
+        "pp4":
+            "Use PS4 in place of PP4.",
+        "pp5":
+            "Excluded",
+        
+        // stand alone benign
+        "ba1":
+            "Allele frequency is above 5% in Exome Sequencing Project, 1000 Genomes, \
+            or ExAC. \r\n\r\n\
+            MAF cutoff of 0.2% \r\n\r\n\
+            Additional comment: \r\n\
+                99.99% CI; subpopulation must have a minimum of 5 alleles present.",
+        
+        // strong benign
+        "bs1":
+            "Allele frequency is greater than expected for disorder. \r\n\r\n\
+            Stand alone: MAF cutoff of 0.1% \r\n\r\n\
+            Additional comment: \r\n\
+                99.99% CI; subpopulation must have a minimum of 5 alleles present",
+        "bs2":
+            "Observed in a healthy adult individual for a recessive (homozygous), \
+            dominant (heterozygous), or X-linked (hemizygous) disorder with full \
+            penetrance expected at an early age. \r\n\r\n\
+            Strength specification: \r\n\
+                - Strong: Variant seen in ≥10 individuals w/o DCG, SRC tumors, or LBC & whose families do not suggest HDGC \r\n\
+                - Supporting: Variant seen in ≥3 individuals w/o DCG, SRC tumors, or LBC & whose families do not suggest HDGC	",
+        "bs3":
+            "Well-established in vitro or in vivo functional studies shows no damaging \
+            effect on protein function or splicing. \r\n\
+            Functional RNA studies demonstrating no impact on transcript composition. \r\n\r\n\
+            Additional comment: \r\n\
+                This rule can only be used to demonstrate lack of splicing and can be downgraded based on quality of data.",
+        "bs4":
+            "Lack of segregation in affected members of a family. \r\n\r\n\
+            Caveat: The presence of phenocopies for common phenotypes (i.e. cancer, \
+                epilepsy) can mimic lack of segregation among affected individuals. Also, \
+                families may have more than one pathogenic variant contributing to an \
+                autosomal dominant disorder, further confounding an apparent lack of \
+                segregation. \r\n\r\n\
+            Additional comment: \r\n\
+                Beware of the presence of phenocopies (e.g., breast cancer) that can \
+                mimic lack of segregation. Also, families may have more than one pathogenic \
+                variant contributing to another AD disorder",
+        
+        // supporting benign
+        "bp1":
+            "Excluded",
+        "bp2":
+            "Observed in trans with a pathogenic variant for a fully penetrant dominant \
+            gene/disorder; or observed in cis with a pathogenic variant in any \
+            inheritance pattern. \r\n\r\n\
+            Strength specifications: \r\n\
+                - Strong: Variant observed in trans w/known pathogenic variant (phase confirmed) \
+                OR observed in the homozygous state in individual w/o personal &/or family \
+                history of DGC, LBC, or SRC tumors \r\n\
+                - Supporting: Variant is observed in cis (or phase is unknown) w/ a pathogenic variant \r\n\r\n\
+            Additional comment: \r\n\
+                Evidence code is dependent on strength of data. Take consideration of quality of \
+                sequencing data when applying code. Note that code requires knowledge of individuals'\
+                phenotype. Therefore, data from population databases should only be used when phenotypic \
+                info is available.",
+        "bp3":
+            "Excluded",
+        "bp4":
+            "Multiple lines of computational evidence suggest no impact on gene or \
+            gene product (conservation, evolutionary, splicing impact, etc) \r\n\r\n\
+            Splicing predictions only. At least 3 in silico splicing predictors in agreement \
+            (Human Splicing Finder (HSF), Maximum Entropy (MaxEnt), Berkeley Drosophilia \
+            Genome Project (BDGP), or ESEfinder) \r\n\r\n\
+            Additional comment: \r\n\
+                This rule can only be used when splicing predictions models suggest no \
+                impact on protein. Do not use protein based computational prediction models \
+                for missense. variants",
+        "bp5":
+            "Variant found in a case with an alternate molecular basis for disease. \r\n\r\n\
+            Additional comment: \r\n\
+                This applies if a P/LP variant is identified in an alternate gene known to cause HDGC (e.g., CTNNA1)",
+        "bp6":
+            "Excluded",
+        "bp7":
+            "A synonymous (silent) variant for which splicing prediction algorithms \
+            predict no impact to the splice consensus sequence nor the creation of a \
+            new splice site AND the nucleotide is not highly conserved. \r\n\r\n\
+            Synonymous variants where nucleotide is not highly conserved; variant is \
+            the reference nucleotide in 1 primate and/or >3 mammal species \r\n\r\n\
+            Additional comment: \r\n\
+                Note the CDH1 rule specification does not require a benign in silico splice prediction. \
+                This allows use with BP4, as appropriate, to classify variants meeting both criteria as likely benign "
     }
-    
 }
 
