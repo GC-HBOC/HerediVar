@@ -265,17 +265,25 @@ class Connection:
     #    self.cursor.execute(command, (external_id, id_source, chr, pos, ref, alt))
     #    self.conn.commit()
     
-    def insert_external_variant_id_from_variant_id(self, variant_id, external_id, id_source):
-        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) VALUES (%s, %s, %s) \
-                    SELECT %s, %s, %s WHERE NOT EXISTS (SELECT * FROM annotation_queue \
-	                    WHERE `variant_id`=%s AND `external_id`=%s AND `source`=%s LIMIT 1)"
+    def insert_external_variant_id(self, variant_id, external_id, id_source):
+        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) \
+                    SELECT %s, %s, %s WHERE NOT EXISTS (SELECT * FROM variant_ids \
+	                    WHERE `variant_id`=%s AND `external_id`=%s AND `id_source`=%s LIMIT 1)"
         self.cursor.execute(command, (variant_id, external_id, id_source, variant_id, external_id, id_source))
+        self.conn.commit()
+    
+    def update_external_variant_id(self, variant_id, external_id, id_source):
+        command = "UPDATE variant_ids SET external_id = %s WHERE variant_id = %s AND id_source = %s"
+        self.cursor.execute(command, (external_id, variant_id, id_source))
         self.conn.commit()
 
     def insert_update_external_variant_id(self, variant_id, external_id, id_source):
-        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE external_id=%s"
-        self.cursor.execute(command, (variant_id, external_id, id_source, external_id))
-        self.conn.commit()
+        previous_external_variant_id = self.get_external_ids_from_variant_id(variant_id, id_source=id_source)
+        print(previous_external_variant_id)
+        if (len(previous_external_variant_id) == 1): # do update
+            self.update_external_variant_id(variant_id, external_id, id_source)
+        else: # save new
+            self.insert_external_variant_id(variant_id, external_id, id_source)
 
     def insert_annotation_request(self, variant_id, user_id): # this inserts only if there is not an annotation request for this variant which is still pending
         #command = "INSERT INTO annotation_queue (variant_id, status, user_id) VALUES (%s, %s, %s)"

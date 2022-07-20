@@ -139,7 +139,7 @@ def process_new_vids(vids):
         else:
             log_file.write('Code: ~~' + get_log_code('discovered duplicate') + '~~ ' +"INFO: discovered variant which is already in heredivar but vid is unknown (this is a duplicate): " + new_chr + ' ' + str(new_pos) + ' ' + new_ref + ' ' + new_alt + ' ' + str(vid) + ' \n')
         variant_id = conn.get_variant_id(new_chr, new_pos, new_ref, new_alt)
-        conn.insert_external_variant_id_from_variant_id(variant_id, vid, 'heredicare') # we know that this is a new vid so we need to save it either way
+        conn.insert_external_variant_id(variant_id, vid, 'heredicare') # we know that this is a new vid so we need to save it either way
         log_file.write('Code: ~~' + get_log_code('inserted new vid') + '~~ ' +"SUCCESS: imported vid: " + str(vid) + ' for variant: ' + new_chr + ' ' + new_pos + ' ' + new_ref + ' ' + new_alt + ' \n')
 
 

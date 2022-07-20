@@ -139,7 +139,7 @@ def submit_clinvar(variant_id):
     if consensus_classification is None:
         flash("There is no consensus classification for this variant! Please create one before submitting to ClinVar!", "alert-danger")
         conn.close()
-        return redirect(url_for('variant.display', variant_id  =variant_id))
+        return redirect(url_for('variant.display', variant_id = variant_id))
     else:
         consensus_classification = consensus_classification[0]
     variant_oi = conn.get_variant_more_info(variant_id)
@@ -181,7 +181,7 @@ def submit_clinvar(variant_id):
                 raise RuntimeError("Status check failed:" + "\n" + clinvar_submission_file_url + "\n" + submission_file_response.content.decode("UTF-8"))
             submission_file_response = submission_file_response.json()
             clinvar_accession = submission_file_response['submissions'][0]['identifiers']['clinvarAccession']
-            conn.insert_external_variant_id_from_variant_id(variant_id, external_id = clinvar_accession, id_source = "clinvar_accession")
+            conn.insert_external_variant_id(variant_id, external_id = clinvar_accession, id_source = "clinvar_accession")
 
 
     # now we fetch the clinvar accession from the database and check for inconsistencies
@@ -245,6 +245,7 @@ def submit_clinvar(variant_id):
             #print(resp)
             #print(resp.json())
             clinvar_submission_id = resp.json()['id']
+            print(clinvar_submission_id)
             conn.insert_update_external_variant_id(variant_id, external_id = clinvar_submission_id, id_source = "clinvar_submission") # save the new submission id to the database
 
 
