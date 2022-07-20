@@ -155,6 +155,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
         flash("WARNING: There are multiple clinvar submission ids for this variant. There is probably an old clinvar submission somewhere in the system which should be deleted. Using " + str(clinvar_submission_id) + " now.", "alert-warning")
     if len(clinvar_submission_id) == 1: # variant was already submitted to clinvar
         clinvar_submission_id = clinvar_submission_id[0]
+    if len(clinvar_submission_id) > 0:
         api_key = os.environ.get('CLINVAR_API_KEY')
         headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
         resp = get_clinvar_submission_status(clinvar_submission_id, headers = headers)
@@ -191,210 +192,8 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             lists = lists)
 
 
-'''
-@variant_blueprint.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])
-@require_permission
-def consensus_classify(variant_id):
-
-    if request.method == 'POST':
-        classification = request.form['class']
-        comment = request.form['comment']
-
-        if not comment:
-            flash('You must provide a comment!', 'alert-danger')
-        else:
-            conn = Connection()
-            annotations = conn.get_all_variant_annotations(variant_id)
-            annotations.pop('consensus_classification', None)
-            variant_oi = get_variant(conn, variant_id)
-
-            current_date = datetime.datetime.today().strftime('%Y-%m-%d')
-
-            buffer = io.BytesIO()
-            generator = pdf_gen(buffer)
-            generator.add_title('Classification report')
-            v = str(variant_oi[1]) + '-' + str(variant_oi[2]) + '-' + str(variant_oi[3]) + '-' + str(variant_oi[4])
-            rsid = annotations.pop('rsid', None)
-            if rsid is not None:
-                rsid = rsid[4]
-            generator.add_variant_info(v, classification, current_date, comment, rsid)
-        
-
-            #literature
-            literature = annotations.pop('literature', None)
 
 
-            # classifications
-            user_classifications = annotations.pop('user_classifications', None)
-            clinvar_submissions = annotations.pop('clinvar_submissions', None)
-            heredicare_center_classifications = annotations.pop('heredicare_center_classifications', None)
-        
-            # consequences
-            variant_consequences = annotations.pop('variant_consequences', None)
-
-            # basic information
-            generator.add_subtitle("Scores & annotations:")
-            for key in annotations:
-                generator.add_relevant_information(key, str(annotations[key][4]))
-
-            if variant_consequences is not None:
-                generator.add_subtitle("Variant consequences:")
-                generator.add_text("Flags column: first number = is_gencode_basic, second number: is_mane_select, third number: is_mane_plus_clinical, fourth number: is_ensembl_canonical")
-                generator.add_relevant_classifications([[x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[11], str(x[13]) + str(x[14]) + str(x[15]) + str(x[16])] for x in variant_consequences], 
-                    ('Transcript Name', 'HGVSc', 'HGVSp', 'Consequence', 'Impact', 'Exon Nr.', 'Intron Nr.', 'Gene Symbol', 'Protein Domain', 'Flags'), [3, 2, 2, 3, 1.5, 1.2, 1.3, 1.5, 1.6, 1.5])
-            
-            if literature is not None:
-                generator.add_subtitle("PubMed IDs:")
-                generator.add_relevant_literature([str(x[2]) for x in literature])
-            
-            if user_classifications is not None or clinvar_submissions is not None or heredicare_center_classifications is not None:
-                generator.add_subtitle("Previous classifications:")
-            if user_classifications is not None:
-                generator.add_text("HerediVar user classifications:")
-                generator.add_relevant_classifications([[x[1], x[8] + ' ' + x[9], x[10], x[5], x[4]] for x in user_classifications], ('Class', 'User', 'Affiliation', 'Date', 'Comment'), [1.2, 2, 2, 2, 11.5])
-            if heredicare_center_classifications is not None:
-                generator.add_text("HerediCare center classifications:")
-                generator.add_relevant_classifications([[x[1], x[3], x[5], x[4]] for x in heredicare_center_classifications], ('Class', 'Center', 'Date', 'Comment'),  [2, 2, 2, 12])
-            if clinvar_submissions is not None:
-                generator.add_text("ClinVar submissions:")
-                generator.add_relevant_classifications([[x[2], x[3], x[4], x[5][1], x[6], x[7]] for x in clinvar_submissions], ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter', 'Comment'), [1.5, 2, 2, 2, 2, 9])
-            
-            
-            generator.save_pdf()
-
-            buffer.seek(io.SEEK_SET)
-            evidence_b64 = functions.buffer_to_base64(buffer)
-            #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/frontend/downloads/consensus_classification_reports/testreport.pdf')
-
-            conn.insert_consensus_classification_from_variant_id(session['user']['user_id'], variant_id, classification, comment, evidence_document=evidence_b64, date = current_date)
-            flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
-            conn.close()
-        return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
-    
-    conn = Connection()
-    if conn.get_consensus_classification(variant_id, most_recent=True) is not None:
-        has_consensus = True
-    else:
-        has_consensus = False
-    conn.close()
-    return render_template('variant/consensus_classify.html', has_consensus=has_consensus)
-'''
-
-
-''''
-@variant_blueprint.route('/classify/<int:variant_id>/user', methods=['GET', 'POST'])
-@require_login
-def user_classify(variant_id):
-    conn = Connection()
-    user_classification = conn.get_user_classification_by_username(session['user']['preferred_username'], variant_id)
-    # default values
-    previous_classification = 1
-    previous_comment = ''
-    has_classification = False
-    if user_classification is not None:
-        previous_classification=user_classification[1]
-        previous_comment=user_classification[4]
-        has_classification = True
-
-    if request.method == 'POST':
-        classification = request.form['class']
-        comment = request.form['comment'].strip()
-        if classification:
-            previous_classification = classification
-        if comment:
-            previous_comment = comment
-        if not comment or not classification:
-            flash("All fields are required!", "alert-danger")
-        else:
-            current_date = datetime.datetime.today().strftime('%Y-%m-%d')
-            if user_classification is not None: # user already has a classification for this variant -> he requests an update
-                conn.update_user_classification(user_classification[0], classification, comment, date = current_date)
-                flash(Markup("Successfully updated user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
-            else: # user does not yet have a classification for this variant -> he wants to create a new one
-                conn.insert_user_classification(variant_id, classification, session['user']['user_id'], comment, date = current_date)
-                conn.close()
-                flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
-            return redirect(url_for('variant.user_classify', variant_id = variant_id))
-    conn.close()
-
-    return render_template('variant/user_classify.html', previous_classification=int(previous_classification), previous_comment=previous_comment, has_classification=has_classification)
-'''
-
-
-
-
-
-def get_previous_user_classification(variant_id, user_id, conn):
-    user_classification = conn.get_user_classification(user_id, variant_id)
-    if user_classification is not None:
-        previous_classification=user_classification[1]
-        previous_comment=user_classification[4]
-        previous_classification_id=user_classification[0]
-        return {'has_classification': True, 'class': previous_classification, 'comment':previous_comment, 'id':previous_classification_id}
-    else:
-        return get_default_previous_classification()
-
-
-def get_schemes_with_info(variant_id, user_id, conn):
-    # fetch previous acmg classifications (could be multiple because of different schemes)
-    # 0id, 1variant_id, 2user_id, 3scheme, 4date
-    previous_acmg_classifications = conn.get_user_acmg_classification(variant_id, user_id)
-    # extract scheme and convert to scheme->acmg_classification_id dict
-    schemes_with_info = {}
-    for entry in previous_acmg_classifications:
-        scheme_key = entry[3]
-        if scheme_key in schemes_with_info:
-            raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme_key + ", user_id: " + str(user_id))
-        schemes_with_info[scheme_key] = {'classification_id':entry[0], 'date':entry[4].strftime('%Y-%m-%d'), 'selected_criteria':conn.get_acmg_criteria(entry[0])}
-    return schemes_with_info
-    
-def get_default_previous_classification():
-    return {'has_classification': False, 'class': 3, 'comment':'', 'id':None}
-
-
-def handle_acmg_classification(acmg_classification_id, criteria, conn):
-    previous_criteria = conn.get_acmg_criteria(acmg_classification_id)
-    previous_criteria_dict = {} # convert to dict criterium->criterium_id,strength,evidence
-    for entry in previous_criteria:
-        criterium_key = entry[2]
-        previous_criteria_dict[criterium_key] = {'id':entry[0], 'strength':entry[3], 'evidence':entry[4]}
-    
-    acmg_classification_got_update = False
-    for criterium in criteria:
-        evidence = criteria[criterium]['evidence']
-        strength = criteria[criterium]['strength']
-        # insert new criteria
-        if criterium not in previous_criteria_dict:
-            conn.insert_acmg_criterium(acmg_classification_id, criterium, strength, evidence)
-            acmg_classification_got_update = True
-        # update records if they were present before
-        elif evidence != previous_criteria_dict[criterium]['evidence'] or strength != previous_criteria_dict[criterium]['strength']:
-            conn.update_acmg_criterium(previous_criteria_dict[criterium]['id'], strength, evidence)
-            acmg_classification_got_update = True
-    
-    
-    # delete unselected criterium tags
-    criteria_to_delete = [x for x in previous_criteria_dict if x not in criteria]
-    for criterium in criteria_to_delete:
-        conn.delete_acmg_criterium(previous_criteria_dict[criterium]['id'])
-        acmg_classification_got_update = True
-    
-    # make sure that the date corresponds to the date last edited!
-    if acmg_classification_got_update:
-        conn.update_acmg_classification_date(acmg_classification_id)
-        flash("Successfully inserted/updated classification based on classification scheme", 'alert-success')
-            
-
-def handle_user_classification(variant_id, user_id, previous_classification, new_classification, new_comment, conn):
-    current_date = datetime.datetime.today().strftime('%Y-%m-%d')
-    if previous_classification['has_classification']: # user already has a classification -> he requests an update
-        if previous_classification['comment'] != new_comment or previous_classification['class'] != new_classification:
-            conn.update_user_classification(previous_classification['id'], new_classification, new_comment, date = current_date)
-            flash(Markup("Successfully updated user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
-    else: # user does not yet have a classification for this variant -> he wants to create a new one
-        conn.insert_user_classification(variant_id, new_classification, user_id, new_comment, date = current_date)
-        flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
-    
 
 
 @variant_blueprint.route('/classify/<int:variant_id>', methods=['GET', 'POST'])
@@ -480,6 +279,8 @@ def consensus_classify(variant_id):
 
     do_redirect=False
     if request.method == 'POST':
+        print(request.form)
+
         ####### classification based on classification scheme submit 
         scheme = request.form['scheme']
 
@@ -517,6 +318,81 @@ def consensus_classify(variant_id):
                                 schemes_with_info=schemes_with_info,
                                 previous_classification=previous_classification,
                                 is_admin=True)
+
+
+
+
+def get_previous_user_classification(variant_id, user_id, conn):
+    user_classification = conn.get_user_classification(user_id, variant_id)
+    if user_classification is not None:
+        previous_classification=user_classification[1]
+        previous_comment=user_classification[4]
+        previous_classification_id=user_classification[0]
+        return {'has_classification': True, 'class': previous_classification, 'comment':previous_comment, 'id':previous_classification_id}
+    else:
+        return get_default_previous_classification()
+
+
+def get_schemes_with_info(variant_id, user_id, conn):
+    # fetch previous acmg classifications (could be multiple because of different schemes)
+    # 0id, 1variant_id, 2user_id, 3scheme, 4date
+    previous_acmg_classifications = conn.get_user_acmg_classification(variant_id, user_id)
+    # extract scheme and convert to scheme->acmg_classification_id dict
+    schemes_with_info = {}
+    for entry in previous_acmg_classifications:
+        scheme_key = entry[3]
+        if scheme_key in schemes_with_info:
+            raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme_key + ", user_id: " + str(user_id))
+        schemes_with_info[scheme_key] = {'classification_id':entry[0], 'date':entry[4].strftime('%Y-%m-%d'), 'selected_criteria':conn.get_acmg_criteria(entry[0])}
+    return schemes_with_info
+    
+def get_default_previous_classification():
+    return {'has_classification': False, 'class': 3, 'comment':'', 'id':None}
+
+
+def handle_acmg_classification(acmg_classification_id, criteria, conn):
+    previous_criteria = conn.get_acmg_criteria(acmg_classification_id)
+    previous_criteria_dict = {} # convert to dict criterium->criterium_id,strength,evidence
+    for entry in previous_criteria:
+        criterium_key = entry[2]
+        previous_criteria_dict[criterium_key] = {'id':entry[0], 'strength':entry[3], 'evidence':entry[4]}
+    
+    acmg_classification_got_update = False
+    for criterium in criteria:
+        evidence = criteria[criterium]['evidence']
+        strength = criteria[criterium]['strength']
+        # insert new criteria
+        if criterium not in previous_criteria_dict:
+            conn.insert_acmg_criterium(acmg_classification_id, criterium, strength, evidence)
+            acmg_classification_got_update = True
+        # update records if they were present before
+        elif evidence != previous_criteria_dict[criterium]['evidence'] or strength != previous_criteria_dict[criterium]['strength']:
+            conn.update_acmg_criterium(previous_criteria_dict[criterium]['id'], strength, evidence)
+            acmg_classification_got_update = True
+    
+    
+    # delete unselected criterium tags
+    criteria_to_delete = [x for x in previous_criteria_dict if x not in criteria]
+    for criterium in criteria_to_delete:
+        conn.delete_acmg_criterium(previous_criteria_dict[criterium]['id'])
+        acmg_classification_got_update = True
+    
+    # make sure that the date corresponds to the date last edited!
+    if acmg_classification_got_update:
+        conn.update_acmg_classification_date(acmg_classification_id)
+        flash("Successfully inserted/updated classification based on classification scheme", 'alert-success')
+            
+
+def handle_user_classification(variant_id, user_id, previous_classification, new_classification, new_comment, conn):
+    current_date = datetime.datetime.today().strftime('%Y-%m-%d')
+    if previous_classification['has_classification']: # user already has a classification -> he requests an update
+        if previous_classification['comment'] != new_comment or previous_classification['class'] != new_classification:
+            conn.update_user_classification(previous_classification['id'], new_classification, new_comment, date = current_date)
+            flash(Markup("Successfully updated user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+    else: # user does not yet have a classification for this variant -> he wants to create a new one
+        conn.insert_user_classification(variant_id, new_classification, user_id, new_comment, date = current_date)
+        flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+    
 
 
 def handle_consensus_classification(variant_id, classification, comment, conn):

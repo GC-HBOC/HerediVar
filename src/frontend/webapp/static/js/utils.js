@@ -160,6 +160,21 @@ var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
 })
 
 
+// use this to escape special chars when using tojson jinja filter
+function escape_special_chars(input_string) {
+    return input_string.replace(/\n/g, "\\n")
+               .replace(/\'/g, "\\'")
+               .replace(/\r/g, "\\r")
+               .replace(/\t/g, "\\t")
+               .replace(/\f/g, "\\f");
+};
+
+
+function json_string_to_object(json_string) {
+    return JSON.parse(escape_special_chars(json_string))
+}
+
+
 function get_amino_acids(three_to_one = true){
     if (three_to_one){
         return {
