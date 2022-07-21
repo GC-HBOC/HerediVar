@@ -245,7 +245,6 @@ def submit_clinvar(variant_id):
             #print(resp)
             #print(resp.json())
             clinvar_submission_id = resp.json()['id']
-            print(clinvar_submission_id)
             conn.insert_update_external_variant_id(variant_id, external_id = clinvar_submission_id, id_source = "clinvar_submission") # save the new submission id to the database
 
 

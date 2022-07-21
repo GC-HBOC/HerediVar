@@ -1,7 +1,7 @@
 from calendar import c
 from flask import Blueprint, redirect, url_for, render_template, request, flash, current_app, abort
 from flask_paginate import Pagination
-from sqlalchemy import true
+from sqlalchemy import false, true
 from ..utils import *
 import datetime
 import sys
@@ -11,6 +11,7 @@ import common.functions as functions
 from common.db_IO import Connection
 import io
 from common.pdf_generator import pdf_gen
+from ..io.download_routes import calculate_acmg_class
 
 
 
@@ -349,13 +350,17 @@ def get_schemes_with_info(variant_id, user_id, conn):
 def get_default_previous_classification():
     return {'has_classification': False, 'class': 3, 'comment':'', 'id':None}
 
+def convert_acmg_criteria_to_dict(criteria):
+    criteria_dict = {} # convert to dict criterium->criterium_id,strength,evidence
+    for entry in criteria:
+        criterium_key = entry[2]
+        criteria_dict[criterium_key] = {'id':entry[0], 'strength':entry[3], 'evidence':entry[4]}
+    return criteria_dict
+
 
 def handle_acmg_classification(acmg_classification_id, criteria, conn):
     previous_criteria = conn.get_acmg_criteria(acmg_classification_id)
-    previous_criteria_dict = {} # convert to dict criterium->criterium_id,strength,evidence
-    for entry in previous_criteria:
-        criterium_key = entry[2]
-        previous_criteria_dict[criterium_key] = {'id':entry[0], 'strength':entry[3], 'evidence':entry[4]}
+    previous_criteria_dict = convert_acmg_criteria_to_dict(previous_criteria)
     
     acmg_classification_got_update = False
     for criterium in criteria:
@@ -481,23 +486,195 @@ def is_valid_acmg(criteria, scheme):
         is_valid = False
         message = "You must select at least one of the classification scheme criteria to submit a classification scheme based classification. The classification scheme based classification was not submitted."
 
-    # ensure that the strength properties are valid
-
+    # ensure that only valid criteria were submitted -> handled by database
+    # ensure that the strength properties are valid -> 
     # ensure that no criteria are selected that can't be selected following the scheme
+    # ensure that no mutually exclusive criteria are selected
 
-    # ensure that no mutually exclusive criteria are selected (also dependent on scheme)
+    #if 'task-force' in scheme:
+    #    pass
+    #elif 'acmg' in scheme:
+        #possible_criteria = ['pvs1', 'ps1', 'ps2', 'ps3', 'ps4', 'pm1', 'pm2', 'pm3', 'pm4', 'pm5', 'pm6', 'pp1', 'pp2', 'pp3', 'pp4', 'pp5', 'ba1', 'bs1', 'bs2', 'bs3', 'bs4', 'bp1', 'bp2', 'bp3', 'bp4', 'bp5', 'bp6', 'bp7']
+        #if not all(criterium in possible_criteria for criterium in criteria):
+        #    is_valid = False
+        #    message = "There are criteria which are not allowed with acmg classifications. Possible criteria are: " + str(possible_criteria)
+        #possible_strengths = ['pvs', 'ps', 'pm', 'pp', 'bs', 'bs', 'bp']
+        #if not all(criteria[criterium]['strength'] in possible_strengths for criterium in criteria):
+        #    is_valid = False
+        #    message = "There were non allowed strengths selected. Allowed values are: " + str(possible_strengths)
+        
+    criteria_with_strength_select = ['pp1', 'ps1', 'bp1', 'bs1']
+
+    not_activateable_buttons = {
+        'acmg_standard': [],
+        'acmg_TP53': ['pm3', 'pm4', 'pp2', 'pp4', 'pp5', 'bp1', 'bp3', 'bp5', 'bp6'],
+        'acmg_CDH1': ['pm1', 'pm3', 'pm5', 'pp2', 'pp4', 'pp5', 'bp1', 'bp3', 'bp6'],
+        'task-force': []
+    }
+
+    disable_groups = {
+        'acmg_standard': {
+            # very strong pathogenic
+            'pvs1': [],
+            # strong pathogenic
+            'ps1': [], 'ps2': [],'ps3': [],'ps4': [],
+            # moderate pathogenic
+            'pm1': [],'pm2': [],'pm3': [],'pm4': [],'pm5': [],'pm6': [],
+            # supporting pathogenic
+            'pp1': ['bs4'],'pp2': [],'pp3': [],'pp4': [],'pp5': [],
+            # supporting benign
+            'bp1': [],'bp2': [],'bp3': [],'bp4': [],'bp5': [],'bp6': [],'bp7': [],
+            # strong benign
+            'bs1': ['ps4'],'bs2': [],'bs3': [],'bs4': ['pp1'],
+            # stand alone benign
+            'ba1': ['ps4']
+        },
+        'acmg_TP53': {
+            # very strong pathogenic
+            'pvs1': [],
+            # strong pathogenic
+            'ps1': [], 'ps2': [],'ps3': [],'ps4': [],
+            # moderate pathogenic
+            'pm1': [],'pm2': [],'pm3': [],'pm4': [],'pm5': [],'pm6': [],
+            # supporting pathogenic
+            'pp1': ['bs4'],'pp2': [],'pp3': [],'pp4': [],'pp5': [],
+            # supporting benign
+            'bp1': [],'bp2': [],'bp3': [],'bp4': [],'bp5': [],'bp6': [],'bp7': [],
+            # strong benign
+            'bs1': ['ps4'],'bs2': [],'bs3': [],'bs4': ['pp1'],
+            # stand alone benign
+            'ba1': ['ps4']
+        },
+        'acmg_CDH1': {
+            # very strong pathogenic
+            'pvs1': [],
+            # strong pathogenic
+            'ps1': [], 'ps2': [],'ps3': [],'ps4': [],
+            # moderate pathogenic
+            'pm1': [],'pm2': [],'pm3': [],'pm4': [],'pm5': [],'pm6': [],
+            # supporting pathogenic
+            'pp1': ['bs4'],'pp2': [],'pp3': [],'pp4': [],'pp5': [],
+            # supporting benign
+            'bp1': [],'bp2': [],'bp3': [],'bp4': [],'bp5': [],'bp6': [],'bp7': [],
+            # strong benign
+            'bs1': ['ps4'],'bs2': [],'bs3': [],'bs4': ['pp1'],
+            # stand alone benign
+            'ba1': ['ps4']
+        }
+    }
+
+    if 'task-force' in scheme:
+        pass
+    elif 'acmg' in scheme:
+        if any(criterium[0] != criteria[criterium]['strength'][0] for criterium in criteria):
+            is_valid = False
+            message = "There are criteria with invalid strengths."
+        if any((criterium not in criteria_with_strength_select) and (criterium[0:2] != criteria[criterium]['strength'][0:2]) for criterium in criteria):
+            is_valid = False
+            message = "There are criteria with strengths that can not be selected"
+
+    if any(criterium in not_activateable_buttons[scheme] for criterium in criteria):
+        is_valid = False
+        message = "There are criteria which can not be activated with the provided scheme (" + scheme + ")"
+
+    for criterium in criteria:
+        current_disable_group = disable_groups[scheme][criterium]
+        if (any(criterium in current_disable_group for criterium in criteria)):
+            is_valid = False
+            message = "There are criteria which are mutually exclusive to " + str(criterium)
+
     
     return is_valid, message
 
 
-@variant_blueprint.route('/display/<int:variant_id>/consensus_classification_history')
+@variant_blueprint.route('/display/<int:variant_id>/classification_history')
 @require_login
-def consensus_classification_history(variant_id):
+def classification_history(variant_id):
     conn = Connection()
+    variant_oi = conn.get_one_variant(variant_id)
+    if variant_oi is None:
+        abort(404)
     consensus_classifications = conn.get_consensus_classification(variant_id)
-    conn.close()
+    user_classifications = conn.get_user_classifications(variant_id)
+    user_scheme_classifications = conn.get_user_acmg_classification(variant_id)
+    consensus_scheme_classifications = conn.get_consensus_acmg_classification(variant_id, scheme = 'all', most_recent = False)
+    
+    # each entry in recorded_classifications is of this form: (type, id, user_id, variant_id, class, comment/evidence, date, is_recent)
     most_recent_consensus_classification = [x for x in consensus_classifications if x[6] == 1][0]
-    other_consensus_classifications = [x for x in consensus_classifications if x[6] == 0]
-    if consensus_classifications is None:
-        abort(404) # redirect to error page
-    return render_template('variant/classification_history.html', most_recent_consensus_classification=most_recent_consensus_classification, other_consensus_classifications=other_consensus_classifications)
+    recorded_classifications = [{'type':'consensus classification', 
+                                 'user_id':x[1],
+                                 'class':x[3], 
+                                 'date':x[5], 
+                                 # additional information
+                                 'comment':x[4], 
+                                 'evidence_document_url':url_for('download.evidence_document', consensus_classification_id=x[0]) 
+                                } for x in consensus_classifications if x[6] == 0]
+    recorded_classifications.extend([{'type':'user classification',
+                                      'user_id':x[3],
+                                      'class':x[1],
+                                      'date':x[5], 
+                                      # additional information
+                                      'comment':x[4]
+                                    } for x in user_classifications])
+    for entry in user_scheme_classifications:
+        current_criteria = conn.get_acmg_criteria(entry[0])
+        current_criteria_dict = convert_acmg_criteria_to_dict(current_criteria)
+        acmg_class = get_acmg_classification(current_criteria)
+        new_classification = {'type':'user scheme classification',
+                              'user_id':entry[2],
+                              'class':acmg_class,
+                              'date':entry[4], 
+                              # additional information
+                              'scheme':entry[3].replace('_', ' '),
+                              'selected_criteria':current_criteria_dict
+                            }
+        recorded_classifications.append(new_classification)
+    
+    most_recent_consensus_scheme_classifications = [x for x in consensus_scheme_classifications if x[2] == 1][0]
+    old_consensus_scheme_classifications = [x for x in consensus_scheme_classifications if x[2] == 0]
+    for entry in old_consensus_scheme_classifications:
+        current_criteria = conn.get_acmg_criteria(entry[0])
+        current_criteria_dict = convert_acmg_criteria_to_dict(current_criteria)
+        acmg_class = get_acmg_classification(current_criteria)
+        new_classification = {'type':'consensus scheme classification',
+                              'class':acmg_class,
+                              'date':entry[4], 
+                              # additional information
+                              'scheme':entry[3].replace('_', ' '),
+                              'selected_criteria':current_criteria_dict
+                            }
+        recorded_classifications.append(new_classification)
+    
+
+    # replace user_id with username & affiliation
+    final_recorded_classifications = []
+    for classification in recorded_classifications:
+        user_id = classification.pop('user_id', '-1')
+        user = conn.get_user(user_id)
+        if user is not None:
+            classification['submitter'] = user[2] + ' ' + user[3]
+            classification['affiliation'] = user[4]
+
+        final_recorded_classifications.append(classification)
+    
+    print(recorded_classifications)
+    #print(most_recent_consensus_scheme_classifications)
+    #print(old_consensus_scheme_classifications)
+    
+    conn.close()
+    return render_template('variant/classification_history.html', 
+                            most_recent_consensus_classification=most_recent_consensus_classification, 
+                            most_recent_consensus_scheme_classifications=most_recent_consensus_scheme_classifications,
+                            recorded_classifications=final_recorded_classifications)
+
+
+def get_acmg_classification(criteria):
+    all_strengths = []
+    for entry in criteria:
+        all_strengths.append(entry[3])
+    response = calculate_acmg_class('+'.join(all_strengths))
+    return response.get_json()['final_class']
+
+
+#def preprocess_consensus_classifications(consensus_classifications):
+#    for 

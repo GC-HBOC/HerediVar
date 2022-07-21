@@ -19,33 +19,64 @@
     {{ macros.draw_most_recent_consensus_classification(most_recent_consensus_classification) }}
 
 
+
+</div>
+
+<div class="container bst" style="max-width:75%">
     <div class="card-subcaption">
         Previous consensus classifications
     </div>
-
     <div class="table-responsive">
         <table class="table table-hover" id="historyTable" style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                    <th><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                    <th><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                    <th>Evidence document</th>
+                    <th id="type_col"><div class="sortable">Type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="submitter_col"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="affiliation_col"><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="class_col"><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="date_col"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="additional_information_col"><div class="sortable">Additional Information</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="document_col">Document</th>
                 </tr>
             </thead>
             <tbody>
-                {% for classification in other_consensus_classifications %}
+                {% for classification in recorded_classifications %}
                 
-                <tr {% if classification[6] == '1' %}class="classification-gradient"{%endif%}>
-                    <td>{{classification[3]}}</td>
-                    <td style="white-space:nowrap;">{{classification[5]}}</td>
-                    <td style="width:100%">{{ classification[4] }}</td>
-                    <td><a href="{{url_for('download.evidence_document', consensus_classification_id=classification[0]) }}">download</a></td>
+                <tr>
+                    <td>{{classification['type']}}</td>
+                    <td>{{classification['submitter']}}</td>
+                    <td>{{classification['affiliation']}}</td>
+                    <td>{{classification['class']}}</td>
+                    <td style="white-space:nowrap;">{{classification['date']}}</td>
+
+                    <td>
+                        {{ classification['comment'] }}
+
+                        {% if 'selected_criteria' in classification %}
+                        <div class="d-flex"><div class="ssr" style="font-weight:bolder">Scheme:</div>{{ classification['scheme'] }}</div>
+                        <div class="d-flex"><div class="ssr" style="font-weight:bolder">Selected criteria:</div>
+                            {% for criterium in classification['selected_criteria'] %}
+                            <span class="d-inline-block ssr" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" 
+                                title="Strength: {{ classification['selected_criteria'][criterium]['strength'] }} <br> Evidence: {{ classification['selected_criteria'][criterium]['evidence'] }}">
+                                <div class="dashed_underline clickable">{{ criterium }}</div>
+                            </span>
+                            {% endfor %}
+                        </div>
+
+
+                        {% endif %}
+                    </td>
+
+                    <td>{% if 'evidence_document_url' in classification %}<a href="{{ classification['evidence_document_url'] }}">download</a>{% endif %}</td>
+
                 </tr>
+
                 {% endfor %}
             </tbody>
         </table>
     </div>
+</div>
+
 
 
 {% endblock %}
@@ -53,4 +84,5 @@
 {% block special_scripts %}
 <script src="/static/js/sortTable.js"></script>
 <script src="/static/js/colors.js"></script>
+<script src="/static/js/classification_history.js"></script>
 {% endblock%}

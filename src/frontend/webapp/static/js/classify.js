@@ -614,7 +614,7 @@ function enable_disable_buttons(criterium_ids, is_disable) {
 function update_classification_preview() {
     var selected_criteria = get_checked_criteria_strengths(); // this is an array of criteria ids
     selected_criteria = selected_criteria.join('+')
-    fetch('/calculate_acmg_class?selected_classes='+selected_criteria).then(function (response) {
+    fetch('/calculate_acmg_class/'+selected_criteria).then(function (response) {
         return response.json();
     }).then(function (text) {
         const final_class = text.final_class
@@ -647,7 +647,8 @@ function toggle_criterium(criterium_id) {
     obj.checked = !obj.checked
     update_criterium_button_background(criterium_id)
     document.getElementById(criterium_id + '_strength').checked = obj.checked
-    const current_disable_group = disable_groups[criterium_id]
+    const scheme = document.getElementById('scheme').value
+    const current_disable_group = disable_groups[scheme][criterium_id]
     enable_disable_buttons(current_disable_group, obj.checked)
 }
 
@@ -656,7 +657,8 @@ function set_criterium(criterium_id, is_checked) {
     obj.checked = is_checked
     update_criterium_button_background(criterium_id)
     document.getElementById(criterium_id + '_strength').checked = obj.checked
-    const current_disable_group = disable_groups[criterium_id]
+    const scheme = document.getElementById('scheme').value
+    const current_disable_group = disable_groups[scheme][criterium_id]
     enable_disable_buttons(current_disable_group, obj.checked)
 }
 

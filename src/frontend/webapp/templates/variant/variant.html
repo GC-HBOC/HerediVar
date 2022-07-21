@@ -213,7 +213,7 @@
                     {% if 'consensus_classification' in annotations %}
                     <div class="row bsl bsb sst">
                         {{ macros.draw_most_recent_consensus_classification(annotations['consensus_classification']) }}
-                        <a href="{{ url_for('variant.consensus_classification_history', variant_id=variant[0]) }}">view consensus classification history</a>
+                        <a href="{{ url_for('variant.classification_history', variant_id=variant[0]) }}">view consensus classification history</a>
                     </div>
                     
                     {% endif %}
