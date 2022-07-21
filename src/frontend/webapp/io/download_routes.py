@@ -221,13 +221,13 @@ def get_variant_vcf_line(variant_id, conn):
 
 # this route listens on get parameter: "selected_classes=acb&abc&abc&...."
 # example
-@download_blueprint.route('/calculate_acmg_class')
-def calculate_acmg_class():
-    selected_classes = request.args.get('selected_classes')
-    selected_classes = selected_classes.split(' ')
+@download_blueprint.route('/calculate_acmg_class/<string:selected_classes>')
+def calculate_acmg_class(selected_classes):
+    #selected_classes = request.args.get('selected_classes')
+    selected_classes = selected_classes.split('+')
     class_counts = get_class_counts(selected_classes)
 
-    print(class_counts)
+    #print(class_counts)
 
     possible_classes = set()
 
@@ -267,6 +267,10 @@ def calculate_acmg_class():
         possible_classes.add(2)
     if class_counts['bp'] >= 2: # 2
         possible_classes.add(2)
+    
+    #print(selected_classes)
+    #print(class_counts)
+    #print(possible_classes)
 
     # uncertain significance if criteria for benign and pathogenic are contradictory
     if (1 in possible_classes or 2 in possible_classes) and (4 in possible_classes or 5 in possible_classes):
@@ -297,3 +301,5 @@ def get_class_counts(data):
     for key in result:
         result[key] = sum(key in x for x in data)
     return result
+
+

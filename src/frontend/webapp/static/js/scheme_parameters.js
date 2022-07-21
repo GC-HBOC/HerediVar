@@ -6,7 +6,7 @@ const criteria = ['pvs1', 'ps1', 'ps2', 'ps3', 'ps4', 'pm1', 'pm2', 'pm3', 'pm4'
 const criteria_with_strength_selects = ['pp1', 'ps1', 'bp1', 'bs1']
 // this dictionary contains the links for the reference articles of the acmg specifications (masks)
 const reference_links = {
-    'acmg_standard': ' https://pubmed.ncbi.nlm.nih.gov/25741868/',
+    'acmg_standard': 'https://pubmed.ncbi.nlm.nih.gov/25741868/',
     'acmg_TP53': 'https://pubmed.ncbi.nlm.nih.gov/33300245/',
     'acmg_CDH1': 'https://pubmed.ncbi.nlm.nih.gov/30311375/',
     'task-force': '#'
@@ -15,41 +15,117 @@ const reference_links = {
 // !! this is unidirectional
 // SPECIFIC FOR TP53 spec: PS4 not applicable when BA1 or BS1 are present, PM1 disables pm5
 const disable_groups = {
-    // very strong pathogenic
-    'pvs1': [],
-    // strong pathogenic
-    'ps1': [],
-    'ps2': [],
-    'ps3': [],
-    'ps4': [],
-    // moderate pathogenic
-    'pm1': [],
-    'pm2': [],
-    'pm3': [],
-    'pm4': [],
-    'pm5': [],
-    'pm6': [],
-    // supporting pathogenic
-    'pp1': ['bs4'],
-    'pp2': [],
-    'pp3': [],
-    'pp4': [],
-    'pp5': [],
-    // supporting benign
-    'bp1': [],
-    'bp2': [],
-    'bp3': [],
-    'bp4': [],
-    'bp5': [],
-    'bp6': [],
-    'bp7': [],
-    // strong benign
-    'bs1': ['ps4'],
-    'bs2': [],
-    'bs3': [],
-    'bs4': ['pp1'],
-    // stand alone benign
-    'ba1': ['ps4']
+    'acmg_standard': {
+        // very strong pathogenic
+        'pvs1': [],
+        // strong pathogenic
+        'ps1': [],
+        'ps2': [],
+        'ps3': [],
+        'ps4': [],
+        // moderate pathogenic
+        'pm1': [],
+        'pm2': [],
+        'pm3': [],
+        'pm4': [],
+        'pm5': [],
+        'pm6': [],
+        // supporting pathogenic
+        'pp1': ['bs4'],
+        'pp2': [],
+        'pp3': [],
+        'pp4': [],
+        'pp5': [],
+        // supporting benign
+        'bp1': [],
+        'bp2': [],
+        'bp3': [],
+        'bp4': [],
+        'bp5': [],
+        'bp6': [],
+        'bp7': [],
+        // strong benign
+        'bs1': [],
+        'bs2': [],
+        'bs3': [],
+        'bs4': ['pp1'],
+        // stand alone benign
+        'ba1': []
+    },
+    'acmg_TP53': {
+        // very strong pathogenic
+        'pvs1': [],
+        // strong pathogenic
+        'ps1': [],
+        'ps2': [],
+        'ps3': [],
+        'ps4': [],
+        // moderate pathogenic
+        'pm1': [],
+        'pm2': [],
+        'pm3': [],
+        'pm4': [],
+        'pm5': [],
+        'pm6': [],
+        // supporting pathogenic
+        'pp1': ['bs4'],
+        'pp2': [],
+        'pp3': [],
+        'pp4': [],
+        'pp5': [],
+        // supporting benign
+        'bp1': [],
+        'bp2': [],
+        'bp3': [],
+        'bp4': [],
+        'bp5': [],
+        'bp6': [],
+        'bp7': [],
+        // strong benign
+        'bs1': ['ps4'],
+        'bs2': [],
+        'bs3': [],
+        'bs4': ['pp1'],
+        // stand alone benign
+        'ba1': ['ps4']
+    },
+    'acmg_CDH1': {
+        // very strong pathogenic
+        'pvs1': [],
+        // strong pathogenic
+        'ps1': [],
+        'ps2': [],
+        'ps3': [],
+        'ps4': [],
+        // moderate pathogenic
+        'pm1': [],
+        'pm2': [],
+        'pm3': [],
+        'pm4': [],
+        'pm5': [],
+        'pm6': [],
+        // supporting pathogenic
+        'pp1': ['bs4'],
+        'pp2': [],
+        'pp3': [],
+        'pp4': [],
+        'pp5': [],
+        // supporting benign
+        'bp1': [],
+        'bp2': [],
+        'bp3': [],
+        'bp4': [],
+        'bp5': [],
+        'bp6': [],
+        'bp7': [],
+        // strong benign
+        'bs1': ['ps4'],
+        'bs2': [],
+        'bs3': [],
+        'bs4': ['pp1'],
+        // stand alone benign
+        'ba1': ['ps4']
+    }
 }
 
 // this dict contains the default strengths for each mask
