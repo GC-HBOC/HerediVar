@@ -41,6 +41,8 @@ The schema files for the returned/uploaded XML documents can be found in this fo
 | Arguments: | <ul><li>**id** (*integer/GET*): The HerediCare VID</li><li>**classification** (*XML/POST)*: An [XML](upload_classification.png) file with class, date, pdf containing information about the classification (base-64 encoding)</li></ul> |
 | Returns:   | n/a (only return code 200, 400, ...)  |
 
+**Questions:**
+- How to keep all databases (HerediVar, HerediCare, ...?) up to date & prevent conflicting classifications (import & export date)?
 
 ## Create Variant
 
