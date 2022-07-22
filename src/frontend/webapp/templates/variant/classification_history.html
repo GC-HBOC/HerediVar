@@ -4,27 +4,55 @@
 <div class="container">
 
 
+    <h1 class="bst">{% block title %} Classification history {% endblock %}</h1>
+
+
+    {{ macros.add_variant_banner(variant_oi) }}
+
+
+
+
     <div class="d-flex">
-        <h1 class="bst">{% block title %} Consensus classification history {% endblock %}</h1>
-        <div class="ms-auto" style="margin-top:2em; margin-right:4em; margin-bottom:1em">
-            {{ macros.render_consensus_classification_label(most_recent_consensus_classification[3]) }}
+        <div class="flex-grow-1">
+            <div class="card-subcaption bst ssb">
+                Current consensus classification
+            </div>
+            {{ macros.draw_most_recent_consensus_classification(most_recent_consensus_classification) }}
         </div>
+
+        <div class="ms-auto" style="margin-top:2em; margin-right:4em; margin-bottom:1em">
+            {% if most_recent_consensus_classification is not none %}
+                {% set consensus_class = most_recent_consensus_classification[3] %}
+            {% else %}
+                {% set consensus_class = '-' %}
+            {% endif %}
+
+            {{ macros.render_consensus_classification_label(consensus_class) }}
+        </div>
+
     </div>
-
-
-    <div class="card-subcaption">
-        Current consensus classification
-    </div>
-
-    {{ macros.draw_most_recent_consensus_classification(most_recent_consensus_classification) }}
+    
 
 
 
 </div>
 
-<div class="container bst" style="max-width:75%">
+<div class="container bst">
     <div class="card-subcaption">
-        Previous consensus classifications
+        All classifications
+    </div>
+    <div>
+        <div>Color scheme:</div>
+        <div class="d-flex align-items-center">
+            <div class="user_scheme_classification_style color_scheme_box ssr bsl"></div>
+            <div>user scheme classification</div>
+            <div class="user_classification_style color_scheme_box ssr bsl"></div>
+            <div>user classification</div>
+            <div class="consensus_scheme_classification_style color_scheme_box ssr bsl"></div>
+            <div>consensus scheme classification</div>
+            <div class="consensus_classification_style color_scheme_box ssr bsl"></div>
+            <div>consensus classification</div>
+        </div>
     </div>
     <div class="table-responsive">
         <table class="table table-hover" id="historyTable" style="table-layout: auto;">
@@ -43,7 +71,7 @@
                 {% for classification in recorded_classifications %}
                 
                 <tr>
-                    <td>{{classification['type']}}</td>
+                    <td class="{{classification['type'] | replace(' ', '_')}}_style">{{classification['type']}}</td>
                     <td>{{classification['submitter']}}</td>
                     <td>{{classification['affiliation']}}</td>
                     <td>{{classification['class']}}</td>

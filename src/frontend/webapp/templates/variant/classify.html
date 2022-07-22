@@ -10,11 +10,7 @@
     </div>
     {% endif %}
 
-    <div class="bst" style="background-color:rgb(238, 238, 238); padding:1em">
-        <div style="font-weight:bolder">Variant information:</div>
-        <div class="bsl">Variant: {{ variant_oi[1] }}:{{ variant_oi[2] }} {{ variant_oi[3] }}>{{ variant_oi[4] }}</div>
-        <div class="bsl">Gene(s): {{ variant_oi[6] }}</div>
-    </div>
+    {{ macros.add_variant_banner(variant_oi) }}
     
 
     <form class="bst" action="" id="acmg-form" autocomplete="off" method="post" novalidate>
