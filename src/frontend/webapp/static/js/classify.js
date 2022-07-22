@@ -10,8 +10,6 @@ var do_request_form_preselect = false
 if (Object.keys(request_form).length > 0) {
     do_request_form_preselect = true
 }
-schemes_with_info['selected'] = {}
-
 
 ///////////// criterium buttons /////////////
 

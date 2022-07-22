@@ -4,12 +4,12 @@
         <svg id="class-label-tooltip-container" xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor" viewBox="0 0 250 250" style="position: absolute; z-index:1;" data-bs-toggle="tooltip" title="" data-bs-placement="left">
             <path d="M212.5,172.3c-16.9,31.1-49.8,52.2-87.6,52.2c-54.9,0-99.5-44.6-99.5-99.5c0-54.9,44.6-99.5,99.5-99.5   c38.3,0,71.6,21.8,88.2,53.6h28C222.9,32.8,177.7,0,125,0C56.1,0,0,56.1,0,125c0,68.9,56.1,125,125,125c52.2,0,97-32.2,115.7-77.7   H212.5z"/>
         </svg>
-        {% if class != '-' %}
+        {% if class == '1' or class == '2' or class == '3' or class == '4' or class == '5' %}
         <div id="consensusClassificationDIV" fill="currentColor" style="font-size:5em; line-height: 0.85; position: relative; left: 0.36em; top: 0.15em;">
             {{ class }}
         </div>
         {% else %}
-        <div id="consensusClassificationDIV" fill="currentColor" style="font-size:5em; line-height: 0.85; position: relative; left: 0.41em; top: 0.15em">
+        <div id="consensusClassificationDIV" fill="currentColor" style="font-size:5em; font-weight:bold; line-height: 0.85; position: relative; left: 0.41em; top: 0.15em">
             -
         </div>
         {% endif %}
@@ -23,7 +23,6 @@
             switch (consensus_classification) {
                 case '5':
                     base_color = class5ColorRGB
-                    console.log(base_color)
                     break;
                 case '4':
                     base_color = class4ColorRGB
@@ -58,11 +57,13 @@
 
 {% macro draw_most_recent_consensus_classification(most_recent_consensus_classification) %}
 <div class="classification-gradient">
+    {% if most_recent_consensus_classification is not none %}
     <table class="table table-borderless " style="table-layout:auto; margin-bottom:0;">
+        
         <tbody>
             <tr style="margin-left:0">
                 <td style="width:10%;">Class:</td>
-                <td  style="width:100%;">{{ most_recent_consensus_classification[3] }}</td>
+                <td style="width:100%;">{{ most_recent_consensus_classification[3] }}</td>
             </tr>
             <tr>
                 <td>Date:</td>
@@ -76,8 +77,13 @@
                 <td>Evidence document:</td>
                 <td><a href="{{url_for('download.evidence_document', consensus_classification_id=most_recent_consensus_classification[0]) }}">download</a></td>
             </tr>
-        </tbody>
+        </tbody>        
     </table>
+    {% else %}
+    <div style="padding:1em">
+        There is no consensus classification for this variant yet.
+    </div>
+    {% endif %}
 </div>
 {% endmacro %}
 
@@ -260,3 +266,10 @@
 </span>
 {% endmacro %}
 
+{% macro add_variant_banner(variant_oi) %}
+<div class="bst" style="background-color:rgb(238, 238, 238); padding:1em">
+    <div style="font-weight:bolder">Variant information:</div>
+    <div class="bsl">Variant: {{ variant_oi[1] }}:{{ variant_oi[2] }} {{ variant_oi[3] }}>{{ variant_oi[4] }}</div>
+    <div class="bsl">Gene(s): {{ variant_oi[6] }}</div>
+</div>
+{% endmacro %}

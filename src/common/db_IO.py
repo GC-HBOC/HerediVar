@@ -719,12 +719,16 @@ class Connection:
             return result[0]
         return result
 
-    def get_consensus_classification(self, variant_id, most_recent = False): # it is possible to have multiple consensus classifications
+    def get_consensus_classification(self, variant_id, most_recent = False, sql_modifier=None): # it is possible to have multiple consensus classifications
         command = "SELECT id,user_id,variant_id,classification,comment,date,is_recent FROM consensus_classification WHERE variant_id = %s"
         if most_recent:
             command = command  + " AND is_recent = '1'"
         else:
             command = command + " ORDER BY DATE(date) DESC, is_recent DESC"
+        
+        if sql_modifier is not None:
+            command = sql_modifier(command)
+
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall()
         if len(result) == 0:
@@ -971,7 +975,26 @@ class Connection:
         if heredicare_center_classifications is not None:
             variant_annot_dict['heredicare_center_classifications'] = heredicare_center_classifications
         
+        user_scheme_classifications = self.get_user_acmg_classification(variant_id, sql_modifier = self.add_userinfo)
+        annotated_user_scheme_classifications = []
+        if user_scheme_classifications is not None:
+            for classification in user_scheme_classifications:
+                current_criteria = self.get_acmg_criteria(classification[0])
+                classification += (current_criteria, )
+                annotated_user_scheme_classifications.append(classification)
+            variant_annot_dict['user_scheme_classifications'] = annotated_user_scheme_classifications
+        
+        consensus_scheme_classifications = self.get_consensus_acmg_classification(variant_id, scheme='all', most_recent=True, sql_modifier=self.add_userinfo)
+        annotated_consensus_scheme_classifications = []
+        if consensus_scheme_classifications is not None:
+            for classification in consensus_scheme_classifications:
+                current_criteria = self.get_acmg_criteria(classification[0])
+                classification += (current_criteria, )
+                annotated_consensus_scheme_classifications.append(classification)
+            variant_annot_dict['consensus_scheme_classifications'] = annotated_consensus_scheme_classifications
+        
         #print(variant_annot_dict['standard_annotations'])
+
     
         return variant_annot_dict
 
@@ -998,7 +1021,7 @@ class Connection:
         self.cursor.execute(command, (acmg_classification_id, user_id))
         self.conn.commit()
     
-    def get_user_acmg_classification(self, variant_id, user_id = 'all', scheme = 'all'):
+    def get_user_acmg_classification(self, variant_id, user_id = 'all', scheme = 'all', get_criteria=False, sql_modifier=None):
         inner_command = "SELECT id as classification_id, variant_id, scheme, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=0"
         actual_information = (variant_id, )
         if scheme != 'all':
@@ -1012,20 +1035,27 @@ class Connection:
         if user_id != 'all':
             command += ' WHERE user_id=%s'
             actual_information += (user_id, )
+
+        if sql_modifier is not None:
+            command = sql_modifier(command)
+        
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
         if len(result) > 1 and scheme != 'all':
             raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme + ", user_id: " + str(user_id) + "\n The result was: " + str(result))
+        if len(result) == 0:
+            return None
+
         return result
 
 
-    def insert_consensus_acmg_classification(self, variant_id, scheme):
+    def insert_consensus_acmg_classification(self, user_id, variant_id, scheme):
         acmg_classification_id = self.insert_acmg_classification(variant_id, scheme, 1)
 
         self.invalidate_previous_acmg_consensus_classifications(variant_id)
 
-        command = "INSERT INTO acmg_consensus_classification (acmg_classification_id, is_recent) VALUES (%s, %s)"
-        self.cursor.execute(command, (acmg_classification_id, 1))
+        command = "INSERT INTO acmg_consensus_classification (acmg_classification_id, user_id, is_recent) VALUES (%s, %s, %s)"
+        self.cursor.execute(command, (acmg_classification_id, user_id, 1))
         self.conn.commit()
         return acmg_classification_id
 
@@ -1037,7 +1067,7 @@ class Connection:
         self.conn.commit()
 
     
-    def get_consensus_acmg_classification(self, variant_id, scheme = 'all', most_recent=True):
+    def get_consensus_acmg_classification(self, variant_id, scheme = 'all', most_recent=True, sql_modifier=None):
         command = "SELECT id, variant_id, scheme, date, is_consensus FROM acmg_consensus_classification a INNER JOIN \
 	                    (SELECT id as inner_id, variant_id, scheme, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=1) b \
 	                ON a.acmg_classification_id = b.inner_id "
@@ -1048,15 +1078,28 @@ class Connection:
             inner_command += " AND scheme=%s"
             actual_information += (scheme, )
         
-        command = "SELECT classification_id, variant_id, is_recent, scheme, date FROM acmg_consensus_classification a INNER JOIN \
+        command = "SELECT classification_id, variant_id, is_recent, scheme, date, user_id FROM acmg_consensus_classification a INNER JOIN \
 	                    (" + inner_command + ") b \
 	                    ON a.acmg_classification_id = b.classification_id"
         if most_recent:
             command += " WHERE is_recent=1"
 
+        if sql_modifier is not None:
+            command = sql_modifier(command)
+
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
+        if len(result) == 0:
+            return None
         return result
+    
+
+    def add_userinfo(self, command):
+        prefix = 'SELECT * FROM (('
+        postfix = ') uid_a INNER JOIN (SELECT id as outer_id, first_name,last_name,affiliation FROM user) uid_b ON uid_a.user_id = uid_b.outer_id)'
+        result = prefix + command + postfix
+        return result
+
 
 
     def update_acmg_classification_date(self, acmg_classification_id):
@@ -1086,6 +1129,11 @@ class Connection:
         self.cursor.execute(command, (acmg_classification_id, ))
         result = self.cursor.fetchall()
         return result
+
+
+
+
+
 
 
 #

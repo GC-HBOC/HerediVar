@@ -36,7 +36,7 @@
                 <span id="tooltip_vcf_export_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip" title="Download this variant & all annotations as VCF.">
                     <a id="vcf_export_button" type="button" class="btn btn-outline-primary" href="{{url_for('download.variant', variant_id = variant[0])}}">Export to VCF</a>
                 </span>
-                {% if 'submitted' in clinvar_submission['status'] or 'processing' in clinvar_submission['status'] %}
+                {% if 'submitted' == clinvar_submission['status'] or 'processing' == clinvar_submission['status'] %}
                 <span id="tooltip_clinvar_export_button" class="d-inline-block ssl" tabindex="0" data-bs-toggle="tooltip" title="Wait for the current ClinVar submission to finish before submitting another one.">
                     <button id="clinvar_export_button" type="button" class="btn btn-outline-primary" disabled="disabled">Submit to ClinVar</button>
                 </span>
@@ -209,13 +209,14 @@
                     
                     {% if 'consensus_classification' in annotations or 'user_classifications' in annotations %}
                     <li class="list-group-item card-subcaption">HerediVar classifications</li>
+                    <div class="row bsl sst">
+                        <a href="{{ url_for('variant.classification_history', variant_id=variant[0]) }}">view classification history</a>
+                    </div>
                     <!-- HEREDIVAR -->
                     {% if 'consensus_classification' in annotations %}
                     <div class="row bsl bsb sst">
                         {{ macros.draw_most_recent_consensus_classification(annotations['consensus_classification']) }}
-                        <a href="{{ url_for('variant.classification_history', variant_id=variant[0]) }}">view consensus classification history</a>
                     </div>
-                    
                     {% endif %}
                     <!-- user classification table -->
                     {% if 'user_classifications' in annotations %}
@@ -226,7 +227,7 @@
                                 <thead>
                                     <tr>
                                         <th><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                        <th><div class="sortable">User</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th style="width: 100%;"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
@@ -247,8 +248,37 @@
                         </div>
                     </div>
                     {% endif %}
+
+                    <!-- user scheme classifications-->
+                    {% if 'user_scheme_classifications' in annotations %}
+                    <div class="row bsl">
+                        <abbr title="User scheme classifications like ACMG guided classifications are shown here">User&nbsp;scheme&nbsp;classifications:</abbr>
+                        <div class="table-responsive">
+                            <table class="table table-hover scroll" id="userClassificationsTable">
+                                <thead>
+                                    <tr>
+                                        <th><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th style="width: 100%;"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for classification in annotations['user_scheme_classifications'] %}
+                                    <tr>
+                                        <td>{{classification}}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
                     {% endif %}
 
+                    <!-- heredicare center classifications -->
                     {% if 'heredicare_center_classifications' in annotations %}
                     <li class="list-group-item card-subcaption">HerediCare center classifications</li>
                     <div class="row bst bsl">
@@ -536,6 +566,9 @@
     </div>
 
 </div>
+
+
+
 
 
 {% endblock %}

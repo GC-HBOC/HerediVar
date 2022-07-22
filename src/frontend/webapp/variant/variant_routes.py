@@ -270,11 +270,12 @@ def consensus_classify(variant_id):
 
     # get dict of all previous user classifications
     user_acmg_classification = conn.get_user_acmg_classification(variant_id, user_id='all', scheme='all')
-    for classification in user_acmg_classification:
-        current_user_id = classification[2]
-        current_schemes_with_info = get_schemes_with_info(variant_id, current_user_id, conn)
-        current_schemes_with_info['user'] = conn.get_user(current_user_id)
-        schemes_with_info[current_user_id] = current_schemes_with_info
+    if user_acmg_classification is not None:
+        for classification in user_acmg_classification:
+            current_user_id = classification[2]
+            current_schemes_with_info = get_schemes_with_info(variant_id, current_user_id, conn)
+            current_schemes_with_info['user'] = conn.get_user(current_user_id)
+            schemes_with_info[current_user_id] = current_schemes_with_info
 
     print(schemes_with_info)
 
@@ -300,7 +301,7 @@ def consensus_classify(variant_id):
         if not user_classification_is_valid: # error in user classification
             flash("Please provide comment & class to submit a consensus classification", "alert-danger")
         if scheme_classification_is_valid and (scheme != 'none') and user_classification_is_valid: # only if both are valid submit the scheme classification
-            acmg_classification_id = conn.insert_consensus_acmg_classification(variant_id, scheme)
+            acmg_classification_id = conn.insert_consensus_acmg_classification(session['user']['user_id'], variant_id, scheme)
             #acmg_classification_id = conn.get_consensus_acmg_classification(variant_id, scheme=scheme, most_recent=True)[0][0]
             handle_acmg_classification(acmg_classification_id, criteria, conn)
         if user_classification_is_valid and ((scheme_classification_is_valid and scheme != 'none') or (scheme == 'none')):
@@ -340,11 +341,12 @@ def get_schemes_with_info(variant_id, user_id, conn):
     previous_acmg_classifications = conn.get_user_acmg_classification(variant_id, user_id)
     # extract scheme and convert to scheme->acmg_classification_id dict
     schemes_with_info = {}
-    for entry in previous_acmg_classifications:
-        scheme_key = entry[3]
-        if scheme_key in schemes_with_info:
-            raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme_key + ", user_id: " + str(user_id))
-        schemes_with_info[scheme_key] = {'classification_id':entry[0], 'date':entry[4].strftime('%Y-%m-%d'), 'selected_criteria':conn.get_acmg_criteria(entry[0])}
+    if previous_acmg_classifications is not None:
+        for entry in previous_acmg_classifications:
+            scheme_key = entry[3]
+            if scheme_key in schemes_with_info:
+                raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme_key + ", user_id: " + str(user_id))
+            schemes_with_info[scheme_key] = {'classification_id':entry[0], 'date':entry[4].strftime('%Y-%m-%d'), 'selected_criteria':conn.get_acmg_criteria(entry[0])}
     return schemes_with_info
     
 def get_default_previous_classification():
@@ -490,18 +492,6 @@ def is_valid_acmg(criteria, scheme):
     # ensure that the strength properties are valid -> 
     # ensure that no criteria are selected that can't be selected following the scheme
     # ensure that no mutually exclusive criteria are selected
-
-    #if 'task-force' in scheme:
-    #    pass
-    #elif 'acmg' in scheme:
-        #possible_criteria = ['pvs1', 'ps1', 'ps2', 'ps3', 'ps4', 'pm1', 'pm2', 'pm3', 'pm4', 'pm5', 'pm6', 'pp1', 'pp2', 'pp3', 'pp4', 'pp5', 'ba1', 'bs1', 'bs2', 'bs3', 'bs4', 'bp1', 'bp2', 'bp3', 'bp4', 'bp5', 'bp6', 'bp7']
-        #if not all(criterium in possible_criteria for criterium in criteria):
-        #    is_valid = False
-        #    message = "There are criteria which are not allowed with acmg classifications. Possible criteria are: " + str(possible_criteria)
-        #possible_strengths = ['pvs', 'ps', 'pm', 'pp', 'bs', 'bs', 'bp']
-        #if not all(criteria[criterium]['strength'] in possible_strengths for criterium in criteria):
-        #    is_valid = False
-        #    message = "There were non allowed strengths selected. Allowed values are: " + str(possible_strengths)
         
     criteria_with_strength_select = ['pp1', 'ps1', 'bp1', 'bs1']
 
@@ -591,60 +581,71 @@ def is_valid_acmg(criteria, scheme):
 @require_login
 def classification_history(variant_id):
     conn = Connection()
-    variant_oi = conn.get_one_variant(variant_id)
+    variant_oi = conn.get_variant_more_info(variant_id)
     if variant_oi is None:
         abort(404)
-    consensus_classifications = conn.get_consensus_classification(variant_id)
+    consensus_classifications = conn.get_consensus_classification(variant_id, sql_modifier=conn.add_userinfo)
     user_classifications = conn.get_user_classifications(variant_id)
-    user_scheme_classifications = conn.get_user_acmg_classification(variant_id)
-    consensus_scheme_classifications = conn.get_consensus_acmg_classification(variant_id, scheme = 'all', most_recent = False)
+    user_scheme_classifications = conn.get_user_acmg_classification(variant_id, sql_modifier=conn.add_userinfo)
+    consensus_scheme_classifications = conn.get_consensus_acmg_classification(variant_id, scheme = 'all', most_recent = False, sql_modifier=conn.add_userinfo)
+    print(consensus_scheme_classifications)
     
+    recorded_classifications = []
+    most_recent_consensus_classification = None
     # each entry in recorded_classifications is of this form: (type, id, user_id, variant_id, class, comment/evidence, date, is_recent)
-    most_recent_consensus_classification = [x for x in consensus_classifications if x[6] == 1][0]
-    recorded_classifications = [{'type':'consensus classification', 
-                                 'user_id':x[1],
-                                 'class':x[3], 
-                                 'date':x[5], 
-                                 # additional information
-                                 'comment':x[4], 
-                                 'evidence_document_url':url_for('download.evidence_document', consensus_classification_id=x[0]) 
-                                } for x in consensus_classifications if x[6] == 0]
-    recorded_classifications.extend([{'type':'user classification',
-                                      'user_id':x[3],
-                                      'class':x[1],
-                                      'date':x[5], 
-                                      # additional information
-                                      'comment':x[4]
-                                    } for x in user_classifications])
-    for entry in user_scheme_classifications:
-        current_criteria = conn.get_acmg_criteria(entry[0])
-        current_criteria_dict = convert_acmg_criteria_to_dict(current_criteria)
-        acmg_class = get_acmg_classification(current_criteria)
-        new_classification = {'type':'user scheme classification',
-                              'user_id':entry[2],
-                              'class':acmg_class,
-                              'date':entry[4], 
-                              # additional information
-                              'scheme':entry[3].replace('_', ' '),
-                              'selected_criteria':current_criteria_dict
-                            }
-        recorded_classifications.append(new_classification)
+    if consensus_classifications is not None:
+        most_recent_consensus_classification = [x for x in consensus_classifications if x[6] == 1][0]
+        recorded_classifications.extend([{'type':'consensus classification', 
+                                     'user_id':x[1],
+                                     'class':x[3], 
+                                     'date':x[5], 
+                                     # additional information
+                                     'comment':x[4], 
+                                     'evidence_document_url':url_for('download.evidence_document', consensus_classification_id=x[0]) 
+                                    } for x in consensus_classifications])
+    if user_classifications is not None:
+        recorded_classifications.extend([{'type':'user classification',
+                                          'submitter':x[8] + ' ' + x[9],
+                                          'affiliation':x[10],
+                                          'class':x[1],
+                                          'date':x[5], 
+                                          # additional information
+                                          'comment':x[4]
+                                        } for x in user_classifications])
+    if user_scheme_classifications is not None:
+        for entry in user_scheme_classifications:
+            current_criteria = conn.get_acmg_criteria(entry[0])
+            current_criteria_dict = convert_acmg_criteria_to_dict(current_criteria)
+            acmg_class = get_acmg_classification(current_criteria)
+            new_classification = {'type':'user scheme classification',
+                                  'submitter':entry[6] + ' ' + entry[7],
+                                  'affiliation':entry[8],
+                                  'class':acmg_class,
+                                  'date':entry[4], 
+                                  # additional information
+                                  'scheme':entry[3].replace('_', ' '),
+                                  'selected_criteria':current_criteria_dict
+                                }
+            recorded_classifications.append(new_classification)
     
-    most_recent_consensus_scheme_classifications = [x for x in consensus_scheme_classifications if x[2] == 1][0]
-    old_consensus_scheme_classifications = [x for x in consensus_scheme_classifications if x[2] == 0]
-    for entry in old_consensus_scheme_classifications:
-        current_criteria = conn.get_acmg_criteria(entry[0])
-        current_criteria_dict = convert_acmg_criteria_to_dict(current_criteria)
-        acmg_class = get_acmg_classification(current_criteria)
-        new_classification = {'type':'consensus scheme classification',
-                              'class':acmg_class,
-                              'date':entry[4], 
-                              # additional information
-                              'scheme':entry[3].replace('_', ' '),
-                              'selected_criteria':current_criteria_dict
-                            }
-        recorded_classifications.append(new_classification)
-    
+    #most_recent_consensus_scheme_classifications = [x for x in consensus_scheme_classifications if x[2] == 1][0]
+    #old_consensus_scheme_classifications = [x for x in consensus_scheme_classifications if x[2] == 0]
+    if consensus_scheme_classifications is not None:
+        for entry in consensus_scheme_classifications:
+            current_criteria = conn.get_acmg_criteria(entry[0])
+            current_criteria_dict = convert_acmg_criteria_to_dict(current_criteria)
+            acmg_class = get_acmg_classification(current_criteria)
+            new_classification = {'type':'consensus scheme classification',
+                                  'submitter':entry[7] + ' ' + entry[8],
+                                  'affiliation':entry[9],
+                                  'class':acmg_class,
+                                  'date':entry[4], 
+                                  # additional information
+                                  'scheme':entry[3].replace('_', ' '),
+                                  'selected_criteria':current_criteria_dict
+                                }
+            recorded_classifications.append(new_classification)
+
 
     # replace user_id with username & affiliation
     final_recorded_classifications = []
@@ -657,14 +658,17 @@ def classification_history(variant_id):
 
         final_recorded_classifications.append(classification)
     
-    print(recorded_classifications)
+    #print(recorded_classifications)
     #print(most_recent_consensus_scheme_classifications)
     #print(old_consensus_scheme_classifications)
+
+
+
     
     conn.close()
     return render_template('variant/classification_history.html', 
+                            variant_oi = variant_oi,
                             most_recent_consensus_classification=most_recent_consensus_classification, 
-                            most_recent_consensus_scheme_classifications=most_recent_consensus_scheme_classifications,
                             recorded_classifications=final_recorded_classifications)
 
 
