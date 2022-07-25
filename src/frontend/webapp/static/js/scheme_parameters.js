@@ -1,9 +1,25 @@
 
 // all possible criteria
-const criteria = ['pvs1', 'ps1', 'ps2', 'ps3', 'ps4', 'pm1', 'pm2', 'pm3', 'pm4', 'pm5', 'pm6', 'pp1', 'pp2', 'pp3', 'pp4', 'pp5', 'ba1', 'bs1', 'bs2', 'bs3', 'bs4', 'bp1', 'bp2', 'bp3', 'bp4', 'bp5', 'bp6', 'bp7']
+const acmg_criteria = ['pvs1', 'ps1', 'ps2', 'ps3', 'ps4', 'pm1', 'pm2', 'pm3', 'pm4', 'pm5', 'pm6', 'pp1', 'pp2', 'pp3', 'pp4', 'pp5', 'bp1', 'bp2', 'bp3', 'bp4', 'bp5', 'bp6', 'bp7', 'bs1', 'bs2', 'bs3', 'bs4', 'ba1']
+const task_force_criteria = []
 
 // add criteria_ids to this array if you want to enable strength select for it
-const criteria_with_strength_selects = ['pp1', 'ps1', 'bp1', 'bs1']
+const criteria_with_strength_selects = {
+    'acmg_standard': [
+        'pp1', 'ps1', 'bp1', 'bs1'
+    ],
+    'acmg_TP53': [
+        'pp1', 'ps1', 'bp1', 'bs1'
+    ],
+    'acmg_CDH1': [
+        'pp1', 'ps1', 'bp1', 'bs1'
+    ],
+    'task-force': [
+        
+    ]
+    
+}
+
 // this dictionary contains the links for the reference articles of the acmg specifications (masks)
 const reference_links = {
     'acmg_standard': 'https://pubmed.ncbi.nlm.nih.gov/25741868/',

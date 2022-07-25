@@ -162,25 +162,48 @@
                                             {% set current_annotations = standard_annotations[annotation_group] %}
                                             {% for annotation_type in current_annotations %}
 
-                                                {% if annotation_type == 'hexplorer' or annotation_type == 'hexplorer_rev' or annotation_type == 'max_hbond' or annotation_type == 'max_hbond_rev' %}
+                                                {% if annotation_type == 'hexplorer' or annotation_type == 'hexplorer_rev' or annotation_type == 'max_hbond' or annotation_type == 'max_hbond_rev' %} <!-- add details for hexplorer/hbond score -->
                                                     {{ macros.draw_hexplorer_score(annotation_type + '_delta', current_annotations[annotation_type], current_annotations.get(annotation_type + '_wt'), current_annotations.get(annotation_type + '_mut')) }}
                                                 {% else %}
-                                                {% if 'heredicare' in annotation_type %}
+                                                {% if 'heredicare' in annotation_type %} <!-- add red exclamation mark for heredicare counts -->
                                                     <div>
-                                                    {% if has_multiple_vids  %}
-                                                        {{ macros.draw_exclamation_mark('Multiple VIDs in HerediCare for this variant. Thus, these counts might be inaccurate!') }}
-                                                    {% endif %}
+                                                        {% if has_multiple_vids  %}
+                                                            {{ macros.draw_exclamation_mark('Multiple VIDs in HerediCare for this variant. Thus, these counts might be inaccurate!') }}
+                                                        {% endif %}
                                                         <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ annotation_type }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
                                                     </div>
                                                 {% else %}
-                                                {% if 'spliceai_max_delta' == annotation_type %}
+                                                {% if 'spliceai_max_delta' == annotation_type %} <!-- add details for spliceai -->
                                                     <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ annotation_type }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
                                                     <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-trigger="focus" data-bs-content="{{ current_annotations['spliceai_details'][0] }} <br/> {{ current_annotations['spliceai_details'][4] }}">details</a>
                                                 {% else %}
-                                                {% if '_mut' not in annotation_type and '_wt' not in annotation_type and 'spliceai_details' not in annotation_type %}
+                                                {% if 'cancerhotspots_cancertypes' == annotation_type %} <!-- handle cancerhotspots cancertypes -->
+                                                    {% set cancerhotspots_cancertypes = current_annotations['cancerhotspots_cancertypes'][4].split('|') %}
+                                                    <div class="table-responsive">
+                                                        <table class="table table-hover scroll" style="max-height:15em" id="cancerhotspots_table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th style="width: 100%; background:white; padding:0;">
+                                                                        <div class="sortable"><a class="dashed_underline">cancertypes</a></div>
+                                                                        <input type="text" class="form-control form-control-sm column-filter sst" style="max-width:10em" placeholder="search...">
+                                                                    </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {% for cancer in cancerhotspots_cancertypes %}
+                                                                    <tr>
+                                                                        <td>{{ cancer.replace(':', ': ') }}</td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                {% else %}
+                                                {% if '_mut' not in annotation_type and '_wt' not in annotation_type and 'spliceai_details' not in annotation_type %} <!-- standard case -->
                                                     <div style="word-break: break-all;">
                                                         <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ annotation_type }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
                                                     </div>
+                                                {% endif %}
                                                 {% endif %}
                                                 {% endif %}
                                                 {% endif %}
@@ -213,9 +236,38 @@
                         <a href="{{ url_for('variant.classification_history', variant_id=variant[0]) }}">view classification history</a>
                     </div>
                     <!-- HEREDIVAR -->
+                    <!-- most recent consensus classification -->
                     {% if 'consensus_classification' in annotations %}
                     <div class="row bsl bsb sst">
                         {{ macros.draw_most_recent_consensus_classification(annotations['consensus_classification']) }}
+                    </div>
+                    {% endif %}
+                    <!-- most recentconsensus scheme classification -->
+                    {% if 'consensus_scheme_classifications' in annotations %}
+                    {% set consensus_scheme_classification = annotations['consensus_scheme_classifications'][0] %}<!-- the consensus scheme classifications should only contain the most recent classification -->
+                    
+                    <div>Most recent consensus scheme classification:</div>
+                    <div class="row bsl bsb">
+                        <table class="table table-borderless " style="table-layout:auto; margin-bottom:0;">
+                            <tbody>
+                                <tr style="margin-left:0">
+                                    <td style="width:10%;">Class:</td>
+                                    <td style="width:100%;">{{ consensus_scheme_classification[11] }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Date:</td>
+                                    <td>{{ consensus_scheme_classification[4] }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Scheme:</td>
+                                    <td>{{ consensus_scheme_classification[3] }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="vertical-align:middle">Criteria:</td>
+                                    <td>{{ macros.draw_criteria_display(consensus_scheme_classification[10], '4em', '2em') }}</td>
+                                </tr>
+                            </tbody>   
+                        </table>
                     </div>
                     {% endif %}
                     <!-- user classification table -->
@@ -260,7 +312,7 @@
                                         <th><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                        <th><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th id="userSchemeClassificationDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th style="width: 100%;"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                     </tr>
@@ -268,7 +320,12 @@
                                 <tbody>
                                     {% for classification in annotations['user_scheme_classifications'] %}
                                     <tr>
-                                        <td>{{classification}}</td>
+                                        <td>{{classification[10]}}</td>
+                                        <td>{{classification[6]}} {{classification[7]}}</td>
+                                        <td>{{classification[8]}}</td>
+                                        <td>{{classification[4]}}</td>
+                                        <td>{{classification[3]}}</td>
+                                        <td>{{ macros.draw_criteria_display(classification[9], '4em', '2.5em') }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -496,8 +553,8 @@
                         <thead>
                             <tr>
                                 <th><div class="sortable">Year</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                <th><div class="sortable">Title</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                <th><div class="sortable">Authors</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th style="width:30%"><div class="sortable">Authors</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th style="width: 100%;"><div class="sortable">Title</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                 <th><div class="sortable">Journal / Publisher</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                 <th>Link</th>
                             </tr>
@@ -506,8 +563,8 @@
                             {% for paper in annotations['literature'] %}
                             <tr>
                                 <td>{{paper[6]}}</td>
-                                <td>{{paper[3]}}</td>
                                 <td style="max-width:500px"><abbr title="{{ paper[4] }}"><div class="Nellipsis" style="max-width:500px">{{ paper[4] }}</div> </abbr></td>
+                                <td>{{paper[3]}}</td>
                                 <td>{{paper[5]}}</td>
                                 <td style="text-align:center;">
                                     <external-link href="https://pubmed.ncbi.nlm.nih.gov/{{ paper[2] }}"></external-link>

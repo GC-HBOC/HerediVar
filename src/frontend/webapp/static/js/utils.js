@@ -148,8 +148,20 @@ $(document).ready(function()
         filterTable_one_column($(this).val(), index, table, true)
     });
 
-    $("*[data-href]").on('click', function () {
-        window.location = $(this).data("href");
+
+    $("*[data-href]").mousedown(function(event) {
+        switch (event.which) {
+            case 1: // left mouse button
+                window.location = $(this).data("href"); // open link in same tab
+                break;
+            case 2: // middle mouse button
+                //alert('Middle mouse button pressed');
+                window.open($(this).data("href")); // open in new tab
+                break;
+            case 3: // right mouse button
+                // nothing rn
+                break;
+        }
     });
 });
 

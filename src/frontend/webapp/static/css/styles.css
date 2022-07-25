@@ -120,108 +120,108 @@ table.scroll th {
 
 
 
-.btn-red {
+.btn-pvs {
     color: #960000;
     background-color: #ffffff;
     background: white;
     border-color: #d8d8d8;
 }
-.btn-red:hover {
+.btn-pvs:hover {
     color: rgb(255, 255, 255);
     background-color: #9c0000;
     border-color: #d8d8d8;
 }
-.btn-red:focus, .btn-red.focus, .btn-red:active:focus, .open>.dropdown-toggle.btn-red, input[type=checkbox]:checked + label.btn-red {
+.btn-pvs:focus, .btn-pvs.focus, .btn-pvs:active:focus, .open>.dropdown-toggle.btn-pvs, input[type=checkbox]:checked + label.btn-pvs {
     color: rgb(255, 255, 255);
     background-color: #960000;
     border-color: #d8d8d8;
 }
-.btn-orange {
+.btn-ps {
     color: #ff7300;
     background-color: #ffffff;
     border-color: #d8d8d8;
 }
-.btn-orange:hover {
+.btn-ps:hover {
     color: rgb(255, 255, 255);
     background-color: #ff8017;
     border-color: #d8d8d8;
 }
-.btn-orange:focus, .btn-orange.focus, .btn-orange:active:focus, .open>.dropdown-toggle.btn-orange, input[type=checkbox]:checked + label.btn-orange {
+.btn-ps:focus, .btn-ps.focus, .btn-ps:active:focus, .open>.dropdown-toggle.btn-ps, input[type=checkbox]:checked + label.btn-ps {
     color: rgb(255, 255, 255);
     background-color: #ff7300;
     border-color: #d8d8d8;
 }
-.btn-yellow {
+.btn-pm {
     color: #d8be19;
     background-color: #ffffff;
     border-color: #d8d8d8;
 }
-.btn-yellow:hover {
+.btn-pm:hover {
     color: rgb(255, 255, 255);
     background-color: #dbc114;
     border-color: #d8d8d8;
 }
-.btn-yellow:focus, .btn-yellow.focus, .btn-yellow:active:focus, .open>.dropdown-toggle.btn-yellow, input[type=checkbox]:checked + label.btn-yellow {
+.btn-pm:focus, .btn-pm.focus, .btn-pm:active:focus, .open>.dropdown-toggle.btn-pm, input[type=checkbox]:checked + label.btn-pm {
     color: rgb(255, 255, 255);
     background-color: #f1d620;
     border-color: #d8d8d8;
 }
-.btn-green {
+.btn-pp {
     color: #108800;
     background-color: #ffffff;
     border-color: #d8d8d8;
 }
-.btn-green:hover {
+.btn-pp:hover {
     color: rgb(255, 255, 255);
     background-color: #108800;
     border-color: #d8d8d8;
 }
-.btn-green:focus, .btn-green.focus, .btn-green:active:focus, .open>.dropdown-toggle.btn-green, input[type=checkbox]:checked + label.btn-green {
+.btn-pp:focus, .btn-pp.focus, .btn-pp:active:focus, .open>.dropdown-toggle.btn-pp, input[type=checkbox]:checked + label.btn-pp {
     color: rgb(255, 255, 255);
     background-color: #108800;
     border-color: #d8d8d8;
 }
-.btn-blue {
+.btn-bp {
     color: #1db5cf;
     background-color: #ffffff;
     border-color: #d8d8d8;
 }
-.btn-blue:hover {
+.btn-bp:hover {
     color: rgb(255, 255, 255);
     background-color: rgb(23, 173, 199);
     border-color: #d8d8d8;
 }
-.btn-blue:focus, .btn-blue.focus, .btn-blue:active:focus, .open>.dropdown-toggle.btn-blue, input[type=checkbox]:checked + label.btn-blue {
+.btn-bp:focus, .btn-bp.focus, .btn-bp:active:focus, .open>.dropdown-toggle.btn-bp, input[type=checkbox]:checked + label.btn-bp {
     color: rgb(255, 255, 255);
     background-color: #1db5cf;
     border-color: #d8d8d8;
 }
-.btn-purple {
+.btn-bs {
     color: #6f15a3;
     background-color: #ffffff;
     border-color: #d8d8d8;
 }
-.btn-purple:hover {
+.btn-bs:hover {
     color: rgb(255, 255, 255);
     background-color: #7e0dc0;
     border-color: #d8d8d8;
 }
-.btn-purple:focus, .btn-purple.focus, .btn-purple:active:focus, .open>.dropdown-toggle.btn-purple, input[type=checkbox]:checked + label.btn-purple {
+.btn-bs:focus, .btn-bs.focus, .btn-bs:active:focus, .open>.dropdown-toggle.btn-bs, input[type=checkbox]:checked + label.btn-bs {
     color: rgb(255, 255, 255);
     background-color: #6f15a3;
     border-color: #d8d8d8;
 }
-.btn-darkblue {
+.btn-ba {
     color: #000d58;
     background-color: #ffffff;
     border-color: #d8d8d8;
 }
-.btn-darkblue:hover {
+.btn-ba:hover {
     color: rgb(255, 255, 255);
     background-color: #000f64;
     border-color: #d8d8d8;
 }
-.btn-darkblue:focus, .btn-darkblue.focus, .btn-darkblue:active:focus, .open>.dropdown-toggle.btn-darkblue, input[type=checkbox]:checked + label.btn-darkblue {
+.btn-ba:focus, .btn-ba.focus, .btn-ba:active:focus, .open>.dropdown-toggle.btn-ba, input[type=checkbox]:checked + label.btn-ba {
     color: rgb(255, 255, 255);
     background-color: #000d58;
     border-color: #d8d8d8;
@@ -235,6 +235,11 @@ table.scroll th {
     font-weight:bold;
     font-size:larger;
     text-align:center;
+
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
 }
 .btn-check:disabled + label.btn {
     color: rgb(170, 170, 170);

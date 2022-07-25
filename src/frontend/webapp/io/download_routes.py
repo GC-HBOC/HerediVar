@@ -219,7 +219,6 @@ def get_variant_vcf_line(variant_id, conn):
     return variant_vcf + '\t' + info, info_headers
 
 
-# this route listens on get parameter: "selected_classes=acb&abc&abc&...."
 # example
 @download_blueprint.route('/calculate_acmg_class/<string:selected_classes>')
 @download_blueprint.route('/calculate_acmg_class/')

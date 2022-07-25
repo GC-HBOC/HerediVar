@@ -5,6 +5,10 @@ if (table != null) {
     sorter(['#variant_consequence_numflags_col', '#variant_consequence_length_col']) // sort first by num of flags and if there is a tie sort by length
 }
 
+if (document.getElementById('userClassificationsTable') != null) {
+    sorter(['#userSchemeClassificationDateCol'])
+}
+
 
 $(document).ready(function()
 {

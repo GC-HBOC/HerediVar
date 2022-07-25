@@ -87,6 +87,15 @@
 </div>
 {% endmacro %}
 
+{% macro draw_criteria_display(criteria, width='6em', height='2.5em') %}
+    {% for criterium in criteria %}
+    <span class="d-inline-block ssr" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" 
+        title="Strength: {{ criterium[5] }} <br> Evidence: {{ criterium[4] }}">
+        <div class="btn btn-{{ criterium[3] }} light-hover acmg-button" style="width:{{width}}; height:{{height}}">{{ criterium[2] }}</div>
+    </span>
+    {% endfor %}
+{% endmacro %}
+
 
 {% macro draw_paginated_variant_table(pagination, variants) %}
 <div id="tabnav-head" class="row align-items-end">
