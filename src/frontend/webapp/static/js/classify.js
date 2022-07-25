@@ -1,7 +1,9 @@
 ///////////// field variables /////////////
 
 var previous_obj = null;
-const colors = load_colors() // this maps a criterium strength to a color which are defined in css
+var colors; // this maps a criterium strength to a color which are defined in css
+var scheme = document.getElementById('scheme').value // contains the currently selected scheme
+var criteria = acmg_criteria // a list of all criteria depending on the currently selecte scheme
 
 ///////////// prepare data ////////////
 const schemes_with_info = json_string_to_object(schemes_with_info_string)
@@ -10,6 +12,8 @@ var do_request_form_preselect = false
 if (Object.keys(request_form).length > 0) {
     do_request_form_preselect = true
 }
+
+
 
 ///////////// criterium buttons /////////////
 
@@ -54,7 +58,7 @@ function update_info_panel(id, previous_evidence) {
         add_user_acmg_classification_details(id)
     }
 
-    if (criteria_with_strength_selects.includes(id)) {
+    if (criteria_with_strength_selects[scheme].includes(id)) {
         add_strength_selection(id)
     }
 
@@ -62,7 +66,6 @@ function update_info_panel(id, previous_evidence) {
 }
 
 function update_criteria_description(div, id) {
-    const scheme = document.getElementById('scheme').value;
     var text = criteria_descriptions[scheme][id]
     div.textContent = text
 }
@@ -174,12 +177,21 @@ function scheme_select_action(do_revert=true) {
         revert_all()
     }
     
-    const scheme = document.getElementById('scheme').value
+    scheme = document.getElementById('scheme').value // update global scheme field variable
+    if (scheme.includes('acmg')) {
+        criteria = acmg_criteria
+    } else if (scheme.includes('task-force')) {
+        criteria = task_force_criteria
+    }
+
+
     if (scheme == 'none') {
         $('#classification_schema_wrapper').collapse('hide');
         //classification_schema_wrapper_div.classList.remove('show')
     } else {
         $('#classification_schema_wrapper').collapse('show');
+        create_criteria_buttons(scheme)
+        colors = load_colors()
         set_default_strengths(default_strengths[scheme])
         set_activatable_property(not_activateable_buttons[scheme])
         enable_disable_buttons(not_activateable_buttons[scheme], true)
@@ -316,16 +328,120 @@ function revert_count_labels() {
     }
 }
 
+function remove_buttons() {
+    document.getElementById('pathogenic_criteria_container').innerHTML = null
+    document.getElementById('benign_criteria_container').innerHTML = null
+}
+
 function revert_all() {
     //revert_strength_selects()
     revert_criteria_container()
-    revert_buttons()
+    remove_buttons()
     revert_previous_obj()
     revert_count_labels()
 }
 
 
 //////////// create dom object functions ////////////
+
+// creates the criteria buttons depending on mask
+function create_criteria_buttons(scheme) {
+    if (scheme.includes('acmg')) {
+        create_acmg_buttons()
+    }
+    if (scheme.includes('task-force')) {
+        create_task_force_buttons()
+    }
+}
+
+function create_acmg_buttons() {
+    var pathogenic_criteria_container = document.getElementById('pathogenic_criteria_container')
+    var benign_criteria_container = document.getElementById('benign_criteria_container')
+
+    
+    var last_default_strength = '-'
+    for (const i in criteria) {
+        var criterium_id = criteria[i]
+        var default_strength = default_strengths['acmg_standard'][criterium_id]
+        if (last_default_strength != default_strength) {
+            
+            if (last_default_strength[0] == 'b') {
+                benign_criteria_container.appendChild(container)
+            } else if (last_default_strength[0] == 'p') {
+                pathogenic_criteria_container.appendChild(container)
+            }
+            var container = document.createElement('div')
+            container.classList.add('ssr')
+            container.classList.add('ssl')
+        }
+        new_criterium_button = create_criterium_button(criterium_id, default_strength)
+        container.appendChild(new_criterium_button)
+        last_default_strength = default_strength
+    }
+
+    if (last_default_strength[0] == 'b') {
+        benign_criteria_container.appendChild(container)
+    } else if (last_default_strength[0] == 'p') {
+        pathogenic_criteria_container.appendChild(container)
+    }
+
+}
+
+
+function create_criterium_button(criterium_id, strength) {
+    `
+    <div class="form-group">
+        <div id="users_selected_pvs1" class="count_label" hidden>0</div>
+        <input type="checkbox" class="btn-check" id="pvs1" name="pvs1" value="" strength-adjustable="true" autocomplete="off" onchange="button_select_action(this)">
+        <label id="pvs1_label" class="btn btn-pvs light-hover acmg-button" for="pvs1">PVS1</label>
+        <input type="checkbox" id="pvs1_strength" name="pvs1_strength" value="pvs" autocomplete="off" hidden>
+    </div>
+    `
+
+    var container = document.createElement('div')
+    container.classList.add("form-group")
+
+    var count_label = document.createElement('div')
+    count_label.id = "users_selected_" + criterium_id
+    count_label.classList.add("count_label")
+    count_label.hidden = true
+    count_label.innerText = '0'
+    container.appendChild(count_label)
+
+    var the_button = document.createElement('input')
+    the_button.setAttribute('type', 'checkbox')
+    the_button.classList.add('btn-check')
+    the_button.id = criterium_id
+    the_button.name = criterium_id
+    the_button.setAttribute('strength-adjustable', 'true')
+    the_button.setAttribute('autocomplete', 'off')
+    the_button.setAttribute('activateable', 'true')
+    the_button.onchange = function() { button_select_action(this) }
+    the_button.value = ''
+    container.appendChild(the_button)
+
+    var label = document.createElement('label')
+    label.setAttribute('for', criterium_id)
+    label.id = criterium_id + '_label'
+    label.classList.add('btn')
+    label.classList.add('btn-'+strength)
+    label.classList.add('light-hover')
+    label.classList.add('acmg-button')
+    label.textContent = criterium_id
+    container.appendChild(label)
+
+    var strength_select = document.createElement('input')
+    strength_select.setAttribute('type', 'checkbox')
+    strength_select.id = criterium_id + '_strength'
+    strength_select.name = criterium_id + '_strength'
+    strength_select.value = strength
+    strength_select.setAttribute('autocomplete', 'off')
+    strength_select.hidden = true
+    container.appendChild(strength_select)
+
+    return container
+}
+
 // strength select radio buttons
 function add_strength_selection(criterium_id) {
     var additional_content = document.getElementById('additional_content');
@@ -484,7 +600,6 @@ function copy_evidence(obj) {
 }
 
 function add_user_acmg_classification_details(criterium_id) {
-    const scheme = document.getElementById('scheme').value
     var additional_content = document.getElementById('additional_content')
     const new_subcaption = create_subcaption("User selections:")
     additional_content.appendChild(new_subcaption)
@@ -583,13 +698,13 @@ function get_currently_checked_criteria() {
 }
 
 function load_colors() {
-    const red = $('.btn-red').css('color')
-    const orange = $('.btn-orange').css('color')
-    const yellow = $('.btn-yellow').css('color')
-    const green = $('.btn-green').css('color')
-    const blue = $('.btn-blue').css('color')
-    const purple = $('.btn-purple').css('color')
-    const darkblue = $('.btn-darkblue').css('color')
+    const red = $('.btn-pvs').css('color')
+    const orange = $('.btn-ps').css('color')
+    const yellow = $('.btn-pm').css('color')
+    const green = $('.btn-pp').css('color')
+    const blue = $('.btn-bp').css('color')
+    const purple = $('.btn-bs').css('color')
+    const darkblue = $('.btn-ba').css('color')
     return {'pvs': red, 'ps': orange, 'pm': yellow, 'pp': green, 'bp': blue, 'bs': purple, 'ba': darkblue}
 }
 
@@ -645,7 +760,6 @@ function toggle_criterium(criterium_id) {
     obj.checked = !obj.checked
     update_criterium_button_background(criterium_id)
     document.getElementById(criterium_id + '_strength').checked = obj.checked
-    const scheme = document.getElementById('scheme').value
     const current_disable_group = disable_groups[scheme][criterium_id]
     enable_disable_buttons(current_disable_group, obj.checked)
 }
@@ -655,7 +769,6 @@ function set_criterium(criterium_id, is_checked) {
     obj.checked = is_checked
     update_criterium_button_background(criterium_id)
     document.getElementById(criterium_id + '_strength').checked = obj.checked
-    const scheme = document.getElementById('scheme').value
     const current_disable_group = disable_groups[scheme][criterium_id]
     enable_disable_buttons(current_disable_group, obj.checked)
 }
@@ -674,7 +787,6 @@ function update_criterium_strength(obj, criterium_id) {
 
 //
 //function update_schemes_with_info() {
-//    const scheme = document.getElementById('scheme').value
 //
 //    var currently_checked_criteria = get_currently_checked_criteria()
 //    var new_selection = []

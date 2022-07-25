@@ -189,3 +189,19 @@ def get_clinvar_submission_status(clinvar_submission_id, headers): # SUB11770209
     #print(resp)
     print(resp.json())
     return resp
+
+def strength_to_text(strength):
+    if strength == 'pvs':
+        return 'very strong pathogenic'
+    if strength == 'ps':
+        return 'strong pathogenic'
+    if strength == 'pm':
+        return 'moderate pathogenic'
+    if strength == 'pp':
+        return 'supporting pathogenic'
+    if strength == 'bp':
+        return 'supporting benign'
+    if strength == 'bs':
+        return 'strong benign'
+    if strength == 'ba':
+        return 'stand-alone benign'
