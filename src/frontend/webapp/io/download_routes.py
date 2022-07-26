@@ -10,6 +10,7 @@ import io
 import datetime
 import tempfile
 from shutil import copyfileobj
+import re
 
 
 download_blueprint = Blueprint(
@@ -220,16 +221,59 @@ def get_variant_vcf_line(variant_id, conn):
 
 
 # example
-@download_blueprint.route('/calculate_acmg_class/<string:selected_classes>')
-@download_blueprint.route('/calculate_acmg_class/')
-@download_blueprint.route('/calculate_acmg_class')
-def calculate_acmg_class(selected_classes = ''):
-    #selected_classes = request.args.get('selected_classes')
+@download_blueprint.route('/calculate_class/<string:scheme>/<string:selected_classes>')
+@download_blueprint.route('/calculate_class/<string:scheme>/')
+@download_blueprint.route('/calculate_class/<string:scheme>')
+def calculate_class(scheme, selected_classes = ''):
     selected_classes = selected_classes.split('+')
-    class_counts = get_class_counts(selected_classes)
+    #scheme = request.args.get('scheme')
 
-    #print(class_counts)
+    final_class = None
+    if 'acmg' in scheme:
+        selected_classes = [re.sub(r'[0-9]+', '', x) for x in selected_classes] # remove numbers from critera if there are any
+        class_counts = get_class_counts(selected_classes) # count how often we have each strength
+        #print(class_counts)
+        possible_classes = get_possible_classes_acmg(class_counts) # get a set of possible classes depending on selected criteria following PMC4544753
+        final_class = decide_for_class_acmg(possible_classes) # decide for class follwing the original publicatoin of ACMG (PMC4544753)
+    
+    if 'task-force' in scheme:
+        final_class = decide_for_class_task_force(selected_classes)
 
+    if final_class is None:
+        raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme? (either acmg or VUS task-force based)')
+
+    result = {'final_class': final_class}
+    return jsonify(result)
+
+
+def decide_for_class_task_force(selected_classes):
+    if '1.1' in selected_classes:
+        return 1
+    if '2.1' in selected_classes:
+        return 2
+    if any(x in ['5.1', '5.2', '5.3', '5.4', '5.5', '5.6'] for x in selected_classes):
+        return 5
+    if any(x in ['1.2', '1.3'] for x in selected_classes):
+        return 1
+    if any(x in ['2.2', '2.3', '2.4', '2.5', '2.6', '2.7', '2.8', '2.9', '2.10'] for x in selected_classes):
+        return 2
+    if any(x in ['4.1', '4.2', '4.3', '4.4', '4.5', '4.6', '4.7', '4.8', '4.9'] for x in selected_classes):
+        return 4
+    #if any(x in ['3.1', '3.2', '3.3', '3.4', '3.5'] for x in selected_classes):
+    #    return 3
+    return 3
+
+
+
+def get_class_counts(data):
+    result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'ba':0}
+    for key in result:
+        result[key] = sum(key in x for x in data)
+    return result
+
+
+def get_possible_classes_acmg(class_counts):
+    
     possible_classes = set()
 
     # numbering comments are nubmers from the official ACMG paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4544753/ (TABLE 5)
@@ -273,6 +317,11 @@ def calculate_acmg_class(selected_classes = ''):
     #print(class_counts)
     #print(possible_classes)
 
+    return possible_classes
+
+
+
+def decide_for_class_acmg(possible_classes):
     # uncertain significance if criteria for benign and pathogenic are contradictory
     if (1 in possible_classes or 2 in possible_classes) and (4 in possible_classes or 5 in possible_classes):
         final_class = 3
@@ -292,15 +341,5 @@ def calculate_acmg_class(selected_classes = ''):
     # uncertain significance if no other criteria match
     elif len(possible_classes) == 0:
         final_class = 3
-
-    result = {'final_class': final_class}
-    return jsonify(result)
-
-
-def get_class_counts(data):
-    result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'ba':0}
-    for key in result:
-        result[key] = sum(key in x for x in data)
-    return result
-
-
+    
+    return final_class

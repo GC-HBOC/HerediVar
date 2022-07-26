@@ -226,7 +226,6 @@ def classify(variant_id):
     is_admin, status_code = request_uma_ticket() # checks if the user has rights to access the consensus classification
 
     if request.method == 'POST':
-        
         ####### classification based on classification scheme submit 
         scheme = request.form['scheme']
 

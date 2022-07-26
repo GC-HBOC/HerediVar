@@ -2,13 +2,13 @@ from ..utils import *
 import datetime
 import io
 from common.pdf_generator import pdf_gen
-from ..io.download_routes import calculate_acmg_class
+from ..io.download_routes import calculate_class
 from functools import cmp_to_key
 
 def add_scheme_classes(classifications, index):
     annotated_classifications = []
     for classification in classifications:
-        current_class = get_acmg_classification(classification[index])
+        current_class = get_acmg_classification(classification[index], classification[3])
         annotated_classifications.append(classification + (current_class,))
     return annotated_classifications
 
@@ -216,11 +216,11 @@ def extract_criteria_from_request(request_obj):
 
 
 
-def get_acmg_classification(criteria):
+def get_acmg_classification(criteria, scheme):
     all_strengths = []
     for entry in criteria:
         all_strengths.append(entry[3])
-    response = calculate_acmg_class('+'.join(all_strengths))
+    response = calculate_class(scheme, '+'.join(all_strengths))
     return response.get_json()['final_class']
 
 
@@ -238,7 +238,20 @@ def is_valid_acmg(criteria, scheme):
     # ensure that no criteria are selected that can't be selected following the scheme
     # ensure that no mutually exclusive criteria are selected
         
-    criteria_with_strength_select = ['pp1', 'ps1', 'bp1', 'bs1']
+    criteria_with_strength_select = {
+        'acmg_standard': [
+            'pp1', 'ps1', 'bp1', 'bs1'
+        ],
+        'acmg_TP53': [
+            'pp1', 'ps1', 'bp1', 'bs1'
+        ],
+        'acmg_CDH1': [
+            'pp1', 'ps1', 'bp1', 'bs1'
+        ],
+        'task-force': [
+
+        ]
+    }
 
     not_activateable_buttons = {
         'acmg_standard': [],
@@ -295,7 +308,14 @@ def is_valid_acmg(criteria, scheme):
             'bs1': ['ps4'],'bs2': [],'bs3': [],'bs4': ['pp1'],
             # stand alone benign
             'ba1': ['ps4']
-        }
+        },
+        'task-force': {
+            '1.1': [], '1.2': [], '1.3': [], 
+            '2.1': [], '2.2': [], '2.3': [], '2.4': [], '2.5': [], '2.6': ['3.3'], '2.7': [], '2.8': [], '2.9': [], '2.10': [], 
+            '3.1': [], '3.2': [], '3.3': [], '3.4': [], '3.5': [], 
+            '4.1': [], '4.2': [], '4.3': ['3.3'], '4.4': ['3.3'], '4.5': [], '4.6': [], '4.7': [], '4.8': [], '4.9': [], 
+            '5.1': [], '5.2': [], '5.3': [], '5.4': [], '5.5': [], '5.6': []
+        } 
     }
 
     if 'task-force' in scheme:
@@ -304,7 +324,7 @@ def is_valid_acmg(criteria, scheme):
         if any(criterium[0] != criteria[criterium]['strength'][0] for criterium in criteria):
             is_valid = False
             message = "There are criteria with invalid strengths."
-        if any((criterium not in criteria_with_strength_select) and (criterium[0:2] != criteria[criterium]['strength'][0:2]) for criterium in criteria):
+        if any((criterium not in criteria_with_strength_select[scheme]) and (criterium[0:2] != criteria[criterium]['strength'][0:2]) for criterium in criteria):
             is_valid = False
             message = "There are criteria with strengths that can not be selected"
 
