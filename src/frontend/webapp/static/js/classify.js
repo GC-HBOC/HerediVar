@@ -132,11 +132,7 @@ function preselect_scheme() {
 }
 
 //Object.keys(request_form).length
-function preselect_from_request_form() {
-    document.getElementById('final_class').value = request_form['final_class']
-    document.getElementById('comment').value = request_form['comment']
-    document.getElementById('scheme').value = request_form['scheme']
-
+function preselect_criteria_from_request_form() {
     for (var key in request_form) {
         if (criteria.includes(key)) { // filter for criteria
             set_criterium(key, true)
@@ -156,18 +152,37 @@ function preselect_from_request_form() {
 
 $(document).ready(function() {
 
+
     if (do_request_form_preselect) {
-        preselect_from_request_form()
+        document.getElementById('final_class').value = request_form['final_class']
+        document.getElementById('comment').value = request_form['comment']
+        // select scheme from request
+        document.getElementById('scheme').value = request_form['scheme']
+        update_scheme_field_variable()
     } else {
         preselect_final_classification()
         preselect_scheme()
     }
 
+    
     scheme_select_action(do_revert=!do_request_form_preselect)
+
+
+    if (do_request_form_preselect) {
+        preselect_criteria_from_request_form()
+    }
 
 });
 
-
+// update global scheme field variable
+function update_scheme_field_variable() {
+    scheme = document.getElementById('scheme').value 
+    if (scheme.includes('acmg')) {
+        criteria = acmg_criteria
+    } else if (scheme.includes('task-force')) {
+        criteria = task_force_criteria
+    }
+}
 
 // call the function once to preselect on page load
 // we need to wait until the document is ready to call the function because there is some jquery
@@ -177,12 +192,7 @@ function scheme_select_action(do_revert=true) {
         revert_all()
     }
     
-    scheme = document.getElementById('scheme').value // update global scheme field variable
-    if (scheme.includes('acmg')) {
-        criteria = acmg_criteria
-    } else if (scheme.includes('task-force')) {
-        criteria = task_force_criteria
-    }
+    update_scheme_field_variable()
 
 
     if (scheme == 'none') {
@@ -294,6 +304,7 @@ function revert_criteria_container() {
     document.getElementById('additional_content').innerHTML = "";
 }
 
+/*
 function revert_buttons() {
     var all_buttons = document.querySelectorAll('.btn-check')
     for (var i = 0; i < all_buttons.length; i++) {
@@ -305,6 +316,7 @@ function revert_buttons() {
         update_criterium_button_background(current_button.id)
     }
 }
+*/
 
 function revert_strength_selects() {
     var all_buttons = document.querySelectorAll('.btn-check')
@@ -331,6 +343,11 @@ function revert_count_labels() {
 function remove_buttons() {
     document.getElementById('pathogenic_criteria_container').innerHTML = null
     document.getElementById('benign_criteria_container').innerHTML = null
+    document.getElementById('uncertain_criteria_container').innerHTML = null
+
+    document.querySelector("#pathogenic_criteria_container").closest(".card").hidden = false
+    document.querySelector("#benign_criteria_container").closest(".card").hidden = false
+    document.querySelector("#uncertain_criteria_container").closest(".card").hidden = false
 }
 
 function revert_all() {
@@ -347,42 +364,63 @@ function revert_all() {
 // creates the criteria buttons depending on mask
 function create_criteria_buttons(scheme) {
     if (scheme.includes('acmg')) {
-        create_acmg_buttons()
+        create_criteria_buttons('acmg_standard')
     }
     if (scheme.includes('task-force')) {
-        create_task_force_buttons()
+        create_criteria_buttons('task-force')
     }
 }
 
-function create_acmg_buttons() {
+function create_criteria_buttons(strength_subset) {
     var pathogenic_criteria_container = document.getElementById('pathogenic_criteria_container')
     var benign_criteria_container = document.getElementById('benign_criteria_container')
+    var uncertain_criteria_container = document.getElementById('uncertain_criteria_container')
 
     
-    var last_default_strength = '-'
+    var last_criterium_type = '-'
+    var container = document.createElement('div')
     for (const i in criteria) {
         var criterium_id = criteria[i]
-        var default_strength = default_strengths['acmg_standard'][criterium_id]
-        if (last_default_strength != default_strength) {
-            
-            if (last_default_strength[0] == 'b') {
+        var default_strength = default_strengths[strength_subset][criterium_id]
+
+        var criterium_type = criterium_id[0]
+        if (strength_subset.includes('acmg')) {
+            criterium_type = criterium_id.replace(/\d+/g, '')
+        }
+
+        if (last_criterium_type != criterium_type) {
+            if (['b', '1', '2'].includes(last_criterium_type[0])) {
                 benign_criteria_container.appendChild(container)
-            } else if (last_default_strength[0] == 'p') {
+            } else if (['p', '4', '5'].includes(last_criterium_type[0])) {
                 pathogenic_criteria_container.appendChild(container)
+            } else if (container.hasChildNodes()) {
+                uncertain_criteria_container.appendChild(container)
             }
-            var container = document.createElement('div')
+            container = document.createElement('div')
             container.classList.add('ssr')
-            container.classList.add('ssl')
         }
         new_criterium_button = create_criterium_button(criterium_id, default_strength)
         container.appendChild(new_criterium_button)
-        last_default_strength = default_strength
+        last_criterium_type = criterium_type
     }
 
-    if (last_default_strength[0] == 'b') {
+    // add the last column of buttons
+    if (['b', '1', '2'].includes(last_criterium_type[0])) {
         benign_criteria_container.appendChild(container)
-    } else if (last_default_strength[0] == 'p') {
+    } else if (['p', '4', '5'].includes(last_criterium_type[0])) {
         pathogenic_criteria_container.appendChild(container)
+    } else {
+        uncertain_criteria_container.appendChild(container)
+    }
+
+    if (! pathogenic_criteria_container.hasChildNodes()) {
+        document.querySelector("#pathogenic_criteria_container").closest(".card").hidden = true
+    }
+    if (! benign_criteria_container.hasChildNodes()) {
+        document.querySelector("#benign_criteria_container").closest(".card").hidden = true
+    }
+    if (! uncertain_criteria_container.hasChildNodes()) {
+        document.querySelector("#uncertain_criteria_container").closest(".card").hidden = true
     }
 
 }
@@ -725,9 +763,13 @@ function enable_disable_buttons(criterium_ids, is_disable) {
 }
 
 function update_classification_preview() {
-    var selected_criteria = get_checked_criteria_strengths(); // this is an array of criteria ids
+    if (scheme.includes('acmg')) {
+        var selected_criteria = get_checked_criteria_strengths(); // this is an array of criteria strengths
+    } else {
+        var selected_criteria = get_currently_checked_criteria(); // this is an array of critera ids
+    }
     selected_criteria = selected_criteria.join('+')
-    fetch('/calculate_acmg_class/'+selected_criteria).then(function (response) {
+    fetch('/calculate_class/'+scheme+'/'+selected_criteria).then(function (response) {
         return response.json();
     }).then(function (text) {
         const final_class = text.final_class

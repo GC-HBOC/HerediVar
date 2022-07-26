@@ -17,7 +17,7 @@ def get_db_connection():
                                        database='HerediVar_ahdoebm1', 
                                        charset = 'utf8')
     except Error as e:
-        print("Error while connecting to DB", e)
+        raise RuntimeError("Error while connecting to HerediVar database " + str(e))
     finally:
         if conn is not None and conn.is_connected():
             return conn
