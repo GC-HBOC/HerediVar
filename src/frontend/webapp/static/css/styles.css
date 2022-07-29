@@ -353,6 +353,26 @@ input.invalid {
 
 
 
+.large.tooltip-inner {
+    max-width: 350px;
+}
+
+
+.sortable[ascending='true']::after {
+    content: " ↑";
+}
+
+.sortable[ascending='false']::after {
+    content: " ↓";
+}
+
+.sortable[ascending]::after {
+    color: rgb(69, 69, 69);
+    white-space: nowrap;
+}
+
+
+
 * { box-sizing: border-box; }
 .autocomplete {
   /*the container must be positioned relative:*/

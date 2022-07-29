@@ -587,7 +587,7 @@ class Connection:
             processed_entry[5] = processed_entry[5].split(':')
             result[i] = processed_entry
         
-        result = sorted(result, key=lambda x: x[3] or datetime.date(datetime.MINYEAR,1,1), reverse=True) # sort table by last evaluated date
+        #result = sorted(result, key=lambda x: x[3] or datetime.date(datetime.MINYEAR,1,1), reverse=True) # sort table by last evaluated date
 
         return result
     
@@ -843,7 +843,7 @@ class Connection:
         result = self.cursor.fetchall()
         if len(result) == 0:
             return None
-        result = sorted(result, key=lambda x: functions.convert_none_infinite(x[5]), reverse=True)
+        #result = sorted(result, key=lambda x: functions.convert_none_infinite(x[5]), reverse=True)
         return result
     
     def insert_user(self, username, first_name, last_name, affiliation):
@@ -927,7 +927,7 @@ class Connection:
         self.cursor.execute(command, (list_id, ))
         self.conn.commit()
 
-    def get_all_variant_annotations(self, variant_id, group_output=False):
+    def get_all_variant_annotations(self, variant_id, group_output=False, most_recent_scheme_consensus=True):
         variant_annotations = self.get_recent_annotations(variant_id)
         standard_annotations = {} # used for grouping hierarchy: 'standard_annotations' -> group -> annotation_label
         variant_annot_dict = {}
@@ -959,7 +959,7 @@ class Connection:
         if variant_consequences is not None:
             variant_annot_dict['variant_consequences'] = variant_consequences
 
-        literature = self.get_variant_literature(variant_id)
+        literature = self.get_variant_literature(variant_id, sort_year=False)
         if literature is not None:
             variant_annot_dict['literature'] = literature
 
@@ -975,20 +975,20 @@ class Connection:
         if heredicare_center_classifications is not None:
             variant_annot_dict['heredicare_center_classifications'] = heredicare_center_classifications
         
-        user_scheme_classifications = self.get_user_acmg_classification(variant_id, sql_modifier = self.add_userinfo)
+        user_scheme_classifications = self.get_user_scheme_classification(variant_id, sql_modifier = self.add_userinfo)
         annotated_user_scheme_classifications = []
         if user_scheme_classifications is not None:
             for classification in user_scheme_classifications:
-                current_criteria = self.get_acmg_criteria(classification[0])
+                current_criteria = self.get_scheme_criteria(classification[0])
                 classification += (current_criteria, )
                 annotated_user_scheme_classifications.append(classification)
             variant_annot_dict['user_scheme_classifications'] = annotated_user_scheme_classifications
         
-        consensus_scheme_classifications = self.get_consensus_acmg_classification(variant_id, scheme='all', most_recent=True, sql_modifier=self.add_userinfo)
+        consensus_scheme_classifications = self.get_consensus_scheme_classification(variant_id, scheme='all', most_recent=most_recent_scheme_consensus, sql_modifier=self.add_userinfo)
         annotated_consensus_scheme_classifications = []
         if consensus_scheme_classifications is not None:
             for classification in consensus_scheme_classifications:
-                current_criteria = self.get_acmg_criteria(classification[0])
+                current_criteria = self.get_scheme_criteria(classification[0])
                 classification += (current_criteria, )
                 annotated_consensus_scheme_classifications.append(classification)
             variant_annot_dict['consensus_scheme_classifications'] = annotated_consensus_scheme_classifications
@@ -1003,34 +1003,34 @@ class Connection:
         self.cursor.execute(command)
         return self.cursor.fetchone()[0]
 
-    ### ACMG classification functions
+    ### scheme classification functions
     # this function is mainly for internal use. Use insert_user_classification or insert_consensus_classification instead
-    def insert_acmg_classification(self, variant_id, scheme, is_consensus):
-        command = "INSERT INTO acmg_classification (variant_id, scheme, date, is_consensus) VALUES (%s, %s, %s, %s)"
+    def insert_scheme_classification(self, variant_id, scheme, is_consensus):
+        command = "INSERT INTO scheme_classification (variant_id, scheme, date, is_consensus) VALUES (%s, %s, %s, %s)"
         curdate = datetime.datetime.today().strftime('%Y-%m-%d')
         self.cursor.execute(command, (variant_id, scheme, curdate, is_consensus))
         self.conn.commit()
 
         return self.get_last_insert_id()
 
-    # each user can have one acmg classification per scheme
-    def insert_user_acmg_classification(self, variant_id, user_id, scheme):
-        acmg_classification_id = self.insert_acmg_classification(variant_id, scheme, 0)
+    # each user can have one scheme classification per scheme
+    def insert_user_scheme_classification(self, variant_id, user_id, scheme):
+        scheme_classification_id = self.insert_scheme_classification(variant_id, scheme, 0)
 
-        command = "INSERT INTO acmg_user_classification (acmg_classification_id, user_id) VALUES (%s, %s)"
-        self.cursor.execute(command, (acmg_classification_id, user_id))
+        command = "INSERT INTO scheme_user_classification (scheme_classification_id, user_id) VALUES (%s, %s)"
+        self.cursor.execute(command, (scheme_classification_id, user_id))
         self.conn.commit()
     
-    def get_user_acmg_classification(self, variant_id, user_id = 'all', scheme = 'all', get_criteria=False, sql_modifier=None):
-        inner_command = "SELECT id as classification_id, variant_id, scheme, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=0"
+    def get_user_scheme_classification(self, variant_id, user_id = 'all', scheme = 'all', get_criteria=False, sql_modifier=None):
+        inner_command = "SELECT id as classification_id, variant_id, scheme, date, is_consensus FROM scheme_classification WHERE variant_id=%s AND is_consensus=0"
         actual_information = (variant_id, )
         if scheme != 'all':
             inner_command += " AND scheme=%s"
             actual_information += (scheme, )
         
-        command = "SELECT classification_id, variant_id, user_id, scheme, date FROM acmg_user_classification a INNER JOIN \
+        command = "SELECT classification_id, variant_id, user_id, scheme, date FROM scheme_user_classification a INNER JOIN \
 	                    (" + inner_command + ") b \
-	                    ON a.acmg_classification_id = b.classification_id"
+	                    ON a.scheme_classification_id = b.classification_id"
 
         if user_id != 'all':
             command += ' WHERE user_id=%s'
@@ -1042,45 +1042,45 @@ class Connection:
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
         if len(result) > 1 and scheme != 'all':
-            raise RuntimeError("ERROR: There are multiple user acmg classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme + ", user_id: " + str(user_id) + "\n The result was: " + str(result))
+            raise RuntimeError("ERROR: There are multiple user scheme classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme + ", user_id: " + str(user_id) + "\n The result was: " + str(result))
         if len(result) == 0:
             return None
 
         return result
 
 
-    def insert_consensus_acmg_classification(self, user_id, variant_id, scheme):
-        acmg_classification_id = self.insert_acmg_classification(variant_id, scheme, 1)
+    def insert_consensus_scheme_classification(self, user_id, variant_id, scheme):
+        scheme_classification_id = self.insert_scheme_classification(variant_id, scheme, 1)
 
-        self.invalidate_previous_acmg_consensus_classifications(variant_id)
+        self.invalidate_previous_scheme_consensus_classifications(variant_id)
 
-        command = "INSERT INTO acmg_consensus_classification (acmg_classification_id, user_id, is_recent) VALUES (%s, %s, %s)"
-        self.cursor.execute(command, (acmg_classification_id, user_id, 1))
+        command = "INSERT INTO scheme_consensus_classification (scheme_classification_id, user_id, is_recent) VALUES (%s, %s, %s)"
+        self.cursor.execute(command, (scheme_classification_id, user_id, 1))
         self.conn.commit()
-        return acmg_classification_id
+        return scheme_classification_id
 
 
 
-    def invalidate_previous_acmg_consensus_classifications(self, variant_id):
-        command = "UPDATE acmg_consensus_classification SET is_recent = %s WHERE acmg_classification_id IN (SELECT id FROM acmg_classification WHERE variant_id=%s AND is_consensus=1)"
+    def invalidate_previous_scheme_consensus_classifications(self, variant_id):
+        command = "UPDATE scheme_consensus_classification SET is_recent = %s WHERE scheme_classification_id IN (SELECT id FROM scheme_classification WHERE variant_id=%s AND is_consensus=1)"
         self.cursor.execute(command, (0, variant_id))
         self.conn.commit()
 
     
-    def get_consensus_acmg_classification(self, variant_id, scheme = 'all', most_recent=True, sql_modifier=None):
-        command = "SELECT id, variant_id, scheme, date, is_consensus FROM acmg_consensus_classification a INNER JOIN \
-	                    (SELECT id as inner_id, variant_id, scheme, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=1) b \
-	                ON a.acmg_classification_id = b.inner_id "
+    def get_consensus_scheme_classification(self, variant_id, scheme = 'all', most_recent=True, sql_modifier=None):
+        command = "SELECT id, variant_id, scheme, date, is_consensus FROM scheme_consensus_classification a INNER JOIN \
+	                    (SELECT id as inner_id, variant_id, scheme, date, is_consensus FROM scheme_classification WHERE variant_id=%s AND is_consensus=1) b \
+	                ON a.scheme_classification_id = b.inner_id "
 
-        inner_command = "SELECT id as classification_id, variant_id, scheme, date, is_consensus FROM acmg_classification WHERE variant_id=%s AND is_consensus=1"
+        inner_command = "SELECT id as classification_id, variant_id, scheme, date, is_consensus FROM scheme_classification WHERE variant_id=%s AND is_consensus=1"
         actual_information = (variant_id, )
         if scheme != 'all':
             inner_command += " AND scheme=%s"
             actual_information += (scheme, )
         
-        command = "SELECT classification_id, variant_id, is_recent, scheme, date, user_id FROM acmg_consensus_classification a INNER JOIN \
+        command = "SELECT classification_id, variant_id, is_recent, scheme, date, user_id FROM scheme_consensus_classification a INNER JOIN \
 	                    (" + inner_command + ") b \
-	                    ON a.acmg_classification_id = b.classification_id"
+	                    ON a.scheme_classification_id = b.classification_id"
         if most_recent:
             command += " WHERE is_recent=1"
 
@@ -1102,31 +1102,31 @@ class Connection:
 
 
 
-    def update_acmg_classification_date(self, acmg_classification_id):
+    def update_scheme_classification_date(self, scheme_classification_id):
         curdate = datetime.datetime.today().strftime('%Y-%m-%d')
-        command = "UPDATE acmg_classification SET DATE=%s WHERE id=%s"
-        self.cursor.execute(command, (curdate, acmg_classification_id))
+        command = "UPDATE scheme_classification SET DATE=%s WHERE id=%s"
+        self.cursor.execute(command, (curdate, scheme_classification_id))
         self.conn.commit()
 
-    def insert_acmg_criterium(self, acmg_classification_id, criterium, strength, evidence):
-        command = "INSERT INTO acmg_criteria (acmg_classification_id, criterium, strength, evidence) VALUES (%s, %s, %s, %s)"
-        actual_information = (acmg_classification_id, criterium, strength, evidence)
+    def insert_scheme_criterium(self, scheme_classification_id, criterium, strength, evidence):
+        command = "INSERT INTO scheme_criteria (scheme_classification_id, criterium, strength, evidence) VALUES (%s, %s, %s, %s)"
+        actual_information = (scheme_classification_id, criterium, strength, evidence)
         self.cursor.execute(command, actual_information)
         self.conn.commit()
 
-    def update_acmg_criterium(self, acmg_criterium_id, updated_strength, updated_evidence):
-        command = "UPDATE acmg_criteria SET strength=%s, evidence=%s WHERE id=%s"
-        self.cursor.execute(command, (updated_strength, updated_evidence, acmg_criterium_id))
+    def update_scheme_criterium(self, scheme_criterium_id, updated_strength, updated_evidence):
+        command = "UPDATE scheme_criteria SET strength=%s, evidence=%s WHERE id=%s"
+        self.cursor.execute(command, (updated_strength, updated_evidence, scheme_criterium_id))
         self.conn.commit()
 
-    def delete_acmg_criterium(self, acmg_criterium_id):
-        command = "DELETE FROM acmg_criteria WHERE id=%s"
-        self.cursor.execute(command, (acmg_criterium_id, ))
+    def delete_scheme_criterium(self, scheme_criterium_id):
+        command = "DELETE FROM scheme_criteria WHERE id=%s"
+        self.cursor.execute(command, (scheme_criterium_id, ))
         self.conn.commit()
 
-    def get_acmg_criteria(self, acmg_classification_id):
-        command = "SELECT * FROM acmg_criteria WHERE acmg_classification_id=%s"
-        self.cursor.execute(command, (acmg_classification_id, ))
+    def get_scheme_criteria(self, scheme_classification_id):
+        command = "SELECT * FROM scheme_criteria WHERE scheme_classification_id=%s"
+        self.cursor.execute(command, (scheme_classification_id, ))
         result = self.cursor.fetchall()
         return result
 

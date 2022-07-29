@@ -1,13 +1,31 @@
 
+
+// presort the tables on page load
 table = document.getElementById("variantConsequenceTable");
 if (table != null) {
     filterTable_one_column("ensembl", 11, table);
-    sorter(['#variant_consequence_numflags_col', '#variant_consequence_length_col']) // sort first by num of flags and if there is a tie sort by length
+    sorter(['#variant_consequence_numflags_col', '#variant_consequence_length_col'], '#variantConsequenceTable') // sort first by num of flags and if there is a tie sort by length
+}
+sorter(['#userClassificationsTableDateCol'], '#userClassificationsTable')
+sorter(['#literatureTableYearCol'], '#literatureTable')
+sorter(['#clinvarSubmissionsTableLastEvaluatedCol'], '#clinvarSubmissionsTable')
+sorter(['#heredicareCenterClassificationsTableDateCol'], '#heredicareCenterClassificationsTable')
+sorter(['#userSchemeClassificationsTableDateCol'], '#userSchemeClassificationsTable')
+
+
+
+// functionality for the consequence table switch between ensembl & refseq
+function filter_consequence_table(source) {
+    const table = document.getElementById('variantConsequenceTable')
+    filterTable_one_column(source, 11, table)
+    const sort_columns = ['#variant_consequence_numflags_col', '#variant_consequence_length_col']
+    for (var i = 0; i < sort_columns.length; i++) {
+        console.log('S')
+        $(sort_columns[i]).attr('asc', 'true')
+    }
+    sorter(sort_columns, '#' + table.id)
 }
 
-if (document.getElementById('userClassificationsTable') != null) {
-    sorter(['#userSchemeClassificationDateCol'])
-}
 
 
 $(document).ready(function()

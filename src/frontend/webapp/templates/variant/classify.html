@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
+<div class="container"  style="min-width:80em">
     <h1 class="bst">{% block title %} Create a {{ classification_type }} classification {% endblock %}</h1>
 
     {% if previous_classification['has_classification'] %}
@@ -44,44 +44,42 @@
         
             <!-- acmg criteria -->
             <div class="d-flex justify-content-center sst">
-                <div class="d-flex">
-                    <div class="card">
-                        <h4 class="card-header">Pathogenic evidence</h4>
-                        <div class="card-body">
-                            <div id="pathogenic_criteria_container" class="d-flex justify-content-center" style="padding-left:10px;"></div>
-                        </div>
+                <div class="card">
+                    <h4 class="card-header">Pathogenic evidence</h4>
+                    <div class="card-body">
+                        <div id="pathogenic_criteria_container" class="d-flex justify-content-center" style="padding-left:10px;"></div>
                     </div>
-
-                    <div class="card">
-                        <h4 class="card-header">Uncertain</h4>
-                        <div class="card-body">
-                            <div id="uncertain_criteria_container" class="d-flex justify-content-center" style="padding-left:10px;"></div>
-                        </div>
-                    </div>
-        
-        
-                    <div class="card">
-                        <h4 class="card-header">Benign evidence</h4>
-                        <div class="card-body">
-                            <div id="benign_criteria_container" class="d-flex justify-content-center" style="padding-left:10px;"></div>
-                        </div>
-                    </div>
-    
-                    <!-- acmg classification preview -->
-                    <div class="card">
-                        <div class="ssr" style="text-align:right"><a href="https://pubmed.ncbi.nlm.nih.gov/25741868/">reference</a></div>
-                        <div class="card-body d-flex justify-content-center align-items-center" style="padding:1.5em">
-                            <div class="">
-                                <hr>
-                                <div>Classification based on selected criteria:</div>
-                                <div class="display-3" style="font-weight:bold; text-align:center;" id="classification_preview"></div>
-                                <hr>
-                            </div>
-                        </div>
-                    </div>
-    
-
                 </div>
+
+
+                <div class="card">
+                    <h4 class="card-header">Uncertain</h4>
+                    <div class="card-body">
+                        <div id="uncertain_criteria_container" class="d-flex justify-content-center" style="padding-left:10px;"></div>
+                    </div>
+                </div>
+    
+    
+                <div class="card">
+                    <h4 class="card-header">Benign evidence</h4>
+                    <div class="card-body">
+                        <div id="benign_criteria_container" class="d-flex justify-content-center" style="padding-left:10px;"></div>
+                    </div>
+                </div>
+
+                <!-- acmg classification preview -->
+                <div class="card">
+                    <div class="ssr" style="text-align:right"><a href="https://pubmed.ncbi.nlm.nih.gov/25741868/">reference</a></div>
+                    <div class="card-body d-flex justify-content-center align-items-center" style="padding:1.5em">
+                        <div class="">
+                            <hr>
+                            <div>Classification based on selected criteria:</div>
+                            <div class="display-3" style="font-weight:bold; text-align:center;" id="classification_preview"></div>
+                            <hr>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
 
@@ -177,6 +175,10 @@
     
     const request_form_string = '{{request.form.to_dict(flat=True) | tojson | safe }}' // must still be escaped and parsed to an object!
 
+    const criteria_with_strength_select_string = '{{ criteria_with_strength_select | tojson | safe }}' // must still be escaped and parsed to an object!
+    const not_activateable_buttons_string = '{{ not_activateable_buttons | tojson | safe }}' // must still be escaped and parsed to an object!
+    const disable_groups_string = '{{ disable_groups | tojson | safe }}' // must still be escaped and parsed to an object!
+
 </script>
 
 
@@ -184,7 +186,6 @@
 
 {% block special_scripts %}
 <!--<script src="/static/js/formValidator.js"></script>-->
-<script src="/static/js/sortTable.js"></script>
 <script src="/static/js/scheme_parameters.js"></script>
 <script src="/static/js/classify.js"></script>
 {% endblock%}

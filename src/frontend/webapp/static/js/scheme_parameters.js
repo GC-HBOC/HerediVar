@@ -18,21 +18,8 @@ const task_force_criteria = [
 ]
 
 // add criteria_ids to this array if you want to enable strength select for it
-const criteria_with_strength_selects = {
-    'acmg_standard': [
-        'pp1', 'ps1', 'bp1', 'bs1'
-    ],
-    'acmg_TP53': [
-        'pp1', 'ps1', 'bp1', 'bs1'
-    ],
-    'acmg_CDH1': [
-        'pp1', 'ps1', 'bp1', 'bs1'
-    ],
-    'task-force': [
-        
-    ]
-    
-}
+const criteria_with_strength_selects = json_string_to_object(criteria_with_strength_select_string) // see variant_functions.py for the definition of this dict
+
 
 // this dictionary contains the links for the reference articles of the acmg specifications (masks)
 const reference_links = {
@@ -44,126 +31,8 @@ const reference_links = {
 // this dictionary contains all buttons which should be disabled if one if them is activated
 // !! this is unidirectional
 // SPECIFIC FOR TP53 spec: PS4 not applicable when BA1 or BS1 are present, PM1 disables pm5
-const disable_groups = {
-    'acmg_standard': {
-        // very strong pathogenic
-        'pvs1': [],
-        // strong pathogenic
-        'ps1': [],
-        'ps2': [],
-        'ps3': [],
-        'ps4': [],
-        // moderate pathogenic
-        'pm1': [],
-        'pm2': [],
-        'pm3': [],
-        'pm4': [],
-        'pm5': [],
-        'pm6': [],
-        // supporting pathogenic
-        'pp1': ['bs4'],
-        'pp2': [],
-        'pp3': [],
-        'pp4': [],
-        'pp5': [],
-        // supporting benign
-        'bp1': [],
-        'bp2': [],
-        'bp3': [],
-        'bp4': [],
-        'bp5': [],
-        'bp6': [],
-        'bp7': [],
-        // strong benign
-        'bs1': [],
-        'bs2': [],
-        'bs3': [],
-        'bs4': ['pp1'],
-        // stand alone benign
-        'ba1': []
-    },
-    'acmg_TP53': {
-        // very strong pathogenic
-        'pvs1': [],
-        // strong pathogenic
-        'ps1': [],
-        'ps2': [],
-        'ps3': [],
-        'ps4': [],
-        // moderate pathogenic
-        'pm1': [],
-        'pm2': [],
-        'pm3': [],
-        'pm4': [],
-        'pm5': [],
-        'pm6': [],
-        // supporting pathogenic
-        'pp1': ['bs4'],
-        'pp2': [],
-        'pp3': [],
-        'pp4': [],
-        'pp5': [],
-        // supporting benign
-        'bp1': [],
-        'bp2': [],
-        'bp3': [],
-        'bp4': [],
-        'bp5': [],
-        'bp6': [],
-        'bp7': [],
-        // strong benign
-        'bs1': ['ps4'],
-        'bs2': [],
-        'bs3': [],
-        'bs4': ['pp1'],
-        // stand alone benign
-        'ba1': ['ps4']
-    },
-    'acmg_CDH1': {
-        // very strong pathogenic
-        'pvs1': [],
-        // strong pathogenic
-        'ps1': [],
-        'ps2': [],
-        'ps3': [],
-        'ps4': [],
-        // moderate pathogenic
-        'pm1': [],
-        'pm2': [],
-        'pm3': [],
-        'pm4': [],
-        'pm5': [],
-        'pm6': [],
-        // supporting pathogenic
-        'pp1': ['bs4'],
-        'pp2': [],
-        'pp3': [],
-        'pp4': [],
-        'pp5': [],
-        // supporting benign
-        'bp1': [],
-        'bp2': [],
-        'bp3': [],
-        'bp4': [],
-        'bp5': [],
-        'bp6': [],
-        'bp7': [],
-        // strong benign
-        'bs1': ['ps4'],
-        'bs2': [],
-        'bs3': [],
-        'bs4': ['pp1'],
-        // stand alone benign
-        'ba1': ['ps4']
-    },
-    'task-force': {
-        '1.1': [], '1.2': [], '1.3': [], 
-        '2.1': [], '2.2': [], '2.3': [], '2.4': [], '2.5': [], '2.6': ['3.3'], '2.7': [], '2.8': [], '2.9': [], '2.10': [], 
-        '3.1': [], '3.2': [], '3.3': [], '3.4': [], '3.5': [], 
-        '4.1': [], '4.2': [], '4.3': ['3.3'], '4.4': ['3.3'], '4.5': [], '4.6': [], '4.7': [], '4.8': [], '4.9': [], 
-        '5.1': [], '5.2': [], '5.3': [], '5.4': [], '5.5': [], '5.6': []
-    } 
-}
+const disable_groups = json_string_to_object(disable_groups_string) // see variant_functions.py for the definition of this dict
+
 
 // this dict contains the default strengths for each mask
 const default_strengths = {
@@ -225,14 +94,7 @@ const default_strengths = {
 }
 
 // this dict contains all criteria which should be disabled for a specific mask
-const not_activateable_buttons = {
-    'acmg_standard': [],
-    'acmg_TP53': ['pm3', 'pm4', 'pp2', 'pp4', 'pp5', 'bp1', 'bp3', 'bp5', 'bp6'], // this is in disable group and if it is in not activateable buttons as well it will stay disabled: , 'bs4'
-    'acmg_CDH1': ['pm1', 'pm3', 'pm5', 'pp2', 'pp4', 'pp5', 'bp1', 'bp3', 'bp6'],
-    'task-force': []
-}
-
-
+const not_activateable_buttons = json_string_to_object(not_activateable_buttons_string) // see variant_functions.py for the definition of this dict
 
 
 // this dictionary contains all criteria descriptions depending on mask 
