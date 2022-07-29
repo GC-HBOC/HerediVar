@@ -10,8 +10,6 @@
     {{ macros.add_variant_banner(variant_oi) }}
 
 
-
-
     <div class="d-flex">
         <div class="flex-grow-1">
             <div class="card-subcaption bst ssb">
@@ -29,18 +27,21 @@
 
             {{ macros.render_consensus_classification_label(consensus_class) }}
         </div>
-
     </div>
     
 
-
-
 </div>
 
+
+
+
 <div class="container bst">
+
+
     <div class="card-subcaption">
         All classifications
     </div>
+    
     <div>
         <div>Color scheme:</div>
         <div class="d-flex align-items-center">
@@ -54,6 +55,7 @@
             <div>consensus classification</div>
         </div>
     </div>
+
     <div class="table-responsive">
         <table class="table table-hover" id="historyTable" style="table-layout: auto;">
             <thead>
@@ -84,13 +86,12 @@
                         <div class="d-flex"><div class="ssr" style="font-weight:bolder">Scheme:</div>{{ classification['scheme'] }}</div>
                         <div class="d-flex"><div class="ssr" style="font-weight:bolder">Selected criteria:</div>
                             {% for criterium in classification['selected_criteria'] %}
-                            <span class="d-inline-block ssr" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" 
+                            <span class="d-inline-block ssr large-tt" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" 
                                 title="Strength: {{ classification['selected_criteria'][criterium]['strength'] }} <br> Evidence: {{ classification['selected_criteria'][criterium]['evidence'] }}">
                                 <div class="dashed_underline clickable">{{ criterium }}</div>
                             </span>
                             {% endfor %}
                         </div>
-
 
                         {% endif %}
                     </td>
@@ -103,6 +104,8 @@
             </tbody>
         </table>
     </div>
+
+
 </div>
 
 
@@ -110,7 +113,6 @@
 {% endblock %}
 
 {% block special_scripts %}
-<script src="/static/js/sortTable.js"></script>
 <script src="/static/js/colors.js"></script>
 <script src="/static/js/classification_history.js"></script>
 {% endblock%}

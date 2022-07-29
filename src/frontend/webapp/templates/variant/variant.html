@@ -124,7 +124,7 @@
             <div class="card-body">
                 <h4 class="card-title">Variant identification</h4>
                 <hr>
-                <p class="card-text">
+                <div>
                     <div class="row align-items-start">
                         <div class="col li-label"><abbr title="Variant in VCF style (FORMAT: chromosome -> position in reference genome (GRCh38) -> reference allele -> alternative allele)">VCF</abbr></div>
                         <div class="col li-info">{{ variant[1] }}&nbsp;&nbsp; {{ variant[2] }}&nbsp;&nbsp; {{ variant[3] }}&nbsp;&nbsp; {{ variant[4] }}</div>
@@ -139,7 +139,7 @@
                             {% endif %}
                         </div>
                     </div>
-                </p>
+                </div>
             </div>
         </div>
     </div>
@@ -149,10 +149,9 @@
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">Variant information</h4>
-                <p class="card-text">
+                <hr>
                     <div>
                         <table class="table" style="table-layout: auto;">
-                            <hr>
                             <tbody>
                                 {% set standard_annotations = annotations['standard_annotations'] %}
                                 {% for annotation_group in standard_annotations %}
@@ -217,7 +216,6 @@
                         </table>
                     </div>
 
-                </p>
             </div>
         </div>
     </div>
@@ -228,17 +226,17 @@
     <div class="col-lg-5 col-lg-6 mb-4">
         <div class="card">
             <div class="card-body">
-                <ul class="list-group list-group-flush">
                     
                     {% if 'consensus_classification' in annotations or 'user_classifications' in annotations %}
-                    <li class="list-group-item card-subcaption">HerediVar classifications</li>
-                    <div class="row bsl sst">
+                    <h4 class="card-title">HerediVar classifications</h4>
+                    <hr>
+                    <div class="ssl sst">
                         <a href="{{ url_for('variant.classification_history', variant_id=variant[0]) }}">view classification history</a>
                     </div>
                     <!-- HEREDIVAR -->
                     <!-- most recent consensus classification -->
                     {% if 'consensus_classification' in annotations %}
-                    <div class="row bsl bsb sst">
+                    <div class="ssl bsb sst">
                         {{ macros.draw_most_recent_consensus_classification(annotations['consensus_classification']) }}
                     </div>
                     {% endif %}
@@ -246,8 +244,8 @@
                     {% if 'consensus_scheme_classifications' in annotations %}
                     {% set consensus_scheme_classification = annotations['consensus_scheme_classifications'][0] %}<!-- the consensus scheme classifications should only contain the most recent classification -->
                     
-                    <div>Most recent consensus scheme classification:</div>
-                    <div class="row bsl bsb">
+                    <div class="ssl">Most recent consensus scheme classification:</div>
+                    <div class="ssl bsb" style="padding-left:1em">
                         <table class="table table-borderless " style="table-layout:auto; margin-bottom:0;">
                             <tbody>
                                 <tr style="margin-left:0">
@@ -272,8 +270,8 @@
                     {% endif %}
                     <!-- user classification table -->
                     {% if 'user_classifications' in annotations %}
-                    <div class="row bsl">
-                        <abbr title="Details about previous user classifications">User&nbsp;classifications:</abbr>
+                    <div class="ssl ssb">User classifications:</div>
+                    <div class="ssl bsb" style="padding-left:1em">
                         <div class="table-responsive">
                             <table class="table table-hover scroll" id="userClassificationsTable">
                                 <thead>
@@ -281,7 +279,7 @@
                                         <th><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                        <th><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th id="userClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th style="width: 100%;"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                     </tr>
                                 </thead>
@@ -303,16 +301,16 @@
 
                     <!-- user scheme classifications-->
                     {% if 'user_scheme_classifications' in annotations %}
-                    <div class="row bsl">
-                        <abbr title="User scheme classifications like ACMG guided classifications are shown here">User&nbsp;scheme&nbsp;classifications:</abbr>
+                    <div class="ssl ssb">User scheme classifications:</div>
+                    <div class="ssl bsb" style="padding-left:1em">
                         <div class="table-responsive">
-                            <table class="table table-hover scroll" id="userClassificationsTable">
+                            <table class="table table-hover scroll" id="userSchemeClassificationsTable">
                                 <thead>
                                     <tr>
                                         <th><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                        <th id="userSchemeClassificationDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th id="userSchemeClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th style="width: 100%;"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                     </tr>
@@ -337,15 +335,16 @@
 
                     <!-- heredicare center classifications -->
                     {% if 'heredicare_center_classifications' in annotations %}
-                    <li class="list-group-item card-subcaption">HerediCare center classifications</li>
-                    <div class="row bst bsl">
+                    <h4 class="card-title">HerediCare center classifications</h4>
+                    <hr>
+                    <div class="ssl bst bsb">
                         <div class="table-responsive">
                             <table class="table table-hover scroll" id="heredicareCenterClassificationsTable">
                                 <thead>
                                     <tr>
                                         <th><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Center</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                        <th><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th id="heredicareCenterClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th style="width: 100%;"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                     </tr>
                                 </thead>
@@ -365,9 +364,10 @@
                     {% endif %}
 
                     {% if 'clinvar_variant_annotation' in annotations %}
-                    <li class="list-group-item card-subcaption">ClinVar classifications</li>
+                    <h4 class="card-title">ClinVar classifications</h4>
+                    <hr>
                     <!-- CLINVAR -->
-                    <div class="row bsl sst bsb">
+                    <div class="ssl sst bsb">
                         <div>
                             <abbr title="The review status from ClinVar"><a class="dashed_underline">review status:</a></abbr>&nbsp;{{annotations['clinvar_variant_annotation'][4]}}
                         </div>
@@ -378,13 +378,13 @@
                     </div>
                     <!-- clinvar submission table -->
                     {% if 'clinvar_submissions' in annotations %}
-                    <div class="row bsl">
+                    <div class="ssl bsb">
                         <div class="table-responsive">
                             <table class="table table-hover scroll" id="clinvarSubmissionsTable">
                                 <thead>
                                     <tr>
                                         <th><div class="sortable">Interpretation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                        <th><div class="sortable">Last evaluated</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th id="clinvarSubmissionsTableLastEvaluatedCol"><div class="sortable">Last evaluated</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Review status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Submission condition</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
@@ -412,22 +412,23 @@
                     {% endif %}
 
                     {% if 'brca_exchange_clinical_significance' in annotations %}
-                    <li class="list-group-item card-subcaption">BRCA exchange classification</li>
+                    <h4 class="card-title">BRCA exchange classification</h4>
+                    <hr>
                     <!-- BRCA-EXCHANGE -->
-                    <div class="row bsl">
+                    <div class="ssl">
                         {{annotations['brca_exchange_clinical_significance'][4]}}
                     </div>
                     {% endif %}
 
                     {% if 'arup_classification' in annotations %}
-                    <li class="list-group-item card-subcaption">ARUP BRCA classification</li>
+                    <h4 class="card-title">ARUP BRCA classification</h4>
+                    <hr>
                     <!-- ARUP -->
-                    <div class="row bsl">
+                    <div class="ssl">
                         {{annotations['arup_classification'][4]}}
                     </div>
                     {% endif %}
 
-                </ul>
             </div>
         </div>
     </div>
@@ -447,10 +448,10 @@
 
                 <ul class="nav nav-tabs" id="tabs" role="tablist"> <!-- although this uses the styles from a tablist it is essentially not a tablist as it is not linked to the tabContent div below! Changes appear through javascript-->
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" data-bs-toggle="tab" type="button" role="tab" aria-selected="true" onclick="filterTable_one_column('ensembl', 11, document.getElementById('variantConsequenceTable'))">Ensembl</button>
+                        <button class="nav-link active" data-bs-toggle="tab" type="button" role="tab" aria-selected="true" onclick="filter_consequence_table('ensembl')">Ensembl</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" data-bs-toggle="tab" type="button" role="tab" aria-selected="false" onclick="filterTable_one_column('refseq', 11, document.getElementById('variantConsequenceTable'))">RefSeq</button>
+                        <button class="nav-link" data-bs-toggle="tab" type="button" role="tab" aria-selected="false" onclick="filter_consequence_table('refseq')">RefSeq</button>
                     </li>
                 </ul>
                 <div class="tab-content" id="tabContent">
@@ -459,20 +460,20 @@
                         <table class="table table-hover scroll" id="variantConsequenceTable">
                             <thead>
                                 <tr>
-                                    <th>Transcript Name<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                    <th>HGVS_C<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                    <th>HGVS_P<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                    <th>Consequence<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                    <th>Impact<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                    <th>Exon Nr.<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                    <th>Intron Nr.<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                    <th>Gene Symbol<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                    <th>Protein Domain<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                    <th>Flags<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th><div class="sortable">Transcript Name</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th><div class="sortable">HGVS_C</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th><div class="sortable">HGVS_P</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th><div class="sortable">Consequence</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th><div class="sortable">Impact</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th><div class="sortable">Exon Nr.</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th><div class="sortable">Intron Nr.</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th><div class="sortable">Gene Symbol</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th><div class="sortable">Protein Domain</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th><div class="sortable">Flags</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                     <th>Links</th>
                                     <th style="display:none;" id="variant_consequence_source_col">Source</th>
-                                    <th id="variant_consequence_length_col">Length</th>
-                                    <th style="display:none;" id="variant_consequence_numflags_col">NumFlags</th>
+                                    <th id="variant_consequence_length_col" asc="true"><div class="sortable">Length</div></th>
+                                    <th style="display:none;" id="variant_consequence_numflags_col" asc="true">NumFlags</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -552,7 +553,7 @@
                     <table class="table table-hover scroll" id="literatureTable">
                         <thead>
                             <tr>
-                                <th><div class="sortable">Year</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                <th id="literatureTableYearCol"><div class="sortable">Year</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                 <th style="width:30%"><div class="sortable">Authors</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                 <th style="width: 100%;"><div class="sortable">Title</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                 <th><div class="sortable">Journal / Publisher</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
@@ -585,6 +586,7 @@
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">Further information</h4>
+                <hr>
                 <p class="card-text">
                     <div>
                         <div>
@@ -625,13 +627,13 @@
 </div>
 
 
-
-
-
 {% endblock %}
 
+
+
+
+
 {% block special_scripts %}
-    <script src="/static/js/sortTable.js"></script>
     <script src="/static/js/variant.js"></script>
     <script src="/static/js/colors.js"></script>
 {% endblock%}

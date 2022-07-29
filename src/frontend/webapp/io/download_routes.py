@@ -220,6 +220,7 @@ def get_variant_vcf_line(variant_id, conn):
     return variant_vcf + '\t' + info, info_headers
 
 
+
 # example
 @download_blueprint.route('/calculate_class/<string:scheme>/<string:selected_classes>')
 @download_blueprint.route('/calculate_class/<string:scheme>/')

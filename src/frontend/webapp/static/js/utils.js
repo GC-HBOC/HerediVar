@@ -73,27 +73,99 @@ function filterTable_all_columns(filter) {
 }
 
 
-function sorter(colids){ // !! only insert columns from the same table
+function remove_sort_direction_arrows(table_id) {
+    if (table_id[0] !== '#') {
+        table_id = '#' + table_id
+    }
+    $(table_id).find('.sortable[ascending]').removeAttr('ascending')
+}
+
+
+$('.sortable').click(function(e) {
+    const table_id = '#' + $(this).parents('table').attr('id')
+    sorter([$(this).parents('th').index()], table_id)
+});
+
+// used for sorting of table columns
+// colids can either be actual ids or the index of the column in the table
+function sorter(colids, table_id){
+    var table = $(table_id)
+
+    if (table.length == 0) { // this checks if the table is present in the current html
+        return
+    }
+
+    remove_sort_direction_arrows(table_id)
+
     var indices = []
     for (var i = 0; i < colids.length; i++) {
         var domid = colids[i]
-        indices.push($(domid).index())
+        if (domid[0] == '#') { // the 'domid' is the jquery id selector starting with a # beware that the domid is the id of the th
+            indices.push($(domid).index())
+        } else { // the 'domid' is its column index
+            indices.push(domid) 
+        }
     }
-    var table = $(domid).parents('table').eq(0)
-    var rows = table.find('tr:gt(0)').toArray().sort(comparer(indices), )
-    rows = rows.reverse()
+    
+    
+
+    var directions = []
+    for (var i = 0; i < indices.length; i++) {
+        var current_index = indices[i]
+        var current_th = table.find('th').get(current_index)
+        var current_sortable = current_th.querySelector('.sortable')
+
+        /*
+        console.log(table.find('th'))
+        console.log(current_index)
+        console.log(current_th)
+        */
+
+        update_asc(current_th)
+        var current_asc = current_th.getAttribute('asc')
+
+        if (current_sortable != null) {
+            current_sortable.setAttribute('ascending', current_asc) // used by css to add the arrows which indicate the direction of sorting
+        }
+
+        directions.push(convert_string_to_bool(current_asc))
+    }
+
+    var rows = table.eq(0).find('tr:gt(0)').toArray().sort(comparer(indices, directions), )
+
+
     for (var i = 0; i < rows.length; i++){
-        table.append(rows[i])
+        table.eq(0).append(rows[i])
+    }
+
+}
+
+
+
+function update_asc(obj) {
+    if (obj.hasAttribute('asc')) {
+        var current_asc = obj.getAttribute('asc')
+        if (current_asc == 'true') {
+            obj.setAttribute('asc', 'false')
+        } else if (current_asc == 'false'){
+            obj.setAttribute('asc', 'true')
+        }
+    } else {
+        obj.setAttribute('asc', 'false')
     }
 }
 
-function comparer(indices) {
+function comparer(indices, directions) {
     return function(a, b) {
         for (var i = 0; i < indices.length; i++) {
             var row_index = indices[i]
+            var asc = directions[i]
             var valA = getCellValue(a, row_index)
             var valB = getCellValue(b, row_index)
             var result = sort_helper(valA, valB)
+            if (!asc) {
+                result = result * -1
+            }
             if (result !== 0) {
                 break;
             }
@@ -128,6 +200,16 @@ function getCellValue(row, index){
 
 
 
+function convert_string_to_bool(s) {
+    if (s === 'true') {
+        return true
+    } else if (s === 'false') {
+        return false
+    }
+    return null
+}
+
+
 $(document).ready(function()
 {
     // add default row to all empty tables
@@ -140,6 +222,11 @@ $(document).ready(function()
 
     ////////// activate bootstrap tooltips
     $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
+    $('.large-tt').tooltip({
+        template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner large"></div></div>'
+    });
+    
+
 
     ////////// functionality for column filters in tables
     $(".column-filter").on("keyup", function() {
@@ -163,6 +250,10 @@ $(document).ready(function()
                 break;
         }
     });
+
+
+    //$('.wide-tooltip').find('.tooltip-inner').addClass('.wide-inner-tooltip')
+    //console.log($('.wide-tooltip').find('.tooltip-inner'))
 });
 
 

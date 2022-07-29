@@ -141,7 +141,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
         if variant_oi is None:
             return redirect(url_for('doc.deleted_variant'))
     else:
-        variant_oi = get_variant(conn, variant_id) # this redirects to 404 page if the variant was not found
+        variant_oi = get_variant(conn, variant_id) # this redirects to 404 page if the variant was not found  
     
     vids = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
     if len(vids) > 1:
@@ -235,7 +235,7 @@ def classify(variant_id):
 
         # test if the input is valid
         criteria = extract_criteria_from_request(request.form)
-        scheme_classification_is_valid, message = is_valid_acmg(criteria, scheme)
+        scheme_classification_is_valid, message = is_valid_scheme(criteria, scheme)
         user_classification_is_valid = (str(classification) in possible_classifications) and comment
         
         # actually submit the data to the database
@@ -244,13 +244,13 @@ def classify(variant_id):
         if not user_classification_is_valid: # error in user classification
             flash("Please provide comment & class to submit a user classification!", "alert-danger")
         if scheme_classification_is_valid and (scheme != 'none') and user_classification_is_valid: # only if both are valid submit the scheme classification
-            # test if the current user already has an acmg classification for this scheme
+            # test if the current user already has an scheme classification for this scheme
             if scheme not in schemes_with_info[user_id]:
-                conn.insert_user_acmg_classification(variant_id, user_id, scheme)
-                acmg_classification_id = conn.get_user_acmg_classification(variant_id, user_id, scheme=scheme)[0][0]
+                conn.insert_user_scheme_classification(variant_id, user_id, scheme)
+                scheme_classification_id = conn.get_user_scheme_classification(variant_id, user_id, scheme=scheme)[0][0]
             else:
-                acmg_classification_id = schemes_with_info[user_id][scheme]['classification_id']
-            handle_acmg_classification(acmg_classification_id, criteria, conn)
+                scheme_classification_id = schemes_with_info[user_id][scheme]['classification_id']
+            handle_scheme_classification(scheme_classification_id, criteria, conn)
         if user_classification_is_valid and ((scheme_classification_is_valid and scheme != 'none') or (scheme == 'none')): # we want to submit the user classification if scheme is none
             handle_user_classification(variant_id, user_id, previous_classification, classification, comment, conn)
             do_redirect = True
@@ -265,7 +265,11 @@ def classify(variant_id):
                                 variant_oi=variant_oi, 
                                 schemes_with_info=schemes_with_info, 
                                 previous_classification=previous_classification,
-                                is_admin=is_admin)
+                                is_admin=is_admin,
+                                criteria_with_strength_select = get_criteria_with_strength_select(),
+                                not_activateable_buttons = get_not_activatable_buttons(),
+                                disable_groups = get_disable_groups()
+                            )
 
 
 @variant_blueprint.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])
@@ -278,19 +282,18 @@ def consensus_classify(variant_id):
     schemes_with_info = {} # keep empty because this is used to preselect from previous classify submission
 
     # get dict of all previous user classifications
-    user_acmg_classification = conn.get_user_acmg_classification(variant_id, user_id='all', scheme='all')
-    if user_acmg_classification is not None:
-        for classification in user_acmg_classification:
+    user_scheme_classification = conn.get_user_scheme_classification(variant_id, user_id='all', scheme='all')
+    if user_scheme_classification is not None:
+        for classification in user_scheme_classification:
             current_user_id = classification[2]
             current_schemes_with_info = get_schemes_with_info(variant_id, current_user_id, conn)
             current_schemes_with_info['user'] = conn.get_user(current_user_id)
             schemes_with_info[current_user_id] = current_schemes_with_info
 
-    print(schemes_with_info)
+    #print(schemes_with_info)
 
     do_redirect=False
     if request.method == 'POST':
-        print(request.form)
 
         ####### classification based on classification scheme submit 
         scheme = request.form['scheme']
@@ -301,7 +304,7 @@ def consensus_classify(variant_id):
 
         # test if the input is valid
         criteria = extract_criteria_from_request(request.form)
-        scheme_classification_is_valid, message = is_valid_acmg(criteria, scheme)
+        scheme_classification_is_valid, message = is_valid_scheme(criteria, scheme)
         user_classification_is_valid = (str(classification) in possible_classifications) and comment
         
         # actually submit the data to the database
@@ -310,9 +313,9 @@ def consensus_classify(variant_id):
         if not user_classification_is_valid: # error in user classification
             flash("Please provide comment & class to submit a consensus classification", "alert-danger")
         if scheme_classification_is_valid and (scheme != 'none') and user_classification_is_valid: # only if both are valid submit the scheme classification
-            acmg_classification_id = conn.insert_consensus_acmg_classification(session['user']['user_id'], variant_id, scheme)
-            #acmg_classification_id = conn.get_consensus_acmg_classification(variant_id, scheme=scheme, most_recent=True)[0][0]
-            handle_acmg_classification(acmg_classification_id, criteria, conn)
+            scheme_classification_id = conn.insert_consensus_scheme_classification(session['user']['user_id'], variant_id, scheme)
+            #scheme_classification_id = conn.get_consensus_scheme_classification(variant_id, scheme=scheme, most_recent=True)[0][0]
+            handle_scheme_classification(scheme_classification_id, criteria, conn)
         if user_classification_is_valid and ((scheme_classification_is_valid and scheme != 'none') or (scheme == 'none')):
             handle_consensus_classification(variant_id, classification, comment, conn)
             flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
@@ -328,7 +331,11 @@ def consensus_classify(variant_id):
                                 variant_oi=variant_oi,
                                 schemes_with_info=schemes_with_info,
                                 previous_classification=previous_classification,
-                                is_admin=True)
+                                is_admin=True,
+                                criteria_with_strength_select = get_criteria_with_strength_select(),
+                                not_activateable_buttons = get_not_activatable_buttons(),
+                                disable_groups = get_disable_groups()
+                                )
 
 
 
@@ -343,8 +350,8 @@ def classification_history(variant_id):
         abort(404)
     consensus_classifications = conn.get_consensus_classification(variant_id, sql_modifier=conn.add_userinfo)
     user_classifications = conn.get_user_classifications(variant_id)
-    user_scheme_classifications = conn.get_user_acmg_classification(variant_id, sql_modifier=conn.add_userinfo)
-    consensus_scheme_classifications = conn.get_consensus_acmg_classification(variant_id, scheme = 'all', most_recent = False, sql_modifier=conn.add_userinfo)
+    user_scheme_classifications = conn.get_user_scheme_classification(variant_id, sql_modifier=conn.add_userinfo)
+    consensus_scheme_classifications = conn.get_consensus_scheme_classification(variant_id, scheme = 'all', most_recent = False, sql_modifier=conn.add_userinfo)
     
     recorded_classifications = []
     most_recent_consensus_classification = None
@@ -371,13 +378,13 @@ def classification_history(variant_id):
                                         } for x in user_classifications])
     if user_scheme_classifications is not None:
         for entry in user_scheme_classifications:
-            current_criteria = conn.get_acmg_criteria(entry[0])
-            current_criteria_dict = convert_acmg_criteria_to_dict(current_criteria)
-            acmg_class = get_acmg_classification(current_criteria)
+            current_criteria = conn.get_scheme_criteria(entry[0])
+            current_criteria_dict = convert_scheme_criteria_to_dict(current_criteria)
+            scheme_class = get_scheme_classification(current_criteria, entry[3])
             new_classification = {'type':'user scheme classification',
                                   'submitter':entry[6] + ' ' + entry[7],
                                   'affiliation':entry[8],
-                                  'class':acmg_class,
+                                  'class':scheme_class,
                                   'date':entry[4], 
                                   # additional information
                                   'scheme':entry[3].replace('_', ' '),
@@ -389,13 +396,13 @@ def classification_history(variant_id):
     #old_consensus_scheme_classifications = [x for x in consensus_scheme_classifications if x[2] == 0]
     if consensus_scheme_classifications is not None:
         for entry in consensus_scheme_classifications:
-            current_criteria = conn.get_acmg_criteria(entry[0])
-            current_criteria_dict = convert_acmg_criteria_to_dict(current_criteria)
-            acmg_class = get_acmg_classification(current_criteria)
+            current_criteria = conn.get_scheme_criteria(entry[0])
+            current_criteria_dict = convert_scheme_criteria_to_dict(current_criteria)
+            scheme_class = get_scheme_classification(current_criteria, entry[3])
             new_classification = {'type':'consensus scheme classification',
                                   'submitter':entry[7] + ' ' + entry[8],
                                   'affiliation':entry[9],
-                                  'class':acmg_class,
+                                  'class':scheme_class,
                                   'date':entry[4], 
                                   # additional information
                                   'scheme':entry[3].replace('_', ' '),
