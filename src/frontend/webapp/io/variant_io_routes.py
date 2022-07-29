@@ -220,8 +220,9 @@ def submit_clinvar(variant_id):
             # submit to clinvar api
             #base_url = 'https://submit.ncbi.nlm.nih.gov/api/v1/submissions/?dry-run=true'
             base_url = 'https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions'
-
-            schema = json.loads(open("/mnt/users/ahdoebm1/HerediVar/clinvar_submission_schema.json").read())
+            
+            schema_path = path.join(path.dirname(current_app.root_path), current_app.config['RESOURCES_FOLDER'])
+            schema = json.loads(open(schema_path + "clinvar_submission_schema.json").read())
 
             selected_condition_orphanet_id = str(selected_condition.split(': ')[1])
             data = get_clinvar_submission_json(variant_oi, consensus_classification, selected_gene, selected_condition_orphanet_id, clinvar_accession)
