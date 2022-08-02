@@ -1,25 +1,41 @@
-{% macro render_consensus_classification_label(class) %}
+{% macro render_consensus_classification_label(class, width='6em') %}
 <!-- position this element when you use it! -->
-    <div id="class-label">
-        <svg id="class-label-tooltip-container" xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor" viewBox="0 0 250 250" style="position: absolute; z-index:1;" data-bs-toggle="tooltip" title="" data-bs-placement="left">
+    <div id="class-label" style="height:auto;">
+        <svg id="class-label-tooltip-container" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" viewBox="0 0 250 250" preserveAspectRatio="xMidYMid meet" style="position: absolute; z-index:1;" fill="currentColor" data-bs-toggle="tooltip" title="" data-bs-placement="left">
             <path d="M212.5,172.3c-16.9,31.1-49.8,52.2-87.6,52.2c-54.9,0-99.5-44.6-99.5-99.5c0-54.9,44.6-99.5,99.5-99.5   c38.3,0,71.6,21.8,88.2,53.6h28C222.9,32.8,177.7,0,125,0C56.1,0,0,56.1,0,125c0,68.9,56.1,125,125,125c52.2,0,97-32.2,115.7-77.7   H212.5z"/>
         </svg>
+
         {% if class == '1' or class == '2' or class == '3' or class == '4' or class == '5' %}
-        <div id="consensusClassificationDIV" fill="currentColor" style="font-size:5em; line-height: 0.85; position: relative; left: 0.36em; top: 0.15em;">
-            {{ class }}
-        </div>
+        <svg id="consensus_class_svg" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" viewBox="-7.6 6.2 30 30" preserveAspectRatio="xMidYMid meet" fill="currentColor" classification="{{ class }}">
+            {% if class == '1' %}
+            <path d="M9.442,30.084H7.333V16.643c-0.508,0.484-1.174,0.969-1.998,1.453s-1.564,0.848-2.221,1.09v-2.039   c1.18-0.555,2.211-1.227,3.094-2.016s1.508-1.555,1.875-2.297h1.359V30.084z"/>
+            {% endif %}
+            {% if class == '2' %}
+            <path d="M12.583,28.057v2.027H1.228c-0.016-0.508,0.066-0.996,0.246-1.465c0.289-0.773,0.752-1.535,1.389-2.285   s1.557-1.617,2.76-2.602c1.867-1.531,3.129-2.744,3.785-3.639s0.984-1.74,0.984-2.537c0-0.836-0.299-1.541-0.896-2.115   s-1.377-0.861-2.338-0.861c-1.016,0-1.828,0.305-2.438,0.914s-0.918,1.453-0.926,2.531l-2.168-0.223   c0.148-1.617,0.707-2.85,1.676-3.697s2.27-1.271,3.902-1.271c1.648,0,2.953,0.457,3.914,1.371s1.441,2.047,1.441,3.398   c0,0.688-0.141,1.363-0.422,2.027s-0.748,1.363-1.4,2.098s-1.736,1.742-3.252,3.023c-1.266,1.063-2.078,1.783-2.438,2.162   s-0.656,0.76-0.891,1.143H12.583z"/>
+            {% endif %}
+            {% if class == '3' %}
+            <path d="M1.509,25.549l2.109-0.281c0.242,1.195,0.654,2.057,1.236,2.584s1.291,0.791,2.127,0.791c0.992,0,1.83-0.344,2.514-1.031   s1.025-1.539,1.025-2.555c0-0.969-0.316-1.768-0.949-2.396s-1.438-0.943-2.414-0.943c-0.398,0-0.895,0.078-1.488,0.234L5.903,20.1   c0.141,0.016,0.254,0.023,0.34,0.023c0.898,0,1.707-0.234,2.426-0.703s1.078-1.191,1.078-2.168c0-0.773-0.262-1.414-0.785-1.922   s-1.199-0.762-2.027-0.762c-0.82,0-1.504,0.258-2.051,0.773s-0.898,1.289-1.055,2.32L1.72,17.288   c0.258-1.414,0.844-2.51,1.758-3.287s2.051-1.166,3.41-1.166c0.938,0,1.801,0.201,2.59,0.604s1.393,0.951,1.811,1.646   s0.627,1.434,0.627,2.215c0,0.742-0.199,1.418-0.598,2.027s-0.988,1.094-1.77,1.453c1.016,0.234,1.805,0.721,2.367,1.459   s0.844,1.662,0.844,2.771c0,1.5-0.547,2.771-1.641,3.814s-2.477,1.564-4.148,1.564c-1.508,0-2.76-0.449-3.756-1.348   S1.649,26.979,1.509,25.549z"/>
+            {% endif %}
+            {% if class == '4' %}
+            <path d="M8.259,30.084v-4.113H0.806v-1.934l7.84-11.133h1.723v11.133h2.32v1.934h-2.32v4.113H8.259z M8.259,24.038v-7.746   L2.88,24.038H8.259z"/>
+            {% endif %}
+            {% if class == '5' %}
+            <path d="M1.497,25.584l2.215-0.188c0.164,1.078,0.545,1.889,1.143,2.432s1.318,0.814,2.162,0.814c1.016,0,1.875-0.383,2.578-1.148   s1.055-1.781,1.055-3.047c0-1.203-0.338-2.152-1.014-2.848s-1.561-1.043-2.654-1.043c-0.68,0-1.293,0.154-1.84,0.463   s-0.977,0.709-1.289,1.201l-1.98-0.258l1.664-8.824h8.543v2.016H5.224l-0.926,4.617c1.031-0.719,2.113-1.078,3.246-1.078   c1.5,0,2.766,0.52,3.797,1.559s1.547,2.375,1.547,4.008c0,1.555-0.453,2.898-1.359,4.031c-1.102,1.391-2.605,2.086-4.512,2.086   c-1.563,0-2.838-0.438-3.826-1.313S1.638,27.03,1.497,25.584z"/>
+            {% endif %}
+        </svg>
         {% else %}
-        <div id="consensusClassificationDIV" fill="currentColor" style="font-size:5em; font-weight:bold; line-height: 0.85; position: relative; left: 0.41em; top: 0.15em">
-            -
-        </div>
+        <svg id="consensus_class_svg" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" fill="currentColor" class="bi bi-dash" viewBox="0.3 -0.3 16 16" preserveAspectRatio="xMidYMid meet" classification="{{ class }}">
+            <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
+        </svg>
         {% endif %}
+        
     </div>
 
     <script>
         $(document).ready(function()
         {
             // coloring of consensus classification
-            var consensus_classification = document.getElementById('consensusClassificationDIV').textContent.trim()
+            var consensus_classification = document.getElementById('consensus_class_svg').getAttribute('classification').trim()
             switch (consensus_classification) {
                 case '5':
                     base_color = class5ColorRGB
@@ -56,32 +72,40 @@
 
 
 {% macro draw_most_recent_consensus_classification(most_recent_consensus_classification) %}
-<div class="classification-gradient" style="padding-left:1em">
+<div class="classification-gradient left-space-padding">
     {% if most_recent_consensus_classification is not none %}
-    <table class="table table-borderless " style="table-layout:auto; margin-bottom:0;">
-        
+
+
+    <table class="table table-borderless table-slim">       
         <tbody>
             <tr style="margin-left:0">
-                <td style="width:10%;">Class:</td>
-                <td style="width:100%;">{{ most_recent_consensus_classification[3] }}</td>
+                <td style="width:6rem;" class="li-label">Data</td>
+                <td style="vertical-align:middle;">
+                    <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
+                        <li class="list-group-item noboarder-td">
+                            Class: {{ most_recent_consensus_classification[3] }}
+                        </li>
+                        <li class="list-group-item noboarder-td">
+                            Date: {{ most_recent_consensus_classification[5] }}
+                        </li>
+                        <li class="list-group-item noboarder-td">
+                            Evidence document: <a href="{{url_for('download.evidence_document', consensus_classification_id=most_recent_consensus_classification[0]) }}">download</a>
+                        </li>
+                    </ul>
+                </td>
             </tr>
+
             <tr>
-                <td>Date:</td>
-                <td>{{ most_recent_consensus_classification[5] }}</td>
-            </tr>
-            <tr>
-                <td>Comment:</td>
+                <td class="li-label">Comment</td>
                 <td>{{ most_recent_consensus_classification[4] }}</td>
             </tr>
-            <tr>
-                <td>Evidence document:</td>
-                <td><a href="{{url_for('download.evidence_document', consensus_classification_id=most_recent_consensus_classification[0]) }}">download</a></td>
-            </tr>
+
         </tbody>        
     </table>
+
     {% else %}
-    <div style="padding:1em">
-        There is no consensus classification for this variant yet.
+    <div class="li-label" style="padding:1em">
+        There is no consensus classification for this variant, yet.
     </div>
     {% endif %}
 </div>
@@ -276,9 +300,31 @@
 {% endmacro %}
 
 {% macro add_variant_banner(variant_oi) %}
-<div class="bst" style="background-color:rgb(238, 238, 238); padding:1em">
-    <div style="font-weight:bolder">Variant information:</div>
-    <div class="bsl">Variant: {{ variant_oi[1] }}-{{ variant_oi[2] }}-{{ variant_oi[3] }}-{{ variant_oi[4] }}</div>
-    <div class="bsl">Gene(s): {{ variant_oi[6] }}</div>
+<div class="w-100 ssb">
+    <div class="card variant-banner-color left-space-padding">
+        
+        <div class="card-text">
+            <div class="table-responsive">
+                <table class="table table-borderless table-slim">
+                    <tbody>
+                        <tr>
+                            <td style="width:10rem" class="li-label">Variant</td>
+                            <td > 
+                                <div style="word-break:break-all;">
+                                    {{ variant_oi[1] }}-{{ variant_oi[2] }}-{{ variant_oi[3] }}-{{ variant_oi[4] }}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="li-label">RSID</td>
+                            <td >{{ variant_oi[6] }}</td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+           
+        </div>
+    </div>
 </div>
 {% endmacro %}

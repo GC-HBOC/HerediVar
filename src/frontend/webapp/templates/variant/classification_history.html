@@ -1,24 +1,22 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
+<div class="container ssb">
 
 
-    <h1 class="bst">{% block title %} Classification history {% endblock %}</h1>
+    <h1 class="sst ssb">{% block title %} Classification history {% endblock %}</h1>
 
 
     {{ macros.add_variant_banner(variant_oi) }}
 
 
-    <div class="d-flex">
+    <div class="d-flex align-items-center">
         <div class="flex-grow-1">
-            <div class="card-subcaption bst ssb">
-                Current consensus classification
-            </div>
+            <div class="card-subcaption ssb">Current consensus classification</div>
             {{ macros.draw_most_recent_consensus_classification(most_recent_consensus_classification) }}
         </div>
 
-        <div class="ms-auto" style="margin-top:2em; margin-right:4em; margin-bottom:1em">
+        <div class="ms-auto" style="margin-right:1em;">
             {% if most_recent_consensus_classification is not none %}
                 {% set consensus_class = most_recent_consensus_classification[3] %}
             {% else %}
@@ -35,7 +33,7 @@
 
 
 
-<div class="container bst">
+<div class="container ssb">
 
 
     <div class="card-subcaption">
@@ -44,28 +42,38 @@
     
     <div>
         <div>Color scheme:</div>
-        <div class="d-flex align-items-center">
-            <div class="user_scheme_classification_style color_scheme_box ssr bsl"></div>
-            <div>user scheme classification</div>
-            <div class="user_classification_style color_scheme_box ssr bsl"></div>
-            <div>user classification</div>
-            <div class="consensus_scheme_classification_style color_scheme_box ssr bsl"></div>
-            <div>consensus scheme classification</div>
-            <div class="consensus_classification_style color_scheme_box ssr bsl"></div>
-            <div>consensus classification</div>
-        </div>
+
+        <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
+            <li class="list-group-item noborder d-flex  align-items-center" >
+                <div class="user_scheme_classification_style color_scheme_box ssr"></div>
+                <div>user scheme classification</div>
+            </li>
+            <li class="list-group-item noborder d-flex  align-items-center">
+                <div class="user_classification_style color_scheme_box ssr"></div>
+                <div>user classification</div>
+            </li>
+            <li class="list-group-item noborder d-flex  align-items-center">
+                <div class="consensus_scheme_classification_style color_scheme_box ssr"></div>
+                <div>consensus scheme classification</div>
+            </li>
+            <li class="list-group-item noborder d-flex align-items-center">
+                <div class="consensus_classification_style color_scheme_box ssr"></div>
+                <div>consensus classification</div>
+            </li>
+
+        </ul>
     </div>
 
     <div class="table-responsive">
         <table class="table table-hover" id="historyTable" style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th id="type_col"><div class="sortable">Type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="type_col" asc="true"><div class="sortable">Type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                     <th id="submitter_col"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                     <th id="affiliation_col"><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                    <th id="class_col"><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                    <th id="date_col"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                    <th id="additional_information_col"><div class="sortable">Additional Information</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="class_col" ><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="date_col" asc="true"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th style="min-width:30rem" id="additional_information_col"><div class="sortable">Additional Information</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                     <th id="document_col">Document</th>
                 </tr>
             </thead>

@@ -75,13 +75,29 @@ abbr[title] {
  }
 
 
+
+ /* deprecated, use tablefixhead instead!! */
 table.scroll {
-    display: inline-block;
+    display:inline-block;
     table-layout: auto;
     max-height: 500px;
     overflow-y: auto;
     border-collapse: collapse;
+    width: 100%;
 }
+
+
+.tableFixHead          { overflow: auto; max-height: 500px; }
+.tableFixHead thead th { position: sticky; top: 0; z-index: 1; }
+
+.tableFixHead table  { border-collapse: collapse; width: 100%; table-layout: auto;}
+.tableFixHead thead th     { background:#eee; }
+
+.tableFixHead.table-lg {
+    max-height: 45rem
+}
+
+
 
 table.scroll thead tbody tr{
     max-width: 100%;
@@ -455,4 +471,53 @@ footer {
     border-bottom: solid;
     border-bottom-width: 1px;
     border-bottom-color: inherit;
+}
+
+
+.list-nobackground li {
+    background-color: transparent;
+}
+
+.table-slim td {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height:170%;
+}
+
+.table-slim {
+    display: inline-block; 
+    table-layout: fixed; 
+    overflow-x:auto; 
+    border-collapse: collapse; 
+    margin-bottom:0; 
+    max-height:10rem;
+}
+
+.list-nopad-td li {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+
+.left-space-padding {
+    padding:0.5rem; 
+    padding-left:1rem
+}
+
+.noboarder-td {
+    border-top:0 !important;
+    border-bottom:0 !important;
+}
+
+.noborder {
+    border-top:0 !important;
+    border-bottom:0 !important;
+    border-left:0 !important;
+    border-right:0 !important;
+}
+
+
+.variant-banner-color {
+    background-color:rgb(238, 238, 238);
+    border-color: rgb(206, 206, 206);
 }

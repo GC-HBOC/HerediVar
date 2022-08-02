@@ -1,18 +1,17 @@
 import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-host = 'SRV018.img.med.uni-tuebingen.de'
 
 # register users at:
 # http://srv018.img.med.uni-tuebingen.de:5050/admin/HerediVar/console/
 # see for a tutorial: https://www.keycloak.org/docs/latest/server_admin/#_fine_grain_permissions
 
 class Config(object):
-    SECRET_KEY = '736670cb10a600b695a55839ca3a5aa54a7d7356cdef815d2ad6e19a2031182b' # should be 32 byte
-    LOGS_FOLDER = 'downloads/logs/'
-    CONSENSUS_CLASSIFICATION_REPORT_FOLDER = 'downloads/consensus_classification_reports/'
-    HOST = host
+    # basic config
+    SECRET_KEY = '736670cb10a600b695a55839ca3a5aa54a7d7356cdef815d2ad6e19a2031182b' # should be at least 32 byte, used for signing the session objects
+    HOST = 'SRV018.img.med.uni-tuebingen.de'
 
+    # keycloak config
     KEYCLOAK_PORT = '5050'
     ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
     CLIENTID = os.environ.get('CLIENT_ID', 'flask-webapp')
@@ -26,6 +25,11 @@ class Config(object):
     SESSION_USE_SIGNER = True
     SESSION_FILE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/flask_sessions"
 
+    # other folders
+    RESOURCES_FOLDER = 'resources/'
+    LOGS_FOLDER = 'downloads/logs/'
+    CONSENSUS_CLASSIFICATION_REPORT_FOLDER = 'downloads/consensus_classification_reports/'
+
 
 class ProdConfig(Config):
     TLS = True
@@ -35,4 +39,4 @@ class ProdConfig(Config):
 class DevConfig(Config):
     DEBUG = True
     TLS = False
-    os.environ['NO_PROXY'] = host
+    os.environ['NO_PROXY'] = 'SRV018.img.med.uni-tuebingen.de'
