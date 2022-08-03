@@ -686,7 +686,10 @@ function add_functionality_to_table() {
         filterTable_one_column($(this).val(), index, table, true)
     });
 
-    $('.sortable').click(click_sorter);
+    $('.sortable').click(function(e) {
+        const table_id = '#' + $(this).parents('table').attr('id')
+        sorter([$(this).parents('th').index()], table_id)
+    });
 }
 
 
