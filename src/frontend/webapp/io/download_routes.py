@@ -101,7 +101,7 @@ def variant(variant_id = None, list_id = None):
     returncode, err_msg, vcf_errors = functions.check_vcf(temp_file_path)
 
     if returncode != 0:
-        flash("ERROR: VCF could not be checked! Reason: " + err_msg, "alert-danger")
+        flash("ERROR: VCF could not be checked! Reason: " + err_msg , "alert-danger")
         return redirect(url_for('variant.display', variant_id=variant_id))
     if vcf_errors != '':
         for line in vcf_errors.split('\n'):
@@ -128,6 +128,7 @@ def get_variant_vcf_line(variant_id, conn):
 
     info = ''
     info_headers = {}
+    # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
     for key in annotations:
         if key == 'clinvar_submissions':
             # no versioning
@@ -139,8 +140,8 @@ def get_variant_vcf_line(variant_id, conn):
                     submission_date = submission_date.strftime('%Y-%m-%d')
                 else:
                     submission_date = str(submission_date)
-                current_submission_string = '|'.join([submission[2], submission_date, submission[4], submission[5][0] + ':' + submission[5][1], submission[6], str(submission[7])])
-                current_submission_string = functions.make_vcf_safe(current_submission_string)
+                current_submission_string = '~7C'.join([submission[2], submission_date, submission[4], submission[5][0] + ':' + submission[5][1], submission[6], str(submission[7])])
+                current_submission_string = functions.encode_vcf(current_submission_string)
                 all_submission_strings = functions.collect_info(all_submission_strings, '', current_submission_string, sep = '&')
             info = functions.collect_info(info, 'clinvar_submissions=', all_submission_strings)
         
@@ -149,7 +150,7 @@ def get_variant_vcf_line(variant_id, conn):
             # no versioning
             info_headers['clinvar_variant_annotation'] = '##INFO=<ID=clinvar_summary,Number=.,Type=String,Description="summary of the clinvar submissions">\n'
             value = content[4] + ':' + content[3]
-            value = functions.make_vcf_safe(value)
+            value = functions.encode_vcf(value)
             info = functions.collect_info(info, 'clinvar_summary=', value)
 
         elif key == 'variant_consequences':
@@ -158,8 +159,8 @@ def get_variant_vcf_line(variant_id, conn):
             all_consequence_strings = ''
             for consequence in annotations['variant_consequences']:
                 consequence = [str(x) for x in consequence]
-                current_consequence_string = '|'.join(consequence[0:8] + consequence[13:17])
-                current_consequence_string = functions.make_vcf_safe(current_consequence_string)
+                current_consequence_string = '~7C'.join(consequence[0:8] + consequence[13:17])
+                current_consequence_string = functions.encode_vcf(current_consequence_string)
                 all_consequence_strings = functions.collect_info(all_consequence_strings, '', current_consequence_string, sep = '&')
             info = functions.collect_info(info, 'consequences=', all_consequence_strings)
 
@@ -178,17 +179,17 @@ def get_variant_vcf_line(variant_id, conn):
             info_headers['consensus_class'] = '##INFO=<ID=consensus_class,Number=1,Type=Integer,Description="The recent consensus classification by the VUS-task-force.">\n'
             info = functions.collect_info(info, 'consensus_class=', consensus_classification[3])
             info_headers['consensus_comment'] = '##INFO=<ID=consensus_comment,Number=1,Type=String,Description="The comment for the consensus classification by the VUS-task-force.">\n'
-            info = functions.collect_info(info, 'consensus_comment=', functions.make_vcf_safe(consensus_classification[3]))
+            info = functions.collect_info(info, 'consensus_comment=', functions.encode_vcf(consensus_classification[3]))
             info_headers['consensus_date'] = '##INFO=<ID=consensus_date,Number=1,Type=String,Description="The submission date of the most recent consensus classification.">\n'
-            info = functions.collect_info(info, 'consensus_date=', functions.make_vcf_safe(submission_date))
+            info = functions.collect_info(info, 'consensus_date=', functions.encode_vcf(submission_date))
     
         elif key == 'user_classifications':
             # no versioning - handled by date field
             info_headers['user_classifications'] = '##INFO=<ID=user_classifications,Number=.,Type=String,Description="Classifications by individual users of HerediVar. Format:class|user|comment|date">\n'
             all_user_classifications = ''
             for classification in annotations['user_classifications']:
-                current_user_classification = '|'.join([classification[1], classification[8] + '_' + classification[9], classification[4], classification[5].strftime('%Y-%m-%d')])
-                current_user_classification = functions.make_vcf_safe(current_user_classification)
+                current_user_classification = '~7C'.join([classification[1], classification[8] + '_' + classification[9], classification[4], classification[5].strftime('%Y-%m-%d')])
+                current_user_classification = functions.encode_vcf(current_user_classification)
                 all_user_classifications = functions.collect_info(all_user_classifications, '', current_user_classification, sep = '&')
             info = functions.collect_info(info, 'user_classifications=', all_user_classifications)
 
@@ -197,10 +198,36 @@ def get_variant_vcf_line(variant_id, conn):
             info_headers['heredicare_center_classifications'] = '##INFO=<ID=heredicare_center_classifications,Number=.,Type=String,Description="An & separated list of the variant classifications from centers imported from HerediCare. Format:class|center|comment|date">\n'
             all_center_classifications = ''
             for classification in annotations['heredicare_center_classifications']:
-                current_center_classification = '|'.join([classification[1], classification[3], classification[4], classification[5].strftime('%Y-%m-%d')])
-                current_center_classification = functions.make_vcf_safe(current_center_classification)
+                current_center_classification = '~7C'.join([classification[1], classification[3], classification[4], classification[5].strftime('%Y-%m-%d')])
+                current_center_classification = functions.encode_vcf(current_center_classification)
                 all_center_classifications = functions.collect_info(all_center_classifications, '', current_center_classification, sep = '&')
             info = functions.collect_info(info, 'heredicare_center_classifications=', all_center_classifications)
+
+        elif key == 'user_scheme_classifications':
+            content = annotations[key]
+            info_headers[key] = '##INFO=<ID=user_scheme_classifications,Number=.,Type=String,Description="An & separated list of the variant scheme classifications from individual users. Format:class|user|affiliation|date|chosen_criteria. The chosen criteria is a ~ separated list of critera itself. Format_criteria: criterium+strength+evidence.">\n'
+            all_user_scheme_classifications = ''
+            for classification in content:
+                current_chosen_criteria = classification[9]
+                current_scheme = classification[3]
+                if 'acmg' in current_scheme:
+                    all_criteria = [x[3] for x in current_chosen_criteria]
+                if 'task-force' in current_scheme:
+                    all_criteria = [x[2] for x in current_chosen_criteria]
+                all_criteria = '+'.join(all_criteria) # this is only required for calculating the class
+                print(all_criteria)
+
+                resp = calculate_class(current_scheme, all_criteria)
+                current_class = str(resp.get_json()['final_class'])
+                chosen_criteria = '~24'.join(['~2B'.join([x[2], x[3], x[4]]) for x in current_chosen_criteria])
+                current_user_scheme_classification = '~7C'.join([current_class, classification[6] + '_' + classification[7], classification[8], classification[4].strftime('%Y-%m-%d'), chosen_criteria])
+                current_user_scheme_classification = functions.encode_vcf(current_user_scheme_classification)
+                all_user_scheme_classifications = functions.collect_info(all_user_scheme_classifications, '', current_user_scheme_classification, sep = '&')
+            info = functions.collect_info(info, key + '=', all_user_scheme_classifications)
+
+        elif key == 'consensus_scheme_classifications':
+            content = annotations[key]
+            print(content)
         
         else: # scores and other non-special values
             content = annotations[key]
@@ -210,7 +237,7 @@ def get_variant_vcf_line(variant_id, conn):
                 version_num = '-'
             info_headers[key_and_date] = '##INFO=<ID=' + key_and_date + ',Number=.,Type=String,Description="' + content[0] + ' version: ' + version_num + ', version date: ' + content[2].strftime('%Y-%m-%d') + '">\n'
             value = content[4]
-            value = functions.make_vcf_safe(value)
+            value = functions.encode_vcf(value)
             info = functions.collect_info(info, key_and_date + '=', value)
 
     if info == '':

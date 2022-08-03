@@ -1,12 +1,12 @@
 {% macro render_consensus_classification_label(class, width='6em') %}
 <!-- position this element when you use it! -->
-    <div id="class-label" style="height:auto;">
-        <svg id="class-label-tooltip-container" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" viewBox="0 0 250 250" preserveAspectRatio="xMidYMid meet" style="position: absolute; z-index:1;" fill="currentColor" data-bs-toggle="tooltip" title="" data-bs-placement="left">
+    <div name="class-label" style="height:auto;" classification="{{ class }}" data-bs-toggle="tooltip" title="" data-bs-placement="left">
+        <svg xmlns="http://www.w3.org/2000/svg" width="{{ width }}" viewBox="0 0 250 250" preserveAspectRatio="xMidYMid meet" style="position: absolute; z-index:1;" fill="currentColor">
             <path d="M212.5,172.3c-16.9,31.1-49.8,52.2-87.6,52.2c-54.9,0-99.5-44.6-99.5-99.5c0-54.9,44.6-99.5,99.5-99.5   c38.3,0,71.6,21.8,88.2,53.6h28C222.9,32.8,177.7,0,125,0C56.1,0,0,56.1,0,125c0,68.9,56.1,125,125,125c52.2,0,97-32.2,115.7-77.7   H212.5z"/>
         </svg>
 
         {% if class == '1' or class == '2' or class == '3' or class == '4' or class == '5' %}
-        <svg id="consensus_class_svg" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" viewBox="-7.6 6.2 30 30" preserveAspectRatio="xMidYMid meet" fill="currentColor" classification="{{ class }}">
+        <svg name="consensus_class_svg" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" viewBox="-7.6 6.2 30 30" preserveAspectRatio="xMidYMid meet" fill="currentColor">
             {% if class == '1' %}
             <path d="M9.442,30.084H7.333V16.643c-0.508,0.484-1.174,0.969-1.998,1.453s-1.564,0.848-2.221,1.09v-2.039   c1.18-0.555,2.211-1.227,3.094-2.016s1.508-1.555,1.875-2.297h1.359V30.084z"/>
             {% endif %}
@@ -24,58 +24,21 @@
             {% endif %}
         </svg>
         {% else %}
-        <svg id="consensus_class_svg" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" fill="currentColor" class="bi bi-dash" viewBox="0.3 -0.3 16 16" preserveAspectRatio="xMidYMid meet" classification="{{ class }}">
-            <path d="M4 8a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 4 8z"/>
+        <svg name="consensus_class_svg" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" fill="currentColor" class="bi bi-dash" viewBox="5.5 -0.7 16 16" preserveAspectRatio="xMidYMid meet">
+            <path  d="M11 7.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5z"/>
         </svg>
         {% endif %}
         
     </div>
 
-    <script>
-        $(document).ready(function()
-        {
-            // coloring of consensus classification
-            var consensus_classification = document.getElementById('consensus_class_svg').getAttribute('classification').trim()
-            switch (consensus_classification) {
-                case '5':
-                    base_color = class5ColorRGB
-                    break;
-                case '4':
-                    base_color = class4ColorRGB
-                    break;
-                case '3':
-                    base_color = class3ColorRGB
-                    break;
-                case '2':
-                    base_color = class2ColorRGB
-                    break;
-                case '1':
-                    base_color = class1ColorRGB
-                    break;
-                default:
-                    base_color = noClassRGB
-            }
-            $('.classification-gradient').css({'background-color': base_color});
-            $('#class-label').css({'color': base_color});
-    
-            if (["1", "2", "3", "4", "5"].includes(consensus_classification)) {
-                tooltip_text = "This variant has been classified by the VUS task-force with the class " + consensus_classification
-            } else {
-                tooltip_text = "This variant has not been classified by the VUS task-force yet."
-            }
-    
-            $('#class-label-tooltip-container').attr('title', tooltip_text);
-        });
-    </script>
-
 {% endmacro %}
 
 
+
+
 {% macro draw_most_recent_consensus_classification(most_recent_consensus_classification) %}
-<div class="classification-gradient left-space-padding">
+<div class="classification-gradient left-space-padding" name="consensus_class_display" classification="{{ most_recent_consensus_classification[3] }}">
     {% if most_recent_consensus_classification is not none %}
-
-
     <table class="table table-borderless table-slim">       
         <tbody>
             <tr style="margin-left:0">
@@ -108,6 +71,7 @@
         There is no consensus classification for this variant, yet.
     </div>
     {% endif %}
+
 </div>
 {% endmacro %}
 
@@ -126,10 +90,20 @@
     <div class="col">{{ pagination.links }}</div>
 
     <div class="col">
-      <a data-bs-toggle="collapse" id="searchOptionsToggle" style="float:right" href="#advanced_search" role="button" aria-expanded="false" aria-controls="advanced_search">
-        Search options
-      </a>
-      <a class="ssr" style="float:right" href="{{ url_for(request.url_rule.endpoint) }}">Clear filters</a>
+        
+        <a class="btn btn-sm btn-primary" data-bs-toggle="collapse" id="searchOptionsToggle" style="float:right" href="#advanced_search" role="button" aria-expanded="false" aria-controls="advanced_search" >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+            </svg>
+        </a>
+        
+
+        <a class="btn btn-sm btn-danger" style="margin-right:0.1em; float:right" href="{{ url_for(request.url_rule.endpoint) }}" data-bs-toggle="tooltip" title="Clear all filters.">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                <path d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
+            </svg>
+        </a>
     </div>
 
     <div class="collapse" id="advanced_search">
@@ -138,7 +112,7 @@
             <div>
                 <form action="" method="GET" novalidate>
         
-                    <div class="form-group sst">
+                    <div class="form-group">
                         <label for="genes" class="form-label">Genes</label>
                         <textarea type="text" name="genes" id="genes"
                                placeholder="BRCA1; BARD1; ..." class="form-control"
@@ -164,24 +138,28 @@
                         <label for="consensus-select" class="form-label">Consensus Classification</label>
                         <div id="consensus-select" class="d-flex">
                             <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="1" id="consensus" name="consensus" {% if '1' in selected_consensus %}checked{% endif %}>
-                                <label class="form-check-label" for="flexCheckDefault">1</label>
+                                <input class="form-check-input" type="checkbox" value="1" id="cl1" name="consensus" {% if '1' in selected_consensus %}checked{% endif %}>
+                                <label class="form-check-label" for="cl1">1</label>
                             </div>
                             <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="2" id="consensus" name="consensus" {% if '2' in selected_consensus %}checked{% endif %}>
-                                <label class="form-check-label" for="flexCheckDefault">2</label>
+                                <input class="form-check-input" type="checkbox" value="2" id="cl2" name="consensus" {% if '2' in selected_consensus %}checked{% endif %}>
+                                <label class="form-check-label" for="cl2">2</label>
                             </div>
                             <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="3" id="consensus" name="consensus" {% if '3' in selected_consensus %}checked{% endif %}>
-                                <label class="form-check-label" for="flexCheckDefault">3</label>
+                                <input class="form-check-input" type="checkbox" value="3" id="cl3" name="consensus" {% if '3' in selected_consensus %}checked{% endif %}>
+                                <label class="form-check-label" for="cl3">3</label>
                             </div>
                             <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="4" id="consensus" name="consensus" {% if '4' in selected_consensus %}checked{% endif %}>
-                                <label class="form-check-label" for="flexCheckDefault">4</label>
+                                <input class="form-check-input" type="checkbox" value="4" id="cl4" name="consensus" {% if '4' in selected_consensus %}checked{% endif %}>
+                                <label class="form-check-label" for="cl4">4</label>
+                            </div>
+                            <div class="form-check bsr">
+                                <input class="form-check-input" type="checkbox" value="5" id="cl5" name="consensus" {% if '5' in selected_consensus %}checked{% endif %}>
+                                <label class="form-check-label" for="cl5">5</label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="5" id="consensus" name="consensus" {% if '5' in selected_consensus %}checked{% endif %}>
-                                <label class="form-check-label" for="flexCheckDefault">5</label>
+                                <input class="form-check-input" type="checkbox" value="-" id="cl-" name="consensus" {% if '-' in selected_consensus %}checked{% endif %}>
+                                <label class="form-check-label" for="cl-">none</label>
                             </div>
                         </div>
                     </div>
@@ -191,7 +169,7 @@
                     {% endif %}
                     
         
-                    <div class="d-flex sst justify-content-end align-items-center">
+                    <div class="d-flex justify-content-end align-items-center">
                         <div>
                             <a class="ssr" href="{{url_for('doc.search_help')}}" style="float:right" >Help</a>
                         </div>
@@ -202,57 +180,61 @@
             </div>
         
         </div>
-
+    </div>
 </div>
   
   
-  <div class="table-responsive" style="float:below">
-    <table class="table table-hover" id="variantTable">
-      <thead id="variantTableHead">
-        <tr>
-          <th style="display:none;">id</th>
-          <th style="width: 10%">CHR</th>
-          <th style="width: 15%">POS</th>
-          <th style="width: 30%">REF</th>
-          <th style="width: 30%">ALT</th>
-          <th style="width: 10%; text-align:center;">GENE</th>
-          <th style="width:12%; text-align:center;">User classification</th>
-          <th style="width:12%; text-align: center;">Consensus classification</th>
-        </tr>
-      </thead>
-      <tbody id="variantTableBody">
-        {% for variant in variants %}
-        <tr style="line-height: 28px;">
-          <td style="display:none;">{{ variant[0] }}</td>
-          <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable" style="white-space: nowrap;">{{ variant[1] }}</td>
-          <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable" style="white-space: nowrap;">{{ variant[2] }}</td>
-          <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss"><abbr title="{{ variant[3] }}">{{ variant[3] }}</abbr></td>
-          <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss"><abbr title="{{ variant[4] }}">{{ variant[4] }}</abbr></td>
-          {% if variant[6] is not none %}
-            {% set symbols = variant[6].split(';') %}
-            {% set gene_ids = variant[5].split(';') %}
-            <td style="text-align:center;">
-            {% for i in range(symbols|length) %}
-                <a href="{{ url_for('extended_information.gene', gene_id=gene_ids[i] | int) }}">{{ symbols[i] }}</a>
-            {% endfor %}
-            </td>
-          {% else %}
-            <td style="text-align:center;">-</td>
-          {% endif %}
-          <td style="text-align:center;">{% if variant[8] is not none %} {{ variant[8] }} {% else %}-{%endif%}</td>
-          <td style="text-align:center;">{% if variant[7] is not none %} {{ variant[7] }} {% else %}-{%endif%}</td>
-        </tr>
-        {% endfor %}
-        {% if variants | length == 0 %}
-          <!--<td colspan="4" class="defaultrow">No results found</td>-->
-          <caption class="defaultrow">Nothing to show</caption>
+<div class="table-responsive">
+  <table class="table table-hover ssb" id="variantTable">
+    <thead id="variantTableHead">
+      <tr>
+        <th style="display:none;">id</th>
+        <th style="width: 10%">CHR</th>
+        <th style="width: 15%">POS</th>
+        <th style="width: 30%">REF</th>
+        <th style="width: 30%">ALT</th>
+        <th style="width: 10%; text-align:center;">GENE</th>
+        <th style="width:12%; text-align:center;">Your classification</th>
+        <th style="width:12%; text-align: center;">Consensus classification</th>
+      </tr>
+    </thead>
+    <tbody id="variantTableBody">
+      {% for variant in variants %}
+      <tr style="line-height: 28px;">
+        <td style="display:none;">{{ variant[0] }}</td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable" style="white-space: nowrap;">{{ variant[1] }}</td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable" style="white-space: nowrap;">{{ variant[2] }}</td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss"><abbr title="{{ variant[3] }}">{{ variant[3] }}</abbr></td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss"><abbr title="{{ variant[4] }}">{{ variant[4] }}</abbr></td>
+        {% if variant[6] is not none %}
+          {% set symbols = variant[6].split(';') %}
+          {% set gene_ids = variant[5].split(';') %}
+          <td style="text-align:center;">
+          {% for i in range(symbols|length) %}
+              <a href="{{ url_for('extended_information.gene', gene_id=gene_ids[i] | int) }}">{{ symbols[i] }}</a>
+          {% endfor %}
+          </td>
+        {% else %}
+          <td style="text-align:center;">-</td>
         {% endif %}
-      </tbody>
-    </table>
-  </div>
+        <td style="text-align:center;">{% if variant[8] is not none %} {{ variant[8] }} {% else %}-{%endif%}</td>
+        <!--<td style="text-align:center;">{% if variant[7] is not none %} {{ variant[7] }} {% else %}-{%endif%}</td>-->
+        <td style="text-align:center;">{{ render_consensus_classification_label(variant[7], '2em') }}</td>
+      </tr>
+      {% endfor %}
+      {% if variants | length == 0 %}
+        <!--<td colspan="4" class="defaultrow">No results found</td>-->
+        <caption class="defaultrow">Nothing to show</caption>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
 
-  <script>
-      $(document).ready(function () {
+
+<div id="tabnav-bottom" class="ssb">{{ pagination.links }}</div>
+
+<script>
+    $(document).ready(function () {
         //save id of collapse to local cookie if it is shown
         $("#advanced_search").on('show.bs.collapse', function () {
             var active = 'advanced_search';
@@ -272,7 +254,7 @@
             $("#" + last).addClass("show");
         }
     });
-  </script>
+</script>
 
 {% endmacro %}
 

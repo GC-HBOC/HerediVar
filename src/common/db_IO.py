@@ -521,11 +521,19 @@ class Connection:
             actual_information += tuple(genes)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if consensus is not None and len(consensus) > 0:
-            placeholders = ["%s"] * len(consensus)
-            placeholders = ', '.join(placeholders)
-            placeholders = enbrace(placeholders)
-            new_constraints = "id IN (SELECT variant_id FROM consensus_classification WHERE classification IN " + placeholders + " AND is_recent = 1)"
-            actual_information += tuple(consensus)
+            new_constraints_inner = ''
+            if '-' in consensus:
+                new_constraints_inner = "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM consensus_classification WHERE is_recent=1)"
+                consensus.remove('-')
+                if len(consensus) > 0: # if we have - AND some other class(es) we need to add an or between them
+                    new_constraints_inner = new_constraints_inner + " UNION ALL "
+            if len(consensus) > 0: # if we have one or more classes without the -
+                placeholders = ["%s"] * len(consensus)
+                placeholders = ', '.join(placeholders)
+                placeholders = enbrace(placeholders)
+                new_constraints_inner = new_constraints_inner + "SELECT variant_id FROM consensus_classification WHERE classification IN " + placeholders + " AND is_recent = 1"
+                actual_information += tuple(consensus)
+            new_constraints = "id IN (" + new_constraints_inner + ")"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if hgvs is not None and len(hgvs) > 0:
             all_variants = []
@@ -546,6 +554,7 @@ class Connection:
             new_constraints = "id IN " + placeholders
             actual_information += tuple(variant_ids_oi)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
+        
         command = prefix + postfix + " ORDER BY chr, pos, ref, alt LIMIT %s, %s"
         actual_information += (offset, page_size)
         command = self.finalize_search_query(command)

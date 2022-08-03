@@ -319,8 +319,33 @@ def base64_to_file(base64_string, path):
 def decode_base64(base64_string):
     return base64.b64decode(base64_string)
 
-def make_vcf_safe(text):
-    return text.replace(' ', '_').replace(';', ',')
+def encode_vcf(text):
+    result = text.replace(' ', '_') \
+                 .replace('\n', '_') \
+                 .replace('\t', '_' ) \
+                 .replace(';', '%3B') \
+                 .replace('$', '%24') \
+                 .replace('#', '%23') \
+                 .replace('+', '%2B') \
+                 .replace('&', '%26') \
+                 .replace('|', '%7C') \
+                 .replace('~3B', ';') \
+                 .replace('~24', '$') \
+                 .replace('~23', '#') \
+                 .replace('~2B', '+') \
+                 .replace('~26', '&') \
+                 .replace('~7C', '|')
+    return result
+
+def decode_vcf(text):
+    result = text.replace('_', ' ') \
+                 .replace('%3B', ';') \
+                 .replace('%24', '$') \
+                 .replace('%23', '#') \
+                 .replace('%2B', '+') \
+                 .replace('%26', '&') \
+                 .replace('%7C', '|')
+    return result
 
 # new_params should be a dict
 def add_args_to_url(url, new_params):

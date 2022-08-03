@@ -101,7 +101,7 @@ def my_lists():
     
     consensus = request.args.getlist('consensus')
     consensus = ';'.join(consensus)
-    consensus = preprocess_query(consensus, '[12345]?')
+    consensus = preprocess_query(consensus, '[12345-]?')
     if consensus is None:
         flash("You have an error in your consensus class query(s). It must consist of a number between 1-5. Results are not filtered by consensus classification.", "alert-danger")
 

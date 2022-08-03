@@ -332,3 +332,61 @@ function get_amino_acids(three_to_one = true){
     }
 
 }
+
+function get_consensus_classification_color(classification) {
+    switch (classification) {
+        case '5':
+            base_color = class5ColorRGB
+            break;
+        case '4':
+            base_color = class4ColorRGB
+            break;
+        case '3':
+            base_color = class3ColorRGB
+            break;
+        case '2':
+            base_color = class2ColorRGB
+            break;
+        case '1':
+            base_color = class1ColorRGB
+            break;
+        default:
+            base_color = noClassRGB
+    }
+    return base_color
+}
+
+
+
+$(document).ready(function(){
+    // coloring of consensus classification
+    document.getElementsByName('class-label').forEach(function(obj) {
+        var consensus_classification = obj.getAttribute('classification').trim();
+        var base_color = get_consensus_classification_color(consensus_classification)
+
+        obj.setAttribute('style', 'color:'+base_color)
+
+        //$('#class-label').css({'color': base_color});
+    
+        if (["1", "2", "3", "4", "5"].includes(consensus_classification)) {
+            tooltip_text = "This variant has been classified by the VUS task-force with the class " + consensus_classification
+        } else {
+            tooltip_text = "This variant has not been classified by the VUS task-force yet."
+        }
+    
+        obj.setAttribute('title', tooltip_text);
+    });
+
+
+    
+    document.getElementsByName('consensus_class_display').forEach(function(obj) {
+        var consensus_classification = obj.getAttribute('classification').trim()
+        var base_color = get_consensus_classification_color(consensus_classification)
+        obj.setAttribute('style', 'background-color:'+base_color)
+    })
+
+
+
+});
+
+

@@ -13,5 +13,5 @@ var class4ColorRGB = "rgba(255,142,61,1)"
 var class5ColorHEX = "#f04935"
 var class5ColorRGB = "rgba(240,73,53,1)"
 
-var noClassHEX = "#696969"
-var noClassRGB = "rgba(105, 105, 105,1)"
+var noClassHEX = "#a4a4a4"
+var noClassRGB = "rgb(164, 164, 164)"

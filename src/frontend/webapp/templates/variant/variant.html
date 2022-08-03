@@ -3,8 +3,6 @@
 
 {% block content %}
 
-<div >
-
 
 <div class="sst ssb">
 
@@ -57,7 +55,7 @@
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                         <li>
-                            <form id="reannotate_form" action="{{ url_for('variant.display', variant_id=variant[0], action='reannotate') }}" name="reannotate_form" method="post" action="#" data-bs-toggle="tooltip" title="">
+                            <form id="reannotate_form" action="{{ url_for('variant.display', variant_id=variant[0], action='reannotate') }}" name="reannotate_form" method="post" action="#" data-bs-toggle="tooltip" title="Tell the annotation service to update all variant annotations.">
                                 <div class="form-group">
                                     <button id="reannotate_button" type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#reannotate-modal">(Re-)Annotate</button>
                                     <meta id="annotation_status" data-annotation-status="{{ current_annotation_status[4] }}">
@@ -77,15 +75,26 @@
                             </a>
                         </li>
                         <li>
-                            {% set clinvar_processing = 'submitted' == clinvar_submission['status'] or 'processing' == clinvar_submission['status'] %}
-                            <button data-href="{{url_for('variant_io.submit_clinvar', variant_id = variant[0])}}" type="button" class="dropdown-item" data-bs-toggle="tooltip" 
-                            {% if clinvar_processing %} title="Wait for the current ClinVar submission to finish before submitting another one." disabled="disabled" {% else %} title="Submit the consensus classification of this variant to ClinVar." {% endif %}>
-                                Submit to ClinVar
-                            </button>
+                            {% set disabled = '' %}
+                            {% set title = 'Submit the consensus classification of this variant to ClinVar.' %}
+                            {% if 'consensus_classification' not in annotations %}
+                                {% set disabled = 'disabled' %}
+                                {% set title = 'Create a consensus classification before submitting to ClinVar.' %}
+                            {% endif %}
+                            {% if 'submitted' == clinvar_submission['status'] or 'processing' == clinvar_submission['status'] %}
+                                {% set disabled = 'disabled' %}
+                                {% set title = 'Wait for the current ClinVar submission to finish before submitting another one.' %}
+                            {% endif %}
+                            <div data-bs-toggle="tooltip" title="{{ title }}"> <!-- idk why, but putting the tooltip on the button does not show it when the button is disabled -->
+                                <button data-href="{{url_for('variant_io.submit_clinvar', variant_id = variant[0])}}" type="button" class="dropdown-item" {% if disabled == 'disabled' %} disabled="disabled" {% endif %}>
+                                    Submit to ClinVar
+                                </button>
+                            </div>
+
                         </li>
                         <li>
                             <form id="add-to-list-form" action="{{ url_for('variant.display', variant_id=variant[0], action='add_to_list') }}" method="post" novalidate>
-                                <div class="dropdown dropdown dropend" data-bs-placement="bottom"
+                                <div class="dropdown dropdown dropend" 
                                 data-bs-toggle="tooltip" title="Select a list to add this variant to it. If a list is highlighted in blue the current variant is already in that list">
                                     <button class="dropdown-item dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">Add to list</button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
@@ -225,13 +234,13 @@
         <button class="nav-link active" id="classification-tab" data-bs-toggle="tab" data-bs-target="#classification" type="button" role="tab" aria-controls="classification" aria-selected="true">Classification</button>
     </li>
     <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pop_score-tab" data-bs-toggle="tab" data-bs-target="#pop_score" type="button" role="tab" aria-controls="pop_score" aria-selected="false">Population & in-silico annotations</button>
+    </li>
+    <li class="nav-item" role="presentation">
         <button class="nav-link" id="consequence-tab" data-bs-toggle="tab" data-bs-target="#consequence" type="button" role="tab" aria-controls="consequence" aria-selected="false">Consequence</button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="literature-tab" data-bs-toggle="tab" data-bs-target="#literature" type="button" role="tab" aria-controls="literature" aria-selected="false">Literature</button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="pop_score-tab" data-bs-toggle="tab" data-bs-target="#pop_score" type="button" role="tab" aria-controls="pop_score" aria-selected="false">Population & in-silico annotations</button>
     </li>
 </ul>
 
@@ -711,8 +720,6 @@
 
 
 
-</div>
-
 {% endblock %}
 
 
@@ -721,7 +728,6 @@
 
 {% block special_scripts %}
     <script src="/static/js/variant.js"></script>
-    <script src="/static/js/colors.js"></script>
 {% endblock%}
 
 <!--
