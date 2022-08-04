@@ -1,7 +1,9 @@
 from turtle import down
-from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for, session, jsonify
+from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for, session, jsonify, Markup
 from os import path
 import sys
+
+from sqlalchemy import true
 from ..utils import require_login
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
@@ -48,12 +50,18 @@ def log_file(log_file):
     return send_from_directory(directory=logs_folder, path='', filename=log_file)
 
 
-@download_blueprint.route('/download/vcf?variant_id=<int:variant_id>')
-@download_blueprint.route('/download/vcf?list_id=<int:list_id>')
+@download_blueprint.route('/download/vcf')
 @require_login
-def variant(variant_id = None, list_id = None):
+def variant():
     conn = Connection()
+
+    variant_id = request.args.get('variant_id')
+    list_id = request.args.get('list_id')
+
+    if variant_id is None and list_id is None:
+        return redirect(url_for('variant.display', variant_id=variant_id))
     
+    variants_oi = None
     # check if the logged in user is the owner of this list
     if list_id is not None:
         user_id = session['user']['user_id']
@@ -66,7 +74,8 @@ def variant(variant_id = None, list_id = None):
     if variant_id is not None:
         variants_oi = [variant_id]
     
-
+    if variants_oi is None:
+        abort(505, "No variants were found for download. Remember to put arguments variant_id or list_id in url get parameters.")
 
     final_info_headers = {}
     all_variant_vcf_lines = []
@@ -101,14 +110,16 @@ def variant(variant_id = None, list_id = None):
     returncode, err_msg, vcf_errors = functions.check_vcf(temp_file_path)
 
     if returncode != 0:
-        flash("ERROR: VCF could not be checked! Reason: " + err_msg , "alert-danger")
-        return redirect(url_for('variant.display', variant_id=variant_id))
-    if vcf_errors != '':
-        for line in vcf_errors.split('\n'):
-            if line.startswith('WARNING') or line.startswith('ERROR'):
-                flash("The generated VCF contains errors: " + line, "alert-warning")
-                flash("Ask an admin to fix this issue!", "alert-danger")
-                return redirect(url_for('variant.display', variant_id=variant_id))
+        if request.args.get('force') is None:
+            force_url = url_for("download.variant", variant_id = variant_id, list_id= list_id, force=True)
+            flash(Markup("The generated VCF contains errors: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
+            return redirect(url_for('variant.display', variant_id=variant_id))
+    #if vcf_errors != '':
+    #    for line in vcf_errors.split('\n'):
+    #        if line.startswith('WARNING') or line.startswith('ERROR'):
+    #            flash("The generated VCF contains errors: " + line, "alert-warning")
+    #            flash("Ask an admin to fix this issue!", "alert-danger")
+    #            return redirect(url_for('variant.display', variant_id=variant_id))
 
     return send_file(buffer, as_attachment=True, attachment_filename="variant_" + str(variant_id) + ".vcf", mimetype="text/vcf")
 
@@ -205,7 +216,7 @@ def get_variant_vcf_line(variant_id, conn):
 
         elif key == 'user_scheme_classifications':
             content = annotations[key]
-            info_headers[key] = '##INFO=<ID=user_scheme_classifications,Number=.,Type=String,Description="An & separated list of the variant scheme classifications from individual users. Format:class|user|affiliation|date|chosen_criteria. The chosen criteria is a ~ separated list of critera itself. Format_criteria: criterium+strength+evidence.">\n'
+            info_headers[key] = '##INFO=<ID=' + key + ',Number=.,Type=String,Description="An & separated list of the variant scheme classifications from individual users. Format:class|user|affiliation|date|chosen_criteria. The chosen criteria is a ~ separated list of critera itself. Format_criteria: criterium+strength+evidence.">\n'
             all_user_scheme_classifications = ''
             for classification in content:
                 current_chosen_criteria = classification[9]
@@ -215,7 +226,6 @@ def get_variant_vcf_line(variant_id, conn):
                 if 'task-force' in current_scheme:
                     all_criteria = [x[2] for x in current_chosen_criteria]
                 all_criteria = '+'.join(all_criteria) # this is only required for calculating the class
-                print(all_criteria)
 
                 resp = calculate_class(current_scheme, all_criteria)
                 current_class = str(resp.get_json()['final_class'])
@@ -227,7 +237,24 @@ def get_variant_vcf_line(variant_id, conn):
 
         elif key == 'consensus_scheme_classifications':
             content = annotations[key]
-            print(content)
+            info_key = 'most_recent_' + key
+            info_headers[key] = '##INFO=<ID=' + info_key + ',Number=1,Type=String,Description="The most recent consensus scheme classification. Format:class|user|affiliation|date|chosen_criteria. The chosen criteria is a ~ separated list of critera itself. Format_criteria: criterium+strength+evidence.">\n'
+            for classification in content:
+                current_chosen_criteria = classification[10]
+                current_scheme = classification[3]
+                if 'acmg' in current_scheme:
+                    all_criteria = [x[3] for x in current_chosen_criteria]
+                if 'task-force' in current_scheme:
+                    all_criteria = [x[2] for x in current_chosen_criteria]
+                all_criteria = '+'.join(all_criteria) # this is only required for calculating the class
+
+                resp = calculate_class(current_scheme, all_criteria)
+                current_class = str(resp.get_json()['final_class'])
+                chosen_criteria = '~24'.join(['~2B'.join([x[2], x[3], x[4]]) for x in current_chosen_criteria])
+                current_user_scheme_classification = '~7C'.join([current_class, classification[7] + '_' + classification[8], classification[9], classification[4].strftime('%Y-%m-%d'), chosen_criteria])
+                current_user_scheme_classification = functions.encode_vcf(current_user_scheme_classification)
+                all_user_scheme_classifications = functions.collect_info(all_user_scheme_classifications, '', current_user_scheme_classification, sep = '&')
+            info = functions.collect_info(info, info_key + '=', all_user_scheme_classifications)
         
         else: # scores and other non-special values
             content = annotations[key]

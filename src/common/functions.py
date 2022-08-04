@@ -321,6 +321,7 @@ def decode_base64(base64_string):
 
 def encode_vcf(text):
     result = text.replace(' ', '_') \
+                 .replace('\r', '') \
                  .replace('\n', '_') \
                  .replace('\t', '_' ) \
                  .replace(';', '%3B') \

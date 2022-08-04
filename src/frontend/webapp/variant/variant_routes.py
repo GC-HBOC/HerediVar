@@ -223,7 +223,7 @@ def classify(variant_id):
 
     do_redirect = False
 
-    is_admin, status_code = request_uma_ticket() # checks if the user has rights to access the consensus classification
+    is_admin, status_code = request_uma_ticket() # checks if the user has rights to access the consensus classification, only for display purposes
 
     if request.method == 'POST':
         ####### classification based on classification scheme submit 
