@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container">
+<div style="min-width:90rem">
 
     <h1 class="bst">{% block title %} Your variant lists {% endblock %}</h1>
 
@@ -9,17 +9,17 @@
     
     
     <div class="d-flex bst">
-        <div class="sst" style="width:20%">
+        <div class="sst" style="width:15%">
 
 
             <div class="table-responsive">
-                <table class="table table-hover" id="variant-list-table">
+                <table class="table table-hover" id="variant-list-table" style="table-layout:auto;">
                     <thead>
                         <tr>
-                            <th style="width:100%; padding-right:0; padding-left:0;">
+                            <th style="padding-right:0; padding-left:0; min-width:10rem">
                                 <div class="sortable"></div><input type="text" class="form-control form-control-sm column-filter" placeholder="search...">
                             </th>
-                            <th style="width:15%; padding-left:0; padding-right:0">
+                            <th style="padding-left:0; padding-right:0;">
                                 <button id="create-list-button" type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="create">+</button>
                             </th>
                         </tr>
@@ -43,7 +43,7 @@
 
         <div id="current-list-id" style="display:none" >{{ request.args.get('view') }}</div>
 
-        <div id="list-content" class="sst bsl" style="width:100%;">
+        <div id="list-content" class="sst bsl">
             {% if view_list_id is not none %}
                 {{ macros.draw_paginated_variant_table(pagination, variants) }}
             {% else %}

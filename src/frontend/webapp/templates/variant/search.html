@@ -3,12 +3,12 @@
 
 {% block content %}
 
-<div class="container">
+<div style="min-width:90rem; width:100%">
 
   
 <h1 class="bst"> {% block title %} Browse variants {% endblock %} </h1>
 
-<div id="list-content" class="sst" style="width:100%;">
+<div id="list-content" class="sst" style="padding-left:1rem; padding-right:1rem">
   {{ macros.draw_paginated_variant_table(pagination, variants) }}
 </div>
 

@@ -341,7 +341,7 @@ if __name__ == '__main__':
             print(vcf_errors)
             if execution_code_vcfcheck != 0:
                 status = "error"
-            err_msgs = collect_error_msgs(err_msgs, err_msg_vcfcheck)
+            err_msgs = collect_error_msgs(err_msgs, vcf_errors)
 
         ## run SpliecAI on the variants which are not contained in the precomputed file
         if do_spliceai:

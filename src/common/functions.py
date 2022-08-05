@@ -1,3 +1,4 @@
+from doctest import ELLIPSIS_MARKER
 import os
 import collections
 import datetime
@@ -199,9 +200,13 @@ def hgvsc_to_vcf(hgvs):
 
 # function for splitting hgvs in refrence transcript and variant
 def split_hgvs(hgvs):
-    reference = hgvs[:hgvs.find(':')]
-    hgvs = hgvs[hgvs.find(':')+1:]
-    return reference, hgvs
+    double_point_pos = hgvs.find(':')
+    if double_point_pos != -1:
+        reference = hgvs[:double_point_pos]
+        hgvs = hgvs[hgvs.find(':')+1:]
+        return reference, hgvs
+    return None, hgvs
+    
 
 
 def find_between(s, prefix, postfix):

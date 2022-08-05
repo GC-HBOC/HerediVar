@@ -170,6 +170,7 @@ def save_redirect(target):
 
 
 def preprocess_query(query, pattern = '.*'):
+    query = query.strip()
     query = ''.join(re.split('[ \r\f\v]', query)) # remove whitespace except for newline and tab
     pattern = re.compile("^(%s[;,\t\n]*)*$" % (pattern, ))
     result = pattern.match(query)

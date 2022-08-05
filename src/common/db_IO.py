@@ -476,6 +476,7 @@ class Connection:
     # this function adds additional columns to the variant table (ie. gene symbol, gene_id)
     def finalize_search_query(self, command):
         prefix = '''
+        SELECT id, chr, pos, ref, alt, gene_id, symbol, classification, user_classification,hgvs_c,hgvs_p FROM (
             SELECT id, chr, pos, ref, alt, gene_id, symbol, classification, user_classification FROM (
 	            SELECT id, chr, pos, ref, alt, gene_id, symbol, classification FROM (
 		            SELECT id, chr, pos, ref, alt, group_concat(gene_id SEPARATOR '; ') as gene_id, group_concat(symbol SEPARATOR '; ') as symbol FROM (
@@ -492,7 +493,10 @@ class Connection:
 	        ) e LEFT JOIN (
 	            SELECT variant_id, classification FROM consensus_classification WHERE is_recent=1) f ON e.id = f.variant_id
             ) g LEFT JOIN (
-	            SELECT variant_id, classification as user_classification FROM user_classification WHERE user_id = %s) h ON g.id = h.variant_id ORDER BY chr, pos, ref, alt;
+	            SELECT variant_id, classification as user_classification FROM user_classification WHERE user_id = %s) h ON g.id = h.variant_id ORDER BY chr, pos, ref, alt
+            ) h  LEFT JOIN (
+				SELECT variant_id,transcript_name,hgvs_c,hgvs_p,is_mane_select FROM transcript  INNER JOIN (SELECT variant_id,transcript_name,hgvs_c,hgvs_p FROM variant_consequence WHERE source='ensembl') x ON transcript.name=x.transcript_name WHERE is_mane_select=1
+            ) i ON h.id=i.variant_id ORDER BY chr, pos, ref, alt
         '''
         command = prefix + command + postfix
         return command
@@ -538,9 +542,19 @@ class Connection:
         if hgvs is not None and len(hgvs) > 0:
             all_variants = []
             for hgvs_string in hgvs:
-                reference_transcript, hgvs = functions.split_hgvs(hgvs_string)
-                variant_id = self.get_variant_id_by_hgvs(reference_transcript, hgvs)
-                all_variants.append(variant_id)
+                ref, hgvs = functions.split_hgvs(hgvs_string) # ref could be a reference transcript or a gene name
+                if ref is not None:
+                    variant_id = self.get_variant_id_by_hgvs(ref, hgvs) # see if the reference transcript is a transcript
+                    if variant_id is None:
+                        reference_transcript = self.get_mane_select_for_gene(ref, 'ensembl')
+                        variant_id = self.get_variant_id_by_hgvs(reference_transcript, hgvs)
+                    if variant_id is not None:
+                        all_variants.append(variant_id)
+                else:
+                    variant_ids = self.get_variant_ids_by_hgvs(hgvs)
+                    all_variants.extend(variant_ids)
+            if len(all_variants) == 0: # we need this because we get an error if the list is empty
+                all_variants = [''] # empty string can never be found
             placeholders = ["%s"] * len(all_variants)
             placeholders = ', '.join(placeholders)
             placeholders = enbrace(placeholders)
@@ -571,6 +585,18 @@ class Connection:
         if num_variants is None:
             return [], 0
         return variants, num_variants[0]
+
+
+    def get_mane_select_for_gene(self, gene, source):
+        gene_id = self.convert_to_gene_id(gene)
+        command = "SELECT DISTINCT transcript_name FROM variant_consequence WHERE transcript_name IN (SELECT name FROM transcript WHERE is_mane_select=1) AND gene_id=%s AND source=%s"
+        self.cursor.execute(command, (gene_id, source))
+        result = self.cursor.fetchone()
+        if result is not None:
+            return result[0]
+        return None
+
+
 
 
 
@@ -665,6 +691,13 @@ class Connection:
         if result is not None:
             result = result[0]
         return result
+
+    # this funciton does not require a reference transcript and just returns all variants which could be right one...
+    def get_variant_ids_by_hgvs(self, hgvs):
+        command = "SELECT DISTINCT variant_id FROM (SELECT variant_id,transcript_name,hgvs_c,hgvs_p FROM variant_consequence WHERE hgvs_c=%s AND transcript_name IN (SELECT name FROM transcript WHERE is_mane_select=1) ) x"
+        self.cursor.execute(command, (hgvs, ))
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
 
 
     def get_vid_list(self):

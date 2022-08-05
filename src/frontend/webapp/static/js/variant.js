@@ -27,6 +27,26 @@ function filter_consequence_table(source) {
 
 
 
+
+
+function get_variant_type(ref, alt) {
+    const ref_len = ref.length
+    const alt_len = alt.length
+    var variant_type = "Variant display" // default phrase just in case
+    if (ref_len === 1 && alt_len === 1) {
+        variant_type = "SNV"
+    }
+    if (ref_len > alt_len) {
+        variant_type = "Deletion (" + String(ref_len-alt_len) + " bp)"
+    }
+    if (ref_len < alt_len) {
+        variant_type = "Insertion (" + String(alt_len-ref_len) + " bp)"
+    }
+    return variant_type
+}
+
+
+
 $(document).ready(function()
 {
     ////////// functionality for the reannotate button
@@ -42,8 +62,12 @@ $(document).ready(function()
        $('#reannotate_form').submit();
     });
 
-    //$('.classification-gradient').css({'background': 'linear-gradient(90deg, ' + class5ColorRGB + ' 0%, rgba(170,240,170,1) 20%, rgba(190,250,190,1) 40%, rgba(255,255,255,1) 100%)'});
-    //$('.classification-gradient').css({'background': 'linear-gradient(90deg, rgba(149,149,149,0.5) 0%, rgba(195,195,195,0.5) 20%, rgba(232,232,232,0.5) 40%, rgba(255,255,255,1) 100%)'});
+    var variant_page_title_obj = document.getElementById('variant_page_title')
+    var title = variant_page_title_obj.innerText
+    const ref = variant_page_title_obj.getAttribute('ref')
+    const alt = variant_page_title_obj.getAttribute('alt')
+    title = get_variant_type(ref, alt) + title
+    variant_page_title_obj.innerText = title
     
 });
 

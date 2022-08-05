@@ -374,7 +374,7 @@ $(document).ready(function(){
             tooltip_text = "This variant has not been classified by the VUS task-force yet."
         }
     
-        obj.setAttribute('title', tooltip_text);
+        obj.querySelector("#theC").setAttribute('title', tooltip_text);
     });
 
 

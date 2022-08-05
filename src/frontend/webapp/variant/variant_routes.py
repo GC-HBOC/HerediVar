@@ -49,9 +49,11 @@ def search():
         flash("You have an error in your consensus class query(s). It must consist of a number between 1-5. Results are not filtered by consensus classification.", "alert-danger")
 
     hgvs = request.args.get('hgvs', '')
-    hgvs = preprocess_query(hgvs, pattern = ".+:c\.\d+[ACGTNacgtn]+>\d+[ACGTNacgtn]+")
+    hgvs = preprocess_query(hgvs, pattern = ".*:?c\..+")
     if hgvs is None:
-        flash("You have an error in your hgvs query(s). Please check the syntax! Results are not filtered by hgvs.", "alert-danger")
+        flash("You have an error in your hgvs query(s). Please check the syntax! c.HGVS be prefixed by this pattern: 'transcript:c.' Results are not filtered by hgvs.", "alert-danger")
+    if any(not(x.startswith('ENST') or x.startswith('NM') or x.startswith('NR') or x.startswith('XM') or x.startswith('XR')) for x in hgvs):
+        flash("You are probably searching for a HGVS c-dot string without knowing its transcript. Be careful with the search results as they might not contain the variant you are looking for!", "alert-warning")
 
     variant_ids_oi = request.args.get('variant_ids_oi', '')
     variant_ids_oi = preprocess_query(variant_ids_oi, '\d*')
