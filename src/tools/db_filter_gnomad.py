@@ -26,7 +26,7 @@ line = None
 
 while(line is None or line.startswith('##')):
     line = input_file.readline()
-    if not line.startswith('##INFO') and not line.startswith('#CHROM') and not line.startswith('#FILTER') and include_header:
+    if not line.startswith('##INFO') and not line.startswith('#CHROM') and include_header:
         print(line.strip())
 
     
@@ -36,6 +36,9 @@ if include_header:
     print('##INFO=<ID=AC,Number=A,Type=Integer,Description="Alternate allele count for samples">')
     print('##INFO=<ID=hom,Number=A,Type=Integer,Description="Count of homozygous individuals in samples">')
     print('##INFO=<ID=popmax,Number=A,Type=String,Description="Population with maximum AF">')
+    print('##INFO=<ID=AC_popmax,Number=A,Type=Integer,Description="Allele count in the population with the maximum allele frequency">')
+    print('##INFO=<ID=AN_popmax,Number=A,Type=Integer,Description="Total number of alleles in the population with the maximum allele frequency">')
+    print('##INFO=<ID=AF_popmax,Number=A,Type=Float,Description="Maximum allele frequency across populations">')
     print('##INFO=<ID=hemi,Number=A,Type=Integer,Description="Count of hemizygous individuals in samples">')
     print('##INFO=<ID=het,Number=A,Type=Integer,Description="Count of heterozygous individuals in samples">')
 
@@ -60,6 +63,9 @@ while line != "":
         af = ''
         hom = ''
         popmax = ''
+        ac_popmax = ''
+        an_popmax = ''
+        af_popmax = ''
         hemi = ''
         het = ''
 
@@ -71,6 +77,12 @@ while line != "":
                 hom = info[8:]
             elif info.startswith('popmax='):
                 popmax = info[7:]
+            elif info.startswith('AC_popmax='):
+                ac_popmax = info[10:]
+            elif info.startswith('AN_popmax='):
+                an_popmax = info[10:]
+            elif info.startswith('AF_popmax='):
+                af_popmax = info[10:]
             elif info.startswith('AC_male=') and is_gonosome and is_nonpar:
                 hemi = info[8:]
             elif info.startswith('AC='):
@@ -89,6 +101,9 @@ while line != "":
         info = functions.collect_info(info, "AC=", ac)
         info = functions.collect_info(info, "hom=", hom)
         info = functions.collect_info(info, "popmax=", popmax)
+        info = functions.collect_info(info, "AC_popmax=", ac_popmax)
+        info = functions.collect_info(info, "AN_popmax=", an_popmax)
+        info = functions.collect_info(info, "AF_popmax=", af_popmax)
         info = functions.collect_info(info, "hemi=", hemi)
         info = functions.collect_info(info, "het=", het)
 

@@ -11,6 +11,7 @@ sorter(['#literatureTableYearCol'], '#literatureTable')
 sorter(['#clinvarSubmissionsTableLastEvaluatedCol'], '#clinvarSubmissionsTable')
 sorter(['#heredicareCenterClassificationsTableDateCol'], '#heredicareCenterClassificationsTable')
 sorter(['#userSchemeClassificationsTableDateCol'], '#userSchemeClassificationsTable')
+sorter(['#assayTableDateCol', '#assayTableAssayTypeCol'], '#assayTable')
 
 
 

@@ -21,7 +21,7 @@ download_blueprint = Blueprint(
 )
 
 # downloads
-@download_blueprint.route('/download_evidence_document/<int:consensus_classification_id>')
+@download_blueprint.route('/download/evidence_document/<int:consensus_classification_id>')
 @require_login
 def evidence_document(consensus_classification_id):
     conn = Connection()
@@ -41,6 +41,27 @@ def evidence_document(consensus_classification_id):
     buffer.seek(0)
     
     return send_file(buffer, as_attachment=True, attachment_filename=report_filename, mimetype='application/pdf')
+
+
+
+@download_blueprint.route('/download/assay_report/<int:assay_id>')
+@require_login
+def assay_report(assay_id):
+    conn = Connection()
+    assay = conn.get_assay_report(assay_id)
+    conn.close()
+    if assay is None:
+        abort(404)
+
+    b_64_assay = assay[0]
+    filename = assay[1]
+
+    buffer = io.BytesIO()
+    buffer.write(functions.decode_base64(b_64_assay))
+    buffer.seek(0)
+    
+    return send_file(buffer, as_attachment=True, attachment_filename=filename, mimetype='application')
+
 
 
 @download_blueprint.route('/import-variants/summary/download?file=<string:log_file>')
@@ -255,6 +276,9 @@ def get_variant_vcf_line(variant_id, conn):
                 current_user_scheme_classification = functions.encode_vcf(current_user_scheme_classification)
                 all_user_scheme_classifications = functions.collect_info(all_user_scheme_classifications, '', current_user_scheme_classification, sep = '&')
             info = functions.collect_info(info, info_key + '=', all_user_scheme_classifications)
+        
+        elif key == 'assays':
+            pass
         
         else: # scores and other non-special values
             content = annotations[key]

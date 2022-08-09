@@ -68,6 +68,12 @@
                             </form>
                         </li>
                         <li>
+                            <a type="button" class="dropdown-item" href="{{url_for('variant_io.submit_assay', variant_id = variant[0])}}" 
+                            data-bs-toggle="tooltip"  title="Submit an assay report & score for this variant.">
+                                Submit assay
+                            </a>
+                        </li>
+                        <li>
                             <a id="classify_button" type="button" class="dropdown-item" href="{{url_for('variant.classify', variant_id = variant[0])}}" 
                             data-bs-toggle="tooltip"  title="Submit a new variant classification or edit your previous classification(s).">
                                 Classify
@@ -246,6 +252,9 @@
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="consequence-tab" data-bs-toggle="tab" data-bs-target="#consequence" type="button" role="tab" aria-controls="consequence" aria-selected="false">Consequence</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="assay-tab" data-bs-toggle="tab" data-bs-target="#assay" type="button" role="tab" aria-controls="assay" aria-selected="false">Assays</button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="literature-tab" data-bs-toggle="tab" data-bs-target="#literature" type="button" role="tab" aria-controls="literature" aria-selected="false">Literature</button>
@@ -677,6 +686,48 @@
 
 
         </div>
+        <div class="tab-pane fade" id="assay" role="tabpanel" aria-labelledby="assay-tab">
+
+    <div class="w-100 ssb">
+        <div class="card" style="border-top:0; border-top-left-radius: 0; border-top-right-radius: 0;">
+            <div class="card-body">
+                <h4 class="card-subcaption">Assays</h4>
+                
+                <p class="card-text">
+                    <div class="table-responsive tableFixHead table-lg">
+                        <table class="table table-hover" id="assayTable">
+                            <thead>
+                                <tr>
+                                    <th id="assayTableAssayTypeCol" asc="false"><div class="sortable">Assay type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th><div class="sortable">Score</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th id="assayTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                    <th><div class="sortable">Report</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assay in annotations['assays'] %}
+                                <tr>
+                                    <td style="min-width:10rem">{{assay[1]}}</td>
+                                    <td style="min-width:6rem">{{ assay[2] }}</td>
+                                    <td style="min-width:8rem; white-space: nobreak;">{{assay[3]}}</td>
+                                    <td style="min-width:10rem"><a href="{{ url_for('download.assay_report', assay_id=assay[0]) }}">Download report</a></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+        </div>
         <div class="tab-pane fade" id="literature" role="tabpanel" aria-labelledby="literature-tab">
             
             
@@ -708,7 +759,7 @@
                                     <td style="min-width:30rem">{{paper[3]}}</td>
                                     <td style="min-width:10rem">{{paper[5]}}</td>
                                     <td style="text-align:center;">
-                                        <external-link href="https://pubmed.ncbi.nlm.nih.gov/{{ paper[2] }}"></external-link>
+                                        <external-link href="https://pubmed.ncbi.nlm.nih.gov/{{ paper[2] }}">PMID:{{paper[2]}}</external-link>
                                     </td>
                                 </tr>
                                 {% endfor %}

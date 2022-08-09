@@ -362,3 +362,7 @@ def add_args_to_url(url, new_params):
     url_parts[4] = urlencode(query)
 
     return urlparse.urlunparse(url_parts)
+
+
+def get_today():
+    return datetime.datetime.today().strftime('%Y-%m-%d')

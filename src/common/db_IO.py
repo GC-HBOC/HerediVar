@@ -91,8 +91,7 @@ class Connection:
         return pending_variant_ids
 
     def update_annotation_queue(self, row_id, status, error_msg):
-        error_msg = enquote(error_msg.replace("\n", " "))
-        status = enquote(status)
+        error_msg = error_msg.replace("\n", " ")
         #print("UPDATE annotation_queue SET status = " + status + ", finished_at = " + time.strftime('%Y-%m-%d %H:%M:%S') + ", error_message = " + error_msg + " WHERE id = " + str(row_id))
         command = "UPDATE annotation_queue SET status = %s, finished_at = NOW(), error_message = %s WHERE id = %s"
         self.cursor.execute(command, (status, error_msg, row_id))
@@ -1035,10 +1034,34 @@ class Connection:
                 annotated_consensus_scheme_classifications.append(classification)
             variant_annot_dict['consensus_scheme_classifications'] = annotated_consensus_scheme_classifications
         
+
+        assays = self.get_assays(variant_id, assay_types = 'all')
+        if assays is not None:
+            variant_annot_dict['assays'] = assays
         #print(variant_annot_dict['standard_annotations'])
 
     
         return variant_annot_dict
+
+
+    def get_assays(self, variant_id, assay_types = 'all'):
+        command = "SELECT id, assay_type, score, date FROM assay WHERE variant_id = %s"
+        actual_information = (variant_id, )
+
+        if assay_types is not 'all':
+            placeholders = ["%s"] * len(assay_types)
+            placeholders = ', '.join(placeholders)
+            placeholders = enbrace(placeholders)
+            new_constraints = " id IN " + placeholders
+            command += new_constraints
+            actual_information += tuple(assay_types)
+        
+        self.cursor.execute(command, actual_information)
+        result = self.cursor.fetchall()
+        if len(result) == 0:
+            return None
+        return result
+
 
     def get_last_insert_id(self):
         command = "SELECT LAST_INSERT_ID()"
@@ -1172,9 +1195,16 @@ class Connection:
         result = self.cursor.fetchall()
         return result
 
+    def insert_assay(self, variant_id, assay_type, report, filename, score, date):
+        command = "INSERT INTO assay (variant_id, assay_type, report, filename, score, date) VALUES (%s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, assay_type, report, filename, score, date))
+        self.conn.commit()
 
-
-
+    def get_assay_report(self, assay_id):
+        command = "SELECT report,filename FROM assay WHERE id = %s"
+        self.cursor.execute(command, (assay_id, ))
+        result = self.cursor.fetchone()
+        return result
 
 
 

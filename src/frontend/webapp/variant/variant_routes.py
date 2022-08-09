@@ -100,7 +100,7 @@ def create():
 
 
         if create_variant_from == 'hgvsc':
-            reference_transcript = request.form['transcript']
+            reference_transcript = request.form.get('transcript')
             hgvsc = request.form['hgvsc']
             if not hgvsc or not reference_transcript:
                 flash('All fields are required!', 'alert-danger')

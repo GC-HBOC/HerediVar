@@ -12,6 +12,8 @@ import jsonschema
 import os
 import json
 import requests
+from werkzeug.utils import secure_filename
+import io
 
 variant_io_blueprint = Blueprint(
     'variant_io',
@@ -373,3 +375,49 @@ def get_clinvar_submission_json(variant_oi, consensus_classification, selected_g
     data['clinvarSubmission'] = clinvar_submission
     print(data)
     return data
+
+
+
+
+
+@variant_io_blueprint.route('/submit_assay/<int:variant_id>', methods=['GET', 'POST'])
+@require_login
+def submit_assay(variant_id):
+
+    do_redirect = False
+    if request.method == 'POST':
+        assay_type = request.form.get('assay_type')
+        assay_report = request.files.get('report')
+        assay_score = request.form.get('score')
+
+        if not assay_type or not assay_report or not assay_score or not assay_report.filename:
+            flash('All fields are required!', 'alert-danger')
+        else:
+
+            assay_report.filename = secure_filename(assay_report.filename)
+
+            # the buffer is required as larger files (>500kb) are saved to /tmp upon upload
+            # this file must be read back in
+            buffer = io.BytesIO()
+            for line in assay_report:
+                buffer.write(line)
+            buffer.seek(0)
+
+            b_64_assay_report = functions.buffer_to_base64(buffer)
+
+            if len(b_64_assay_report) > 16777215:
+                abort(500, "The uploaded file is too large. Please upload a smaller file.")
+
+            conn = Connection()
+            conn.insert_assay(variant_id, assay_type, b_64_assay_report, assay_report.filename, assay_score, functions.get_today())
+            conn.close()
+
+            do_redirect = True
+
+
+            #functions.base64_to_file(b_64_assay_report, '/mnt/users/ahdoebm1/HerediVar/src/frontend/webapp/io/test.pdf')
+
+
+    if do_redirect :
+        return redirect(url_for('variant_io.submit_assay', variant_id = variant_id))
+    return render_template('variant_io/submit_assay.html')

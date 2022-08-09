@@ -122,10 +122,13 @@ function preselect_final_classification() {
 
 function preselect_scheme() {
     var scheme_select = document.getElementById('scheme')
-    if (variant_genes.includes('TP53') || variant_genes.includes('tp53')) {
+    const lower_case_variant_genes = variant_genes.join('|').toLowerCase().split('|') // convert all genes to lower case
+    if (lower_case_variant_genes.includes('tp53')) {
         scheme_select.value = 'acmg_TP53'
-    } else if (variant_genes.includes('CDH1') || variant_genes.includes('cdh1')) {
+    } else if (lower_case_variant_genes.includes('cdh1')) {
         scheme_select.value = 'acmg_CDH1'
+    } else if (lower_case_variant_genes.includes('brca1') || lower_case_variant_genes.includes('brca2')) {
+        scheme_select.value = 'task-force-brca'
     } else {
         scheme_select.value = 'acmg_standard'
     }
