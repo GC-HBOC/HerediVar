@@ -4,6 +4,7 @@ import common.functions as functions
 Entrez.email = 'marvin.doebel@med.uni-tuebingen.de'
 
 def fetch(pmids):
+    pmids = pmids.replace('&', ',')
     handle = Entrez.efetch(db='pubmed', id=pmids, retmode='xml')
     records = Entrez.read(handle)
     handle.close()
@@ -50,16 +51,16 @@ def parse_record(rec, doc_section, article_section, title_section, journal_secti
                         year = curdict['Year']
 
 
-    article_title = extract(rec, title_section)
+    article_title = rec.get(title_section, '')
     authors = []
-    author_dict = extract(rec, 'AuthorList')
+    author_dict = rec.get('AuthorList', '')
     if author_dict != '':
         for author in author_dict:
             if book: # in bookarticle type pubmed entries the authors are wrapped within another list
                 for a in author:
-                    forename = extract(a, 'ForeName')
-                    lastname = extract(a, 'LastName')
-                    collective_name = extract(a, 'CollectiveName')
+                    forename = a.get('ForeName', '')
+                    lastname = a.get('LastName', '')
+                    collective_name = a.get('CollectiveName', '')
                     fullname = functions.collect_info(forename, '', lastname, sep = ' ')
                     if fullname != '':
                         authors.append(fullname)
@@ -69,9 +70,9 @@ def parse_record(rec, doc_section, article_section, title_section, journal_secti
                     if collective_name != '' and fullname == '' and len(authors) == 0: 
                         authors.append(collective_name)
             else:
-                forename = extract(author, 'ForeName')
-                lastname = extract(author, 'LastName')
-                collective_name = extract(author, 'CollectiveName')
+                forename = author.get('ForeName', '')
+                lastname = author.get('LastName', '')
+                collective_name = author.get('CollectiveName', '')
                 fullname = functions.collect_info(forename, '', lastname, sep = ' ')
 
                 if fullname != '':
@@ -79,11 +80,8 @@ def parse_record(rec, doc_section, article_section, title_section, journal_secti
                 if collective_name != '':
                     authors.append(collective_name)
 
-    journal = extract(extract(rec, journal_section), journal_title_section)
+    #journal = extract(extract(rec, journal_section), journal_title_section)
+    journal = rec.get(journal_section, {}).get(journal_title_section, '')
     return [int(pmid), str(article_title), ', '.join([str(x) for x in authors]), str(journal), int(year)]
 
-def extract(dictionary, key):  
-    if key in dictionary:
-        return dictionary[key]
-    else:
-        return ''
+

@@ -94,16 +94,19 @@ def validate_chr(chr, max = 22):
         return chr
 
 def collect_info(old_info, new_info_name, new_value, sep = ';'):
-    new_value = str(new_value)
-    if old_info != '':
-        if new_value == '':
+    if new_value is not None:
+        new_value = str(new_value)
+    if old_info is not None:
+        old_info = str(old_info)
+    if old_info != '' and old_info is not None:
+        if new_value == '' or new_value is None: # only old value has content
             return old_info
-        else:
+        else: # both values have content
             return old_info + sep + new_info_name + new_value
-    else:
-        if new_value == '':
-            return old_info
-        else:
+    else: # old value is empty
+        if new_value == '' or new_value is None: # both values are empty
+            return ''
+        else: # only new info has content
             return new_info_name + new_value
 
 def trim_hgnc(hgnc_id):
@@ -366,3 +369,12 @@ def add_args_to_url(url, new_params):
 
 def get_today():
     return datetime.datetime.today().strftime('%Y-%m-%d')
+
+
+def is_snv(one_var):
+    ref = one_var[3]
+    alt = one_var[4]
+    if len(ref) > 1 or len(alt) > 1:
+        return False
+    else:
+        return True
