@@ -4,8 +4,9 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from common.db_IO import Connection
 import common.functions as functions
 import tempfile
-import pubmed_parser
-from annotation_jobs import *
+
+from .annotation_jobs import *
+from .pubmed_parser import fetch
 
 
 ## configuration
@@ -41,6 +42,18 @@ job_config = {
 }
 
 
+# annotation job definitions
+all_jobs = [
+    vep_job.vep_job(job_config, refseq=False),
+    vep_job.vep_job(job_config, refseq=True),
+    phylop_job.phylop_job(job_config),
+    hexplorer_job.hexplorer_job(job_config),
+    annotate_from_vcf_job.annotate_from_vcf_job(job_config),
+    spliceai_job.spliceai_job(job_config),
+    task_force_protein_domain_job.task_force_protein_domain_job(job_config)
+]
+
+
 conn = Connection()
 
 
@@ -54,124 +67,132 @@ def collect_error_msgs(msg1, msg2):
     return res
 
 
-
-if __name__ == '__main__':
-    pending_requests = conn.get_pending_requests()
-
+def get_temp_vcf_path():
     temp_file_path = tempfile.gettempdir()
     vcf_path = temp_file_path + "/variant.vcf"
+    return vcf_path
 
-    # annotation job definitions
-    all_jobs = [
-        vep_job.vep_job(job_config, refseq=False),
-        vep_job.vep_job(job_config, refseq=True),
-        phylop_job.phylop_job(job_config),
-        hexplorer_job.hexplorer_job(job_config),
-        annotate_from_vcf_job.annotate_from_vcf_job(job_config),
-        spliceai_job.spliceai_job(job_config),
-        task_force_protein_domain_job.task_force_protein_domain_job(job_config)
-    ]
+
+def process_one_request(annotation_queue_id):
+    """ this is the main worker of the annotation job - A 5 step process -"""
 
     status = "success"
 
-    for request_id, variant_id, user_id in pending_requests:
-        err_msgs = ""
-        one_variant = conn.get_one_variant(variant_id) # 0id,1chr,2pos,3ref,4alt
-        print("processing request " + str(one_variant[0]) + " annotating variant: " + " ".join([str(x) for x in one_variant[1:5]]))
+    annotation_queue_entry = conn.get_annotation_queue_entry(annotation_queue_id)
+    if annotation_queue_entry is None:
+        return "error: annotation queue entry not found"
+    variant_id = annotation_queue_entry[1]
+    user_id = annotation_queue_entry[2]
 
-        '''
-        if do_heredicare:
-            vids = conn.get_external_ids_from_variant_id(variant_id, id_source='heredicare')
-            #log_file_date = datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
-            log_file_path = path.join(path.dirname(path.abspath(__file__)),  'logs/heredicare_update.log')
-            heredicare.update_specific_vids(log_file_path, vids, conn.get_user(user_id)[1])
-            #look for error code: s1 (deleted variant)
-            log_file = open(log_file_path, 'r')
-            deleted_variant = False
-            for line in log_file:
-                if '~~s1~~' in line:
-                    deleted_variant = True
-            log_file.close()
-            if deleted_variant:
-                continue # stop annotation if it was deleted!
-        '''
+    err_msgs = ""
+    one_variant = conn.get_one_variant(variant_id) # 0id,1chr,2pos,3ref,4alt
+    print("processing request " + str(one_variant[0]) + " annotating variant: " + " ".join([str(x) for x in one_variant[1:5]]))
 
-        functions.variant_to_vcf(one_variant[1], one_variant[2], one_variant[3], one_variant[4], vcf_path)
+    '''
+    if do_heredicare:
+        vids = conn.get_external_ids_from_variant_id(variant_id, id_source='heredicare')
+        #log_file_date = datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
+        log_file_path = path.join(path.dirname(path.abspath(__file__)),  'logs/heredicare_update.log')
+        heredicare.update_specific_vids(log_file_path, vids, conn.get_user(user_id)[1])
+        #look for error code: s1 (deleted variant)
+        log_file = open(log_file_path, 'r')
+        deleted_variant = False
+        for line in log_file:
+            if '~~s1~~' in line:
+                deleted_variant = True
+        log_file.close()
+        if deleted_variant:
+            continue # stop annotation if it was deleted!
+    '''
 
-
-        ############################################################
-        ############ 1: execute jobs (ie. annotate vcf) ############
-        ############################################################
-        for job in all_jobs:
-            current_code, current_stderr, current_stdout = job.execute(vcf_path, one_variant=one_variant) # this one_variant thing is kinda ugly as it is only used in annotate_from_vcf_job..
-            if current_code > 0:
-                status = "error"
-            err_msgs = collect_error_msgs(err_msgs, current_stderr)
+    vcf_path = get_temp_vcf_path()
+    functions.variant_to_vcf(one_variant[1], one_variant[2], one_variant[3], one_variant[4], vcf_path)
 
 
-        ############################################################
-        ############ 2: check validity of annotated vcf ############
-        ############################################################
-        print("checking validity of annotated vcf file...")
-        execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(vcf_path)
-        if execution_code_vcfcheck != 0:
+    ############################################################
+    ############ 1: execute jobs (ie. annotate vcf) ############
+    ############################################################
+    for job in all_jobs:
+        current_code, current_stderr, current_stdout = job.execute(vcf_path, one_variant=one_variant) # this one_variant thing is kinda ugly as it is only used in annotate_from_vcf_job..
+        if current_code > 0:
             status = "error"
-        else:
-            print("VCF OK")
-        err_msgs = collect_error_msgs(err_msgs, vcf_errors)
+        err_msgs = collect_error_msgs(err_msgs, current_stderr)
+
+
+    ############################################################
+    ############ 2: check validity of annotated vcf ############
+    ############################################################
+    print("checking validity of annotated vcf file...")
+    execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(vcf_path)
+    if execution_code_vcfcheck != 0:
+        status = "error"
+    else:
+        print("VCF OK")
+    err_msgs = collect_error_msgs(err_msgs, vcf_errors)
+
+
+    ############################################################
+    ########### 3: save the collected data to the db ###########
+    ############################################################
+    print("saving to database...")
+    headers, info = functions.read_vcf_info(vcf_path)
+
+    for vcf_variant_idx in range(len(info)):
+        current_info = info[vcf_variant_idx]
+
+        for job in all_jobs:
+            job.save_to_db(current_info, variant_id, conn=conn)
 
 
         ############################################################
-        ########### 3: save the collected data to the db ###########
+        ###### 4: insert saved data & perform postprocessing #######
         ############################################################
-        print("saving to database...")
-        headers, info = functions.read_vcf_info(vcf_path)
-
-        for vcf_variant_idx in range(len(info)):
-            current_info = info[vcf_variant_idx]
-
-            for job in all_jobs:
-                job.save_to_db(current_info, variant_id, conn=conn)
-
-
-
-            ############################################################
-            ###### 4: insert saved data & perform postprocessing #######
-            ############################################################
-            saved_data = job.get_saved_data()
-            # submit collected clinvar data to db if it exists
-            if 'clv_varid' in saved_data and 'clv_inpret' in saved_data and 'clv_revstat' in saved_data:
-                conn.clean_clinvar(variant_id) # remove all clinvar information of this variant from database and insert it again -> only the most recent clinvar annotaion is saved in database!
-                conn.insert_clinvar_variant_annotation(variant_id, saved_data['clv_varid'], saved_data['clv_inpret'], saved_data['clv_revstat'])
-                clinvar_variant_annotation_id = conn.get_clinvar_variant_annotation_id_by_variant_id(variant_id)
-                if clinvar_variant_annotation_id is None:
-                    err_msgs = collect_error_msgs(err_msgs, "CLINVAR_VARIANT_ANNOTATION ERROR: no variant annotation ids for variant " + str(variant_id))
-                else:
-                    for submission in saved_data['clinvar_submissions']:
-                        #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|5SubmittedPhenotypeInfo|7Submitter|8comment
-                        submissions = submission.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').replace('&', ';').split('|')
-                        conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
+        saved_data = job.get_saved_data()
+        # submit collected clinvar data to db if it exists
+        if 'clv_varid' in saved_data and 'clv_inpret' in saved_data and 'clv_revstat' in saved_data:
+            conn.clean_clinvar(variant_id) # remove all clinvar information of this variant from database and insert it again -> only the most recent clinvar annotaion is saved in database!
+            conn.insert_clinvar_variant_annotation(variant_id, saved_data['clv_varid'], saved_data['clv_inpret'], saved_data['clv_revstat'])
+            clinvar_variant_annotation_id = conn.get_clinvar_variant_annotation_id_by_variant_id(variant_id)
+            if clinvar_variant_annotation_id is None:
+                err_msgs = collect_error_msgs(err_msgs, "CLINVAR_VARIANT_ANNOTATION ERROR: no variant annotation ids for variant " + str(variant_id))
+            else:
+                for submission in saved_data['clinvar_submissions']:
+                    #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|5SubmittedPhenotypeInfo|7Submitter|8comment
+                    submissions = submission.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').replace('&', ';').split('|')
+                    conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
             
-            # insert literature
-            if saved_data.get('pmids', '') != '' and job_config['insert_literature']:
-                pmids = saved_data['pmids']
-                literature_entries = pubmed_parser.fetch(pmids)
-                for paper in literature_entries: #[pmid, article_title, authors, journal, year]
-                    conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4])
-        
-        print("~~~")
-        print("Annotation done!")
-
-        print(status)
-        print(err_msgs)
-
+        # insert literature
+        if saved_data.get('pmids', '') != '' and job_config['insert_literature']:
+            pmids = saved_data['pmids']
+            literature_entries = fetch(pmids) # defined in pubmed_parser.py
+            for paper in literature_entries: #[pmid, article_title, authors, journal, year]
+                conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4])
         
 
-        ############################################################
-        ############## 5: update the annotation queue ##############
-        ############################################################
-        conn.update_annotation_queue(row_id=request_id, status=status, error_msg=err_msgs)
+    print("~~~")
+    print("Annotation done!")
+    print(status)
+    print(err_msgs)
+
+
+    ############################################################
+    ############## 5: update the annotation queue ##############
+    ############################################################
+    conn.update_annotation_queue(row_id=annotation_queue_id, status=status, error_msg=err_msgs)
+
+    return status
+
+
+
+
+def process_all_pending_requests():
+    """ fetches all pending requests from the annotatino queue and annotates all of them sequentially"""
+    pending_requests = conn.get_pending_requests()
+
+    for pending_request in pending_requests:
+        process_one_request(pending_request[0])
         
-
-
     conn.close()
+
+
+
