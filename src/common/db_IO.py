@@ -291,6 +291,11 @@ class Connection:
 	                    WHERE `variant_id`=%s AND `status`='pending' LIMIT 1)"
         self.cursor.execute(command, (variant_id, user_id, variant_id))
         self.conn.commit()
+
+    def insert_celery_task_id(self, annotation_queue_id, celery_task_id):
+        command = "UPDATE annotation_queue SET celery_task_id = %s WHERE id = %s"
+        self.cursor.execute(command, (celery_task_id, annotation_queue_id))
+        self.conn.commit()
     
     def insert_clinvar_variant_annotation(self, variant_id, variation_id, interpretation, review_status):
         command = "INSERT INTO clinvar_variant_annotation (variant_id, variation_id, interpretation, review_status) VALUES (%s, %s, %s, %s)"
@@ -1206,6 +1211,10 @@ class Connection:
         result = self.cursor.fetchone()
         return result
 
-
+    def get_annotation_queue_entry(self, annotation_queue_id):
+        command = "SELECT * FROM annotation_queue WHERE id = %s"
+        self.cursor.execute(command, (annotation_queue_id, ))
+        result  = self.cursor.fetchone()
+        return result
 
 #
