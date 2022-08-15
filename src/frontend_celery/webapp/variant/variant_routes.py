@@ -65,11 +65,12 @@ def search():
     conn = Connection()
     variants, total = conn.get_variants_page_merged(page, per_page, user_id=session['user']['user_id'], ranges=ranges, genes = genes, consensus=consensus, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
     conn.close()
+
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
     return render_template('variant/search.html', variants=variants, page=page, per_page=per_page, pagination=pagination)
 
 
-
+# chr1-17027834-G-A
 @variant_blueprint.route('/create', methods=('GET', 'POST'))
 @require_login
 def create():
@@ -87,16 +88,20 @@ def create():
             if not chr or not pos or not ref or not alt or 'genome' not in request.form:
                 flash('All fields are required!', 'alert-danger')
             else:
-                try:
-                    if int(pos) < 0:
-                        flash('ERROR: Negative genomic position given, but must be positive.', 'alert-danger')
-                    else:
-                        genome_build = request.form['genome']
-                        was_successful = validate_and_insert_variant(chr, pos, ref, alt, genome_build)
-                        if was_successful:
-                            return redirect(url_for('variant.create'))
-                except:
-                    flash('ERROR: Genomic position is not a valid integer.', 'alert-danger')
+                #try:
+                #    pos = int(pos)
+                #except:
+                #    flash('ERROR: Genomic position is not a valid integer.', 'alert-danger')
+                    
+                if int(pos) < 0:
+                    flash('ERROR: Negative genomic position given, but must be positive.', 'alert-danger')
+                else:
+                    genome_build = request.form['genome']
+                    was_successful = validate_and_insert_variant(chr, pos, ref, alt, genome_build)
+                    if was_successful:
+                        return redirect(url_for('variant.create'))
+
+                    
 
 
         if create_variant_from == 'hgvsc':

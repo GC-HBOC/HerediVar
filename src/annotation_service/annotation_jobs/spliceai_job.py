@@ -26,7 +26,8 @@ class spliceai_job(Job):
 
 
     def save_to_db(self, info, variant_id, conn):
-        self.insert_annotation(variant_id, info, "hexplorer_delta=", 39, conn)
+        self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : '|'.join(value.split('|')[2:]))
+        self.insert_annotation(variant_id, info, 'SpliceAI=', 8, conn, value_modifier_function= lambda value : max(value.split('|')[2:6]))
 
 
 
@@ -63,7 +64,6 @@ class spliceai_job(Job):
         if not found_spliceai_header:
             errors.append("SpliceAI WARNING: did not find a SpliceAI INFO entry in input vcf, did you annotate the file using a precomputed file before?")
         if need_annotation:
-            print('executing SpliceAI to annotate new variant...')
             functions.execute_command(['sed', '-i', '/SpliceAI/d', temp_path], "sed")
             spliceai_code, spliceai_stderr, splicai_stdout = self.annotate_spliceai_algorithm(temp_path, output_vcf_path)
             errors.append(spliceai_stderr)

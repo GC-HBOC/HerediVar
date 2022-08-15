@@ -258,6 +258,7 @@ class Connection:
         self.conn.commit()
         variant_id = self.get_variant_id(chr, pos, ref, alt)
         self.insert_annotation_request(variant_id, user_id)
+        return self.get_last_insert_id() # return the annotation_queue_id of the new variant
     
     #def insert_external_variant_id_from_vcf(self, chr, pos, ref, alt, external_id, id_source):
     #    command = "INSERT INTO variant_ids (variant_id, external_id, id_source) (SELECT id, %s, %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)"
@@ -580,6 +581,7 @@ class Connection:
         #print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants = self.cursor.fetchall()
+
 
         # get number of variants
         prefix = "SELECT COUNT(id) FROM variant"

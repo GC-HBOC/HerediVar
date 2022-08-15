@@ -53,7 +53,7 @@ class Job(metaclass=abc.ABCMeta):
             os.replace(annotated_file_path, not_annotated_file_path)
 
     def insert_annotation(self, variant_id, info, info_name, annotation_type_id, conn, value_modifier_function = None):
-        value = functions.find_between(info, info_name, ';')
+        value = functions.find_between(info, info_name, '(;|$)')
 
         if value == '' or value is None:
             return

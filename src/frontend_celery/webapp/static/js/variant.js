@@ -118,11 +118,13 @@ function update_annotation_status(status_url) {
             show_annotation_status("bg-success", "The annotation is finished page is reloading", "Annotation finished")
         } else if (data['state'] == "FAILURE") {
             show_annotation_status("bg-danger", "Something unexpected happened during variant annotation: " + data['state'] + ' ' + data['status'], "Annotation error")
+        } else {
+            show_annotation_status("bg-danger", "An unexpected status found: " + data['state'], "Annotation error")
         }
 
         // polling happens here:
         // rerun in 5 seconds if state resembles an unfinished task
-        if (! (data['state'] == 'FAILURE' || data['state'] == 'SUCCESS')) {
+        if (data['state'] == 'PENDING' || data['state'] == 'PROGRESS') {
             
             setTimeout(function() {
                 update_annotation_status(status_url);

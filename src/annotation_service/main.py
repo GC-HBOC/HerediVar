@@ -171,7 +171,7 @@ def process_one_request(annotation_queue_id):
 
     print("~~~")
     print("Annotation done!")
-    print(status)
+    print("Status: " + status)
     print(err_msgs)
 
 
