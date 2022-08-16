@@ -4,7 +4,7 @@
 table = document.getElementById("variantConsequenceTable");
 if (table != null) {
     filterTable_one_column("ensembl", 10, table);
-    sorter(['#variant_consequence_numflags_col', '#variant_consequence_length_col'], '#variantConsequenceTable') // sort first by num of flags and if there is a tie sort by length
+    sorter(['#variant_consequence_gene_symbol_col', '#variant_consequence_numflags_col', '#variant_consequence_length_col'], '#variantConsequenceTable') // sort first by num of flags and if there is a tie sort by length
 }
 sorter(['#userClassificationsTableDateCol'], '#userClassificationsTable')
 sorter(['#literatureTableYearCol'], '#literatureTable')

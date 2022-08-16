@@ -8,6 +8,7 @@ import common.functions as functions
 from operator import itemgetter
 import datetime
 import re
+from functools import cmp_to_key
 
 def get_db_connection():
     conn = None
@@ -470,18 +471,83 @@ class Connection:
             gene_id = self.get_gene_id_by_hgnc_id(string)
         return gene_id # can return none
     
-    
-    def get_variant_more_info(self, variant_id):
+
+    def get_variant_more_info(self, variant_id, user_id = None):
         command = "SELECT * FROM variant WHERE id = %s"
-        command = self.finalize_search_query(command)
-        self.cursor.execute(command, (variant_id, 1))
+        command = self.annotate_genes(command)
+        command = self.annotate_consensus_classification(command)
+        actual_information = (variant_id, )
+        if user_id is not None:
+            command = self.annoate_specific_user_classification(command)
+            actual_information += (user_id, )
+        self.cursor.execute(command, actual_information)
         result = self.cursor.fetchone()
         return result
+
+    # these functions add additional columns to the variant table
+    def annotate_genes(self, command):
+        prefix = """
+        				SELECT id, chr, pos, ref, alt, group_concat(gene_id SEPARATOR '; ') as gene_id, group_concat(symbol SEPARATOR '; ') as symbol FROM (
+							SELECT * FROM (
+        """
+        postfix = """
+        						) a LEFT JOIN (
+                                    SELECT DISTINCT variant_id, gene_id FROM variant_consequence WHERE gene_id IS NOT NULL) b ON a.id=b.variant_id
+					) c LEFT JOIN (
+                                SELECT id AS gene_id_2, symbol FROM gene WHERE id
+				) d ON c.gene_id=d.gene_id_2
+                        GROUP BY id, chr, pos, ref, alt
+        """
+        return prefix + command + postfix
+
+    def annotate_specific_user_classification(self, command, user_id):
+        prefix = """
+        SELECT g.*, h.user_classification FROM (
+        """
+        postfix = """
+        		) g LEFT JOIN (
+                    SELECT variant_id, classification as user_classification FROM user_classification WHERE user_id = %s) h ON g.id = h.variant_id ORDER BY chr, pos, ref, alt
+        """
+        return prefix + command + postfix
     
+    def annotate_consensus_classification(self, command):
+        prefix = """
+            SELECT e.*, f.classification FROM (
+        """
+        postfix = """
+        	) e LEFT JOIN (
+                SELECT variant_id, classification FROM consensus_classification WHERE is_recent=1) f ON e.id = f.variant_id
+        """
+        return prefix + command + postfix
+
+    # this function returns a list of variant tuples (can have length more than one if there are multiple mane select transcripts for this variant)
+    def annotate_preferred_transcripts(self, variant):
+        result = []
+        consequences = self.get_variant_consequences(variant_id = variant[0])
+        if consequences is not None:
+            keyfunc = cmp_to_key(mycmp = self.sort_consequences)
+                
+            consequences.sort(key = keyfunc) # sort by preferred transcript
+            best_consequence = consequences[0]
+                
+            if best_consequence[14] == 1: # if the best one is a mane select transcript scan also the following and add them as well
+                for consequence in consequences:
+                    if consequence[14] == 1: # append one variant entry for each mane select transcript (in case of multiple genes, usually a low number)
+                        result.append(variant + consequence)
+                    else:
+                        break # we can do this because the list is sorted
+            else: # in case the best consequence is no mane select transcrip
+                result.append(variant + best_consequence)
+
+        else:
+            result.append(variant + (None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None))
+        return result
+
+    """
     # this function adds additional columns to the variant table (ie. gene symbol, gene_id)
     def finalize_search_query(self, command):
         prefix = '''
-        SELECT id, chr, pos, ref, alt, gene_id, symbol, classification, user_classification,hgvs_c,hgvs_p FROM (
+        SELECT id, chr, pos, ref, alt, gene_id, symbol, classification, user_classification,hgvs_c,hgvs_p,symbol_details,gene_id_details FROM (
             SELECT id, chr, pos, ref, alt, gene_id, symbol, classification, user_classification FROM (
 	            SELECT id, chr, pos, ref, alt, gene_id, symbol, classification FROM (
 		            SELECT id, chr, pos, ref, alt, group_concat(gene_id SEPARATOR '; ') as gene_id, group_concat(symbol SEPARATOR '; ') as symbol FROM (
@@ -500,11 +566,17 @@ class Connection:
             ) g LEFT JOIN (
 	            SELECT variant_id, classification as user_classification FROM user_classification WHERE user_id = %s) h ON g.id = h.variant_id ORDER BY chr, pos, ref, alt
             ) h  LEFT JOIN (
-				SELECT variant_id,transcript_name,hgvs_c,hgvs_p,is_mane_select FROM transcript  INNER JOIN (SELECT variant_id,transcript_name,hgvs_c,hgvs_p FROM variant_consequence WHERE source='ensembl') x ON transcript.name=x.transcript_name WHERE is_mane_select=1
-            ) i ON h.id=i.variant_id ORDER BY chr, pos, ref, alt
+		        SELECT variant_id,hgvs_c,hgvs_p,is_mane_select,symbol_details,gene_id as gene_id_details FROM (
+		        	SELECT variant_id,transcript_name,hgvs_c,hgvs_p,is_mane_select,gene_id FROM transcript INNER JOIN (SELECT variant_id,transcript_name,hgvs_c,hgvs_p FROM variant_consequence WHERE source='ensembl') x ON transcript.name=x.transcript_name WHERE is_mane_select=1
+                    ) x LEFT JOIN (SELECT id,symbol as symbol_details FROM gene) y ON x.gene_id = y.id
+        ) i ON h.id=i.variant_id ORDER BY chr, pos, ref, alt
         '''
+        #				SELECT variant_id,transcript_name,hgvs_c,hgvs_p,is_mane_select FROM transcript  INNER JOIN (SELECT variant_id,transcript_name,hgvs_c,hgvs_p FROM variant_consequence WHERE source='ensembl') x ON transcript.name=x.transcript_name WHERE is_mane_select=1
+
         command = prefix + command + postfix
         return command
+    """
+
 
     def get_variants_page_merged(self, page, page_size, user_id, ranges = None, genes = None, consensus = None, hgvs = None, variant_ids_oi = None):
         # get one page of variants determined by offset & pagesize
@@ -576,12 +648,19 @@ class Connection:
         
         command = prefix + postfix + " ORDER BY chr, pos, ref, alt LIMIT %s, %s"
         actual_information += (offset, page_size)
-        command = self.finalize_search_query(command)
+        command = self.annotate_genes(command)
+        command = self.annotate_consensus_classification(command)
+        command = self.annotate_specific_user_classification(command, user_id = user_id)
         actual_information += (user_id, ) # this is required to get the user-classifications of the currently logged in user for the variants
-        #print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants = self.cursor.fetchall()
 
+        variants_and_transcripts = []
+        for variant in variants:
+            annotated_variant = self.annotate_preferred_transcripts(variant)
+            variants_and_transcripts.extend(annotated_variant)
+        variants = variants_and_transcripts
+        print(variants)
 
         # get number of variants
         prefix = "SELECT COUNT(id) FROM variant"
@@ -591,6 +670,39 @@ class Connection:
         if num_variants is None:
             return [], 0
         return variants, num_variants[0]
+    
+
+    def sort_consequences(self, a, b):
+        # sort by ensembl/refseq
+        if a[9] == 'ensembl' and b[9] == 'refseq':
+            return -1
+        elif a[9] == 'refseq' and b[9] == 'ensembl':
+            return 1
+        elif a[9] == b[9]:
+
+            # sort by mane select
+            if a[14] is None or b[14] is None:
+                return 1
+            elif a[14] == 1 and b[14] == 0:
+                return -1
+            elif a[14] == 0 and b[14] == 1:
+                return 1
+            elif a[14] == b[14]:
+
+                # sort by biotype
+                if a[18] == 'protein coding' and b[18] != 'protein coding':
+                    return -1
+                elif a[18] != 'protein coding' and b[18] == 'protein coding':
+                    return 1
+                elif (a[18] != 'protein coding' and b[18] != 'protein coding') or (a[18] == 'protein coding' and b[18] == 'protein coding'):
+
+                    # sort by length
+                    if a[12] > b[12]:
+                        return -1
+                    elif a[12] < b[12]:
+                        return 1
+                    else:
+                        return 0
 
 
     def get_mane_select_for_gene(self, gene, source):
@@ -633,7 +745,7 @@ class Connection:
         return result
     
     def get_variant_consequences(self, variant_id):
-        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,x.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags FROM transcript RIGHT JOIN ( \
+        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,x.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype FROM transcript RIGHT JOIN ( \
 	                    SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,gene_id,exon_nr,intron_nr,source,pfam_accession,pfam_description FROM gene RIGHT JOIN ( \
 		                    SELECT * FROM variant_consequence WHERE variant_id=%s \
 	                    ) y \

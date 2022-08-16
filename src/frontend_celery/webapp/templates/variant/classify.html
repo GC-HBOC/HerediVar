@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container"  style="min-width:80em">
+    <h1 class="bst">{% block title %} Create a {{ classification_type }} classification {% endblock %}</h1>
+
+    {% if previous_classification['has_classification'] %}
+    <div class="alert alert-warning bst" role="alert">
+        It appears that you already have a classification for this variant. You can edit it here.
+    </div>
+    {% endif %}
+
+    {{ macros.add_variant_banner(variant_oi) }}
+    
+
+    <form class="bst" action="" id="acmg-form" autocomplete="off" method="post" novalidate>
+
+        <!-- user/consensus select-->
+        {% if is_admin %}
+        <div class="form-group">
+            <label for="classification_type" class="form-label">Select type of classification</label>
+            <select class="form-select" name="classification_type" id="classification_type" required>
+                <option data-href="{{ url_for('variant.classify', variant_id=variant_oi[0]) }}" value="user" {% if classification_type == 'user' %}selected{% endif %}>User classification</option>
+                <option data-href="{{ url_for('variant.consensus_classify', variant_id=variant_oi[0]) }}" value="consensus" {% if classification_type == 'consensus' %}selected{% endif %}>Consensus classification</option>
+            </select>
+        </div>
+        {% endif %}
+
+        <!-- scheme select -->
+         <div class="form-group sst">
+             <label for="scheme" class="form-label">Classification scheme</label>
+             <select class="form-select" name="scheme" id="scheme" onchange="scheme_select_action()" required>
+                 <option value="acmg_standard">ACMG standard</option>
+                 <option value="acmg_TP53">ACMG gene specific: TP53</option>
+                 <option value="acmg_CDH1">ACMG gene specific: CDH1</option>
+                 <option value="task-force">VUS-task-force standard</option>
+                 <option value="task-force-brca">VUS-task-force gene specific: BRCA1/2</option>
+                 <option value="none">None</option>
+            </select>
+        </div>
+
+        <div class="collapse show" aria-expanded="true" id="classification_schema_wrapper">
+        
+            <div class="sst">Go <a id="scheme_reference" href="#">here</a> for more details about the currently selected ACMG scheme.</div>
+        
+            <!-- acmg criteria -->
+            <div class="d-flex justify-content-center sst">
+                <div class="card">
+                    <h4 class="card-header">Pathogenic evidence</h4>
+                    <div class="card-body">
+                        <div id="pathogenic_criteria_container" class="d-flex justify-content-center" style="padding-left:10px;"></div>
+                    </div>
+                </div>
+
+
+                <div class="card">
+                    <h4 class="card-header">Uncertain</h4>
+                    <div class="card-body">
+                        <div id="uncertain_criteria_container" class="d-flex justify-content-center" style="padding-left:10px;"></div>
+                    </div>
+                </div>
+    
+    
+                <div class="card">
+                    <h4 class="card-header">Benign evidence</h4>
+                    <div class="card-body">
+                        <div id="benign_criteria_container" class="d-flex justify-content-center" style="padding-left:10px;"></div>
+                    </div>
+                </div>
+
+                <!-- acmg classification preview -->
+                <div class="card">
+                    <div class="ssr" style="text-align:right"><a href="https://pubmed.ncbi.nlm.nih.gov/25741868/">reference</a></div>
+                    <div class="card-body d-flex justify-content-center align-items-center" style="padding:1.5em">
+                        <div class="">
+                            <hr>
+                            <div>Classification based on selected criteria:</div>
+                            <div class="display-3" style="font-weight:bold; text-align:center;" id="classification_preview"></div>
+                            <hr>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- criterium display & evidence select -->
+            <div class="d-flex justify-content-center sst">
+                <div id="criteria_container" class="card" style="width:100%">
+                    <div class="card-body">
+
+                        <div class="d-flex align-items-center">
+                            <input style="transform:scale(1.5)" class="ssr" id="select_criterium_check" type="checkbox" 
+                                onchange="select_criterium(this)" data-bs-trigger="manual" data-bs-container="body" 
+                                data-bs-toggle="popover" data-bs-placement="left" 
+                                data-bs-content="you must provide evidence in order to select this criterion" hidden>
+                            <label style="font-size:x-large"  id="criteria_title"></label>
+                        </div>
+                        <hr>
+                        <div id="button_container" hidden>
+                            <h5 class="sst">Description:</h5>
+                            <div id="criteria_description" style="white-space: pre-line;"></div>
+                            <div id="additional_content" class="sst"></div>
+                            <h5 class="bst">Evidence:</h5>
+                            <textarea type="text" id="criteria_evidence" class="form-control sst" placeholder="insert evidence..."></textarea>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+
+
+        <!-- final classification -->
+        <div class="form-group bst">
+            <label for="final_class" class="form-label">Final classification</label>
+            <select class="form-select" name="final_class" id="final_class" required>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+           </select>
+           <div class="invalid-feedback">
+               Please select a classification
+           </div>
+        </div>
+
+
+
+        <!-- comment -->
+        <div class="form-group sst">
+            <label for="comment" class="form-label">Comment</label>
+            <textarea type="text" name="comment"
+                   placeholder="comment" class="form-control"
+                   value="{{ previous_classification['comment'] }}" id="comment" maxlength="3500" required>{{ previous_classification['comment'] }}</textarea>
+            <div class="invalid-feedback">
+                Please provide a comment describing more about the reasons for this classification.
+            </div>
+        </div>
+
+
+
+        <!-- submit -->
+        <div class="bsb">
+            <button id="submit-acmg-form" class="sst btn btn-primary" type="submit" onclick="submit_classification()">Submit classification</button>
+            <!--
+            <div class="d-flex">
+                <div class="ssr">Last submitted at:</div>
+                <div id="submitted_at_date"></div>
+            </div>
+            -->
+        </div>
+
+    </form>
+      
+</div>
+
+<meta id="test" data-request-object="{{ request.form.to_dict(flat=True) }}">
+
+<!-- this extracts the flask data and makes them available to the scripts -->
+<script>
+
+
+
+    const schemes_with_info_string = '{{ schemes_with_info | tojson | safe }}' // must still be escaped and parsed to an object!
+    // example: {3: {'none': {'classification_id': 4, 'date': '2022-07-15', 'selected_criteria': [(26, 4, 'pvs1', 'pvs', 'egsa'), (27, 4, 'pp1', 'pm', 'edfsg'), (28, 4, 'bs1', 'bs', 'fdsaf')]}, 'TP53': {'classification_id': 10, 'date': '2022-07-13', 'selected_criteria': [(21, 10, 'bp2', 'bp', 'erwhgerwb'), (22, 10, 'bs1', 'bs', 'ababasc')]}}, 14: {'none': {'classification_id': 23, 'date': '2022-07-18', 'selected_criteria': [(36, 23, 'pm3', 'pm', 'asfdsaf'), (37, 23, 'pp1', 'pvs', 'VERRRRYYY STRONG!')]}, 'TP53': {'classification_id': 24, 'date': '2022-07-18', 'selected_criteria': [(38, 24, 'ps1', 'ps', 'c vxc ysa'), (39, 24, 'ps2', 'ps', 'asdfafafd'), (40, 24, 'pm2', 'pm', 'afdasfasdf'), (41, 24, 'pm5', 'pm', 'daffafd')]}}}
+    const previous_classification = '{{ previous_classification["class"] }}';
+    const has_classification = '{{ previous_classification["has_classification"]}}';
+    const variant_genes = '{{ variant_oi[6] }}'.split(';');
+    const classification_type = '{{ classification_type }}';
+
+    
+    const request_form_string = '{{request.form.to_dict(flat=True) | tojson | safe }}' // must still be escaped and parsed to an object!
+
+    const criteria_with_strength_select_string = '{{ criteria_with_strength_select | tojson | safe }}' // must still be escaped and parsed to an object!
+    const not_activateable_buttons_string = '{{ not_activateable_buttons | tojson | safe }}' // must still be escaped and parsed to an object!
+    const disable_groups_string = '{{ disable_groups | tojson | safe }}' // must still be escaped and parsed to an object!
+
+</script>
+
+
+{% endblock %}
+
+{% block special_scripts %}
+<!--<script src="/static/js/formValidator.js"></script>-->
+<script src="/static/js/scheme_parameters.js"></script>
+<script src="/static/js/classify.js"></script>
+{% endblock%}

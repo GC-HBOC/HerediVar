@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+
+    <h1 class="bst">{% block title %} Submit a new consensus classification {% endblock %}</h1>
+
+    <form id="classifyForm" class="needs-validation" method="post" novalidate>
+
+        
+          
+            <div class="form-group bst">
+                <h4 for="class" class="form-label">Class</h4>
+                <select class="form-select" name="class" id="class" required>
+                    <option value="1" selected="selected">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+               </select>
+               <div class="invalid-feedback">
+                   Please select a classification
+               </div>
+            </div>
+            
+
+            <div class="form-group sst">
+                <h4 for="comment" class="form-label">Comment</h4>
+                <textarea  type="text" name="comment" style="resize: vertical;"
+                       placeholder="comment" class="form-control"
+                       value="{{ request.form['comment'] }}" id="comment" required></textarea >
+                <div class="invalid-feedback">
+                    Please provide a comment describing more about the reasons for this classification.
+                </div>
+            </div>
+
+            <div class="form-group sst bsb">
+                {% if not has_consensus %}
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                {% else %}
+                    <button id="submit-button" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#submit-modal">Submit</button>
+                {% endif %}
+            </div>
+
+
+
+        
+    </form> 
+
+<!-- modal -->
+<div class="modal fade" id="submit-modal" tabindex="-1" aria-labelledby="submit-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="submit-modal-label">WARNING</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                There is already a consensus classification for this variant. Submitting a new consensus classification will invalidate the previous one. <br>
+                A history of all consensus classifications can be accessed through the variant display page.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="submit-submit" type="submit" class="btn btn-primary">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block special_scripts %}
+    <script src="/static/js/formValidator.js"></script>
+    <script src="/static/js/consensus_classify.js"></script>
+{% endblock%}

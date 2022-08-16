@@ -23,7 +23,7 @@ class Config(object):
     # configuration of server side session from flask-session module
     SESSION_PERMANENT = False
     SESSION_TYPE = "filesystem"
-    #app.config["SESSION_COOKIE_SECURE"] = True
+    #SESSION_COOKIE_SECURE = True
     SESSION_USE_SIGNER = True
     SESSION_FILE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/flask_sessions"
 
