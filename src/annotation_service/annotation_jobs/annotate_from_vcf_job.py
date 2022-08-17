@@ -4,6 +4,8 @@ import common.paths as paths
 import common.functions as functions
 import tempfile
 
+from ..pubmed_parser import fetch
+
 ## this annotates various information from different vcf files
 class annotate_from_vcf_job(Job):
     def __init__(self, job_config):
@@ -11,7 +13,7 @@ class annotate_from_vcf_job(Job):
         self.job_config = job_config
 
 
-    def execute(self, inpath, **kwargs):
+    def execute(self, inpath, annotated_inpath, **kwargs):
         if not any(self.job_config[x] for x in ['do_dbsnp', 'do_revel', 
                                                 'do_spliceai', 'do_cadd', 
                                                 'do_clinvar', 'do_gnomad', 
@@ -25,10 +27,10 @@ class annotate_from_vcf_job(Job):
 
 
         config_file_path = self.write_vcf_annoate_config(one_variant = kwargs['one_variant'])
-        vcf_annotate_code, vcf_annotate_stderr, vcf_annotate_stdout = self.annotate_from_vcf(config_file_path, inpath, self.get_annotation_tempfile())
+        vcf_annotate_code, vcf_annotate_stderr, vcf_annotate_stdout = self.annotate_from_vcf(config_file_path, inpath, annotated_inpath)
 
 
-        self.handle_result(inpath, vcf_annotate_code)
+        self.handle_result(inpath, annotated_inpath, vcf_annotate_code)
         return vcf_annotate_code, vcf_annotate_stderr, vcf_annotate_stdout
 
 
@@ -59,34 +61,45 @@ class annotate_from_vcf_job(Job):
 
         self.insert_annotation(variant_id, info, "ARUP_classification=", 21, conn)
 
+        self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : '|'.join(value.split('|')[2:]))
+        self.insert_annotation(variant_id, info, 'SpliceAI=', 8, conn, value_modifier_function= lambda value : max(value.split('|')[2:6]))
+
         self.insert_annotation(variant_id, info, "tp53db_class=", 27, conn)
         self.insert_annotation(variant_id, info, "tp53db_bayes_del=", 30, conn)
         self.insert_annotation(variant_id, info, "tp53db_DNE_LOF_class=", 29, conn)
         self.insert_annotation(variant_id, info, "tp53db_DNE_class=", 31, conn)
         self.insert_annotation(variant_id, info, "tp53db_domain_function=", 32, conn)
         self.insert_annotation(variant_id, info, "tp53db_transactivation_class=", 33, conn)
-        if self.get_saved_data().get('pmids') is None:
-            self.save_data('pmids', '')
-        self.update_saved_data('pmids', functions.find_between(info, 'tp53db_pubmed=', ';'), operation = lambda x, y : functions.collect_info(x, '', y, sep = '&'))
+        pmids = functions.find_between(info, 'tp53db_pubmed=', '(;|$)')
+        if pmids is not None and pmids != '':
+            if self.job_config['insert_literature']:
+                literature_entries = fetch(pmids) # defined in pubmed_parser.py
+                for paper in literature_entries: #[pmid, article_title, authors, journal, year]
+                    conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4])
 
-        clinvar_submissions = functions.find_between(info, 'ClinVar_submissions=', ';')
+
+        # CLINVAR
+        clinvar_submissions = functions.find_between(info, 'ClinVar_submissions=', '(;|$)')
         if clinvar_submissions == '' or clinvar_submissions is None:
             clinvar_submissions = []
         else:
             clinvar_submissions = clinvar_submissions.split(',')
-        self.save_data('clinvar_submissions', clinvar_submissions)
-        clv_revstat = functions.find_between(info, 'ClinVar_revstat=', ';')
-        if clv_revstat is not None:
-            self.save_data('clv_revstat', clv_revstat.replace('\\', ',').replace('_', ' '))
-        clv_varid = functions.find_between(info, 'ClinVar_varid=', ';')
-        if clv_varid is not None:
-            self.save_data('clv_varid', clv_varid)
-        clv_inpret = functions.find_between(info, 'ClinVar_inpret=', ';')
-        if clv_inpret is not None:
-            self.save_data('clv_inpret', clv_inpret.replace('\\', ',').replace('_', ' '))
+        clv_revstat = functions.find_between(info, 'ClinVar_revstat=', '(;|$)')
+        clv_varid = functions.find_between(info, 'ClinVar_varid=', '(;|$)')
+        clv_inpret = functions.find_between(info, 'ClinVar_inpret=', '(;|$)')
 
-        self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : '|'.join(value.split('|')[2:]))
-        self.insert_annotation(variant_id, info, 'SpliceAI=', 8, conn, value_modifier_function= lambda value : max(value.split('|')[2:6]))
+        if clv_revstat is not None and clv_inpret is not None and clv_varid is not None:
+            clv_revstat.replace('\\', ',').replace('_', ' ')
+            clv_inpret.replace('\\', ',').replace('_', ' ')
+
+            conn.clean_clinvar(variant_id) # remove all clinvar information of this variant from database and insert it again -> only the most recent clinvar annotaion is saved in database!
+            conn.insert_clinvar_variant_annotation(variant_id, clv_varid, clv_inpret, clv_revstat)
+            clinvar_variant_annotation_id = conn.get_clinvar_variant_annotation_id_by_variant_id(variant_id)
+
+            for submission in clinvar_submissions:
+                #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|5SubmittedPhenotypeInfo|7Submitter|8comment
+                submissions = submission.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').replace('&', ';').split('|')
+                conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
 
 
 

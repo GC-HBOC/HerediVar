@@ -51,7 +51,7 @@ def search():
     hgvs = request.args.get('hgvs', '')
     hgvs = preprocess_query(hgvs, pattern = ".*:?c\..+")
     if hgvs is None:
-        flash("You have an error in your hgvs query(s). Please check the syntax! c.HGVS be prefixed by this pattern: 'transcript:c.' Results are not filtered by hgvs.", "alert-danger")
+        flash("You have an error in your hgvs query(s). Please check the syntax! c.HGVS should be prefixed by this pattern: 'transcript:c.' Results are not filtered by hgvs.", "alert-danger")
     if any(not(x.startswith('ENST') or x.startswith('NM') or x.startswith('NR') or x.startswith('XM') or x.startswith('XR')) for x in hgvs):
         flash("You are probably searching for a HGVS c-dot string without knowing its transcript. Be careful with the search results as they might not contain the variant you are looking for!", "alert-warning")
 
@@ -132,6 +132,11 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
         variant_id = get_variant_id(conn, chr, pos, ref, alt)
 
     current_annotation_status = conn.get_current_annotation_status(variant_id)
+    if current_annotation_status[4] == 'pending' and current_annotation_status[7] is None:
+        celery_task_id = start_annotation_service(variant_id = variant_id)
+        current_annotation_status = current_annotation_status[0:7] + (celery_task_id, )
+
+
     if request.method == 'POST':
         user_action = request.args.get('action')
         if user_action == 'add_to_list':

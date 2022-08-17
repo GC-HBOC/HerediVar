@@ -3,6 +3,9 @@ from ._job import Job
 import common.paths as paths
 import common.functions as functions
 import tempfile
+import uuid
+import os
+
 
 ## run SpliecAI on the variants which are not contained in the precomputed file
 class spliceai_job(Job):
@@ -11,30 +14,30 @@ class spliceai_job(Job):
         self.job_config = job_config
 
 
-    def execute(self, inpath, **kwargs):
+    def execute(self, inpath, annotated_inpath, **kwargs):
         if not self.job_config['do_spliceai']:
             return 0, '', ''
 
         self.print_executing()
 
 
-        spliceai_code, spliceai_stderr, splicai_stdout = self.annotate_missing_spliceai(inpath, self.get_annotation_tempfile())
+        spliceai_code, spliceai_stderr, splicai_stdout = self.annotate_missing_spliceai(inpath, annotated_inpath)
 
 
-        self.handle_result(inpath, spliceai_code)
+        self.handle_result(inpath, annotated_inpath, spliceai_code)
         return spliceai_code, spliceai_stderr, splicai_stdout
 
 
     def save_to_db(self, info, variant_id, conn):
-        self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : '|'.join(value.split('|')[2:]))
-        self.insert_annotation(variant_id, info, 'SpliceAI=', 8, conn, value_modifier_function= lambda value : max(value.split('|')[2:6]))
+        self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : '|'.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )
+        self.insert_annotation(variant_id, info, 'SpliceAI=', 8, conn, value_modifier_function= lambda value : ','.join([str(max([float(x) for x in x.split('|')[2:6]])) for x in value.split(',')]) )
 
 
 
 
     def annotate_missing_spliceai(self, input_vcf_path, output_vcf_path):
         input_file = open(input_vcf_path, 'r')
-        temp_path = tempfile.gettempdir() + "/spliceai_temp.vcf"
+        temp_path = tempfile.gettempdir() + '/' + str(uuid.uuid4()) + '.vcf'
         temp_file = open(temp_path, 'w')
 
         found_spliceai_header = False
@@ -71,6 +74,8 @@ class spliceai_job(Job):
         # need to insert some code here to merge the newly annotated variants and previously 
         # annotated ones from the db if there are files which contain more than one variant! 
         input_file.close()
+
+        #os.remove(temp_path)
 
         return spliceai_code, '; '.join(errors), splicai_stdout
 

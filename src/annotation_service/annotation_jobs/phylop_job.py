@@ -11,17 +11,17 @@ class phylop_job(Job):
         self.job_config = job_config
 
 
-    def execute(self, inpath, **kwargs):
+    def execute(self, inpath, annotated_inpath, **kwargs):
         if not self.job_config['do_phylop']:
             return 0, '', ''
 
         self.print_executing()
 
         
-        phylop_code, phylop_stderr, phylop_stdout = self.annotate_phylop(inpath, self.get_annotation_tempfile())
+        phylop_code, phylop_stderr, phylop_stdout = self.annotate_phylop(inpath, annotated_inpath)
 
 
-        self.handle_result(inpath, phylop_code)
+        self.handle_result(inpath, annotated_inpath, phylop_code)
         return phylop_code, phylop_stderr, phylop_stdout
 
 

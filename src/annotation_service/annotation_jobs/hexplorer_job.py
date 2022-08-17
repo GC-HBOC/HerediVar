@@ -11,17 +11,17 @@ class hexplorer_job(Job):
         self.job_config = job_config
 
 
-    def execute(self, inpath, **kwargs):
+    def execute(self, inpath, annotated_inpath, **kwargs):
         if not self.job_config['do_hexplorer']:
             return 0, '', ''
 
         self.print_executing()
 
 
-        hexplorer_code, hexplorer_stderr, hexplorer_stdout = self.annotate_hexplorer(inpath, self.get_annotation_tempfile())
+        hexplorer_code, hexplorer_stderr, hexplorer_stdout = self.annotate_hexplorer(inpath, annotated_inpath)
 
 
-        self.handle_result(inpath, hexplorer_code)
+        self.handle_result(inpath, annotated_inpath, hexplorer_code)
         return hexplorer_code, hexplorer_stderr, hexplorer_stdout
 
 

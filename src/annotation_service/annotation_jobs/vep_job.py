@@ -4,6 +4,9 @@ import common.paths as paths
 import common.functions as functions
 import re
 
+from ..pubmed_parser import fetch
+
+
 class vep_job(Job):
     def __init__(self, job_config, refseq=False):
         if refseq:
@@ -14,15 +17,15 @@ class vep_job(Job):
         self.job_config = job_config
 
 
-    def execute(self, inpath, **kwargs):
+    def execute(self, inpath, annotated_inpath, **kwargs):
         if not self.job_config['do_vep']:
             return 0, '', ''
 
         self.print_executing()
 
-        vep_code, vep_stderr, vep_stdout = self._annotate_vep(inpath, self.get_annotation_tempfile())
+        vep_code, vep_stderr, vep_stdout = self._annotate_vep(inpath, annotated_inpath)
 
-        self.handle_result(inpath, vep_code)
+        self.handle_result(inpath, annotated_inpath, vep_code)
         return vep_code, vep_stderr, vep_stdout
 
 
@@ -39,10 +42,9 @@ class vep_job(Job):
         if csq_info == '' or csq_info is None:
             return
 
-        if 'pmids' not in self.get_saved_data():
-            self.save_data('pmids', '')
         vep_entries = csq_info.split(',')
         transcript_independent_saved = False
+        pmids = ''
         for vep_entry in vep_entries:
             #10MaxEntScan_ref,11MaxEntScan_alt
             vep_entry = vep_entry.split('|')
@@ -85,7 +87,14 @@ class vep_job(Job):
                 maxentscan_alt = vep_entry[num_vep_basic_entries+1]
                 if maxentscan_alt != '' and self.job_config['insert_maxent']:
                     conn.insert_variant_annotation(variant_id, 10, maxentscan_alt)
-                self.update_saved_data('pmids', vep_entry[num_vep_basic_entries+2], operation = lambda x, y : functions.collect_info(x, '', y, sep = '&'))
+                pmids = functions.collect_info(pmids, '', vep_entry[num_vep_basic_entries+2], sep = '&')
+                #self.update_saved_data('pmids', vep_entry[num_vep_basic_entries+2], operation = lambda x, y : functions.collect_info(x, '', y, sep = '&'))
+
+        # insert literature
+        if self.job_config['insert_literature'] and pmids != '':
+            literature_entries = fetch(pmids) # defined in pubmed_parser.py
+            for paper in literature_entries: #[pmid, article_title, authors, journal, year]
+                conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4])
 
 
 

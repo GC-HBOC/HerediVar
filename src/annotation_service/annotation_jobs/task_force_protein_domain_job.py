@@ -11,7 +11,7 @@ class task_force_protein_domain_job(Job):
         self.job_config = job_config
 
 
-    def execute(self, inpath, **kwargs):
+    def execute(self, inpath, annotated_inpath, **kwargs):
             return 0, '', ''
 
 

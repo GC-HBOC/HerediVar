@@ -294,6 +294,13 @@ class Connection:
         self.cursor.execute(command, (variant_id, user_id, variant_id))
         self.conn.commit()
 
+        command = "SELECT id from annotation_queue WHERE variant_id=%s AND status='pending'"
+        self.cursor.execute(command, (variant_id, ))
+        annotation_queue_id = self.cursor.fetchone()
+        if annotation_queue_id is not None:
+            return annotation_queue_id[0]
+        return None
+
     def insert_celery_task_id(self, annotation_queue_id, celery_task_id):
         command = "UPDATE annotation_queue SET celery_task_id = %s WHERE id = %s"
         self.cursor.execute(command, (celery_task_id, annotation_queue_id))
@@ -525,9 +532,7 @@ class Connection:
         result = []
         consequences = self.get_variant_consequences(variant_id = variant[0])
         if consequences is not None:
-            keyfunc = cmp_to_key(mycmp = self.sort_consequences)
-                
-            consequences.sort(key = keyfunc) # sort by preferred transcript
+            consequences = self.order_consequences(consequences)
             best_consequence = consequences[0]
                 
             if best_consequence[14] == 1: # if the best one is a mane select transcript scan also the following and add them as well
@@ -542,6 +547,13 @@ class Connection:
         else:
             result.append(variant + (None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None))
         return result
+    
+    def order_consequences(self, consequences):
+        keyfunc = cmp_to_key(mycmp = self.sort_consequences)
+                
+        consequences.sort(key = keyfunc) # sort by preferred transcript
+        return consequences
+
 
     """
     # this function adds additional columns to the variant table (ie. gene symbol, gene_id)
@@ -623,10 +635,11 @@ class Connection:
                 if ref is not None:
                     variant_id = self.get_variant_id_by_hgvs(ref, hgvs) # see if the reference transcript is a transcript
                     if variant_id is None:
-                        reference_transcript = self.get_mane_select_for_gene(ref, 'ensembl')
-                        variant_id = self.get_variant_id_by_hgvs(reference_transcript, hgvs)
-                    if variant_id is not None:
-                        all_variants.append(variant_id)
+                        variant_ids = self.get_variant_ids_from_gene_and_hgvs(ref, hgvs)
+                        #variant_id = self.get_variant_id_by_hgvs(reference_transcript, hgvs)
+                        all_variants.extend(variant_ids)
+                    else:
+                        all_variants.append(variant_ids)
                 else:
                     variant_ids = self.get_variant_ids_by_hgvs(hgvs)
                     all_variants.extend(variant_ids)
@@ -670,6 +683,70 @@ class Connection:
         if num_variants is None:
             return [], 0
         return variants, num_variants[0]
+
+
+
+    def get_variant_ids_from_gene_and_hgvs(self, gene, hgvs_c, source = 'ensembl'):
+        gene_id = self.convert_to_gene_id(gene)
+
+        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,z.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype,variant_id  FROM transcript RIGHT JOIN ( \
+                        SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,gene_id,exon_nr,intron_nr,source,pfam_accession,pfam_description,variant_id FROM gene RIGHT JOIN ( \
+                            SELECT * FROM variant_consequence INNER JOIN ( \
+	                            SELECT DISTINCT variant_id as variant_id_trash FROM variant_consequence WHERE source = %s AND gene_id = %s AND hgvs_c = %s \
+                            ) x ON x.variant_id_trash = variant_consequence.variant_id  \
+                        ) y ON gene.id = y.gene_id \
+                    ) z ON transcript.name = z.transcript_name WHERE z.gene_id=%s ORDER BY variant_id asc"
+        self.cursor.execute(command, (source, gene_id, hgvs_c, gene_id))
+        possible_consequences = self.cursor.fetchall()
+        
+        # extract all matching variant ids
+        # these are identified where the given hgvs_c string is matching with the preferred transcript's hgvs_c. 
+        # for this
+        # (1) find all consequences from one variant where the hgvsc string is matching in at least one consequence
+        # (2) from this set extract the preferred transcript(s)
+        # (3) save the variant_id as this is the one we are looking for
+        matching_variant_ids = []
+        current_batch = []
+        batches = []
+        for consequence in possible_consequences:
+            if len(current_batch) == 0 or consequence[19] == current_batch[0][19]:
+                # (1)
+                current_batch.append(consequence)
+            elif consequence[19] != current_batch[0][19]:
+                batches.append(current_batch)
+                current_batch = [consequence]
+        if len(current_batch) > 0:
+            batches.append(current_batch)
+
+        for current_batch in batches:
+            # (2)
+            current_batch = self.order_consequences(current_batch)
+            best_consequence = current_batch[0]
+
+            # (3)
+            if best_consequence[1] == hgvs_c:
+                matching_variant_ids.append(best_consequence[19])
+            
+            if best_consequence[14] == 1: # is mane select
+                for c in current_batch:
+                    if c[14] == 1 and c[1] == hgvs_c:
+                        
+                        matching_variant_ids.append(c[19]) # this can lead to duplicated variant ids
+                    elif c[14] == 0:
+                        break
+
+        matching_variant_ids = list(set(matching_variant_ids)) # removes duplicates
+
+        return matching_variant_ids
+
+                    
+
+
+
+
+
+
+
     
 
     def sort_consequences(self, a, b):
@@ -704,7 +781,7 @@ class Connection:
                     else:
                         return 0
 
-
+    """
     def get_mane_select_for_gene(self, gene, source):
         gene_id = self.convert_to_gene_id(gene)
         command = "SELECT DISTINCT transcript_name FROM variant_consequence WHERE transcript_name IN (SELECT name FROM transcript WHERE is_mane_select=1) AND gene_id=%s AND source=%s"
@@ -713,7 +790,7 @@ class Connection:
         if result is not None:
             return result[0]
         return None
-
+    """
 
 
 

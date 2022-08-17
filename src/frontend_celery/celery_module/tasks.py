@@ -48,6 +48,6 @@ def fetch_consequence_task(self, variant_id):
 @celery.task(bind=True)
 def annotate_variant(self, annotation_queue_id):
     """Background task for running the annotation service"""
-    self.update_state(state='PROGRESS')
+    self.update_state(state='PROGRESS', meta={'annotation_queue_id':annotation_queue_id})
     status = process_one_request(annotation_queue_id)
-    self.update_state(state=status)
+    self.update_state(state=status, meta={'annotation_queue_id':annotation_queue_id})

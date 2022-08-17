@@ -116,11 +116,10 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
 
 
 def start_annotation_service(variant_id = None, annotation_queue_id = None):
-    print("STARTED ANNOTATION TASK!!!!!!")
     conn = Connection()
     if variant_id is not None:
-        conn.insert_annotation_request(variant_id, session['user']['user_id'])
-        annotation_queue_id = conn.get_last_insert_id()
+        annotation_queue_id = conn.insert_annotation_request(variant_id, session['user']['user_id']) # only inserts a new row if there is none with this variant_id & pending
+    print(annotation_queue_id)
     import celery_module
     task = celery_module.annotate_variant.apply_async(args=[annotation_queue_id])
     conn.insert_celery_task_id(annotation_queue_id, task.id)

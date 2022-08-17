@@ -99,7 +99,8 @@ function confirm_reannotation_action() {
             update_annotation_status(status_url);
         },
         error: function() {
-            show_annotation_status("bg-danger", "The variant could not be annotated. Either the service is unreachable or some other unexpected exception occured.", "Internal error")
+            show_annotation_status("bg-danger", "The variant could not be annotated. Either the service is unreachable or some other unexpected exception occured. You can try to reload this page or issue another annotation to fix this. If that does not help try again later.", "Internal error")
+            $('#reannotate_button').attr('disabled', false)
         }
     });
 }
@@ -115,9 +116,10 @@ function update_annotation_status(status_url) {
             show_annotation_status("bg-primary", "Annotation is being processed in the background. Please wait for it to finish.", "Annotation processing")
         } else if (data['state'] == "SUCCESS") {
             $('#reload-modal').modal('toggle');
-            show_annotation_status("bg-success", "The annotation is finished page is reloading", "Annotation finished")
+            show_annotation_status("bg-success", "The annotation is finished. Reload the page to see the updated annotations.", "Annotation finished")
         } else if (data['state'] == "FAILURE") {
             show_annotation_status("bg-danger", "Something unexpected happened during variant annotation: " + data['state'] + ' ' + data['status'], "Annotation error")
+            $('#reannotate_button').attr('disabled', false);
         } else {
             show_annotation_status("bg-danger", "An unexpected status found: " + data['state'], "Annotation error")
         }
@@ -138,6 +140,7 @@ function update_annotation_status(status_url) {
 
 
 function show_annotation_status(color_class, tooltip_text, inner_text) {
+    $('#current_status').tooltip('hide')
     var annotation_status_obj = document.getElementById('annotation_status_pills')
     annotation_status_obj.innerHTML = ""
     // <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="annotation requested at {{ current_annotation_status[3] }}">annotation requested, <br> refresh page to see if it is ready</span>
@@ -149,6 +152,7 @@ function show_annotation_status(color_class, tooltip_text, inner_text) {
     status_pill.setAttribute('title', tooltip_text)
     status_pill.innerText = inner_text
     annotation_status_obj.appendChild(status_pill)
+    status_pill.id = "current_status"
 }
 
 

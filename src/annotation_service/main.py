@@ -6,7 +6,8 @@ import common.functions as functions
 import tempfile
 
 from .annotation_jobs import *
-from .pubmed_parser import fetch
+
+import os
 
 
 ## configuration
@@ -67,10 +68,14 @@ def collect_error_msgs(msg1, msg2):
     return res
 
 
-def get_temp_vcf_path():
+def get_temp_vcf_path(annotation_queue_id):
     temp_file_path = tempfile.gettempdir()
-    vcf_path = temp_file_path + "/variant.vcf"
+    vcf_path = temp_file_path + "/" + str(annotation_queue_id) + ".vcf"
     return vcf_path
+
+def get_annotation_tempfile(annotation_queue_id):
+    res = tempfile.gettempdir() + "/" + str(annotation_queue_id) + "_annotated.vcf"
+    return res
 
 
 def process_one_request(annotation_queue_id):
@@ -105,15 +110,15 @@ def process_one_request(annotation_queue_id):
             continue # stop annotation if it was deleted!
     '''
 
-    vcf_path = get_temp_vcf_path()
+    vcf_path = get_temp_vcf_path(annotation_queue_id)
     functions.variant_to_vcf(one_variant[1], one_variant[2], one_variant[3], one_variant[4], vcf_path)
-
+    vcf_annotated_tmp_path = get_annotation_tempfile(annotation_queue_id)
 
     ############################################################
     ############ 1: execute jobs (ie. annotate vcf) ############
     ############################################################
     for job in all_jobs:
-        current_code, current_stderr, current_stdout = job.execute(vcf_path, one_variant=one_variant) # this one_variant thing is kinda ugly as it is only used in annotate_from_vcf_job..
+        current_code, current_stderr, current_stdout = job.execute(vcf_path, vcf_annotated_tmp_path, one_variant=one_variant) # this one_variant thing is kinda ugly as it is only used in annotate_from_vcf_job..
         if current_code > 0:
             status = "error"
         err_msgs = collect_error_msgs(err_msgs, current_stderr)
@@ -144,30 +149,6 @@ def process_one_request(annotation_queue_id):
             job.save_to_db(current_info, variant_id, conn=conn)
 
 
-        ############################################################
-        ###### 4: insert saved data & perform postprocessing #######
-        ############################################################
-        saved_data = job.get_saved_data()
-        # submit collected clinvar data to db if it exists
-        if 'clv_varid' in saved_data and 'clv_inpret' in saved_data and 'clv_revstat' in saved_data:
-            conn.clean_clinvar(variant_id) # remove all clinvar information of this variant from database and insert it again -> only the most recent clinvar annotaion is saved in database!
-            conn.insert_clinvar_variant_annotation(variant_id, saved_data['clv_varid'], saved_data['clv_inpret'], saved_data['clv_revstat'])
-            clinvar_variant_annotation_id = conn.get_clinvar_variant_annotation_id_by_variant_id(variant_id)
-            if clinvar_variant_annotation_id is None:
-                err_msgs = collect_error_msgs(err_msgs, "CLINVAR_VARIANT_ANNOTATION ERROR: no variant annotation ids for variant " + str(variant_id))
-            else:
-                for submission in saved_data['clinvar_submissions']:
-                    #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|5SubmittedPhenotypeInfo|7Submitter|8comment
-                    submissions = submission.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').replace('&', ';').split('|')
-                    conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
-            
-        # insert literature
-        if saved_data.get('pmids', '') != '' and job_config['insert_literature']:
-            pmids = saved_data['pmids']
-            literature_entries = fetch(pmids) # defined in pubmed_parser.py
-            for paper in literature_entries: #[pmid, article_title, authors, journal, year]
-                conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4])
-        
 
     print("~~~")
     print("Annotation done!")
@@ -179,6 +160,10 @@ def process_one_request(annotation_queue_id):
     ############## 5: update the annotation queue ##############
     ############################################################
     conn.update_annotation_queue(row_id=annotation_queue_id, status=status, error_msg=err_msgs)
+
+
+    # revert
+    #os.remove(vcf_path)
 
     return status
 

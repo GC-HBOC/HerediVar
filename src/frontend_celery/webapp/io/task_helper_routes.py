@@ -45,6 +45,8 @@ def run_annotation_service():
 def annotation_status(task_id):
     task = celery_module.annotate_variant.AsyncResult(task_id)
 
+
+
     if task.state != 'FAILURE':
         response = {
             'state': task.state,
@@ -55,4 +57,5 @@ def annotation_status(task_id):
             'state': task.state,
             'status': str(task.info),  # this is the exception raised
         }
+
     return jsonify(response)
