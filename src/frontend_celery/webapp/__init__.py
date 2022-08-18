@@ -2,9 +2,12 @@ from flask import Flask, request, url_for, current_app, redirect
 from authlib.integrations.flask_client import OAuth
 from flask_session import Session # alternatives: flask-caching, flask-kvsesssion
 from urllib.parse import urlparse, urljoin
+from celery import Celery
+from config import Config  # NEW!!!!!
 
 oauth = OAuth()
 sess = Session()
+celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)  # NEW!!!!!
 
 
 def create_app(object_name):
@@ -31,6 +34,8 @@ def create_app(object_name):
             'code_challenge_method': 'S256'  # enable PKCE
         }
     )
+
+    celery.conf.update(app.config)
 
 
 

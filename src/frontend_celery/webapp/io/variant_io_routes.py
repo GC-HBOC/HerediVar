@@ -20,47 +20,7 @@ variant_io_blueprint = Blueprint(
     __name__
 )
 
-@variant_io_blueprint.route('/import-variants', methods=('GET', 'POST'))
-@require_permission
-def import_variants():
-    conn = Connection()
-    most_recent_import_request = conn.get_most_recent_import_request()
-    if most_recent_import_request is None:
-        status = 'finished'
-    else:
-        status = most_recent_import_request[3]
 
-    if request.method == 'POST':
-        request_type = request.args.get("type")
-        if request_type == 'update_variants':
-
-
-            if status == 'finished':
-                import_queue_id = conn.insert_import_request(user_id = session['user']['user_id'])
-                requested_at = conn.get_import_request(import_queue_id = import_queue_id)[2]
-                requested_at = datetime.strptime(str(requested_at), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
-
-                logs_folder = path.join(path.dirname(current_app.root_path), current_app.config['LOGS_FOLDER'])
-                log_file_path = logs_folder + 'heredicare_import:' + requested_at + '.log'
-                heredicare.process_all(log_file_path, user_id=session['user']['user_id'])
-                print('yo')
-                log_file_path = heredicare.get_log_file_path()
-                date = log_file_path.strip('.log').split(':')[1].split('-')
-
-                conn.close_import_request(import_queue_id)
-                conn.close()
-                return redirect(url_for('variant_io.import_summary', year=date[0], month=date[1], day=date[2], hour=date[3], minute=date[4], second=date[5]))
-
-        elif request_type == 'reannotate':
-            conn = Connection()
-            variant_ids = conn.get_all_valid_variant_ids()
-            for variant_id in variant_ids:
-                conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
-
-            flash('Variant reannotation requested. It will be computed in the background.', 'alert-success')
-        
-    conn.close()
-    return render_template('variant_io/import_variants.html', most_recent_import_request=most_recent_import_request)
 
 
 #http://srv018.img.med.uni-tuebingen.de:5000/import-variants/summary%3Fdate%3D2022-06-15-11-44-25

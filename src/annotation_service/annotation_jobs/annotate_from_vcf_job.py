@@ -61,8 +61,9 @@ class annotate_from_vcf_job(Job):
 
         self.insert_annotation(variant_id, info, "ARUP_classification=", 21, conn)
 
-        self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : '|'.join(value.split('|')[2:]))
-        self.insert_annotation(variant_id, info, 'SpliceAI=', 8, conn, value_modifier_function= lambda value : max(value.split('|')[2:6]))
+        # spliceai is saved to the database in the dedicated spliceai job (which must be called after this job anyway)
+        #self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )
+        #self.insert_annotation(variant_id, info, 'SpliceAI=', 8, conn, value_modifier_function= lambda value : ','.join([str(max([float(x) for x in x.split('|')[2:6]])) for x in value.split(',')]) )
 
         self.insert_annotation(variant_id, info, "tp53db_class=", 27, conn)
         self.insert_annotation(variant_id, info, "tp53db_bayes_del=", 30, conn)

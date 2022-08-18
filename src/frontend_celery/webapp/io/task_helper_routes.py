@@ -12,7 +12,7 @@ import datetime
 import tempfile
 from shutil import copyfileobj
 import re
-
+from ..tasks import *
 
 
 task_helper_blueprint = Blueprint(
@@ -21,8 +21,6 @@ task_helper_blueprint = Blueprint(
 )
 
 
-
-import celery_module
 
 
 # this route listens on the GET parameter: annotation_queue_id or variant_id
@@ -43,8 +41,7 @@ def run_annotation_service():
 @task_helper_blueprint.route('/task/annotation_status/<task_id>')
 @require_login
 def annotation_status(task_id):
-    task = celery_module.annotate_variant.AsyncResult(task_id)
-
+    task = annotate_variant.AsyncResult(task_id)
 
 
     if task.state != 'FAILURE':

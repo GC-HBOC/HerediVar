@@ -8,6 +8,7 @@ import os
 
 
 ## run SpliecAI on the variants which are not contained in the precomputed file
+# this should be called after the annotate_from_vcf_job!
 class spliceai_job(Job):
     def __init__(self, job_config):
         self.job_name = "spliceAI on missing variants"
@@ -29,7 +30,7 @@ class spliceai_job(Job):
 
 
     def save_to_db(self, info, variant_id, conn):
-        self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : '|'.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )
+        self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )
         self.insert_annotation(variant_id, info, 'SpliceAI=', 8, conn, value_modifier_function= lambda value : ','.join([str(max([float(x) for x in x.split('|')[2:6]])) for x in value.split(',')]) )
 
 

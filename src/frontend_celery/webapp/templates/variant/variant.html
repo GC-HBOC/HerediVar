@@ -23,21 +23,20 @@
             <div class="d-flex align-items-center">
                 <!-- status badges -->
                 <div id="annotation_status_pills">
-
                     {% if current_annotation_status is not none %}
 
                         {% if current_annotation_status[4] == 'pending' %}
-                            <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="annotation requested at {{ current_annotation_status[3] }}">annotation requested, <br> refresh page to see if it is ready</span>
+                            <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="annotation requested at {{ current_annotation_status[3] }}">Annotation requested, <br> refresh page to see if it is ready</span>
                         {% endif %}
                         {% if current_annotation_status[4] == 'success' %}
-                            <span class="badge rounded-pill bg-success" data-bs-toggle="tooltip" title="most recent annotation finished at {{ current_annotation_status[5] }}">annotation done</span>
+                            <span class="badge rounded-pill bg-success" data-bs-toggle="tooltip" title="most recent annotation finished at {{ current_annotation_status[5] }}">Annotation done</span>
                         {% endif %}
                         {% if current_annotation_status[4] == 'error' %}
-                            <span class="badge rounded-pill bg-danger" data-bs-toggle="tooltip" title="most recent annotation finished at {{ current_annotation_status[5] }} with error {{ current_annotation_status[6] }}">annotation error</span>
+                            <span class="badge rounded-pill bg-danger" data-bs-toggle="tooltip" title="most recent annotation finished at {{ current_annotation_status[5] }} with error {{ current_annotation_status[6] }}">Annotation error</span>
                         {% endif %}
 
                     {% else %}
-                        <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="This variant was not annotated, yet.">no annotation</span>
+                        <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="This variant was not annotated, yet.">No annotation</span>
                     {% endif %}
                 </div>
                 <div class="ssl"> 
@@ -546,9 +545,30 @@
                                                     <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ annotation_type }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
                                                 </div>
                                             {% else %}
-                                            {% if 'spliceai_max_delta' == annotation_type %} <!-- add details for spliceai -->
-                                                <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ annotation_type }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
-                                                <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-trigger="focus" data-bs-content="{{ current_annotations['spliceai_details'][0] }} <br/> {{ current_annotations['spliceai_details'][4] }}">details</a>
+                                            {% if 'spliceai_details' == annotation_type %} <!-- add details for spliceai -->
+                                                {% set spliceai_details_values = current_annotations['spliceai_details'][4].split(',') %}
+                                                <div class="d-flex">
+                                                    <abbr class="ssr" title="{{current_annotations['spliceai_max_delta'][0]}}"><a class="dashed_underline">spliceai:</a></abbr>
+
+
+                                                    <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
+                                                        {% for spliceai in spliceai_details_values %}
+                                                        <li class="list-group-item noboarder-td" >
+                                                            <div class="d-flex">
+                                                                <div class="ssr">{{ spliceai.split('|')[0] }}:</div> <div class="ssr">{{ spliceai.split('|')[1:5] | map('float') | max }}</div>
+                                                                <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-trigger="focus" 
+                                                                    data-bs-content="{{ current_annotations['spliceai_details'][0] }} <br/> {{ spliceai }}">
+                                                                        details
+                                                                </a>
+                                                            </div>
+    
+                                                        </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+
+
+
                                             {% else %}
                                             {% if 'cancerhotspots_cancertypes' == annotation_type %} <!-- handle cancerhotspots cancertypes -->
                                                 {% set cancerhotspots_cancertypes = current_annotations['cancerhotspots_cancertypes'][4].split('|') %}
@@ -572,7 +592,7 @@
                                                     </table>
                                                 </div>
                                             {% else %}
-                                            {% if '_mut' not in annotation_type and '_wt' not in annotation_type and 'spliceai_details' not in annotation_type %} <!-- standard case -->
+                                            {% if '_mut' not in annotation_type and '_wt' not in annotation_type and 'spliceai' not in annotation_type %} <!-- standard case -->
                                                 <div style="word-break: break-all;">
                                                     <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ annotation_type }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
                                                 </div>

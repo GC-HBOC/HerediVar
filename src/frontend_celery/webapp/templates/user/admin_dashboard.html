@@ -6,11 +6,11 @@
 <div class="container">
 
   
-<h1 class="bst"> {% block title %} Update database {% endblock %} </h1>
+<h1 class="bst"> {% block title %} Admin dashboard {% endblock %} </h1>
 
 <!-- import all from heredicare button -->
 <div class="bst" style="display:flex; align-items:center;">
-    <form action="/import-variants?type=update_variants" id="import-variants-form" name="import-variants-form" method="post" action="#">
+    <form action="/admin_dashboard?type=update_variants" id="import-variants-form" name="import-variants-form" method="post" action="#">
         <div class="form-group">
             <span id="tooltip-import-variants-button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button invokes a mass-import of all variants in HerediCare and collects metadata from HerediCare.">
                 <button id="import-variants-button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#import-variants-modal">Import HerediCare</button>
@@ -20,10 +20,10 @@
     </form>
     {% if most_recent_import_request is not none %}
         {% if most_recent_import_request[3] == 'pending' %}
-            <span class="badge rounded-pill bg-secondary" style="margin-left:10px" data-bs-toggle="tooltip" title="annotation requested at {{ most_recent_import_request[2] }}">import requested</span>
+            <span class="badge rounded-pill bg-secondary" style="margin-left:10px" data-bs-toggle="tooltip" title="import requested at {{ most_recent_import_request[2] }}">import requested</span>
         {% endif %}
         {% if most_recent_import_request[3] == 'finished' %}
-            <span class="badge rounded-pill bg-success" style="margin-left:10px" data-bs-toggle="tooltip" title="most recent annotation finished at {{ most_recent_import_request[4] }}">last annotation: {{ most_recent_import_request[4] }}</span>
+            <span class="badge rounded-pill bg-success" style="margin-left:10px" data-bs-toggle="tooltip" title="most recent import finished at {{ most_recent_import_request[4] }}">last import: {{ most_recent_import_request[4] }}</span>
         {% endif %}
     {% endif %}
 </div>
@@ -41,7 +41,7 @@
                 Are you sure that you want to import & update all variants in HerediVar from HerediCare?
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button id="import-variants-submit" type="submit" class="btn btn-primary">Yes</button>
             </div>
         </div>
@@ -52,7 +52,7 @@
 
 <!-- reannotate all button -->
 <div class="bst" style="display:flex; align-items:center;">
-    <form action="/import-variants?type=reannotate" id="reannotate-variants-form" name="reannotate-variants-form" method="post" action="#">
+    <form action="/admin_dashboard?type=reannotate" id="reannotate-variants-form" name="reannotate-variants-form" method="post" action="#">
         <div class="form-group">
             <span id="tooltip-reannotate-variants-button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button requests an annotation of all variants in HerediVar.">
                 <button id="reannotate-variants-button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reannotate-variants-modal">(Re-)Annotate all</button>

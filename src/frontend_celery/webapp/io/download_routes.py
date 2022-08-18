@@ -284,7 +284,7 @@ def get_variant_vcf_line(variant_id, conn):
             content = annotations[key]
             key_and_date = key + '_' + content[2].strftime('%Y%m%d')
             version_num = content[1]
-            if version_num == '':
+            if version_num == '' or version_num is None:
                 version_num = '-'
             info_headers[key_and_date] = '##INFO=<ID=' + key_and_date + ',Number=.,Type=String,Description="' + content[0] + ' version: ' + version_num + ', version date: ' + content[2].strftime('%Y-%m-%d') + '">\n'
             value = content[4]

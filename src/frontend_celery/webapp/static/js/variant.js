@@ -121,7 +121,8 @@ function update_annotation_status(status_url) {
             show_annotation_status("bg-danger", "Something unexpected happened during variant annotation: " + data['state'] + ' ' + data['status'], "Annotation error")
             $('#reannotate_button').attr('disabled', false);
         } else {
-            show_annotation_status("bg-danger", "An unexpected status found: " + data['state'], "Annotation error")
+            show_annotation_status("bg-warning", "An unexpected status found: " + data['state'], "Unexpected status")
+            $('#reannotate_button').attr('disabled', false);
         }
 
         // polling happens here:
@@ -212,6 +213,6 @@ function show_annotation_status(color_class, tooltip_text, inner_text) {
 
     $('.dropdown').on('hidden.bs.dropdown', function() {
         $(this).tooltip("hide");
-        $(this).dropdown('toggle');
+        //$(this).dropdown('toggle');
     })
 })(bootstrap);

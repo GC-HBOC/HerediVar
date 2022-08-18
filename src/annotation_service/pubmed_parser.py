@@ -1,5 +1,6 @@
 from Bio import Entrez
 import common.functions as functions
+import re
 
 Entrez.email = 'marvin.doebel@med.uni-tuebingen.de'
 
@@ -34,13 +35,13 @@ def parse_record(rec, doc_section, article_section, title_section, journal_secti
     if not book:
         if len(year_section) >= 1:
             year_section = year_section[0]
-    year = ''
+    year = 0
     if 'Year' in year_section:
         year = year_section['Year']
 
     # the following tests if this is contained: year = rec['Journal']['JournalIssue']['PubDate']['Year']
     # this is a fallback if the date section is missing
-    if year == '':
+    if year == 0:
         if 'Journal' in rec:
             curdict = rec['Journal']
             if 'JournalIssue' in curdict:
@@ -49,6 +50,10 @@ def parse_record(rec, doc_section, article_section, title_section, journal_secti
                     curdict = curdict['PubDate']
                     if 'Year' in curdict:
                         year = curdict['Year']
+                    elif 'MedlineDate' in curdict:
+                        res = re.search(r'[^\d](\d{4})[^\d]', ' ' + curdict['MedlineDate'] + ' ')
+                        if res is not None:
+                            year = res.group(1)
 
 
     article_title = rec.get(title_section, '')
@@ -82,6 +87,11 @@ def parse_record(rec, doc_section, article_section, title_section, journal_secti
 
     #journal = extract(extract(rec, journal_section), journal_title_section)
     journal = rec.get(journal_section, {}).get(journal_title_section, '')
+    try:
+        int(year)
+    except:
+        print(rec)
+
     return [int(pmid), str(article_title), ', '.join([str(x) for x in authors]), str(journal), int(year)]
 
 

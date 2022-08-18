@@ -1,17 +1,16 @@
-from .main import celery
-import random
-import time
-import sys
-from os import path
-sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
-import common.functions as functions
-from common.db_IO import Connection
+from . import celery
+#import sys
+#from os import path
+#sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
+#import common.functions as functions
+#from common.db_IO import Connection
 from annotation_service.main import process_one_request
+from celery.exceptions import Ignore
 
-
+"""
 @celery.task(bind=True)
 def long_task(self):
-    """Background task that runs a long function with progress reports."""
+    #Background task that runs a long function with progress reports.
     verb = ['Starting up', 'Booting', 'Repairing', 'Loading', 'Checking']
     adjective = ['master', 'radiant', 'silent', 'harmonic', 'fast']
     noun = ['solar array', 'particle reshaper', 'cosmic ray', 'orbiter', 'bit']
@@ -32,7 +31,7 @@ def long_task(self):
 
 @celery.task(bind=True)
 def fetch_consequence_task(self, variant_id):
-    """Background task for fetching the consequence from the database"""
+    #Background task for fetching the consequence from the database
     self.update_state(state='PROGRESS')
     
     conn = Connection()
@@ -41,7 +40,7 @@ def fetch_consequence_task(self, variant_id):
     variant_consequences = conn.get_variant_consequences(variant_id) # 0transcript_name,1hgvs_c,2hgvs_p,3consequence,4impact,5exon_nr,6intron_nr,7symbol,8transcript.gene_id,9source,10pfam_accession,11pfam_description,12length,13is_gencode_basic,14is_mane_select,15is_mane_plus_clinical,16is_ensembl_canonical,17total_flag
     conn.close()
     return {'status': 'COMPLETED', 'result': variant_consequences}
-
+"""
 
 
 
@@ -50,4 +49,12 @@ def annotate_variant(self, annotation_queue_id):
     """Background task for running the annotation service"""
     self.update_state(state='PROGRESS', meta={'annotation_queue_id':annotation_queue_id})
     status = process_one_request(annotation_queue_id)
+    if status == 'error':
+        status = 'FAILURE'
+        self.update_state(state=status, meta={'annotation_queue_id':annotation_queue_id, 
+                        'exc_type': "Runtime error",
+                        'exc_message': "The annotation service yielded a runtime error!", 
+                        'custom': '...'
+                    })
+        raise Ignore()
     self.update_state(state=status, meta={'annotation_queue_id':annotation_queue_id})
