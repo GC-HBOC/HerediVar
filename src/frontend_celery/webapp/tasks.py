@@ -1,3 +1,4 @@
+from urllib.error import HTTPError
 from . import celery
 #import sys
 #from os import path
@@ -43,18 +44,27 @@ def fetch_consequence_task(self, variant_id):
 """
 
 
-
-@celery.task(bind=True)
+# this uses exponential backoff in case there is a http error
+# this will retry 3 times before giving up
+# first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
+@celery.task(bind=True, retry_backoff=5, max_retries=3)
 def annotate_variant(self, annotation_queue_id):
     """Background task for running the annotation service"""
     self.update_state(state='PROGRESS', meta={'annotation_queue_id':annotation_queue_id})
-    status = process_one_request(annotation_queue_id)
+    status, runtime_error = process_one_request(annotation_queue_id)
     if status == 'error':
         status = 'FAILURE'
         self.update_state(state=status, meta={'annotation_queue_id':annotation_queue_id, 
                         'exc_type': "Runtime error",
-                        'exc_message': "The annotation service yielded a runtime error!", 
+                        'exc_message': "The annotation service yielded a runtime error: " + runtime_error, 
                         'custom': '...'
                     })
         raise Ignore()
+    if status == "retry":
+        status = "RETRY"
+        self.update_state(state=status, meta={'annotation_queue_id':annotation_queue_id,
+                        'exc_type': "Runtime error",
+                        'exc_message': "The annotation service yielded " + runtime_error + "! Will attempt retry.", 
+                        'custom': '...'})
+        annotate_variant.retry()
     self.update_state(state=status, meta={'annotation_queue_id':annotation_queue_id})

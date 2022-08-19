@@ -5,8 +5,10 @@ from common.db_IO import Connection
 import common.functions as functions
 import tempfile
 import traceback
-
+from urllib.error import HTTPError
+from os.path import exists
 from .annotation_jobs import *
+import random
 
 import os
 
@@ -83,8 +85,13 @@ def process_one_request(annotation_queue_id):
     """ this is the main worker of the annotation job - A 5 step process -"""
 
     conn = Connection()
+    vcf_path = get_temp_vcf_path(annotation_queue_id)
+    runtime_error = ""
 
     try:
+
+        #if random.randint(1,10) > 5:
+        #    raise HTTPError(url = "srv18", code=429, msg="Too many requests", hdrs = {}, fp = None)
 
         status = "success"
 
@@ -115,7 +122,6 @@ def process_one_request(annotation_queue_id):
                 continue # stop annotation if it was deleted!
         '''
 
-        vcf_path = get_temp_vcf_path(annotation_queue_id)
         functions.variant_to_vcf(one_variant[1], one_variant[2], one_variant[3], one_variant[4], vcf_path)
         vcf_annotated_tmp_path = get_annotation_tempfile(annotation_queue_id)
 
@@ -132,19 +138,20 @@ def process_one_request(annotation_queue_id):
         ############################################################
         ############ 2: check validity of annotated vcf ############
         ############################################################
-        print("checking validity of annotated vcf file...")
+        #print("checking validity of annotated vcf file...")
         execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(vcf_path)
         if execution_code_vcfcheck != 0:
             status = "error"
         else:
-            print("VCF OK")
+            pass
+            #print("VCF OK")
         err_msgs = collect_error_msgs(err_msgs, vcf_errors)
 
 
         ############################################################
         ########### 3: save the collected data to the db ###########
         ############################################################
-        print("saving to database...")
+        #print("saving to database...")
         headers, info = functions.read_vcf_info(vcf_path)
 
         for vcf_variant_idx in range(len(info)):
@@ -155,31 +162,48 @@ def process_one_request(annotation_queue_id):
 
 
 
-        print("~~~")
-        print("Annotation done!")
-        print("Status: " + status)
-        print(err_msgs)
+        #print("~~~")
+        #print("Annotation done!")
+        #print("Status: " + status)
+        #print(err_msgs)
 
 
         ############################################################
         ############## 5: update the annotation queue ##############
         ############################################################
-        conn.update_annotation_queue(row_id=annotation_queue_id, status=status, error_msg=err_msgs)
+        conn.update_annotation_queue(row_id=annotation_queue_id, status=status, error_msg="")
 
 
+    except HTTPError as e: # we want to raise any http errors to be able to retry later again (eg. 429)
+        # cleanup after http error before retry
+        print("An HTTP exception occured: " + str(e))
+        print(traceback.format_exc())
+
+        status = "retry"
+        conn.update_annotation_queue(row_id=annotation_queue_id, status=status, error_msg=str(e))
+        
+        runtime_error = str(e)
+
+        if  exists(vcf_path): 
+            os.remove(vcf_path)
+        conn.close()
+        #raise e #HTTPError(url = e.url, code = e.code, msg = "A HTTP error occured", hdrs = e.hdrs, fp = e.fp)
+        return status, runtime_error
     except Exception as e:
         print("An exception occured: " + str(e))
         print(traceback.format_exc())
-        conn.update_annotation_queue(row_id = annotation_queue_id, status="error", error_msg = "Annotation service runtime error: " + str(e))
+        conn.update_annotation_queue(row_id = annotation_queue_id, status="error", error_msg = "Annotation service runtime error: " + str(e) + ' ' + traceback.format_exc())
         status = "error"
+        runtime_error = str(e)
 
     # revert
-    os.remove(vcf_path)
+    if  exists(vcf_path): 
+        os.remove(vcf_path)
 
     conn.close()
 
 
-    return status
+    return status, runtime_error
 
 
 

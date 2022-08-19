@@ -39,6 +39,7 @@ def my_lists():
         is_list_owner = conn.check_user_list_ownership(user_id, view_list_id)
         #print(is_list_owner)
         if not is_list_owner:
+            current_app.logger.error(session['user']['preferred_username'] + " attempted view list with id " + str(list_id) + ", but this list was not created by him.")
             return abort(403)
 
     #user = session['user']['given_name'] + ' ' + session['user']['family_name']
@@ -50,6 +51,7 @@ def my_lists():
             list_name = request.form['list-name']
             conn.insert_user_variant_list(user_id, list_name)
             flash("Successfully created new list: \"" + list_name + "\"", "alert-success")
+            current_app.logger.info(session['user']['preferred_username'] + " successfully created list " + list_name)
             conn.close()
             return redirect(url_for('user.my_lists'))
         if request_type == 'edit':
@@ -58,9 +60,10 @@ def my_lists():
             if list_id is not None:
                 is_list_owner = conn.check_user_list_ownership(user_id, list_id)
                 if not is_list_owner:
-                    return abort('403')
+                    return abort(403)
             conn.update_user_variant_list(list_id, user_id, list_name)
             flash("Successfully changed list name to \"" + list_name + "\"", "alert-success")
+            current_app.logger.info(session['user']['preferred_username'] + " successfully changed list " + str(list_id) +" name to " + list_name)
             conn.close()
             return redirect(url_for('user.my_lists'))
         if request_type == 'delete_list':
@@ -71,6 +74,7 @@ def my_lists():
                     return abort('403')
             conn.delete_user_variant_list(list_id)
             flash("Successfully removed list", "alert-success")
+            current_app.logger.info(session['user']['preferred_username'] + " successfully deleted list " + str(list_id)) 
             conn.close()
             return redirect(url_for('user.my_lists'))
 
@@ -162,6 +166,7 @@ def admin_dashboard():
 
                 conn.close_import_request(import_queue_id)
                 conn.close()
+                current_app.logger.info(session['user']['preferred_username'] + " issued a full HerediCare import.") 
                 return redirect(url_for('variant_io.import_summary', year=date[0], month=date[1], day=date[2], hour=date[3], minute=date[4], second=date[5]))
 
         elif request_type == 'reannotate':
@@ -169,7 +174,7 @@ def admin_dashboard():
             for variant_id in variant_ids:
                 start_annotation_service(variant_id = variant_id) # inserts a new annotation queue entry before submitting the task to celery
                 #conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
-
+            current_app.logger.info(session['user']['preferred_username'] + " issued a reannotation of all variants") 
             flash('Variant reannotation requested. It will be computed in the background.', 'alert-success')
         
     conn.close()

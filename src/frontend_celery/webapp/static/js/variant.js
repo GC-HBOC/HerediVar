@@ -74,7 +74,7 @@ $(document).ready(function()
     //// this is blocking I think so it should be called last!
     var annotation_status = $('#annotation_status').data()['annotationStatus'];
     var celery_task_id = $('#annotation_status').data()['celeryTaskId'];
-    if (annotation_status === 'pending' && celery_task_id !== null){
+    if ((annotation_status === 'pending' || annotation_status == 'retry') && celery_task_id !== null){
         $('#reannotate_button').attr('disabled', true)
         //$('#reannotate-list-item').attr('title', "Wait for the current annotation to finish before submitting another one")
         status_url = "/task/annotation_status/" + celery_task_id;
@@ -120,6 +120,8 @@ function update_annotation_status(status_url) {
         } else if (data['state'] == "FAILURE") {
             show_annotation_status("bg-danger", "Something unexpected happened during variant annotation: " + data['state'] + ' ' + data['status'], "Annotation error")
             $('#reannotate_button').attr('disabled', false);
+        } else if (data['state'] == 'RETRY') {
+            show_annotation_status("bg-warning", "Task yielded an error: " + data['status'] + ". Will try again soon.", "Retrying annotation")
         } else {
             show_annotation_status("bg-warning", "An unexpected status found: " + data['state'], "Unexpected status")
             $('#reannotate_button').attr('disabled', false);
@@ -127,7 +129,7 @@ function update_annotation_status(status_url) {
 
         // polling happens here:
         // rerun in 5 seconds if state resembles an unfinished task
-        if (data['state'] == 'PENDING' || data['state'] == 'PROGRESS') {
+        if (data['state'] == 'PENDING' || data['state'] == 'PROGRESS' || data['state'] == 'RETRY') {
             
             setTimeout(function() {
                 update_annotation_status(status_url);

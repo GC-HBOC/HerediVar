@@ -43,7 +43,6 @@ def run_annotation_service():
 def annotation_status(task_id):
     task = annotate_variant.AsyncResult(task_id)
 
-
     if task.state != 'FAILURE':
         response = {
             'state': task.state,

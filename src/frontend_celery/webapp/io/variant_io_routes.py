@@ -91,6 +91,8 @@ def import_summary(year, month, day, hour, minute, second):
 @variant_io_blueprint.route('/submit_clinvar/<int:variant_id>', methods=['GET', 'POST'])
 @require_permission
 def submit_clinvar(variant_id):
+    
+
     # header definition for clinvar submissions
     api_key = current_app.config['CLINVAR_API_KEY']
     headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
@@ -123,7 +125,8 @@ def submit_clinvar(variant_id):
         clinvar_submission_id = clinvar_submission_id[0]
         resp = get_clinvar_submission_status(clinvar_submission_id, headers = headers)
         if resp.status_code not in [200]:
-            flash("ERROR: could not check status of clinvar submission id: " + str(clinvar_submission_id) + " , status code: " + str(resp.status_code) + ". Error message: " + resp.content.decode("UTF-8"), "alert-danger")
+            flash("ERROR: could not check status of clinvar submission id: " + str(clinvar_submission_id) + ", status code: " + str(resp.status_code) + ". Error message: " + resp.content.decode("UTF-8"), "alert-danger")
+            current_app.logger.error("Could not check status of clinvar submission id: " + str(clinvar_submission_id) + ", status code: " + str(resp.status_code) + ". Error message: " + resp.content.decode("UTF-8"))
             conn.close()
             raise RuntimeError("ERROR: could not check status of clinvar submission id: " + str(clinvar_submission_id) + "\n Status code: " + str(resp.status_code) + "\n Error message: " + resp.content.decode("UTF-8"))
         response_content = resp.json()['actions'][0]
@@ -151,6 +154,7 @@ def submit_clinvar(variant_id):
     if len(clinvar_accession) > 1: # this should not happen!
         clinvar_accession = clinvar_accession[len(clinvar_accession) - 1]
         flash("WARNING: There are multiple clinvar accession ids for this variant. It was probably submitted multiple times to ClinVar. This should be investigated! Using " + str(clinvar_accession) + " now.", "alert-warning")
+        current_app.logger.error("WARNING: There are multiple clinvar accession ids for this variant. It was probably submitted multiple times to ClinVar. This should be investigated! Using " + str(clinvar_accession) + " now.")
     elif len(clinvar_accession) == 0:
         clinvar_accession = None
     else:
@@ -193,6 +197,7 @@ def submit_clinvar(variant_id):
             try:
                 jsonschema.validate(instance = data, schema = schema)
             except jsonschema.exceptions.ValidationError as ex:
+                current_app.logger.error('There is an error in the JSON for ClinVar api submission!' + str(ex) + " For variant " + str(variant_id))
                 abort(500, 'There is an error in the JSON for ClinVar api submission!' + str(ex))
 
 
@@ -213,9 +218,11 @@ def submit_clinvar(variant_id):
 
             if resp.status_code == 200 or resp.status_code == 201:
                 flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
+                current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded variant " + str(variant_id) + " to ClinVar.")
                 conn.close()
                 return redirect(url_for('variant.display', variant_id=variant_id))
             flash("There was an error during submission to ClinVar. It ended with status code: " + str(resp.status_code), "alert-danger")
+            current_app.logger.error(session['user']['preferred_username'] + " tried to upload a consensus classification for variant " + str(variant_id) + " to ClinVar, but it resulted in an error with status code: " + str(resp.status_code))
     
 
     # the orphanet codes have to be in a dictionary so that they are parsable as a list by JSON.parse in javascript!
@@ -224,6 +231,8 @@ def submit_clinvar(variant_id):
     }
     
     conn.close()
+
+    
     return render_template('variant_io/submit_clinvar.html', variant = variant_oi[0:5], data = data, genes=genes)
 
 
@@ -365,12 +374,15 @@ def submit_assay(variant_id):
 
             b_64_assay_report = functions.buffer_to_base64(buffer)
 
-            if len(b_64_assay_report) > 16777215:
+            if len(b_64_assay_report) > 16777215: # limited by the database mediumblob
+                current_app.logger.error(session['user']['preferred_username'] + " attempted uploading an assay which excedes the maximum filesize. The filesize was: " + str(len(b_64_assay_report)))
                 abort(500, "The uploaded file is too large. Please upload a smaller file.")
 
             conn = Connection()
             conn.insert_assay(variant_id, assay_type, b_64_assay_report, assay_report.filename, assay_score, functions.get_today())
             conn.close()
+
+            current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded a new assay for variant " + str(variant_id))
 
             do_redirect = True
 

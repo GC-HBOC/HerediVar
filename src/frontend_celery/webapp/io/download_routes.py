@@ -39,6 +39,8 @@ def evidence_document(consensus_classification_id):
     buffer = io.BytesIO()
     buffer.write(functions.decode_base64(b_64_report))
     buffer.seek(0)
+
+    current_app.logger.info(session['user']['preferred_username'] + " downloaded consensus classification evidence document for consensus classification " + str(consensus_classification_id))
     
     return send_file(buffer, as_attachment=True, attachment_filename=report_filename, mimetype='application/pdf')
 
@@ -59,6 +61,8 @@ def assay_report(assay_id):
     buffer = io.BytesIO()
     buffer.write(functions.decode_base64(b_64_assay))
     buffer.seek(0)
+
+    current_app.logger.info(session['user']['preferred_username'] + " downloaded assay " + str(assay_id))
     
     return send_file(buffer, as_attachment=True, attachment_filename=filename, mimetype='application')
 
@@ -74,6 +78,7 @@ def log_file(log_file):
 @download_blueprint.route('/download/vcf')
 @require_login
 def variant():
+
     conn = Connection()
 
     variant_id = request.args.get('variant_id')
@@ -88,7 +93,9 @@ def variant():
         user_id = session['user']['user_id']
         is_list_owner = conn.check_user_list_ownership(user_id, list_id)
         if not is_list_owner:
-            return redirect(url_for('doc.error', code='403', text='No permission to view this variant list!'))
+            current_app.logger.error(session['user']['preferred_username'] + " attempted download of list with id " + str(list_id) + ", but this list was not created by him.")
+            return abort(403)
+            #return redirect(url_for('doc.error', code='403', text='No permission to view this variant list!'))
 
         variants_oi = conn.get_variant_ids_from_list(list_id)
 
@@ -134,6 +141,7 @@ def variant():
         if request.args.get('force') is None:
             force_url = url_for("download.variant", variant_id = variant_id, list_id= list_id, force=True)
             flash(Markup("The generated VCF contains errors: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
+            current_app.logger.error(session['user']['preferred_username'] + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant id " + str(variant_id) + " or user variant list " + str(list_id))
             return redirect(url_for('variant.display', variant_id=variant_id))
     #if vcf_errors != '':
     #    for line in vcf_errors.split('\n'):
@@ -142,6 +150,8 @@ def variant():
     #            flash("Ask an admin to fix this issue!", "alert-danger")
     #            return redirect(url_for('variant.display', variant_id=variant_id))
 
+    current_app.logger.info(session['user']['preferred_username'] + " downloaded vcf of variant id: " + str(variant_id) + " or user variant list: " + str(list_id))
+    
     return send_file(buffer, as_attachment=True, attachment_filename="variant_" + str(variant_id) + ".vcf", mimetype="text/vcf")
 
 
@@ -319,7 +329,7 @@ def calculate_class(scheme, selected_classes = ''):
         final_class = decide_for_class_task_force(selected_classes)
 
     if final_class is None:
-        raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme? (either acmg or VUS task-force based)')
+        raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme? (either "acmg" or VUS "task-force" based)')
 
     result = {'final_class': final_class}
     return jsonify(result)

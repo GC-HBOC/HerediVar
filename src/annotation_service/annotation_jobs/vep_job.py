@@ -109,6 +109,7 @@ class vep_job(Job):
                    "--offline", "--cache", "--dir_cache", "/mnt/storage2/GRCh38/share/data/dbs/ensembl-vep-104/cache", "--fasta", paths.ref_genome_path,
                    "--numbers", "--hgvs", "--symbol", "--domains", #"--transcript_version",
                    "--failed", "1",
+                   "--quiet"
                    #"--sift", "b", "--polyphen", "b", "--af","--pubmed"
                    ]
 

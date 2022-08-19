@@ -120,8 +120,12 @@ def start_annotation_service(variant_id = None, annotation_queue_id = None):
     conn = Connection()
     if variant_id is not None:
         annotation_queue_id = conn.insert_annotation_request(variant_id, session['user']['user_id']) # only inserts a new row if there is none with this variant_id & pending
+        log_postfix = " for variant " + str(variant_id)
+    else:
+        log_postfix = " for annotation queue entry " + str(annotation_queue_id)
     task = annotate_variant.apply_async(args=[annotation_queue_id])
     print("Issued annotation for annotation queue id: " + str(annotation_queue_id) + "with celery task id: " + str(task.id))
+    current_app.logger.info(session['user']['preferred_username'] + " started the annotation service for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task.id))
     conn.insert_celery_task_id(annotation_queue_id, task.id)
     conn.close()
     return task.id
@@ -163,6 +167,7 @@ def is_safe_url(target):
 
 def save_redirect(target):
     if not target or not is_safe_url(target):
+        current_app.logger.error("Unsafe redirect url detected: " + str(target))
         return redirect(url_for('main.index')) # maybe use abort() here??
     return redirect(target) # url is save to redirect to!
 

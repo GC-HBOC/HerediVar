@@ -1,13 +1,19 @@
-from flask import Flask, request, url_for, current_app, redirect
+from flask import Flask
 from authlib.integrations.flask_client import OAuth
 from flask_session import Session # alternatives: flask-caching, flask-kvsesssion
 from urllib.parse import urlparse, urljoin
+# for celery
 from celery import Celery
-from config import Config  # NEW!!!!!
+from config import Config
+# for logging
+import logging
+from flask.logging import default_handler
+from logging.handlers import RotatingFileHandler
+
 
 oauth = OAuth()
 sess = Session()
-celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)  # NEW!!!!!
+celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)
 
 
 def create_app(object_name):
@@ -38,7 +44,6 @@ def create_app(object_name):
     celery.conf.update(app.config)
 
 
-
     from .main import create_module as main_create_module
     from .variant import create_module as variant_create_module
     from .doc import create_module as doc_create_module
@@ -57,4 +62,19 @@ def create_app(object_name):
     user_create_module(app)
     errorhandlers_create_module(app)
 
+
+    configure_logging(app)
+
     return app
+
+
+
+def configure_logging(app):
+    app.logger.removeHandler(default_handler) # deactivate the default flask logging handler
+
+    # set up new handler which writs to a file & add it to the app
+    file_handler = RotatingFileHandler('logs/webapp/webapp.log', maxBytes=16384, backupCount=20)
+    file_handler.setLevel(logging.INFO)
+    file_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(module)s>%(filename)s: %(lineno)d]') # format of the logged messages
+    file_handler.setFormatter(file_formatter)
+    app.logger.addHandler(file_handler)

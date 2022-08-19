@@ -99,6 +99,7 @@ def create():
                     genome_build = request.form['genome']
                     was_successful = validate_and_insert_variant(chr, pos, ref, alt, genome_build)
                     if was_successful:
+                        current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant: " + ' '.join([chr, pos, ref, alt, genome_build]) + ". This information is the unprocessed user input.") 
                         return redirect(url_for('variant.create'))
 
                     
@@ -116,6 +117,7 @@ def create():
                 else:
                     was_successful = validate_and_insert_variant(chr, pos, ref, alt, 'GRCh38')
                     if was_successful:
+                        current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([chr, pos, ref, alt, genome_build]))
                         return redirect(url_for('variant.create'))
 
     return render_template('variant/create.html', chrs=chrs)
@@ -271,6 +273,7 @@ def classify(variant_id):
     # either redirect or show the webpage depending on success of submission / page reload
     conn.close()
     if do_redirect: # do redirect if one of the submissions was successful
+        current_app.logger.info(session['user']['preferred_username'] + " successfully classified variant " + str(variant_id) + " with class " + str(classification))
         return redirect(url_for('variant.classify', variant_id = variant_id))
     else:
         return render_template('variant/classify.html',
@@ -337,6 +340,7 @@ def consensus_classify(variant_id):
 
     conn.close()
     if do_redirect: # do redirect if one of the submissions was successful
+        current_app.logger.info(session['user']['preferred_username'] + " successfully classified variant " + str(variant_id) + " with class " + str(classification) + " from scheme " + str(scheme))
         return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
     else:
         return render_template('variant/classify.html', 
