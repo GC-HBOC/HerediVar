@@ -1,6 +1,6 @@
 import re
 from werkzeug.exceptions import abort
-from flask import flash, Markup
+from flask import flash, Markup, g
 import tempfile
 import sys
 from os import path
@@ -100,7 +100,7 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
         new_ref = variant.REF
         new_alt = variant.ALT
 
-        conn = Connection()
+        conn = get_connection()
         is_duplicate = conn.check_variant_duplicate(new_chr, new_pos, new_ref, new_alt) # check if variant is already contained
         if not is_duplicate:
             # insert it & capture the annotation_queue_id of the newly inserted variant to start the annotation service in celery
@@ -111,13 +111,12 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
         else:
             flash("Variant not imported: already in database!!", "alert-danger")
             was_successful = False
-        conn.close()
 
     return was_successful
 
 
 def start_annotation_service(variant_id = None, annotation_queue_id = None):
-    conn = Connection()
+    conn = get_connection()
     if variant_id is not None:
         annotation_queue_id = conn.insert_annotation_request(variant_id, session['user']['user_id']) # only inserts a new row if there is none with this variant_id & pending
         log_postfix = " for variant " + str(variant_id)
@@ -127,7 +126,6 @@ def start_annotation_service(variant_id = None, annotation_queue_id = None):
     print("Issued annotation for annotation queue id: " + str(annotation_queue_id) + "with celery task id: " + str(task.id))
     current_app.logger.info(session['user']['preferred_username'] + " started the annotation service for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task.id))
     conn.insert_celery_task_id(annotation_queue_id, task.id)
-    conn.close()
     return task.id
 
 
@@ -193,6 +191,16 @@ def get_clinvar_submission_status(clinvar_submission_id, headers): # SUB11770209
     #print(resp)
     print(resp.json())
     return resp
+
+
+def request_has_connection():
+    return hasattr(g, 'dbconn')
+
+def get_connection():
+    if not request_has_connection():
+        g.dbconn = Connection()        
+        current_app.logger.debug("established db connection")
+    return g.dbconn
 
 
 def strength_to_text(strength, scheme):

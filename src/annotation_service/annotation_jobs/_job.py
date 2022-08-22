@@ -39,8 +39,7 @@ class Job(metaclass=abc.ABCMeta):
     #    return saved_data
 
     def print_executing(self):
-        #print("executing " + self.job_name + "...")
-        pass
+        print("executing " + self.job_name + "...")
     
     def handle_result(self, inpath, annotated_inpath, code):
         self.update_output(inpath, annotated_inpath, code)

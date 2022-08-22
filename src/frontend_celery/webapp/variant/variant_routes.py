@@ -62,9 +62,8 @@ def search():
 
     page = int(request.args.get('page', 1))
     per_page = 20
-    conn = Connection()
+    conn = get_connection()
     variants, total = conn.get_variants_page_merged(page, per_page, user_id=session['user']['user_id'], ranges=ranges, genes = genes, consensus=consensus, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
-    conn.close()
 
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
     return render_template('variant/search.html', variants=variants, page=page, per_page=per_page, pagination=pagination)
@@ -128,7 +127,7 @@ def create():
 # example: http://srv023.img.med.uni-tuebingen.de:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http://srv023.img.med.uni-tuebingen.de:5000/display/17
 @require_login
 def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
-    conn = Connection()
+    conn = get_connection()
 
     if variant_id is None:
         variant_id = get_variant_id(conn, chr, pos, ref, alt)
@@ -175,42 +174,8 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
+    clinvar_submission = get_clinvar_submission(variant_id, conn)
 
-    clinvar_submission_id = conn.get_external_ids_from_variant_id(variant_id, id_source="clinvar_submission")
-    clinvar_submission = {'status': None, 'date': None, 'message': None}
-    if len(clinvar_submission_id) > 1: # this should not happen!
-        clinvar_submission_id = clinvar_submission_id[len(clinvar_submission_id) - 1]
-        flash("WARNING: There are multiple clinvar submission ids for this variant. There is probably an old clinvar submission somewhere in the system which should be deleted. Using " + str(clinvar_submission_id) + " now.", "alert-warning")
-    if len(clinvar_submission_id) == 1: # variant was already submitted to clinvar
-        clinvar_submission_id = clinvar_submission_id[0]
-    if len(clinvar_submission_id) > 0:
-        api_key = current_app.config['CLINVAR_API_KEY']
-        headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
-        resp = get_clinvar_submission_status(clinvar_submission_id, headers = headers)
-        if resp.status_code not in [200]:
-            conn.close()
-            raise RuntimeError("Status check failed:\n" + resp.content.decode("UTF-8"))
-        response_content = resp.json()['actions'][0]
-        clinvar_submission_status = response_content['status']
-        clinvar_submission['status'] = clinvar_submission_status
-        if clinvar_submission_status in ['submitted', 'processing']:
-            clinvar_submission_date = response_content['updated']
-            clinvar_submission['date'] = clinvar_submission_date.replace('T', '\n').replace('Z', '')
-        else:
-            clinvar_submission_file_url = response_content['responses'][0]['files'][0]['url']
-            submission_file_response = requests.get(clinvar_submission_file_url, headers = headers)
-            if submission_file_response.status_code != 200:
-                raise RuntimeError("Status check failed:" + "\n" + clinvar_submission_file_url + "\n" + submission_file_response.content.decode("UTF-8"))
-            submission_file_response = submission_file_response.json()
-            clinvar_submission_date = submission_file_response['submissionDate']
-            clinvar_submission['date'] = clinvar_submission_date
-            if clinvar_submission_status == 'error':
-                clinvar_submission_messages = submission_file_response['submissions'][0]['errors'][0]['output']['errors']
-                clinvar_submission_messages = [x['userMessage'] for x in clinvar_submission_messages]
-                clinvar_submission_message = ';'.join(clinvar_submission_messages)
-                clinvar_submission['message'] = clinvar_submission_message
-
-    conn.close()
     return render_template('variant/variant.html', 
                             variant=variant_oi, 
                             annotations = annotations,
@@ -226,7 +191,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 @variant_blueprint.route('/classify/<int:variant_id>', methods=['GET', 'POST'])
 @require_login
 def classify(variant_id):
-    conn = Connection()
+    conn = get_connection()
 
     user_id = session['user']['user_id']
     schemes_with_info = {user_id: get_schemes_with_info(variant_id, user_id, conn)}
@@ -271,7 +236,6 @@ def classify(variant_id):
             do_redirect = True
 
     # either redirect or show the webpage depending on success of submission / page reload
-    conn.close()
     if do_redirect: # do redirect if one of the submissions was successful
         current_app.logger.info(session['user']['preferred_username'] + " successfully classified variant " + str(variant_id) + " with class " + str(classification))
         return redirect(url_for('variant.classify', variant_id = variant_id))
@@ -291,7 +255,7 @@ def classify(variant_id):
 @variant_blueprint.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])
 @require_permission
 def consensus_classify(variant_id):
-    conn = Connection()
+    conn = get_connection()
 
     variant_oi = conn.get_variant_more_info(variant_id)
     previous_classification = get_default_previous_classification() # keep empty because we always submit a new consensus classification 
@@ -338,7 +302,6 @@ def consensus_classify(variant_id):
             do_redirect = True
 
 
-    conn.close()
     if do_redirect: # do redirect if one of the submissions was successful
         current_app.logger.info(session['user']['preferred_username'] + " successfully classified variant " + str(variant_id) + " with class " + str(classification) + " from scheme " + str(scheme))
         return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
@@ -361,7 +324,7 @@ def consensus_classify(variant_id):
 @variant_blueprint.route('/display/<int:variant_id>/classification_history')
 @require_login
 def classification_history(variant_id):
-    conn = Connection()
+    conn = get_connection()
     variant_oi = conn.get_variant_more_info(variant_id)
     if variant_oi is None:
         abort(404)
@@ -427,7 +390,6 @@ def classification_history(variant_id):
                                 }
             recorded_classifications.append(new_classification)
 
-    conn.close()
     return render_template('variant/classification_history.html', 
                             variant_oi = variant_oi,
                             most_recent_consensus_classification=most_recent_consensus_classification, 

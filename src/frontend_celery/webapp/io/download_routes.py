@@ -4,7 +4,7 @@ from os import path
 import sys
 
 from sqlalchemy import true
-from ..utils import require_login
+from ..utils import require_login, get_connection
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from common.db_IO import Connection
@@ -24,9 +24,8 @@ download_blueprint = Blueprint(
 @download_blueprint.route('/download/evidence_document/<int:consensus_classification_id>')
 @require_login
 def evidence_document(consensus_classification_id):
-    conn = Connection()
+    conn = get_connection()
     consensus_classification = conn.get_evidence_document(consensus_classification_id)
-    conn.close()
     if consensus_classification is None:
         abort(404)
     b_64_report = consensus_classification[0]
@@ -49,9 +48,8 @@ def evidence_document(consensus_classification_id):
 @download_blueprint.route('/download/assay_report/<int:assay_id>')
 @require_login
 def assay_report(assay_id):
-    conn = Connection()
+    conn = get_connection()
     assay = conn.get_assay_report(assay_id)
-    conn.close()
     if assay is None:
         abort(404)
 
@@ -79,7 +77,7 @@ def log_file(log_file):
 @require_login
 def variant():
 
-    conn = Connection()
+    conn = get_connection()
 
     variant_id = request.args.get('variant_id')
     list_id = request.args.get('list_id')
@@ -111,8 +109,6 @@ def variant():
         variant_vcf, info_headers = get_variant_vcf_line(variant_id, conn)
         all_variant_vcf_lines.append(variant_vcf)
         final_info_headers = merge_info_headers(final_info_headers, info_headers)
-        
-    conn.close()
     
 
 
@@ -143,12 +139,6 @@ def variant():
             flash(Markup("The generated VCF contains errors: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
             current_app.logger.error(session['user']['preferred_username'] + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant id " + str(variant_id) + " or user variant list " + str(list_id))
             return redirect(url_for('variant.display', variant_id=variant_id))
-    #if vcf_errors != '':
-    #    for line in vcf_errors.split('\n'):
-    #        if line.startswith('WARNING') or line.startswith('ERROR'):
-    #            flash("The generated VCF contains errors: " + line, "alert-warning")
-    #            flash("Ask an admin to fix this issue!", "alert-danger")
-    #            return redirect(url_for('variant.display', variant_id=variant_id))
 
     current_app.logger.info(session['user']['preferred_username'] + " downloaded vcf of variant id: " + str(variant_id) + " or user variant list: " + str(list_id))
     

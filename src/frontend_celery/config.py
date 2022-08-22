@@ -43,9 +43,14 @@ class Config(object):
 class ProdConfig(Config):
     TLS = True
     DEBUG = False
+    TESTING = False
 
 
 class DevConfig(Config):
     DEBUG = True
     TLS = False
     os.environ['NO_PROXY'] = 'SRV018.img.med.uni-tuebingen.de'
+    TESTING = False
+
+class TestConfig(Config):
+    TESTING = True

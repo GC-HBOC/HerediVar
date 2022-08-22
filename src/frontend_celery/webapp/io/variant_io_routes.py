@@ -7,9 +7,8 @@ from werkzeug.exceptions import abort
 import common.functions as functions
 import annotation_service.fetch_heredicare_variants as heredicare
 from datetime import datetime
-from ..utils import require_permission, require_login, get_clinvar_submission_status
+from ..utils import require_permission, require_login, get_clinvar_submission_status, get_connection
 import jsonschema
-import os
 import json
 import requests
 from werkzeug.utils import secure_filename
@@ -65,12 +64,9 @@ def import_summary(year, month, day, hour, minute, second):
         if '~~i7~~' in line:
             num_heredivar_and_heredicare = functions.find_between(line, 'a total of ', ' vids were')
     
-    conn = Connection()
+    conn = get_connection()
     finished_at = conn.get_import_request(date = requested_at)[4]
-    print(finished_at)
-    conn.close()
     requested_at = datetime.strptime(requested_at, '%Y-%m-%d-%H-%M-%S').strftime('%Y-%m-%d %H:%M:%S')
-    print(requested_at)
     return render_template('variant_io/import_variants_summary.html', 
                             num_new_variants=num_new_variants,
                             num_deleted_variants=num_deleted_variants, 
@@ -98,11 +94,10 @@ def submit_clinvar(variant_id):
     headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
 
     # get relevant information
-    conn = Connection()
+    conn = get_connection()
     consensus_classification = conn.get_consensus_classification(variant_id, most_recent=True)
     if consensus_classification is None:
         flash("There is no consensus classification for this variant! Please create one before submitting to ClinVar!", "alert-danger")
-        conn.close()
         return redirect(url_for('variant.display', variant_id = variant_id))
     else:
         consensus_classification = consensus_classification[0]
@@ -127,13 +122,11 @@ def submit_clinvar(variant_id):
         if resp.status_code not in [200]:
             flash("ERROR: could not check status of clinvar submission id: " + str(clinvar_submission_id) + ", status code: " + str(resp.status_code) + ". Error message: " + resp.content.decode("UTF-8"), "alert-danger")
             current_app.logger.error("Could not check status of clinvar submission id: " + str(clinvar_submission_id) + ", status code: " + str(resp.status_code) + ". Error message: " + resp.content.decode("UTF-8"))
-            conn.close()
             raise RuntimeError("ERROR: could not check status of clinvar submission id: " + str(clinvar_submission_id) + "\n Status code: " + str(resp.status_code) + "\n Error message: " + resp.content.decode("UTF-8"))
         response_content = resp.json()['actions'][0]
         submission_status = response_content['status']
         if submission_status in ['submitted', 'processing']:
             flash("WARNING: there is still a " + submission_status + " clinvar submission. Please wait until it is finished before making updates to the previous one.", "alert-warning")
-            conn.close()
             return redirect(url_for('variant.display', variant_id=variant_id))
 
         # if we have a finished clinvar submission we first fetch the accession id and insert that to the database
@@ -142,7 +135,6 @@ def submit_clinvar(variant_id):
             clinvar_submission_file_url = response_content['responses'][0]['files'][0]['url']
             submission_file_response = requests.get(clinvar_submission_file_url, headers = headers)
             if submission_file_response.status_code != 200:
-                conn.close()
                 raise RuntimeError("Status check failed:" + "\n" + clinvar_submission_file_url + "\n" + submission_file_response.content.decode("UTF-8"))
             submission_file_response = submission_file_response.json()
             clinvar_accession = submission_file_response['submissions'][0]['identifiers']['clinvarAccession']
@@ -219,7 +211,6 @@ def submit_clinvar(variant_id):
             if resp.status_code == 200 or resp.status_code == 201:
                 flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
                 current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded variant " + str(variant_id) + " to ClinVar.")
-                conn.close()
                 return redirect(url_for('variant.display', variant_id=variant_id))
             flash("There was an error during submission to ClinVar. It ended with status code: " + str(resp.status_code), "alert-danger")
             current_app.logger.error(session['user']['preferred_username'] + " tried to upload a consensus classification for variant " + str(variant_id) + " to ClinVar, but it resulted in an error with status code: " + str(resp.status_code))
@@ -229,8 +220,6 @@ def submit_clinvar(variant_id):
     data = {
         'orphanet_codes': orphanet_codes
     }
-    
-    conn.close()
 
     
     return render_template('variant_io/submit_clinvar.html', variant = variant_oi[0:5], data = data, genes=genes)
@@ -378,9 +367,8 @@ def submit_assay(variant_id):
                 current_app.logger.error(session['user']['preferred_username'] + " attempted uploading an assay which excedes the maximum filesize. The filesize was: " + str(len(b_64_assay_report)))
                 abort(500, "The uploaded file is too large. Please upload a smaller file.")
 
-            conn = Connection()
+            conn = get_connection()
             conn.insert_assay(variant_id, assay_type, b_64_assay_report, assay_report.filename, assay_score, functions.get_today())
-            conn.close()
 
             current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded a new assay for variant " + str(variant_id))
 

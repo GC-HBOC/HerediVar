@@ -300,6 +300,43 @@ def is_valid_scheme(criteria, scheme):
     return is_valid, message
 
 
+def get_clinvar_submission(variant_id, conn):
+    clinvar_submission_id = conn.get_external_ids_from_variant_id(variant_id, id_source="clinvar_submission")
+    clinvar_submission = {'status': None, 'date': None, 'message': None}
+    if len(clinvar_submission_id) > 1: # this should not happen!
+        clinvar_submission_id = clinvar_submission_id[len(clinvar_submission_id) - 1]
+        flash("WARNING: There are multiple clinvar submission ids for this variant. There is probably an old clinvar submission somewhere in the system which should be deleted. Using " + str(clinvar_submission_id) + " now.", "alert-warning")
+    if len(clinvar_submission_id) == 1: # variant was already submitted to clinvar
+        clinvar_submission_id = clinvar_submission_id[0]
+    if len(clinvar_submission_id) > 0:
+        api_key = current_app.config['CLINVAR_API_KEY']
+        headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
+        resp = get_clinvar_submission_status(clinvar_submission_id, headers = headers)
+        if resp.status_code not in [200]:
+            raise RuntimeError("Status check failed:\n" + resp.content.decode("UTF-8"))
+        response_content = resp.json()['actions'][0]
+        clinvar_submission_status = response_content['status']
+        clinvar_submission['status'] = clinvar_submission_status
+        if clinvar_submission_status in ['submitted', 'processing']:
+            clinvar_submission_date = response_content['updated']
+            clinvar_submission['date'] = clinvar_submission_date.replace('T', '\n').replace('Z', '')
+        else:
+            clinvar_submission_file_url = response_content['responses'][0]['files'][0]['url']
+            submission_file_response = requests.get(clinvar_submission_file_url, headers = headers)
+            if submission_file_response.status_code != 200:
+                raise RuntimeError("Status check failed:" + "\n" + clinvar_submission_file_url + "\n" + submission_file_response.content.decode("UTF-8"))
+            submission_file_response = submission_file_response.json()
+            clinvar_submission_date = submission_file_response['submissionDate']
+            clinvar_submission['date'] = clinvar_submission_date
+            if clinvar_submission_status == 'error':
+                clinvar_submission_messages = submission_file_response['submissions'][0]['errors'][0]['output']['errors']
+                clinvar_submission_messages = [x['userMessage'] for x in clinvar_submission_messages]
+                clinvar_submission_message = ';'.join(clinvar_submission_messages)
+                clinvar_submission['message'] = clinvar_submission_message
+    
+    return clinvar_submission
+
+
 ##### these functions return data which is needed to
 # (1) display buttons correctly in frontend
 # (2) verify that the inserted data is valid

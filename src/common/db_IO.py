@@ -673,7 +673,7 @@ class Connection:
             annotated_variant = self.annotate_preferred_transcripts(variant)
             variants_and_transcripts.extend(annotated_variant)
         variants = variants_and_transcripts
-        print(variants)
+        #print(variants)
 
         # get number of variants
         prefix = "SELECT COUNT(id) FROM variant"

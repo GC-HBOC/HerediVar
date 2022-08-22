@@ -21,7 +21,7 @@ user_blueprint = Blueprint(
 @require_login
 def my_lists():
     user_id = session['user']['user_id']
-    conn = Connection()
+    conn = get_connection()
     user_lists = conn.get_lists_for_user(user_id)
 
     # variant view table of lists in pagination
@@ -52,7 +52,6 @@ def my_lists():
             conn.insert_user_variant_list(user_id, list_name)
             flash("Successfully created new list: \"" + list_name + "\"", "alert-success")
             current_app.logger.info(session['user']['preferred_username'] + " successfully created list " + list_name)
-            conn.close()
             return redirect(url_for('user.my_lists'))
         if request_type == 'edit':
             list_name = request.form['list-name']
@@ -64,7 +63,6 @@ def my_lists():
             conn.update_user_variant_list(list_id, user_id, list_name)
             flash("Successfully changed list name to \"" + list_name + "\"", "alert-success")
             current_app.logger.info(session['user']['preferred_username'] + " successfully changed list " + str(list_id) +" name to " + list_name)
-            conn.close()
             return redirect(url_for('user.my_lists'))
         if request_type == 'delete_list':
             list_id = request.form['list-id']
@@ -75,7 +73,6 @@ def my_lists():
             conn.delete_user_variant_list(list_id)
             flash("Successfully removed list", "alert-success")
             current_app.logger.info(session['user']['preferred_username'] + " successfully deleted list " + str(list_id)) 
-            conn.close()
             return redirect(url_for('user.my_lists'))
 
         # actions on variant list view
@@ -86,7 +83,6 @@ def my_lists():
             variant_id_to_delete = request.args['variant_id']
             conn.delete_variant_from_list(view_list_id, variant_id_to_delete)
             url_to_deleted_variant = url_for('variant.display', variant_id=variant_id_to_delete)
-            conn.close()
             flash(Markup("Successfully removed variant from list! Go <a href='" + url_to_deleted_variant + "'>here</a> to undo this action."), "alert-success")
             return redirect(url_for('user.my_lists', view=view_list_id))
 
@@ -129,7 +125,6 @@ def my_lists():
             variants, total = conn.get_variants_page_merged(page, per_page, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
     
-    conn.close()
     return render_template('user/my_lists.html', 
                             user_lists = user_lists,
                             variants=variants, 
@@ -143,7 +138,7 @@ def my_lists():
 @user_blueprint.route('/admin_dashboard', methods=('GET', 'POST'))
 @require_permission
 def admin_dashboard():
-    conn = Connection()
+    conn = get_connection()
     most_recent_import_request = conn.get_most_recent_import_request()
     if most_recent_import_request is None:
         status = 'finished'
@@ -165,7 +160,6 @@ def admin_dashboard():
                 date = log_file_path.strip('.log').split(':')[1].split('-')
 
                 conn.close_import_request(import_queue_id)
-                conn.close()
                 current_app.logger.info(session['user']['preferred_username'] + " issued a full HerediCare import.") 
                 return redirect(url_for('variant_io.import_summary', year=date[0], month=date[1], day=date[2], hour=date[3], minute=date[4], second=date[5]))
 
@@ -177,5 +171,4 @@ def admin_dashboard():
             current_app.logger.info(session['user']['preferred_username'] + " issued a reannotation of all variants") 
             flash('Variant reannotation requested. It will be computed in the background.', 'alert-success')
         
-    conn.close()
     return render_template('user/admin_dashboard.html', most_recent_import_request=most_recent_import_request)

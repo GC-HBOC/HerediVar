@@ -144,14 +144,14 @@ def process_one_request(annotation_queue_id):
             status = "error"
         else:
             pass
-            #print("VCF OK")
+            print("VCF OK")
         err_msgs = collect_error_msgs(err_msgs, vcf_errors)
 
 
         ############################################################
         ########### 3: save the collected data to the db ###########
         ############################################################
-        #print("saving to database...")
+        print("saving to database...")
         headers, info = functions.read_vcf_info(vcf_path)
 
         for vcf_variant_idx in range(len(info)):
@@ -162,16 +162,16 @@ def process_one_request(annotation_queue_id):
 
 
 
-        #print("~~~")
-        #print("Annotation done!")
-        #print("Status: " + status)
-        #print(err_msgs)
+        print("~~~")
+        print("Annotation done!")
+        print("Status: " + status)
+        print(err_msgs)
 
 
         ############################################################
-        ############## 5: update the annotation queue ##############
+        ############## 4: update the annotation queue ##############
         ############################################################
-        conn.update_annotation_queue(row_id=annotation_queue_id, status=status, error_msg="")
+        conn.update_annotation_queue(row_id=annotation_queue_id, status=status, error_msg=err_msgs)
 
 
     except HTTPError as e: # we want to raise any http errors to be able to retry later again (eg. 429)
@@ -197,8 +197,8 @@ def process_one_request(annotation_queue_id):
         runtime_error = str(e)
 
     # revert
-    if  exists(vcf_path): 
-        os.remove(vcf_path)
+    #if  exists(vcf_path): 
+    #    os.remove(vcf_path)
 
     conn.close()
 
