@@ -24,6 +24,12 @@ def require_login(f):
         # user is logged in -> check if access token is still valid using introspect endpoint --> introspect endpoint can be omitted if token is validated locally using some jwt lib
         
         token = session['tokenResponse']
+
+        # maybe also add: 
+        # state=5AzjFWCkQzjmh4YozUfuE8pHytJj3i
+        # nonce=fvdZHHR1mmAHBIbCQtgZ
+        # code_challenge=hoiDWU7Vf4tOreIeYyIi7IKcw2BseRW7j5wwXROJtPA
+        # code_challenge_method=S256
         
         issuer = current_app.config['ISSUER']
         url = f'{issuer}/protocol/openid-connect/token/introspect'
