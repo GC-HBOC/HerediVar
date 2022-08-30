@@ -5,6 +5,7 @@ import tempfile
 import sys
 from os import path
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
+print(sys.path)
 from common.db_IO import Connection
 import common.functions as functions
 from .decorators import *
@@ -27,6 +28,7 @@ def get_variant_id(conn, chr, pos, ref, alt):
     variant_id = conn.get_variant_id(chr, pos, ref, alt)
     return variant_id
 
+'''
 def is_valid_query(search_query):
     print(search_query)
     if re.search("%.*%\s*%.*%", search_query):
@@ -47,6 +49,7 @@ def is_valid_query(search_query):
             flash("Search query ERROR: malformed hgvs found in " + search_query + " expecting 'transcript:[c. OR p.]...'", 'alert-danger')
             return False
     return True
+'''
 
 def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
     was_successful = True
