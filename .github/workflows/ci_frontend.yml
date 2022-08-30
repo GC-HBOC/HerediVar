@@ -16,6 +16,8 @@ jobs:
           architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
       - name: Display Python version
         run: python3 -c "import sys; print(sys.version)"
+      - name: Print content of src folder
+        run: ls -l /home/runner/work/HerediVar/HerediVar/src
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
