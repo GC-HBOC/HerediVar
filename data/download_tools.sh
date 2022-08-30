@@ -58,7 +58,7 @@ pip install mysql-connector
 pip install spliceai
 pip install tensorflow
 pip install flask
-pip install flask-mysql
+#pip install flask-mysql
 
 pip3 install CrossMap
 
@@ -69,7 +69,7 @@ pip install flask-paginate
 pip install authlib
 pip install blinker
 
-pip install lxml
+#pip install lxml
 '
 
 #### previous click version: 8.0.4 (before celery installation)
