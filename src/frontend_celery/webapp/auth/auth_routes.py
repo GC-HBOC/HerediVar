@@ -36,7 +36,7 @@ def login():
         session['tokenResponse'] = token_response.json()
 
         url = f'{issuer}/userinfo'
-        data = {'authorization': session['tokenResponse']['accessToken']}
+        data = {'authorization': session['tokenResponse']['access_token']}
         user_response = requests.post(url = url, data=data)
         print(user_response.status_code)
         print(user_response.json)
