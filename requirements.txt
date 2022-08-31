@@ -82,7 +82,6 @@ pandas==1.1.5
 parsedatetime==2.6
 Pillow==8.4.0
 pipreqs==0.4.11
-pkg_resources==0.0.0
 pluggy==1.0.0
 prompt-toolkit==3.0.30
 protobuf==3.19.4
