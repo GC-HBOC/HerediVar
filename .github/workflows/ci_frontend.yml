@@ -6,7 +6,6 @@ jobs:
 
   test_frontend:
     runs-on: ubuntu-latest
-    needs: [build_python, build_keycloak]
 
     steps:
       # build python
