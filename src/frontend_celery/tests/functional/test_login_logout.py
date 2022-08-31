@@ -5,9 +5,7 @@ import requests
 
 def test_login(test_client):
     """
-    GIVEN a Flask application configured for testing
-    WHEN the '/' page is requested (GET)
-    THEN check that the response is valid
+    DOCSTRING
     """
     response = test_client.get(url_for('auth.login'), follow_redirects=True)
     print(request.path)
