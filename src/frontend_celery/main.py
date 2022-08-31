@@ -11,4 +11,4 @@ app = create_app('config.%sConfig' % env.capitalize())
 
 
 if __name__ == '__main__':
-    app.run(host=app.config['HOST'])
+    app.run(__name__, host=app.config['HOST'])

@@ -56,5 +56,5 @@ class DevConfig(Config):
 
 class TestConfig(Config):
     TESTING = True
-    HOST = "localhost"
+    HOST = "127.0.0.1"
     DEBUG = True
