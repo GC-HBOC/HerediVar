@@ -34,15 +34,14 @@ def login():
         data = {'client_id':current_app.config['CLIENTID'], 'client_secret': current_app.config['CLIENTSECRET'], 'grant_type': 'password', 'username': 'testuser', 'password': '12345'}
         resp = requests.post(url = url, data=data)
         print(resp.status_code)
-        print(resp.json())
         if resp.status_code != 200:
             return redirect(url_for('main.index'))
-        return save_redirect(request.args.get('next_login', '/'))
+        return save_redirect(request.args.get('next_login', url_for('main.index')))
 
     # construct redirect uri: first redirect to keycloak login page
     # then redirect to auth with the next param which defaults to the '/' route
     # auth itself redirects to next ie. the page which required a login
-    redirect_uri = url_for('auth.auth', _external=True, next_login=request.args.get('next_login', '/'))
+    redirect_uri = url_for('auth.auth', _external=True, next_login=request.args.get('next_login', url_for('main.index')))
 
     return oauth.keycloak.authorize_redirect(redirect_uri)
 
