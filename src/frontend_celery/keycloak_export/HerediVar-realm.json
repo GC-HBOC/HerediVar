@@ -751,7 +751,7 @@
         "logic" : "POSITIVE",
         "decisionStrategy" : "UNANIMOUS",
         "config" : {
-          "users" : "[]"
+          "users" : "[\"testuser\"]"
         }
       }, {
         "id" : "ef531d80-a5e0-4c2d-aeee-33f813f493f1",
