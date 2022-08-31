@@ -3,7 +3,7 @@ name: Python package
 on: [push]
 
 jobs:
-  build:
+  test_frontend:
 
     runs-on: ubuntu-latest
 
@@ -14,6 +14,10 @@ jobs:
         with:
           python-version: '3.6.9'  # use 3.x to use the most up-to-date python3 version
           architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
+      - uses: actions/cache@v2 # cache the python environment to speed up tests
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
@@ -21,10 +25,6 @@ jobs:
           python3 -m pip install --upgrade setuptools wheel
           pip install pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      - uses: actions/cache@v2 # cache the python environment to speed up tests
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
       - name: Setup environment variables
         run: export WEBAPP_ENV=test
       #- name: Lint with flake8
@@ -35,10 +35,8 @@ jobs:
       #    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: pip freeze
         run: pip freeze
-      - name: Start web service
-        run: |
-          chmod 755 src/frontend_celery/start_webapp.sh
-          src/frontend_celery/start_webapp.sh
+      - name: run tests
+        run: src/frontend_celery/run_tests.sh
         shell: bash
       - name: Something
         run: echo "TEST"
