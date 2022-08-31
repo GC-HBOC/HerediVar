@@ -27,6 +27,18 @@ auth_blueprint = Blueprint(
 
 @auth_blueprint.route('/login')
 def login():
+
+    if current_app.config.get('TESTING', False):
+        issuer = current_app.config['ISSUER']
+        url = f'{issuer}/protocol/openid-connect/token'
+        data = {'client_id':current_app.config['CLIENTID'], 'client_secret': current_app.config['CLIENTSECRET'], 'grant_type': 'password', 'username': 'testuser', 'password': '12345'}
+        resp = requests.post(url = url, data=data)
+        print(resp.status_code)
+        print(resp.json())
+        if resp.status_code != 200:
+            return redirect(url_for('main.index'))
+        return save_redirect(request.args.get('next_login', '/'))
+
     # construct redirect uri: first redirect to keycloak login page
     # then redirect to auth with the next param which defaults to the '/' route
     # auth itself redirects to next ie. the page which required a login
