@@ -27,29 +27,6 @@ def get_variant_id(conn, chr, pos, ref, alt):
     variant_id = conn.get_variant_id(chr, pos, ref, alt)
     return variant_id
 
-'''
-def is_valid_query(search_query):
-    print(search_query)
-    if re.search(r"%.*%\s*%.*%", search_query):
-        flash("Search query ERROR: No multiple query types allowed in: " + search_query, 'alert-danger')
-        return False
-    if re.search('-', search_query):
-        if not re.search("chr.+:\d+-\d+", search_query): # chr2:214767531-214780740
-            flash("Search query malformed: Expecting chromosomal range search of the form: 'chr:start-end'. Query: " + search_query + " If you are looking for a gene which contains a '-' use the appropriate radio button or append '%gene%'.", 'alert-danger')
-            return False # if the range query is not exactly of this form it is malformed
-        else:
-            res = re.search("chr.+:(\d+)-(\d+)", search_query)
-            start = res.group(1)
-            end = res.group(2)
-            if start > end:
-                flash("Search query WARNING: Range search start position is larger than the end position, in: " + search_query, 'alert-danger')
-    if "%hgvs%" in search_query:
-        if not re.search(".*:[c\.|p\.]", search_query):
-            flash("Search query ERROR: malformed hgvs found in " + search_query + " expecting 'transcript:[c. OR p.]...'", 'alert-danger')
-            return False
-    return True
-'''
-
 def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
     was_successful = True
     # validate request
