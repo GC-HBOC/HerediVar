@@ -20,6 +20,12 @@ jobs:
           chmod 755 src/frontend_celery/tests/script/prepare_keycloak.sh
           src/frontend_celery/tests/script/prepare_keycloak.sh
 
+      # start keycloak
+      - name: Start Keycloak
+        run: |
+          chmod 755 src/frontend_celery/tests/script/start_keycloak_for_tests.sh
+          src/frontend_celery/tests/script/start_keycloak_for_tests.sh
+
       # build python
       - name: Set up Python 3.6.9
         uses: actions/setup-python@v4
