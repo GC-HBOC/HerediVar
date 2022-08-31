@@ -5,7 +5,6 @@ import tempfile
 import sys
 from os import path
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
-print(sys.path)
 from common.db_IO import Connection
 import common.functions as functions
 from .decorators import *
@@ -31,7 +30,7 @@ def get_variant_id(conn, chr, pos, ref, alt):
 '''
 def is_valid_query(search_query):
     print(search_query)
-    if re.search("%.*%\s*%.*%", search_query):
+    if re.search(r"%.*%\s*%.*%", search_query):
         flash("Search query ERROR: No multiple query types allowed in: " + search_query, 'alert-danger')
         return False
     if re.search('-', search_query):

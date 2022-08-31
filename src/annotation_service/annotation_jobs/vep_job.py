@@ -62,7 +62,7 @@ class vep_job(Job):
             domains = vep_entry[9]
             pfam_acc = ''
             if domains.count("Pfam:") >= 1:
-                pfam_acc = re.search('Pfam:(PF\d+)(?:\s+|$|\&|\|)', domains).group(1) # grab only pfam accession id from all protein domains which were returned
+                pfam_acc = re.search(r'Pfam:(PF\d+)(?:\s+|$|\&|\|)', domains).group(1) # grab only pfam accession id from all protein domains which were returned
                 if domains.count("Pfam:") > 1:
                     print("WARNING: there were multiple PFAM domain ids in: " + str(domains) + ". defaulting to the first one.")
             if self.job_config['insert_consequence']:
