@@ -25,5 +25,5 @@ function waitForServer {
   done
 }
 
-keycloak-18.0.0/bin/kc.sh start-dev --hostname localhost --http-port 5050 --features=admin-fine-grained-authz  > keycloak.log 2>&1 & # --log-level debug
+keycloak-18.0.0/bin/kc.sh start-dev --hostname 127.0.0.1 --http-port 5050 --features=admin-fine-grained-authz  > keycloak.log 2>&1 & # --log-level debug
 waitForServer "Keycloak"

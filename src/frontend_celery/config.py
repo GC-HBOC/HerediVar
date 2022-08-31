@@ -58,3 +58,9 @@ class TestConfig(Config):
     TESTING = True
     HOST = "127.0.0.1"
     DEBUG = True
+
+    KEYCLOAK_PORT = '5050'
+    ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
+    CLIENTID = os.environ.get('CLIENT_ID', 'flask-webapp')
+    CLIENTSECRET = os.environ.get('CLIENT_SECRET', 'NRLzlQfotGy9W8hkuYFm3T48Bjnti15k')
+    DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
