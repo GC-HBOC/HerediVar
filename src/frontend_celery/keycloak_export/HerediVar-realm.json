@@ -749,10 +749,7 @@
         "description" : "with this role you are able to register & inactivate users",
         "type" : "user",
         "logic" : "POSITIVE",
-        "decisionStrategy" : "UNANIMOUS",
-        "config" : {
-          "users" : "[\"testuser\"]"
-        }
+        "decisionStrategy" : "UNANIMOUS"
       }, {
         "id" : "ef531d80-a5e0-4c2d-aeee-33f813f493f1",
         "name" : "manage.permission.client.5ad7bea2-ec76-4c8c-98df-65fbfafae12c",
