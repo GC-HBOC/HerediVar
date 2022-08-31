@@ -8,7 +8,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps: 
-      - uses: actions/checkout@v3
       - name: Set up Python 3.6.9
         uses: actions/setup-python@v4
         with:
@@ -59,6 +58,7 @@ jobs:
     needs: [build_python, build_keycloak]
 
     steps:
+      - uses: actions/checkout@v3
       - name: ls
         run: ls -l
       - name: run tests
