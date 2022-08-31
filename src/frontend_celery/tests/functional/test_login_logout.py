@@ -9,10 +9,9 @@ def test_login(test_client):
     WHEN the '/' page is requested (GET)
     THEN check that the response is valid
     """
-    with test_client.app_context():
-        response = test_client.get(url_for('auth.login'), follow_redirects=True)
-        print(request.path)
-        print(response)
+    response = test_client.get(url_for('auth.login'), follow_redirects=True)
+    print(request.path)
+    print(response)
     #keycloak_auth_url = response.location
     #print(keycloak_auth_url)
     

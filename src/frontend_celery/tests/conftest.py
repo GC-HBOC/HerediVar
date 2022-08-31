@@ -11,5 +11,5 @@ def test_client():
 
     
     with app.test_client() as test_client:
-        #with app.app_context(): # Establish an application context
+        with app.app_context(): # Establish an application context
             yield test_client 
