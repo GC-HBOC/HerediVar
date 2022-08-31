@@ -4,10 +4,12 @@ on: [push]
 
 jobs:
 
-  build_python:
+  test_frontend:
     runs-on: ubuntu-latest
+    needs: [build_python, build_keycloak]
 
-    steps: 
+    steps:
+      # build python
       - uses: actions/checkout@v3
       - name: Set up Python 3.6.9
         uses: actions/setup-python@v4
@@ -32,36 +34,17 @@ jobs:
       #    # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
       #    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-
-
-  build_keycloak:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
+      # build keycloak
       - uses: actions/setup-java@v1
         with:
           java-version: 11
-
       - name: Prepare Keycloak
         run: |
           chmod 755 src/frontend_celery/tests/script/prepare_keycloak.sh
           src/frontend_celery/tests/script/prepare_keycloak.sh
-
-      #- name: Start Keycloak
-      #  run: scripts/start-local-server.sh
-
-
-
-
-  test_frontend:
-    runs-on: ubuntu-latest
-    needs: [build_python, build_keycloak]
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: ls
-        run: ls -l
+      
+      
+      # run tests
       - name: run tests
         run: |
           chmod 755 src/frontend_celery/tests/script/run_tests.sh
