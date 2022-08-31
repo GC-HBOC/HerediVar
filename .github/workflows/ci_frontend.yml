@@ -59,6 +59,8 @@ jobs:
     needs: [build_python, build_keycloak]
 
     steps:
+      - name: ls
+        run: ls -l
       - name: run tests
         run: |
           chmod 755 src/frontend_celery/tests/script/run_tests.sh
