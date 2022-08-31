@@ -58,6 +58,7 @@ class TestConfig(Config):
     TESTING = True
     HOST = "127.0.0.1"
     DEBUG = True
+    TLS = False
 
     KEYCLOAK_PORT = '5050'
     ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
