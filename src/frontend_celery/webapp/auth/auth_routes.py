@@ -32,9 +32,16 @@ def login():
         issuer = current_app.config['ISSUER']
         url = f'{issuer}/protocol/openid-connect/token'
         data = {'client_id':current_app.config['CLIENTID'], 'client_secret': current_app.config['CLIENTSECRET'], 'grant_type': 'password', 'username': 'testuser', 'password': '12345'}
-        resp = requests.post(url = url, data=data)
-        print(resp.status_code)
-        if resp.status_code != 200:
+        token_response = requests.post(url = url, data=data)
+        session['tokenResponse'] = token_response.json()
+
+        url = f'{issuer}/userinfo'
+        data = {'authorization': session['tokenResponse']['accessToken']}
+        user_response = requests.post(url = url, data=data)
+        print(user_response.status_code)
+        print(user_response.json)
+
+        if token_response.status_code != 200:
             return redirect(url_for('main.index'))
         return save_redirect(request.args.get('next_login', url_for('main.index')))
 
