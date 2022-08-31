@@ -55,7 +55,7 @@ jobs:
           restore-keys: cache-1-${{ runner.os }}-m2
 
       - name: Prepare Keycloak
-        run: src/frontend_celery/tests/scripts/prepare_keycloak.sh
+        run: src/frontend_celery/tests/script/prepare_keycloak.sh
 
       #- name: Start Keycloak
       #  run: scripts/start-local-server.sh
@@ -69,5 +69,5 @@ jobs:
 
     steps:
       - name: run tests
-        run: src/frontend_celery/tests/scripts/run_tests.sh
+        run: src/frontend_celery/tests/script/run_tests.sh
         shell: bash
