@@ -14,8 +14,10 @@ jobs:
         with:
           python-version: '3.6.9'  # use 3.x to use the most up-to-date python3 version
           architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
-      - name: Print content of src folder
-        run: ls -l /home/runner/work/HerediVar/HerediVar/src
+      - uses: actions/cache@v2 # cache the python environment to speed up tests
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
@@ -23,6 +25,8 @@ jobs:
           python3 -m pip install --upgrade setuptools wheel
           pip install pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      - name: Setup environment variables
+        run: export WEBAPP_ENV=test
       #- name: Lint with flake8
       #  run: |
       #    # stop the build if there are Python syntax errors or undefined names

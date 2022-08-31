@@ -44,6 +44,7 @@ class ProdConfig(Config):
     TLS = True
     DEBUG = False
     TESTING = False
+    HOST = "host not specified"
 
 
 class DevConfig(Config):
@@ -51,6 +52,9 @@ class DevConfig(Config):
     TLS = False
     os.environ['NO_PROXY'] = 'SRV018.img.med.uni-tuebingen.de'
     TESTING = False
+    HOST = "SRV018.img.med.uni-tuebingen.de"
 
 class TestConfig(Config):
     TESTING = True
+    HOST = "localhost"
+    DEBUG = True
