@@ -21,10 +21,10 @@ jobs:
           src/frontend_celery/tests/script/prepare_keycloak.sh
 
       # start keycloak
-      - name: Start Keycloak
-        run: |
-          chmod 755 src/frontend_celery/tests/script/start_keycloak_for_tests.sh
-          src/frontend_celery/tests/script/start_keycloak_for_tests.sh
+      #- name: Start Keycloak
+      #  run: |
+      #    chmod 755 src/frontend_celery/tests/script/start_keycloak_for_tests.sh
+      #    src/frontend_celery/tests/script/start_keycloak_for_tests.sh
 
       # init keycloak
       - name: Initialize Keycloak
