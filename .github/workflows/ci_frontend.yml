@@ -26,10 +26,10 @@ jobs:
 
       - name: Verify MySQL connection from container 
         run: |
-          apt-get update
-          apt-get install -y mysql-client
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
           mysql --host mydb -uroot -ppassword -e "SHOW DATABASES"
-          
+
 
       # prepare keycloak
       - uses: actions/setup-java@v1
