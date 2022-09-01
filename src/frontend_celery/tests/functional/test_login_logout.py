@@ -7,7 +7,7 @@ def test_login(test_client):
     """
     DOCSTRING
     """
-    response = test_client.get(url_for('auth.login'), follow_redirects=True)
+    response = test_client.get("/login", follow_redirects=True)
     print(request.path)
     print(response)
     print(session['tokenResponse'])
