@@ -25,8 +25,8 @@ def test_client():
 
 
 @pytest.fixture(autouse=True)
-def _push_request_context(request, app):
-    ctx = app.test_request_context()  # create context
+def _push_request_context(request, test_client):
+    ctx = test_client.test_request_context()  # create context
     ctx.push()  # push
 
     def teardown():
