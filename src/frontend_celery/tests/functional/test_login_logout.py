@@ -9,11 +9,17 @@ def test_login(test_client):
     """
     response = test_client.get("/login", follow_redirects=False)
     print(response.request.path)
-    print(response.json)
     print(session['tokenResponse'])
     print(session['user'])
     assert session.get('user') is not None
     assert session.get('tokenResponse') is not None
+    assert session.get('tokenResponse').get('access_token') is not None
+
+    response = test_client.get("/create")
+    print(response.json)
+    print(response.status_code)
+
+
     assert response.status_code == 2300
     #keycloak_auth_url = response.location
     #print(keycloak_auth_url)
