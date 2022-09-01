@@ -28,7 +28,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y mysql-client
-          mysql --host 0.0.0.0 -uroot -ppassword -e "SHOW DATABASES"
+          export MOST_RECENT_DUMP=$(cat src/tools/database_dumper/most_recent_dump.txt)
+          mysql --host 0.0.0.0 -u root -p password < src/tools/database_dumper/$MOST_RECENT_DUMP
+          mysql --host 0.0.0.0 -u root -p password -e "SHOW TABLES"
 
 
       # prepare keycloak
