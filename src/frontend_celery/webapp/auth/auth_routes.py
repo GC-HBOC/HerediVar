@@ -36,10 +36,11 @@ def login():
         session['tokenResponse'] = token_response.json()
 
         url = f'{issuer}/protocol/openid-connect/userinfo'
-        data = {'authorization': session['tokenResponse']['access_token']}
-        user_response = requests.post(url = url, data=data)
+        data = {'token': session["tokenResponse"]["access_token"], 'token_type_hint': 'access_token', 'client_secret': current_app.config['CLIENTSECRET'], 'client_id': current_app.config['CLIENTID']}
+        header = {'Authorization': f'Bearer {session["tokenResponse"]["access_token"]}'}
+        user_response = requests.post(url = url, data=data, headers=header)
         print(user_response.status_code)
-        print(user_response.json)
+        print(user_response.json())
 
         if token_response.status_code != 200:
             return redirect(url_for('main.index'))
