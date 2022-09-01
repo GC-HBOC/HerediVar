@@ -24,6 +24,13 @@ jobs:
       # download repository
       - uses: actions/checkout@v3
 
+      - name: Verify MySQL connection from container 
+        run: |
+          apt-get update
+          apt-get install -y mysql-client
+          mysql --host mydb -uroot -ppassword -e "SHOW DATABASES"
+          
+
       # prepare keycloak
       - uses: actions/setup-java@v1
         with:
