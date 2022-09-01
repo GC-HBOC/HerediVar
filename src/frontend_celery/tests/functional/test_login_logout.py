@@ -14,7 +14,12 @@ def test_login(test_client):
 
     login_admin()
 
+    print(session['tokenResponse'])
+    print(session['user'])
+
     response = test_client.get("/create", follow_redirects=True)
+    print(response)
+    print(response())
     print(response.text)
     print(response.status_code)
 
