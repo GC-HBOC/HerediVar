@@ -39,6 +39,8 @@ def login():
         data = {'token': session["tokenResponse"]["access_token"], 'token_type_hint': 'access_token', 'client_secret': current_app.config['CLIENTSECRET'], 'client_id': current_app.config['CLIENTID']}
         header = {'Authorization': f'Bearer {session["tokenResponse"]["access_token"]}'}
         user_response = requests.post(url = url, data=data, headers=header)
+        session['user'] = user_response.json()
+        
         print(user_response.status_code)
         print(user_response.json())
 
@@ -52,6 +54,7 @@ def login():
     redirect_uri = url_for('auth.auth', _external=True, next_login=request.args.get('next_login', url_for('main.index')))
 
     return oauth.keycloak.authorize_redirect(redirect_uri)
+
 
 
 @auth_blueprint.route('/auth')
@@ -75,7 +78,7 @@ def auth():
         user_info = token_response['userinfo']
         
 
-        # save user to database - this is only to record which user made which actions in the database and has nothing to do with authenitication
+        # this is only to record which user made which actions in the database and has nothing to do with authenitication
         username = user_info['preferred_username']
         first_name = user_info['given_name']
         last_name = user_info['family_name']
@@ -89,11 +92,12 @@ def auth():
         user_info['user_id'] = conn.get_user_id(username)
         conn.close()
 
+
         # init the session
         session['user'] = user_info
         session['tokenResponse'] = token_response
 
-        current_app.logger.info("User " + username + ' (' + affiliation + ") successfully logged in.")
+        current_app.logger.info("User " + user_info['preferred_username'] + ' (' + user_info.get('affiliation') + ") successfully logged in.")
 
         return save_redirect(request.args.get('next_login', url_for('main.index')))
     
