@@ -29,6 +29,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y mysql-client
           export MOST_RECENT_DUMP=$(cat src/tools/database_dumper/most_recent_dump.txt)
+          gunzip $MOST_RECENT_DUMP
           mysql --host 0.0.0.0 -u root -p password < src/tools/database_dumper/$MOST_RECENT_DUMP
           mysql --host 0.0.0.0 -u root -p password -e "SHOW TABLES"
 
