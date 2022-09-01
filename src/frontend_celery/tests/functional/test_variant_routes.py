@@ -3,7 +3,7 @@ from flask import request, url_for, session, current_app
 from urllib.parse import urlparse
 import requests
 
-def test_login(test_client):
+def test_create(test_client):
     """
     DOCSTRING
     """
@@ -11,16 +11,18 @@ def test_login(test_client):
     #print(response.request.path)
     #print(session['tokenResponse'])
     #print(session['user'])
-    response = test_client.get(url_for("variant.create"), follow_redirects=True)
-    print(response)
-    print(session['tokenResponse'])
-    print(response.data)
-    print(response.status_code)
 
+    # check access
+    response = test_client.get(url_for("variant.create"), follow_redirects=True)
+    #print(response)
+    #print(session['tokenResponse'])
+    #print(response.data)
+    #print(response.status_code)
 
     assert response.status_code == 200
-    #keycloak_auth_url = response.location
-    #print(keycloak_auth_url)
+    
+
+    
     
     
 

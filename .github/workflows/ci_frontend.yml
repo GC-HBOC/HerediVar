@@ -7,6 +7,19 @@ jobs:
   test_frontend:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+            MYSQL_ALLOW_EMPTY_PASSWORD: yes
+            MYSQL_USER: test_user
+            MYSQL_PASSWORD: password
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: test_db
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     steps:
       # download repository
       - uses: actions/checkout@v3
@@ -62,4 +75,6 @@ jobs:
         ##### !!!!!! REPLACE THIS with secrets that are loaded from github: https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md
         env:
           FLASK_SECRET_KEY: The_testing_key
+          CLIENT_ID: flask-webapp
+          CLIENT_SECRET: NRLzlQfotGy9W8hkuYFm3T48Bjnti15k
         shell: bash
