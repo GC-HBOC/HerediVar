@@ -28,6 +28,10 @@ def test_client(app):
     with app.test_client() as client:
         yield client
 
+@pytest.fixture
+def config(app):
+    return app.config
+
 @pytest.fixture(autouse=True)
 def _push_request_context(request, app):
     ctx = app.test_request_context()  # create context

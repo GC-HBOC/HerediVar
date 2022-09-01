@@ -18,7 +18,7 @@ def test_login(test_client):
     print(response.status_code)
 
 
-    assert response.status_code == 2300
+    assert response.status_code == 200
     #keycloak_auth_url = response.location
     #print(keycloak_auth_url)
     

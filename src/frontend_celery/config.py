@@ -8,17 +8,11 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 #set environment variables: export CLINVAR_API_KEY=12345
 
-class Config(object):
-    # basic config
-    SECRET_KEY = '736670cb10a600b695a55839ca3a5aa54a7d7356cdef815d2ad6e19a2031182b' # should be at least 32 byte, used for signing the session objects
-    HOST = 'SRV018.img.med.uni-tuebingen.de'
+# example discovery url: http://srv018.img.med.uni-tuebingen.de:5050/realms/HerediVar/.well-known/openid-configuration
 
-    # keycloak config
-    KEYCLOAK_PORT = '5050'
-    ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
-    CLIENTID = os.environ.get('CLIENT_ID', 'flask-webapp')
-    CLIENTSECRET = os.environ.get('CLIENT_SECRET', 'NRLzlQfotGy9W8hkuYFm3T48Bjnti15k')
-    DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
+class Config(object):
+
+    
 
     # configuration of server side session from flask-session module
     SESSION_PERMANENT = False
@@ -41,27 +35,50 @@ class Config(object):
 
 
 class ProdConfig(Config):
-    TLS = True
-    DEBUG = False
-    TESTING = False
     HOST = "host not specified"
+    TESTING = False
+    DEBUG = False
+    TLS = True
+
+
+    SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') # should be at least 32 byte, used for signing the session objects
+
+    # keycloak config
+    KEYCLOAK_PORT = '5050'
+    ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
+    CLIENTID = os.environ.get('CLIENT_ID')
+    CLIENTSECRET = os.environ.get('CLIENT_SECRET')
+
+    
+    
 
 
 class DevConfig(Config):
+    HOST = 'SRV018.img.med.uni-tuebingen.de'
+    TESTING = False
     DEBUG = True
     TLS = False
+
+    SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', '736670cb10a600b695a55839ca3a5aa54a7d7356cdef815d2ad6e19a2031182b') # should be at least 32 byte, used for signing the session objects
+
+    # keycloak config
+    KEYCLOAK_PORT = '5050'
+    ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
+    CLIENTID = os.environ.get('CLIENT_ID', 'flask-webapp')
+    CLIENTSECRET = os.environ.get('CLIENT_SECRET', 'NRLzlQfotGy9W8hkuYFm3T48Bjnti15k')
+    
     os.environ['NO_PROXY'] = 'SRV018.img.med.uni-tuebingen.de'
-    TESTING = False
-    HOST = "SRV018.img.med.uni-tuebingen.de"
+
 
 class TestConfig(Config):
+    HOST = "127.0.0.1" # localhost
     TESTING = True
-    HOST = "127.0.0.1"
     DEBUG = True
     TLS = False
+    
+    SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', "missing")
 
     KEYCLOAK_PORT = '5050'
     ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
     CLIENTID = os.environ.get('CLIENT_ID', 'flask-webapp')
     CLIENTSECRET = os.environ.get('CLIENT_SECRET', 'NRLzlQfotGy9W8hkuYFm3T48Bjnti15k')
-    DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
