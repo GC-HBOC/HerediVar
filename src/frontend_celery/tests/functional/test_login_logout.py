@@ -11,15 +11,9 @@ def test_login(test_client):
     #print(response.request.path)
     #print(session['tokenResponse'])
     #print(session['user'])
-
-    login_admin()
-
-    print(session['tokenResponse'])
-    print(session['user'])
-
     response = test_client.get(url_for("variant.create"), follow_redirects=True)
     print(response)
-    print(response())
+    print(session['tokenResponse'])
     print(response.text)
     print(response.status_code)
 
@@ -31,21 +25,4 @@ def test_login(test_client):
     
 
         
-def login_admin():
-    issuer = current_app.config['ISSUER']
-    url = f'{issuer}/protocol/openid-connect/token'
-    data = {'client_id':current_app.config['CLIENTID'], 'client_secret': current_app.config['CLIENTSECRET'], 'grant_type': 'password', 'username': 'testuser', 'password': '12345'}
-    token_response = requests.post(url = url, data=data)
-    assert token_response.status_code == 200
-    session['tokenResponse'] = token_response.json()
 
-    url = f'{issuer}/protocol/openid-connect/userinfo'
-    data = {'token': session["tokenResponse"]["access_token"], 'token_type_hint': 'access_token', 'client_secret': current_app.config['CLIENTSECRET'], 'client_id': current_app.config['CLIENTID']}
-    header = {'Authorization': f'Bearer {session["tokenResponse"]["access_token"]}'}
-    user_response = requests.post(url = url, data=data, headers=header)
-    assert user_response.status_code == 200
-    session['user'] = user_response.json()
-
-    assert session.get('user') is not None
-    assert session.get('tokenResponse') is not None
-    assert session.get('tokenResponse').get('access_token') is not None

@@ -31,7 +31,21 @@ def login():
     # you can not use the regular login route during testing because this redirects to the keycloak form which can not
     # be filled computationally
     if current_app.config.get('TESTING', False):
-        abort(404)
+        issuer = current_app.config['ISSUER']
+        url = f'{issuer}/protocol/openid-connect/token'
+        data = {'client_id':current_app.config['CLIENTID'], 'client_secret': current_app.config['CLIENTSECRET'], 'grant_type': 'password', 'username': 'testuser', 'password': '12345'}
+        token_response = requests.post(url = url, data=data)
+        assert token_response.status_code == 200
+        session['tokenResponse'] = token_response.json()
+
+        url = f'{issuer}/protocol/openid-connect/userinfo'
+        data = {'token': session["tokenResponse"]["access_token"], 'token_type_hint': 'access_token', 'client_secret': current_app.config['CLIENTSECRET'], 'client_id': current_app.config['CLIENTID']}
+        header = {'Authorization': f'Bearer {session["tokenResponse"]["access_token"]}'}
+        user_response = requests.post(url = url, data=data, headers=header)
+        assert user_response.status_code == 200
+        session['user'] = user_response.json()
+
+        save_redirect(request.args.get('next_login', url_for('main.index')))
 
     # construct redirect uri: first redirect to keycloak login page
     # then redirect to auth with the next param which defaults to the '/' route
