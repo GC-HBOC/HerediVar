@@ -7,7 +7,7 @@ def test_login(test_client):
     """
     DOCSTRING
     """
-    response = test_client.get("/create", follow_redirects=True)
+    response = test_client.get("/create", follow_redirects=False)
     print(response.history)
     print(response.request.path)
     print(response.json)
