@@ -30,8 +30,9 @@ jobs:
           sudo apt-get install -y mysql-client
           export MOST_RECENT_DUMP=$(cat src/tools/database_dumper/most_recent_dump.txt)
           gunzip src/tools/database_dumper/$MOST_RECENT_DUMP.gz
-          sudo mysql --host 0.0.0.0 -u test_user -p password < src/tools/database_dumper/$MOST_RECENT_DUMP
-          sudo mysql --host 0.0.0.0 -u test_user -p password -e "SHOW TABLES"
+          mysql --host 0.0.0.0 -uroot -ppassword -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';"
+          mysql --host 0.0.0.0 -uroot -ppassword < src/tools/database_dumper/$MOST_RECENT_DUMP
+          mysql --host 0.0.0.0 -uroot -ppassword -e "SHOW TABLES"
 
 
       # prepare keycloak
