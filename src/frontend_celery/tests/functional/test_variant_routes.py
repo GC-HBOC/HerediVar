@@ -22,6 +22,11 @@ def test_create(test_client):
     assert response.status_code == 200
     
 
+def test_browse(test_client):
+    """
+    This tests if the browse variant table works properly
+    """
+    response = test_client.get(url_for("variant.search"), follow_redirects=True)
     
     
     

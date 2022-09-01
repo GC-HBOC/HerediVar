@@ -13,10 +13,15 @@ from functools import cmp_to_key
 def get_db_connection():
     conn = None
     try:
-        conn = mysql.connector.connect(user='ahdoebm1', password='20220303',
-                                       host='SRV011.img.med.uni-tuebingen.de',
-                                       database='HerediVar_ahdoebm1', 
+        #conn = mysql.connector.connect(user='ahdoebm1', password='20220303',
+        #                               host='SRV011.img.med.uni-tuebingen.de',
+        #                               database='HerediVar_ahdoebm1', 
+        #                               charset = 'utf8')
+        conn = mysql.connector.connect(user='test_user', password='password',
+                                       host='0.0.0.0',
+                                       database='test_db', 
                                        charset = 'utf8')
+
     except Error as e:
         raise RuntimeError("Error while connecting to HerediVar database " + str(e))
     finally:
