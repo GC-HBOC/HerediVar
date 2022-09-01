@@ -48,6 +48,7 @@ class ProdConfig(Config):
     ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
     CLIENTID = os.environ.get('CLIENT_ID')
     CLIENTSECRET = os.environ.get('CLIENT_SECRET')
+    DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
 
     
     
@@ -66,6 +67,7 @@ class DevConfig(Config):
     ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
     CLIENTID = os.environ.get('CLIENT_ID', 'flask-webapp')
     CLIENTSECRET = os.environ.get('CLIENT_SECRET', 'NRLzlQfotGy9W8hkuYFm3T48Bjnti15k')
+    DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
     
     os.environ['NO_PROXY'] = 'SRV018.img.med.uni-tuebingen.de'
 
@@ -82,3 +84,4 @@ class TestConfig(Config):
     ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
     CLIENTID = os.environ.get('CLIENT_ID', 'flask-webapp')
     CLIENTSECRET = os.environ.get('CLIENT_SECRET', 'NRLzlQfotGy9W8hkuYFm3T48Bjnti15k')
+    DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
