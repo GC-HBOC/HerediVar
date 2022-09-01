@@ -16,7 +16,7 @@ def test_login(test_client):
     assert session.get('tokenResponse').get('access_token') is not None
 
     response = test_client.get("/create")
-    print(response.json)
+    print(response.data)
     print(response.status_code)
 
 
