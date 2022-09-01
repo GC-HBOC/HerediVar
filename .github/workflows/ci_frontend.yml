@@ -30,7 +30,6 @@ jobs:
           sudo apt-get install -y mysql-client
           export MOST_RECENT_DUMP=$(cat src/tools/database_dumper/most_recent_dump.txt)
           gunzip src/tools/database_dumper/$MOST_RECENT_DUMP.gz
-        #mysql --host 0.0.0.0 -uroot -ppassword -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';"
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/tools/database_dumper/$MOST_RECENT_DUMP
           mysql --host 0.0.0.0 -uroot -ppassword -use test_db -e "SHOW TABLES"
 
