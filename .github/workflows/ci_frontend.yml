@@ -52,10 +52,6 @@ jobs:
       #    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       
 
-      ##### !!!!!! REPLACE THIS with secrets that are loaded from github: https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md
-      - name: set environment variables
-        env:
-          FLASK_SECRET_KEY: The_testing_key
 
 
       # run tests
@@ -63,4 +59,7 @@ jobs:
         run: |
           chmod 755 src/frontend_celery/tests/script/run_tests.sh
           src/frontend_celery/tests/script/run_tests.sh
+        ##### !!!!!! REPLACE THIS with secrets that are loaded from github: https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md
+        env:
+          FLASK_SECRET_KEY: The_testing_key
         shell: bash
