@@ -9,7 +9,7 @@ def test_login(test_client):
     """
     response = test_client.get("/create", follow_redirects=True)
     print(request.path)
-    print(response.json())
+    print(response.history)
     print(session['tokenResponse'])
     assert response.status_code == 2300
     #keycloak_auth_url = response.location

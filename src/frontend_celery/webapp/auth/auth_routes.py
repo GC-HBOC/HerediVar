@@ -33,19 +33,18 @@ def login():
         url = f'{issuer}/protocol/openid-connect/token'
         data = {'client_id':current_app.config['CLIENTID'], 'client_secret': current_app.config['CLIENTSECRET'], 'grant_type': 'password', 'username': 'testuser', 'password': '12345'}
         token_response = requests.post(url = url, data=data)
+        if token_response.status_code != 200:
+            return redirect(url_for('main.index'))
         session['tokenResponse'] = token_response.json()
 
         url = f'{issuer}/protocol/openid-connect/userinfo'
         data = {'token': session["tokenResponse"]["access_token"], 'token_type_hint': 'access_token', 'client_secret': current_app.config['CLIENTSECRET'], 'client_id': current_app.config['CLIENTID']}
         header = {'Authorization': f'Bearer {session["tokenResponse"]["access_token"]}'}
         user_response = requests.post(url = url, data=data, headers=header)
+        if user_response.status_code != 200:
+            return redirect(url_for('main.index'))
         session['user'] = user_response.json()
         
-        print(user_response.status_code)
-        print(user_response.json())
-
-        if token_response.status_code != 200:
-            return redirect(url_for('main.index'))
         return save_redirect(request.args.get('next_login', url_for('main.index')))
 
     # construct redirect uri: first redirect to keycloak login page
