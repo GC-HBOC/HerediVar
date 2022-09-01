@@ -1999,13 +1999,6 @@
       "priority" : 50,
       "autheticatorFlow" : false,
       "userSetupAllowed" : false
-    }, {
-      "authenticator" : "registration-recaptcha-action",
-      "authenticatorFlow" : false,
-      "requirement" : "DISABLED",
-      "priority" : 60,
-      "autheticatorFlow" : false,
-      "userSetupAllowed" : false
     } ]
   }, {
     "id" : "7d7f2d5d-9f22-459b-a454-da575f0b6daf",
