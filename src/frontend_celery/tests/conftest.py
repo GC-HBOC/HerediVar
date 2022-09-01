@@ -18,15 +18,19 @@ import os
 # one can use this code to set one up manually This enables using url_for
 
 @pytest.fixture
-def test_client():
+def app():
     env = "test"
     app = create_app('config.%sConfig' % env.capitalize())
     return app
 
+@pytest.fixture
+def test_client(app):
+    with app.test_client() as client:
+        yield client
 
 @pytest.fixture(autouse=True)
-def _push_request_context(request, test_client):
-    ctx = test_client.test_request_context()  # create context
+def _push_request_context(request, app):
+    ctx = app.test_request_context()  # create context
     ctx.push()
 
     def teardown():
