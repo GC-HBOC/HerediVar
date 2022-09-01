@@ -17,7 +17,7 @@ def test_login(test_client):
     print(session['tokenResponse'])
     print(session['user'])
 
-    response = test_client.get("/create", follow_redirects=True)
+    response = test_client.get(url_for("variant.create"), follow_redirects=True)
     print(response)
     print(response())
     print(response.text)

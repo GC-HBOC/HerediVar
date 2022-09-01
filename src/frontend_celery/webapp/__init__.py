@@ -69,7 +69,7 @@ def create_app(object_name):
     from .utils import request_has_connection, get_connection
     @app.teardown_request
     def close_db_connection(ex):
-        if not app.config['TESTING']:
+        #if not app.config['TESTING']:
             if request_has_connection():
                 conn = get_connection()
                 conn.close()
