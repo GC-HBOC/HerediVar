@@ -45,7 +45,7 @@ def login():
         assert user_response.status_code == 200
         session['user'] = user_response.json()
 
-        save_redirect(request.args.get('next_login', url_for('main.index')))
+        return save_redirect(request.args.get('next_login', url_for('main.index')))
 
     # construct redirect uri: first redirect to keycloak login page
     # then redirect to auth with the next param which defaults to the '/' route
