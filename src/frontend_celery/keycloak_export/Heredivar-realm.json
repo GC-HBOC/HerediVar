@@ -595,7 +595,7 @@
     "consentRequired" : false,
     "standardFlowEnabled" : true,
     "implicitFlowEnabled" : false,
-    "directAccessGrantsEnabled" : true,
+    "directAccessGrantsEnabled" : false,
     "serviceAccountsEnabled" : true,
     "authorizationServicesEnabled" : true,
     "publicClient" : false,
@@ -2000,7 +2000,6 @@
       "autheticatorFlow" : false,
       "userSetupAllowed" : false
     }, {
-      "authenticatorConfig" : "heredivar-recaptcha",
       "authenticator" : "registration-recaptcha-action",
       "authenticatorFlow" : false,
       "requirement" : "DISABLED",
@@ -2065,13 +2064,6 @@
     "alias" : "create unique user config",
     "config" : {
       "require.password.update.after.registration" : "false"
-    }
-  }, {
-    "id" : "f68c2662-02b2-4c8b-b560-75547ce9d420",
-    "alias" : "heredivar-recaptcha",
-    "config" : {
-      "site.key" : "6LebZHAgAAAAABRVz7HL89XDxNpo30gB1BTAeAzf",
-      "secret" : "6LebZHAgAAAAAGUYe34STZzOiD3AQZ1y_H3Urlcg"
     }
   }, {
     "id" : "18f63ea9-5029-49b2-b565-5088332680ed",
