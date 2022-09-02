@@ -57,7 +57,6 @@ UNLOCK TABLES;
 
 
 
-
 --
 -- Dumping data for table `task_force_protein_domains`
 --
@@ -113,6 +112,24 @@ INSERT INTO `gene_alias` VALUES
 	(51290,38963,'p53'),
 	(51291,38963,'LFS1');
 /*!40000 ALTER TABLE `gene_alias` ENABLE KEYS */;
+UNLOCK TABLES;
+
+
+--
+-- Dumping data for table `variant`
+--
+
+LOCK TABLES `variant` WRITE;
+/*!40000 ALTER TABLE `variant` DISABLE KEYS */;
+INSERT INTO `variant` VALUES 
+	(15,'chr2',214730440,'G','A',0,NULL,'chr1',0,'',''),
+	(52,'chr13',32314943,'A','G',0,'dummy BRCA variant','chr1',0,'',''),
+	(55,'chr16',68822185,'C','T',0,'PFAM annotation consequences','chr1',0,'',''),
+	(71,'chr17',43124032,'AAGATTTTCTGCAT','A',0,NULL,'chr1',0,'',''),
+	(72,'chr17',7670685,'G','A',0,'dummy TP53 variant','chr1',0,'',''),
+	(119,'chr1',10295758,'G','A',0,NULL,'chr1',10355816,'G','A'),
+	(139,'chr1',10304277,'T','C',0,NULL,'chr1',10364335,'T','C');
+/*!40000 ALTER TABLE `variant` ENABLE KEYS */;
 UNLOCK TABLES;
 
 
