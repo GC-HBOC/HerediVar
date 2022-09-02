@@ -37,7 +37,7 @@ def test_browse(test_client):
     """
     response = test_client.get(url_for("variant.search"), follow_redirects=True)
     data = response.data.decode('utf8')
-    print(data)
+    assert response.status_code == 200
     assert 'id="variantTable"' in data
     assert data.count('name="variant_row"') == 5
     assert 'variant_id="15"' in data
@@ -45,7 +45,15 @@ def test_browse(test_client):
     assert 'variant_id="71"' in data
     assert 'variant_id="72"' in data
     assert 'variant_id="139"' in data
-    assert response.status_code == 2000
+
+    response = test_client.get(url_for("variant.search", genes="BARD1"))
+    data = response.data.decode('utf8')
+    print(data)
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 5
+    assert 'variant_id="15"' in data
+
+    
     
     
     
