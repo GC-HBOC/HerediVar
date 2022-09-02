@@ -51,11 +51,9 @@ def login():
         last_name = user_info['family_name']
         affiliation = user_info.get('affiliation')
         assert affiliation is not None and affiliation.strip() != ''
-        conn = Connection()
+        conn = get_connection()
         conn.insert_user(username, first_name, last_name, affiliation) # this inserts only if the user is not already in the database and updates the information if the information changed (except for username this one has to stay)
         user_info['user_id'] = conn.get_user_id(username)
-        print(conn.user_test())
-        conn.close()
 
         session['user'] = user_info
 
@@ -100,10 +98,9 @@ def auth():
             flash('LOGIN ERROR: You are missing the affiliation tag ask a HerediVar administrator to add it!', 'alert-danger')
             current_app.logger.error("Could not login user " + username + ", because the user was missing affiliation tag in keycloak.")
             return redirect(url_for('auth.logout', auto_logout='True'))
-        conn = Connection()
+        conn = get_connection()
         conn.insert_user(username, first_name, last_name, affiliation) # this inserts only if the user is not already in the database and updates the information if the information changed (except for username this one has to stay)
         user_info['user_id'] = conn.get_user_id(username)
-        conn.close()
 
 
         # init the session

@@ -36,9 +36,7 @@ def test_browse(test_client):
     This tests if the browse variant table works properly
     """
     response = test_client.get(url_for("variant.search"), follow_redirects=True)
-    print(response)
-    print(response.data)
-    assert response.status_code == 345
+    assert response.status_code == 200
     
     
     

@@ -1421,10 +1421,3 @@ class Connection:
         self.cursor.execute(command, (annotation_queue_id, ))
         result  = self.cursor.fetchone()
         return result
-
-    def user_test(self):
-        command = "SELECT * FROM user"
-        self.cursor.execute(command)
-        result = self.cursor.fetchall()
-        return result
-#
