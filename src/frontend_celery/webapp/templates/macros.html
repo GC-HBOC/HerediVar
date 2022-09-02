@@ -208,7 +208,7 @@
     </thead>
     <tbody id="variantTableBody">
       {% for variant in variants %}
-      <tr style="line-height: 28px;" variant_id="{{ variant[0] }}">
+      <tr name="variant_row" style="line-height: 28px;" variant_id="{{ variant[0] }}">
         <td style="display:none;">{{ variant[0] }}</td>
         <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable" style="white-space: nowrap;">{{ variant[1] }}</td>
         <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable" style="white-space: nowrap;">{{ variant[2] }}</td>

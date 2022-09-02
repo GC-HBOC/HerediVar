@@ -36,9 +36,10 @@ def test_browse(test_client):
     This tests if the browse variant table works properly
     """
     response = test_client.get(url_for("variant.search"), follow_redirects=True)
-    print(response.data)
-    data = response.data
+    data = response.data.decode('ascii')
+    print(data)
     assert 'id="variantTable"' in data
+    assert data.count('name="variant_row"') == 5
     assert 'variant_id="15"' in data
     assert 'variant_id="52"' in data
     assert 'variant_id="71"' in data
