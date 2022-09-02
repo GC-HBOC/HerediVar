@@ -159,9 +159,9 @@ UNLOCK TABLES;
 LOCK TABLES `pfam_id_mapping` WRITE;
 /*!40000 ALTER TABLE `pfam_id_mapping` DISABLE KEYS */;
 INSERT INTO `pfam_id_mapping` VALUES 
-	(1711,'PF00028','Cadherin domain')
-	(9095,'PF00498','FHA domain')
-	(13575,'PF07710','P53 tetramerisation motif')
+	(1711,'PF00028','Cadherin domain'),
+	(9095,'PF00498','FHA domain'),
+	(13575,'PF07710','P53 tetramerisation motif');
 /*!40000 ALTER TABLE `pfam_id_mapping` ENABLE KEYS */;
 UNLOCK TABLES;
 
