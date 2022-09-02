@@ -9,7 +9,7 @@ def test_login(test_client):
 
     assert 'tokenResponse' in session
     assert 'user' in session
-    assert session['user']['user_id'] == 1
+    assert 'user_id' in session['user']
 
 
 def test_create(test_client):
@@ -36,6 +36,9 @@ def test_browse(test_client):
     This tests if the browse variant table works properly
     """
     response = test_client.get(url_for("variant.search"), follow_redirects=True)
+    print(response)
+    print(response.data)
+    assert response.status_code == 345
     
     
     
