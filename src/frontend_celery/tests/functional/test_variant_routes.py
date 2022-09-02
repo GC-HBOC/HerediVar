@@ -3,6 +3,14 @@ from flask import request, url_for, session, current_app
 from urllib.parse import urlparse
 import requests
 
+def test_login(test_client):
+    response = test_client.get(url_for('auth.login'))
+
+    assert 'tokenResponse' in session
+    assert 'user' in session
+    assert session['user']['user_id'] == 1
+
+
 def test_create(test_client):
     """
     DOCSTRING

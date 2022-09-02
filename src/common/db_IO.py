@@ -9,19 +9,28 @@ from operator import itemgetter
 import datetime
 import re
 from functools import cmp_to_key
+import os
 
 def get_db_connection():
     conn = None
     try:
-        #conn = mysql.connector.connect(user='ahdoebm1', password='20220303',
-        #                               host='SRV011.img.med.uni-tuebingen.de',
-        #                               database='HerediVar_ahdoebm1', 
-        #                               charset = 'utf8')
-        conn = mysql.connector.connect(user='test_user', password='password',
-                                       host='0.0.0.0',
-                                       database='test_db', 
-                                       charset = 'utf8')
-
+        env = os.environ.get('WEBAPP_ENV', 'dev')
+        if env == 'dev':
+            conn = mysql.connector.connect(user='ahdoebm1', password='20220303',
+                                           host='SRV011.img.med.uni-tuebingen.de',
+                                           database='HerediVar_ahdoebm1', 
+                                           charset = 'utf8')
+        elif env == 'test':
+            conn = mysql.connector.connect(user='test_user', password='password',
+                                           host='0.0.0.0',
+                                           database='test_db', 
+                                           charset = 'utf8')
+        elif env == 'prod': ## TODO
+            conn = mysql.connector.connect(user='missing', password='missing',
+                                           host='0.0.0.0',
+                                           database='missing', 
+                                           charset = 'utf8')
+                                           
     except Error as e:
         raise RuntimeError("Error while connecting to HerediVar database " + str(e))
     finally:
