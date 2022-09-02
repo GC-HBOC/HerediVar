@@ -44,8 +44,7 @@ def login():
         user_response = requests.post(url = url, data=data, headers=header)
         assert user_response.status_code == 200
         user_info = user_response.json()
-        session['user'] = user_info
-
+        
         # this is only to record which user made which actions in the database and has nothing to do with authenitication
         username = user_info['preferred_username']
         first_name = user_info['given_name']
@@ -56,6 +55,8 @@ def login():
         conn.insert_user(username, first_name, last_name, affiliation) # this inserts only if the user is not already in the database and updates the information if the information changed (except for username this one has to stay)
         user_info['user_id'] = conn.get_user_id(username)
         conn.close()
+
+        session['user'] = user_info
 
         return save_redirect(request.args.get('next_login', url_for('main.index')))
 
