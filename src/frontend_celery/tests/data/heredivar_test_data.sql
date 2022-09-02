@@ -82,6 +82,7 @@ INSERT INTO `gene` VALUES
 	(4004,1748,'CDH1','cadherin 1','protein-coding gene',192090,15419),
 	(2564,1100,'BRCA1','BRCA1 DNA repair associated','protein-coding gene',113705,15377),
 	(13764,16636,'KIF1B','kinesin family member 1B','protein-coding gene',605995,16304),
+	(21914,20691,'NBR2','neighbor of BRCA1 lncRNA 2','non-coding RNA',618708,NULL),
 	(38963,11998,'TP53','tumor protein p53','protein-coding gene',191170,15644),
 	(30030,34281,'RNU6-37P','RNA, U6 small nuclear 37, pseudogene','pseudogene',NULL,NULL);
 /*!40000 ALTER TABLE `gene` ENABLE KEYS */;
