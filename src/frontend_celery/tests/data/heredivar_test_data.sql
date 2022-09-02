@@ -56,15 +56,6 @@ INSERT INTO `annotation_type` VALUES
 UNLOCK TABLES;
 
 
---
--- Dumping data for table `scheme_criteria`
---
-
-LOCK TABLES `scheme_criteria` WRITE;
-/*!40000 ALTER TABLE `scheme_criteria` DISABLE KEYS */;
-INSERT INTO `scheme_criteria` VALUES (44,27,'ps2','ps','bvd | lol this is a test & more + more'),(45,27,'pp1','ps','fasdfasfas\r\ntestscht'),(47,27,'bs1','bs','benign criterium'),(48,28,'pp1','ps','this was copied'),(49,28,'ba1','ba','this is benign'),(50,29,'ps1','ps','abebra'),(51,29,'pp1','pvs','VERRRYY STRONG!'),(52,29,'bp7','bp','fsafbadfasfwababetn sgg f f f'),(53,30,'ps2','ps','afdafas'),(54,30,'pp1','ps','fasdfasfas'),(55,31,'pp1','pm','v<safsa'),(56,32,'pp1','pm','erhsehbs'),(57,33,'pp1','pm','evidence here'),(58,34,'pp1','ps','aednr hae hrthztrj zt j '),(59,34,'bp4','bp','evonei vbiuebiebgie bie'),(60,34,'bs2','bs','adbvebrag g g  '),(61,35,'ps2','ps','afdafas'),(62,35,'pp1','ps','fasdfasfas\r\ntestscht'),(63,36,'ps1','ps','gdsgsgf'),(64,36,'pp1','pm','suppporting evidence'),(65,27,'pvs1','pvs','ie belgische Föderalregierung oder föderale Regierung (niederländisch Federale regering, französisch Gouvernement fédéral), manchmal vereinfacht belgische Regierung oder nationale Regierung (veraltet) genannt, ist auf föderaler Ebene das exekutive Verfassungsorgan Belgiens. Die ausführende Gewalt liegt zwar verfassungsrechtlich allein beim König, dieser benötigt jedoch für alle Rechtshandlungen, die er ausführt, die Gegenzeichnung eines Ministers der Regierung. In Wirklichkeit wird die Politik der föderalen Exekutiven im belgischen Staatsgefüge allein durch die Regierung ausgeübt. Die Regierung ist aus einem Premierminister und höchstens vierzehn anderen Ministern, die den Ministerrat bilden, und eventuell aus mehreren Staatssekretären zusammengestellt. Die vornehmlichsten Befugnisse der Regierung sind die Erstellung von Gesetzesentwürfen und die Ausführung von Gesetzen, die im Föderalen Parlament verabschiedet wurden. Zudem führt die Regierung die auswärtigen Beziehungen, organisiert die föderale Verwaltung des Landes und verfügt über die belgischen Streitkräfte. Die Föderalregierung muss sich allein vor der Abgeordnetenk'),(66,36,'ps2','ps','ycavsvavasv'),(67,38,'pp1','pp',''),(68,39,'ps2','ps','bvd'),(69,39,'pp1','pm','fasdfasfas\r\ntestscht'),(70,40,'4.4','ps','dsaaD'),(71,41,'5.2','pvs','yoho test'),(72,41,'4.4','ps','dsaaD'),(80,40,'5.3','pvs','rhtrh'),(81,40,'3.2','bp','asvabaerb  a rg af a'),(82,40,'2.8','pm','aga raga '),(83,40,'1.1','pp',' aarfaeff a  '),(97,62,'pp1','ps','fasdfasfas\r\ntestscht'),(98,63,'pp1','ps','fasdfasfas\r\ntestscht'),(99,64,'pp1','pp',''),(100,65,'4.3','ps','gfsb');
-/*!40000 ALTER TABLE `scheme_criteria` ENABLE KEYS */;
-UNLOCK TABLES;
 
 
 --
