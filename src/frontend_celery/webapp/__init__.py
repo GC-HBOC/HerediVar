@@ -72,7 +72,7 @@ def create_app(object_name):
         #if not app.config['TESTING']:
             if request_has_connection():
                 conn = get_connection()
-                conn.close()
+                #conn.close()
                 app.logger.debug("Closed db connection")
 
     return app
