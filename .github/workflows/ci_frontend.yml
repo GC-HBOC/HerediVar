@@ -33,7 +33,6 @@ jobs:
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
-          mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SELECT * FROM variant"
 
 
       # prepare keycloak

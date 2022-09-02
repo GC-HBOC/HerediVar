@@ -1421,3 +1421,10 @@ class Connection:
         self.cursor.execute(command, (annotation_queue_id, ))
         result  = self.cursor.fetchone()
         return result
+
+
+    def variant_test(self):
+        command = "SELECT * FROM variant"
+        self.cursor.execute(command)
+        result  = self.cursor.fetchall()
+        return result

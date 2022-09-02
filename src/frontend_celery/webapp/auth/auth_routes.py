@@ -54,6 +54,7 @@ def login():
         conn = Connection()
         conn.insert_user(username, first_name, last_name, affiliation) # this inserts only if the user is not already in the database and updates the information if the information changed (except for username this one has to stay)
         user_info['user_id'] = conn.get_user_id(username)
+        print(conn.variant_test())
         conn.close()
 
         session['user'] = user_info
