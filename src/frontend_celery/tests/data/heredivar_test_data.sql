@@ -79,12 +79,10 @@ LOCK TABLES `gene` WRITE;
 INSERT INTO `gene` VALUES 
 	(2174,952,'BARD1','BRCA1 associated RING domain 1','protein-coding gene',601593,18430),
 	(2566,1101,'BRCA2','BRCA2 DNA repair associated','protein-coding gene',600185,15378),
-	(4004,1748,'CDH1','cadherin 1','protein-coding gene',192090,15419),
 	(2564,1100,'BRCA1','BRCA1 DNA repair associated','protein-coding gene',113705,15377),
-	(13764,16636,'KIF1B','kinesin family member 1B','protein-coding gene',605995,16304),
 	(21914,20691,'NBR2','neighbor of BRCA1 lncRNA 2','non-coding RNA',618708,NULL),
-	(38963,11998,'TP53','tumor protein p53','protein-coding gene',191170,15644),
-	(30030,34281,'RNU6-37P','RNA, U6 small nuclear 37, pseudogene','pseudogene',NULL,NULL);
+	(42061,37116,'ZAR1L','zygote arrest 1 like','protein-coding gene',NULL,NULL),
+	(38963,11998,'TP53','tumor protein p53','protein-coding gene',191170,15644);
 /*!40000 ALTER TABLE `gene` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -102,14 +100,6 @@ INSERT INTO `gene_alias` VALUES
 	(4433,2564,'FANCS'),
 	(4440,2566,'XRCC11'),
 	(4441,2566,'FANCD1'),
-	(6845,4004,'uvomorulin'),
-	(6846,4004,'CD324'),
-	(6847,4004,'UVO'),
-	(22212,13764,'KIAA0591'),
-	(22213,13764,'KLP'),
-	(22214,13764,'HMSNII'),
-	(22215,13764,'CMT2A'),
-	(41734,30030,'RNU6-37'),
 	(51290,38963,'p53'),
 	(51291,38963,'LFS1');
 /*!40000 ALTER TABLE `gene_alias` ENABLE KEYS */;
@@ -125,10 +115,8 @@ LOCK TABLES `variant` WRITE;
 INSERT INTO `variant` VALUES 
 	(15,'chr2',214730440,'G','A',0,NULL,'chr1',0,'',''),
 	(52,'chr13',32314943,'A','G',0,'dummy BRCA variant','chr1',0,'',''),
-	(55,'chr16',68822185,'C','T',0,'PFAM annotation consequences','chr1',0,'',''),
-	(71,'chr17',43124032,'AAGATTTTCTGCAT','A',0,NULL,'chr1',0,'',''),
+	(71,'chr17',43124032,'AAGATTTTCTGCAT','A',0,'ARUP BRCA classification example','chr1',0,'',''),
 	(72,'chr17',7670685,'G','A',0,'dummy TP53 variant','chr1',0,'',''),
-	(119,'chr1',10295758,'G','A',0,NULL,'chr1',10355816,'G','A'),
 	(139,'chr1',10304277,'T','C',0,NULL,'chr1',10364335,'T','C');
 /*!40000 ALTER TABLE `variant` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -143,8 +131,6 @@ UNLOCK TABLES;
 LOCK TABLES `heredicare_center_classification` WRITE;
 /*!40000 ALTER TABLE `heredicare_center_classification` DISABLE KEYS */;
 INSERT INTO `heredicare_center_classification` VALUES 
-	(46,'5',119,'Uniklinik Tübingen','this is a test','1999-01-01'),
-	(47,'5',119,'Hamburger Hähnchenfabrik','this is a test for the second classificatoin center','2020-05-01'),
 	(60,'5',139,'Uniklinik Tübingen','this is a test','1999-01-01'),
 	(61,'5',139,'Hamburger Hähnchenfabrik','this is a test for the second classificatoin center','2020-05-01');
 /*!40000 ALTER TABLE `heredicare_center_classification` ENABLE KEYS */;
@@ -281,19 +267,6 @@ INSERT INTO `variant_consequence` VALUES
 	(963,72,'NM_001276760','c.907C>T','p.Arg303Ter','stop gained','high',10,NULL,38963,'refseq',NULL,NULL),
 	(964,72,'NM_001276761','c.907C>T','p.Arg303Ter','stop gained','high',10,NULL,38963,'refseq',NULL,NULL),
 
-	(1111,55,'ENST00000261769','c.1896C>T','p.His632%3D','synonymous variant','low',12,NULL,4004,'ensembl','PF00028','Cadherin domain'),
-	(1112,55,'ENST00000422392','c.1713C>T','p.His571%3D','synonymous variant','low',11,NULL,4004,'ensembl','PF00028','Cadherin domain'),
-	(1113,55,'ENST00000562087',NULL,NULL,'upstream gene variant','modifier',NULL,NULL,9549,'ensembl',NULL,NULL),
-	(1114,55,'ENST00000562118',NULL,NULL,'upstream gene variant','modifier',NULL,NULL,4004,'ensembl',NULL,NULL),
-	(1115,55,'ENST00000562836','n.1967C>T',NULL,'non coding transcript exon variant','modifier',11,NULL,4004,'ensembl',NULL,NULL),
-	(1116,55,'ENST00000563916','n.263+1079G>A',NULL,'intron variant & non coding transcript variant','modifier',NULL,1,NULL,'ensembl',NULL,NULL),
-	(1117,55,'ENST00000566510','c.*562C>T',NULL,'3 prime UTR variant & NMD transcript variant','modifier',11,NULL,4004,'ensembl',NULL,NULL),
-	(1118,55,'ENST00000566612','c.*136C>T',NULL,'3 prime UTR variant & NMD transcript variant','modifier',11,NULL,4004,'ensembl',NULL,NULL),
-	(1119,55,'NM_001317184','c.1713C>T','p.His571%3D','synonymous variant','low',11,NULL,4004,'refseq',NULL,NULL),
-	(1120,55,'NM_001317185','c.348C>T','p.His116%3D','synonymous variant','low',12,NULL,4004,'refseq',NULL,NULL),
-	(1121,55,'NM_001317186','c.-70C>T',NULL,'5 prime UTR variant','modifier',11,NULL,4004,'refseq',NULL,NULL),
-	(1122,55,'NM_004360','c.1896C>T','p.His632%3D','synonymous variant','low',12,NULL,4004,'refseq',NULL,NULL),
-
 	(2328,52,'ENST00000345108',NULL,NULL,'upstream gene variant','modifier',NULL,NULL,42061,'ensembl',NULL,NULL),
 	(2329,52,'ENST00000380152',NULL,NULL,'upstream gene variant','modifier',NULL,NULL,2566,'ensembl',NULL,NULL),
 	(2330,52,'ENST00000530893',NULL,NULL,'upstream gene variant','modifier',NULL,NULL,2566,'ensembl',NULL,NULL),
@@ -305,24 +278,7 @@ INSERT INTO `variant_consequence` VALUES
 	(2336,52,'ENSM00526233310',NULL,NULL,'TF binding site variant','modifier',NULL,NULL,NULL,'ensembl',NULL,NULL),
 	(2337,52,'ENSM00522614247',NULL,NULL,'TF binding site variant','modifier',NULL,NULL,NULL,'ensembl',NULL,NULL),
 	(2338,52,'NM_000059',NULL,NULL,'upstream gene variant','modifier',NULL,NULL,2566,'refseq',NULL,NULL),
-	(2339,52,'NM_001136571','c.-390+372T>C',NULL,'intron variant','modifier',NULL,1,42061,'refseq',NULL,NULL),
-
-	(2448,119,'ENST00000263934','c.1631G>A','p.Ser544Asn','missense variant','moderate',17,NULL,13764,'ensembl','PF00498','FHA domain'),
-	(2450,119,'ENST00000362692',NULL,NULL,'upstream gene variant','modifier',NULL,NULL,30030,'ensembl',NULL,NULL),
-	(2453,119,'ENST00000377081','c.1769G>A','p.Ser590Asn','missense variant','moderate',18,NULL,13764,'ensembl','PF00498','FHA domain'),
-	(2457,119,'ENST00000377083','c.1631G>A','p.Ser544Asn','missense variant','moderate',17,NULL,13764,'ensembl','PF00498','FHA domain'),
-	(2460,119,'ENST00000377086','c.1769G>A','p.Ser590Asn','missense variant','moderate',19,NULL,13764,'ensembl','PF00498','FHA domain'),
-	(2461,119,'ENST00000377093','c.1631G>A','p.Ser544Asn','missense variant','moderate',17,NULL,13764,'ensembl','PF00498','FHA domain'),
-	(2463,119,'ENST00000497835',NULL,NULL,'downstream gene variant','modifier',NULL,NULL,13764,'ensembl',NULL,NULL),
-	(2464,119,'ENST00000620295','c.1727G>A','p.Ser576Asn','missense variant','moderate',17,NULL,13764,'ensembl','PF00498','FHA domain'),
-	(2466,119,'ENST00000622724','c.1691G>A','p.Ser564Asn','missense variant','moderate',18,NULL,13764,'ensembl','PF00498','FHA domain'),
-	(2468,119,'ENST00000676179','c.1769G>A','p.Ser590Asn','missense variant','moderate',19,NULL,13764,'ensembl','PF00498','FHA domain'),
-	(2469,119,'ENSR00000919611',NULL,NULL,'regulatory region variant','modifier',NULL,NULL,NULL,'ensembl',NULL,NULL),
-	(2471,119,'NM_001365951','c.1769G>A','p.Ser590Asn','missense variant','moderate',19,NULL,13764,'refseq',NULL,NULL),
-	(2472,119,'NM_001365952','c.1769G>A','p.Ser590Asn','missense variant','moderate',19,NULL,13764,'refseq',NULL,NULL),
-	(2474,119,'NM_001365953','c.1631G>A','p.Ser544Asn','missense variant','moderate',17,NULL,13764,'refseq',NULL,NULL),
-	(2475,119,'NM_015074','c.1631G>A','p.Ser544Asn','missense variant','moderate',17,NULL,13764,'refseq',NULL,NULL),
-	(2476,119,'NM_183416','c.1631G>A','p.Ser544Asn','missense variant','moderate',17,NULL,13764,'refseq',NULL,NULL);
+	(2339,52,'NM_001136571','c.-390+372T>C',NULL,'intron variant','modifier',NULL,1,42061,'refseq',NULL,NULL);
 /*!40000 ALTER TABLE `variant_consequence` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -338,9 +294,8 @@ UNLOCK TABLES;
 LOCK TABLES `variant_ids` WRITE;
 /*!40000 ALTER TABLE `variant_ids` DISABLE KEYS */;
 INSERT INTO `variant_ids` VALUES 
-	(57,119,'SCV002541050','clinvar_accession'),
-	(55,119,'SUB11823131','clinvar_submission'),
-	(40,119,'11740058','heredicare'),
+	(65,15,'SCV002549291','clinvar_accession'),
+	(56,15,'SUB11885096','clinvar_submission'),
 
 	(51,139,'11334923','heredicare'),
 	(52,139,'11509431','heredicare');
