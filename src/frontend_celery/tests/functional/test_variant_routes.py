@@ -6,6 +6,7 @@ import requests
 def test_login(test_client):
     response = test_client.get(url_for('auth.login'))
 
+
     assert 'tokenResponse' in session
     assert 'user' in session
     assert session['user']['user_id'] == 1

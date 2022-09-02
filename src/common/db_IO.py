@@ -30,7 +30,7 @@ def get_db_connection():
                                            host='0.0.0.0',
                                            database='missing', 
                                            charset = 'utf8')
-                                           
+
     except Error as e:
         raise RuntimeError("Error while connecting to HerediVar database " + str(e))
     finally:
@@ -1422,4 +1422,9 @@ class Connection:
         result  = self.cursor.fetchone()
         return result
 
+    def user_test(self):
+        command = "SELECT * FROM user"
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return result
 #
