@@ -50,7 +50,7 @@ def test_browse(test_client):
     data = response.data.decode('utf8')
     print(data)
     assert response.status_code == 200
-    assert data.count('name="variant_row"') == 5
+    assert data.count('name="variant_row"') == 1
     assert 'variant_id="15"' in data
 
     
