@@ -21,7 +21,8 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-      # download repositor
+      # download repository
+      # mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
       - uses: actions/checkout@v3
 
       - name: Verify MySQL connection from container 
@@ -31,7 +32,6 @@ jobs:
           export MOST_RECENT_DUMP_DATE=$(cat src/tools/database_dumper/most_recent_dump.txt)
           gunzip src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql.gz
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
-        # mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
 
 
