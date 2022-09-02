@@ -333,6 +333,16 @@ INSERT INTO `variant_literature` VALUES
 UNLOCK TABLES;
 
 
+--
+-- Dumping data for table `clinvar_variant_annotation`
+--
+
+LOCK TABLES `clinvar_variant_annotation` WRITE;
+/*!40000 ALTER TABLE `clinvar_variant_annotation` DISABLE KEYS */;
+INSERT INTO `clinvar_variant_annotation` VALUES 
+	(702,15,136500,'Conflicting_interpretations_of_pathogenicity|Uncertain_significance(1)|_Benign(8)|_Likely_benign(4)','criteria_provided,_conflicting_interpretations');
+/*!40000 ALTER TABLE `clinvar_variant_annotation` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 --
@@ -361,13 +371,3 @@ INSERT INTO `clinvar_submission` VALUES
 /*!40000 ALTER TABLE `clinvar_submission` ENABLE KEYS */;
 UNLOCK TABLES;
 
---
--- Dumping data for table `clinvar_variant_annotation`
---
-
-LOCK TABLES `clinvar_variant_annotation` WRITE;
-/*!40000 ALTER TABLE `clinvar_variant_annotation` DISABLE KEYS */;
-INSERT INTO `clinvar_variant_annotation` VALUES 
-	(702,15,136500,'Conflicting_interpretations_of_pathogenicity|Uncertain_significance(1)|_Benign(8)|_Likely_benign(4)','criteria_provided,_conflicting_interpretations');
-/*!40000 ALTER TABLE `clinvar_variant_annotation` ENABLE KEYS */;
-UNLOCK TABLES;
