@@ -37,6 +37,7 @@ def test_browse(test_client):
     """
     response = test_client.get(url_for("variant.search"), follow_redirects=True)
     data = response.data.decode('utf8')
+    print(data)
     assert response.status_code == 200
     assert 'id="variantTable"' in data
     assert data.count('name="variant_row"') == 7 # always +1 because there are duplicated rows which are merged with js
@@ -126,7 +127,7 @@ def test_variant_display(test_client):
     """
     This checks the completeness of the variant display page. All information must be shown somewhere
     """
-    response = test_client.get(url_for("variant.display", variant_id=15))
+    response = test_client.get(url_for("variant.display", variant_id=15), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert "SNV: chr2-214730440-G-A (GRCh38)" in data
