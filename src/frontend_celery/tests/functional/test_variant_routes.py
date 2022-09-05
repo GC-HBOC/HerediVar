@@ -37,10 +37,9 @@ def test_browse(test_client):
     """
     response = test_client.get(url_for("variant.search"), follow_redirects=True)
     data = response.data.decode('utf8')
-    print(data)
     assert response.status_code == 200
     assert 'id="variantTable"' in data
-    assert data.count('name="variant_row"') == 6
+    assert data.count('name="variant_row"') == 7 # always +1 because there are duplicated rows which are merged with js
     assert 'data-href="' + url_for('variant.display', variant_id="15") + '"' in data # make sure link was built correctly
     assert 'c.1972C>T' in data # make sure mane select hgvs is displayed
     assert 'p.Arg658Cys' in data
@@ -50,8 +49,10 @@ def test_browse(test_client):
     assert 'variant_id="72"' in data
     assert 'variant_id="139"' in data
     assert 'variant_id="130"' in data
-    assert '<div><abbr title="c.1008C>T">c.1008C&gt;T</abbr></div><div><abbr title="c.9866C>T">c.9866C&gt;T</abbr></div>' in data
-    assert '<td><div><a href="/gene/21541">MUTYH</a></div><div><a href="/gene/11973">HPDL</a></div></td>' in data
+    assert 'c.1008C>T' in data
+    assert 'c.9866C>T' in data
+    assert 'MUTYH' in data
+    assert 'HPDL' in data
     
 
     # search for genes
