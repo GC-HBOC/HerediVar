@@ -106,7 +106,7 @@ def test_browse(test_client):
     assert data.count('name="variant_row"') == 1
     assert 'variant_id="15"' in data
 
-    response = test_client.get(url_for("variant.search", consensus=3, consensus=4)) # gene + mane select transcript works
+    response = test_client.get(url_for("variant.search", consensus=[3,4])) # gene + mane select transcript works
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 2
