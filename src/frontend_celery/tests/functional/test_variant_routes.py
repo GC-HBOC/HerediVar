@@ -141,9 +141,17 @@ def test_variant_display(test_client):
 
 
     conn = Connection()
-    annotations = conn.get_all_variant_annotations(variant_id)
+    annotations = conn.get_all_variant_annotations(variant_id, group_output=True)
     conn.close()
     print(annotations)
+
+    for key in annotations:
+        if key == 'standard_annotations':
+            for group in annotations['standard_annotations']:
+                for annotation in annotations['standard_annotations'][group]:
+                    value = annotations['standard_annotations'][group][annotation]
+                    assert value[4] in data
+
     assert response.status_code == 30285
 
 
