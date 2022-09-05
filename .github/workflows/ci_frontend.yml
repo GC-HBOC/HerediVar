@@ -88,6 +88,6 @@ jobs:
           WEBAPP_ENV: test
           FLASK_SECRET_KEY: The_testing_key
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          FLASK_SECRET_KEY: ${{ secrets.CLIENT_SECRET }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           CLINVAR_API_KEY: ${{ secrets.CLINVAR_API_KEY }}
         shell: bash
