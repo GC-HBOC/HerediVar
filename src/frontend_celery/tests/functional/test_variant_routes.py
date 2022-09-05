@@ -2,6 +2,7 @@
 from flask import request, url_for, session, current_app
 from urllib.parse import urlparse
 import requests
+import html
 
 def test_login(test_client):
     response = test_client.get(url_for('auth.login'))
@@ -36,7 +37,7 @@ def test_browse(test_client):
     This tests if the browse variant table works properly
     """
     response = test_client.get(url_for("variant.search"), follow_redirects=True)
-    data = response.data.decode('utf8')
+    data = html.unescape(response.data.decode('utf8'))
     print(data)
     assert response.status_code == 200
     assert 'id="variantTable"' in data
