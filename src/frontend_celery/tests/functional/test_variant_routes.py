@@ -37,6 +37,7 @@ def test_browse(test_client):
     """
     response = test_client.get(url_for("variant.search"), follow_redirects=True)
     data = response.data.decode('utf8')
+    print(data)
     assert response.status_code == 200
     assert 'id="variantTable"' in data
     assert data.count('name="variant_row"') == 6
