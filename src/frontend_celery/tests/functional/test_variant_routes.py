@@ -39,13 +39,18 @@ def test_browse(test_client):
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert 'id="variantTable"' in data
-    assert data.count('name="variant_row"') == 5
+    assert data.count('name="variant_row"') == 6
     assert 'data-href="' + url_for('variant.display', variant_id="15") + '"' in data # make sure link was built correctly
+    assert 'c.1972C>T' in data # make sure mane select hgvs is displayed
+    assert 'p.Arg658Cys' in data
     assert 'variant_id="15"' in data # ensure that all variant ids are present, this can not handle more than 20 entries as this would result in a pagination -> extra tests??
     assert 'variant_id="52"' in data
     assert 'variant_id="71"' in data
     assert 'variant_id="72"' in data
     assert 'variant_id="139"' in data
+    assert 'variant_id="130"' in data
+    assert 'c.1008C>T' in data
+    assert 'c.9866C>T' in data
     
 
     # search for genes
@@ -99,6 +104,7 @@ def test_browse(test_client):
     assert data.count('name="variant_row"') == 1
     assert 'variant_id="72"' in data
 
+    # search for consensus classifications
     response = test_client.get(url_for("variant.search", consensus=3)) # gene + mane select transcript works
     data = response.data.decode('utf8')
     assert response.status_code == 200
@@ -111,13 +117,6 @@ def test_browse(test_client):
     assert data.count('name="variant_row"') == 2
     assert 'variant_id="15"' in data
     assert 'variant_id="139"' in data
-    
-    # serach for consensus classifications
-    response = test_client.get(url_for("variant.search", genes="BARD1"))
-    data = response.data.decode('utf8')
-    assert response.status_code == 200
-    assert data.count('name="variant_row"') == 1
-    assert 'variant_id="15"' in data
 
         
 
