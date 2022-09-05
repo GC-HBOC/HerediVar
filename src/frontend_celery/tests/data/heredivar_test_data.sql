@@ -648,7 +648,7 @@ INSERT INTO `transcript` VALUES
 	(5635,21541,'ENST00000475516','nonsense mediated decay',121,0,0,0,0),
 	(5636,21541,'ENST00000355498','protein coding',1551,1,0,0,0),
 	(5637,21541,'ENST00000372110','protein coding',1595,1,0,0,0),
-	(5638,21541,'ENST00000481571','nonsense mediated decay'	162,0,0,0,0),
+	(5638,21541,'ENST00000481571','nonsense mediated decay',162,0,0,0,0),
 	(5639,21541,'ENST00000372098','protein coding',1625,1,0,0,0),
 	(5640,21541,'ENST00000672818','protein coding',1625,1,0,0,0),
 	(5641,21541,'ENST00000372115','protein coding',1592,1,0,0,0),
