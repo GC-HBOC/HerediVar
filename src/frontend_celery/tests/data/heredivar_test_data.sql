@@ -466,6 +466,43 @@ UNLOCK TABLES;
 
 
 
+--
+-- Dumping data for table `variant_annotation`
+--
+
+LOCK TABLES `variant_annotation` WRITE;
+/*!40000 ALTER TABLE `variant_annotation` DISABLE KEYS */;
+INSERT INTO `variant_annotation` VALUES (1,15,4,'5.269',NULL),
+	(3,15,6,'0.104',NULL),
+	(6,15,7,'BARD1|0.00|0.00|0.00|0.01|46|-25|43|-29',NULL),
+	(7,15,8,'0.01',NULL),
+	(8,15,5,'24.3',NULL),
+	(42,15,12,'0.00732654',NULL),
+	(43,15,11,'1114',NULL),
+	(44,15,13,'15',NULL),
+	(45,15,15,'1084',NULL),
+	(46,15,16,'eas',NULL),
+	(55,15,25,'000000000000000',NULL),
+	(56,15,26,'3738999',NULL),
+	(123,15,3,'3738888',NULL),
+	(124,15,20,'130',NULL),
+	(125,15,19,'9',NULL),
+	(194,15,39,'-1.71',NULL),
+	(195,15,40,'4.34',NULL),
+	(196,15,41,'6.05',NULL),
+	(197,15,42,'-0.51',NULL),
+	(198,15,43,'7.99',NULL),
+	(199,15,44,'8.51',NULL),
+	(200,15,45,'-4.50',NULL),
+	(201,15,47,'4.50',NULL),
+	(202,15,48,'0.00',NULL),
+	(203,15,49,'10.10',NULL),
+	(1154,15,50,'10.10',NULL),
+	(1168,15,36,'BRCT Domains',NULL),
+	(1169,15,37,'PMID: 32726901',NULL),
+	(16009,15,51,'0.00984176',NULL);
+/*!40000 ALTER TABLE `variant_annotation` ENABLE KEYS */;
+UNLOCK TABLES;
 
 
 
