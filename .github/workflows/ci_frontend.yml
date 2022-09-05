@@ -87,6 +87,7 @@ jobs:
         env:
           WEBAPP_ENV: test
           FLASK_SECRET_KEY: The_testing_key
-          CLIENT_ID: flask-webapp
-          CLIENT_SECRET: NRLzlQfotGy9W8hkuYFm3T48Bjnti15k
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          FLASK_SECRET_KEY: ${{ secrets.CLIENT_SECRET }}
+          CLINVAR_API_KEY: ${{ secrets.CLINVAR_API_KEY }}
         shell: bash

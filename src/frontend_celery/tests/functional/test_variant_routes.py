@@ -122,3 +122,49 @@ def test_browse(test_client):
 
         
 
+def test_variant_display(test_client):
+    """
+    This checks the completeness of the variant display page. All information must be shown somewhere
+    """
+    response = test_client.get(url_for("variant.display", variant_id=15))
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert "SNV: chr2-214730440-G-A (GRCh38)" in data
+
+
+def test_variant_history(test_client):
+    """
+    This tests the completeness of the variant history page
+    """
+    pass
+
+
+def test_classify(test_client):
+    """
+    This classifies a variant using different schema & checks the consensus classification evidence document
+    """
+    pass
+
+def test_acmg_classification_calculation(test_client):
+    """
+    This tests if the class returned by the acmg endpoint is correct
+    """
+    pass
+
+def test_export_variant_to_vcf(test_client):
+    """
+    This does a variant to vcf export and checks if the output is equal to a vcf file which was generated before
+    """
+    pass
+
+def test_user_lists(test_client):
+    """
+    This first creates a new user list for the testuser and subsequentially adds variants, deletes, renames and searches them
+    """
+    pass
+
+def test_submit_assay(test_client):
+    """
+    This testsif the submission of assays works properly
+    """
+    pass

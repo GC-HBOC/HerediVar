@@ -127,6 +127,8 @@ def create():
 # example: http://srv023.img.med.uni-tuebingen.de:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http://srv023.img.med.uni-tuebingen.de:5000/display/17
 @require_login
 def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
+    print(current_app.config['CLIENTSECRET'])
+
     conn = get_connection()
 
     if variant_id is None:
