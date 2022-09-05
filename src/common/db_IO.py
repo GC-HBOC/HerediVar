@@ -653,7 +653,7 @@ class Connection:
                         #variant_id = self.get_variant_id_by_hgvs(reference_transcript, hgvs)
                         all_variants.extend(variant_ids)
                     else:
-                        all_variants.append(variant_ids)
+                        all_variants.append(variant_id)
                 else:
                     variant_ids = self.get_variant_ids_by_hgvs(hgvs)
                     all_variants.extend(variant_ids)
