@@ -89,9 +89,8 @@ def test_browse(test_client):
     response = test_client.get(url_for("variant.search", hgvs="ENST00000613192:c.*35C>T;c.1972C>T ,   ENST00000420246:c.*131C>T ")) # gene + mane select transcript works
     data = response.data.decode('utf8')
     assert response.status_code == 200
-    assert data.count('name="variant_row"') == 3
+    assert data.count('name="variant_row"') == 2
     assert 'variant_id="15"' in data
-    assert 'variant_id="71"' in data
     assert 'variant_id="72"' in data
 
     response = test_client.get(url_for("variant.search", hgvs="c.1972C>T ,   ENST00000420246:c.*131C>T ", genes="TP53")) # gene + mane select transcript works
