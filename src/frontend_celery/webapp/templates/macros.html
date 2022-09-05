@@ -215,22 +215,23 @@
         <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss"><abbr title="{{ variant[3] }}">{{ variant[3] }}</abbr></td>
         <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss"><abbr title="{{ variant[4] }}">{{ variant[4] }}</abbr></td>
         <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss" style="white-space: nowrap;">
-            {% if variant[10] is not none %}
-                <div>
+            <div>
+                {% if variant[10] is not none %}
                     <abbr title="{{ variant[10] }}">{{ variant[10] }}</abbr>
-                </div>
-            {% else %}
-                -
-            {% endif %}
+                {% else %}
+                    -
+                {% endif %}
+            </div>
         </td>
         <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss" style="white-space: nowrap;">
-            {% if variant[11] is not none %}
-                <div>
+            <div>
+                {% if variant[11] is not none %}
                     <abbr title="{{ variant[11] }}">{{ variant[11] }}</abbr>
-                </div>
-            {% else %}
-                -
-            {% endif %}
+                {% else %}
+                    -
+                {% endif %}
+            </div>
+
         </td>
         <td>
             {% if variant[17] is not none %}

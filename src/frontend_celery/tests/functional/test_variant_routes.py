@@ -49,8 +49,8 @@ def test_browse(test_client):
     assert 'variant_id="72"' in data
     assert 'variant_id="139"' in data
     assert 'variant_id="130"' in data
-    assert 'c.1008C>T' in data
-    assert 'c.9866C>T' in data
+    assert '<div><abbr title="c.1008C>T">c.1008C&gt;T</abbr></div><div><abbr title="c.9866C>T">c.9866C&gt;T</abbr></div>' in data
+    assert '<td><div><a href="/gene/21541">MUTYH</a></div><div><a href="/gene/11973">HPDL</a></div></td>' in data
     
 
     # search for genes
