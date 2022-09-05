@@ -3,6 +3,10 @@ from flask import request, url_for, session, current_app
 from urllib.parse import urlparse
 import requests
 import html
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+from common.db_IO import Connection
 
 def test_login(test_client):
     response = test_client.get(url_for('auth.login'))
@@ -128,11 +132,19 @@ def test_variant_display(test_client):
     """
     This checks the completeness of the variant display page. All information must be shown somewhere
     """
-    response = test_client.get(url_for("variant.display", variant_id=15), follow_redirects=True)
+    variant_id = 15
+    response = test_client.get(url_for("variant.display", variant_id=variant_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
     print(data)
     assert response.status_code == 200
-    assert "SNV: chr2-214730440-G-A (GRCh38)" in data
+    assert "chr2-214730440-G-A (GRCh38)" in data
+
+
+    conn = Connection()
+    annotations = conn.get_all_variant_annotations(variant_id)
+    conn.close()
+    print(annotations)
+    assert response.status_code == 30285
 
 
 def test_variant_history(test_client):
