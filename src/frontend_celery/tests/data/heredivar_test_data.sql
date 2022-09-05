@@ -405,7 +405,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `scheme_consensus_classification` WRITE;
 /*!40000 ALTER TABLE `scheme_consensus_classification` DISABLE KEYS */;
-INSERT INTO `scheme_consensus_classification` VALUES (11,28,1,0),(12,30,1,0),(13,31,1,1),(18,41,3,0);
+INSERT INTO `scheme_consensus_classification` VALUES (11,28,3,0),(12,30,3,0),(13,31,3,1),(18,41,3,0);
 /*!40000 ALTER TABLE `scheme_consensus_classification` ENABLE KEYS */;
 UNLOCK TABLES;
 
