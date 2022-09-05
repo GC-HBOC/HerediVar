@@ -129,7 +129,8 @@ def test_variant_display(test_client):
     This checks the completeness of the variant display page. All information must be shown somewhere
     """
     response = test_client.get(url_for("variant.display", variant_id=15), follow_redirects=True)
-    data = response.data.decode('utf8')
+    data = html.unescape(response.data.decode('utf8'))
+    print(data)
     assert response.status_code == 200
     assert "SNV: chr2-214730440-G-A (GRCh38)" in data
 
