@@ -392,7 +392,7 @@
                                 </thead>
                                 <tbody>
                                     {% for classification in annotations['user_scheme_classifications'] %}
-                                    <tr user_scheme_classification_id="classification[0]">
+                                    <tr user_scheme_classification_id="{{ classification[0] }}">
                                         <td style="vertical-align:middle;">{{classification[10]}}</td>
                                         <td style="vertical-align:middle;">{{classification[6]}} {{classification[7]}}</td>
                                         <td style="vertical-align:middle;">{{classification[8]}}</td>
