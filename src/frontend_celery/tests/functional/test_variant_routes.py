@@ -177,7 +177,7 @@ def test_variant_display(test_client):
                 assert 'assay_id="' + str(assay[0]) in data
 
         if key == 'consensus_classification':
-            assert 'consensus_classification_id="' + str(annotations['consensus_classification']) + '"' in data
+            assert 'consensus_classification_id="' + str(annotations['consensus_classification'][0]) + '"' in data
         
         if key == 'user_classifications':
             for user_classification in annotations['user_classifications']:
