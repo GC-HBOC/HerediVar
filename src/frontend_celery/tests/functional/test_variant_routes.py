@@ -251,7 +251,9 @@ def test_clinvar_submission(test_client):
         follow_redirects=True
     )
     assert response.status_code == 200
-    
+    assert request.endpoint == 'variant.display'
+    assert request.response == 2039402
+
 
 
 
