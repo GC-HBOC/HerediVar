@@ -250,9 +250,19 @@ def test_clinvar_submission(test_client):
         },
         follow_redirects=True
     )
+    data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
     assert request.endpoint == 'variant.display'
-    assert request.response == 2039402
+    assert "ERROR" not in data
+    assert "WARNING" not in data
+    
+
+    variant_id = 139
+    response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert request.endpoint == 'variant.display'
+    assert "There is no consensus classification for this variant! Please create one before submitting to ClinVar!" in data
 
 
 
