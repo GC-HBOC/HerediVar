@@ -217,6 +217,7 @@ def test_variant_display(test_client):
     links = re.findall(r'href="(http.*)"', data)
     print(links)
     for link in links:
+        print(link)
         response = requests.get(link)
         assert response.status_code == 200
     
