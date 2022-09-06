@@ -466,7 +466,7 @@
                                 </thead>
                                 <tbody>
                                     {% for submission in annotations['clinvar_submissions'] %}
-                                    <tr>
+                                    <tr clinvar_id="{{submission[0]}}">
                                         <td>{{ submission[2] }}</td>
                                         <td style="white-space:nowrap;">{{ submission[3] }}</td>
                                         <td>{{ submission[4] }}</td>

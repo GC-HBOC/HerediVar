@@ -160,6 +160,10 @@ def test_variant_display(test_client):
                     value = str(annotations['standard_annotations'][group][annotation][-1])
                     assert value in all_annotation_ids
 
+        if key == 'clinvar_submissions':
+            for submission in annotations['clinvar_submissions']:
+                assert 'clinvar_id="' + str(submission[0]) + '"' in data
+
     assert response.status_code == 30285
 
 

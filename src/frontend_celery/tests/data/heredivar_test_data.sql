@@ -472,7 +472,8 @@ UNLOCK TABLES;
 
 LOCK TABLES `variant_annotation` WRITE;
 /*!40000 ALTER TABLE `variant_annotation` DISABLE KEYS */;
-INSERT INTO `variant_annotation` VALUES (1,15,4,'5.269',NULL),
+INSERT INTO `variant_annotation` VALUES 
+	(1,15,4,'5.269',NULL),
 	(3,15,6,'0.104',NULL),
 	(6,15,7,'BARD1|0.00|0.00|0.00|0.01|46|-25|43|-29',NULL),
 	(7,15,8,'0.01',NULL),
@@ -503,8 +504,6 @@ INSERT INTO `variant_annotation` VALUES (1,15,4,'5.269',NULL),
 	(16009,15,51,'0.00984176',NULL);
 /*!40000 ALTER TABLE `variant_annotation` ENABLE KEYS */;
 UNLOCK TABLES;
-
-
 
 --
 -- insert some literature entries
