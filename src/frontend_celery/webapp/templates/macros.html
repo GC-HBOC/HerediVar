@@ -39,7 +39,7 @@
 {% macro draw_most_recent_consensus_classification(most_recent_consensus_classification) %}
 <div class="classification-gradient left-space-padding" name="consensus_class_display" classification="{{ most_recent_consensus_classification[3] }}">
     {% if most_recent_consensus_classification is not none %}
-    <table class="table table-borderless table-slim">       
+    <table class="table table-borderless table-slim" consensus_class_id="{{ most_recent_consensus_classification[0] }}">       
         <tbody>
             <tr style="margin-left:0">
                 <td style="width:6rem;" class="li-label">Data</td>
@@ -77,7 +77,7 @@
 
 {% macro draw_criteria_display(criteria, width='6em', height='2.5em') %}
     {% for criterium in criteria %}
-    <span class="d-inline-block ssr large-tt" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" 
+    <span class="d-inline-block ssr large-tt" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" selected_scheme_criterium_id="{{ criterium[0] }}"
         title="Strength: {{ criterium[5] }} <br> Evidence: {{ criterium[4] }}">
         <div class="btn btn-{{ criterium[3] }} light-hover acmg-button" style="width:{{width}}; height:{{height}}">{{ criterium[2] }}</div>
     </span>

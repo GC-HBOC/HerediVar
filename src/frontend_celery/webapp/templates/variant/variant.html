@@ -316,7 +316,7 @@
                     {% set consensus_scheme_classification = annotations['consensus_scheme_classifications'][0] %}<!-- the consensus scheme classifications should only contain the most recent classification -->
                     
                     <div class="ssl ssb">Most recent consensus scheme classification:</div>
-                    <div class="ssb" style="padding-left:1em">
+                    <div class="ssb" style="padding-left:1em" consensus_scheme_classification_id="{{ consensus_scheme_classification[0] }}">
                         <table class="table table-borderless table-slim">
                             <tbody>
                                 <tr style="margin-left:0">
@@ -360,7 +360,7 @@
                                 </thead>
                                 <tbody>
                                     {% for classification in annotations['user_classifications'] %}
-                                    <tr>
+                                    <tr user_classification_id="{{ classification[0] }}">
                                         <td>{{ classification[1] }}</td>
                                         <td>{{ classification[8] + ' ' + classification[9] }}</td>
                                         <td>{{ classification[10] }}</td>
@@ -392,7 +392,7 @@
                                 </thead>
                                 <tbody>
                                     {% for classification in annotations['user_scheme_classifications'] %}
-                                    <tr>
+                                    <tr user_scheme_classification_id="classification[0]">
                                         <td style="vertical-align:middle;">{{classification[10]}}</td>
                                         <td style="vertical-align:middle;">{{classification[6]}} {{classification[7]}}</td>
                                         <td style="vertical-align:middle;">{{classification[8]}}</td>
@@ -423,7 +423,7 @@
                                 </thead>
                                 <tbody>
                                     {% for classification in annotations['heredicare_center_classifications'] %}
-                                    <tr>
+                                    <tr heredicare_center_classification_id="{{ classification[0] }}">
                                         <td>{{ classification[1] }}</td>
                                         <td>{{ classification[3] }}</td>
                                         <td style="white-space:nowrap;">{{ classification[5] }}</td>
@@ -755,7 +755,7 @@
                             </thead>
                             <tbody>
                                 {% for assay in annotations['assays'] %}
-                                <tr>
+                                <tr assay_id="assay[0]">
                                     <td style="min-width:10rem">{{assay[1]}}</td>
                                     <td style="min-width:6rem">{{ assay[2] }}</td>
                                     <td style="min-width:8rem; white-space: nobreak;">{{assay[3]}}</td>

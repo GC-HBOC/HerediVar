@@ -163,6 +163,43 @@ def test_variant_display(test_client):
         if key == 'clinvar_submissions':
             for submission in annotations['clinvar_submissions']:
                 assert 'clinvar_id="' + str(submission[0]) + '"' in data
+        
+        if key == 'variant_consequences':
+            for consequence in annotations['variant_consequences']:
+                assert consequence[0] in data
+            
+        if key == 'literature':
+            for paper in annotations['literature']:
+                assert "PMID:" + str(paper[2]) in data
+
+        if key == 'assays':
+            for assay in annotations['assays']:
+                assert 'assay_id="' + str(assay[0]) in data
+
+        if key == 'consensus_classification':
+            assert 'consensus_classification_id="' + str(annotations['consensus_classification']) + '"' in data
+        
+        if key == 'user_classifications':
+            for user_classification in annotations['user_classifications']:
+                assert 'user_classification_id="' + str(user_classification[0]) + '"' in data
+            
+        if key == 'consensus_scheme_classifications':
+            for classification in annotations['consensus_scheme_classifications']:
+                print(classification)
+                assert 'consensus_scheme_classification_id="' + str(classification[0]) in data
+                for scheme_criterium in classification[10]:
+                    assert 'consensus_scheme_classification_id="' + str(scheme_criterium[0]) in data
+
+        if key == 'user_scheme_classifications':
+            for classification in annotations['user_scheme_classifications']:
+                assert 'user_scheme_classification_id="' + str(classification[0]) in data
+                for scheme_criterium in classification[10]:
+                    assert 'selected_scheme_criterium_id="' + str(scheme_criterium[0]) in data
+
+            
+        if key == 'heredicare_center_classifications':
+            for classification in annotations['heredicare_center_classifications']:
+                assert 'heredicare_center_classification_id="' + str(classification[0]) + '"' in data
 
     assert response.status_code == 30285
 
