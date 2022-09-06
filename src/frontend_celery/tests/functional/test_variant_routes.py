@@ -8,6 +8,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from common.db_IO import Connection
 import re
+from webapp.variant.variant_routes import add_scheme_classes, prepare_scheme_criteria
 
 def test_login(test_client):
     response = test_client.get(url_for('auth.login'))
@@ -143,6 +144,13 @@ def test_variant_display(test_client):
 
     conn = Connection()
     annotations = conn.get_all_variant_annotations(variant_id, group_output=True)
+    if annotations.get('consensus_scheme_classifications', None) is not None:
+        annotations['consensus_scheme_classifications'] = add_scheme_classes(annotations['consensus_scheme_classifications'], 10)
+        annotations['consensus_scheme_classifications'] = prepare_scheme_criteria(annotations['consensus_scheme_classifications'], 10)
+
+    if annotations.get('user_scheme_classifications', None) is not None:
+        annotations['user_scheme_classifications'] = add_scheme_classes(annotations['user_scheme_classifications'], 9)
+        annotations['user_scheme_classifications'] = prepare_scheme_criteria(annotations['user_scheme_classifications'], 9)
     conn.close()
 
     all_anntation_ids_raw = re.findall(r'annotation_id="((\d*;?)*)"', data)
@@ -193,6 +201,7 @@ def test_variant_display(test_client):
         if key == 'user_scheme_classifications':
             for classification in annotations['user_scheme_classifications']:
                 assert 'user_scheme_classification_id="' + str(classification[0]) in data
+                print(classification)
                 for scheme_criterium in classification[10]:
                     assert 'selected_scheme_criterium_id="' + str(scheme_criterium[0]) in data
 
