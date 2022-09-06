@@ -218,9 +218,13 @@ def test_variant_display(test_client):
     print(links)
     for link in links:
         print(link)
-        response = requests.get(link)
-        assert response.status_code == 200
-    
+        if 'cosmic' not in link:
+            response = requests.get(link)
+            assert response.status_code == 200
+    #check cosmic:
+    link = 'https://cancer.sanger.ac.uk/cosmic/search?q=BARD1+c.1972C>T'
+    response = requests.get(link)
+    assert response.status_code == 200
     assert response.status_code == 23487
 
 
