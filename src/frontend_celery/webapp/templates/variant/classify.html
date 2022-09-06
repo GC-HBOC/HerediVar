@@ -28,8 +28,8 @@
 
         <!-- scheme select -->
          <div class="form-group sst">
-             <label for="scheme" class="form-label">Classification scheme</label>
-             <select class="form-select" name="scheme" id="scheme" onchange="scheme_select_action()" required>
+            <label for="scheme" class="form-label">Classification scheme</label>
+            <select class="form-select" name="scheme" id="scheme" onchange="scheme_select_action()" required>
                  <option value="acmg_standard">ACMG standard</option>
                  <option value="acmg_TP53">ACMG gene specific: TP53</option>
                  <option value="acmg_CDH1">ACMG gene specific: CDH1</option>
@@ -163,8 +163,6 @@
 
 <!-- this extracts the flask data and makes them available to the scripts -->
 <script>
-
-
 
     const schemes_with_info_string = '{{ schemes_with_info | tojson | safe }}' // must still be escaped and parsed to an object!
     // example: {3: {'none': {'classification_id': 4, 'date': '2022-07-15', 'selected_criteria': [(26, 4, 'pvs1', 'pvs', 'egsa'), (27, 4, 'pp1', 'pm', 'edfsg'), (28, 4, 'bs1', 'bs', 'fdsaf')]}, 'TP53': {'classification_id': 10, 'date': '2022-07-13', 'selected_criteria': [(21, 10, 'bp2', 'bp', 'erwhgerwb'), (22, 10, 'bs1', 'bs', 'ababasc')]}}, 14: {'none': {'classification_id': 23, 'date': '2022-07-18', 'selected_criteria': [(36, 23, 'pm3', 'pm', 'asfdsaf'), (37, 23, 'pp1', 'pvs', 'VERRRRYYY STRONG!')]}, 'TP53': {'classification_id': 24, 'date': '2022-07-18', 'selected_criteria': [(38, 24, 'ps1', 'ps', 'c vxc ysa'), (39, 24, 'ps2', 'ps', 'asdfafafd'), (40, 24, 'pm2', 'pm', 'afdasfasdf'), (41, 24, 'pm5', 'pm', 'daffafd')]}}}

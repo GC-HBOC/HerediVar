@@ -293,6 +293,7 @@ def test_variant_history(test_client):
 
     response = test_client.get(url_for("variant.classification_history", variant_id=variant_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
 
     conn = Connection()
     consensus_classifications = conn.get_consensus_classification(variant_id, sql_modifier=conn.add_userinfo)
@@ -318,10 +319,7 @@ def test_variant_history(test_client):
     
     assert data.count('user scheme classification') == len(user_scheme_classifications)
     assert data.count('consensus scheme classification') == len(consensus_scheme_classifications)
-
-
-
-    assert response.status_code == 200
+    
 
 
 
@@ -329,7 +327,34 @@ def test_classify(test_client):
     """
     This classifies a variant using different schema & checks the consensus classification evidence document
     """
-    pass
+    variant_id = 15
+    response = test_client.get(url_for("variant.classify", variant_id=variant_id), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+
+    assert "It appears that you already have a classification for this variant. You can edit it here." in data
+
+
+    ##### post a new user classification #####
+    response = test_client.post(
+        url_for("variant.classify", variant_id=variant_id),
+        data = {
+            'classification': "1",
+            'comment': "This is a test comment.",
+            'ps1': "Evidence for ps1 given in this field",
+            'ps2': "Evidence for ps2 given in this field",
+            'ps1_strength': "ps",
+            'ps2_strength': 'ps'
+        },
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+
+    assert response.status_code == 200
+    assert "Successfully inserted/updated classification based on classification scheme" in data
+    assert "Successfully inserted new user classification" in data
+
+
 
 def test_acmg_classification_calculation(test_client):
     """
