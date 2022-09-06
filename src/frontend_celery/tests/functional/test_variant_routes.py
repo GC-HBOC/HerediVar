@@ -344,7 +344,8 @@ def test_classify(test_client):
             'ps1': "Evidence for ps1 given in this field",
             'ps2': "Evidence for ps2 given in this field",
             'ps1_strength': "ps",
-            'ps2_strength': 'ps'
+            'ps2_strength': "ps",
+            'scheme': "acmg_standard"
         },
         follow_redirects=True
     )
