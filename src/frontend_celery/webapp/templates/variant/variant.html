@@ -541,7 +541,7 @@
                                                 {{ macros.draw_hexplorer_score(annotation_type + '_delta', current_annotations[annotation_type], current_annotations.get(annotation_type + '_wt'), current_annotations.get(annotation_type + '_mut')) }}
                                             {% else %}
                                             {% if 'heredicare' in annotation_type %} <!-- add red exclamation mark for heredicare counts -->
-                                                <div>
+                                                <div annotation_id="{{current_annotations[annotation_type][7]}}">
                                                     {% if has_multiple_vids  %}
                                                         {{ macros.draw_exclamation_mark('Multiple VIDs in HerediCare for this variant. Thus, these counts might be inaccurate!') }}
                                                     {% endif %}
@@ -550,7 +550,7 @@
                                             {% else %}
                                             {% if 'spliceai_details' == annotation_type %} <!-- add details for spliceai -->
                                                 {% set spliceai_details_values = current_annotations['spliceai_details'][4].split(',') %}
-                                                <div class="d-flex">
+                                                <div class="d-flex" annotation_id="{{current_annotations[annotation_type][7]}};{{current_annotations['spliceai_max_delta'][7]}}">
                                                     <abbr class="ssr" title="{{current_annotations['spliceai_max_delta'][0]}}"><a class="dashed_underline">spliceai:</a></abbr>
 
 
@@ -575,7 +575,7 @@
                                             {% else %}
                                             {% if 'cancerhotspots_cancertypes' == annotation_type %} <!-- handle cancerhotspots cancertypes -->
                                                 {% set cancerhotspots_cancertypes = current_annotations['cancerhotspots_cancertypes'][4].split('|') %}
-                                                <div class="table-responsive tableFixHead">
+                                                <div class="table-responsive tableFixHead" annotation_id="{{current_annotations[annotation_type][7]}}">
                                                     <table class="table table-hover" style="max-height:15em" id="cancerhotspots_table">
                                                         <thead>
                                                             <tr>
@@ -596,7 +596,7 @@
                                                 </div>
                                             {% else %}
                                             {% if '_mut' not in annotation_type and '_wt' not in annotation_type and 'spliceai' not in annotation_type %} <!-- standard case -->
-                                                <div style="word-break: break-all;">
+                                                <div style="word-break: break-all;" annotation_id="{{current_annotations[annotation_type][7]}}">
                                                     <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ annotation_type }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
                                                 </div>
                                             {% endif %}

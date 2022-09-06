@@ -437,7 +437,7 @@ class Connection:
 
     
     def get_recent_annotations(self, variant_id): # ! the ordering of the columns in the outer select statement is important and should not be changed
-        command = "SELECT title, description, version, version_date, variant_id, value, supplementary_document, group_name FROM variant_annotation INNER JOIN ( \
+        command = "SELECT variant_annotation.id, title, description, version, version_date, variant_id, value, supplementary_document, group_name FROM variant_annotation INNER JOIN ( \
                         SELECT * \
 	                        FROM annotation_type WHERE (title, version_date) IN ( \
 		                        select title, MAX(version_date) version_date from annotation_type INNER JOIN ( \
@@ -1185,20 +1185,24 @@ class Connection:
 
         if group_output: # all groups are grouped into one dictionary except for the special group 'None' which is inserted as key directly into variant_annot_dict
             for annot in variant_annotations:
-                current_group = annot[7]
+                current_group = annot[8]
+                new_value = annot[2:len(annot)] + (annot[0], ) # put annotation id last and remove title
+                new_annotation_type = annot[1]
                 if current_group == 'None':
-                    variant_annot_dict[annot[0]] = annot[1:len(annot)]
+                    variant_annot_dict[new_annotation_type] = new_value
                     continue
                 if current_group in standard_annotations:
                     updated_annots = standard_annotations[current_group]
-                    updated_annots[annot[0]] = annot[1:len(annot)]
+                    updated_annots[new_annotation_type] = new_value
                     standard_annotations[current_group] = updated_annots
                 else:
-                    standard_annotations[current_group] = {annot[0]: annot[1:len(annot)]}
+                    standard_annotations[current_group] = {new_annotation_type: new_value}
             variant_annot_dict['standard_annotations'] = standard_annotations
         else:
             for annot in variant_annotations:
-                variant_annot_dict[annot[0]] = annot[1:len(annot)]
+                new_value = annot[2:len(annot)].append(annot[0]) # put annotation id last and remove title
+                new_annotation_type = annot[1]
+                variant_annot_dict[new_annotation_type] = new_value
         
         clinvar_variant_annotation = self.get_clinvar_variant_annotation(variant_id)
         if clinvar_variant_annotation is not None:

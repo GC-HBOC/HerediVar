@@ -7,6 +7,7 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from common.db_IO import Connection
+import re
 
 def test_login(test_client):
     response = test_client.get(url_for('auth.login'))
@@ -143,14 +144,21 @@ def test_variant_display(test_client):
     conn = Connection()
     annotations = conn.get_all_variant_annotations(variant_id, group_output=True)
     conn.close()
-    print(annotations)
+
+    all_anntation_ids_raw = re.findall(r'annotation_id="((\d*;?)*)"', data)
+    print(all_anntation_ids_raw)
+    all_annotation_ids = []
+    for ids in all_anntation_ids_raw:
+        ids = ids[0].split(';')
+        all_annotation_ids.extend(ids)
+    print(all_annotation_ids)
 
     for key in annotations:
         if key == 'standard_annotations':
             for group in annotations['standard_annotations']:
                 for annotation in annotations['standard_annotations'][group]:
-                    value = annotations['standard_annotations'][group][annotation]
-                    assert value[4] in data
+                    value = str(annotations['standard_annotations'][group][annotation])
+                    assert value in all_annotation_ids
 
     assert response.status_code == 30285
 
