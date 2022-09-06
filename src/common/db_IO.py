@@ -992,7 +992,7 @@ class Connection:
         result = self.cursor.fetchone()
         return result
     
-    def get_user_classifications(self, variant_id):
+    def get_user_classifications(self, variant_id): # id,classification,variant_id,user_id,comment,date
         #command = "SELECT * FROM user_classification WHERE variant_id = %s"
         command = "SELECT * FROM user_classification a INNER JOIN (SELECT * FROM user) b ON a.user_id = b.id WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id, ))

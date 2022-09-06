@@ -336,7 +336,6 @@ def classification_history(variant_id):
     
     recorded_classifications = []
     most_recent_consensus_classification = None
-    # each entry in recorded_classifications is of this form: (type, id, user_id, variant_id, class, comment/evidence, date, is_recent)
     if consensus_classifications is not None:
         most_recent_consensus_classification = [x for x in consensus_classifications if x[6] == 1][0]
         recorded_classifications.extend([{'type':'consensus classification', 

@@ -233,6 +233,7 @@ def test_clinvar_submission(test_client):
     """
     variant_id = 15
 
+    ##### standard get #####
     response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
 
@@ -242,6 +243,7 @@ def test_clinvar_submission(test_client):
         response = requests.get(link)
         assert response.status_code == 200
     
+    ##### successul upload to clinvar #####
     response = test_client.post(
         url_for("variant_io.submit_clinvar", variant_id=variant_id),
         data={
@@ -255,8 +257,23 @@ def test_clinvar_submission(test_client):
     assert request.endpoint == 'variant.display'
     assert "ERROR" not in data
     assert "WARNING" not in data
-    
 
+
+    ##### Incorrect orphanet #####
+    response = test_client.post(
+        url_for("variant_io.submit_clinvar", variant_id=variant_id),
+        data={
+            "condition": "This is not an orphanet code",
+            "gene": "BARD1"
+        },
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "The selected condition contains errors. It MUST be one of the provided autocomplete values." in data
+    
+    
+    ##### Variant does not have a consensus classification
     variant_id = 71
     response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
@@ -271,7 +288,41 @@ def test_variant_history(test_client):
     """
     This tests the completeness of the variant history page
     """
-    pass
+    ##### check completeness #####
+    variant_id = 15
+
+    response = test_client.get(url_for("variant.classification_history", variant_id=variant_id), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+
+    conn = Connection()
+    consensus_classifications = conn.get_consensus_classification(variant_id, sql_modifier=conn.add_userinfo)
+    user_classifications = conn.get_user_classifications(variant_id)
+    user_scheme_classifications = conn.get_user_scheme_classification(variant_id, sql_modifier=conn.add_userinfo)
+    consensus_scheme_classifications = conn.get_consensus_scheme_classification(variant_id, scheme = 'all', most_recent = False, sql_modifier=conn.add_userinfo)
+    conn.close()
+
+    assert data.count('consensus classification') == len(consensus_classifications)
+    for consensus_classification in consensus_classifications: #id,user_id,variant_id,classification,comment,date,is_recent
+        classification =  consensus_classification[3]
+        comment = consensus_classification[4]
+        date = consensus_classification[5]
+        assert '<td>' + str(classification) + '</td><td style="white-space:nowrap;">' + str(comment) + '</td><td>' + str(date) + '</td>' in data
+
+    
+    assert data.count('user_classifications') == len(user_classifications)
+    for user_classification in user_classifications: # id,classification,variant_id,user_id,comment,date
+        classification = user_classification[1]
+        comment = user_classification[4]
+        date = user_classification[5]
+        assert '<td>' + str(classification) + '</td><td style="white-space:nowrap;">' + str(comment) + '</td><td>' + str(date) + '</td>' in data
+    
+    assert data.count('user scheme classification') == len(user_scheme_classifications)
+    assert data.count('consensus scheme classification') == len(consensus_scheme_classifications)
+
+
+
+    assert response.status_code == 200
+
 
 
 def test_classify(test_client):
