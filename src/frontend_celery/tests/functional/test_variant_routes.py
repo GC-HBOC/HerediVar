@@ -195,14 +195,14 @@ def test_variant_display(test_client):
             for classification in annotations['consensus_scheme_classifications']:
                 print(classification)
                 assert 'consensus_scheme_classification_id="' + str(classification[0]) in data
-                for scheme_criterium in classification[10]:
+                for scheme_criterium in classification[9]:
                     assert 'consensus_scheme_classification_id="' + str(scheme_criterium[0]) in data
 
         if key == 'user_scheme_classifications':
             for classification in annotations['user_scheme_classifications']:
                 assert 'user_scheme_classification_id="' + str(classification[0]) in data
                 print(classification)
-                for scheme_criterium in classification[10]:
+                for scheme_criterium in classification[9]:
                     assert 'selected_scheme_criterium_id="' + str(scheme_criterium[0]) in data
 
             
