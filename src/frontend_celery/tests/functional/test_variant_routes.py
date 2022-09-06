@@ -257,7 +257,7 @@ def test_clinvar_submission(test_client):
     assert "WARNING" not in data
     
 
-    variant_id = 139
+    variant_id = 71
     response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
