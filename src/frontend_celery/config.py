@@ -33,6 +33,9 @@ class Config(object):
     # clinvar
     CLINVAR_API_KEY = os.environ.get('CLINVAR_API_KEY')
 
+    # orphanet
+    ORPHANET_DISCOVERY_URL = "https://api.orphacode.org/EN/ClinicalEntity"
+
 
 class ProdConfig(Config):
     HOST = "host not specified"
@@ -49,6 +52,9 @@ class ProdConfig(Config):
     CLIENTID = os.environ.get('CLIENT_ID')
     CLIENTSECRET = os.environ.get('CLIENT_SECRET')
     DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
+
+
+    CLINVAR_API_ENDPOINT = "TBD"
 
     
     
@@ -71,6 +77,8 @@ class DevConfig(Config):
     
     os.environ['NO_PROXY'] = 'SRV018.img.med.uni-tuebingen.de'
 
+    CLINVAR_API_ENDPOINT = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions" # test endpoint
+
 
 class TestConfig(Config):
     HOST = "127.0.0.1" # localhost
@@ -85,3 +93,5 @@ class TestConfig(Config):
     CLIENTID = os.environ.get('CLIENT_ID', 'flask-webapp')
     CLIENTSECRET = os.environ.get('CLIENT_SECRET', 'NRLzlQfotGy9W8hkuYFm3T48Bjnti15k')
     DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
+
+    CLINVAR_API_ENDPOINT = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions" # test endpoint

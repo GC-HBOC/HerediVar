@@ -153,7 +153,7 @@ def submit_clinvar(variant_id):
         clinvar_accession = clinvar_accession[0]
 
     # fetch orphanet entities for the autocomplete search bar
-    orphanet_json = requests.get("https://api.orphacode.org/EN/ClinicalEntity", headers={'apiKey': 'HerediVar'})
+    orphanet_json = requests.get(current_app.config['ORPHANET_DISCOVERY_URL'], headers={'apiKey': 'HerediVar'})
     orphanet_json = json.loads(orphanet_json.text)
     orphanet_codes = []
     for entry in orphanet_json:
@@ -177,7 +177,9 @@ def submit_clinvar(variant_id):
         else:
             # submit to clinvar api
             #base_url = 'https://submit.ncbi.nlm.nih.gov/api/v1/submissions/?dry-run=true'
-            base_url = 'https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions'
+            #base_url = 'https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions'
+            base_url = current_app.config['CLINVAR_API_ENDPOINT']
+            
             
             schema_path = path.join(path.dirname(current_app.root_path), current_app.config['RESOURCES_FOLDER'])
             schema = json.loads(open(schema_path + "clinvar_submission_schema.json").read())

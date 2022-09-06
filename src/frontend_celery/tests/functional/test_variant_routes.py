@@ -44,7 +44,7 @@ def test_browse(test_client):
     """
     response = test_client.get(url_for("variant.search"), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
-    print(data)
+    #print(data)
     assert response.status_code == 200
     assert 'id="variantTable"' in data
     assert data.count('name="variant_row"') == 7 # always +1 because there are duplicated rows which are merged with js
@@ -115,13 +115,13 @@ def test_browse(test_client):
     assert 'variant_id="72"' in data
 
     # search for consensus classifications
-    response = test_client.get(url_for("variant.search", consensus=3)) # gene + mane select transcript works
+    response = test_client.get(url_for("variant.search", consensus=3))
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 1
     assert 'variant_id="139"' in data
 
-    response = test_client.get(url_for("variant.search", consensus=[3,4])) # gene + mane select transcript works
+    response = test_client.get(url_for("variant.search", consensus=[3,4]))
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 2
@@ -154,12 +154,12 @@ def test_variant_display(test_client):
     conn.close()
 
     all_anntation_ids_raw = re.findall(r'annotation_id="((\d*;?)*)"', data)
-    print(all_anntation_ids_raw)
+    #print(all_anntation_ids_raw)
     all_annotation_ids = []
     for ids in all_anntation_ids_raw:
         ids = ids[0].strip(' ').strip(';').split(';')
         all_annotation_ids.extend(ids)
-    print(all_annotation_ids)
+    #print(all_annotation_ids)
 
     for key in annotations:
         if key == 'standard_annotations':
@@ -214,8 +214,7 @@ def test_variant_display(test_client):
     assert url_for('download.variant', variant_id=variant_id) in data
     assert url_for('variant_io.submit_clinvar', variant_id=variant_id) in data
 
-    links = re.findall(r'href="(http.*?)"[ |>]', data)
-    print(links)
+    links = get_all_links(data)
     for link in links:
         print(link)
         if 'cosmic' not in link:
@@ -225,7 +224,34 @@ def test_variant_display(test_client):
     link = 'https://cancer.sanger.ac.uk/cosmic/search?q=BARD1+c.1972C>T'
     response = requests.get(link)
     assert response.status_code == 200
-    assert response.status_code == 23487
+
+
+
+def test_clinvar_submission(test_client):
+    """
+    This submitts a variant to the clinvar test api
+    """
+    variant_id = 15
+
+    response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+
+    assert response.status_code == 200
+    links = get_all_links(data)
+    for link in links:
+        response = requests.get(link)
+        assert response.status_code == 200
+    
+    response = test_client.post(
+        url_for("variant_io.submit_clinvar", variant_id=variant_id),
+        data={
+            "condition": "Hereditary breast and ovarian cancer syndrome: 145",
+            "gene": "BARD1"
+        },
+        follow_redirects=True
+    )
+    assert response.status_code == 200
+    
 
 
 
@@ -265,3 +291,10 @@ def test_submit_assay(test_client):
     This testsif the submission of assays works properly
     """
     pass
+
+
+
+
+def get_all_links(html_data):
+    links = re.findall(r'href="(http.*?)"[ |>]', html_data)
+    return links
