@@ -50,7 +50,7 @@
                       {{ session.get('user').get('preferred_username')}}
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown" style="min-width: 1rem;">
-                      {% set host = request.url.split(':')[0:2] | join(':') %}
+                      {% set host = request.url.split(':')[0:2] | join(':') | strip('/') %}
                       <li><a class="dropdown-item" href="{{host}}:5050/realms/HerediVar/account/#/personal-info">Profile</a></li>
                       <li><a class="dropdown-item" href="{{ url_for('user.my_lists') }}">My lists</a></li>
                       <li><a class="dropdown-item" href="https://github.com/GC-HBOC/HerediVar/issues">Feedback</a></li>
