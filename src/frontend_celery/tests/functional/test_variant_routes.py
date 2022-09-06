@@ -214,7 +214,7 @@ def test_variant_display(test_client):
     assert url_for('download.variant', variant_id=variant_id) in data
     assert url_for('variant_io.submit_clinvar', variant_id=variant_id) in data
 
-    links = re.findall(r'href="(http.*)"', data)
+    links = re.findall(r'href="(http.*)".*>', data)
     print(links)
     for link in links:
         print(link)
