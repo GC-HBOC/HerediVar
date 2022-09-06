@@ -141,7 +141,7 @@ def test_variant_display(test_client):
     assert response.status_code == 200
     assert "chr2-214730440-G-A (GRCh38)" in data
 
-
+    ##### test that all data is there #####
     conn = Connection()
     annotations = conn.get_all_variant_annotations(variant_id, group_output=True)
     if annotations.get('consensus_scheme_classifications', None) is not None:
@@ -193,7 +193,6 @@ def test_variant_display(test_client):
             
         if key == 'consensus_scheme_classifications':
             for classification in annotations['consensus_scheme_classifications']:
-                print(classification)
                 assert 'consensus_scheme_classification_id="' + str(classification[0]) in data
                 for scheme_criterium in classification[9]:
                     assert 'consensus_scheme_classification_id="' + str(scheme_criterium[0]) in data
@@ -201,7 +200,6 @@ def test_variant_display(test_client):
         if key == 'user_scheme_classifications':
             for classification in annotations['user_scheme_classifications']:
                 assert 'user_scheme_classification_id="' + str(classification[0]) in data
-                print(classification)
                 for scheme_criterium in classification[9]:
                     assert 'selected_scheme_criterium_id="' + str(scheme_criterium[0]) in data
 
@@ -210,7 +208,20 @@ def test_variant_display(test_client):
             for classification in annotations['heredicare_center_classifications']:
                 assert 'heredicare_center_classification_id="' + str(classification[0]) + '"' in data
 
-    assert response.status_code == 30285
+    ##### test that links are built properly #####
+    assert url_for('variant_io.submit_assay', variant_id=variant_id) in data
+    assert url_for('variant.classify', variant_id=variant_id) in data
+    assert url_for('download.variant', variant_id=variant_id) in data
+    assert url_for('variant_io.submit_clinvar', variant_id=variant_id) in data
+
+    links = re.findall(r'href="(http.*)"', data)
+    print(links)
+    for link in links:
+        response = requests.get(link)
+        assert response.status_code == 200
+    
+    assert response.status_code == 23487
+
 
 
 def test_variant_history(test_client):
