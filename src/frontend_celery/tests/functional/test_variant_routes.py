@@ -339,7 +339,7 @@ def test_classify(test_client):
     response = test_client.post(
         url_for("variant.classify", variant_id=variant_id),
         data = {
-            'classification': "1",
+            'final_class': "1",
             'comment': "This is a test comment.",
             'ps1': "Evidence for ps1 given in this field",
             'ps2': "Evidence for ps2 given in this field",
