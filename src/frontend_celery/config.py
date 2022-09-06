@@ -73,7 +73,7 @@ class DevConfig(Config):
 
 
 class TestConfig(Config):
-    HOST = "http://127.0.0.1" # localhost
+    HOST = "127.0.0.1" # localhost
     TESTING = True
     DEBUG = True
     TLS = False
