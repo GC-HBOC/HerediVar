@@ -165,8 +165,6 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
         has_multiple_vids = False
     
     annotations = conn.get_all_variant_annotations(variant_id, group_output=True)
-    print('~~~~~~~~~~~~~~~~~')
-    print(annotations)
     if annotations.get('consensus_scheme_classifications', None) is not None:
         annotations['consensus_scheme_classifications'] = add_scheme_classes(annotations['consensus_scheme_classifications'], 10)
         annotations['consensus_scheme_classifications'] = prepare_scheme_criteria(annotations['consensus_scheme_classifications'], 10)

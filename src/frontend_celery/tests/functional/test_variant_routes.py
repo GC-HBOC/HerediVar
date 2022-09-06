@@ -136,7 +136,7 @@ def test_variant_display(test_client):
     variant_id = 15
     response = test_client.get(url_for("variant.display", variant_id=variant_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
-    print(data)
+    #print(data)
     assert response.status_code == 200
     assert "chr2-214730440-G-A (GRCh38)" in data
 
@@ -149,7 +149,7 @@ def test_variant_display(test_client):
     print(all_anntation_ids_raw)
     all_annotation_ids = []
     for ids in all_anntation_ids_raw:
-        ids = ids[0].split(';')
+        ids = ids[0].strip(' ').strip(';').split(';')
         all_annotation_ids.extend(ids)
     print(all_annotation_ids)
 
@@ -157,7 +157,7 @@ def test_variant_display(test_client):
         if key == 'standard_annotations':
             for group in annotations['standard_annotations']:
                 for annotation in annotations['standard_annotations'][group]:
-                    value = str(annotations['standard_annotations'][group][annotation])
+                    value = str(annotations['standard_annotations'][group][annotation][-1])
                     assert value in all_annotation_ids
 
     assert response.status_code == 30285

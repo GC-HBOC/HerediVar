@@ -318,7 +318,7 @@
 
 
 {% macro draw_hexplorer_score(label, delta, wt, mut) %}
-<div annotation_id="{{delta[7]}};{{wt[7]}};{{mut[7]}}">
+<div annotation_id="{{delta[7]}}{% if wt is not none %};{{wt[7]}}{% endif %}{% if mut is not none %};{{mut[7]}}{% endif %}">
     {% if wt is none or mut is none %}
     {{ draw_exclamation_mark('There is no wildtype or mutant score. Thus, one of the sequence is missing the motiv! Be careful with the interpretation of the delta score!') }}
    {% endif %}
