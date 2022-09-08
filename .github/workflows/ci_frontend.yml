@@ -24,19 +24,32 @@ jobs:
       # download repository
       - uses: actions/checkout@v3
 
+      - uses: conda-incubator/setup-miniconda@v2.1.1
+        with:
+          python-version: 3.6.9
+          auto-activate-base: false
+        
+      - name: install ngs-bits
+        run: conda install ngs-bits
+
+      - name: verify conda
+        run: |
+          conda info
+          conda list
+          $CONDA/bin/ReadQC --help
+
+
       # this step installs ngs-bits though miniconda
       # $CONDA is an environment variable pointing to the root of the miniconda directory
-      - name: install ngs-bits
-        run: |
-          CONDA_BIN=$CONDA/bin/conda
-          $CONDA_BIN config --add channels defaults
-          $CONDA_BIN config --add channels conda-forge
-          $CONDA_BIN config --add channels bioconda
-          $CONDA_BIN install ngs-bits
+      #- name: install ngs-bits
+      #  run: |
+      #    CONDA_BIN=$CONDA/bin/conda
+      #    $CONDA_BIN config --add channels defaults
+      #    $CONDA_BIN config --add channels conda-forge
+      #    $CONDA_BIN config --add channels bioconda
+      #    $CONDA_BIN install ngs-bits
 
-      
-      - name: verify ngs-bits installation
-        run: $CONDA/bin/ReadQC --help
+
 
       - name: Verify MySQL connection from container 
         run: |
