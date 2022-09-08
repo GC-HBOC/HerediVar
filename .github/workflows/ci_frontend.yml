@@ -44,27 +44,33 @@ jobs:
       - name: install ngs-bits
         run: docker pull quay.io/biocontainers/ngs-bits:2022_07--py310hb611552_0
 
+
+      - name: test ngs-bits
+        run: |
+          docker images
+          docker run ngs-bits:2022_07--py310hb611552_0
+
       
       # this step installs ngs-bits though miniconda
       # $CONDA is an environment variable pointing to the root of the miniconda directory
-      - name: prepare conda
-        run: |
-          $CONDA/bin/conda config --add channels conda-forge
-          $CONDA/bin/conda config --add channels bioconda
-          $CONDA/bin/conda config --add channels defaults
+      #- name: prepare conda
+      #  run: |
+      #    $CONDA/bin/conda config --add channels conda-forge
+      #    $CONDA/bin/conda config --add channels bioconda
+      #    $CONDA/bin/conda config --add channels defaults
           
 
-      - name: install samtools
-        run: |
-          conda install -c bioconda samtools
-          conda list
-          conda info
-          ls -l $CONDA/bin
+      #- name: install samtools
+      #  run: |
+      #    conda install -c bioconda samtools
+      #    conda list
+      #    conda info
+      #    ls -l $CONDA/bin
 
-      - name: install ngs-bits
-        run: |
-          $CONDA/bin/conda install ngs-bits
-          $CONDA/bin/ReadQC --help
+      #- name: install ngs-bits
+      #  run: |
+      #    $CONDA/bin/conda install ngs-bits
+      #    $CONDA/bin/ReadQC --help
 
 
       - name: Verify MySQL connection from container 
