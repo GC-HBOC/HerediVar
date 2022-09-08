@@ -24,16 +24,18 @@ jobs:
       # download repository
       - uses: actions/checkout@v3
 
-      - uses: conda-incubator/setup-miniconda@v2.1.1
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: 3.6.9
           auto-activate-base: false
-      
-      - name: update conda channels
+          channels: defaults,conda-forge,bioconda
+
+
+      - name: test install conda
         run: |
-          conda config --add channels defaults
-          conda config --add channels conda-forge
-          conda config --add channels bioconda
+          conda install flake8
+          conda list
+          conda info
         
       - name: install ngs-bits
         run: conda install ngs-bits
