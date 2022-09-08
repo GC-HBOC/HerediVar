@@ -85,7 +85,7 @@ jobs:
           src/frontend_celery/tests/script/run_tests.sh
         ##### !!!!!! REPLACE THIS with secrets that are loaded from github: https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md
         env:
-          WEBAPP_ENV: test
+          WEBAPP_ENV: githubtest
           FLASK_SECRET_KEY: The_testing_key
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
