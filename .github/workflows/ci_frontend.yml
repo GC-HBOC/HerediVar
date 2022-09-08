@@ -41,7 +41,7 @@ jobs:
       #  run: conda install ngs-bits
 
 
-      -name: install ngs-bits
+      - name: install ngs-bits
         run: docker pull quay.io/biocontainers/ngs-bits
 
       
