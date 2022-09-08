@@ -43,25 +43,26 @@ jobs:
 
 
 
-
-      - name: test install conda
-        run: |
-          $CONDA/bin/conda install flake8
-          $CONDA/bin/conda list
-          $CONDA/bin/conda info
       
       # this step installs ngs-bits though miniconda
       # $CONDA is an environment variable pointing to the root of the miniconda directory
+      - name: prepare conda
+        run: |
+          $CONDA/bin/conda config --add channels conda-forge
+          $CONDA/bin/conda config --add channels bioconda
+          $CONDA/bin/conda config --add channels defaults
+          
+
+      - name: install samtools
+        run: |
+          conda install -c bioconda samtools
+          conda list
+          conda info
+          ls -l $CONDA/bin
+
       - name: install ngs-bits
         run: |
-          CONDA_BIN=$CONDA/bin/conda
-          $CONDA_BIN config --add channels defaults
-          $CONDA_BIN config --add channels conda-forge
-          $CONDA_BIN config --add channels bioconda
-          $CONDA_BIN install ngs-bits
-
-      - name: verify conda
-        run: |
+          $CONDA/bin/conda install ngs-bits
           $CONDA/bin/ReadQC --help
 
 
