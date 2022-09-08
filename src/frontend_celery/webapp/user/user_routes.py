@@ -39,7 +39,7 @@ def my_lists():
         is_list_owner = conn.check_user_list_ownership(user_id, view_list_id)
         #print(is_list_owner)
         if not is_list_owner:
-            current_app.logger.error(session['user']['preferred_username'] + " attempted view list with id " + str(list_id) + ", but this list was not created by him.")
+            current_app.logger.error(session['user']['preferred_username'] + " attempted view list with id " + str(view_list_id) + ", but this list was not created by him.")
             return abort(403)
 
     #user = session['user']['given_name'] + ' ' + session['user']['family_name']
@@ -48,14 +48,14 @@ def my_lists():
         
         # actions on the lists themselves
         if request_type == 'create':
-            list_name = request.form['list-name']
+            list_name = request.form['list_name']
             conn.insert_user_variant_list(user_id, list_name)
             flash("Successfully created new list: \"" + list_name + "\"", "alert-success")
             current_app.logger.info(session['user']['preferred_username'] + " successfully created list " + list_name)
             return redirect(url_for('user.my_lists'))
         if request_type == 'edit':
-            list_name = request.form['list-name']
-            list_id = request.form['list-id']
+            list_name = request.form['list_name']
+            list_id = request.form['list_id']
             if list_id is not None:
                 is_list_owner = conn.check_user_list_ownership(user_id, list_id)
                 if not is_list_owner:
@@ -65,7 +65,7 @@ def my_lists():
             current_app.logger.info(session['user']['preferred_username'] + " successfully changed list " + str(list_id) +" name to " + list_name)
             return redirect(url_for('user.my_lists'))
         if request_type == 'delete_list':
-            list_id = request.form['list-id']
+            list_id = request.form['list_id']
             if list_id is not None:
                 is_list_owner = conn.check_user_list_ownership(user_id, list_id)
                 if not is_list_owner:
@@ -81,9 +81,10 @@ def my_lists():
 
         if request_type == 'delete_variant':
             variant_id_to_delete = request.args['variant_id']
-            conn.delete_variant_from_list(view_list_id, variant_id_to_delete)
+            conn.delete_variant_from_list(view_list_id, variant_id_to_delete) # list ownership is already tested at the top of this function
             url_to_deleted_variant = url_for('variant.display', variant_id=variant_id_to_delete)
             flash(Markup("Successfully removed variant from list! Go <a href='" + url_to_deleted_variant + "'>here</a> to undo this action."), "alert-success")
+
             return redirect(url_for('user.my_lists', view=view_list_id))
 
 

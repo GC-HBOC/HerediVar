@@ -80,8 +80,26 @@ class DevConfig(Config):
     CLINVAR_API_ENDPOINT = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions" # test endpoint
 
 
-class TestConfig(Config):
+class GithubtestConfig(Config):
     HOST = "127.0.0.1" # localhost
+    TESTING = True
+    DEBUG = True
+    TLS = False
+    
+    SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', "missing")
+
+    KEYCLOAK_PORT = '5050'
+    ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
+    CLIENTID = os.environ.get('CLIENT_ID', 'flask-webapp')
+    CLIENTSECRET = os.environ.get('CLIENT_SECRET', 'NRLzlQfotGy9W8hkuYFm3T48Bjnti15k')
+    DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
+
+    CLINVAR_API_ENDPOINT = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions" # test endpoint
+
+
+
+class LocaltestConfig(Config):
+    HOST = "SRV018.img.med.uni-tuebingen.de"
     TESTING = True
     DEBUG = True
     TLS = False

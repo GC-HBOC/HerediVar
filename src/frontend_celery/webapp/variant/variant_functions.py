@@ -331,8 +331,13 @@ def get_scheme_classification(criteria, scheme):
 
 
 def is_valid_scheme(criteria, scheme):
+
     is_valid = True
     message = ''
+
+    if scheme == 'none': # abort
+        return is_valid, message
+
     # ensure that at least one criterium is selected
     if len(criteria) == 0:
         is_valid = False

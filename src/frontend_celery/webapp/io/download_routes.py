@@ -211,7 +211,7 @@ def get_variant_vcf_line(variant_id, conn):
             info_headers['consensus_class'] = '##INFO=<ID=consensus_class,Number=1,Type=Integer,Description="The recent consensus classification by the VUS-task-force.">\n'
             info = functions.collect_info(info, 'consensus_class=', consensus_classification[3])
             info_headers['consensus_comment'] = '##INFO=<ID=consensus_comment,Number=1,Type=String,Description="The comment for the consensus classification by the VUS-task-force.">\n'
-            info = functions.collect_info(info, 'consensus_comment=', functions.encode_vcf(consensus_classification[3]))
+            info = functions.collect_info(info, 'consensus_comment=', functions.encode_vcf(consensus_classification[4]))
             info_headers['consensus_date'] = '##INFO=<ID=consensus_date,Number=1,Type=String,Description="The submission date of the most recent consensus classification.">\n'
             info = functions.collect_info(info, 'consensus_date=', functions.encode_vcf(submission_date))
     
@@ -411,7 +411,7 @@ def decide_for_class_acmg(possible_classes):
 
     # choose the one with higher significance if there are different benign possibilities
     elif 1 in possible_classes and 2 in possible_classes:
-        final_class = 2
+        final_class = 1
 
     # if there is only one possibility choose it
     elif len(possible_classes) == 1:

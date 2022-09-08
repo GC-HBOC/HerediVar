@@ -344,11 +344,18 @@ def get_clinvar_submission_json(variant_oi, consensus_classification, selected_g
 @require_login
 def submit_assay(variant_id):
 
+    print(request.method)
+
     do_redirect = False
     if request.method == 'POST':
         assay_type = request.form.get('assay_type')
         assay_report = request.files.get('report')
         assay_score = request.form.get('score')
+
+        print(assay_type)
+        print(assay_report)
+        print(assay_score)
+
 
         if not assay_type or not assay_report or not assay_score or not assay_report.filename:
             flash('All fields are required!', 'alert-danger')
@@ -371,6 +378,8 @@ def submit_assay(variant_id):
 
             conn = get_connection()
             conn.insert_assay(variant_id, assay_type, b_64_assay_report, assay_report.filename, assay_score, functions.get_today())
+
+            flash("Successfully uploaded a new assay for variant " + str(variant_id), "alert-success")
 
             current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded a new assay for variant " + str(variant_id))
 

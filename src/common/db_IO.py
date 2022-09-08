@@ -20,11 +20,16 @@ def get_db_connection():
                                            host='SRV011.img.med.uni-tuebingen.de',
                                            database='HerediVar_ahdoebm1', 
                                            charset = 'utf8')
-        elif env == 'test':
+        elif env == 'githubtest':
             conn = mysql.connector.connect(user='test_user', password='password',
                                            host='0.0.0.0',
                                            database='test_db', 
                                            charset = 'utf8')
+        elif env == 'localtest':
+            conn = mysql.connector.connect(user='ahdoebm1', password='20220303',
+                               host='SRV011.img.med.uni-tuebingen.de',
+                               database='HerediVar_ahdoebm1_test', 
+                               charset = 'utf8')
         elif env == 'prod': ## TODO
             conn = mysql.connector.connect(user='missing', password='missing',
                                            host='0.0.0.0',
@@ -1143,7 +1148,7 @@ class Connection:
         self.conn.commit()
 
     def get_variant_ids_from_list(self, list_id):
-        command = "SELECT variant_id FROM list_variants WHERE list_id = %s"
+        command = "SELECT variant_id FROM list_variants WHERE list_id=%s"
         self.cursor.execute(command, (list_id, ))
         result = self.cursor.fetchall()
         result = [str(x[0]) for x in result] # extract variant_id
@@ -1200,7 +1205,7 @@ class Connection:
             variant_annot_dict['standard_annotations'] = standard_annotations
         else:
             for annot in variant_annotations:
-                new_value = annot[2:len(annot)].append(annot[0]) # put annotation id last and remove title
+                new_value = annot[2:len(annot)] + (annot[0], )  # put annotation id last and remove title
                 new_annotation_type = annot[1]
                 variant_annot_dict[new_annotation_type] = new_value
         
@@ -1299,7 +1304,8 @@ class Connection:
         command = "INSERT INTO scheme_user_classification (scheme_classification_id, user_id) VALUES (%s, %s)"
         self.cursor.execute(command, (scheme_classification_id, user_id))
         self.conn.commit()
-    
+
+
     def get_user_scheme_classification(self, variant_id, user_id = 'all', scheme = 'all', get_criteria=False, sql_modifier=None):
         inner_command = "SELECT id as classification_id, variant_id, scheme, date, is_consensus FROM scheme_classification WHERE variant_id=%s AND is_consensus=0"
         actual_information = (variant_id, )

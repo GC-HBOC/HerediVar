@@ -225,7 +225,7 @@ def classify(variant_id):
         if not user_classification_is_valid: # error in user classification
             flash("Please provide comment & class to submit a user classification!", "alert-danger")
         if scheme_classification_is_valid and (scheme != 'none') and user_classification_is_valid: # only if both are valid submit the scheme classification
-            # test if the current user already has an scheme classification for this scheme
+            # test if the current user already has a scheme classification for this scheme
             if scheme not in schemes_with_info[user_id]:
                 conn.insert_user_scheme_classification(variant_id, user_id, scheme)
                 scheme_classification_id = conn.get_user_scheme_classification(variant_id, user_id, scheme=scheme)[0][0]
