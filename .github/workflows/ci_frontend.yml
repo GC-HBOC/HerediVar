@@ -28,6 +28,12 @@ jobs:
         with:
           python-version: 3.6.9
           auto-activate-base: false
+      
+      - name: update conda channels
+        run: |
+          conda config --add channels defaults
+          conda config --add channels conda-forge
+          conda config --add channels bioconda
         
       - name: install ngs-bits
         run: conda install ngs-bits
