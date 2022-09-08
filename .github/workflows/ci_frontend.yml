@@ -42,7 +42,7 @@ jobs:
 
 
       - name: install ngs-bits
-        run: docker pull quay.io/biocontainers/ngs-bits
+        run: docker pull quay.io/biocontainers/ngs-bits:2022_07--py310hb611552_0
 
       
       # this step installs ngs-bits though miniconda
