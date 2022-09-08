@@ -24,39 +24,45 @@ jobs:
       # download repository
       - uses: actions/checkout@v3
 
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          python-version: 3.6.9
-          auto-activate-base: false
-          channels: defaults,conda-forge,bioconda
+      #- uses: conda-incubator/setup-miniconda@v2
+      #  with:
+      #    python-version: 3.6.9
+      #    auto-activate-base: false
+      #    channels: defaults,conda-forge,bioconda
+
+
+      #- name: test install conda
+      #  run: |
+      #    conda install flake8
+      #    conda list
+      #    conda info
+        
+      #- name: install ngs-bits
+      #  run: conda install ngs-bits
+
+
+
 
 
       - name: test install conda
         run: |
-          conda install flake8
-          conda list
-          conda info
-        
+          $CONDA/bin/conda install flake8
+          $CONDA/bin/conda list
+          $CONDA/bin/conda info
+      
+      # this step installs ngs-bits though miniconda
+      # $CONDA is an environment variable pointing to the root of the miniconda directory
       - name: install ngs-bits
-        run: conda install ngs-bits
+        run: |
+          CONDA_BIN=$CONDA/bin/conda
+          $CONDA_BIN config --add channels defaults
+          $CONDA_BIN config --add channels conda-forge
+          $CONDA_BIN config --add channels bioconda
+          $CONDA_BIN install ngs-bits
 
       - name: verify conda
         run: |
-          conda info
-          conda list
           $CONDA/bin/ReadQC --help
-
-
-      # this step installs ngs-bits though miniconda
-      # $CONDA is an environment variable pointing to the root of the miniconda directory
-      #- name: install ngs-bits
-      #  run: |
-      #    CONDA_BIN=$CONDA/bin/conda
-      #    $CONDA_BIN config --add channels defaults
-      #    $CONDA_BIN config --add channels conda-forge
-      #    $CONDA_BIN config --add channels bioconda
-      #    $CONDA_BIN install ngs-bits
-
 
 
       - name: Verify MySQL connection from container 
