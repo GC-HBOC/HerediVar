@@ -24,6 +24,20 @@ jobs:
       # download repository
       - uses: actions/checkout@v3
 
+      # this step installs ngs-bits though miniconda
+      # $CONDA is an environment variable pointing to the root of the miniconda directory
+      -name: install ngs-bits
+        run: |
+          $conda_bin config --add channels defaults
+          $conda_bin config --add channels conda-forge
+          $conda_bin config --add channels bioconda
+          $conda_bin install ngs-bits
+        env:
+          conda_bin=$CONDA/bin/conda
+      
+      -name: verify ngs-bits installation
+        run: $CONDA/bin/ReadQC --help
+
       - name: Verify MySQL connection from container 
         run: |
           sudo apt-get update
