@@ -49,7 +49,7 @@ jobs:
         run: |
           docker images
           docker run 881f65da80a2 bash
-          ls -l
+          ReadQC --help
 
       
       # this step installs ngs-bits though miniconda
