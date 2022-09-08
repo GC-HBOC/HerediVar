@@ -28,12 +28,12 @@ jobs:
       # $CONDA is an environment variable pointing to the root of the miniconda directory
       - name: install ngs-bits
         run: |
+          CONDA_BIN=$CONDA/bin/conda
           $CONDA_BIN config --add channels defaults
           $CONDA_BIN config --add channels conda-forge
           $CONDA_BIN config --add channels bioconda
           $CONDA_BIN install ngs-bits
-        env:
-          CONDA_BIN: $CONDA/bin/conda
+
       
       - name: verify ngs-bits installation
         run: $CONDA/bin/ReadQC --help
