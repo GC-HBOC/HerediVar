@@ -48,9 +48,10 @@ jobs:
       - name: test ngs-bits
         run: |
           docker images
-          docker run -d -it 881f65da80a2 /bin/bash
+          docker run -d -it 881f65da80a2 /bin/bash > ngs-bits-container.txt
           docker ps -a
-          docker exec 7483c5db8b93 ReadQC --help
+          ngsbitscontainer=$(cat ngs-bits-container.txt)
+          docker exec $ngsbitscontainer ReadQC --help
 
       
       # this step installs ngs-bits though miniconda
