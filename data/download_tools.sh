@@ -19,14 +19,14 @@ tools=$root/src/tools/
 #download and build ngs-bits
 
 cd $tools
-: ' '
+: ' 
 git clone --recursive https://github.com/imgag/ngs-bits.git
 cd ngs-bits
 ##git checkout 2021_12 && git submodule update --recursive --init ## select stable version once project is finished!
 make build_3rdparty
 make build_libs_release
 make build_tools_release
-
+'
 
 
 #download and build samtools
@@ -40,6 +40,14 @@ make
 cd ..
 mv samtools-1.11 samtools
 '
+
+# download and build htslib
+cd $tools
+wget https://github.com/samtools/htslib/releases/download/1.16/htslib-1.16.tar.bz2
+tar -vxjf htslib-1.16.tar.bz2
+cd htslib-1.16
+make
+
 
 # download python
 
