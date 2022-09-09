@@ -156,6 +156,7 @@ fabric.properties
 
 /src/tools/ngs-bits/
 /src/tools/samtools/
+/src/tools/htslib-1.16/
 /src/tools/vcf2maf/
 /src/tools/redis-stable/
 /src/tools/node-v16.15.0-linux-x64/
