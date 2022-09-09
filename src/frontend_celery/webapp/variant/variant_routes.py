@@ -79,10 +79,10 @@ def create():
     if request.method == 'POST':
         create_variant_from = request.args.get("type")
         if create_variant_from == 'vcf':
-            chr = request.form['chr']
+            chr = request.form.get('chr', '')
             pos = ''.join(request.form['pos'].split())
-            ref = request.form['ref'].upper().strip()
-            alt = request.form['alt'].upper().strip()
+            ref = request.form.get('ref', '').upper().strip()
+            alt = request.form.get('alt', '').upper().strip()
 
             if not chr or not pos or not ref or not alt or 'genome' not in request.form:
                 flash('All fields are required!', 'alert-danger')

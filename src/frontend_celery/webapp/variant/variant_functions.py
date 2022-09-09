@@ -13,14 +13,17 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
     tmp_file_path = tempfile.gettempdir() + "/new_variant.vcf"
     tmp_vcfcheck_out_path = tempfile.gettempdir() + "/frontend_variant_import_vcf_errors.txt"
     functions.variant_to_vcf(chr, pos, ref, alt, tmp_file_path)
+
+    do_liftover = genome_build == 'GRCh37'
+    returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post = functions.preprocess_variant(tmp_file_path, do_liftover = do_liftover)
     
 
-    command = ['/mnt/users/ahdoebm1/HerediVar/src/common/scripts/preprocess_variant.sh', '-i', tmp_file_path, '-o', tmp_vcfcheck_out_path]
+    #command = ['/mnt/users/ahdoebm1/HerediVar/src/common/scripts/preprocess_variant.sh', '-i', tmp_file_path, '-o', tmp_vcfcheck_out_path]
 
-    if genome_build == 'GRCh37':
-        command.append('-l') # enable liftover
+    #if genome_build == 'GRCh37':
+    #    command.append('-l') # enable liftover
         
-    returncode, err_msg, command_output = functions.execute_command(command, 'preprocess_variant')
+    #returncode, err_msg, command_output = functions.execute_command(command, 'preprocess_variant')
     #print(err_msg)
     #print(command_output)
     
@@ -28,9 +31,8 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
         flash(err_msg, 'alert-danger')
         was_successful = False
         return was_successful
-    vcfcheck_errors = open(tmp_vcfcheck_out_path + '.pre', 'r').read()
-    if 'ERROR:' in vcfcheck_errors:
-        flash(vcfcheck_errors.replace('\n', ' '), 'alert-danger')
+    if 'ERROR:' in vcf_errors_pre:
+        flash(vcf_errors_pre.replace('\n', ' '), 'alert-danger')
         was_successful = False
         return was_successful
     if genome_build == 'GRCh37':
@@ -46,9 +48,8 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
             flash('ERROR: could not lift variant ' + unmapped_variant, ' alert-danger')
             was_successful = False
             return was_successful
-    vcfcheck_errors = open(tmp_vcfcheck_out_path + '.post', 'r').read()
-    if 'ERROR:' in vcfcheck_errors:
-        flash(vcfcheck_errors.replace('\n', ' '), 'alert-danger')
+    if 'ERROR:' in vcf_errors_post:
+        flash(vcf_errors_post.replace('\n', ' '), 'alert-danger')
         was_successful = False
         return was_successful
 
@@ -66,7 +67,7 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
             annotation_queue_id = conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chr, pos, ref, alt, user_id = session['user']['user_id'])
             celery_task_id = start_annotation_service(annotation_queue_id = annotation_queue_id) # starts the celery background task
             flash(Markup("Successfully inserted variant: " + new_chr + ' ' + str(new_pos) + ' ' + new_ref + ' ' + new_alt + 
-                        ' (view your variant <a href="display/chr=' + str(new_chr) + '&pos=' + str(new_pos) + '&ref=' + str(new_ref) + '&alt=' + str(new_alt) + '" class="alert-link">here</a>)'), "alert-success")
+                        ' (view your variant <a href="' + url_for("variant.display", chr=str(new_chr), pos=str(new_pos), ref=str(new_ref), alt=str(new_alt)) + '" class="alert-link">here</a>)'), "alert-success")
         else:
             flash("Variant not imported: already in database!!", "alert-danger")
             was_successful = False

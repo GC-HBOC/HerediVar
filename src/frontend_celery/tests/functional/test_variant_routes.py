@@ -766,6 +766,99 @@ def test_submit_assay(test_client):
 
     
 
+def test_create_variant(test_client):
+    """
+    This creates a new variant 
+    """
+
+    response = test_client.get(url_for("variant.create"), follow_redirects=True)
+    assert response.status_code == 200
+
+    ##### create new variant successfully #####
+    response = test_client.post(
+        url_for("variant.create", type = "vcf"), 
+        data={
+            "chr": "chr1",
+            "pos": "10295758",
+            "ref": "G",
+            "alt": "A",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+
+    assert response.status_code == 200
+    assert "Successfully inserted variant" in data
+    assert "alert-danger" not in data
+    assert "ERROR" not in data
+
+    links = get_all_links(data)
+    for link in links:
+        response = requests.get(link)
+        assert response.status_code == 200
+    
+
+    ##### post the same one again - should be rejected #####
+    response = test_client.post(
+        url_for("variant.create", type = "vcf"), 
+        data={
+            "chr": "chr1",
+            "pos": "10295758",
+            "ref": "G",
+            "alt": "A",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Variant not imported: already in database!" in data
+
+
+
+    ##### post invalid data #####
+    response = test_client.post(
+        url_for("variant.create", type = "vcf"), 
+        data={
+            "chr": "chr1",
+            "pos": "10295", # wrong position
+            "ref": "G",
+            "alt": "A",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "ERROR: Reference base(s) not correct." in data
+
+
+    ##### post missing data #####
+    response = test_client.post(
+        url_for("variant.create", type = "vcf"), 
+        data={
+            "chr": "chr1",
+            "pos": "10303165",
+            "ref": "C",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "All fields are required!" in data
+
+    ##### tests for grch37 variants #####
+    # TODO
+    # need htslib & crossmap installed for this
+
+
+
 
 
 def get_all_links(html_data):

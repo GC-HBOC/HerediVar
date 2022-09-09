@@ -154,6 +154,68 @@ def execute_command(command, process_name, use_prefix_error_log = True):
 def get_docker_instructions():
     return ["docker", "exec", os.environ.get("NGSBITS_CONTAINER_ID")]
 
+
+
+
+def preprocess_variant(infile, do_liftover=False):
+    
+    final_returncode = 0
+    err_msg = ""
+    command_output = ""
+    vcf_errors_pre = ""
+    vcf_errors_post = ""
+
+
+    if do_liftover:
+        returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh37")
+        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+        returncode, err_msg, command_output = execute_command([paths.htslib_path + 'bgzip', '-f', '-k', infile], process_name="bgzip")
+
+        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+        returncode, err_msg, command_output = perform_liftover(infile, infile + ".lifted")
+        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+        returncode, err_msg, command_output = execute_command(["rm", infile + '.gz'], "rm")
+        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+        returncode, err_msg, command_output = execute_command(["rm", infile], "rm")
+        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+        returncode, err_msg, command_output = execute_command(["mv", infile + ".lifted", infile], "mv")
+        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+    else:
+        returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh38")
+        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+    
+    returncode, err_msg, command_output = left_align_vcf(infile, outfile= infile + ".leftnormalized", ref_genome="GRCh38")
+    if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+
+    returncode, err_msg, command_output = execute_command(["rm", infile], "rm")
+    if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+    returncode, err_msg, command_output = execute_command(["mv", infile + ".leftnormalized", infile], "mv")
+    if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+
+    returncode, err_msg, vcf_errors_post = check_vcf(infile, ref_genome="GRCh38")
+    if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+
+    return final_returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+
+
+
+
+
+
+
+# infile has to be .gz
+def perform_liftover(infile, outfile, from_genome="GRCh37", to_genome="GRCh38"):
+    if from_genome == "GRCh37" and to_genome == "GRCh38":
+        chainfile = paths.chainfile_path
+    if to_genome == "GRCh38":
+        genome_path = paths.ref_genome_path
+    elif to_genome == "GRCh37":
+        genome_path = paths.ref_genome_path_grch37
+
+    returncode, err_msg, command_output = execute_command(['CrossMap.py', 'vcf', chainfile, infile, genome_path, outfile], process_name="CrossMap")
+    return returncode, err_msg, command_output
+
+
 def check_vcf(path, ref_genome = 'GRCh38'):
     genome_path = ''
     if ref_genome == 'GRCh37':
@@ -171,7 +233,7 @@ def check_vcf(path, ref_genome = 'GRCh38'):
     returncode, err_msg, vcf_errors = execute_command(command, 'VcfCheck')
     return returncode, err_msg, vcf_errors
 
-def left_align_vcf(path, ref_genome = 'GRCh38'):
+def left_align_vcf(infile, outfile, ref_genome = 'GRCh38'):
     genome_path = ''
     if ref_genome == 'GRCh37':
         genome_path = paths.ref_genome_path_grch37
@@ -185,7 +247,7 @@ def left_align_vcf(path, ref_genome = 'GRCh38'):
         command.append("VcfLeftNormalize")
     else: # use local installation
         command = [paths.ngs_bits_path + "VcfLeftNormalize"]
-    command.extend(["-in", path, "-stream", "-ref", genome_path])
+    command.extend(["-in", infile, "-out", outfile, "-stream", "-ref", genome_path])
 
 
     returncode, err_msg, command_output = execute_command(command, 'VcfLeftNormalize')
