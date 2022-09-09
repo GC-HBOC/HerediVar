@@ -135,6 +135,8 @@ jobs:
       # run tests
       - name: run tests
         run: |
+          export NGSBITS_CONTAINER_ID=$(cat ngs-bits-container.txt)
+
           chmod 755 src/frontend_celery/tests/script/run_tests.sh
           src/frontend_celery/tests/script/run_tests.sh
         ##### !!!!!! REPLACE THIS with secrets that are loaded from github: https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md
