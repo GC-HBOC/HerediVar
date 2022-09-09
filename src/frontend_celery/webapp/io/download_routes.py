@@ -136,7 +136,7 @@ def variant():
     if returncode != 0:
         if request.args.get('force') is None:
             force_url = url_for("download.variant", variant_id = variant_id, list_id= list_id, force=True)
-            flash(Markup("The generated VCF contains errors: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
+            flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
             current_app.logger.error(session['user']['preferred_username'] + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant id " + str(variant_id) + " or user variant list " + str(list_id))
             return redirect(url_for('variant.display', variant_id=variant_id))
 

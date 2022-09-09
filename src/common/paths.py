@@ -12,8 +12,13 @@ ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
 
 # data
 ref_genome_name = "GRCh38"
-ref_genome_path = workdir + "data/genomes/GRCh38.fa"
-ref_genome_path_grch37 = workdir + "data/genomes/GRCh37.fa"
+if os.environ.get('WEBAPP_ENV') == 'githubtest': # online installation
+    ref_genome_path = "https://download.imgag.de/ahsturm1/genomes/GRCh38.fa"
+    ref_genome_path_grch37 = "https://download.imgag.de/ahsturm1/genomes/GRCh37.fa"
+else: # local installation
+    ref_genome_path = workdir + "data/genomes/GRCh38.fa"
+    ref_genome_path_grch37 = workdir + "data/genomes/GRCh37.fa"
+
 chainfile_path = workdir + "data/genomes/hg19ToHg38.fixed.over.chain.gz"
 
 #metadata
