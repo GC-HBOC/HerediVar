@@ -546,8 +546,9 @@ def compare_vcf(reference_file, vcf_string):
         line = line.strip()
         if line == '':
             continue
-        if line.startswith('#') and not line.startswith('##fileDate'): # skip the filedate header line because this one changes daily
-            assert line in vcf_string # test that header line is there
+        if line.startswith('#'): 
+            if not line.startswith('##fileDate'): # skip the filedate header line because this one changes daily, but the test data is not updated daily
+                assert line in vcf_string # test that header line is there
             continue
 
         parts = line.split('\t')
