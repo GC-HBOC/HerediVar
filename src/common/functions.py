@@ -151,14 +151,23 @@ def execute_command(command, process_name, use_prefix_error_log = True):
         err_msg = err_msg + std_err
     return completed_process.returncode, err_msg, command_output
 
+def get_docker_instructions():
+    return ["docker", "exec", os.environ.get("NGSBITS_CONTAINER_ID")]
+
 def check_vcf(path, ref_genome = 'GRCh38'):
     genome_path = ''
     if ref_genome == 'GRCh37':
         genome_path = paths.ref_genome_path_grch37
     elif ref_genome == 'GRCh38': 
         genome_path = paths.ref_genome_path
-    command = [paths.ngs_bits_path + "VcfCheck",
-               "-in", path, "-lines", "0", "-ref", genome_path]
+
+    if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
+        command = get_docker_instructions()
+        command.append("VcfCheck")
+    else: # use local installation
+        command = [paths.ngs_bits_path + "VcfCheck"]
+    command.extend(["-in", path, "-lines", "0", "-ref", genome_path])
+
     returncode, err_msg, vcf_errors = execute_command(command, 'VcfCheck')
     return returncode, err_msg, vcf_errors
 
@@ -168,8 +177,17 @@ def left_align_vcf(path, ref_genome = 'GRCh38'):
         genome_path = paths.ref_genome_path_grch37
     elif ref_genome == 'GRCh38': 
         genome_path = paths.ref_genome_path
-    command = [paths.ngs_bits_path + "VcfLeftNormalize",
-               "-in", path, "-stream", "-ref", genome_path]
+    
+    #command = [paths.ngs_bits_path + "VcfLeftNormalize",
+    #           "-in", path, "-stream", "-ref", genome_path]
+    if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
+        command = get_docker_instructions()
+        command.append("VcfLeftNormalize")
+    else: # use local installation
+        command = [paths.ngs_bits_path + "VcfLeftNormalize"]
+    command.extend(["-in", path, "-stream", "-ref", genome_path])
+
+
     returncode, err_msg, command_output = execute_command(command, 'VcfLeftNormalize')
     return returncode, err_msg, command_output
 
@@ -183,7 +201,13 @@ def hgvsc_to_vcf(hgvs):
     tmp_file.write(reference + "\t" + hgvs + "\n")
     tmp_file.close()
 
-    command = [paths.ngs_bits_path + "/HgvsToVcf", '-in', tmp_file_path + '.tsv', '-ref', paths.ref_genome_path, '-out', tmp_file_path + '.vcf']
+    #command = [paths.ngs_bits_path + "HgvsToVcf", '-in', tmp_file_path + '.tsv', '-ref', paths.ref_genome_path, '-out', tmp_file_path + '.vcf']
+    if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
+        command = get_docker_instructions()
+        command.append("HgvsToVcf")
+    else: # use local installation
+        command = [paths.ngs_bits_path + "HgvsToVcf"]
+    command.extend(['-in', tmp_file_path + '.tsv', '-ref', paths.ref_genome_path, '-out', tmp_file_path + '.vcf'])
     returncode, err_msg, command_output = execute_command(command, "HgvsToVcf", use_prefix_error_log=False)
     
     chr = None

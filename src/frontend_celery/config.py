@@ -96,6 +96,11 @@ class GithubtestConfig(Config):
 
     CLINVAR_API_ENDPOINT = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions" # test endpoint
 
+    # use docker container for ngs-bits installation
+    # this container should already be running in the system
+    # can be downloaded here: https://bioconda.github.io/recipes/ngs-bits/README.html
+    NGSBITS_CONTAINER_ID = os.environ.get('NGSBITS_CONTAINER_ID')
+
 
 
 class LocaltestConfig(Config):
