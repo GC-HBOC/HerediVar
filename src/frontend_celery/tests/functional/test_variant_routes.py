@@ -522,12 +522,14 @@ def test_export_variant_to_vcf(test_client):
     response = test_client.get(url_for("download.variant", variant_id=variant_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
+    assert "The generated VCF contains errors" not in data
 
 
     variant_id = 52
     response = test_client.get(url_for("download.variant", variant_id=variant_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
+    assert "The generated VCF contains errors" not in data
 
     
     with open(test_data_dir + '/variant_52.vcf', 'r') as img1:
