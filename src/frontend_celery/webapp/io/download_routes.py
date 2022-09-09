@@ -41,7 +41,7 @@ def evidence_document(consensus_classification_id):
 
     current_app.logger.info(session['user']['preferred_username'] + " downloaded consensus classification evidence document for consensus classification " + str(consensus_classification_id))
     
-    return send_file(buffer, as_attachment=True, attachment_filename=report_filename, mimetype='application/pdf')
+    return send_file(buffer, as_attachment=True, download_name=report_filename, mimetype='application/pdf')
 
 
 
@@ -62,7 +62,7 @@ def assay_report(assay_id):
 
     current_app.logger.info(session['user']['preferred_username'] + " downloaded assay " + str(assay_id))
     
-    return send_file(buffer, as_attachment=True, attachment_filename=filename, mimetype='application')
+    return send_file(buffer, as_attachment=True, download_name=filename, mimetype='application')
 
 
 
@@ -142,7 +142,7 @@ def variant():
 
     current_app.logger.info(session['user']['preferred_username'] + " downloaded vcf of variant id: " + str(variant_id) + " or user variant list: " + str(list_id))
     
-    return send_file(buffer, as_attachment=True, attachment_filename="variant_" + str(variant_id) + ".vcf", mimetype="text/vcf")
+    return send_file(buffer, as_attachment=True, download_name="variant_" + str(variant_id) + ".vcf", mimetype="text/vcf")
 
 
 def merge_info_headers(old_headers, new_headers):
