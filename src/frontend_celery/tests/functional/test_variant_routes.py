@@ -789,6 +789,8 @@ def test_create_variant(test_client):
     )
     data = html.unescape(response.data.decode('utf8'))
 
+    print(data)
+
     assert response.status_code == 200
     assert "Successfully inserted variant" in data
     assert "alert-danger" not in data
