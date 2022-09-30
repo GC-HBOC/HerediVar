@@ -65,7 +65,8 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
         if not is_duplicate:
             # insert it & capture the annotation_queue_id of the newly inserted variant to start the annotation service in celery
             annotation_queue_id = conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chr, pos, ref, alt, user_id = session['user']['user_id'])
-            celery_task_id = start_annotation_service(annotation_queue_id = annotation_queue_id) # starts the celery background task
+            if not current_app.config['TESTING']:
+                celery_task_id = start_annotation_service(annotation_queue_id = annotation_queue_id) # starts the celery background task
             flash(Markup("Successfully inserted variant: " + new_chr + ' ' + str(new_pos) + ' ' + new_ref + ' ' + new_alt + 
                         ' (view your variant <a href="' + url_for("variant.display", chr=str(new_chr), pos=str(new_pos), ref=str(new_ref), alt=str(new_alt)) + '" class="alert-link">here</a>)'), "alert-success")
         else:

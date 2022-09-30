@@ -178,7 +178,11 @@ def preprocess_variant(infile, do_liftover=False):
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
         returncode, err_msg, command_output = execute_command(["rm", infile], "rm")
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
-        returncode, err_msg, command_output = execute_command(["mv", infile + ".lifted", infile], "mv")
+        if os.environ.get("WEBAPP_ENV") == "githubtest":
+        # need to sudo the mv in github actions otherwise it will result in permission denied...
+            returncode, err_msg, command_output = execute_command(["sudo", "mv", infile + ".leftnormalized", infile], "mv")
+        else: 
+            returncode, err_msg, command_output = execute_command(["mv", infile + ".leftnormalized", infile], "mv")
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
     else:
         returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh38")
@@ -189,9 +193,13 @@ def preprocess_variant(infile, do_liftover=False):
 
     returncode, err_msg, command_output = execute_command(["rm", infile], "rm")
     if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
-    returncode, err_msg, command_output = execute_command(["sudo", "mv", infile + ".leftnormalized", infile], "mv")
+    if os.environ.get("WEBAPP_ENV") == "githubtest":
+        # need to sudo the mv in github actions otherwise it will result in permission denied...
+        returncode, err_msg, command_output = execute_command(["sudo", "mv", infile + ".leftnormalized", infile], "mv")
+    else: 
+        returncode, err_msg, command_output = execute_command(["mv", infile + ".leftnormalized", infile], "mv")
     if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
-    print(infile)
+    
     returncode, err_msg, vcf_errors_post = check_vcf(infile, ref_genome="GRCh38")
     if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
 

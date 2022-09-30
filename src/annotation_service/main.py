@@ -82,7 +82,7 @@ def get_annotation_tempfile(annotation_queue_id):
 
 
 def process_one_request(annotation_queue_id):
-    """ this is the main worker of the annotation job - A 5 step process -"""
+    """ this is the main worker of the annotation job - A 4 step process -"""
 
     conn = Connection()
     vcf_path = get_temp_vcf_path(annotation_queue_id)
@@ -174,7 +174,7 @@ def process_one_request(annotation_queue_id):
         conn.update_annotation_queue(row_id=annotation_queue_id, status=status, error_msg=err_msgs)
 
 
-    except HTTPError as e: # we want to raise any http errors to be able to retry later again (eg. 429)
+    except HTTPError as e: # we want to catch http errors to be able to retry later again (eg. 429)
         # cleanup after http error before retry
         print("An HTTP exception occured: " + str(e))
         print(traceback.format_exc())
@@ -196,9 +196,7 @@ def process_one_request(annotation_queue_id):
         status = "error"
         runtime_error = str(e)
 
-    # revert
-    #if  exists(vcf_path): 
-    #    os.remove(vcf_path)
+
 
     conn.close()
 
