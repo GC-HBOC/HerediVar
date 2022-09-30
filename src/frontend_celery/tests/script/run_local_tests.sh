@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-
+# keep in mind to set the clinvar api key via console: export CLINVAR_API_KEY=.....
 export WEBAPP_ENV=localtest
 export NO_PROXY=SRV018.img.med.uni-tuebingen.de
 export CLIENT_SECRET=NRLzlQfotGy9W8hkuYFm3T48Bjnti15k

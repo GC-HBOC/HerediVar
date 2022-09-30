@@ -855,6 +855,31 @@ def test_create_variant(test_client):
     assert response.status_code == 200
     assert "All fields are required!" in data
 
+    # hgvs import does not currently work in github actions because ngsd is not installed
+    """
+    ##### create new variant from HGVS #####
+    response = test_client.post(
+        url_for("variant.create", type = "hgvs"), 
+        data={
+            "hgvsc": " 	c.1519G>A",
+            "transcript": "ENST00000260947"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+
+    assert response.status_code == 200
+    assert "Successfully inserted variant" in data
+    assert "alert-danger" not in data
+    assert "ERROR" not in data
+
+    response = test_client.post(url_for("variant.display", chr = "chr2", pos = 214767531, ref = "C", alt = "T"))
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "chr2-214767531-C-T (GRCh38)" in data
+    """
+
     ##### tests for grch37 variants #####
     # TODO
     # need htslib & crossmap installed for this

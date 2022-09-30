@@ -14,48 +14,84 @@ import os
 
 
 ## configuration
-job_config = {
-    # heredicare annotations
-    'do_heredicare': False,
+def get_default_job_config():
+    job_config = {
+        # heredicare annotations
+        'do_heredicare': False,
 
-    # external programs
-    'do_phylop': True,
-    'do_spliceai': True,
-    'do_hexplorer': True,
+        # external programs
+        'do_phylop': True,
+        'do_spliceai': True,
+        'do_hexplorer': True,
 
-    # vep dependent
-    'do_vep': True,
-    'insert_consequence': True,
-    'insert_maxent': True,
-    'insert_literature': True,
+        # vep dependent
+        'do_vep': True,
+        'insert_consequence': True,
+        'insert_maxent': True,
+        'insert_literature': True,
 
-    #vcf annotate from vcf
-    'do_dbsnp': True,
-    'do_revel': True,
-    'do_cadd': True,
-    'do_clinvar': True,
-    'do_gnomad': True,
-    'do_brca_exchange': True,
-    'do_flossies': True,
-    'do_cancerhotspots': True,
-    'do_arup': True,
-    'do_tp53_database': True,
+        #vcf annotate from vcf
+        'do_dbsnp': True,
+        'do_revel': True,
+        'do_cadd': True,
+        'do_clinvar': True,
+        'do_gnomad': True,
+        'do_brca_exchange': True,
+        'do_flossies': True,
+        'do_cancerhotspots': True,
+        'do_arup': True,
+        'do_tp53_database': True,
 
-    # additional annotations
-    'do_task_force_protein_domains': True
-}
+        # additional annotations
+        'do_task_force_protein_domains': True
+    }
+    return job_config
 
+def get_empty_job_config():
+    job_config = {
+        # heredicare annotations
+        'do_heredicare': False,
+
+        # external programs
+        'do_phylop': False,
+        'do_spliceai': False,
+        'do_hexplorer': False,
+
+        # vep dependent
+        'do_vep': False,
+        'insert_consequence': False,
+        'insert_maxent': False,
+        'insert_literature': False,
+
+        #vcf annotate from vcf
+        'do_dbsnp': False,
+        'do_revel': False,
+        'do_cadd': False,
+        'do_clinvar': False,
+        'do_gnomad': False,
+        'do_brca_exchange': False,
+        'do_flossies': False,
+        'do_cancerhotspots': False,
+        'do_arup': False,
+        'do_tp53_database': False,
+
+        # additional annotations
+        'do_task_force_protein_domains': False
+    }
+    return job_config
 
 # annotation job definitions
-all_jobs = [
-    vep_job.vep_job(job_config, refseq=False),
-    vep_job.vep_job(job_config, refseq=True),
-    phylop_job.phylop_job(job_config),
-    hexplorer_job.hexplorer_job(job_config),
-    annotate_from_vcf_job.annotate_from_vcf_job(job_config),
-    spliceai_job.spliceai_job(job_config),
-    task_force_protein_domain_job.task_force_protein_domain_job(job_config)
-]
+def get_jobs(job_config):
+    all_jobs = [
+        vep_job.vep_job(job_config, refseq=False),
+        vep_job.vep_job(job_config, refseq=True),
+        phylop_job.phylop_job(job_config),
+        hexplorer_job.hexplorer_job(job_config),
+        annotate_from_vcf_job.annotate_from_vcf_job(job_config),
+        spliceai_job.spliceai_job(job_config),
+        task_force_protein_domain_job.task_force_protein_domain_job(job_config)
+    ]
+    return all_jobs
 
 
 
@@ -81,8 +117,10 @@ def get_annotation_tempfile(annotation_queue_id):
     return res
 
 
-def process_one_request(annotation_queue_id):
+def process_one_request(annotation_queue_id, job_config = get_default_job_config()):
     """ this is the main worker of the annotation job - A 4 step process -"""
+
+    all_jobs = get_jobs(job_config)
 
     conn = Connection()
     vcf_path = get_temp_vcf_path(annotation_queue_id)
