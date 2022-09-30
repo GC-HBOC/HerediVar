@@ -14,13 +14,13 @@ htslib_path = workdir + "src/tools/htslib-1.16/"
 # data
 ref_genome_name = "GRCh38"
 if os.environ.get('WEBAPP_ENV') == 'githubtest': # online installation
-    ref_genome_path = "https://download.imgag.de/ahsturm1/genomes/GRCh38.fa"
-    ref_genome_path_grch37 = "https://download.imgag.de/ahsturm1/genomes/GRCh37.fa"
+    ref_genome_path = "https://download.imgag.de/public/genomes/GRCh38.fa"
+    ref_genome_path_grch37 = "https://download.imgag.de/public/genomes/GRCh37.fa"
+    chainfile_path = "https://download.imgag.de/public/genomes/hg19ToHg38.over.chain.gz"
 else: # local installation
     ref_genome_path = workdir + "data/genomes/GRCh38.fa"
     ref_genome_path_grch37 = workdir + "data/genomes/GRCh37.fa"
-
-chainfile_path = workdir + "data/genomes/hg19ToHg38.fixed.over.chain.gz"
+    chainfile_path = workdir + "data/genomes/hg19ToHg38.fixed.over.chain.gz"
 
 #metadata
 gnomad_path = datadir + "gnomAD/gnomAD_genome_v3.1.2_GRCh38.vcf.gz"
