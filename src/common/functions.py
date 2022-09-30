@@ -240,6 +240,8 @@ def check_vcf(path, ref_genome = 'GRCh38'):
     #    returncode, err_msg, command_output = execute_command(["docker", "exec", os.environ.get("NGSBITS_CONTAINER_ID"), "chmod", "777", path], "chmod")
     #    print(returncode)
     #    print(err_msg)
+    if os.environ.get('WEBAPP_ENV') == 'githubtest':
+        execute_command(["chmod", "777", path], "chmod")
     return returncode, err_msg, vcf_errors
 
 def left_align_vcf(infile, outfile, ref_genome = 'GRCh38'):
@@ -261,10 +263,8 @@ def left_align_vcf(infile, outfile, ref_genome = 'GRCh38'):
 
     returncode, err_msg, command_output = execute_command(command, 'VcfLeftNormalize')
 
-    #if os.environ.get('WEBAPP_ENV') == 'githubtest':
-    #    returncode, err_msg, command_output = execute_command(["docker", "exec", os.environ.get("NGSBITS_CONTAINER_ID"), "chmod", "777", outfile], "chmod")
-    #    print(returncode)
-    #    print(err_msg)
+    if os.environ.get('WEBAPP_ENV') == 'githubtest':
+        execute_command(["chmod", "777", outfile], "chmod")
     return returncode, err_msg, command_output
 
 
