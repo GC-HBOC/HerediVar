@@ -43,7 +43,11 @@ jobs:
       - name: lsses
         run: |
           ls -l
-          cd src/common/scripts
+          cd src
+          ls -l
+          cd common
+          ls -l
+          cd scripts
           ls -l
           chmod 777 preprocess_variant.sh
 
