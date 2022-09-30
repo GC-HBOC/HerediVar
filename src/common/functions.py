@@ -135,6 +135,10 @@ def convert_none_infinite(x):
         return x
 
 def execute_command(command, process_name, use_prefix_error_log = True):
+    if os.environ.get("WEBAPP_ENV") == "githubtest":
+        # need to sudo the mv in github actions otherwise it will result in permission denied...
+        command = command.insert(0, "sudo")
+
     completed_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     std_out, std_err = completed_process.communicate()#[1].strip().decode("utf-8") # catch errors and warnings and convert to str
     #vcf_errors = completed_process.communicate()[0].strip().decode("utf-8") # catch errors and warnings and convert to str
@@ -178,11 +182,7 @@ def preprocess_variant(infile, do_liftover=False):
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
         returncode, err_msg, command_output = execute_command(["rm", infile], "rm")
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
-        if os.environ.get("WEBAPP_ENV") == "githubtest":
-        # need to sudo the mv in github actions otherwise it will result in permission denied...
-            returncode, err_msg, command_output = execute_command(["sudo", "mv", infile + ".leftnormalized", infile], "mv")
-        else: 
-            returncode, err_msg, command_output = execute_command(["mv", infile + ".leftnormalized", infile], "mv")
+        returncode, err_msg, command_output = execute_command(["mv", infile + ".leftnormalized", infile], "mv")
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
     else:
         returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh38")
@@ -193,11 +193,7 @@ def preprocess_variant(infile, do_liftover=False):
 
     returncode, err_msg, command_output = execute_command(["rm", infile], "rm")
     if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
-    if os.environ.get("WEBAPP_ENV") == "githubtest":
-        # need to sudo the mv in github actions otherwise it will result in permission denied...
-        returncode, err_msg, command_output = execute_command(["sudo", "mv", infile + ".leftnormalized", infile], "mv")
-    else: 
-        returncode, err_msg, command_output = execute_command(["mv", infile + ".leftnormalized", infile], "mv")
+    returncode, err_msg, command_output = execute_command(["mv", infile + ".leftnormalized", infile], "mv")
     if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
     
     returncode, err_msg, vcf_errors_post = check_vcf(infile, ref_genome="GRCh38")
