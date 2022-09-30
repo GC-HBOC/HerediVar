@@ -40,17 +40,6 @@ jobs:
       #- name: install ngs-bits
       #  run: conda install ngs-bits
 
-      - name: lsses
-        run: |
-          ls -l
-          cd src
-          ls -l
-          cd common
-          ls -l
-          cd scripts
-          ls -l
-          chmod 777 preprocess_variant.sh
-
 
       - name: install ngs-bits
         run: docker pull quay.io/biocontainers/ngs-bits:2022_07--py310hb611552_0
