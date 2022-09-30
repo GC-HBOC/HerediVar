@@ -137,7 +137,6 @@ jobs:
         run: |
           export NGSBITS_CONTAINER_ID=$(cat ngs-bits-container.txt)
 
-          chmod 777 src/common/scripts/preprocess_variant.sh
           chmod 755 src/frontend_celery/tests/script/run_tests.sh
           src/frontend_celery/tests/script/run_tests.sh
         ##### !secrets are loaded from github: https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md
