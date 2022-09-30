@@ -137,7 +137,7 @@ def convert_none_infinite(x):
 def execute_command(command, process_name, use_prefix_error_log = True):
     if os.environ.get("WEBAPP_ENV") == "githubtest":
         # need to sudo the mv in github actions otherwise it will result in permission denied...
-        command = command.insert(0, "sudo")
+        command.insert(0, "sudo")
 
     completed_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     std_out, std_err = completed_process.communicate()#[1].strip().decode("utf-8") # catch errors and warnings and convert to str
