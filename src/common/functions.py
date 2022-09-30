@@ -191,7 +191,7 @@ def preprocess_variant(infile, do_liftover=False):
     if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
     returncode, err_msg, command_output = execute_command(["sudo", "mv", infile + ".leftnormalized", infile], "mv")
     if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
-
+    print(infile)
     returncode, err_msg, vcf_errors_post = check_vcf(infile, ref_genome="GRCh38")
     if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
 
@@ -232,10 +232,10 @@ def check_vcf(path, ref_genome = 'GRCh38'):
 
     returncode, err_msg, vcf_errors = execute_command(command, 'VcfCheck')
 
-    if os.environ.get('WEBAPP_ENV') == 'githubtest':
-        returncode, err_msg, command_output = execute_command(["docker", "exec", os.environ.get("NGSBITS_CONTAINER_ID"), "chmod", "777", path], "chmod")
-        print(returncode)
-        print(err_msg)
+    #if os.environ.get('WEBAPP_ENV') == 'githubtest':
+    #    returncode, err_msg, command_output = execute_command(["docker", "exec", os.environ.get("NGSBITS_CONTAINER_ID"), "chmod", "777", path], "chmod")
+    #    print(returncode)
+    #    print(err_msg)
     return returncode, err_msg, vcf_errors
 
 def left_align_vcf(infile, outfile, ref_genome = 'GRCh38'):
@@ -257,10 +257,10 @@ def left_align_vcf(infile, outfile, ref_genome = 'GRCh38'):
 
     returncode, err_msg, command_output = execute_command(command, 'VcfLeftNormalize')
 
-    if os.environ.get('WEBAPP_ENV') == 'githubtest':
-        returncode, err_msg, command_output = execute_command(["docker", "exec", os.environ.get("NGSBITS_CONTAINER_ID"), "chmod", "777", outfile], "chmod")
-        print(returncode)
-        print(err_msg)
+    #if os.environ.get('WEBAPP_ENV') == 'githubtest':
+    #    returncode, err_msg, command_output = execute_command(["docker", "exec", os.environ.get("NGSBITS_CONTAINER_ID"), "chmod", "777", outfile], "chmod")
+    #    print(returncode)
+    #    print(err_msg)
     return returncode, err_msg, command_output
 
 
