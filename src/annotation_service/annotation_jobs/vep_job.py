@@ -104,7 +104,7 @@ class vep_job(Job):
     def _fake_vep(self, variant_id, output_vcf):
         """This function is only for testing purposes"""
         import shutil
-        shutil.copy2(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/tests/data" + str(variant_id) + "_vep_annotated.vcf", output_vcf)
+        shutil.copy2(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/tests/data/" + str(variant_id) + "_vep_annotated.vcf", output_vcf)
 
 
     #"/mnt/storage2/GRCh38/share/data/genomes/GRCh38.fa"
