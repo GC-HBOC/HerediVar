@@ -63,7 +63,7 @@ jobs:
         run: |
           vepcontainer=$(cat vep-container.txt)
           docker exec $vepcontainer INSTALL.pl -a p --PLUGINS REVEL,CADD,MaxEntScan --NO_UPDATE --NO_BIOPERL --NO_TEST --NO_HTSLIB
-          cat /opt/vep/.vep/Plugins/REVEL.pm
+          docker exec $vepcontainer cat /opt/vep/.vep/Plugins/REVEL.pm
           docker exec $vepcontainer vep --help
 
 
