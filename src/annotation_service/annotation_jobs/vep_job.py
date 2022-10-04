@@ -28,7 +28,8 @@ class vep_job(Job):
         print(kwargs['one_variant'])
         
         if os.environ.get("WEBAPP_ENV") == "githubtest":
-            vep_code, vep_stderr, vep_stdout = self._fake_vep(kwargs['one_variant'][0], annotated_inpath)
+            one_variant = kwargs['one_variant']
+            vep_code, vep_stderr, vep_stdout = self._fake_vep(one_variant[0], annotated_inpath)
         else:
             vep_code, vep_stderr, vep_stdout = self._annotate_vep(inpath, annotated_inpath)
 
@@ -108,6 +109,7 @@ class vep_job(Job):
         """This function is only for testing purposes"""
         import shutil
         shutil.copy2(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/tests/data/" + str(variant_id) + "_vep_annotated.vcf", output_vcf)
+        return 0, "", ""
 
 
     #"/mnt/storage2/GRCh38/share/data/genomes/GRCh38.fa"
