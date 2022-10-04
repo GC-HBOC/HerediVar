@@ -25,7 +25,7 @@ class vep_job(Job):
         self.print_executing()
         
         if os.environ.get("WEBAPP_ENV") == "githubtest":
-            vep_code, vep_stderr, vep_stdout = self._fake_vep(inpath, annotated_inpath)
+            vep_code, vep_stderr, vep_stdout = self._fake_vep(kwargs['one_variant'][0], annotated_inpath)
         else:
             vep_code, vep_stderr, vep_stdout = self._annotate_vep(inpath, annotated_inpath)
 
