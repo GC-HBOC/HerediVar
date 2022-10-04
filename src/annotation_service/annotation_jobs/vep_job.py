@@ -23,9 +23,6 @@ class vep_job(Job):
             return 0, '', ''
 
         self.print_executing()
-
-        print(kwargs)
-        print(kwargs['one_variant'])
         
         if os.environ.get("WEBAPP_ENV") == "githubtest":
             one_variant = kwargs['one_variant']

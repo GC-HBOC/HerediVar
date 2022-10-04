@@ -41,8 +41,11 @@ def read_vcf_info(path):
     entries = []
     info_headers = []
     for line in file:
+        if line.strip() == '':
+            continue
         if line.startswith('##INFO'):
             info_headers.append(line.strip())
+            continue
         if not line.startswith('#'):
             l = line.split('\t')[7]
             entries.append(l.strip())
