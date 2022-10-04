@@ -66,15 +66,16 @@ jobs:
           docker exec $vepcontainer cp /opt/vep/.vep/Plugins/CADD.pm modules
           docker exec $vepcontainer cp /opt/vep/.vep/Plugins/MaxEntScan.pm modules
 
-      - name: install maxentscan
-        run: |
-          vepcontainer=$(cat vep-container.txt)
-          docker exec $vepcontainer mkdir -p MaxEntScan
-          docker exec $vepcontainer wget http://hollywood.mit.edu/burgelab/maxent/download/fordownload.tar.gz MaxEntScan
-          docker exec $vepcontainer tar xzf MaxEntScan/fordownload.tar.gz
-          docker exec $vepcontainer mv MaxEntScan/fordownload/* .
-          docker exec $vepcontainer rm -rf MaxEntScan/fordownload*
-          docker exec $vepcontainer chmod -R 755 MaxEntScan
+
+      #- name: install maxentscan
+      #  run: |
+      #    vepcontainer=$(cat vep-container.txt)
+      #    docker exec $vepcontainer mkdir -p MaxEntScan
+      #    docker exec $vepcontainer wget http://hollywood.mit.edu/burgelab/maxent/download/fordownload.tar.gz MaxEntScan
+      #    docker exec $vepcontainer tar xzf MaxEntScan/fordownload.tar.gz
+      #    docker exec $vepcontainer mv MaxEntScan/fordownload/* .
+      #    docker exec $vepcontainer rm -rf MaxEntScan/fordownload*
+      #    docker exec $vepcontainer chmod -R 755 MaxEntScan
           
 
       
@@ -82,6 +83,7 @@ jobs:
         run: |
           vepcontainer=$(cat vep-container.txt)
           docker exec $vepcontainer vep --help
+
 
 
       - name: install ngs-bits
@@ -130,6 +132,18 @@ jobs:
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
+
+      
+      - name: test annotation service
+        run: |
+          export NGSBITS_CONTAINER_ID=$(cat ngs-bits-container.txt)
+          export VEP_CONTAINER_ID=$(cat vep-container.txt)
+
+          chmod 755 src/annotation_service/tests/run_tests.sh
+          src/annotation_service/tests/run_tests.sh
+        env:
+          WEBAPP_ENV: githubtest
+        shell: bash
 
 
       # prepare keycloak

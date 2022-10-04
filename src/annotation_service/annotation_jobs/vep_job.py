@@ -3,6 +3,7 @@ from ._job import Job
 import common.paths as paths
 import common.functions as functions
 import re
+import os
 
 from ..pubmed_parser import fetch
 
@@ -128,5 +129,8 @@ class vep_job(Job):
                                  "--vcf_info_field", "CSQ_refseq",
                                  "--fields", fields_oi]
         
+        if os.environ.get("WEBAPP_ENV") == "githubtest":
+            command = functions.get_docker_instructions(os.environ.get("VEP_CONTAINER_ID")) + command
+
         return_code, err_msg, command_output = functions.execute_command(command, process_name="VEP")
         return return_code, err_msg, command_output
