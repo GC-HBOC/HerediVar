@@ -40,20 +40,28 @@ jobs:
       #- name: install ngs-bits
       #  run: conda install ngs-bits
 
-      - name: install perl
-        uses: shogo82148/actions-setup-perl@v1
-        with:
-          perl-version: '5.34'
-      
-      - name: test cpanm
-        run: cpanm
+      #- name: install perl
+      #  uses: shogo82148/actions-setup-perl@v1
+      #  with:
+      #    perl-version: '5.34'
+
+      #- name: install vep
+      #  run: src/tools/download_tools_vep.sh
 
       - name: install vep
-        run: src/tools/download_tools_vep.sh
+        run: docker pull ensemblorg/ensembl-vep:release_104.3
+      
+      - name: start vep container
+        run: |
+          docker images
+          docker run -d -it 881f65da80a2 /bin/bash > vep-container.txt
+          docker ps -a
 
       
       - name: test vep
-        run: /src/tools/ensembl-vep-release-104.3/vep
+        run: |
+          vepcontainer=$(cat vep-container.txt)
+          docker exec $vepcontainer vep --help
 
 
       - name: install ngs-bits
