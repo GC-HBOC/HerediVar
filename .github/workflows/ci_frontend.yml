@@ -41,7 +41,7 @@ jobs:
       #  run: conda install ngs-bits
 
       - name: install perl
-        run: shogo82148/actions-setup-perl@v1
+        uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: '5.34'
       
