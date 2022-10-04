@@ -40,6 +40,13 @@ jobs:
       #- name: install ngs-bits
       #  run: conda install ngs-bits
 
+      - name: install vep
+        run: src/tools/download_tools_vep.sh
+
+      
+      - name: test vep
+        run: /src/tools/ensembl-vep-release-104.3/vep
+
 
       - name: install ngs-bits
         run: docker pull quay.io/biocontainers/ngs-bits:2022_07--py310hb611552_0

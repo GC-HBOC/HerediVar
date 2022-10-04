@@ -4,12 +4,8 @@ set -o pipefail
 set -o verbose
 
 root=`pwd`
-tools=$root/tools/
-dbs=$root/dbs/
-
-#Ignore this - used for local installation
-# tools=/mnt/storage2/GRCh38/share/opt/
-# dbs=/mnt/storage2/GRCh38/share/data/dbs/
+tools=$root/src/tools/
+dbs=$root/data/dbs/
 
 vep_install_dir=$tools/ensembl-vep-release-104.3/
 vep_cpan_dir=$vep_install_dir/cpan/
