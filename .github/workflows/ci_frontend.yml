@@ -56,11 +56,13 @@ jobs:
           docker images
           docker run -d -it 43bc9e0feefb /bin/bash > vep-container.txt
           docker ps -a
+          
 
       
       - name: test vep
         run: |
           vepcontainer=$(cat vep-container.txt)
+          docker exec $vepcontainer INSTALL.pl -a p --PLUGINS REVEL,CADD,MaxEntScan --NO_UPDATE --NO_BIOPERL --NO_TEST --NO_HTSLIB
           docker exec $vepcontainer vep --help
 
 
