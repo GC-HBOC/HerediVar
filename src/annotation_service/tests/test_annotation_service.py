@@ -18,7 +18,8 @@ def test_vep_annotation_job():
     job_config = get_empty_job_config()
     job_config['do_vep'] = True
     job_config['insert_consequence'] = True
-    job_config['do_vep'] = True
+    job_config['insert_maxent'] = True
+    job_config['insert_literature'] = True
     status, runtime_error = process_one_request(annotation_queue_id, job_config)
     print(status)
     print(runtime_error)

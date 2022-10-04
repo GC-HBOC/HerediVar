@@ -35,6 +35,8 @@ class vep_job(Job):
 
 
     def save_to_db(self, info, variant_id, conn):
+        
+        print("is refseq: " + self.refseq)
         # save variant consequences from ensembl and refseq
         # !!!! format of refseq and ensembl annotations from vep need to be equal: 0Feature,1HGVSc,2HGVSp,3Consequence,4IMPACT,5EXON,6INTRON,7HGNC_ID,8SYMBOL,9DOMAIN,...additional info
         if self.refseq:

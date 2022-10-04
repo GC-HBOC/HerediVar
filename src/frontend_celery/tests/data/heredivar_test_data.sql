@@ -163,6 +163,8 @@ INSERT INTO `gene` VALUES
 	(42061,37116,'ZAR1L','zygote arrest 1 like','protein-coding gene',NULL,NULL),
 	(11973,28242,'HPDL','4-hydroxyphenylpyruvate dioxygenase like','protein-coding gene',618994,30681),
 	(21541,7527,'MUTYH','mutY DNA glycosylase','protein-coding gene',604933,16490),
+	(13764, 16636, 'KIF1B', 'kinesin family member 1B', 'protein-coding gene', 605995, 16304),
+	(28804, 46747, 'RN7SL731P', 'RNA, 7SL, cytoplasmic 731, pseudogene', 'pseudogene',NULL,NULL),
 	(38963,11998,'TP53','tumor protein p53','protein-coding gene',191170,15644);
 UNLOCK TABLES;
 
