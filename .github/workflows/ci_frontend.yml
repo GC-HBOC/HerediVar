@@ -45,7 +45,8 @@ jobs:
           with:
           perl-version: '5.34'
       
-      - run: cpanm
+      - name: test cpanm
+        run: cpanm
 
       - name: install vep
         run: src/tools/download_tools_vep.sh
