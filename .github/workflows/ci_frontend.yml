@@ -40,6 +40,13 @@ jobs:
       #- name: install ngs-bits
       #  run: conda install ngs-bits
 
+      - name: install perl
+        run: shogo82148/actions-setup-perl@v1
+          with:
+          perl-version: '5.34'
+      
+      - run: cpanm
+
       - name: install vep
         run: src/tools/download_tools_vep.sh
 
