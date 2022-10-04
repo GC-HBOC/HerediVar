@@ -134,6 +134,32 @@ jobs:
           mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
 
       
+      # build python
+      - name: Set up Python 3.6.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.6.9'  # use 3.x to use the most up-to-date python3 version
+          architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
+      - uses: actions/cache@v2 # cache the python environment to speed up tests
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install wheel setuptools
+          python3 -m pip install --upgrade setuptools wheel
+          pip install pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      #- name: Lint with flake8
+      #  run: |
+      #    # stop the build if there are Python syntax errors or undefined names
+      #    flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      #    # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+      #    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      
+
+      
       - name: test annotation service
         run: |
           export NGSBITS_CONTAINER_ID=$(cat ngs-bits-container.txt)
@@ -162,30 +188,6 @@ jobs:
           src/frontend_celery/tests/script/start_keycloak_for_tests.sh
 
 
-      # build python
-      - name: Set up Python 3.6.9
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.6.9'  # use 3.x to use the most up-to-date python3 version
-          architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
-      - uses: actions/cache@v2 # cache the python environment to speed up tests
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
-      - name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install wheel setuptools
-          python3 -m pip install --upgrade setuptools wheel
-          pip install pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-      #- name: Lint with flake8
-      #  run: |
-      #    # stop the build if there are Python syntax errors or undefined names
-      #    flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-      #    # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-      #    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      
 
 
 
