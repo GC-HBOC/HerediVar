@@ -20,7 +20,7 @@ rm 104.3.tar.gz
 
 #install dependencies
 mkdir -p $vep_cpan_dir
-cpanm -l $vep_cpan_dir -L $vep_cpan_dir Set::IntervalTree URI::Escape DB_File Carp::Assert JSON::XS PerlIO::gzip DBI
+cpanm -l $vep_cpan_dir -L $vep_cpan_dir Set::IntervalTree URI::Escape Carp::Assert JSON::XS PerlIO::gzip DBI
 
 #download VEP cache data
 mkdir -p $vep_data_dir
