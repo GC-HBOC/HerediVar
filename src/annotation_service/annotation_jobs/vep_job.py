@@ -24,7 +24,7 @@ class vep_job(Job):
 
         self.print_executing()
         
-        if os.environ.get("WEBAPP_ENV") == "githubtest":
+        if os.environ.get("WEBAPP_ENV") == "githubtest" or os.environ.get('WEBAPP_ENV') == 'localtest':
             one_variant = kwargs['one_variant']
             vep_code, vep_stderr, vep_stdout = self._fake_vep(one_variant[0], annotated_inpath)
         else:
@@ -39,10 +39,10 @@ class vep_job(Job):
         # save variant consequences from ensembl and refseq
         # !!!! format of refseq and ensembl annotations from vep need to be equal: 0Feature,1HGVSc,2HGVSp,3Consequence,4IMPACT,5EXON,6INTRON,7HGNC_ID,8SYMBOL,9DOMAIN,...additional info
         if self.refseq:
-            csq_info = functions.find_between(info, "CSQ_refseq=", ';')
+            csq_info = functions.find_between(info, "CSQ_refseq=", '(;|$)')
             consequence_source = "refseq"
         else:
-            csq_info = functions.find_between(info, "CSQ=", ';')
+            csq_info = functions.find_between(info, "CSQ=", '(;|$)')
             consequence_source = "ensembl"
         
         print(csq_info)

@@ -7,7 +7,7 @@ zcat $BASE_PATH/src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_
 mysql --host SRV011.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahdoebm1_test < $BASE_PATH/src/frontend_celery/tests/data/heredivar_test_data.sql
 mysql --host SRV011.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahdoebm1_test -e "SHOW TABLES"
 
-
+export WEBAPP_ENV=localtest
 
 cd $BASE_PATH/src/annotation_service
 python -m pytest -k 'test_dev'
