@@ -61,8 +61,9 @@ jobs:
         run: |
           vepcontainer=$(cat vep-container.txt)
           docker exec $vepcontainer INSTALL.pl -a p --PLUGINS REVEL,CADD,MaxEntScan --NO_UPDATE --NO_BIOPERL --NO_TEST --NO_HTSLIB
-          docker exec $vepcontainer cat /opt/vep/.vep/Plugins/REVEL.pm
-          docker exec $vepcontainer cp /opt/vep/.vep/Plugins/*.pm modules/
+
+          docker exec $vepcontainer cp /opt/vep/.vep/Plugins/REVEL.pm modules
+          docker exec $vepcontainer ls -l /opt/vep/.vep/Plugins/
 
       - name: install maxentscan
         run: |
