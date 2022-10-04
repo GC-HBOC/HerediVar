@@ -54,7 +54,7 @@ jobs:
       - name: start vep container
         run: |
           docker images
-          docker run -d -it 881f65da80a2 /bin/bash > vep-container.txt
+          docker run -d -it 43bc9e0feefb /bin/bash > vep-container.txt
           docker ps -a
 
       
