@@ -24,9 +24,6 @@ jobs:
       # download repository
       - uses: actions/checkout@v3
 
-      - name: test
-        run: ls -l /home/runner/work/HerediVar/HerediVar/src/annotation_service
-
       #- uses: conda-incubator/setup-miniconda@v2
       #  with:
       #    python-version: 3.6.9
@@ -85,7 +82,7 @@ jobs:
       - name: test vep
         run: |
           vepcontainer=$(cat vep-container.txt)
-          docker exec $vepcontainer vep --help
+          docker exec $vepcontainer ./vep --help
 
 
 

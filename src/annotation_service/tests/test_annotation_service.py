@@ -20,6 +20,8 @@ def test_vep_annotation_job():
     job_config['insert_consequence'] = True
     job_config['do_vep'] = True
     status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(status)
+    print(runtime_error)
 
     annotated_vcf_path = get_temp_vcf_path(annotation_queue_id)
 

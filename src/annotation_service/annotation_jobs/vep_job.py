@@ -129,7 +129,7 @@ class vep_job(Job):
                                  "--vcf_info_field", "CSQ_refseq",
                                  "--fields", fields_oi]
         
-        if os.environ.get("WEBAPP_ENV") == "githubtest":
+        if os.environ.get("WEBAPP_ENV") == "githubtest": # preprend docker instructions if we are running the github actions tests
             command = functions.get_docker_instructions(os.environ.get("VEP_CONTAINER_ID")) + command
 
         return_code, err_msg, command_output = functions.execute_command(command, process_name="VEP")
