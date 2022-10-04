@@ -48,23 +48,23 @@ jobs:
       #- name: install vep
       #  run: src/tools/download_tools_vep.sh
 
-      - name: install vep
-        run: docker pull ensemblorg/ensembl-vep:release_104.3
+      #- name: install vep
+      #  run: docker pull ensemblorg/ensembl-vep:release_104.3
       
-      - name: start vep container
-        run: |
-          docker images
-          docker run -d -it 43bc9e0feefb /bin/bash > vep-container.txt
-          docker ps -a
+      #- name: start vep container
+      #  run: |
+      #    docker images
+      #    docker run -d -it 43bc9e0feefb /bin/bash > vep-container.txt
+      #    docker ps -a
       
-      - name: install vep plugins
-        run: |
-          vepcontainer=$(cat vep-container.txt)
-          docker exec $vepcontainer INSTALL.pl -a p --PLUGINS REVEL,CADD,MaxEntScan --NO_UPDATE --NO_BIOPERL --NO_TEST --NO_HTSLIB
+      #- name: install vep plugins
+      #  run: |
+      #    vepcontainer=$(cat vep-container.txt)
+      #    docker exec $vepcontainer INSTALL.pl -a p --PLUGINS REVEL,CADD,MaxEntScan --NO_UPDATE --NO_BIOPERL --NO_TEST --NO_HTSLIB
 
-          docker exec $vepcontainer cp /opt/vep/.vep/Plugins/REVEL.pm modules
-          docker exec $vepcontainer cp /opt/vep/.vep/Plugins/CADD.pm modules
-          docker exec $vepcontainer cp /opt/vep/.vep/Plugins/MaxEntScan.pm modules
+      #    docker exec $vepcontainer cp /opt/vep/.vep/Plugins/REVEL.pm modules
+      #    docker exec $vepcontainer cp /opt/vep/.vep/Plugins/CADD.pm modules
+      #    docker exec $vepcontainer cp /opt/vep/.vep/Plugins/MaxEntScan.pm modules
 
 
       #- name: install maxentscan
@@ -77,12 +77,10 @@ jobs:
       #    docker exec $vepcontainer rm -rf MaxEntScan/fordownload*
       #    docker exec $vepcontainer chmod -R 755 MaxEntScan
           
-
-      
-      - name: test vep
-        run: |
-          vepcontainer=$(cat vep-container.txt)
-          docker exec $vepcontainer ./vep --help
+      #- name: test vep
+      #  run: |
+      #    vepcontainer=$(cat vep-container.txt)
+      #    docker exec $vepcontainer ./vep --help
 
 
 
@@ -163,7 +161,6 @@ jobs:
       - name: test annotation service
         run: |
           export NGSBITS_CONTAINER_ID=$(cat ngs-bits-container.txt)
-          export VEP_CONTAINER_ID=$(cat vep-container.txt)
 
           chmod 755 src/annotation_service/tests/run_tests.sh
           src/annotation_service/tests/run_tests.sh

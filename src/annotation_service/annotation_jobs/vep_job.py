@@ -23,8 +23,11 @@ class vep_job(Job):
             return 0, '', ''
 
         self.print_executing()
-
-        vep_code, vep_stderr, vep_stdout = self._annotate_vep(inpath, annotated_inpath)
+        
+        if os.environ.get("WEBAPP_ENV") == "githubtest":
+            vep_code, vep_stderr, vep_stdout = self._fake_vep(inpath, annotated_inpath)
+        else:
+            vep_code, vep_stderr, vep_stdout = self._annotate_vep(inpath, annotated_inpath)
 
         self.handle_result(inpath, annotated_inpath, vep_code)
         return vep_code, vep_stderr, vep_stdout
@@ -98,6 +101,11 @@ class vep_job(Job):
                 conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4])
 
 
+    def _fake_vep(self, variant_id, output_vcf):
+        """This function is only for testing purposes"""
+        import shutil
+        shutil.copy2(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/tests/data" + str(variant_id) + "_vep_annotated.vcf", output_vcf)
+
 
     #"/mnt/storage2/GRCh38/share/data/genomes/GRCh38.fa"
     def _annotate_vep(self, input_vcf, output_vcf):
@@ -107,7 +115,7 @@ class vep_job(Job):
                    "-o", output_vcf, "--vcf", "--no_stats", "--force_overwrite",
                    "--species", "homo_sapiens", "--assembly", paths.ref_genome_name,
                    "--fork", "1",
-                   "--offline", "--cache", "--dir_cache", "/mnt/storage2/GRCh38/share/data/dbs/ensembl-vep-104/cache", "--fasta", paths.ref_genome_path,
+                   "--offline", "--cache", "--dir_cache", paths.vep_cache_dir, "--fasta", paths.ref_genome_path,
                    "--numbers", "--hgvs", "--symbol", "--domains", #"--transcript_version",
                    "--failed", "1",
                    "--quiet"
@@ -129,8 +137,7 @@ class vep_job(Job):
                                  "--vcf_info_field", "CSQ_refseq",
                                  "--fields", fields_oi]
         
-        if os.environ.get("WEBAPP_ENV") == "githubtest": # preprend docker instructions if we are running the github actions tests
-            command = functions.get_docker_instructions(os.environ.get("VEP_CONTAINER_ID")) + command
+
 
         return_code, err_msg, command_output = functions.execute_command(command, process_name="VEP")
         return return_code, err_msg, command_output
