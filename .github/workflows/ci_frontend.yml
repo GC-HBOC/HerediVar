@@ -42,8 +42,8 @@ jobs:
 
       - name: install perl
         run: shogo82148/actions-setup-perl@v1
-          with:
-            perl-version: '5.34'
+        with:
+          perl-version: '5.34'
       
       - name: test cpanm
         run: cpanm
