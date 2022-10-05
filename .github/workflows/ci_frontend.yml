@@ -195,7 +195,7 @@ jobs:
         shell: bash
 
       
-    - name: test annotation service
+      - name: test annotation service
         run: |
           export NGSBITS_CONTAINER_ID=$(cat ngs-bits-container.txt)
 
