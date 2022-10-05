@@ -3,6 +3,7 @@ from ._job import Job
 import common.paths as paths
 import common.functions as functions
 import tempfile
+import os
 
 from ..pubmed_parser import fetch
 
@@ -107,12 +108,19 @@ class annotate_from_vcf_job(Job):
 
 
     def annotate_from_vcf(self, config_file_path, input_vcf, output_vcf):
-        command = [paths.ngs_bits_path + "VcfAnnotateFromVcf",
-                   "-config_file", config_file_path, "-in", input_vcf, "-out", output_vcf]
 
-        returncode, stderr, stdout = functions.execute_command(command, process_name = "VcfAnnotateFromVcf")
+        if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
+            command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
+            command.append("VcfCheck")
+        else: # use local installation
+            command = [paths.ngs_bits_path + "VcfAnnotateFromVcf"]
+        command.extend([ "-config_file", config_file_path, "-in", input_vcf, "-out", output_vcf])
 
-        return returncode, stderr, stdout
+        returncode, err_msg, vcf_errors = functions.execute_command(command, 'VcfCheck')
+
+        if os.environ.get('WEBAPP_ENV') == 'githubtest':
+            functions.execute_command(["chmod", "777", output_vcf], "chmod")
+        return returncode, err_msg, vcf_errors
 
     
     def write_vcf_annoate_config(self, one_variant):
