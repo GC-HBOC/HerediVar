@@ -34,6 +34,8 @@ class annotate_from_vcf_job(Job):
         print(returncode)
         print(err_msg)
         print(vcf_errors)
+        returncode, err, out = functions.execute_command(["cat", "/tmp/1114_annotated.vcf"], "cat")
+        print(out)
 
 
         self.handle_result(inpath, annotated_inpath, vcf_annotate_code)
@@ -127,6 +129,7 @@ class annotate_from_vcf_job(Job):
         #    print(returncode)
         #    print(err_msg)
         if os.environ.get('WEBAPP_ENV') == 'githubtest':
+            functions.execute_command(["chmod", "777", output_vcf], "chmod")
             functions.execute_command(["chmod", "777", output_vcf], "chmod")
         return returncode, err_msg, vcf_errors
 
