@@ -129,7 +129,6 @@ class annotate_from_vcf_job(Job):
         #    print(returncode)
         #    print(err_msg)
         if os.environ.get('WEBAPP_ENV') == 'githubtest':
-            functions.execute_command(["chmod", "777", input_vcf], "chmod")
             functions.execute_command(["chmod", "777", output_vcf], "chmod")
         return returncode, err_msg, vcf_errors
 

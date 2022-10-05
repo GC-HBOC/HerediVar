@@ -53,7 +53,7 @@ def test_browse(test_client):
     #print(data)
     assert response.status_code == 200
     assert 'id="variantTable"' in data
-    assert data.count('name="variant_row"') == 8 # always +1 because there are duplicated rows which are merged with js
+    assert data.count('name="variant_row"') == 10 # always +1 because there are duplicated rows which are merged with js
     assert 'data-href="' + url_for('variant.display', variant_id="15") + '"' in data # make sure link was built correctly
     assert 'c.1972C>T' in data # make sure mane select hgvs is displayed
     assert 'p.Arg658Cys' in data
