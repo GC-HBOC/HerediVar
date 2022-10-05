@@ -109,18 +109,35 @@ class annotate_from_vcf_job(Job):
 
     def annotate_from_vcf(self, config_file_path, input_vcf, output_vcf):
 
+
+
+
         if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
             command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
-            command.append("VcfCheck")
+            command.append("VcfAnnotateFromVcf")
         else: # use local installation
             command = [paths.ngs_bits_path + "VcfAnnotateFromVcf"]
         command.extend([ "-config_file", config_file_path, "-in", input_vcf, "-out", output_vcf])
 
-        returncode, err_msg, vcf_errors = functions.execute_command(command, 'VcfCheck')
+        returncode, err_msg, vcf_errors = functions.execute_command(command, 'VcfAnnotateFromVcf')
 
+        #if os.environ.get('WEBAPP_ENV') == 'githubtest':
+        #    returncode, err_msg, command_output = execute_command(["docker", "exec", os.environ.get("NGSBITS_CONTAINER_ID"), "chmod", "777", path], "chmod")
+        #    print(returncode)
+        #    print(err_msg)
         if os.environ.get('WEBAPP_ENV') == 'githubtest':
             functions.execute_command(["chmod", "777", output_vcf], "chmod")
         return returncode, err_msg, vcf_errors
+
+
+
+
+        #command = [paths.ngs_bits_path + "VcfAnnotateFromVcf",
+        #           "-config_file", config_file_path, "-in", input_vcf, "-out", output_vcf]
+
+        #returncode, stderr, stdout = functions.execute_command(command, process_name = "VcfAnnotateFromVcf")
+
+        #return returncode, stderr, stdout
 
     
     def write_vcf_annoate_config(self, one_variant):
