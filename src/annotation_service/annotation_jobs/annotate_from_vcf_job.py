@@ -30,7 +30,7 @@ class annotate_from_vcf_job(Job):
         config_file_path = self.write_vcf_annoate_config(one_variant = kwargs['one_variant'])
         vcf_annotate_code, vcf_annotate_stderr, vcf_annotate_stdout = self.annotate_from_vcf(config_file_path, inpath, annotated_inpath)
 
-        returncode, err_msg, vcf_errors = functions.execute_command("ls", "-l", "/tmp")
+        returncode, err_msg, vcf_errors = functions.execute_command(["ls", "-l", "/tmp"], "ls")
         print(returncode)
         print(err_msg)
         print(vcf_errors)
