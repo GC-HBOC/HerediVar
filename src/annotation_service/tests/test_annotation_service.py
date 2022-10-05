@@ -142,10 +142,424 @@ def test_dbsnp_annotation():
 
     # check that annotation was inserted correctly
     conn = Connection()
-    print(conn.get_variant_annotation(156, 3))
     rs_num = conn.get_variant_annotation(variant_id, 3)
     assert len(rs_num) == 1
     assert rs_num[0][3] == "1570391677"
+
+
+    # cleanup
+    conn.close()
+
+
+def test_revel_annotation():
+    """
+    This tests that REVEL score is annotated correctly
+    """
+
+    # setup
+    user_id = 3
+    job_config = get_empty_job_config()
+    job_config['do_revel'] = True
+    conn = Connection()
+
+    # insert annotation request
+    annotation_queue_id = conn.insert_variant(chr='chr1', pos=35142, ref='G', alt='A', orig_chr='chr1', orig_pos=35142, orig_ref='G', orig_alt='A', user_id=user_id)
+    variant_id = conn.get_annotation_queue_entry(annotation_queue_id)[1]
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    conn = Connection()
+    res = conn.get_variant_annotation(variant_id, 6)
+    assert len(res) == 1
+    assert res[0][3] == "0.027"
+
+
+    # cleanup
+    conn.close()
+
+
+def test_cadd_annotation():
+    """
+    This tests that CADD score is annotated correctly
+    """
+
+    # setup
+    user_id = 3
+    job_config = get_empty_job_config()
+    job_config['do_cadd'] = True
+    conn = Connection()
+
+    # insert annotation request
+    #chr1    10009   .       A       T       .       .       CADD=8.518
+    annotation_queue_id = conn.insert_variant(chr='chr1', pos=10009, ref='A', alt='T', orig_chr='chr1', orig_pos=10009, orig_ref='A', orig_alt='T', user_id=user_id)
+    variant_id = conn.get_annotation_queue_entry(annotation_queue_id)[1]
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    conn = Connection()
+    res = conn.get_variant_annotation(variant_id, 5)
+    assert len(res) == 1
+    assert res[0][3] == "8.518"
+
+
+    # cleanup
+    conn.close()
+
+
+
+def test_gnomad_annotation():
+    """
+    This tests that gnomad population counts are stored correctly
+    """
+
+    # setup
+    user_id = 3
+    job_config = get_empty_job_config()
+    job_config['do_gnomad'] = True
+    conn = Connection()
+
+    # insert annotation request
+    #chr1	10037	.	T	C	.	AS_VQSR	AF=2.60139e-05;AC=2;hom=0;popmax=eas;AC_popmax=1;AN_popmax=2456;AF_popmax=0.000407166;het=2
+    annotation_queue_id = conn.insert_variant(chr='chr1', pos=10037, ref='T', alt='C', orig_chr='chr1', orig_pos=10037, orig_ref='T', orig_alt='A', user_id=user_id)
+    variant_id = conn.get_annotation_queue_entry(annotation_queue_id)[1]
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    #11	gnomad_ac
+    #12	gnomad_af
+    #13	gnomad_hom
+    #14	gnomad_hemi
+    #15	gnomad_het
+    #16	gnomad_popmax
+    #17	gnomadm_ac_hom
+    #51	gnomad_popmax_AF
+    conn = Connection()
+    res = conn.get_variant_annotation(variant_id, 11)
+    assert len(res) == 1
+    assert res[0][3] == "2"
+
+    res = conn.get_variant_annotation(variant_id, 12)
+    assert len(res) == 1
+    assert res[0][3] == "2.60139e-05"
+
+    res = conn.get_variant_annotation(variant_id, 13)
+    assert len(res) == 1
+    assert res[0][3] == "0"
+    
+    res = conn.get_variant_annotation(variant_id, 14)
+    assert len(res) == 0
+    
+    res = conn.get_variant_annotation(variant_id, 15)
+    assert len(res) == 1
+    assert res[0][3] == "2"
+    
+    res = conn.get_variant_annotation(variant_id, 16)
+    assert len(res) == 1
+    assert res[0][3] == "eas"
+    
+    res = conn.get_variant_annotation(variant_id, 17)
+    assert len(res) == 0
+    
+    res = conn.get_variant_annotation(variant_id, 51)
+    assert len(res) == 1
+    assert res[0][3] == "0.000407166"
+
+
+    # cleanup
+    conn.close()
+    
+
+def test_brca_exchange_annotation():
+    """
+    This tests that BRCA exchange classification is stored correctly
+    """
+
+    # setup
+    user_id = 3
+    job_config = get_empty_job_config()
+    job_config['do_brca_exchange'] = True
+    conn = Connection()
+
+    # insert annotation request
+    #chr13   32315226        .       G       A       .       .       clin_sig_detail=Benign(ENIGMA),_Benign_(ClinVar);clin_sig_short=Benign_/_Little_Clinical_Significance
+    annotation_queue_id = conn.insert_variant(chr='chr13', pos=32315226, ref='G', alt='A', orig_chr='chr13', orig_pos=32315226, orig_ref='G', orig_alt='A', user_id=user_id)
+
+    variant_id = conn.get_annotation_queue_entry(annotation_queue_id)[1]
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    conn = Connection()
+    res = conn.get_variant_annotation(variant_id, 18)
+    assert len(res) == 1
+    assert res[0][3] == "Benign / Little Clinical Significance" # '_' are replaced with spaces
+
+
+    # cleanup
+    conn.close()
+    
+
+def test_flossies_annotation():
+    """
+    This tests that BRCA exchange classification is stored correctly
+    """
+
+    # setup
+    user_id = 3
+    job_config = get_empty_job_config()
+    job_config['do_flossies'] = True
+    conn = Connection()
+
+    # insert annotation request
+    #chr2	17753961	.	G	C	.	.	num_eur=1;num_afr=0
+    annotation_queue_id = conn.insert_variant(chr='chr2', pos=17753961, ref='G', alt='C', orig_chr='chr2', orig_pos=17753961, orig_ref='G', orig_alt='C', user_id=user_id)
+
+    variant_id = conn.get_annotation_queue_entry(annotation_queue_id)[1]
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    conn = Connection()
+    res = conn.get_variant_annotation(variant_id, 19)
+    assert len(res) == 1
+    assert res[0][3] == "0"
+
+    res = conn.get_variant_annotation(variant_id, 20)
+    assert len(res) == 1
+    assert res[0][3] == "1"
+
+
+    # cleanup
+    conn.close()
+
+
+def test_cancerhotspots_annotation():
+    """
+    This tests that cancerhotspots are stored correctly
+    """
+
+    # setup
+    user_id = 3
+    job_config = get_empty_job_config()
+    job_config['do_cancerhotspots'] = True
+    conn = Connection()
+
+    # insert annotation request
+    #chr1	939434	.	A	AT	.	.	cancertypes=Colorectal_Adenocarcinoma:bowel|Invasive_Breast_Carcinoma:breast|Cutaneous_Melanoma:skin|Low-Grade_Glioma:cnsbrain;AC=4;AF=0.00016503692701241903
+    annotation_queue_id = conn.insert_variant(chr='chr1', pos=939434, ref='A', alt='AT', orig_chr='chr2', orig_pos=939434, orig_ref='A', orig_alt='AT', user_id=user_id)
+    variant_id = conn.get_annotation_queue_entry(annotation_queue_id)[1]
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    conn = Connection()
+    res = conn.get_variant_annotation(variant_id, 22)
+    assert len(res) == 1
+    assert res[0][3] == "Colorectal_Adenocarcinoma:bowel|Invasive_Breast_Carcinoma:breast|Cutaneous_Melanoma:skin|Low-Grade_Glioma:cnsbrain"
+
+    res = conn.get_variant_annotation(variant_id, 23)
+    assert len(res) == 1
+    assert res[0][3] == "4"
+
+    res = conn.get_variant_annotation(variant_id, 24)
+    assert len(res) == 1
+    assert res[0][3] == "0.00016503692701241903"
+
+
+    # cleanup
+    conn.close()
+
+
+
+
+def test_arup_brca_annotation():
+    """
+    This tests that arup brca classifications are stored correctly
+    """
+
+    # setup
+    user_id = 3
+    job_config = get_empty_job_config()
+    job_config['do_arup'] = True
+    conn = Connection()
+
+    # insert annotation request
+    #chr13	32316453	.	AGGTAAAAATGCCTATT	A	.	.	HGVSc=ENST00000380152:c.-5_11del;classification=5
+    annotation_queue_id = conn.insert_variant(chr='chr13', pos=32316453, ref='AGGTAAAAATGCCTATT', alt='A', orig_chr='chr13', orig_pos=32316453, orig_ref='AGGTAAAAATGCCTATT', orig_alt='A', user_id=user_id)
+    variant_id = conn.get_annotation_queue_entry(annotation_queue_id)[1]
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    conn = Connection()
+    res = conn.get_variant_annotation(variant_id, 21)
+    assert len(res) == 1
+    assert res[0][3] == "5"
+
+
+    # cleanup
+    conn.close()
+    
+
+
+def test_tp53_db_annotation():
+    """
+    This tests that TP53 db annotations are stored correctly
+    """
+
+    # setup
+    user_id = 3
+    job_config = get_empty_job_config()
+    job_config['do_tp53_database'] = True
+    job_config['insert_literature'] = True
+    conn = Connection()
+
+    # insert annotation request
+    #chr17	7670613	.	A	C	.	.	class=FH;bayes_del=0.1186;transactivation_class=functional;DNE_LOF_class=notDNE_notLOF;DNE_class=No;domain_function=Regulation;pubmed=12672316&18511570
+    annotation_queue_id = conn.insert_variant(chr='chr17', pos=7670613, ref='A', alt='C', orig_chr='chr17', orig_pos=7670613, orig_ref='A', orig_alt='C', user_id=user_id)
+    variant_id = conn.get_annotation_queue_entry(annotation_queue_id)[1]
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    #27	tp53db_class
+    #29	tp53db_DNE_LOF_class
+    #30	tp53db_bayes_del
+    #31	tp53db_DNE_class
+    #32	tp53db_domain_function
+    #33	tp53db_transactivation_class
+    conn = Connection()
+    res = conn.get_variant_annotation(variant_id, 27)
+    assert len(res) == 1
+    assert res[0][3] == "FH"
+
+
+    res = conn.get_variant_annotation(variant_id, 30)
+    assert len(res) == 1
+    assert res[0][3] == "0.1186"
+
+    res = conn.get_variant_annotation(variant_id, 33)
+    assert len(res) == 1
+    assert res[0][3] == "functional"
+
+    res = conn.get_variant_annotation(variant_id, 29)
+    assert len(res) == 1
+    assert res[0][3] == "notDNE_notLOF"
+
+    res = conn.get_variant_annotation(variant_id, 31)
+    assert len(res) == 1
+    assert res[0][3] == "No"
+
+    res = conn.get_variant_annotation(variant_id, 32)
+    assert len(res) == 1
+    assert res[0][3] == "Regulation"
+
+
+    literature = conn.get_variant_literature(variant_id)
+    assert len(literature) == 2
+    assert any([12672316 in x or 18511570 in x for x in literature])
+
+
+    # cleanup
+    conn.close()
+    
+
+    
+def test_clinvar_annotation():
+    """
+    This tests that clinvar annotations are stored correctly
+    """
+
+    # setup
+    user_id = 3
+    job_config = get_empty_job_config()
+    job_config['do_clinvar'] = True
+    conn = Connection()
+
+    # insert annotation request
+    #chr1	925952	1019397	G	A	.	.	
+    #inpret=Uncertain_significance
+    #revstat=criteria_provided,_single_submitter
+    #varid=1019397
+    #submissions=1019397|Uncertain_significance|2020-07-03|criteria_provided\_single_submitter|CN517202:not_provided|Invitae|description:_This_sequence_change_replaces_glycine_with_glutamic_acid_at_codon_4_of_the_SAMD11_protein_(p.Gly4Glu)._The_glycine_residue_is_weakly_conserved_and_there_is_a_moderate_physicochemical_difference_between_glycine_and_glutamic_acid._This_variant_is_not_present_in_population_databases_(ExAC_no_frequency)._This_variant_has_not_been_reported_in_the_literature_in_individuals_with_SAMD11-related_conditions._Algorithms_developed_to_predict_the_effect_of_missense_changes_on_protein_structure_and_function_are_either_unavailable_or_do_not_agree_on_the_potential_impact_of_this_missense_change_(SIFT:_Deleterious&_PolyPhen-2:_Probably_Damaging&_Align-GVGD:_Class_C0)._In_summary\_the_available_evidence_is_currently_insufficient_to_determine_the_role_of_this_variant_in_disease._Therefore\_it_has_been_classified_as_a_Variant_of_Uncertain_Significance.
+    annotation_queue_id = conn.insert_variant(chr='chr1', pos=925952, ref='G', alt='A', orig_chr='chr1', orig_pos=925952, orig_ref='G', orig_alt='A', user_id=user_id)
+    variant_id = conn.get_annotation_queue_entry(annotation_queue_id)[1]
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    #27	tp53db_class
+    #29	tp53db_DNE_LOF_class
+    #30	tp53db_bayes_del
+    #31	tp53db_DNE_class
+    #32	tp53db_domain_function
+    #33	tp53db_transactivation_class
+    conn = Connection()
+    clinvar_variant_annotation = conn.get_clinvar_variant_annotation(variant_id)
+    clinvar_variation_id = clinvar_variant_annotation[2]
+    print(clinvar_variant_annotation)
+
+    assert clinvar_variant_annotation is not None
+    assert clinvar_variant_annotation[1] == variant_id
+    assert str(clinvar_variant_annotation[2]) == str(clinvar_variation_id) == str(1019397)
+    assert clinvar_variant_annotation[3] == 'Uncertain_significance'
+    assert clinvar_variant_annotation[4] == 'criteria_provided,_single_submitter'
+
+
+    clinvar_submissions = conn.get_clinvar_submissions(clinvar_variant_annotation[0])
+
+    print(clinvar_submissions)
+
+    assert len(clinvar_submissions) == 1
+
 
 
     # cleanup

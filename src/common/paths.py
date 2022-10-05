@@ -86,7 +86,7 @@ elif webapp_env == 'localtest':
     
     #metadata
     gnomad_path = datadir + "gnomAD.vcf.gz"
-    gnomad_m_path  = datadir + "gnomA_mito.vcf.gz"
+    gnomad_m_path  = datadir + "gnomAD_mito.vcf.gz"
     phylop_file_path = datadir + "phyloP.bw"
     dbsnp_path = datadir + "dbSNP.vcf.gz"
     revel_path = datadir + "revel.vcf.gz"
@@ -122,7 +122,7 @@ elif webapp_env == 'githubtest':
     
     #metadata
     gnomad_path = datadir + "gnomAD.vcf.gz"
-    gnomad_m_path  = datadir + "gnomA_mito.vcf.gz"
+    gnomad_m_path  = datadir + "gnomAD_mito.vcf.gz"
     phylop_file_path = datadir + "phyloP.bw"
     dbsnp_path = datadir + "dbSNP.vcf.gz"
     revel_path = datadir + "revel.vcf.gz"

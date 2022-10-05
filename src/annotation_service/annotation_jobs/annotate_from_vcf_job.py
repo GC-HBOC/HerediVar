@@ -30,13 +30,6 @@ class annotate_from_vcf_job(Job):
         config_file_path = self.write_vcf_annoate_config(one_variant = kwargs['one_variant'])
         vcf_annotate_code, vcf_annotate_stderr, vcf_annotate_stdout = self.annotate_from_vcf(config_file_path, inpath, annotated_inpath)
 
-        returncode, err_msg, vcf_errors = functions.execute_command(["ls", "-l", "/tmp"], "ls")
-        print(returncode)
-        print(err_msg)
-        print(vcf_errors)
-        returncode, err, out = functions.execute_command(["cat", "/tmp/1114_annotated.vcf"], "cat")
-        print(out)
-
 
         self.handle_result(inpath, annotated_inpath, vcf_annotate_code)
         return vcf_annotate_code, vcf_annotate_stderr, vcf_annotate_stdout
@@ -124,23 +117,10 @@ class annotate_from_vcf_job(Job):
 
         returncode, err_msg, vcf_errors = functions.execute_command(command, 'VcfAnnotateFromVcf')
 
-        #if os.environ.get('WEBAPP_ENV') == 'githubtest':
-        #    returncode, err_msg, command_output = execute_command(["docker", "exec", os.environ.get("NGSBITS_CONTAINER_ID"), "chmod", "777", path], "chmod")
-        #    print(returncode)
-        #    print(err_msg)
         if os.environ.get('WEBAPP_ENV') == 'githubtest':
             functions.execute_command(["chmod", "777", output_vcf], "chmod")
         return returncode, err_msg, vcf_errors
 
-
-
-
-        #command = [paths.ngs_bits_path + "VcfAnnotateFromVcf",
-        #           "-config_file", config_file_path, "-in", input_vcf, "-out", output_vcf]
-
-        #returncode, stderr, stdout = functions.execute_command(command, process_name = "VcfAnnotateFromVcf")
-
-        #return returncode, stderr, stdout
 
     
     def write_vcf_annoate_config(self, one_variant):
