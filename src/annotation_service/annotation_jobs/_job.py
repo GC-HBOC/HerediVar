@@ -46,7 +46,7 @@ class Job(metaclass=abc.ABCMeta):
     
     def update_output(self, not_annotated_file_path, annotated_file_path, error_code):
         if error_code == 0: # execution worked and we want to keep the info
-            returncode, err, out = functions.execute_command(["mv", not_annotated_file_path, annotated_file_path], "mv")
+            returncode, err, out = functions.execute_command(["mv", annotated_file_path, not_annotated_file_path], "mv")
             print(err)
             print(out)
             #os.replace(annotated_file_path, not_annotated_file_path)
