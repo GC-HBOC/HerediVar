@@ -90,7 +90,7 @@ jobs:
       - name: start ngs-bits container
         run: |
           docker images
-          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar/src/annotation_service/tests/data/testdbs:/data -it 881f65da80a2  /bin/bash > ngs-bits-container.txt
+          docker run -d -v /home/runner/work/HerediVar/HerediVar/src/annotation_service/tests/data/testdbs:/data -v /tmp:/tmp -it 881f65da80a2  /bin/bash > ngs-bits-container.txt
           docker ps -a
 
       - name: test ngs-bits
