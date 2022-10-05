@@ -135,7 +135,7 @@ class Connection:
             pfam_description = self.cursor.fetchone()
             if pfam_description is None:
                 command = "SELECT old_accession_id,new_accession_id FROM pfam_legacy WHERE old_accession_id = %s"
-                self.cursor.execute(command, (pfam_acc))
+                self.cursor.execute(command, (pfam_acc, ))
                 pfam_description = self.cursor.fetchone()
                 if pfam_description is not None:
                     if pfam_description[1] == 'removed':

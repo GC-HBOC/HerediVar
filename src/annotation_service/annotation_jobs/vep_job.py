@@ -45,7 +45,6 @@ class vep_job(Job):
             csq_info = functions.find_between(info, "CSQ=", '(;|$)')
             consequence_source = "ensembl"
         
-        print(csq_info)
         if csq_info == '' or csq_info is None:
             return
 
@@ -53,7 +52,6 @@ class vep_job(Job):
         transcript_independent_saved = False
         pmids = ''
         for vep_entry in vep_entries:
-            print(vep_entry)
             #10MaxEntScan_ref,11MaxEntScan_alt
             vep_entry = vep_entry.split('|')
             exon_nr = vep_entry[5]

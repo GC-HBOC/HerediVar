@@ -110,7 +110,7 @@ class annotate_from_vcf_job(Job):
         command = [paths.ngs_bits_path + "VcfAnnotateFromVcf",
                    "-config_file", config_file_path, "-in", input_vcf, "-out", output_vcf]
 
-        returncode, stderr, stdout = functions.execute_command(command, process_name = "hexplorer")
+        returncode, stderr, stdout = functions.execute_command(command, process_name = "VcfAnnotateFromVcf")
 
         return returncode, stderr, stdout
 

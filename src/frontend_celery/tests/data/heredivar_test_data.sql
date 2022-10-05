@@ -163,8 +163,10 @@ INSERT INTO `gene` VALUES
 	(42061,37116,'ZAR1L','zygote arrest 1 like','protein-coding gene',NULL,NULL),
 	(11973,28242,'HPDL','4-hydroxyphenylpyruvate dioxygenase like','protein-coding gene',618994,30681),
 	(21541,7527,'MUTYH','mutY DNA glycosylase','protein-coding gene',604933,16490),
-	(13764, 16636, 'KIF1B', 'kinesin family member 1B', 'protein-coding gene', 605995, 16304),
-	(28804, 46747, 'RN7SL731P', 'RNA, 7SL, cytoplasmic 731, pseudogene', 'pseudogene',NULL,NULL),
+	(13764, 16636,'KIF1B','kinesin family member 1B','protein-coding gene',605995,16304),
+	(28804, 46747,'RN7SL731P','RNA, 7SL, cytoplasmic 731, pseudogene','pseudogene',NULL,NULL),
+	(4183,1817,'CEACAM5','CEA cell adhesion molecule 5','protein-coding gene',114890,NULL),
+	(1817,795,'ATM','ATM serine/threonine kinase','protein-coding gene',607585,15962),
 	(38963,11998,'TP53','tumor protein p53','protein-coding gene',191170,15644);
 UNLOCK TABLES;
 
@@ -197,6 +199,8 @@ INSERT INTO `variant` VALUES
 	(71,'chr17',43124032,'AAGATTTTCTGCAT','A',0,'ARUP BRCA classification example','chr17',43124032,'AAGATTTTCTGCAT','A'),
 	(72,'chr17',7670685,'G','A',0,'dummy TP53 variant','chr17',7670685,'G','A'),
 	(130,'chr1',45331755,'G','A',0,'variant with two mane select transcripts in consequences','chr1',45331755,'G','A'),
+	(146,'chr11',108229267,'A','C',0,NULL,'chr11',108229267,'A','C'),
+	(32,'chr13',32362509,'T','C',0,NULL,'chr1',32362509,'T','C'),
 	(139,'chr1',10304277,'T','C',0,NULL,'chr1',10364335,'T','C');
 UNLOCK TABLES;
 
@@ -224,9 +228,20 @@ LOCK TABLES `pfam_id_mapping` WRITE;
 INSERT INTO `pfam_id_mapping` VALUES 
 	(1711,'PF00028','Cadherin domain'),
 	(9095,'PF00498','FHA domain'),
+	(17449,'PF11640','Telomere-length maintenance and DNA damage repair'),
+	(16,'PF20150','2EXR family'),
 	(13575,'PF07710','P53 tetramerisation motif');
 UNLOCK TABLES;
 
+
+--
+-- Dumping data for table `pfam_legacy`
+--
+
+LOCK TABLES `pfam_legacy` WRITE;
+INSERT INTO `pfam_legacy` VALUES 
+	(1,'PF11641','PF20150');
+UNLOCK TABLES;
 
 
 --
