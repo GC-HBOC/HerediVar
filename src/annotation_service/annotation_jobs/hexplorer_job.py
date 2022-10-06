@@ -52,7 +52,7 @@ class hexplorer_job(Job):
             command = [paths.ngs_bits_path + "VcfAnnotateHexplorer"]
         command.extend(["-in", input_vcf_path, "-out", output_vcf_path, "-ref", paths.ref_genome_path])
 
-        returncode, stderr, stdout = functions.execute_command(command, 'VcfAnnotateFromVcf')
+        returncode, stderr, stdout = functions.execute_command(command, 'VcfAnnotateHexplorer')
 
         return returncode, stderr, stdout
 
