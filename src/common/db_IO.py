@@ -833,7 +833,14 @@ class Connection:
             return None
         for i in range(len(result)):
             processed_entry = list(result[i])
-            processed_entry[5] = processed_entry[5].split(':')
+            submission_condition = processed_entry[5].split(':')
+            
+            if len(submission_condition) == 1:
+                submission_condition.append("missing")
+            elif len(submission_condition) > 2:
+                functions.eprint("WARNING: the clinvar submission condition: " + str(submission_condition) + " has more than two entries. Although it should only have 2: id and description. Will be neglecting everything after the first two entries.")
+                submission_condition = submission_condition[0:2]
+            processed_entry[5] = submission_condition
             result[i] = processed_entry
         
         #result = sorted(result, key=lambda x: x[3] or datetime.date(datetime.MINYEAR,1,1), reverse=True) # sort table by last evaluated date
