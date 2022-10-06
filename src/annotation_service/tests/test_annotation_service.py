@@ -545,7 +545,7 @@ def test_clinvar_annotation():
     conn = Connection()
     clinvar_variant_annotation = conn.get_clinvar_variant_annotation(variant_id)
     clinvar_variation_id = clinvar_variant_annotation[2]
-    print(clinvar_variant_annotation)
+    print("Clinvar variant annotation: " + str(clinvar_variant_annotation))
 
     assert clinvar_variant_annotation is not None
     assert clinvar_variant_annotation[1] == variant_id
@@ -556,7 +556,7 @@ def test_clinvar_annotation():
 
     clinvar_submissions = conn.get_clinvar_submissions(clinvar_variant_annotation[0])
 
-    print(clinvar_submissions)
+    print("Clinvar submissions: " + str(clinvar_submissions))
 
     assert len(clinvar_submissions) == 1
 
@@ -564,3 +564,123 @@ def test_clinvar_annotation():
 
     # cleanup
     conn.close()
+
+
+
+def test_task_force_protein_domain_annotation():
+    """
+    This tests that the task force protein domains stored correctly
+    """
+
+    # setup
+    user_id = 3
+    variant_id = 32
+    job_config = get_empty_job_config()
+    job_config['do_task_force_protein_domains'] = True
+    conn = Connection()
+
+    # insert annotation request
+    conn.insert_annotation_request(variant_id, user_id)
+    annotation_queue_id = conn.get_last_insert_id()
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    conn = Connection()
+    protein_domains = conn.get_variant_annotation(variant_id, 36)
+    assert len(protein_domains) == 1
+    assert protein_domains[0][3].strip() == "C-terminal RAD51 binding domain (inkl. NLS1 und BRC-)"
+
+    protein_domains_sources = conn.get_variant_annotation(variant_id, 37)
+    assert len(protein_domains_sources) == 1
+    assert protein_domains_sources[0][3] == "BWRL/ENIGMA"
+
+
+
+    # cleanup
+    conn.close()
+
+
+
+def test_hexplorer_annotation():
+    """
+    This tests that the hexplorer tool is run correctly and that annotations are stored
+    """
+
+    # setup
+    user_id = 3
+    variant_id = 32
+    job_config = get_empty_job_config()
+    job_config['do_hexplorer'] = True
+    conn = Connection()
+
+    # insert annotation request
+    #chr1-45332791-C-T
+    annotation_queue_id = conn.insert_variant(chr='chr1', pos=45332791, ref='C', alt='T', orig_chr='chr1', orig_pos=45332791, orig_ref='C', orig_alt='T', user_id=user_id)
+    variant_id = conn.get_annotation_queue_entry(annotation_queue_id)[1]
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    conn = Connection()
+    res = conn.get_variant_annotation(variant_id, 39)
+    assert len(res) == 1
+    assert res[0][3] == "-1.72"
+
+    res = conn.get_variant_annotation(variant_id, 41)
+    assert len(res) == 1
+    assert res[0][3] == "7.48"
+
+    res = conn.get_variant_annotation(variant_id, 40)
+    assert len(res) == 1
+    assert res[0][3] == "5.75"
+
+    res = conn.get_variant_annotation(variant_id, 42)
+    assert len(res) == 1
+    assert res[0][3] == "1.77"
+    
+    res = conn.get_variant_annotation(variant_id, 44)
+    assert len(res) == 1
+    assert res[0][3] == "4.80"
+
+    res = conn.get_variant_annotation(variant_id, 43)
+    assert len(res) == 1
+    assert res[0][3] == "6.57"
+
+    res = conn.get_variant_annotation(variant_id, 45)
+    assert len(res) == 1
+    assert res[0][3] == "8.30"
+
+    res = conn.get_variant_annotation(variant_id, 47)
+    assert len(res) == 0
+
+    res = conn.get_variant_annotation(variant_id, 46)
+    assert len(res) == 1
+    assert res[0][3] == "8.30"
+
+    res = conn.get_variant_annotation(variant_id, 48)
+    assert len(res) == 1
+    assert res[0][3] == "0.60"
+
+    res = conn.get_variant_annotation(variant_id, 50)
+    assert len(res) == 1
+    assert res[0][3] == "4.50"
+
+    res = conn.get_variant_annotation(variant_id, 49)
+    assert len(res) == 1
+    assert res[0][3] == "5.10"
+
+
+    # cleanup
+    conn.close()
+    
