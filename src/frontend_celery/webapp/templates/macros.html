@@ -368,3 +368,96 @@
     </div>
 </div>
 {% endmacro %}
+
+
+{% macro external_link(display_text, url) %}
+{% set words = display_text.split(' ') %}
+{% set first_words = ' '.join(words[0:-1]) %}
+{% set last_word = words[-1] %}
+<a class="external_link" href="{{url}}">{{ first_words }} <nobr>{{ last_word }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+    <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+    <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+</svg><nobr>
+</a>
+
+</script>
+
+{% endmacro %}
+
+
+{% macro google_link(display_text, rsid = none, hgvs_c = none, hgvs_p = none, gene_name = none, is_scholar = False) %}
+
+{% if is_scholar %}
+    {% set link = "https://scholar.google.de/scholar?q=" %}
+{% else %}
+    {% set link = "https://www.google.com/search?q=" %}
+{% endif%}
+
+{% if gene_name is not none %}
+    {% set link = link + gene_name %}
+{% endif %}
+
+{% set stuff_for_braces = [] %}
+
+{% if hgvs_c is not none %}
+    {% set cdotcrop = hgvs_c.split('.')[-1] %}
+    {% set stuff_for_braces = stuff_for_braces + ["%22" + cdotcrop|replace(">", "%3E") + "%22"] %}
+    {% set stuff_for_braces = stuff_for_braces + ["%22" + cdotcrop|replace(">", "-%3E") + "%22"] %}
+    {% set stuff_for_braces = stuff_for_braces + ["%22" + cdotcrop|replace(">", "--%3E") + "%22"] %}
+    {% set stuff_for_braces = stuff_for_braces + ["%22" + cdotcrop|replace(">", "/") + "%22"] %}
+{% endif %}
+
+{% if hgvs_p is not none %}
+    {% set pdotcrop = hgvs_p.split('.')[-1] %}
+    {% set stuff_for_braces = stuff_for_braces + ["%22" + pdotcrop|replace(">", "%3E") + "%22"] %}
+    {% set stuff_for_braces = 
+        stuff_for_braces + ["%22" + 
+            pdotcrop|lower|replace("ala", "A") |
+            replace("arg", "R") |
+            replace("asn", "N") |
+            replace("asp", "D") |
+            replace("asx", "B") |
+            replace("cys", "C") |
+            replace("glu", "E") |
+            replace("gln", "Q") |
+            replace("glx", "Z") |
+            replace("gly", "G") |
+            replace("his", "H") |
+            replace("ile", "I") |
+            replace("leu", "L") |
+            replace("lys", "K") |
+            replace("met", "M") |
+            replace("phe", "F") |
+            replace("pro", "P") |
+            replace("ser", "S") |
+            replace("thr", "T") |
+            replace("trp", "W") |
+            replace("tyr", "Y") |
+            replace("val", "V")
+        + "%22" |replace(">", "%3E")] 
+    
+    %}
+{% endif %}
+
+{% if rsid is not none %}
+    {% set stuff_for_braces = stuff_for_braces + ["%22" + "rs" + rsid|string + "%22"] %}
+{% endif %}
+
+
+{% if stuff_for_braces | length > 0 %}
+    {% if gene_name != "" %}
+        {% set link = link + "+AND+(" %}
+    {% endif %}
+    {% set link = link + "+OR+".join(stuff_for_braces) %}
+    {% set link = link + ")" %}
+{% endif %}
+
+{{ external_link( display_text, link) }}
+
+
+</script>
+
+
+</script>
+
+{% endmacro %}

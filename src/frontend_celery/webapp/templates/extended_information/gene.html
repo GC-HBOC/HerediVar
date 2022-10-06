@@ -11,7 +11,10 @@
 <div style="width:40%">
     <div class="row align-items-start">
         <div class="col li-label"><abbr title="someinfo">HGNC-ID</abbr></div>
-        <div class="col li-info"><external-link href="https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:{{ gene_info[1] }}">{{ gene_info[1] }}</external-link></div>
+        
+        <div class="col li-info">
+            {{ macros.external_link(gene_info[1]|string, "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:" + gene_info[1]|string) }}
+        </div>
     </div>
     <div class="row align-items-start">
         <div class="col li-label"><abbr title="someinfo">Gene symbol</abbr></div>
@@ -29,16 +32,16 @@
         <div class="col li-label">Links</div>
         <div class="col li-info">
             <div class="li-element ssr">
-                <external-link href="https://www.cbioportal.org/results/mutations?case_set_id=all&gene_list={{ gene_info[2] }}&cancer_study_list=5c8a7d55e4b046111fee2296">cBioPortal</external-link>
+                {{ macros.external_link("cBioPortal", "https://www.cbioportal.org/results/mutations?case_set_id=all&gene_list=" + gene_info[2]|string + "&cancer_study_list=5c8a7d55e4b046111fee2296") }}
             </div>
             {% if gene_info[5] is not none %}
             <div class="li-element ssr">
-                <external-link href="https://www.omim.org/entry/{{ gene_info[5] }}">OMIM</external-link>
+                {{ macros.external_link("OMIM", "https://www.omim.org/entry/" + gene_info[5]|string) }}
             </div>
             {% endif %}
             {% if gene_info[6] is not none %}
             <div class="li-element ssr">
-                <external-link href="https://www.orpha.net/consor/cgi-bin/Disease_Genes.php?lng=DE&data_id={{ gene_info[6] }}">OrphaNet</external-link>
+                {{ macros.external_link("OrphaNet", "https://www.orpha.net/consor/cgi-bin/Disease_Genes.php?lng=DE&data_id=" + gene_info[6]|string) }}
             </div>
             {% endif %}
         </div>
