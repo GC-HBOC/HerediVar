@@ -97,10 +97,12 @@ jobs:
           sudo make
           export PATH="$PATH:/usr/bin/htslib-1.16"
           source ~/.profile
+          echo $PATH
       
       - name: test htslib
         run: |
           echo $PATH
+          /usr/bin/htslib-1.16/tabix -h
           tabix -h
 
 
