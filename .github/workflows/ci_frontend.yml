@@ -95,8 +95,7 @@ jobs:
           sudo tar -vxjf htslib-1.16.tar.bz2
           cd htslib-1.16
           sudo make
-          export PATH="$PATH:/usr/bin/htslib-1.16"
-          source ~/.profile
+          echo "/usr/bin/htslib-1.16" >> $GITHUB_PATH
           echo $PATH
       
       - name: test htslib
