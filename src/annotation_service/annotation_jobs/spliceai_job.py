@@ -97,6 +97,8 @@ class spliceai_job(Job):
         print("vcfsort:")
         print(stderr)
         print(stdout)
+        if returncode != 0:
+            return returncode, stderr, stdout
         #functions.execute_command([paths.ngs_bits_path + "VcfSort", "-in", input_vcf_path, "-out", input_vcf_path], 'vcfsort')
 
 
@@ -104,10 +106,14 @@ class spliceai_job(Job):
         print("bgzip:")
         print(stderr)
         print(stdout)
+        if returncode != 0:
+            return returncode, stderr, stdout
         returncode, stderr, stdout = functions.execute_command(['tabix', "-f", "-p", "vcf", input_vcf_zipped_path], 'tabix')
         print("tabix:")
         print(stderr)
         print(stdout)
+        if returncode != 0:
+            return returncode, stderr, stdout
 
         # execute spliceai
         command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path, '-A', paths.ref_genome_name.lower()]
