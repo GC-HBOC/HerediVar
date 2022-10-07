@@ -91,10 +91,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev
           cd /usr/bin
-          wget https://github.com/samtools/htslib/releases/download/1.16/htslib-1.16.tar.bz2
+          sudo wget https://github.com/samtools/htslib/releases/download/1.16/htslib-1.16.tar.bz2
           sudo tar -vxjf htslib-1.16.tar.bz2
           cd htslib-1.16
-          make
+          sudo make
           export PATH="$PATH:/usr/bin/htslib-1.16"
           source ~/.profile
       

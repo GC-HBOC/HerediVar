@@ -3,9 +3,9 @@ name: "Code Scanning - Action"
 
 on:
   push:
-    branches: [main]
+    branches: [never]
   pull_request:
-    branches: [main]
+    branches: [never]
 #  schedule:
 #    - cron: '30 1 * * 0'
 
