@@ -93,12 +93,21 @@ class spliceai_job(Job):
         else: # use local installation
             command = [paths.ngs_bits_path + "VcfSort"]
         command.extend(["-in", input_vcf_path, "-out", input_vcf_path])
-        functions.execute_command(command, 'VcfSort')
+        returncode, stderr, stdout = functions.execute_command(command, 'VcfSort')
+        print("vcfsort:")
+        print(stderr)
+        print(stdout)
         #functions.execute_command([paths.ngs_bits_path + "VcfSort", "-in", input_vcf_path, "-out", input_vcf_path], 'vcfsort')
 
 
-        functions.execute_command(['bgzip', '-f', input_vcf_path], 'bgzip')
-        functions.execute_command(['tabix', "-f", "-p", "vcf", input_vcf_zipped_path], 'tabix')
+        returncode, stderr, stdout = functions.execute_command(['bgzip', '-f', input_vcf_path], 'bgzip')
+        print("bgzip:")
+        print(stderr)
+        print(stdout)
+        returncode, stderr, stdout = functions.execute_command(['tabix', "-f", "-p", "vcf", input_vcf_zipped_path], 'tabix')
+        print("tabix:")
+        print(stderr)
+        print(stdout)
 
         # execute spliceai
         command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path, '-A', paths.ref_genome_name.lower()]
