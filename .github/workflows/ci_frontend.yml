@@ -82,13 +82,22 @@ jobs:
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
 
+      - uses: actions/cache@v2 # cache the python environment to speed up tests
+        with:
+          path: GRCh38.fa
+          key: GRCh38
       - name: download grch38
-        run: |
-          wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
-          (gunzip -c GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz |  sed -r 's/>chrM/>chrMT/g' > GRCh38.fa) || true
-          rm GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
-          ls -l
-          pwd
+        run: |  
+          if [ -f GRCh38.fa ]; then
+             echo "Genome was restored from cache."
+          else
+            wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
+            (gunzip -c GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz |  sed -r 's/>chrM/>chrMT/g' > GRCh38.fa) || true
+            rm GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
+            ls -l
+            pwd
+          fi
+
 
       - name: test annotation service
         run: |
