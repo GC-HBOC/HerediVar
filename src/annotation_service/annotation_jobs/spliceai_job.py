@@ -74,9 +74,9 @@ class spliceai_job(Job):
             returncode, stderr, stdout = functions.execute_command(['chmod', '777', temp_path], 'chmod')
             if returncode != 0:
                 errors.append(stderr)
-            returncode, stderr, stdout = functions.execute_command(["ls", "-l", "/tmp"])
+            returncode, stderr, stdout = functions.execute_command(["ls", "-l", "/tmp"], "ls")
             print(stdout)
-            returncode, stderr, stdout = functions.execute_command(["cat", temp_path])
+            returncode, stderr, stdout = functions.execute_command(["cat", temp_path], "cat")
             print(stdout)
             spliceai_code, spliceai_stderr, splicai_stdout = self.annotate_spliceai_algorithm(temp_path, output_vcf_path)
             errors.append(spliceai_stderr)
