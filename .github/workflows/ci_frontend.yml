@@ -99,7 +99,9 @@ jobs:
           source ~/.profile
       
       - name: test htslib
-        run: tabix -h
+        run: |
+          echo $PATH
+          tabix -h
 
 
 
