@@ -68,7 +68,12 @@ class spliceai_job(Job):
         if not found_spliceai_header:
             errors.append("SpliceAI WARNING: did not find a SpliceAI INFO entry in input vcf, did you annotate the file using a precomputed file before?")
         if need_annotation:
-            functions.execute_command(['sed', '-i', '/SpliceAI/d', temp_path], "sed")
+            returncode, stderr, stdout = functions.execute_command(['sed', '-i', '/SpliceAI/d', temp_path], "sed")
+            if returncode != 0:
+                errors.append(stderr)
+            returncode, stderr, stdout = functions.execute_command(['chmod', '777', temp_path], 'chmod')
+            if returncode != 0:
+                errors.append(stderr)
             spliceai_code, spliceai_stderr, splicai_stdout = self.annotate_spliceai_algorithm(temp_path, output_vcf_path)
             errors.append(spliceai_stderr)
 
@@ -94,24 +99,15 @@ class spliceai_job(Job):
             command = [paths.ngs_bits_path + "VcfSort"]
         command.extend(["-in", input_vcf_path, "-out", input_vcf_path])
         returncode, stderr, stdout = functions.execute_command(command, 'VcfSort')
-        print("vcfsort:")
-        print(stderr)
-        print(stdout)
         if returncode != 0:
             return returncode, stderr, stdout
         #functions.execute_command([paths.ngs_bits_path + "VcfSort", "-in", input_vcf_path, "-out", input_vcf_path], 'vcfsort')
 
 
         returncode, stderr, stdout = functions.execute_command(['bgzip', '-f', input_vcf_path], 'bgzip')
-        print("bgzip:")
-        print(stderr)
-        print(stdout)
         if returncode != 0:
             return returncode, stderr, stdout
         returncode, stderr, stdout = functions.execute_command(['tabix', "-f", "-p", "vcf", input_vcf_zipped_path], 'tabix')
-        print("tabix:")
-        print(stderr)
-        print(stdout)
         if returncode != 0:
             return returncode, stderr, stdout
 
