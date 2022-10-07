@@ -137,7 +137,9 @@ jobs:
       #    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: tets
-        run: ls -l /opt/hostedtoolcache/Python/3.6.9/x64/bin
+        run: |
+          ls -l /opt/hostedtoolcache/Python/3.6.9/x64/bin/spliceai
+
 
 
 
