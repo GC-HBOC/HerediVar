@@ -759,9 +759,11 @@ def test_submit_assay(test_client):
     all_assays = conn.get_assays(variant_id)
     assert len(all_assays) == 1
 
-    assay = conn.get_assay_report(all_assays[0][0])
-    functions.base64_to_file(assay[0], path = test_data_dir + '/test_assay_downloaded.pdf')
-    assert open(test_data_dir + "/test_assay_downloaded.pdf", "rb").read() == open(test_data_dir + "/test_assay.pdf", "rb").read()
+    b_64_assay = conn.get_assay_report(all_assays[0][0])[0]
+    #functions.base64_to_file(assay[0], path = test_data_dir + '/test_assay_downloaded.pdf')
+    b_64_assay_test = functions.get_base64_encoding(test_data_dir + "/test_assay.pdf")
+    #assert open(test_data_dir + "/test_assay_downloaded.pdf", "rb").read() == open(test_data_dir + "/test_assay.pdf", "rb").read()
+    b_64_assay == b_64_assay_test
     conn.close()
 
     

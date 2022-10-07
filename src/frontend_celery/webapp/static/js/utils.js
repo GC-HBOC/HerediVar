@@ -265,11 +265,19 @@ var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
 
 // use this to escape special chars when using tojson jinja filter
 function escape_special_chars(input_string) {
-    return input_string.replace(/\n/g, "\\n")
-               .replace(/\'/g, "\\'")
-               .replace(/\r/g, "\\r")
-               .replace(/\t/g, "\\t")
-               .replace(/\f/g, "\\f");
+    const result =  input_string
+                .replace(/\\/g, "\\\\")           
+                .replace(/\n/g, "\\n")
+                .replace(/\'/g, "\\'")
+                .replace(/\r/g, "\\r")
+                .replace(/\t/g, "\\t")
+                .replace(/\f/g, "\\f");
+    // the best built in approach to do this is:
+    //console.log(JSON.stringify(input_string))
+    // but this also escapes double quotes which destroys the data
+    // removing them does not work either because double quotes would be deleted in the actual
+    // data as well
+    return result
 };
 
 
