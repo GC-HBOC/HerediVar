@@ -96,15 +96,15 @@ class spliceai_job(Job):
         input_vcf_zipped_path = input_vcf_path + ".gz"
         
 
-        if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
-            command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
-            command.append("VcfSort")
-        else: # use local installation
-            command = [paths.ngs_bits_path + "VcfSort"]
-        command.extend(["-in", input_vcf_path, "-out", input_vcf_path])
-        returncode, stderr, stdout = functions.execute_command(command, 'VcfSort')
-        if returncode != 0:
-            return returncode, stderr, stdout
+        #if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
+        #    command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
+        #    command.append("VcfSort")
+        #else: # use local installation
+        #    command = [paths.ngs_bits_path + "VcfSort"]
+        #command.extend(["-in", input_vcf_path, "-out", input_vcf_path])
+        #returncode, stderr, stdout = functions.execute_command(command, 'VcfSort')
+        #if returncode != 0:
+        #    return returncode, stderr, stdout
         #functions.execute_command([paths.ngs_bits_path + "VcfSort", "-in", input_vcf_path, "-out", input_vcf_path], 'vcfsort')
 
 
