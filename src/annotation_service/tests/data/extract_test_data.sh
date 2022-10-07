@@ -91,3 +91,10 @@ zcat $datadir/ClinVar/submission_summary_preprocessed.txt.gz | grep "^1019397" >
 #1019397	Uncertain significance	Jul 03, 2020	This sequence change replaces glycine with glutamic acid at codon 4 of the SAMD11 protein (p.Gly4Glu). The glycine residue is weakly conserved and there is a moderate physicochemical difference between glycine and glutamic acid. This variant is not present in population databases (ExAC no frequency). This variant has not been reported in the literature in individuals with SAMD11-related conditions. Algorithms developed to predict the effect of missense changes on protein structure and function are either unavailable or do not agree on the potential impact of this missense change (SIFT: Deleterious; PolyPhen-2: Probably Damaging; Align-GVGD: Class C0). In summary, the available evidence is currently insufficient to determine the role of this variant in disease. Therefore, it has been classified as a Variant of Uncertain Significance.	MedGen:CN517202	CN517202:not provided	criteria provided, single submitter	clinical testing	germline:na	Invitae	SCV001509541.1	SAMD11	-
 bgzip -f $testdatadir/ClinVar.txt
 
+# get spliceai
+zcat $datadir/SpliceAI/spliceai_scores_2022_02_09_GRCh38.vcf.gz | head -n 100 > $testdatadir/SpliceAI.vcf
+#chr1	69092	.	T	C	.	.	SpliceAI=C|OR4F5|0.01|0.00|0.09|0.01|41|42|1|23
+bgzip -f $testdatadir/SpliceAI.vcf
+tabix -fp vcf $testdatadir/SpliceAI.vcf.gz
+
+

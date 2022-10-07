@@ -96,12 +96,7 @@ jobs:
           cd htslib-1.16
           sudo make
           echo "/usr/bin/htslib-1.16" >> $GITHUB_PATH
-          echo $PATH
       
-      - name: test htslib
-        run: |
-          echo $PATH
-          tabix -h
 
 
 

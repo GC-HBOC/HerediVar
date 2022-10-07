@@ -85,7 +85,18 @@ class spliceai_job(Job):
     def annotate_spliceai_algorithm(self, input_vcf_path, output_vcf_path):
         # prepare input data
         input_vcf_zipped_path = input_vcf_path + ".gz"
-        functions.execute_command([paths.ngs_bits_path + "VcfSort", "-in", input_vcf_path, "-out", input_vcf_path], 'vcfsort')
+        
+
+        if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
+            command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
+            command.append("VcfSort")
+        else: # use local installation
+            command = [paths.ngs_bits_path + "VcfSort"]
+        command.extend(["-in", input_vcf_path, "-out", input_vcf_path])
+        functions.execute_command(command, 'VcfSort')
+        #functions.execute_command([paths.ngs_bits_path + "VcfSort", "-in", input_vcf_path, "-out", input_vcf_path], 'vcfsort')
+
+
         functions.execute_command(['bgzip', '-f', input_vcf_path], 'bgzip')
         functions.execute_command(['tabix', "-f", "-p", "vcf", input_vcf_zipped_path], 'tabix')
 

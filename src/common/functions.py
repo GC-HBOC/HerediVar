@@ -158,6 +158,8 @@ def execute_command(command, process_name, use_prefix_error_log = True):
         err_msg = err_msg + std_err
     return completed_process.returncode, err_msg, command_output
 
+
+
 def get_docker_instructions(container_id):
     return ["docker", "exec", container_id]
 
