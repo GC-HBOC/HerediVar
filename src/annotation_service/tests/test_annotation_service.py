@@ -685,6 +685,69 @@ def test_task_force_protein_domain_annotation():
 #    conn.close()
 
 
+def test_spliceai_annotation():
+    """
+    This tests that the hexplorer tool is run correctly and that annotations are stored
+    """
+
+    # setup
+    user_id = 3
+    variant_id = 32
+    job_config = get_empty_job_config()
+    job_config['do_spliceai'] = True
+    conn = Connection()
+
+    # test variant where the annotation was read from the preannotated file
+    # insert annotation request
+    #chr1	69092	.	T	C	.	.	SpliceAI=C|OR4F5|0.01|0.00|0.09|0.01|41|42|1|23
+    annotation_queue_id = conn.insert_variant(chr='chr1', pos=69092, ref='T', alt='C', orig_chr='chr1', orig_pos=69092, orig_ref='T', orig_alt='C', user_id=user_id)
+    variant_id = conn.get_annotation_queue_entry(annotation_queue_id)[1]
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    conn = Connection()
+    res = conn.get_variant_annotation(variant_id, 7)
+    assert len(res) == 1
+    assert res[0][3] == "OR4F5|0.01|0.00|0.09|0.01|41|42|1|23"
+
+    res = conn.get_variant_annotation(variant_id, 8)
+    assert len(res) == 1
+    assert res[0][3] == "0.09"
+
+    # cleanup
+    conn.close()
+
+    # test running spliceai
+    conn = Connection()
+    #164	chr14	39335204	A	G	0		chr14	39335204	A	G
+    annotation_queue_id = conn.insert_variant(chr='chr14', pos=39335204, ref='A', alt='G', orig_chr='chr14', orig_pos=39335204, orig_ref='A', orig_alt='G', user_id=user_id)
+    variant_id = conn.get_annotation_queue_entry(annotation_queue_id)[1]
+
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == "success"
+    conn.close()
+
+    conn = Connection()
+    res = conn.get_variant_annotation(variant_id, 7)
+    assert len(res) == 1
+    assert res[0][3] == "RP11-407N17.3|0.00|0.00|0.00|0.00|-38|14|-1|-44,CTAGE5|0.00|0.00|0.00|0.00|-38|14|-1|-44"
+
+    res = conn.get_variant_annotation(variant_id, 8)
+    assert len(res) == 1
+    assert res[0][3] == "0.0,0.0"
+
+    conn.close()
+
+
+
+
 def test_phylop():
     """
     This tests that the phylop annotation works properly
@@ -717,5 +780,3 @@ def test_phylop():
 
     # cleanup
     conn.close()
-    
-
