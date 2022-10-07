@@ -28,7 +28,7 @@ variant_io_blueprint = Blueprint(
 def import_summary(year, month, day, hour, minute, second):
     logs_folder = path.join(path.dirname(current_app.root_path), current_app.config['LOGS_FOLDER'])
     requested_at = '-'.join([year, month, day, hour, minute, second])
-    log_file = 'heredicare_import:' + requested_at + '.log'
+    log_file = secure_filename('heredicare_import:' + requested_at + '.log')
     try:
         import_log_file = open(path.join(logs_folder, log_file), 'r')
     except:
