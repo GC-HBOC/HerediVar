@@ -138,7 +138,7 @@ def convert_none_infinite(x):
         return x
 
 def execute_command(command, process_name, use_prefix_error_log = True):
-    if os.environ.get("WEBAPP_ENV") == "githubtest":
+    if os.environ.get("WEBAPP_ENV") == "githubtest" and process_name not in ["SpliceAI"]:
         # need to sudo the mv in github actions otherwise it will result in permission denied...
         command.insert(0, "sudo")
 
