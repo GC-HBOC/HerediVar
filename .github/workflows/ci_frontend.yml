@@ -86,6 +86,21 @@ jobs:
       #    vepcontainer=$(cat vep-container.txt)
       #    docker exec $vepcontainer ./vep --help
 
+      - name: install htslib
+        run: |
+          sudo apt-get update
+          sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev
+          cd /usr/bin
+          wget https://github.com/samtools/htslib/releases/download/1.16/htslib-1.16.tar.bz2
+          tar -vxjf htslib-1.16.tar.bz2
+          cd htslib-1.16
+          make
+          export PATH="$PATH:/usr/bin/htslib-1.16"
+          source ~/.profile
+      
+      - name: test htslib
+        run: tabix -h
+
 
 
       - name: install ngs-bits
