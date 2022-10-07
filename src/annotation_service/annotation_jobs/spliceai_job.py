@@ -101,7 +101,7 @@ class spliceai_job(Job):
         functions.execute_command(['tabix', "-f", "-p", "vcf", input_vcf_zipped_path], 'tabix')
 
         # execute spliceai
-        command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path, '-A', paths.ref_genome_name.lower()]
+        command = ['/opt/hostedtoolcache/Python/3.6.9/x64/bin/spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path, '-A', paths.ref_genome_name.lower()]
         returncode, stderr, stdout = functions.execute_command(command, 'SpliceAI')
 
         return returncode, stderr, stdout
