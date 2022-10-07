@@ -76,8 +76,6 @@ class spliceai_job(Job):
                 errors.append(stderr)
             returncode, stderr, stdout = functions.execute_command(["ls", "-l", "/tmp"], "ls")
             print(stdout)
-            returncode, stderr, stdout = functions.execute_command(["cat", temp_path], "cat")
-            print(stdout)
             spliceai_code, spliceai_stderr, splicai_stdout = self.annotate_spliceai_algorithm(temp_path, output_vcf_path)
             errors.append(spliceai_stderr)
 
@@ -116,7 +114,10 @@ class spliceai_job(Job):
             return returncode, stderr, stdout
 
         # execute spliceai
-        command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path, '-A', paths.ref_genome_name.lower()]
+        if os.environ.get('WEBAPP_ENV') == "githubtest":
+            command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path_local, '-A', paths.ref_genome_name.lower()]
+        else:
+            command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path, '-A', paths.ref_genome_name.lower()]
         returncode, stderr, stdout = functions.execute_command(command, 'SpliceAI')
 
         return returncode, stderr, stdout
