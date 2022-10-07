@@ -86,33 +86,7 @@ jobs:
       #    vepcontainer=$(cat vep-container.txt)
       #    docker exec $vepcontainer ./vep --help
 
-      - name: install htslib
-        run: |
-          sudo apt-get update
-          sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev
-          cd /usr/bin
-          sudo wget https://github.com/samtools/htslib/releases/download/1.16/htslib-1.16.tar.bz2
-          sudo tar -vxjf htslib-1.16.tar.bz2
-          cd htslib-1.16
-          sudo make
-          echo "/usr/bin/htslib-1.16" >> $GITHUB_PATH
-      
 
-
-
-      - name: install ngs-bits
-        run: docker pull quay.io/biocontainers/ngs-bits:2022_07--py310hb611552_0
-
-      - name: start ngs-bits container
-        run: |
-          docker images
-          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar/src/annotation_service/tests/data/testdbs:/data -it 881f65da80a2  /bin/bash > ngs-bits-container.txt
-          docker ps -a
-
-      - name: test ngs-bits
-        run: |
-          ngsbitscontainer=$(cat ngs-bits-container.txt)
-          docker exec $ngsbitscontainer ReadQC --help
 
       
       # this step installs ngs-bits though miniconda
@@ -136,17 +110,6 @@ jobs:
       #    $CONDA/bin/conda install ngs-bits
       #    $CONDA/bin/ReadQC --help
 
-
-      - name: Verify MySQL connection from container 
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y mysql-client
-          export MOST_RECENT_DUMP_DATE=$(cat src/tools/database_dumper/most_recent_dump.txt)
-          gunzip src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql.gz
-          mysql --host 0.0.0.0 -uroot -ppassword test_db < src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
-          mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
-          mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
-
       
       # build python
       - name: Set up Python 3.6.9
@@ -165,7 +128,6 @@ jobs:
           python3 -m pip install --upgrade setuptools wheel
           pip install pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          echo $PATH >> $GITHUB_PATH
 
       #- name: Lint with flake8
       #  run: |
@@ -173,6 +135,50 @@ jobs:
       #    flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
       #    # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
       #    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: tets
+        run: ls -l /opt/hostedtoolcache/Python/3.6.9/x64/bin
+
+
+
+      - name: install htslib
+        run: |
+          sudo apt-get update
+          sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev
+          cd /usr/bin
+          sudo wget https://github.com/samtools/htslib/releases/download/1.16/htslib-1.16.tar.bz2
+          sudo tar -vxjf htslib-1.16.tar.bz2
+          cd htslib-1.16
+          sudo make
+          echo "/usr/bin/htslib-1.16" >> $GITHUB_PATH
+
+
+      - name: install ngs-bits
+        run: docker pull quay.io/biocontainers/ngs-bits:2022_07--py310hb611552_0
+
+      - name: start ngs-bits container
+        run: |
+          docker images
+          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar/src/annotation_service/tests/data/testdbs:/data -it 881f65da80a2  /bin/bash > ngs-bits-container.txt
+          docker ps -a
+
+      - name: test ngs-bits
+        run: |
+          ngsbitscontainer=$(cat ngs-bits-container.txt)
+          docker exec $ngsbitscontainer ReadQC --help
+
+
+      - name: Verify MySQL connection from container 
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+          export MOST_RECENT_DUMP_DATE=$(cat src/tools/database_dumper/most_recent_dump.txt)
+          gunzip src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql.gz
+          mysql --host 0.0.0.0 -uroot -ppassword test_db < src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
+          mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
+          mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
+
+
 
 
       
@@ -223,8 +229,5 @@ jobs:
         env:
           WEBAPP_ENV: githubtest
         shell: bash
-
-      
-
 
 
