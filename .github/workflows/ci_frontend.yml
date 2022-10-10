@@ -190,8 +190,8 @@ jobs:
           mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "CREATE DATABASE IF NOT EXISTS ngsd;"
           mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "SHOW DATABASES LIKE 'ngsd';"
           mysql --host 0.0.0.0 -uroot -ppassword --port 3306 ngsd < src/frontend_celery/tests/data/ngsd_test_data.sql
-          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "SHOW TABLES"
-          
+          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "SHOW TABLES FROM ngsd"
+
       
       # build python
       - name: Set up Python 3.6.9
