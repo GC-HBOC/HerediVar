@@ -106,10 +106,10 @@ class spliceai_job(Job):
         #functions.execute_command([paths.ngs_bits_path + "VcfSort", "-in", input_vcf_path, "-out", input_vcf_path], 'vcfsort')
 
 
-        returncode, stderr, stdout = functions.execute_command(['bgzip', '-f', input_vcf_path], 'bgzip')
+        returncode, stderr, stdout = functions.execute_command([paths.htslib_path + 'bgzip', '-f', input_vcf_path], 'bgzip')
         if returncode != 0:
             return returncode, stderr, stdout
-        returncode, stderr, stdout = functions.execute_command(['tabix', "-f", "-p", "vcf", input_vcf_zipped_path], 'tabix')
+        returncode, stderr, stdout = functions.execute_command([paths.htslib_path + 'tabix', "-f", "-p", "vcf", input_vcf_zipped_path], 'tabix')
         if returncode != 0:
             return returncode, stderr, stdout
 
