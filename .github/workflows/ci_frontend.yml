@@ -27,6 +27,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: update OS repositories
+        run: sudo apt-get update
+
       - name: Set up Python 3.6.9
         uses: actions/setup-python@v4
         with:
@@ -44,10 +47,37 @@ jobs:
           pip install pytest
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
+      
 
+
+
+
+      
+      - name: install samtools
+        run: |
+          cd /usr/bin
+          sudo wget https://github.com/samtools/samtools/releases/download/1.11/samtools-1.11.tar.bz2
+          sudo tar xjf samtools-1.11.tar.bz2
+          sudo rm samtools-1.11.tar.bz2
+          cd samtools-1.11
+          sudo make
+          echo "/usr/bin/samtools-1.11" >> $GITHUB_PATH
+
+      - name: download grch38
+        run: |  
+          wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
+          (gunzip -c GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz |  sed -r 's/>chrM/>chrMT/g' > GRCh38.fa) || true
+          rm GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
+          samtools faidx GRCh38.fa
+          ls -l
+          pwd
+
+
+
+
+      
       - name: install htslib
         run: |
-          sudo apt-get update
           sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev
           cd /usr/bin
           sudo wget https://github.com/samtools/htslib/releases/download/1.16/htslib-1.16.tar.bz2
@@ -81,14 +111,6 @@ jobs:
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
-
-      - name: download grch38
-        run: |  
-          wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
-          (gunzip -c GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz |  sed -r 's/>chrM/>chrMT/g' > GRCh38.fa) || true
-          rm GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
-          ls -l
-          pwd
 
 
       - name: test annotation service
