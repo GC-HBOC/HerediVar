@@ -147,16 +147,17 @@ jobs:
       - uses: actions/checkout@v3
 
 
-      # download OS dependencies
+      # install os dependencies
       - name: update OS repositories
         run: sudo apt-get update
 
       - name: install OS dependencies
         run: sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev libncursesw5-dev
 
+
       
       # build python
-            - name: Set up Python 3.6.9
+      - name: Set up Python 3.6.9
         uses: actions/setup-python@v4
         with:
           python-version: '3.6.9'  # use 3.x to use the most up-to-date python3 version
