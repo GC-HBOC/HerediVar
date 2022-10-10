@@ -116,7 +116,7 @@ elif webapp_env == 'githubtest':
 
     # data
     ref_genome_path = "https://download.imgag.de/public/genomes/GRCh38.fa"
-    ref_genome_path_local = "/home/runner/work/HerediVar/HerediVar/GRCh38.fa" # used for spliceai
+    ref_genome_path_local = workdir + "GRCh38.fa" # used for spliceai
     ref_genome_path_grch37 = "https://download.imgag.de/public/genomes/GRCh37.fa"
     chainfile_path = "https://download.imgag.de/public/genomes/hg19ToHg38.over.chain.gz"
 

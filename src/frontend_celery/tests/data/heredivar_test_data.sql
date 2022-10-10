@@ -201,7 +201,8 @@ INSERT INTO `variant` VALUES
 	(130,'chr1',45331755,'G','A',0,'variant with two mane select transcripts in consequences','chr1',45331755,'G','A'),
 	(146,'chr11',108229267,'A','C',0,NULL,'chr11',108229267,'A','C'),
 	(32,'chr13',32362509,'T','C',0,NULL,'chr1',32362509,'T','C'),
-	(139,'chr1',10304277,'T','C',0,NULL,'chr1',10364335,'T','C');
+	(139,'chr1',10304277,'T','C',0,NULL,'chr1',10364335,'T','C'),
+	(164,'chr14',39335204,'A','G',0,NULL,'chr14',39335204,'A','G');
 UNLOCK TABLES;
 
 
