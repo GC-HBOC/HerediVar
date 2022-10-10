@@ -114,10 +114,7 @@ class spliceai_job(Job):
             return returncode, stderr, stdout
 
         # execute spliceai
-        if os.environ.get('WEBAPP_ENV') == "githubtest":
-            command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path_local, '-A', paths.ref_genome_name.lower()]
-        else:
-            command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path, '-A', paths.ref_genome_name.lower()]
+        command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path, '-A', paths.ref_genome_name.lower()]
         returncode, stderr, stdout = functions.execute_command(command, 'SpliceAI')
 
         return returncode, stderr, stdout

@@ -48,10 +48,9 @@ class hexplorer_job(Job):
         if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
             command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
             command.append("VcfAnnotateHexplorer")
-            command = command + ["-in", input_vcf_path, "-out", output_vcf_path, "-ref", paths.ref_genome_path_local]
         else: # use local installation
-            command = [paths.ngs_bits_path + "VcfAnnotateHexplorer", "-in", input_vcf_path, "-out", output_vcf_path, "-ref", paths.ref_genome_path]
-
+            command = [paths.ngs_bits_path + "VcfAnnotateHexplorer"]
+        command = command + ["-in", input_vcf_path, "-out", output_vcf_path, "-ref", paths.ref_genome_path]
         returncode, stderr, stdout = functions.execute_command(command, 'VcfAnnotateHexplorer')
 
         return returncode, stderr, stdout
