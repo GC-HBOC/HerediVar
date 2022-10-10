@@ -891,7 +891,7 @@ def test_create_variant(test_client):
         assert response.status_code == 200
 
     # hgvs import does not currently work in github actions because ngsd is not installed
-    """
+    
     ##### create new variant from HGVS #####
     response = test_client.post(
         url_for("variant.create", type = "hgvsc"), 
@@ -915,7 +915,7 @@ def test_create_variant(test_client):
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
     assert "chr2-214767531-C-T (GRCh38)" in data
-    """
+    
 
 
 
