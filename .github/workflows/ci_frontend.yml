@@ -31,7 +31,7 @@ jobs:
         run: sudo apt-get update
 
       - name: install OS dependencies
-        run: sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev
+        run: sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev libncursesw5-dev
 
       - name: Set up Python 3.6.9
         uses: actions/setup-python@v4
