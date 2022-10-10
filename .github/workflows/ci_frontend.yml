@@ -77,6 +77,14 @@ jobs:
 
 
       # download genomes
+      - name: download grch37
+        run: |
+          wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz
+          (gunzip -c hs37d5.fa.gz | sed -r 's/>/>chr/g' > GRCh37.fa) || true
+          rm hs37d5.fa.gz
+          samtools faidx GRCh37.fa
+
+
       - name: download grch38
         run: |  
           wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
@@ -101,7 +109,7 @@ jobs:
           docker exec $ngsbitscontainer ReadQC --help
 
 
-      # init db
+      # init dbs
       - name: Init heredivar database
         run: |
           sudo apt-get install -y mysql-client
@@ -110,6 +118,33 @@ jobs:
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
+
+      - name: Init NGSD
+        run: |
+          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "CREATE DATABASE IF NOT EXISTS ngsd;"
+          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "SHOW DATABASES LIKE 'ngsd';"
+          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 < src/frontend_celery/tests/data/ngsd_test_data.sql
+          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "SHOW TABLES"
+
+
+      - name: Connect ngs-bits with ngsd
+        run: |
+          ngsbitscontainer=$(cat ngs-bits-container.txt)
+          docker exec $ngsbitscontainer touch bin/settings.ini
+          docker exec $ngsbitscontainer echo "ngsd_host = \"0.0.0.0\"" > settings.ini
+          docker exec $ngsbitscontainer echo "ngsd_port = 3306" >> settings.ini
+          docker exec $ngsbitscontainer echo "ngsd_name = \"ngsd\"" >> settings.ini
+          docker exec $ngsbitscontainer echo "ngsd_user = \"root\"" >> settings.ini
+          docker exec $ngsbitscontainer echo "ngsd_pass = \"password\"" >> settings.ini
+          docker exec $ngsbitscontainer ls -l bin
+          docker exec $ngsbitscontainer cat bin/settings.ini
+
+          
+
+
+
+
+          
 
 
       # run tests
