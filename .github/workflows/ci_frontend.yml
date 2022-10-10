@@ -30,6 +30,9 @@ jobs:
       - name: update OS repositories
         run: sudo apt-get update
 
+      - name: install OS dependencies
+        run: sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev
+
       - name: Set up Python 3.6.9
         uses: actions/setup-python@v4
         with:
@@ -78,7 +81,6 @@ jobs:
       
       - name: install htslib
         run: |
-          sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev
           cd /usr/bin
           sudo wget https://github.com/samtools/htslib/releases/download/1.16/htslib-1.16.tar.bz2
           sudo tar -vxjf htslib-1.16.tar.bz2
@@ -104,7 +106,6 @@ jobs:
 
       - name: Verify MySQL connection from container 
         run: |
-          sudo apt-get update
           sudo apt-get install -y mysql-client
           export MOST_RECENT_DUMP_DATE=$(cat src/tools/database_dumper/most_recent_dump.txt)
           gunzip src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql.gz
