@@ -75,9 +75,10 @@ def search():
 def create():
     chrs = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
             'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY', 'chrMT']
-
+    print(request.method)
     if request.method == 'POST':
         create_variant_from = request.args.get("type")
+        
         if create_variant_from == 'vcf':
             chr = request.form.get('chr', '')
             pos = ''.join(request.form['pos'].split())
@@ -95,6 +96,7 @@ def create():
                 if int(pos) < 0:
                     flash('ERROR: Negative genomic position given, but must be positive.', 'alert-danger')
                 else:
+                    
                     genome_build = request.form['genome']
                     was_successful = validate_and_insert_variant(chr, pos, ref, alt, genome_build)
                     if was_successful:
@@ -111,12 +113,14 @@ def create():
                 flash('All fields are required!', 'alert-danger')
             else:
                 chr, pos, ref, alt, possible_errors = functions.hgvsc_to_vcf(reference_transcript + ':' + hgvsc)
+                print(possible_errors)
                 if possible_errors != '':
                     flash(possible_errors, "alert-danger")
                 else:
                     was_successful = validate_and_insert_variant(chr, pos, ref, alt, 'GRCh38')
+                    print(was_successful)
                     if was_successful:
-                        current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([chr, pos, ref, alt, genome_build]))
+                        current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([chr, pos, ref, alt, "GRCh38"]))
                         return redirect(url_for('variant.create'))
 
     return render_template('variant/create.html', chrs=chrs)

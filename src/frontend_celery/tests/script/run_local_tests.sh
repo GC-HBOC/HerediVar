@@ -1,6 +1,7 @@
-#!/bin/bash -e
+#!/bin/bash
 
 # keep in mind to set the clinvar api key via console: export CLINVAR_API_KEY=.....
+# stop any running keycloak instances if there are any
 export WEBAPP_ENV=localtest
 export NO_PROXY=SRV018.img.med.uni-tuebingen.de
 export CLIENT_SECRET=NRLzlQfotGy9W8hkuYFm3T48Bjnti15k
@@ -20,6 +21,14 @@ mysql --host SRV011.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahd
 mysql --host SRV011.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahdoebm1_test -e "SHOW TABLES"
 #gzip src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
 
+export WEBAPP_ENV=localtest
 
+# start keycloak
+src/frontend_celery/tests/script/start_keycloak_for_tests.sh
+
+# run tests
 cd $BASE_PATH/src/frontend_celery
 python -m pytest -k 'test_dev'
+
+# stop keycloak
+pkill -s 0 -e java

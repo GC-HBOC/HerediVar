@@ -138,7 +138,7 @@ def convert_none_infinite(x):
         return x
 
 def execute_command(command, process_name, use_prefix_error_log = True):
-    if os.environ.get("WEBAPP_ENV") == "githubtest" and process_name not in ["SpliceAI", "bgzip", "tabix"]:
+    if os.environ.get("WEBAPP_ENV") == "githubtest" and process_name not in ["SpliceAI", "bgzip", "tabix", "CrossMap"]:
         # need to sudo the mv in github actions otherwise it will result in permission denied...
         command.insert(0, "sudo")
 
@@ -179,7 +179,6 @@ def preprocess_variant(infile, do_liftover=False):
         returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh37")
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
         returncode, err_msg, command_output = execute_command([paths.htslib_path + 'bgzip', '-f', '-k', infile], process_name="bgzip")
-
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
         returncode, err_msg, command_output = perform_liftover(infile, infile + ".lifted")
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
@@ -187,7 +186,7 @@ def preprocess_variant(infile, do_liftover=False):
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
         returncode, err_msg, command_output = execute_command(["rm", infile], "rm")
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
-        returncode, err_msg, command_output = execute_command(["mv", infile + ".leftnormalized", infile], "mv")
+        returncode, err_msg, command_output = execute_command(["mv", infile + ".lifted", infile], "mv")
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
     else:
         returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh38")
@@ -315,10 +314,11 @@ def hgvsc_to_vcf(hgvs):
 
 # function for splitting hgvs in refrence transcript and variant
 def split_hgvs(hgvs):
+    hgvs = hgvs.strip()
     double_point_pos = hgvs.find(':')
     if double_point_pos != -1:
-        reference = hgvs[:double_point_pos]
-        hgvs = hgvs[hgvs.find(':')+1:]
+        reference = hgvs[:double_point_pos].strip()
+        hgvs = hgvs[double_point_pos+1:].strip()
         return reference, hgvs
     return None, hgvs
     

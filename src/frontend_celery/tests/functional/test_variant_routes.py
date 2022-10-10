@@ -851,6 +851,7 @@ def test_create_variant(test_client):
             "chr": "chr1",
             "pos": "10303165",
             "ref": "C",
+            # missing alternative allele information
             "genome": "GRCh38"
         },
         follow_redirects=True,
@@ -860,11 +861,40 @@ def test_create_variant(test_client):
     assert response.status_code == 200
     assert "All fields are required!" in data
 
+    ##### create new variant from grch37 successfully #####
+    #chr1	10363223	C	T
+    response = test_client.post(
+        url_for("variant.create", type = "vcf"), 
+        data={
+            "chr": "chr1",
+            "pos": "10363223",
+            "ref": "C",
+            "alt": "T",
+            "genome": "GRCh37"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+
+    print(data)
+
+    assert response.status_code == 200
+    assert "Successfully inserted variant" in data
+    assert "alert-danger" not in data
+    assert "ERROR" not in data
+    assert "10303165" in data
+
+    links = get_all_links(data)
+    for link in links:
+        response = requests.get(link)
+        assert response.status_code == 200
+
     # hgvs import does not currently work in github actions because ngsd is not installed
     """
     ##### create new variant from HGVS #####
     response = test_client.post(
-        url_for("variant.create", type = "hgvs"), 
+        url_for("variant.create", type = "hgvsc"), 
         data={
             "hgvsc": " 	c.1519G>A",
             "transcript": "ENST00000260947"
@@ -873,6 +903,8 @@ def test_create_variant(test_client):
         content_type='multipart/form-data'
     )
     data = html.unescape(response.data.decode('utf8'))
+
+    print(data)
 
     assert response.status_code == 200
     assert "Successfully inserted variant" in data
@@ -885,9 +917,7 @@ def test_create_variant(test_client):
     assert "chr2-214767531-C-T (GRCh38)" in data
     """
 
-    ##### tests for grch37 variants #####
-    # TODO
-    # need htslib & crossmap installed for this
+
 
 
 
