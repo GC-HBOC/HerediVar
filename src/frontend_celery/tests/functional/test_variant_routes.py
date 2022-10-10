@@ -926,3 +926,8 @@ def test_create_variant(test_client):
 def get_all_links(html_data):
     links = re.findall(r'href="(http.*?)"[ |>]', html_data)
     return links
+
+
+
+
+

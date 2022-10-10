@@ -111,13 +111,6 @@ jobs:
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
 
-      - name: Init NGSD
-        run: |
-          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "CREATE DATABASE IF NOT EXISTS ngsd;"
-          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "SHOW DATABASES LIKE 'ngsd';"
-          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 < src/frontend_celery/tests/data/ngsd_test_data.sql
-          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "SHOW TABLES"
-
 
       - name: Connect ngs-bits with ngsd
         run: |
@@ -181,7 +174,24 @@ jobs:
       - name: install OS dependencies
         run: sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev libncursesw5-dev
 
+      # init dbs
+      - name: Verify MySQL connection from container 
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+          export MOST_RECENT_DUMP_DATE=$(cat src/tools/database_dumper/most_recent_dump.txt)
+          gunzip src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql.gz
+          mysql --host 0.0.0.0 -uroot -ppassword test_db < src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
+          mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
+          mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
 
+      - name: Init NGSD
+        run: |
+          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "CREATE DATABASE IF NOT EXISTS ngsd;"
+          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "SHOW DATABASES LIKE 'ngsd';"
+          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 ngsd < src/frontend_celery/tests/data/ngsd_test_data.sql
+          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "SHOW TABLES"
+          
       
       # build python
       - name: Set up Python 3.6.9
@@ -264,19 +274,6 @@ jobs:
         run: |
           ngsbitscontainer=$(cat ngs-bits-container.txt)
           docker exec $ngsbitscontainer ReadQC --help
-
-      # init heredivar databse
-      - name: Verify MySQL connection from container 
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y mysql-client
-          export MOST_RECENT_DUMP_DATE=$(cat src/tools/database_dumper/most_recent_dump.txt)
-          gunzip src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql.gz
-          mysql --host 0.0.0.0 -uroot -ppassword test_db < src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
-          mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
-          mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
-
-
 
 
       
