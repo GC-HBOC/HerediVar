@@ -107,7 +107,7 @@ elif webapp_env == 'githubtest':
 
     workdir = "/home/runner/work/HerediVar/HerediVar/"
     datadir = workdir + "src/annotation_service/tests/data/testdbs/"
-    datadir = "/data/"
+    #datadir = "/data/"
 
     # tools
     # vep not used atm
