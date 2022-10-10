@@ -745,4 +745,3 @@ def test_spliceai_annotation():
     conn.close()
 
 
-

@@ -77,14 +77,6 @@ jobs:
 
 
       # download genomes
-      - name: download grch37
-        run: |
-          wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz
-          (gunzip -c hs37d5.fa.gz | sed -r 's/>/>chr/g' > GRCh37.fa) || true
-          rm hs37d5.fa.gz
-          samtools faidx GRCh37.fa
-
-
       - name: download grch38
         run: |  
           wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
@@ -234,6 +226,13 @@ jobs:
 
 
       # download genomes
+      - name: download grch37
+        run: |
+          wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz
+          (gunzip -c hs37d5.fa.gz | sed -r 's/>/>chr/g' > GRCh37.fa) || true
+          rm hs37d5.fa.gz
+          samtools faidx GRCh37.fa
+
       - name: download grch38
         run: |  
           wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
