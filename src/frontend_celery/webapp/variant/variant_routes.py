@@ -75,7 +75,7 @@ def search():
 def create():
     chrs = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
             'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY', 'chrMT']
-    print(request.method)
+            
     if request.method == 'POST':
         create_variant_from = request.args.get("type")
         
@@ -118,7 +118,6 @@ def create():
                     flash(possible_errors, "alert-danger")
                 else:
                     was_successful = validate_and_insert_variant(chr, pos, ref, alt, 'GRCh38')
-                    print(was_successful)
                     if was_successful:
                         current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([chr, pos, ref, alt, "GRCh38"]))
                         return redirect(url_for('variant.create'))

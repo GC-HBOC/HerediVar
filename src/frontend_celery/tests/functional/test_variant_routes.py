@@ -840,6 +840,9 @@ def test_create_variant(test_client):
         content_type='multipart/form-data'
     )
     data = html.unescape(response.data.decode('utf8'))
+    
+    print(data)
+    
     assert response.status_code == 200
     assert "ERROR: Reference base(s) not correct." in data
 
@@ -858,8 +861,17 @@ def test_create_variant(test_client):
         content_type='multipart/form-data'
     )
     data = html.unescape(response.data.decode('utf8'))
+
+    print(data)
+
     assert response.status_code == 200
     assert "All fields are required!" in data
+
+
+
+def test_create_variant_from_grch37(test_client):
+    response = test_client.get(url_for("variant.create"), follow_redirects=True)
+    assert response.status_code == 200
 
     ##### create new variant from grch37 successfully #####
     #chr1	10363223	C	T
@@ -891,7 +903,9 @@ def test_create_variant(test_client):
         assert response.status_code == 200
 
     # hgvs import does not currently work in github actions because ngsd is not installed
-    
+
+
+def test_create_variant_from_hgvs(test_client):
     ##### create new variant from HGVS #####
     response = test_client.post(
         url_for("variant.create", type = "hgvsc"), 
