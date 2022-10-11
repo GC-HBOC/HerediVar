@@ -172,6 +172,34 @@ jobs:
           mysql --host 0.0.0.0 -uroot -ppassword --port 3306 ngsd < src/frontend_celery/tests/data/ngsd_test_data.sql
           mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "SHOW TABLES FROM ngsd"
 
+
+      # setup ngs-bits
+      - name: install ngs-bits
+        run: docker pull quay.io/biocontainers/ngs-bits:2022_07--py310hb611552_0
+
+      - name: start ngs-bits container
+        run: |
+          docker images
+          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar:/home/runner/work/HerediVar/HerediVar  --network="host" -it 881f65da80a2 /bin/bash > ngs-bits-container.txt
+          docker ps -a
+
+      - name: test ngs-bits
+        run: |
+          ngsbitscontainer=$(cat ngs-bits-container.txt)
+          docker exec $ngsbitscontainer ReadQC --help
+
+      - name: Connect ngs-bits with ngsd
+        run: |
+          ngsbitscontainer=$(cat ngs-bits-container.txt)
+          echo "ngsd_host = \"0.0.0.0\"" > settings.ini
+          echo "ngsd_port = 3306" >> settings.ini
+          echo "ngsd_name = \"ngsd\"" >> settings.ini
+          echo "ngsd_user = \"root\"" >> settings.ini
+          echo "ngsd_pass = \"password\"" >> settings.ini
+          docker cp settings.ini $ngsbitscontainer:/usr/local/bin
+          docker exec $ngsbitscontainer cat /usr/local/bin/settings.ini
+        #a6b92e07401f9f9df6e471043c7634d3b38f59307c3bfb2c5e62aa801503ae36
+
       
       # build python
       - name: Set up Python 3.6.9
@@ -240,32 +268,7 @@ jobs:
 
 
 
-      # setup ngs-bits
-      - name: install ngs-bits
-        run: docker pull quay.io/biocontainers/ngs-bits:2022_07--py310hb611552_0
 
-      - name: start ngs-bits container
-        run: |
-          docker images
-          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar:/home/runner/work/HerediVar/HerediVar -it 881f65da80a2 --add-host=host.docker.internal:host-gateway /bin/bash > ngs-bits-container.txt
-          docker ps -a
-
-      - name: test ngs-bits
-        run: |
-          ngsbitscontainer=$(cat ngs-bits-container.txt)
-          docker exec $ngsbitscontainer ReadQC --help
-
-      - name: Connect ngs-bits with ngsd
-        run: |
-          ngsbitscontainer=$(cat ngs-bits-container.txt)
-          echo "ngsd_host = \"0.0.0.0\"" > settings.ini
-          echo "ngsd_port = 3306" >> settings.ini
-          echo "ngsd_name = \"ngsd\"" >> settings.ini
-          echo "ngsd_user = \"root\"" >> settings.ini
-          echo "ngsd_pass = \"password\"" >> settings.ini
-          docker cp settings.ini $ngsbitscontainer:/usr/local/bin
-          docker exec $ngsbitscontainer cat /usr/local/bin/settings.ini
-        #a6b92e07401f9f9df6e471043c7634d3b38f59307c3bfb2c5e62aa801503ae36
 
 
       
