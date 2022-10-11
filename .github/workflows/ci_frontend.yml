@@ -258,14 +258,14 @@ jobs:
       - name: Connect ngs-bits with ngsd
         run: |
           ngsbitscontainer=$(cat ngs-bits-container.txt)
-          docker exec $ngsbitscontainer touch bin/settings.ini
-          docker exec $ngsbitscontainer echo "ngsd_host = \"0.0.0.0\"" > settings.ini
-          docker exec $ngsbitscontainer echo "ngsd_port = 3306" >> settings.ini
-          docker exec $ngsbitscontainer echo "ngsd_name = \"ngsd\"" >> settings.ini
-          docker exec $ngsbitscontainer echo "ngsd_user = \"root\"" >> settings.ini
-          docker exec $ngsbitscontainer echo "ngsd_pass = \"password\"" >> settings.ini
-          docker exec $ngsbitscontainer ls -l bin
-          docker exec $ngsbitscontainer cat bin/settings.ini
+          echo "ngsd_host = \"0.0.0.0\"" > settings.ini
+          echo "ngsd_port = 3306" >> settings.ini
+          echo "ngsd_name = \"ngsd\"" >> settings.ini
+          echo "ngsd_user = \"root\"" >> settings.ini
+          echo "ngsd_pass = \"password\"" >> settings.ini
+          docker cp settings.ini $ngsbitscontainer:/usr/local/bin
+          docker exec $ngsbitscontainer cat /usr/local/bin/settings.ini
+        #a6b92e07401f9f9df6e471043c7634d3b38f59307c3bfb2c5e62aa801503ae36
 
 
       
