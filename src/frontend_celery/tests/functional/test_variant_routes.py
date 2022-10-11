@@ -905,11 +905,14 @@ def test_create_variant_from_grch37(test_client):
 
 
 def test_create_variant_from_hgvs(test_client):
+    response = test_client.get(url_for("variant.create"), follow_redirects=True)
+    assert response.status_code == 200
+
     ##### create new variant from HGVS #####
     response = test_client.post(
         url_for("variant.create", type = "hgvsc"), 
         data={
-            "hgvsc": " 	c.1519G>A",
+            "hgvsc": "c.1519G>A",
             "transcript": "ENST00000260947"
         },
         follow_redirects=True,
