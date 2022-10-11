@@ -79,7 +79,18 @@ jobs:
           sudo make
           echo "/usr/bin/samtools-1.11" >> $GITHUB_PATH
 
-      - name: install htslib
+      - name: cache htslib
+        id: cache-htslib
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-htslib
+          htslib-version: 1-16
+        with:
+          path: /usr/bin/htslib-1.16
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.htslib-version }}
+
+      - if: ${{ steps.cache-htslib.outputs.cache-hit != 'true' }}
+        name: install htslib
         run: |
           cd /usr/bin
           sudo wget https://github.com/samtools/htslib/releases/download/1.16/htslib-1.16.tar.bz2
@@ -105,7 +116,7 @@ jobs:
       - name: start ngs-bits container
         run: |
           docker images
-          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar:/home/runner/work/HerediVar/HerediVar -it 881f65da80a2  /bin/bash > ngs-bits-container.txt
+          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar:/home/runner/work/HerediVar/HerediVar -it quay.io/biocontainers/ngs-bits  /bin/bash > ngs-bits-container.txt
           docker ps -a
 
       - name: test ngs-bits
@@ -193,7 +204,7 @@ jobs:
       - name: start ngs-bits container
         run: |
           docker images
-          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar:/home/runner/work/HerediVar/HerediVar  --network="host" -it 881f65da80a2 /bin/bash > ngs-bits-container.txt
+          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar:/home/runner/work/HerediVar/HerediVar  --network="host" -it quay.io/biocontainers/ngs-bits /bin/bash > ngs-bits-container.txt
           docker ps -a
 
       - name: test ngs-bits
@@ -245,7 +256,18 @@ jobs:
           sudo make
           echo "/usr/bin/htslib-1.16" >> $GITHUB_PATH
       
-      - name: install samtools
+      - name: cache samtools
+        id: cache-samtools
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-samtools
+          samtools-version: 1-11
+        with:
+          path: /usr/bin/samtools-1.11
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.samtools-version }}
+
+      - if: ${{ steps.cache-samtools.outputs.cache-hit != 'true' }}
+        name: install samtools
         run: |
           cd /usr/bin
           sudo wget https://github.com/samtools/samtools/releases/download/1.11/samtools-1.11.tar.bz2
