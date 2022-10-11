@@ -112,26 +112,6 @@ jobs:
           mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
 
 
-      - name: Connect ngs-bits with ngsd
-        run: |
-          ngsbitscontainer=$(cat ngs-bits-container.txt)
-          docker exec $ngsbitscontainer touch bin/settings.ini
-          docker exec $ngsbitscontainer echo "ngsd_host = \"0.0.0.0\"" > settings.ini
-          docker exec $ngsbitscontainer echo "ngsd_port = 3306" >> settings.ini
-          docker exec $ngsbitscontainer echo "ngsd_name = \"ngsd\"" >> settings.ini
-          docker exec $ngsbitscontainer echo "ngsd_user = \"root\"" >> settings.ini
-          docker exec $ngsbitscontainer echo "ngsd_pass = \"password\"" >> settings.ini
-          docker exec $ngsbitscontainer ls -l bin
-          docker exec $ngsbitscontainer cat bin/settings.ini
-
-          
-
-
-
-
-          
-
-
       # run tests
       - name: test annotation service
         run: |
@@ -274,6 +254,18 @@ jobs:
         run: |
           ngsbitscontainer=$(cat ngs-bits-container.txt)
           docker exec $ngsbitscontainer ReadQC --help
+
+      - name: Connect ngs-bits with ngsd
+        run: |
+          ngsbitscontainer=$(cat ngs-bits-container.txt)
+          docker exec $ngsbitscontainer touch bin/settings.ini
+          docker exec $ngsbitscontainer echo "ngsd_host = \"0.0.0.0\"" > settings.ini
+          docker exec $ngsbitscontainer echo "ngsd_port = 3306" >> settings.ini
+          docker exec $ngsbitscontainer echo "ngsd_name = \"ngsd\"" >> settings.ini
+          docker exec $ngsbitscontainer echo "ngsd_user = \"root\"" >> settings.ini
+          docker exec $ngsbitscontainer echo "ngsd_pass = \"password\"" >> settings.ini
+          docker exec $ngsbitscontainer ls -l bin
+          docker exec $ngsbitscontainer cat bin/settings.ini
 
 
       
