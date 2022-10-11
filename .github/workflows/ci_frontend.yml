@@ -42,7 +42,7 @@ jobs:
         with:
           python-version: '3.6.9'  # use 3.x to use the most up-to-date python3 version
           architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
-      - uses: actions/cache@v2 # cache the python environment to speed up tests
+      - uses: actions/cache@v3 # cache the python environment to speed up tests
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
@@ -56,7 +56,23 @@ jobs:
 
 
       # install tools dependencies
-      - name: install samtools
+      - name: cache samtools
+        id: cache-samtools
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-samtools
+          samtools-version: 1-11
+        with:
+          path: /usr/bin/samtools-1.11
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.samtools-version }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.samtools-version }}
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - if: ${{ steps.cache-samtools.outputs.cache-hit != 'true' }}
+        name: install samtools
         run: |
           cd /usr/bin
           sudo wget https://github.com/samtools/samtools/releases/download/1.11/samtools-1.11.tar.bz2
@@ -207,7 +223,7 @@ jobs:
         with:
           python-version: '3.6.9'  # use 3.x to use the most up-to-date python3 version
           architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
-      - uses: actions/cache@v2 # cache the python environment to speed up tests
+      - uses: actions/cache@v3 # cache the python environment to speed up tests
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
