@@ -16,6 +16,42 @@ basepath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 test_data_dir = basepath + "/data"
 
 
+
+
+def test_create_variant_from_hgvs(test_client):
+    response = test_client.get(url_for("variant.create"), follow_redirects=True)
+    assert response.status_code == 200
+
+    ##### create new variant from HGVS #####
+    response = test_client.post(
+        url_for("variant.create", type = "hgvsc"), 
+        data={
+            "hgvsc": "c.1519G>A",
+            "transcript": "ENST00000260947"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+
+    print(data)
+
+    assert response.status_code == 200
+    assert "Successfully inserted variant" in data
+    assert "alert-danger" not in data
+    assert "ERROR" not in data
+
+    response = test_client.post(url_for("variant.display", chr = "chr2", pos = 214767531, ref = "C", alt = "T"))
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "chr2-214767531-C-T (GRCh38)" in data
+    
+
+    
+
+
+
+
 def test_login(test_client):
     response = test_client.get(url_for('auth.login'))
 
@@ -904,34 +940,6 @@ def test_create_variant_from_grch37(test_client):
 
 
 
-def test_create_variant_from_hgvs(test_client):
-    response = test_client.get(url_for("variant.create"), follow_redirects=True)
-    assert response.status_code == 200
-
-    ##### create new variant from HGVS #####
-    response = test_client.post(
-        url_for("variant.create", type = "hgvsc"), 
-        data={
-            "hgvsc": "c.1519G>A",
-            "transcript": "ENST00000260947"
-        },
-        follow_redirects=True,
-        content_type='multipart/form-data'
-    )
-    data = html.unescape(response.data.decode('utf8'))
-
-    print(data)
-
-    assert response.status_code == 200
-    assert "Successfully inserted variant" in data
-    assert "alert-danger" not in data
-    assert "ERROR" not in data
-
-    response = test_client.post(url_for("variant.display", chr = "chr2", pos = 214767531, ref = "C", alt = "T"))
-    data = html.unescape(response.data.decode('utf8'))
-    assert response.status_code == 200
-    assert "chr2-214767531-C-T (GRCh38)" in data
-    
 
 
 
