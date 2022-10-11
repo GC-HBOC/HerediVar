@@ -78,6 +78,7 @@ def create():
             
     if request.method == 'POST':
         create_variant_from = request.args.get("type")
+        print(create_variant_from)
         
         if create_variant_from == 'vcf':
             chr = request.form.get('chr', '')
@@ -108,7 +109,9 @@ def create():
 
         if create_variant_from == 'hgvsc':
             reference_transcript = request.form.get('transcript')
-            hgvsc = request.form['hgvsc']
+            hgvsc = request.form.get('hgvsc')
+            print(reference_transcript)
+            print(hgvsc)
             if not hgvsc or not reference_transcript:
                 flash('All fields are required!', 'alert-danger')
             else:
@@ -118,6 +121,7 @@ def create():
                     flash(possible_errors, "alert-danger")
                 else:
                     was_successful = validate_and_insert_variant(chr, pos, ref, alt, 'GRCh38')
+                    print(was_successful)
                     if was_successful:
                         current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([chr, pos, ref, alt, "GRCh38"]))
                         return redirect(url_for('variant.create'))

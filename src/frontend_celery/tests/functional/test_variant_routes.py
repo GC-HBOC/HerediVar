@@ -902,7 +902,6 @@ def test_create_variant_from_grch37(test_client):
         response = requests.get(link)
         assert response.status_code == 200
 
-    # hgvs import does not currently work in github actions because ngsd is not installed
 
 
 def test_create_variant_from_hgvs(test_client):
