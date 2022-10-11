@@ -26,6 +26,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+
+      - name: set versions
+        run: |
+          echo "ngs-bits-version=2022_10--py310hf1a0324_1" >> $GITHUB_ENV
       
 
       # install os dependencies
@@ -111,12 +116,12 @@ jobs:
 
       # install ngs-bits
       - name: install ngs-bits
-        run: docker pull quay.io/biocontainers/ngs-bits:2022_10--py310hf1a0324_1
+        run: docker pull quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }}
 
       - name: start ngs-bits container
         run: |
           docker images
-          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar:/home/runner/work/HerediVar/HerediVar -it quay.io/biocontainers/ngs-bits  /bin/bash > ngs-bits-container.txt
+          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar:/home/runner/work/HerediVar/HerediVar -it quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }} /bin/bash > ngs-bits-container.txt
           docker ps -a
 
       - name: test ngs-bits
@@ -170,6 +175,9 @@ jobs:
       # download repository
       - uses: actions/checkout@v3
 
+      - name: set versions
+        run: |
+          echo "ngs-bits-version=2022_10--py310hf1a0324_1" >> $GITHUB_ENV
 
       # install os dependencies
       - name: update OS repositories
@@ -199,12 +207,12 @@ jobs:
 
       # setup ngs-bits
       - name: install ngs-bits
-        run: docker pull quay.io/biocontainers/ngs-bits:2022_10--py310hf1a0324_1
+        run: docker pull quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }}
 
       - name: start ngs-bits container
         run: |
           docker images
-          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar:/home/runner/work/HerediVar/HerediVar  --network="host" -it quay.io/biocontainers/ngs-bits /bin/bash > ngs-bits-container.txt
+          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar:/home/runner/work/HerediVar/HerediVar  --network="host" -it quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }} /bin/bash > ngs-bits-container.txt
           docker ps -a
 
       - name: test ngs-bits
