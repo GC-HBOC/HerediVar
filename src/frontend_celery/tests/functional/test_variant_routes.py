@@ -610,7 +610,7 @@ def test_user_lists(test_client):
     response = test_client.post(
         url_for("variant.display", variant_id=variant_id, action='add_to_list'),
         data={
-            "add-to-list": list_id
+            "list_id": list_id
         }, 
         follow_redirects=True
     )
@@ -621,7 +621,7 @@ def test_user_lists(test_client):
     response = test_client.post(
         url_for("variant.display", variant_id=variant_id, action='add_to_list'),
         data={
-            "add-to-list": list_id
+            "list_id": list_id
         }, 
         follow_redirects=True
     )
