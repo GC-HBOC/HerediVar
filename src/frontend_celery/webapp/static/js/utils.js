@@ -262,7 +262,7 @@ var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
   return new bootstrap.Popover(popoverTriggerEl)
 })
 
-
+/*
 // use this to escape special chars when using tojson jinja filter
 function escape_special_chars(input_string) {
     const result =  input_string
@@ -279,11 +279,13 @@ function escape_special_chars(input_string) {
     // data as well
     return result
 };
+*/
 
-
+/*
 function json_string_to_object(json_string) {
     return JSON.parse(escape_special_chars(json_string))
 }
+*/
 
 
 function get_amino_acids(three_to_one = true){

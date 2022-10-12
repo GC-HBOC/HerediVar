@@ -6,8 +6,8 @@ var scheme = document.getElementById('scheme').value // contains the currently s
 var criteria = acmg_criteria // a list of all criteria depending on the currently selecte scheme
 
 ///////////// prepare data ////////////
-const schemes_with_info = json_string_to_object(schemes_with_info_string)
-const request_form = json_string_to_object(request_form_string)
+//const schemes_with_info = json_string_to_object(schemes_with_info_string)
+//const request_form = json_string_to_object(request_form_string)
 var do_request_form_preselect = false
 if (Object.keys(request_form).length > 0) {
     do_request_form_preselect = true

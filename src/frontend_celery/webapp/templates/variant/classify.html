@@ -163,8 +163,7 @@
 
 <!-- this extracts the flask data and makes them available to the scripts -->
 <script>
-
-    const schemes_with_info_string = '{{ schemes_with_info | tojson | safe }}' // must still be escaped and parsed to an object!
+    const schemes_with_info = JSON.parse('{{ schemes_with_info | tojson }}'.slice(1, -1))
     // example: {3: {'none': {'classification_id': 4, 'date': '2022-07-15', 'selected_criteria': [(26, 4, 'pvs1', 'pvs', 'egsa'), (27, 4, 'pp1', 'pm', 'edfsg'), (28, 4, 'bs1', 'bs', 'fdsaf')]}, 'TP53': {'classification_id': 10, 'date': '2022-07-13', 'selected_criteria': [(21, 10, 'bp2', 'bp', 'erwhgerwb'), (22, 10, 'bs1', 'bs', 'ababasc')]}}, 14: {'none': {'classification_id': 23, 'date': '2022-07-18', 'selected_criteria': [(36, 23, 'pm3', 'pm', 'asfdsaf'), (37, 23, 'pp1', 'pvs', 'VERRRRYYY STRONG!')]}, 'TP53': {'classification_id': 24, 'date': '2022-07-18', 'selected_criteria': [(38, 24, 'ps1', 'ps', 'c vxc ysa'), (39, 24, 'ps2', 'ps', 'asdfafafd'), (40, 24, 'pm2', 'pm', 'afdasfasdf'), (41, 24, 'pm5', 'pm', 'daffafd')]}}}
     const previous_classification = '{{ previous_classification["class"] }}';
     const has_classification = '{{ previous_classification["has_classification"]}}';
@@ -172,11 +171,11 @@
     const classification_type = '{{ classification_type }}';
 
     
-    const request_form_string = '{{request.form.to_dict(flat=True) | tojson | safe }}' // must still be escaped and parsed to an object!
+    const request_form = JSON.parse('{{request.form.to_dict(flat=True) | tojson | tojson }}'.slice(1, -1))
 
-    const criteria_with_strength_select_string = '{{ criteria_with_strength_select | tojson | safe }}' // must still be escaped and parsed to an object!
-    const not_activateable_buttons_string = '{{ not_activateable_buttons | tojson | safe }}' // must still be escaped and parsed to an object!
-    const disable_groups_string = '{{ disable_groups | tojson | safe }}' // must still be escaped and parsed to an object!
+    const criteria_with_strength_selects = JSON.parse('{{ criteria_with_strength_select | tojson }}'.slice(1, -1)) // see variant_functions.py for the definition of this dict
+    const not_activateable_buttons = JSON.parse('{{ not_activateable_buttons | tojson }}'.slice(1, -1)) // see variant_functions.py for the definition of this dict
+    const disable_groups = JSON.parse('{{ disable_groups | tojson  }}'.slice(1, -1)) // see variant_functions.py for the definition of this dict
 
 </script>
 

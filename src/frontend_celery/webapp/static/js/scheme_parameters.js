@@ -18,15 +18,15 @@ const task_force_criteria = [
 ]
 
 // add criteria_ids to this array if you want to enable strength select for it
-const criteria_with_strength_selects = json_string_to_object(criteria_with_strength_select_string) // see variant_functions.py for the definition of this dict
+//const criteria_with_strength_selects = json_string_to_object(criteria_with_strength_select_string) 
 
 // this dictionary contains all buttons which should be disabled if one if them is activated
 // !! this is unidirectional
 // SPECIFIC FOR TP53 spec: PS4 not applicable when BA1 or BS1 are present, PM1 disables pm5
-const disable_groups = json_string_to_object(disable_groups_string) // see variant_functions.py for the definition of this dict
+//const disable_groups = json_string_to_object(disable_groups_string) 
 
 // this dict contains all criteria which should be disabled for a specific mask
-const not_activateable_buttons = json_string_to_object(not_activateable_buttons_string) // see variant_functions.py for the definition of this dict
+//const not_activateable_buttons = json_string_to_object(not_activateable_buttons_string) // see variant_functions.py for the definition of this dict
 
 
 

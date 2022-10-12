@@ -145,9 +145,18 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     if request.method == 'POST':
         user_action = request.args.get('action')
         if user_action == 'add_to_list':
-            list_id = request.form['add-to-list']
+            list_id = request.form['list_id']
             conn.add_variant_to_list(list_id, variant_id) # MAYBE add a check that this list belongs to you!
             return redirect(url_for('variant.display', variant_id=variant_id))
+        if user_action == 'remove_from_list':
+            list_id = request.form['list_id']
+            user_id = session['user']['user_id']
+            is_list_owner = conn.check_user_list_ownership(user_id, list_id)
+            #print(is_list_owner)
+            if not is_list_owner:
+                current_app.logger.error(session['user']['preferred_username'] + " attempted view list with id " + str(list_id) + ", but this list was not created by him.")
+                return abort(403)
+            conn.delete_variant_from_list(list_id, variant_id)
         #if user_action == 'reannotate' and (current_annotation_status is None or current_annotation_status[4] != 'pending'):
         #    conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
         #    conn.close()
@@ -246,12 +255,12 @@ def classify(variant_id):
         return render_template('variant/classify.html',
                                 classification_type='user',
                                 variant_oi=variant_oi, 
-                                schemes_with_info=schemes_with_info, 
+                                schemes_with_info=json.dumps(schemes_with_info), 
                                 previous_classification=previous_classification,
                                 is_admin=is_admin,
-                                criteria_with_strength_select = get_criteria_with_strength_select(),
-                                not_activateable_buttons = get_not_activatable_buttons(),
-                                disable_groups = get_disable_groups()
+                                criteria_with_strength_select = json.dumps(get_criteria_with_strength_select()),
+                                not_activateable_buttons = json.dumps(get_not_activatable_buttons()),
+                                disable_groups = json.dumps(get_disable_groups())
                             )
 
 

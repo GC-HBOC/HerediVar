@@ -64,6 +64,11 @@ $(document).ready(function()
         location.reload()
     })
 
+    $('.variant-list-button').click(function() {
+        const form_to_submit = $('#add-to-list-form')
+        form_to_submit.attr('action', $(this).attr('action'))
+    });
+
     ////////// set the title of the page
     var variant_page_title_obj = document.getElementById('variant_page_title')
     var title = variant_page_title_obj.innerText
