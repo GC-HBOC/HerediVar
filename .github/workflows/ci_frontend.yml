@@ -318,6 +318,7 @@ jobs:
       # setup keycloak
       - uses: actions/setup-java@v2
         with:
+          distribution: 'zulu'
           java-version: 11
       - name: Prepare Keycloak
         run: |
