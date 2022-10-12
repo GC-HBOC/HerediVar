@@ -54,6 +54,7 @@ def assay_report(assay_id):
         abort(404)
 
     b_64_assay = assay[0]
+    print(b_64_assay)
     filename = assay[1]
 
     buffer = io.BytesIO()
@@ -154,6 +155,8 @@ def get_variant_vcf_line(variant_id, conn):
     variant_oi = conn.get_one_variant(variant_id)
 
     annotations = conn.get_all_variant_annotations(variant_id)
+    external_variant_ids = conn.get_external_ids_from_variant_id(variant_id)
+
     
     #"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO"
     variant_vcf = '\t'.join((str(variant_oi[1]), str(variant_oi[2]), str(variant_oi[0]), str(variant_oi[3]), str(variant_oi[4]), '.', '.'))
@@ -278,7 +281,19 @@ def get_variant_vcf_line(variant_id, conn):
             info = functions.collect_info(info, info_key + '=', all_user_scheme_classifications)
         
         elif key == 'assays':
-            pass
+            content = annotations[key]
+            info_key = 'assays'
+            info_headers[key] = '##INFO=<ID=' + info_key + ',Number=.,Type=String,Description="All types of assays (e. g. functional or splicing) which were submitted to HerediVar. Assays are separated by "&" symbols. Format:date|assay_type|score.">\n'
+            all_assay_strings = ""
+            for assay in content:
+                assay_type = assay[1]
+                score = str(assay[2])
+                date = assay[3].strftime('%Y-%m-%d')
+                assay_string = '~7C'.join([date, assay_type, score])
+                assay_string = functions.encode_vcf(assay_string)
+                all_assay_strings = functions.collect_info(all_assay_strings, "", assay_string, sep = '&')
+            info = functions.collect_info(info, info_key + "=", all_assay_strings)
+
         
         else: # scores and other non-special values
             content = annotations[key]
@@ -290,6 +305,18 @@ def get_variant_vcf_line(variant_id, conn):
             value = content[4]
             value = functions.encode_vcf(value)
             info = functions.collect_info(info, key_and_date + '=', value)
+
+    all_external_variant_ids_string = ""
+    key = "external_ids"
+    info_headers[key] = '##INFO=<ID=' + key + ',Number=.,Type=String,Description="All external variant ids recorded in HerediVar. Entries are separated by & symbols. Format:source|id.">\n'
+    for entry in external_variant_ids:
+        external_variant_id = str(entry[0])
+        source = entry[1]
+        external_variant_id_string = '~7C'.join([source, external_variant_id])
+        external_variant_id_string = functions.encode_vcf(external_variant_id_string)
+        all_external_variant_ids_string = functions.collect_info(all_external_variant_ids_string, "", external_variant_id_string, sep = "&")
+    info = functions.collect_info(info, key + "=", all_external_variant_ids_string)
+
 
     if info == '':
         info = '.'

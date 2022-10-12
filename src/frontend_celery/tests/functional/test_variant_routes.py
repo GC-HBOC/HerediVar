@@ -16,16 +16,6 @@ basepath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 test_data_dir = basepath + "/data"
 
 
-
-
-
-    
-
-
-
-
-
-
 def test_login(test_client):
     response = test_client.get(url_for('auth.login'))
 
@@ -60,7 +50,7 @@ def test_browse(test_client):
     """
     response = test_client.get(url_for("variant.search"), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
-    #print(data)
+    print(data)
     assert response.status_code == 200
     assert 'id="variantTable"' in data
     assert data.count('name="variant_row"') == 11 # always +1 because there are duplicated rows which are merged with js

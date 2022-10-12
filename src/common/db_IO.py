@@ -299,7 +299,7 @@ class Connection:
 
     def insert_update_external_variant_id(self, variant_id, external_id, id_source):
         previous_external_variant_id = self.get_external_ids_from_variant_id(variant_id, id_source=id_source)
-        print(previous_external_variant_id)
+        #print(previous_external_variant_id)
         if (len(previous_external_variant_id) == 1): # do update
             self.update_external_variant_id(variant_id, external_id, id_source)
         else: # save new
@@ -920,13 +920,14 @@ class Connection:
         result = self.cursor.fetchall()
         return [x[0] for x in result]
 
-
+    '''
     def get_vid_list(self):
         command = "SELECT external_id FROM variant_ids WHERE id_source='heredicare'"
         self.cursor.execute(command)
         vids = self.cursor.fetchall()
         vids = [x[0] for x in vids]
         return vids
+    '''
 
     '''
     def insert_consensus_classification_from_vcf(self, user_id, chr, pos, ref, alt, consensus_classification, comment, date = "CURDATE()", evidence_document = None):
@@ -1062,8 +1063,13 @@ class Connection:
         result = self.cursor.fetchone()
         return result
 
+    # returns a list of external ids if an id source is given
+    # returns a list of tuples with (external_id, source) if no id source is given -> exports all external ids
     def get_external_ids_from_variant_id(self, variant_id, id_source=''):
-        command = "SELECT external_id FROM variant_ids WHERE variant_id = %s"
+        columns_oi = ["external_id"]
+        if id_source == '' or id_source is None:
+            columns_oi = columns_oi + ["id_source"]
+        command = "SELECT " + ", ".join(columns_oi) + " FROM variant_ids WHERE variant_id = %s"
         information = (variant_id,)
         if id_source != '':
             command = command + " AND id_source = %s"
@@ -1072,7 +1078,10 @@ class Connection:
         result = self.cursor.fetchall()
         if result is None:
             return []
-        return [x[0] for x in result]
+        if id_source != '':
+            return [x[0] for x in result]
+        else:
+            return result
 
     def delete_external_id(self, external_id, id_source):
         command = "DELETE FROM variant_ids WHERE external_id = %s AND id_source = %s"

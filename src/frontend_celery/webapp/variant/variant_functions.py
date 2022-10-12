@@ -70,7 +70,7 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
             flash(Markup("Successfully inserted variant: " + new_chr + ' ' + str(new_pos) + ' ' + new_ref + ' ' + new_alt + 
                         ' (view your variant <a href="' + url_for("variant.display", chr=str(new_chr), pos=str(new_pos), ref=str(new_ref), alt=str(new_alt)) + '" class="alert-link">here</a>)'), "alert-success")
         else:
-            flash("Variant not imported: already in database!!", "alert-danger")
+            flash(Markup("Variant not imported: already in database!! View it " + "<a href=" + url_for("variant.display", chr=str(new_chr), pos=str(new_pos), ref=str(new_ref), alt=str(new_alt)) + " class=\"alert-link\">here</a>"), "alert-danger")
             was_successful = False
 
     return was_successful

@@ -1,10 +1,12 @@
 
 
 // presort the tables on page load
+variant_consequence_table_default_sorting_columns = ['#variant_consequence_numflags_col', '#variant_consequence_length_col', '#variant_consequence_gene_symbol_col']
+variant_consequence_table_ascending = ['true', 'true', "false"]
 table = document.getElementById("variantConsequenceTable");
 if (table != null) {
     filterTable_one_column("ensembl", 10, table);
-    sorter(['#variant_consequence_gene_symbol_col', '#variant_consequence_numflags_col', '#variant_consequence_length_col'], '#variantConsequenceTable') // sort first by num of flags and if there is a tie sort by length
+    sorter(variant_consequence_table_default_sorting_columns, '#variantConsequenceTable') // sort first by num of flags, at tie by length and at tie by gene symbol
 }
 sorter(['#userClassificationsTableDateCol'], '#userClassificationsTable')
 sorter(['#literatureTableYearCol'], '#literatureTable')
@@ -19,9 +21,9 @@ sorter(['#assayTableDateCol', '#assayTableAssayTypeCol'], '#assayTable')
 function filter_consequence_table(source) {
     const table = document.getElementById('variantConsequenceTable')
     filterTable_one_column(source, 10, table)
-    const sort_columns = ['#variant_consequence_numflags_col', '#variant_consequence_length_col']
+    const sort_columns = variant_consequence_table_default_sorting_columns
     for (var i = 0; i < sort_columns.length; i++) {
-        $(sort_columns[i]).attr('asc', 'true')
+        $(sort_columns[i]).attr('asc', variant_consequence_table_ascending[i])
     }
     sorter(sort_columns, '#' + table.id)
 }

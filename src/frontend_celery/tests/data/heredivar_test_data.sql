@@ -478,6 +478,9 @@ INSERT INTO `variant_ids` VALUES
 	(65,15,'SCV002549291','clinvar_accession'),
 	(56,15,'SUB11885096','clinvar_submission'),
 
+	(40, 52, '11740058', 'heredicare'),
+	(41, 52, 'blimblam2', 'sometest'),
+
 	(51,139,'11334923','heredicare'),
 	(52,139,'11509431','heredicare');
 UNLOCK TABLES;
@@ -830,4 +833,12 @@ INSERT INTO `transcript` VALUES
 	(52022,2566,'ENST00000680887','protein coding',10231,0,0,0,0),
 	(311253,2566,'NM_000059','mRNA',10231,1,1,0,1),
 	(311252,42061,'NM_001136571','mRNA',962,1,1,0,1);
+UNLOCK TABLES;
+
+
+
+LOCK TABLES `assay` WRITE;
+/*!40000 ALTER TABLE `assay` DISABLE KEYS */;
+INSERT INTO `assay` VALUES (1,52,'functional',_binary 'dA0KdGUNCnRlcw0KdGVzdA0KdGVzDQp0ZQ0KdA==','test.txt',12345,'2022-08-08'),(6,52,'functional',_binary 'dA0KdGUNCnRlcw0KdGVzdA0KdGVzDQp0ZQ0KdA==','test.txt',6565,'2022-08-09'),(14,52,'splicing',_binary 'dA0KdGUNCnRlcw0KdGVzdA0KdGVzDQp0ZQ0KdA==','test.txt',3654,'2022-08-09');
+/*!40000 ALTER TABLE `assay` ENABLE KEYS */;
 UNLOCK TABLES;
