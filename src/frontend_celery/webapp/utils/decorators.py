@@ -77,7 +77,7 @@ def request_uma_ticket():
     header = {'Authorization': f'Bearer {token.get("access_token")}'}
     resp = requests.post(url, data=data, headers=header)
     if resp.status_code != 200:
-        current_app.logger.error(current_app['user']['preferred_username'] + " tried to access a protected route, but had not the required permissions.")
+        current_app.logger.error(session['user']['preferred_username'] + " tried to access a protected route, but had not the required permissions.")
         return False, resp.status_code
     return True, 200
 

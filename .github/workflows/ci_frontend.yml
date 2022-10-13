@@ -82,7 +82,7 @@ jobs:
           sudo rm samtools-${{ env.samtools-version }}.tar.bz2
           cd samtools-${{ env.samtools-version }}
           sudo make
-          echo "samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
 
       - name: cache htslib
         id: cache-htslib
@@ -99,7 +99,7 @@ jobs:
           sudo tar -vxjf htslib-${{ env.htslib-version }}.tar.bz2
           cd htslib-${{ env.htslib-version }}
           sudo make
-          echo "htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
 
 
       # download genomes
@@ -118,7 +118,7 @@ jobs:
       - name: start ngs-bits container
         run: |
           docker images
-          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar:/home/runner/work/HerediVar/HerediVar -it quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }} /bin/bash > ngs-bits-container.txt
+          docker run -d -v /tmp:/tmp -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE -it quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }} /bin/bash > ngs-bits-container.txt
           docker ps -a
 
       - name: test ngs-bits
@@ -211,7 +211,7 @@ jobs:
       - name: start ngs-bits container
         run: |
           docker images
-          docker run -d -v /tmp:/tmp -v /home/runner/work/HerediVar/HerediVar:/home/runner/work/HerediVar/HerediVar  --network="host" -it quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }} /bin/bash > ngs-bits-container.txt
+          docker run -d -v /tmp:/tmp -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE  --network="host" -it quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }} /bin/bash > ngs-bits-container.txt
           docker ps -a
 
       - name: test ngs-bits
@@ -271,7 +271,7 @@ jobs:
           sudo rm samtools-${{ env.samtools-version }}.tar.bz2
           cd samtools-${{ env.samtools-version }}
           sudo make
-          echo "samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
 
       - name: cache htslib
         id: cache-htslib
@@ -288,7 +288,7 @@ jobs:
           sudo tar -vxjf htslib-${{ env.htslib-version }}.tar.bz2
           cd htslib-${{ env.htslib-version }}
           sudo make
-          echo "htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
 
 
       # download genomes

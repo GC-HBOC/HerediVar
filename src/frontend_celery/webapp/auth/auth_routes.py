@@ -7,9 +7,7 @@ from authlib.oauth2.rfc6749 import OAuth2Token
 from flask import url_for, session, request, Blueprint, current_app
 from flask import render_template, redirect
 from authlib.integrations.flask_oauth2 import ResourceProtector, current_token
-from functools import wraps
 from flask_session import Session
-from redis import Redis
 from authlib.oauth2.rfc7636 import create_s256_code_challenge
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 import common.functions as functions
@@ -108,6 +106,8 @@ def auth():
         # init the session
         session['user'] = user_info
         session['tokenResponse'] = token_response
+
+        session['user']['is_admin'] = request_uma_ticket()[0]
 
         current_app.logger.info("User " + user_info['preferred_username'] + ' (' + user_info.get('affiliation') + ") successfully logged in.")
 
