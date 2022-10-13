@@ -72,18 +72,17 @@ jobs:
         env:
           cache-name: cache-samtools
         with:
-          path: /usr/bin/samtools-${{ env.samtools-version }}
+          path: samtools-${{ env.samtools-version }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.samtools-version }}
       - if: ${{ steps.cache-samtools.outputs.cache-hit != 'true' }}
         name: install samtools
         run: |
-          cd /usr/bin
           sudo wget -q https://github.com/samtools/samtools/releases/download/${{ env.samtools-version }}/samtools-${{ env.samtools-version }}.tar.bz2
           sudo tar xjf samtools-${{ env.samtools-version }}.tar.bz2
           sudo rm samtools-${{ env.samtools-version }}.tar.bz2
           cd samtools-${{ env.samtools-version }}
           sudo make
-          echo "/usr/bin/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
+          echo "samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
 
       - name: cache htslib
         id: cache-htslib
@@ -91,17 +90,16 @@ jobs:
         env:
           cache-name: cache-htslib
         with:
-          path: /usr/bin/htslib-${{ env.htslib-version }}
+          path: htslib-${{ env.htslib-version }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.htslib-version }}
       - if: ${{ steps.cache-htslib.outputs.cache-hit != 'true' }}
         name: install htslib
         run: |
-          cd /usr/bin
           sudo wget -q https://github.com/samtools/htslib/releases/download/${{ env.htslib-version }}/htslib-${{ env.htslib-version }}.tar.bz2
           sudo tar -vxjf htslib-${{ env.htslib-version }}.tar.bz2
           cd htslib-${{ env.htslib-version }}
           sudo make
-          echo "/usr/bin/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
+          echo "htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
 
 
       # download genomes
@@ -177,6 +175,8 @@ jobs:
       - name: set versions
         run: |
           echo "ngs-bits-version=2022_10--py310hf1a0324_1" >> $GITHUB_ENV
+          echo "samtools-version=1.11" >> $GITHUB_ENV
+          echo "htslib-version=1.16" >> $GITHUB_ENV
 
       # install os dependencies
       - name: update OS repositories
@@ -255,34 +255,40 @@ jobs:
 
 
       # install tools dependencies (used for crossmap)
-      - name: install htslib
-        run: |
-          cd /usr/bin
-          sudo wget -q https://github.com/samtools/htslib/releases/download/1.16/htslib-1.16.tar.bz2
-          sudo tar -vxjf htslib-1.16.tar.bz2
-          cd htslib-1.16
-          sudo make
-          echo "/usr/bin/htslib-1.16" >> $GITHUB_PATH
-      
       - name: cache samtools
         id: cache-samtools
         uses: actions/cache@v3
         env:
           cache-name: cache-samtools
-          samtools-version: 1-11
         with:
-          path: /usr/bin/samtools-1.11
+          path: samtools-${{ env.samtools-version }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.samtools-version }}
       - if: ${{ steps.cache-samtools.outputs.cache-hit != 'true' }}
         name: install samtools
         run: |
-          cd /usr/bin
-          sudo wget -q https://github.com/samtools/samtools/releases/download/1.11/samtools-1.11.tar.bz2
-          sudo tar xjf samtools-1.11.tar.bz2
-          sudo rm samtools-1.11.tar.bz2
-          cd samtools-1.11
+          sudo wget -q https://github.com/samtools/samtools/releases/download/${{ env.samtools-version }}/samtools-${{ env.samtools-version }}.tar.bz2
+          sudo tar xjf samtools-${{ env.samtools-version }}.tar.bz2
+          sudo rm samtools-${{ env.samtools-version }}.tar.bz2
+          cd samtools-${{ env.samtools-version }}
           sudo make
-          echo "/usr/bin/samtools-1.11" >> $GITHUB_PATH
+          echo "samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
+
+      - name: cache htslib
+        id: cache-htslib
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-htslib
+        with:
+          path: htslib-${{ env.htslib-version }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.htslib-version }}
+      - if: ${{ steps.cache-htslib.outputs.cache-hit != 'true' }}
+        name: install htslib
+        run: |
+          sudo wget -q https://github.com/samtools/htslib/releases/download/${{ env.htslib-version }}/htslib-${{ env.htslib-version }}.tar.bz2
+          sudo tar -vxjf htslib-${{ env.htslib-version }}.tar.bz2
+          cd htslib-${{ env.htslib-version }}
+          sudo make
+          echo "htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
 
 
       # download genomes
