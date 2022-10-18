@@ -348,48 +348,49 @@ def get_scheme_classification(criteria, scheme_type):
 
 
 
-def is_valid_scheme(criteria, scheme):
-
+def is_valid_scheme(selected_criteria, scheme):
     is_valid = True
     message = ''
 
-    if scheme == 'none': # abort
+    scheme_criteria = scheme['criteria']
+    scheme_description = scheme['description']
+
+    if scheme['scheme_type'] == 'none': # abort, always valid, never insert data
         return is_valid, message
 
     # ensure that at least one criterium is selected
-    if len(criteria) == 0:
+    if len(selected_criteria) == 0:
         is_valid = False
         message = "You must select at least one of the classification scheme criteria to submit a classification scheme based classification. The classification scheme based classification was not submitted."
 
-    # ensure that only valid criteria were submitted -> handled by database
-    # ensure that the strength properties are valid -> 
-    # ensure that no criteria are selected that can't be selected following the scheme
-    # ensure that no mutually exclusive criteria are selected
-        
-    criteria_with_strength_select = get_criteria_with_strength_select()
-    not_activateable_buttons = get_not_activatable_buttons()
-    disable_groups = get_disable_groups()
+    all_selected_criteria_names = [selected_criteria[x]['criterium_name'] for x in selected_criteria]
 
-    if 'task-force' in scheme:
-        pass
-    elif 'acmg' in scheme:
-        if any(criterium[0] != criteria[criterium]['strength'][0] for criterium in criteria):
+    # ensure that only valid criteria were submitted
+    for criterium_id in selected_criteria:
+        criterium_name = selected_criteria[criterium_id]['criterium_name']
+        # ensure that only valid criteria were submitted
+        if criterium_name not in scheme_criteria:
             is_valid = False
-            message = "There are criteria with invalid strengths."
-        if any((criterium not in criteria_with_strength_select[scheme]) and (criterium[0:2] != criteria[criterium]['strength'][0:2]) for criterium in criteria):
+            message = "Criterium " + str(criterium_name) + " is not a valid criterium for the " + scheme_description + " scheme."
+            break
+        # ensure that the criteria are selectable in the selected scheme
+        if scheme_criteria[criterium_name]['is_selectable'] == 0:
             is_valid = False
-            message = "There are criteria with strengths that can not be selected"
-
-    if any(criterium in not_activateable_buttons[scheme] for criterium in criteria):
-        is_valid = False
-        message = "There are criteria which can not be activated with the provided scheme (" + scheme + ")"
-
-    for criterium in criteria:
-        current_disable_group = disable_groups[scheme][criterium]
-        if (any(criterium in current_disable_group for criterium in criteria)):
+            message = "Criterium " + str(criterium_name) + " can not be selected for the " + scheme_description + " scheme."
+            break
+        # ensure that the strength properties are valid
+        current_possible_strengths = scheme_criteria[criterium_name]['possible_strengths']
+        selected_strength = selected_criteria[criterium_id]['strength']
+        if selected_strength not in current_possible_strengths:
             is_valid = False
-            message = "There are criteria which are mutually exclusive to " + str(criterium)
-
+            message = "Criterium " + str(criterium_name) + " received the strength: " + str(selected_strength) + " which is not valid for this criterium. Valid values are: " + str(current_possible_strengths)
+            break
+        # ensure that no mutually exclusive criteria are selected
+        current_mutually_exclusive_criteria = scheme_criteria[criterium_name]['mutually_exclusive_criteria']
+        if any([x in current_mutually_exclusive_criteria for x in all_selected_criteria_names]):
+            is_valid = False
+            message = "A mutually exclusive criterium to " + str(criterium_name) + " was selected. Remember to not select " + str(criterium_name) + " together with any of " + str(current_mutually_exclusive_criteria)
+            break
     
     return is_valid, message
 
@@ -429,104 +430,3 @@ def get_clinvar_submission(variant_id, conn):
                 clinvar_submission['message'] = clinvar_submission_message
     
     return clinvar_submission
-
-
-##### these functions return data which is needed to
-# (1) display buttons correctly in frontend
-# (2) verify that the inserted data is valid
-def get_criteria_with_strength_select():
-    criteria_with_strength_select = {
-        'acmg_standard': [
-            'pp1', 'ps1', 'bp1', 'bs1'
-        ],
-        'acmg_TP53': [
-            'pp1', 'ps1', 'bp1', 'bs1'
-        ],
-        'acmg_CDH1': [
-            'pp1', 'ps1', 'bp1', 'bs1'
-        ],
-        'task-force': [
-
-        ],
-        'task-force-brca': [
-
-        ]
-    }
-    return criteria_with_strength_select
-
-def get_not_activatable_buttons():
-    not_activateable_buttons = {
-        'acmg_standard': [],
-        'acmg_TP53': ['pm3', 'pm4', 'pp2', 'pp4', 'pp5', 'bp1', 'bp3', 'bp5', 'bp6'],
-        'acmg_CDH1': ['pm1', 'pm3', 'pm5', 'pp2', 'pp4', 'pp5', 'bp1', 'bp3', 'bp6'],
-        'task-force': ['1.2', '2.5', '3.5', '4.1', '5.2'],
-        'task-force-brca': []
-    }
-    return not_activateable_buttons
-
-def get_disable_groups():
-    disable_groups = {
-        'acmg_standard': {
-            # very strong pathogenic
-            'pvs1': [],
-            # strong pathogenic
-            'ps1': [], 'ps2': [],'ps3': [],'ps4': [],
-            # moderate pathogenic
-            'pm1': [],'pm2': [],'pm3': [],'pm4': [],'pm5': [],'pm6': [],
-            # supporting pathogenic
-            'pp1': ['bs4'],'pp2': [],'pp3': [],'pp4': [],'pp5': [],
-            # supporting benign
-            'bp1': [],'bp2': [],'bp3': [],'bp4': [],'bp5': [],'bp6': [],'bp7': [],
-            # strong benign
-            'bs1': ['ps4'],'bs2': [],'bs3': [],'bs4': ['pp1'],
-            # stand alone benign
-            'ba1': ['ps4']
-        },
-        'acmg_TP53': {
-            # very strong pathogenic
-            'pvs1': [],
-            # strong pathogenic
-            'ps1': [], 'ps2': [],'ps3': [],'ps4': [],
-            # moderate pathogenic
-            'pm1': [],'pm2': [],'pm3': [],'pm4': [],'pm5': [],'pm6': [],
-            # supporting pathogenic
-            'pp1': ['bs4'],'pp2': [],'pp3': [],'pp4': [],'pp5': [],
-            # supporting benign
-            'bp1': [],'bp2': [],'bp3': [],'bp4': [],'bp5': [],'bp6': [],'bp7': [],
-            # strong benign
-            'bs1': ['ps4'],'bs2': [],'bs3': [],'bs4': ['pp1'],
-            # stand alone benign
-            'ba1': ['ps4']
-        },
-        'acmg_CDH1': {
-            # very strong pathogenic
-            'pvs1': [],
-            # strong pathogenic
-            'ps1': [], 'ps2': [],'ps3': [],'ps4': [],
-            # moderate pathogenic
-            'pm1': [],'pm2': [],'pm3': [],'pm4': [],'pm5': [],'pm6': [],
-            # supporting pathogenic
-            'pp1': ['bs4'],'pp2': [],'pp3': [],'pp4': [],'pp5': [],
-            # supporting benign
-            'bp1': [],'bp2': [],'bp3': [],'bp4': [],'bp5': [],'bp6': [],'bp7': [],
-            # strong benign
-            'bs1': ['ps4'],'bs2': [],'bs3': [],'bs4': ['pp1'],
-            # stand alone benign
-            'ba1': ['ps4']
-        },
-        'task-force': {
-            '1.1': [], '1.2': [], '1.3': [], 
-            '2.1': [], '2.2': [], '2.3': [], '2.4': [], '2.5': [], '2.6': ['3.3'], '2.7': [], '2.8': [], '2.9': [], '2.10': [], 
-            '3.1': [], '3.2': [], '3.3': [], '3.4': [], '3.5': [], 
-            '4.1': [], '4.2': [], '4.3': ['3.3'], '4.4': ['3.3'], '4.5': [], '4.6': [], '4.7': [], '4.8': [], '4.9': [], 
-            '5.1': [], '5.2': [], '5.3': [], '5.4': [], '5.5': [], '5.6': []
-        },
-        'task-force-brca': {
-            '1.1': [], '1.2': [], '1.3': [], 
-            '2.1': [], '2.2': [], '2.3': [], '2.4': [], '2.5': [], '2.6': ['3.3'], '2.7': [], '2.8': [], '2.9': [], '2.10': [], 
-            '3.1': [], '3.2': [], '3.3': [], '3.4': [], '3.5': [], 
-            '4.1': [], '4.2': [], '4.3': ['3.3'], '4.4': ['3.3'], '4.5': [], '4.6': [], '4.7': [], '4.8': [], '4.9': [], 
-            '5.1': [], '5.2': [], '5.3': [], '5.4': [], '5.5': [], '5.6': []
-        } 
-    }
-    return disable_groups

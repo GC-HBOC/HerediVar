@@ -576,42 +576,6 @@ class Connection:
         consequences.sort(key = keyfunc) # sort by preferred transcript
         return consequences
 
-
-    """
-    # this function adds additional columns to the variant table (ie. gene symbol, gene_id)
-    def finalize_search_query(self, command):
-        prefix = '''
-        SELECT id, chr, pos, ref, alt, gene_id, symbol, classification, user_classification,hgvs_c,hgvs_p,symbol_details,gene_id_details FROM (
-            SELECT id, chr, pos, ref, alt, gene_id, symbol, classification, user_classification FROM (
-	            SELECT id, chr, pos, ref, alt, gene_id, symbol, classification FROM (
-		            SELECT id, chr, pos, ref, alt, group_concat(gene_id SEPARATOR '; ') as gene_id, group_concat(symbol SEPARATOR '; ') as symbol FROM (
-			            SELECT * FROM (
-        '''
-        postfix = '''
-			    ) a
-			    LEFT JOIN (
-				    SELECT DISTINCT variant_id, gene_id FROM variant_consequence WHERE gene_id IS NOT NULL) b ON a.id=b.variant_id
-		        ) c LEFT JOIN (
-			        SELECT id AS gene_id_2, symbol FROM gene WHERE id
-		    ) d ON c.gene_id=d.gene_id_2 
-		        GROUP BY id, chr, pos, ref, alt
-	        ) e LEFT JOIN (
-	            SELECT variant_id, classification FROM consensus_classification WHERE is_recent=1) f ON e.id = f.variant_id
-            ) g LEFT JOIN (
-	            SELECT variant_id, classification as user_classification FROM user_classification WHERE user_id = %s) h ON g.id = h.variant_id ORDER BY chr, pos, ref, alt
-            ) h  LEFT JOIN (
-		        SELECT variant_id,hgvs_c,hgvs_p,is_mane_select,symbol_details,gene_id as gene_id_details FROM (
-		        	SELECT variant_id,transcript_name,hgvs_c,hgvs_p,is_mane_select,gene_id FROM transcript INNER JOIN (SELECT variant_id,transcript_name,hgvs_c,hgvs_p FROM variant_consequence WHERE source='ensembl') x ON transcript.name=x.transcript_name WHERE is_mane_select=1
-                    ) x LEFT JOIN (SELECT id,symbol as symbol_details FROM gene) y ON x.gene_id = y.id
-        ) i ON h.id=i.variant_id ORDER BY chr, pos, ref, alt
-        '''
-        #				SELECT variant_id,transcript_name,hgvs_c,hgvs_p,is_mane_select FROM transcript  INNER JOIN (SELECT variant_id,transcript_name,hgvs_c,hgvs_p FROM variant_consequence WHERE source='ensembl') x ON transcript.name=x.transcript_name WHERE is_mane_select=1
-
-        command = prefix + command + postfix
-        return command
-    """
-
-
     def get_variants_page_merged(self, page, page_size, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None):
         # get one page of variants determined by offset & pagesize
         offset = (page - 1) * page_size
@@ -782,15 +746,6 @@ class Connection:
 
         return matching_variant_ids
 
-                    
-
-
-
-
-
-
-
-    
 
     def sort_consequences(self, a, b):
         # sort by ensembl/refseq
@@ -949,27 +904,6 @@ class Connection:
         result = self.cursor.fetchall()
         return [x[0] for x in result]
 
-    '''
-    def get_vid_list(self):
-        command = "SELECT external_id FROM variant_ids WHERE id_source='heredicare'"
-        self.cursor.execute(command)
-        vids = self.cursor.fetchall()
-        vids = [x[0] for x in vids]
-        return vids
-    '''
-
-    '''
-    def insert_consensus_classification_from_vcf(self, user_id, chr, pos, ref, alt, consensus_classification, comment, date = "CURDATE()", evidence_document = None):
-        self.invalidate_previous_consensus_classifications(self.get_one_variant(chr, pos, ref, alt)[0])
-        if date != "CURDATE()":
-            date = enquote(date)
-        if evidence_document is None:
-            return
-        command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document) (SELECT %s, id, %s, %s, " + date + ", %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)"
-        self.cursor.execute(command, (user_id, consensus_classification, comment, evidence_document.decode(), chr, pos, ref, alt))
-        self.conn.commit()
-    '''
-    
     def insert_consensus_classification_from_variant_id(self, user_id, variant_id, consensus_classification, comment, evidence_document, date, scheme_id):
         self.invalidate_previous_consensus_classifications(variant_id)
         command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document, classification_scheme_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
@@ -1034,117 +968,6 @@ class Connection:
         result = self.cursor.fetchone()
         return result
 
-
-
-
-
-
-
-
-
-
-
-    ### scheme classification functions
-    # this function is mainly for internal use. Use insert_user_classification or insert_consensus_classification instead
-    """
-    def insert_scheme_classification(self, variant_id, scheme, is_consensus):
-        command = "INSERT INTO scheme_classification (variant_id, scheme, date, is_consensus) VALUES (%s, %s, %s, %s)"
-        curdate = datetime.datetime.today().strftime('%Y-%m-%d')
-        self.cursor.execute(command, (variant_id, scheme, curdate, is_consensus))
-        self.conn.commit()
-
-        return self.get_last_insert_id()
-
-
-    def insert_consensus_scheme_classification(self, user_id, variant_id, scheme):
-        scheme_classification_id = self.insert_scheme_classification(variant_id, scheme, 1)
-
-        self.invalidate_previous_scheme_consensus_classifications(variant_id)
-
-        command = "INSERT INTO scheme_consensus_classification (scheme_classification_id, user_id, is_recent) VALUES (%s, %s, %s)"
-        self.cursor.execute(command, (scheme_classification_id, user_id, 1))
-        self.conn.commit()
-        return scheme_classification_id
-
-
-    
-
-    # each user can have one scheme classification per scheme
-    def insert_user_scheme_classification(self, variant_id, user_id, scheme):
-        scheme_classification_id = self.insert_scheme_classification(variant_id, scheme, 0)
-
-        command = "INSERT INTO scheme_user_classification (scheme_classification_id, user_id) VALUES (%s, %s)"
-        self.cursor.execute(command, (scheme_classification_id, user_id))
-        self.conn.commit()
- 
-
-    def update_scheme_classification_date(self, scheme_classification_id):
-        curdate = datetime.datetime.today().strftime('%Y-%m-%d')
-        command = "UPDATE scheme_classification SET DATE=%s WHERE id=%s"
-        self.cursor.execute(command, (curdate, scheme_classification_id))
-        self.conn.commit()
-
-
-    def delete_scheme_criterium(self, scheme_criterium_id):
-        command = "DELETE FROM scheme_criteria WHERE id=%s"
-        self.cursor.execute(command, (scheme_criterium_id, ))
-        self.conn.commit()
-   """
-
-    """
-    def get_user_scheme_classification(self, variant_id, user_id = 'all', scheme = 'all', get_criteria=False, sql_modifier=None):
-        inner_command = "SELECT id as classification_id, variant_id, scheme, date, is_consensus FROM scheme_classification WHERE variant_id=%s AND is_consensus=0"
-        actual_information = (variant_id, )
-        if scheme != 'all':
-            inner_command += " AND scheme=%s"
-            actual_information += (scheme, )
-        
-        command = "SELECT classification_id, variant_id, user_id, scheme, date FROM scheme_user_classification a INNER JOIN \
-	                    (" + inner_command + ") b \
-	                    ON a.scheme_classification_id = b.classification_id"
-
-        if user_id != 'all':
-            command += ' WHERE user_id=%s'
-            actual_information += (user_id, )
-
-        if sql_modifier is not None:
-            command = sql_modifier(command)
-        
-        self.cursor.execute(command, actual_information)
-        result = self.cursor.fetchall()
-        if len(result) > 1 and scheme != 'all':
-            raise RuntimeError("ERROR: There are multiple user scheme classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme + ", user_id: " + str(user_id) + "\n The result was: " + str(result))
-        if len(result) == 0:
-            return None
-
-        return result
-    """
-
-
-    '''
-    def get_classification_criteria_applied(self, variant_id, user_id = 'all', scheme = 'all', where = 'user'):
-        
-        command = "SELECT id FROM user_classification WHERE variant_id=%s"
-        actual_information = (variant_id, )
-        if user_id != 'all':
-            command = command + ' AND user_id=%s'
-            actual_information += (user_id, )
-        if scheme != 'all':
-            scheme_id = self.get_scheme_id_from_scheme_name(scheme)
-            command += ' AND classification_scheme_id = %s'
-            actual_information += (scheme_id, )
-        self.cursor.execute(command, actual_information)
-        classification_ids = self.cursor.fetchall()
-        classification_ids = tuple([classification_id[0] for classification_id in classification_ids])
-
-
-        command = "SELECT * FROM user_classification_criteria_applied WHERE user_classification_id in [" + ', '.join(["%s" for x in classification_ids]) + "]"
-        self.cursor.execute(command, classification_ids)
-        result = self.cursor.fetchall()
-        return result
-    '''
-
-
     def get_classification_criterium_id(self, scheme_id, classification_criterium_name):
         #classification_scheme_id = self.get_scheme_id_from_scheme_name(scheme)
         command = "SELECT id FROM classification_criterium WHERE name = %s and classification_scheme_id = %s"
@@ -1208,7 +1031,6 @@ class Connection:
 
 
     def delete_scheme_criterium_applied(self, scheme_criterium_id, where="user"):
-        #
         if where == "user":
             command = "DELETE FROM user_classification_criteria_applied WHERE id=%s"
         elif where == "consensus":
@@ -1264,33 +1086,6 @@ class Connection:
         if len(user_classifications) == 0:
             return None
         return user_classifications
-
-
-    '''
-    def get_user_classifications(self, variant_id): # id,classification,variant_id,user_id,comment,date
-        #command = "SELECT * FROM user_classification WHERE variant_id = %s"
-        command = "SELECT * FROM user_classification a INNER JOIN (SELECT * FROM user) b ON a.user_id = b.id WHERE variant_id = %s"
-        self.cursor.execute(command, (variant_id, ))
-        result = self.cursor.fetchall()
-        if len(result) == 0:
-            return None
-        result = sorted(result, key=lambda x: functions.convert_none_infinite(x[5]), reverse=True)
-        return result
-    '''
-
-    """
-    def get_user_classification(self, user_id, variant_id = None):
-        actual_information = (user_id, )
-        command = "SELECT * FROM user_classification WHERE user_id = %s"
-        if variant_id is not None:
-            command = command + " AND variant_id = %s"
-            actual_information = actual_information + (variant_id, )
-        command = command + " ORDER BY DATE(date) DESC LIMIT 1" # probably not neccessary
-        self.cursor.execute(command, actual_information)
-        result = self.cursor.fetchone()
-        return result
-    """
-
 
     def delete_variant(self, variant_id):
         command = "DELETE FROM variant WHERE id = %s"
@@ -1502,24 +1297,6 @@ class Connection:
         user_classifications = self.get_user_classifications_extended(variant_id) # 0id,1classification,2variant_id,3user_id,4comment,5date,6classification_scheme_id,7user_id,8first_name,9last_name,10affiliation
         if user_classifications is not None:
             variant_annot_dict['user_classifications'] = user_classifications
-
-        #user_scheme_classifications = self.get_user_scheme_classification(variant_id, sql_modifier = self.add_userinfo)
-        #annotated_user_scheme_classifications = []
-        #if user_scheme_classifications is not None:
-        #    for classification in user_scheme_classifications:
-        #        current_criteria = self.get_scheme_criteria(classification[0])
-        #        classification += (current_criteria, )
-        #        annotated_user_scheme_classifications.append(classification)
-        #    variant_annot_dict['user_scheme_classifications'] = annotated_user_scheme_classifications
-        
-        #consensus_scheme_classifications = self.get_consensus_scheme_classification(variant_id, scheme='all', most_recent=most_recent_scheme_consensus, sql_modifier=self.add_userinfo)
-        #annotated_consensus_scheme_classifications = []
-        #if consensus_scheme_classifications is not None:
-        #    for classification in consensus_scheme_classifications:
-        #        current_criteria = self.get_scheme_criteria(classification[0])
-        #        classification += (current_criteria, )
-        #        annotated_consensus_scheme_classifications.append(classification)
-        #    variant_annot_dict['consensus_scheme_classifications'] = annotated_consensus_scheme_classifications
         
         heredicare_center_classifications = self.get_heredicare_center_classifications(variant_id)
         if heredicare_center_classifications is not None:
@@ -1595,43 +1372,11 @@ class Connection:
         self.cursor.execute(command, (0, variant_id))
         self.conn.commit()
 
-    """
-    def get_consensus_scheme_classification(self, variant_id, scheme = 'all', most_recent=True, sql_modifier=None):
-        command = "SELECT id, variant_id, scheme, date, is_consensus FROM scheme_consensus_classification a INNER JOIN \
-	                    (SELECT id as inner_id, variant_id, scheme, date, is_consensus FROM scheme_classification WHERE variant_id=%s AND is_consensus=1) b \
-	                ON a.scheme_classification_id = b.inner_id "
-
-        inner_command = "SELECT id as classification_id, variant_id, scheme, date, is_consensus FROM scheme_classification WHERE variant_id=%s AND is_consensus=1"
-        actual_information = (variant_id, )
-        if scheme != 'all':
-            inner_command += " AND scheme=%s"
-            actual_information += (scheme, )
-        
-        command = "SELECT classification_id, variant_id, is_recent, scheme, date, user_id FROM scheme_consensus_classification a INNER JOIN \
-	                    (" + inner_command + ") b \
-	                    ON a.scheme_classification_id = b.classification_id"
-        if most_recent:
-            command += " WHERE is_recent=1"
-
-        if sql_modifier is not None:
-            command = sql_modifier(command)
-
-        self.cursor.execute(command, actual_information)
-        result = self.cursor.fetchall()
-        if len(result) == 0:
-            return None
-        return result
-    """
-
     def add_userinfo(self, command):
         prefix = 'SELECT * FROM (('
         postfix = ') uid_a INNER JOIN (SELECT id as outer_id, first_name,last_name,affiliation FROM user) uid_b ON uid_a.user_id = uid_b.outer_id)'
         result = prefix + command + postfix
         return result
-
-
-
-
 
     def insert_assay(self, variant_id, assay_type, report, filename, score, date):
         command = "INSERT INTO assay (variant_id, assay_type, report, filename, score, date) VALUES (%s, %s, %s, %s, %s, %s)"
@@ -1671,7 +1416,6 @@ class Connection:
             else:
                 mutually_exclusive_criteria_dict[source].append(target)
 
-
         result = {}
         for classification_schema in classification_schemas:
             classification_schema_id = classification_schema[0]
@@ -1691,7 +1435,7 @@ class Connection:
                 classification_criterium_is_selectable = criterium[4]
 
                 new_criterium_dict = {}
-
+                new_criterium_dict["id"] = classification_criterium_id
                 new_criterium_dict["name"] = classification_criterium_name
                 new_criterium_dict["description"] = classification_criterium_description
                 new_criterium_dict["is_selectable"] = classification_criterium_is_selectable
@@ -1708,29 +1452,10 @@ class Connection:
                         new_criterium_dict["default_strength"] = classification_criterium_strength_name
                     all_criteria_strengths.append(classification_criterium_strength_name)
                 new_criterium_dict["possible_strengths"] = all_criteria_strengths
-
-
                 new_criterium_dict['mutually_exclusive_criteria'] = mutually_exclusive_criteria_dict.get(classification_criterium_id, []) 
 
                 classification_criteria_dict[classification_criterium_name] = new_criterium_dict
 
-
-            
-
             result[classification_schema_id] = {"description": description, "scheme_type": scheme_type, "reference": online_reference, 'criteria': classification_criteria_dict}
 
         return result
-
-        
-
-
-    '''delete later'''
-    def insert_classification_criterium(self, classification_scheme_id, name, description, is_selectable):
-        command = "INSERT INTO classification_criterium (classification_scheme_id, name, description, is_selectable) VALUES (%s, %s, %s, %s)"
-        self.cursor.execute(command, (classification_scheme_id, name, description, is_selectable))
-        self.conn.commit()
-
-    def insert_classification_criterium_strength(self, classification_criterium_id, name, description, is_default):
-        command = "INSERT INTO classification_criterium_strength (classification_criterium_id, name, description, is_default) VALUES (%s, %s, %s, %s)"
-        self.cursor.execute(command, (classification_criterium_id, name, description, is_default))
-        self.conn.commit()
