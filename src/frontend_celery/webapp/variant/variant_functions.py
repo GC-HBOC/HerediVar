@@ -256,33 +256,30 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
         rsid = rsid[4]
     generator.add_variant_info(v, classification, current_date, comment, rsid)
 
-    #literature
+    # extract & remove special annotations
     literature = annotations.pop('literature', None)
-    # classifications
     user_classifications = annotations.pop('user_classifications', None)
     clinvar_submissions = annotations.pop('clinvar_submissions', None)
     heredicare_center_classifications = annotations.pop('heredicare_center_classifications', None)
     consensus_scheme_classifications = annotations.pop('consensus_scheme_classifications', None)
     user_scheme_classifications = annotations.pop('user_scheme_classifications', None)
     assays = annotations.pop('assays', None) #TODO
-
     # consequences
     variant_consequences = annotations.pop('variant_consequences', None)
+
     # basic information
     generator.add_subtitle("Scores & annotations:")
     for key in annotations:
-        print(key)
+        #print(key)
         generator.add_relevant_information(key.replace('_', ' '), str(annotations[key][4]))
     if variant_consequences is not None:
         generator.add_subtitle("Variant consequences:")
         generator.add_text("Flags column: first number = is_gencode_basic, second number: is_mane_select, third number: is_mane_plus_clinical, fourth number: is_ensembl_canonical")
         generator.add_relevant_classifications([[x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[11], str(x[13]) + str(x[14]) + str(x[15]) + str(x[16])] for x in variant_consequences], 
             ('Transcript Name', 'HGVSc', 'HGVSp', 'Consequence', 'Impact', 'Exon Nr.', 'Intron Nr.', 'Gene Symbol', 'Protein Domain', 'Flags'), [3, 2, 2, 3, 1.5, 1.2, 1.3, 1.5, 1.6, 1.5])
-    
     if literature is not None:
         generator.add_subtitle("PubMed IDs:")
         generator.add_relevant_literature([str(x[2]) for x in literature])
-    
     if any(x is not None for x in [user_classifications, clinvar_submissions, heredicare_center_classifications, consensus_scheme_classifications, user_scheme_classifications]):
         generator.add_subtitle("Classifications:")
     if consensus_scheme_classifications is not None:
@@ -301,7 +298,6 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
     if user_scheme_classifications is not None:
         generator.add_text("HerediVar user scheme classifications:")
         user_scheme_classifications = add_scheme_classes(user_scheme_classifications, 9)
-        #print(user_scheme_classifications)
         table_data = []
         for classification in user_scheme_classifications:
             scheme = classification[3]
@@ -314,9 +310,12 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
         generator.add_relevant_classifications([[x[1], x[3], x[5], x[4]] for x in heredicare_center_classifications], ('Class', 'Center', 'Date', 'Comment'),  [2, 2, 2, 12])
     if clinvar_submissions is not None:
         generator.add_text("ClinVar submissions:")
-        print(clinvar_submissions[5])
         generator.add_relevant_classifications([[x[2], x[3], x[4], ';'.join([condition[0] for condition in x[5]]), x[6], x[7]] for x in clinvar_submissions], ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter', 'Comment'), [1.5, 2, 2, 2, 2, 9])
-    
+    if assays is not None:
+        generator.add_text("Assays:")
+        generator.add_relevant_classifications([[x[1], x[2], x[3]] for x in assays], ("Assay type", "Score", "Date"), [3,3,3])
+
+
     generator.save_pdf()
     buffer.seek(io.SEEK_SET)
     evidence_b64 = functions.buffer_to_base64(buffer)

@@ -273,7 +273,7 @@ def consensus_classify(variant_id):
     do_redirect=False
     if request.method == 'POST':
         ####### classification based on classification scheme submit 
-        scheme_id = request.form['scheme']
+        scheme_id = int(request.form['scheme'])
 
         classification = request.form['final_class']
         comment = request.form['comment'].strip()
