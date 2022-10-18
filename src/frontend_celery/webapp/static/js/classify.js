@@ -392,17 +392,6 @@ function revert_all() {
 //////////// create dom object functions ////////////
 
 // creates the criteria buttons depending on mask
-/*
-function create_criteria_buttons(scheme) {
-    if (scheme.includes('acmg')) {
-        create_criteria_buttons('acmg_standard')
-    }
-    if (scheme.includes('task-force')) {
-        create_criteria_buttons('task-force')
-    }
-}
-*/
-
 function create_criteria_buttons() {
     var pathogenic_criteria_container = document.getElementById('pathogenic_criteria_container')
     var benign_criteria_container = document.getElementById('benign_criteria_container')
@@ -411,10 +400,12 @@ function create_criteria_buttons() {
     
     var last_criterium_type = '-'
     var container = document.createElement('div')
-    console.log(scheme)
-    console.log(classification_schemas)
     const current_criteria = classification_schemas[scheme]['criteria']
-    for (const criterium_id in current_criteria) {
+    criteria_ids = Object.keys(current_criteria)
+    criteria_ids = criteria_ids.sort(compare_criteria())
+
+    for (const i in criteria_ids) {
+        var criterium_id = criteria_ids[i]
         var current_criterium = current_criteria[criterium_id]
         var default_strength = current_criterium['default_strength']
 
@@ -459,6 +450,62 @@ function create_criteria_buttons() {
     }
 
 }
+
+
+
+function compare_criteria() {
+    return function(a, b) {
+        if (scheme_type === 'acmg') {
+            const criterium_order = {'pvs': 1, 'ps': 2, 'pm': 3, 'pp': 4, 'bp': 5, 'bs': 6, 'ba': 7}
+            const a_letters = a.slice(0, -1)
+            const a_crit_num = parseInt(a.slice(-1))
+            const b_letters = b.slice(0, -1)
+            const b_crit_num = parseInt(b.slice(-1))
+
+            if (a_letters === b_letters) {
+                return a_crit_num - b_crit_num
+            }
+
+            a_num = criterium_order[a_letters]
+            b_num = criterium_order[b_letters]
+
+            return a_num - b_num
+        } 
+        
+        if (scheme_type === 'task-force') {
+
+            const a_first_num = a[0]
+            const b_first_num = b[0]
+
+            if (a_first_num !== b_first_num) {
+                return b_first_num - a_first_num
+            }
+
+            const a_second_num = a.slice(2)
+            const b_second_num = b.slice(2)
+
+            return a_second_num - b_second_num
+            
+        }
+    }
+}
+
+
+
+
+
+function compare_strength() {
+    return function(a, b) {
+        const strength_order = {'pvs': 1, 'ps': 2, 'pm': 3, 'pp': 4, 'bp': 5, 'bs': 6, 'ba': 7}
+        a_num = strength_order[a]
+        b_num = strength_order[b]
+        
+        return a_num - b_num
+    }
+}
+
+
+
 
 
 function create_select_option(parent, value, display_text, scheme_type) {
@@ -524,11 +571,14 @@ function create_criterium_button(criterium_id, strength) {
     return container
 }
 
+
 // strength select radio buttons
 function add_strength_selection(criterium_id, possible_strengths) {
     if (possible_strengths.length <= 1) {
         return
     }
+
+    possible_strengths = possible_strengths.sort(compare_strength())
 
     var additional_content = document.getElementById('additional_content');
     const new_subcaption = create_subcaption('Strength:')
@@ -543,6 +593,7 @@ function add_strength_selection(criterium_id, possible_strengths) {
     const preselected_strength = document.getElementById(criterium_id + '_strength').value
     document.getElementById(preselected_strength + '_radio').checked = true
 }
+
 
 function create_strength_ratio(criterium_id, criterium_strength) {
     var container = document.createElement('div')
