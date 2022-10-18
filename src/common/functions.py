@@ -483,6 +483,9 @@ def add_args_to_url(url, new_params):
 def get_today():
     return datetime.datetime.today().strftime('%Y-%m-%d')
 
+def get_now():
+    return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
 
 def is_snv(one_var):
     ref = one_var[3]

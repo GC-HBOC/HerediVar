@@ -3,7 +3,7 @@
 var previous_obj = null;
 var colors; // this maps a criterium strength to a color which are defined in css
 var scheme = document.getElementById('scheme').value // contains the currently selected scheme
-var criteria = acmg_criteria // a list of all criteria depending on the currently selecte scheme
+var scheme_type = document.getElementById('scheme').getAttribute('scheme_type')
 
 ///////////// prepare data ////////////
 //const schemes_with_info = json_string_to_object(schemes_with_info_string)
@@ -35,38 +35,39 @@ function save_criteria() {
     }
 }
 
-function update_info_panel(id, previous_evidence) {
+function update_info_panel(criterium_id, previous_evidence) {
     revert_criteria_container()
     //var criteria_container = document.getElementById('criteria_container')
     var criteria_title = document.getElementById('criteria_title')
-    criteria_title.textContent = id.toUpperCase();
+    criteria_title.textContent = criterium_id.toUpperCase();
     document.getElementById('button_container').hidden = false;
 
     $('#select_criterium_check').popover('hide')
     document.getElementById('select_criterium_check').hidden = false;
 
     var criteria_description_dom = document.getElementById('criteria_description')
-    update_criteria_description(criteria_description_dom, id)
+    update_criteria_description(criteria_description_dom, criterium_id)
     var criteria_evidence_dom = document.getElementById('criteria_evidence')
     update_criteria_evidence_dom(criteria_evidence_dom, previous_evidence)
     var select_criterium_button = document.getElementById('select_criterium_check')
-    update_select_criterium_button(select_criterium_button, id)
+    update_select_criterium_button(select_criterium_button, criterium_id)
 
 
     
     if (classification_type === 'consensus') {
-        add_user_acmg_classification_details(id)
+        add_user_acmg_classification_details(criterium_id)
     }
 
-    if (criteria_with_strength_selects[scheme].includes(id)) {
-        add_strength_selection(id)
+    const current_criteria = classification_schemas[scheme]['criteria']
+    if (criterium_id in current_criteria) {
+        add_strength_selection(criterium_id, current_criteria[criterium_id]['possible_strengths'])
     }
 
 
 }
 
-function update_criteria_description(div, id) {
-    var text = criteria_descriptions[scheme][id]
+function update_criteria_description(div, criterium_id) {
+    var text = classification_schemas[scheme]['criteria'][criterium_id]['description']
     div.textContent = text
 }
 
@@ -116,7 +117,20 @@ function submit_classification() {
 ///////////// preselect stuff ////////////
 // call functions once on page load
 function preselect_final_classification() {
-    document.getElementById('final_class').value = previous_classification
+    var comment_text_area = document.getElementById('comment')
+    var final_class_select = document.getElementById('final_class')
+    var warning_display = document.getElementById('warning_alert_previous_classification')
+    if (scheme in previous_classification){
+        final_class_select.value = previous_classification[scheme]['class']
+        comment_text_area.value = previous_classification[scheme]['comment']
+        comment_text_area.innerText = previous_classification[scheme]['comment']
+        warning_display.hidden = false
+    } else {
+        final_class_select.value = 3
+        comment_text_area.value = ''
+        comment_text_area.innerText = ''
+        warning_display.hidden = true
+    }
 }
 
 
@@ -124,20 +138,20 @@ function preselect_scheme() {
     var scheme_select = document.getElementById('scheme')
     const lower_case_variant_genes = variant_genes.join('|').toLowerCase().split('|') // convert all genes to lower case
     if (lower_case_variant_genes.includes('tp53')) {
-        scheme_select.value = 'acmg_TP53'
+        scheme_select.value = 3 //'acmg_TP53'
     } else if (lower_case_variant_genes.includes('cdh1')) {
-        scheme_select.value = 'acmg_CDH1'
+        scheme_select.value = 4 //'acmg_CDH1'
     } else if (lower_case_variant_genes.includes('brca1') || lower_case_variant_genes.includes('brca2')) {
-        scheme_select.value = 'task-force-brca'
+        scheme_select.value = 6 //'task-force-brca'
     } else {
-        scheme_select.value = 'acmg_standard'
+        scheme_select.value = 2 //'acmg_standard'
     }
 }
 
 //Object.keys(request_form).length
 function preselect_criteria_from_request_form() {
     for (var key in request_form) {
-        if (criteria.includes(key)) { // filter for criteria
+        if (key in classification_schemas[scheme]['criteria']) { // filter for criteria
             set_criterium(key, true)
             var current_evidence = request_form[key]
             document.getElementById(key).value = current_evidence
@@ -154,7 +168,7 @@ function preselect_criteria_from_request_form() {
 
 
 $(document).ready(function() {
-
+    set_scheme_select_options()
 
     if (do_request_form_preselect) {
         document.getElementById('final_class').value = request_form['final_class']
@@ -163,8 +177,9 @@ $(document).ready(function() {
         document.getElementById('scheme').value = request_form['scheme']
         update_scheme_field_variable()
     } else {
-        preselect_final_classification()
         preselect_scheme()
+        update_scheme_field_variable()
+        preselect_final_classification()
     }
 
     
@@ -179,12 +194,8 @@ $(document).ready(function() {
 
 // update global scheme field variable
 function update_scheme_field_variable() {
-    scheme = document.getElementById('scheme').value 
-    if (scheme.includes('acmg')) {
-        criteria = acmg_criteria
-    } else if (scheme.includes('task-force')) {
-        criteria = task_force_criteria
-    }
+    scheme = $('#scheme').val()
+    scheme_type = $("#scheme :selected").attr('scheme_type')
 }
 
 // call the function once to preselect on page load
@@ -198,16 +209,15 @@ function scheme_select_action(do_revert=true) {
     update_scheme_field_variable()
 
 
-    if (scheme == 'none') {
+    if (scheme == 1) {
         $('#classification_schema_wrapper').collapse('hide');
         //classification_schema_wrapper_div.classList.remove('show')
     } else {
         $('#classification_schema_wrapper').collapse('show');
-        create_criteria_buttons(scheme)
+        create_criteria_buttons()
         colors = load_colors()
-        set_default_strengths(default_strengths[scheme])
-        set_activatable_property(not_activateable_buttons[scheme])
-        enable_disable_buttons(not_activateable_buttons[scheme], true)
+        set_default_strengths()
+        set_activatable_property()
     
         if (classification_type === 'user' && do_revert) {
             preselect_criteria_from_database(scheme)
@@ -218,10 +228,12 @@ function scheme_select_action(do_revert=true) {
         
         update_classification_preview()
         update_reference_link(scheme)
+
         //update_last_submitted_date(scheme)
         
         //update_schemes_with_info()
     }
+    preselect_final_classification()
 }
 
 function set_user_selection_counts(scheme) {
@@ -231,7 +243,7 @@ function set_user_selection_counts(scheme) {
         var selected_criteria = scheme_with_info['selected_criteria'] ?? {} // propagate the above
         for (var i in selected_criteria) {
             var criterium = selected_criteria[i]
-            var criterium_id = criterium[2]
+            var criterium_id = criterium[5]
             var count_label = document.getElementById('users_selected_' + criterium_id)
             count_label.innerText = parseInt(count_label.innerText) + 1
             count_label.hidden = false;
@@ -239,12 +251,12 @@ function set_user_selection_counts(scheme) {
     }
 }
 
-function set_default_strengths(strengths) {
+function set_default_strengths() {
     var all_strength_selects = document.querySelectorAll('[id$="_strength"]');
     for (var i = 0; i < all_strength_selects.length; i++) {
         var current_strength_select = all_strength_selects[i];
         var current_criterium_id = current_strength_select.id.replace('_strength', '');
-        current_strength_select.setAttribute('default_strength', strengths[current_criterium_id])
+        current_strength_select.setAttribute('default_strength', classification_schemas[scheme]['criteria'][current_criterium_id]['default_strength'])
         if (!Object.keys(request_form).includes(current_criterium_id) || request_form['scheme'] !== document.getElementById('scheme').value) {
             current_strength_select.value = current_strength_select.getAttribute('default_strength')
         }   
@@ -258,9 +270,9 @@ function preselect_criteria_from_database(scheme) {
         selected_criteria = current_scheme_with_info['selected_criteria']
         for(var i = 0; i < selected_criteria.length; i++) {
             var current_data = selected_criteria[i];
-            var current_criterium = current_data[2].toLowerCase();
+            var current_criterium = current_data[5].toLowerCase();
             var current_evidence = current_data[4];
-            var current_strength = current_data[3];
+            var current_strength = current_data[6];
 
             var selected_button = document.getElementById(current_criterium);
             selected_button.value = current_evidence;
@@ -270,16 +282,31 @@ function preselect_criteria_from_database(scheme) {
     }
 }
 
-function set_activatable_property(criterium_ids) {
-    for (var i = 0; i < criterium_ids.length; i++) {
-        var criterium_id = criterium_ids[i];
+function set_activatable_property() {
+    const criteria = classification_schemas[scheme]['criteria']
+    for (const criterium_id in criteria) {
+        const is_selectable = criteria[criterium_id]['is_selectable']
+        var selectable = false
+        if (is_selectable === 1) {
+            selectable = true
+        }
         var current_criterium_button = document.getElementById(criterium_id)
-        current_criterium_button.setAttribute('activateable', 'false')
+        current_criterium_button.setAttribute('activateable', selectable)
+        
+        enable_disable_buttons([criterium_id], !selectable)
     }
 }
 
 function update_reference_link(scheme) {
-    document.getElementById('scheme_reference').setAttribute('href', reference_links[scheme])
+    document.getElementById('scheme_reference').setAttribute('href', classification_schemas[scheme]['reference'])
+}
+
+
+function set_scheme_select_options() {
+    var scheme_select = document.getElementById('scheme')
+    for (var key in classification_schemas) {
+        create_select_option(scheme_select, key, classification_schemas[key]['description'], classification_schemas[key]['scheme_type'])
+    }
 }
 
 //function update_last_submitted_date(scheme) {
@@ -365,6 +392,7 @@ function revert_all() {
 //////////// create dom object functions ////////////
 
 // creates the criteria buttons depending on mask
+/*
 function create_criteria_buttons(scheme) {
     if (scheme.includes('acmg')) {
         create_criteria_buttons('acmg_standard')
@@ -373,8 +401,9 @@ function create_criteria_buttons(scheme) {
         create_criteria_buttons('task-force')
     }
 }
+*/
 
-function create_criteria_buttons(strength_subset) {
+function create_criteria_buttons() {
     var pathogenic_criteria_container = document.getElementById('pathogenic_criteria_container')
     var benign_criteria_container = document.getElementById('benign_criteria_container')
     var uncertain_criteria_container = document.getElementById('uncertain_criteria_container')
@@ -382,13 +411,16 @@ function create_criteria_buttons(strength_subset) {
     
     var last_criterium_type = '-'
     var container = document.createElement('div')
-    for (const i in criteria) {
-        var criterium_id = criteria[i]
-        var default_strength = default_strengths[strength_subset][criterium_id]
+    console.log(scheme)
+    console.log(classification_schemas)
+    const current_criteria = classification_schemas[scheme]['criteria']
+    for (const criterium_id in current_criteria) {
+        var current_criterium = current_criteria[criterium_id]
+        var default_strength = current_criterium['default_strength']
 
-        var criterium_type = criterium_id[0]
-        if (strength_subset.includes('acmg')) {
-            criterium_type = criterium_id.replace(/\d+/g, '')
+        var criterium_type = criterium_id[0] // a task force criterium -> the type is determined by the first digit
+        if (scheme_type === 'acmg') {
+            criterium_type = criterium_id.replace(/\d+/g, '') // an acmg criterium. The type is determined by the first two or three letters
         }
 
         if (last_criterium_type != criterium_type) {
@@ -426,6 +458,15 @@ function create_criteria_buttons(strength_subset) {
         document.querySelector("#uncertain_criteria_container").closest(".card").hidden = true
     }
 
+}
+
+
+function create_select_option(parent, value, display_text, scheme_type) {
+    var new_option = document.createElement('option')
+    new_option.setAttribute('value', value)
+    new_option.setAttribute('scheme_type', scheme_type)
+    new_option.innerText = display_text
+    parent.appendChild(new_option)
 }
 
 
@@ -484,26 +525,20 @@ function create_criterium_button(criterium_id, strength) {
 }
 
 // strength select radio buttons
-function add_strength_selection(criterium_id) {
+function add_strength_selection(criterium_id, possible_strengths) {
+    if (possible_strengths.length <= 1) {
+        return
+    }
+
     var additional_content = document.getElementById('additional_content');
     const new_subcaption = create_subcaption('Strength:')
     additional_content.appendChild(new_subcaption)
-    if (criterium_id[0] === 'p') {
-        var container = document.createElement('div')
-        container.appendChild(create_strength_ratio(criterium_id, 'pp'))
-        container.appendChild(create_strength_ratio(criterium_id, 'pm'))
-        container.appendChild(create_strength_ratio(criterium_id, 'ps'))
-        container.appendChild(create_strength_ratio(criterium_id, 'pvs'))
-        additional_content.appendChild(container)
-    } else {
-        if (criterium_id[0] === 'b') {
-            var container = document.createElement('div')
-            container.appendChild(create_strength_ratio(criterium_id, 'bp'))
-            container.appendChild(create_strength_ratio(criterium_id, 'bs'))
-            container.appendChild(create_strength_ratio(criterium_id, 'ba'))
-            additional_content.appendChild(container)
-        }
+    var container = document.createElement('div')
+    for (var i in possible_strengths) {
+        container.appendChild(create_strength_ratio(criterium_id, possible_strengths[i]))
     }
+    additional_content.appendChild(container)
+
     // preselect
     const preselected_strength = document.getElementById(criterium_id + '_strength').value
     document.getElementById(preselected_strength + '_radio').checked = true
@@ -658,8 +693,8 @@ function add_user_acmg_classification_details(criterium_id) {
             var selected_criteria = scheme_with_info['selected_criteria'] // (28, 4, 'bs1', 'bs', 'fdsaf')
             for (var i in selected_criteria) {
                 var criterium = selected_criteria[i]
-                var current_criterium_id = criterium[2]
-                var current_strength = criterium[3]
+                var current_criterium_id = criterium[5]
+                var current_strength = criterium[6]
                 var current_evidence = criterium[4]
                 if (current_criterium_id === criterium_id) {
                     var new_row = create_row_user_acmg_details(user, affiliation, current_strength, current_evidence, current_date)
@@ -769,18 +804,18 @@ function enable_disable_buttons(criterium_ids, is_disable) {
 }
 
 function update_classification_preview() {
-    if (scheme.includes('acmg')) {
+    if (scheme_type == 'acmg') {
         var selected_criteria = get_checked_criteria_strengths(); // this is an array of criteria strengths
     } else {
         var selected_criteria = get_currently_checked_criteria(); // this is an array of critera ids
     }
     selected_criteria = selected_criteria.join('+')
-    fetch('/calculate_class/'+scheme+'/'+selected_criteria).then(function (response) {
+    fetch('/calculate_class/'+scheme_type+'/'+selected_criteria).then(function (response) {
         return response.json();
     }).then(function (text) {
         const final_class = text.final_class
         document.getElementById('classification_preview').textContent = final_class
-        if (has_classification === 'False' && !do_request_form_preselect) {
+        if (!(scheme in previous_classification) && !do_request_form_preselect) {
             document.getElementById('final_class').value = final_class
         }
         
@@ -808,7 +843,7 @@ function toggle_criterium(criterium_id) {
     obj.checked = !obj.checked
     update_criterium_button_background(criterium_id)
     document.getElementById(criterium_id + '_strength').checked = obj.checked
-    const current_disable_group = disable_groups[scheme][criterium_id]
+    const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
     enable_disable_buttons(current_disable_group, obj.checked)
 }
 
@@ -817,7 +852,7 @@ function set_criterium(criterium_id, is_checked) {
     obj.checked = is_checked
     update_criterium_button_background(criterium_id)
     document.getElementById(criterium_id + '_strength').checked = obj.checked
-    const current_disable_group = disable_groups[scheme][criterium_id]
+    const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
     enable_disable_buttons(current_disable_group, obj.checked)
 }
 

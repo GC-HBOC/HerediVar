@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container ssb">
+<div class="ssb">
 
 
     <h1 class="sst ssb">{% block title %} Classification history {% endblock %}</h1>
@@ -33,47 +33,26 @@
 
 
 
-<div class="container ssb">
+<div class="ssb">
 
 
     <div class="card-subcaption">
         All classifications
-    </div>
-    
-    <div>
-        <div>Color scheme:</div>
-
-        <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
-            <li class="list-group-item noborder d-flex  align-items-center" >
-                <div class="user_scheme_classification_style color_scheme_box ssr"></div>
-                <div>user scheme classification</div>
-            </li>
-            <li class="list-group-item noborder d-flex  align-items-center">
-                <div class="user_classification_style color_scheme_box ssr"></div>
-                <div>user classification</div>
-            </li>
-            <li class="list-group-item noborder d-flex  align-items-center">
-                <div class="consensus_scheme_classification_style color_scheme_box ssr"></div>
-                <div>consensus scheme classification</div>
-            </li>
-            <li class="list-group-item noborder d-flex align-items-center">
-                <div class="consensus_classification_style color_scheme_box ssr"></div>
-                <div>consensus classification</div>
-            </li>
-
-        </ul>
     </div>
 
     <div class="table-responsive">
         <table class="table table-hover" id="historyTable" style="table-layout: auto;">
             <thead>
                 <tr>
-                    <th id="type_col" asc="true"><div class="sortable">Type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="type_col" asc="false"><div class="sortable">Type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                     <th id="submitter_col"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                     <th id="affiliation_col"><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                    <th id="class_col" ><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="class_col" ><div class="sortable">User defined class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                     <th id="date_col" asc="true"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                    <th style="min-width:30rem" id="additional_information_col"><div class="sortable">Additional Information</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th style="min-width:30rem" id="comment_col"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="scheme_col"><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="selected_criteria_col" style="min-width:20rem"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                    <th id="class_by_scheme_col" style="max-width:5rem"><div class="sortable">Class by scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                     <th id="document_col">Document</th>
                 </tr>
             </thead>
@@ -86,25 +65,13 @@
                     <td>{{classification['affiliation']}}</td>
                     <td>{{classification['class']}}</td>
                     <td style="white-space:nowrap;">{{classification['date']}}</td>
-
-                    <td>
-                        {{ classification['comment'] }}
-
-                        {% if 'selected_criteria' in classification %}
-                        <div class="d-flex"><div class="ssr" style="font-weight:bolder">Scheme:</div>{{ classification['scheme'] }}</div>
-                        <div class="d-flex"><div class="ssr" style="font-weight:bolder">Selected criteria:</div>
-                            {% for criterium in classification['selected_criteria'] %}
-                            <span class="d-inline-block ssr large-tt" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" 
-                                title="Strength: {{ classification['selected_criteria'][criterium]['strength'] }} <br> Evidence: {{ classification['selected_criteria'][criterium]['evidence'] }}">
-                                <div class="dashed_underline clickable">{{ criterium }}</div>
-                            </span>
-                            {% endfor %}
-                        </div>
-
-                        {% endif %}
-                    </td>
-
+                    <td>{{classification['comment']}}</td>
+                    <td>{{classification['scheme']}}</td>
+                    <td>{{ macros.draw_criteria_display(classification['selected_criteria'], '4em', '2em') }}</td>
+                    <td>{{classification['class_by_scheme']}}</td>
                     <td>{% if 'evidence_document_url' in classification %}<a href="{{ classification['evidence_document_url'] }}">download</a>{% endif %}</td>
+
+
 
                 </tr>
 
@@ -116,6 +83,22 @@
 
 </div>
 
+
+<div class="bsb">
+    <div>Color scheme:</div>
+
+    <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
+        <li class="list-group-item noborder d-flex  align-items-center">
+            <div class="user_classification_style color_scheme_box ssr"></div>
+            <div>user classification</div>
+        </li>
+        <li class="list-group-item noborder d-flex align-items-center">
+            <div class="consensus_classification_style color_scheme_box ssr"></div>
+            <div>consensus classification</div>
+        </li>
+
+    </ul>
+</div>
 
 
 {% endblock %}

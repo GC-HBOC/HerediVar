@@ -24,7 +24,7 @@ class pdf_gen:
         self.story = []
         self.width = self.doc.width
         self.height = self.doc.height
-        self.col1width = 5 * cm
+        self.col1width = 6 * cm
         self.col2width = self.width - self.col1width
         self.subtitle_style = ParagraphStyle("subtitle", fontName=self.font, fontSize=15, spaceAfter=5, spaceBefore=15)
         self.title_style = ParagraphStyle("title", fontName=self.font, fontSize=17, spaceAfter=30)

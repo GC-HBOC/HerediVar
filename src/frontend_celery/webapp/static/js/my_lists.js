@@ -4,10 +4,10 @@ var create_modal = document.getElementById('createModal')
 create_modal.addEventListener('show.bs.modal', function (event) {
     var button = event.relatedTarget
     var action_type = button.getAttribute('data-bs-type')
-    var list_name_select = create_modal.querySelector('#list-name')
+    var list_name_select = create_modal.querySelector('#list_name')
     var modal_title = create_modal.querySelector('.modal-title')
     var submit_button = create_modal.querySelector('#list-modal-submit')
-    var list_id_meta = create_modal.querySelector('#list-id')
+    var list_id_meta = create_modal.querySelector('#list_id')
     var delete_button = create_modal.querySelector('#list-modal-submit-delete')
 
     var preselected_list_name = ''
@@ -33,6 +33,7 @@ create_modal.addEventListener('show.bs.modal', function (event) {
         delete_button.disabled = true
         delete_button.style.visibility = 'hidden'
     }
+
 
     modal_title.textContent = title
     submit_button.textContent = submit_button_title
@@ -66,7 +67,6 @@ $(document).ready(function()
     variant_table.find('tbody').find('tr').each(function(){
         var trow = $(this)
         var variant_id = trow[0].getAttribute("variant_id")
-        console.log(variant_id)
         create_trashcan(trow, list_id, variant_id)
     });
 

@@ -66,10 +66,12 @@ def my_lists():
             return redirect(url_for('user.my_lists'))
         if request_type == 'delete_list':
             list_id = request.form['list_id']
+            if list_id == "":
+                return abort(404)
             if list_id is not None:
                 is_list_owner = conn.check_user_list_ownership(user_id, list_id)
                 if not is_list_owner:
-                    return abort('403')
+                    return abort(403)
             conn.delete_user_variant_list(list_id)
             flash("Successfully removed list", "alert-success")
             current_app.logger.info(session['user']['preferred_username'] + " successfully deleted list " + str(list_id)) 

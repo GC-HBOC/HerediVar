@@ -84,7 +84,10 @@ def variant():
     list_id = request.args.get('list_id')
 
     if variant_id is None and list_id is None:
-        return redirect(url_for('variant.display', variant_id=variant_id))
+        return abort(404)
+    
+    if variant_id is not None and list_id is not None:
+        return abort(404)
     
     variants_oi = None
     # check if the logged in user is the owner of this list
@@ -97,6 +100,7 @@ def variant():
             #return redirect(url_for('doc.error', code='403', text='No permission to view this variant list!'))
 
         variants_oi = conn.get_variant_ids_from_list(list_id)
+        #variants_oi = [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 52, 53, 54, 55, 56, 70, 71, 72, 119, 120, 121, 126, 127, 130, 135, 139, 141, 143, 144, 145, 146, 161, 164]
 
     if variant_id is not None:
         variants_oi = [variant_id]
@@ -106,8 +110,8 @@ def variant():
 
     final_info_headers = {}
     all_variant_vcf_lines = []
-    for variant_id in variants_oi:
-        variant_vcf, info_headers = get_variant_vcf_line(variant_id, conn)
+    for id in variants_oi:
+        variant_vcf, info_headers = get_variant_vcf_line(id, conn)
         all_variant_vcf_lines.append(variant_vcf)
         final_info_headers = merge_info_headers(final_info_headers, info_headers)
     
@@ -132,18 +136,27 @@ def variant():
         copyfileobj(helper, tf)
     helper.close()
 
+    # set some variables depending on the input data
+    if variant_id is not None:
+        force_url = url_for("download.variant", variant_id = variant_id, force=True)
+        redirect_url = url_for('variant.display', variant_id=variant_id)
+        download_file_name = "variant_" + str(variant_id) + ".vcf"
+    elif list_id is not None:
+        force_url = url_for("download.variant", list_id = list_id, force = True)
+        redirect_url = url_for("user.my_lists", view = list_id)
+        download_file_name = "list_" + str(list_id) + ".vcf"
+
     returncode, err_msg, vcf_errors = functions.check_vcf(temp_file_path)
 
     if returncode != 0:
         if request.args.get('force') is None:
-            force_url = url_for("download.variant", variant_id = variant_id, list_id= list_id, force=True)
             flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
             current_app.logger.error(session['user']['preferred_username'] + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant id " + str(variant_id) + " or user variant list " + str(list_id))
-            return redirect(url_for('variant.display', variant_id=variant_id))
+            return redirect(redirect_url)
 
     current_app.logger.info(session['user']['preferred_username'] + " downloaded vcf of variant id: " + str(variant_id) + " or user variant list: " + str(list_id))
     
-    return send_file(buffer, as_attachment=True, download_name="variant_" + str(variant_id) + ".vcf", mimetype="text/vcf")
+    return send_file(buffer, as_attachment=True, download_name=download_file_name, mimetype="text/vcf")
 
 
 def merge_info_headers(old_headers, new_headers):
@@ -175,7 +188,7 @@ def get_variant_vcf_line(variant_id, conn):
                     submission_date = submission_date.strftime('%Y-%m-%d')
                 else:
                     submission_date = str(submission_date)
-                current_submission_string = '~7C'.join([submission[2], submission_date, submission[4], submission[5][0] + ':' + submission[5][1], submission[6], str(submission[7])])
+                current_submission_string = '~7C'.join([submission[2], submission_date, submission[4], ';'.join([':'.join([submission_condition[0], submission_condition[1]]) for submission_condition in submission[5]]), submission[6], str(submission[7])])
                 current_submission_string = functions.encode_vcf(current_submission_string)
                 all_submission_strings = functions.collect_info(all_submission_strings, '', current_submission_string, sep = '&')
             info = functions.collect_info(info, 'clinvar_submissions=', all_submission_strings)
@@ -237,7 +250,8 @@ def get_variant_vcf_line(variant_id, conn):
                 current_center_classification = functions.encode_vcf(current_center_classification)
                 all_center_classifications = functions.collect_info(all_center_classifications, '', current_center_classification, sep = '&')
             info = functions.collect_info(info, 'heredicare_center_classifications=', all_center_classifications)
-
+       
+        
         elif key == 'user_scheme_classifications':
             content = annotations[key]
             info_headers[key] = '##INFO=<ID=' + key + ',Number=.,Type=String,Description="An & separated list of the variant scheme classifications from individual users. Format:class|user|affiliation|date|chosen_criteria. The chosen criteria is a ~ separated list of critera itself. Format_criteria: criterium+strength+evidence.">\n'
@@ -258,11 +272,13 @@ def get_variant_vcf_line(variant_id, conn):
                 current_user_scheme_classification = functions.encode_vcf(current_user_scheme_classification)
                 all_user_scheme_classifications = functions.collect_info(all_user_scheme_classifications, '', current_user_scheme_classification, sep = '&')
             info = functions.collect_info(info, key + '=', all_user_scheme_classifications)
+        
 
         elif key == 'consensus_scheme_classifications':
             content = annotations[key]
             info_key = 'most_recent_' + key
-            info_headers[key] = '##INFO=<ID=' + info_key + ',Number=1,Type=String,Description="The most recent consensus scheme classification. Format:class|user|affiliation|date|chosen_criteria. The chosen criteria is a ~ separated list of critera itself. Format_criteria: criterium+strength+evidence.">\n'
+            info_headers[key] = '##INFO=<ID=' + info_key + ',Number=1,Type=String,Description="The most recent' + key.replace('_', ' ') + '. Format:class|user|affiliation|date|chosen_criteria. The chosen criteria is a ~ separated list of critera itself. Format_criteria: criterium+strength+evidence.">\n'
+            all_scheme_classifications = ''
             for classification in content:
                 current_chosen_criteria = classification[10]
                 current_scheme = classification[3]
@@ -275,10 +291,10 @@ def get_variant_vcf_line(variant_id, conn):
                 resp = calculate_class(current_scheme, all_criteria)
                 current_class = str(resp.get_json()['final_class'])
                 chosen_criteria = '~24'.join(['~2B'.join([x[2], x[3], x[4]]) for x in current_chosen_criteria])
-                current_user_scheme_classification = '~7C'.join([current_class, classification[7] + '_' + classification[8], classification[9], classification[4].strftime('%Y-%m-%d'), chosen_criteria])
-                current_user_scheme_classification = functions.encode_vcf(current_user_scheme_classification)
-                all_user_scheme_classifications = functions.collect_info(all_user_scheme_classifications, '', current_user_scheme_classification, sep = '&')
-            info = functions.collect_info(info, info_key + '=', all_user_scheme_classifications)
+                current_scheme_classification = '~7C'.join([current_class, classification[7] + '_' + classification[8], classification[9], classification[4].strftime('%Y-%m-%d'), chosen_criteria])
+                current_scheme_classification = functions.encode_vcf(current_scheme_classification)
+                all_scheme_classifications = functions.collect_info(all_scheme_classifications, '', current_scheme_classification, sep = '&')
+            info = functions.collect_info(info, info_key + '=', all_scheme_classifications)
         
         elif key == 'assays':
             content = annotations[key]
@@ -327,22 +343,25 @@ def get_variant_vcf_line(variant_id, conn):
 
 
 # example
-@download_blueprint.route('/calculate_class/<string:scheme>/<string:selected_classes>')
-@download_blueprint.route('/calculate_class/<string:scheme>/')
-@download_blueprint.route('/calculate_class/<string:scheme>')
-def calculate_class(scheme, selected_classes = ''):
+@download_blueprint.route('/calculate_class/<string:scheme_type>/<string:selected_classes>')
+@download_blueprint.route('/calculate_class/<string:scheme_type>/')
+@download_blueprint.route('/calculate_class/<string:scheme_type>')
+def calculate_class(scheme_type, selected_classes = ''):
+    if scheme_type == "none":
+        return jsonify({'final_class': '-'})
+
     selected_classes = selected_classes.split('+')
     #scheme = request.args.get('scheme')
 
     final_class = None
-    if 'acmg' in scheme:
+    if scheme_type == 'acmg':
         selected_classes = [re.sub(r'[0-9]+', '', x) for x in selected_classes] # remove numbers from critera if there are any
         class_counts = get_class_counts(selected_classes) # count how often we have each strength
         #print(class_counts)
         possible_classes = get_possible_classes_acmg(class_counts) # get a set of possible classes depending on selected criteria following PMC4544753
         final_class = decide_for_class_acmg(possible_classes) # decide for class follwing the original publicatoin of ACMG (PMC4544753)
     
-    if 'task-force' in scheme:
+    if scheme_type == 'task-force':
         final_class = decide_for_class_task_force(selected_classes)
 
     if final_class is None:

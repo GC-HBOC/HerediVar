@@ -63,6 +63,29 @@
                 <td>{{ most_recent_consensus_classification[4] }}</td>
             </tr>
 
+            {% set selected_criteria = most_recent_consensus_classification[14] %}<!-- the consensus scheme classifications should only contain the most recent classification -->
+            {% set selected_scheme = most_recent_consensus_classification[12] %}
+            {% set scheme_determined_class = most_recent_consensus_classification[15] %}
+
+            <tr style="margin-left:0">
+                <td class="li-label" style="width:5rem;">Scheme</td>
+                <td style="vertical-align:middle;">
+                    <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
+                        <li class="list-group-item noboarder-td">
+                            Class by scheme: {{ scheme_determined_class }}
+                        </li>
+                        <li class="list-group-item noboarder-td">
+                            Scheme: {{ selected_scheme }}
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="li-label" style="vertical-align:middle">Criteria</td>
+                <td style="vertical-align:middle">{{ draw_criteria_display(selected_criteria, '4em', '1.7em') }}</td>
+            </tr>
+
         </tbody>        
     </table>
 
@@ -78,8 +101,8 @@
 {% macro draw_criteria_display(criteria, width='6em', height='2.5em') %}
     {% for criterium in criteria %}
     <span class="d-inline-block ssr large-tt" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" selected_scheme_criterium_id="{{ criterium[0] }}"
-        title="Strength: {{ criterium[5] }} <br> Evidence: {{ criterium[4] }}">
-        <div class="btn btn-{{ criterium[3] }} light-hover acmg-button" style="width:{{width}}; height:{{height}}">{{ criterium[2] }}</div>
+        title="Strength: {{ criterium[7] }} <br> Evidence: {{ criterium[4] }}">
+        <div class="btn btn-{{ criterium[6] }} light-hover acmg-button" style="width:{{width}}; height:{{height}}">{{ criterium[5] }}</div>
     </span>
     {% endfor %}
 {% endmacro %}
@@ -133,7 +156,7 @@
                     </div>
         
                     <div class="form-group sst">
-                        <label for="hgvs" class="form-label">HGVS c-dot</label>
+                        <label for="hgvs" class="form-label">HGVS c.</label>
                         <textarea type="text" name="hgvs" id="hgvs"
                                placeholder="ENST00000260947:c.1972C>T; ..." class="form-control"
                                >{{ request.args.get('hgvs', '') }}</textarea>
@@ -166,6 +189,37 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" value="-" id="cl-" name="consensus" {% if '-' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl-">none</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group sst">
+                        {% set selected_user = request.args.getlist('user') %}
+                        <label for="user-select" class="form-label">Your classification</label>
+                        <div id="user-select" class="d-flex">
+                            <div class="form-check bsr">
+                                <input class="form-check-input" type="checkbox" value="1" id="ucl1" name="user" {% if '1' in selected_user %}checked{% endif %}>
+                                <label class="form-check-label" for="ucl1">1</label>
+                            </div>
+                            <div class="form-check bsr">
+                                <input class="form-check-input" type="checkbox" value="2" id="ucl2" name="user" {% if '2' in selected_user %}checked{% endif %}>
+                                <label class="form-check-label" for="ucl2">2</label>
+                            </div>
+                            <div class="form-check bsr">
+                                <input class="form-check-input" type="checkbox" value="3" id="ucl3" name="user" {% if '3' in selected_user %}checked{% endif %}>
+                                <label class="form-check-label" for="ucl3">3</label>
+                            </div>
+                            <div class="form-check bsr">
+                                <input class="form-check-input" type="checkbox" value="4" id="ucl4" name="user" {% if '4' in selected_user %}checked{% endif %}>
+                                <label class="form-check-label" for="ucl4">4</label>
+                            </div>
+                            <div class="form-check bsr">
+                                <input class="form-check-input" type="checkbox" value="5" id="ucl5" name="user" {% if '5' in selected_user %}checked{% endif %}>
+                                <label class="form-check-label" for="ucl5">5</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="-" id="ucl-" name="user" {% if '-' in selected_user %}checked{% endif %}>
+                                <label class="form-check-label" for="ucl-">none</label>
                             </div>
                         </div>
                     </div>
@@ -382,7 +436,7 @@
     <a class="external_link" href="{{url}}">{{ first_words }} <nobr>{{ last_word }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
         <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
         <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
-    </svg><nobr>
+    </svg></nobr>
     </a>
 {% endif %}
 

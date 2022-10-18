@@ -311,97 +311,38 @@
 
                     <!-- HEREDIVAR -->
                     <!-- most recent consensus classification -->
-                    <div class="ssb">
+                    <div class="ssl ssb">
                         {{ macros.draw_most_recent_consensus_classification(annotations.get('consensus_classification')) }}
                     </div>
-                    <!-- most recentconsensus scheme classification -->
-                    {% if 'consensus_scheme_classifications' in annotations %}
-                    {% set consensus_scheme_classification = annotations['consensus_scheme_classifications'][0] %}<!-- the consensus scheme classifications should only contain the most recent classification -->
-                    
-                    <div class="ssl ssb">Most recent consensus scheme classification:</div>
-                    <div class="ssb" style="padding-left:1em" consensus_scheme_classification_id="{{ consensus_scheme_classification[0] }}">
-                        <table class="table table-borderless table-slim">
-                            <tbody>
-                                <tr style="margin-left:0">
-                                    <td class="li-label" style="width:5rem;">Data</td>
-                                    <td style="vertical-align:middle;">
-                                        <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
-                                            <li class="list-group-item noboarder-td">
-                                                Class: {{ consensus_scheme_classification[11] }}
-                                            </li>
-                                            <li class="list-group-item noboarder-td">
-                                                Date: {{ consensus_scheme_classification[4] }}
-                                            </li>
-                                            <li class="list-group-item noboarder-td">
-                                                Scheme: {{ consensus_scheme_classification[3] }}
-                                            </li>
-                                        </ul>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="li-label" style="vertical-align:middle">Criteria</td>
-                                    <td>{{ macros.draw_criteria_display(consensus_scheme_classification[10], '4em', '2em') }}</td>
-                                </tr>
-                            </tbody>   
-                        </table>
-                    </div>
-                    {% endif %}
                     <!-- user classification table -->
                     {% if 'user_classifications' in annotations %}
                     <h4 class="card-subcaption">HerediVar user classifications</h4>
-                    <div class="ssl ssb" style="padding-left:1em; margin-bottom:0">
+                    <div class="ssl ssb" style="margin-bottom:0">
                         <div class="table-responsive tableFixHead">
                             <table class="table table-hover" id="userClassificationsTable">
                                 <thead>
                                     <tr>
-                                        <th style="width:2.5rem"><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th style="width:2.5rem"><div class="sortable">User defined class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th id="userClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                         <th style="min-width: 20rem"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th style="min-width:20rem"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
+                                        <th style="max-width:3rem"><div class="sortable">Class by scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for classification in annotations['user_classifications'] %}
                                     <tr user_classification_id="{{ classification[0] }}">
                                         <td>{{ classification[1] }}</td>
-                                        <td>{{ classification[8] + ' ' + classification[9] }}</td>
-                                        <td>{{ classification[10] }}</td>
+                                        <td>{{ classification[9] + ' ' + classification[10] }}</td>
+                                        <td>{{ classification[11] }}</td>
                                         <td style="white-space:nowrap;">{{ classification[5] }}</td>
-                                        <td>{{ classification[4] }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- user scheme classifications-->
-                    {% if 'user_scheme_classifications' in annotations %}
-                    <div class="ssl ssb">User scheme classifications:</div>
-                    <div class="ssl ssb" style="padding-left:1em">
-                        <div class="table-responsive tableFixHead">
-                            <table class="table table-hover"  id="userSchemeClassificationsTable">
-                                <thead>
-                                    <tr>
-                                        <th style="width:2.5rem"><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                        <th><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                        <th><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                        <th id="userSchemeClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                        <th><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                        <th style="min-width:24rem"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for classification in annotations['user_scheme_classifications'] %}
-                                    <tr user_scheme_classification_id="{{ classification[0] }}">
-                                        <td style="vertical-align:middle;">{{classification[10]}}</td>
-                                        <td style="vertical-align:middle;">{{classification[6]}} {{classification[7]}}</td>
-                                        <td style="vertical-align:middle;">{{classification[8]}}</td>
-                                        <td style="vertical-align:middle;">{{classification[4]}}</td>
-                                        <td style="white-space:nowrap; vertical-align:middle;">{{classification[3] | replace('_', ' ')}}</td>
-                                        <td>{{ macros.draw_criteria_display(classification[9], '4em', '2em') }}</td>
+                                        <td><abbr title="{{ classification[4] }}"><div class="Nellipsis" >{{ classification[4] }}</div> </abbr></td>
+                                        <td style="white-space:nowrap;">{{classification[12] | replace('_', ' ')}}</td>
+                                        <td>{{ macros.draw_criteria_display(classification[13], '4em', '2em') }}</td>
+                                        <td>{{ classification[14] }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -474,7 +415,13 @@
                                         <td style="white-space:nowrap;">{{ submission[3] }}</td>
                                         <td>{{ submission[4] }}</td>
                                         <td>
-                                            {{ macros.external_link(submission[5][1], "https://www.ncbi.nlm.nih.gov/medgen/" + submission[5][0]) }}
+                                            {% for clinvar_submission_condition in submission[5] %}
+                                                <div>
+                                                    {{ macros.external_link(clinvar_submission_condition[1], "https://www.ncbi.nlm.nih.gov/medgen/" + clinvar_submission_condition[0]) }}
+                                                </div>
+                                                
+                                            {% endfor %}
+                                            
                                         </td>
                                         <td>{{ submission[6] }}</td>
                                         <td ><abbr title="{{ submission[7] }}"><div class="Nellipsis" >{{ submission[7] }}</div> </abbr></td>

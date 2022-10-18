@@ -81,8 +81,9 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
 def add_scheme_classes(classifications, index): # the index is the index where the classification criteria are located
     annotated_classifications = []
     for classification in classifications:
-        current_class = get_scheme_classification(classification[index], classification[3])
-        annotated_classifications.append(classification + (current_class,))
+        current_class = get_scheme_classification(classification[index], classification[index-1])
+        classification.append(current_class)
+        annotated_classifications.append(classification)
     return annotated_classifications
 
 
@@ -93,18 +94,19 @@ def prepare_scheme_criteria(classifications, index):
     for classification in classifications:
         classification = list(classification) # needed because of append
         current_criteria = classification[index]
+
         current_criteria = sorted(current_criteria, key=cmp_to_key(compare))
-        current_scheme = classification[3]
-        for i in range(len(current_criteria)):
-            current_criteria[i] = list(current_criteria[i])
-            current_criteria[i].append(strength_to_text(current_criteria[i][3], current_scheme))
+        #current_scheme = classification[3]
+        #for i in range(len(current_criteria)):
+            #current_criteria[i] = list(current_criteria[i])
+            #current_criteria[i].append(strength_to_text(current_criteria[i][3], current_scheme))
         classification[index] = current_criteria
         new_classifications.append(classification)
     return new_classifications
 
 def compare(a, b):
-    a = criterium_to_num(a[2])
-    b = criterium_to_num(b[2])
+    a = criterium_to_num(a[5])
+    b = criterium_to_num(b[5])
     return a - b
 
 def criterium_to_num(criterium):
@@ -135,104 +137,113 @@ def criterium_to_num(criterium):
 
 
 
+
+
 def get_previous_user_classification(variant_id, user_id, conn):
-    user_classification = conn.get_user_classification(user_id, variant_id)
-    if user_classification is not None:
-        previous_classification=user_classification[1]
-        previous_comment=user_classification[4]
-        previous_classification_id=user_classification[0]
-        return {'has_classification': True, 'class': previous_classification, 'comment':previous_comment, 'id':previous_classification_id}
+    user_classifications = conn.get_user_classifications(variant_id = variant_id, user_id=user_id)
+    if user_classifications is not None:
+        result = {}
+        for user_classification in user_classifications:
+            previous_classification=user_classification[1]
+            previous_comment=user_classification[4]
+            previous_classification_id=user_classification[0]
+            scheme_id = user_classification[6]
+            new_entry = {'class': previous_classification, 'comment':previous_comment, 'id':previous_classification_id}
+            result[scheme_id] = new_entry
+        return result
     else:
-        return get_default_previous_classification()
+        return {}
+
+def get_default_previous_classification():
+    return {'has_classification': False, 'class': 3, 'comment':'', 'id':None}
+
+def convert_scheme_criteria_to_dict(criteria):
+    criteria_dict = {} # convert to dict criterium->criterium_id,strength,evidence
+    for entry in criteria:
+        criterium_id = entry[2]
+        criteria_dict[criterium_id] = {'id':entry[0], 'strength_id':entry[3], 'evidence':entry[4]}
+    return criteria_dict
 
 
 
 def get_schemes_with_info(variant_id, user_id, conn):
     # fetch previous scheme classifications (could be multiple because of different schemes)
     # 0id, 1variant_id, 2user_id, 3scheme, 4date
-    previous_scheme_classifications = conn.get_user_scheme_classification(variant_id, user_id)
+    previous_classifications = conn.get_user_classifications(variant_id = variant_id, user_id = user_id)
     # extract scheme and convert to scheme->scheme_classification_id dict
     schemes_with_info = {}
-    if previous_scheme_classifications is not None:
-        for entry in previous_scheme_classifications:
-            scheme_key = entry[3]
-            if scheme_key in schemes_with_info:
-                raise RuntimeError("ERROR: There are multiple user scheme classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme_key + ", user_id: " + str(user_id))
-            schemes_with_info[scheme_key] = {'classification_id':entry[0], 'date':entry[4].strftime('%Y-%m-%d'), 'selected_criteria':conn.get_scheme_criteria(entry[0])}
+    if previous_classifications is not None:
+        for entry in previous_classifications:
+            scheme_id = entry[6]
+            if scheme_id in schemes_with_info:
+                raise RuntimeError("ERROR: There are multiple user scheme classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme_id + ", user_id: " + str(user_id))
+            schemes_with_info[scheme_id] = {'classification_id':entry[0], 'date':entry[5].strftime('%Y-%m-%d'), 'selected_criteria':conn.get_scheme_criteria_applied(entry[0])}
     return schemes_with_info
-    
-
-
-def get_default_previous_classification():
-    return {'has_classification': False, 'class': 3, 'comment':'', 'id':None}
 
 
 
-def convert_scheme_criteria_to_dict(criteria):
-    criteria_dict = {} # convert to dict criterium->criterium_id,strength,evidence
-    for entry in criteria:
-        criterium_key = entry[2]
-        criteria_dict[criterium_key] = {'id':entry[0], 'strength':entry[3], 'evidence':entry[4]}
-    return criteria_dict
-
-
-
-def handle_scheme_classification(scheme_classification_id, criteria, conn):
-    previous_criteria = conn.get_scheme_criteria(scheme_classification_id)
+def handle_scheme_classification(classification_id, criteria, conn, where = "user"):
+    previous_criteria = conn.get_scheme_criteria_applied(classification_id, where = where)
     previous_criteria_dict = convert_scheme_criteria_to_dict(previous_criteria)
     
     scheme_classification_got_update = False
-    for criterium in criteria:
-        evidence = criteria[criterium]['evidence']
-        strength = criteria[criterium]['strength']
+    for criterium_id in criteria:
+        evidence = criteria[criterium_id]['evidence']
+        strength_id = criteria[criterium_id]['criterium_strength_id']
         # insert new criteria
-        if criterium not in previous_criteria_dict:
-            conn.insert_scheme_criterium(scheme_classification_id, criterium, strength, evidence)
+        if criterium_id not in previous_criteria_dict:
+            conn.insert_scheme_criterium_applied(classification_id, criterium_id, strength_id, evidence, where=where)
             scheme_classification_got_update = True
         # update records if they were present before
-        elif evidence != previous_criteria_dict[criterium]['evidence'] or strength != previous_criteria_dict[criterium]['strength']:
-            conn.update_scheme_criterium(previous_criteria_dict[criterium]['id'], strength, evidence)
+        elif evidence != previous_criteria_dict[criterium_id]['evidence'] or strength_id != previous_criteria_dict[criterium_id]['strength_id']:
+            conn.update_scheme_criterium_applied(previous_criteria_dict[criterium_id]['id'], strength_id, evidence, where="user")
             scheme_classification_got_update = True
     
     
     # delete unselected criterium tags
     criteria_to_delete = [x for x in previous_criteria_dict if x not in criteria]
     for criterium in criteria_to_delete:
-        conn.delete_scheme_criterium(previous_criteria_dict[criterium]['id'])
+        conn.delete_scheme_criterium_applied(previous_criteria_dict[criterium]['id'], where=where)
         scheme_classification_got_update = True
     
     # make sure that the date corresponds to the date last edited!
     if scheme_classification_got_update:
-        conn.update_scheme_classification_date(scheme_classification_id)
+        if where != "consensus":
+            current_datetime = functions.get_now()
+            conn.update_classification_date(classification_id, current_datetime)
         flash("Successfully inserted/updated classification based on classification scheme", 'alert-success')
             
 
 
-def handle_user_classification(variant_id, user_id, previous_classification, new_classification, new_comment, conn):
-    current_date = datetime.datetime.today().strftime('%Y-%m-%d')
-    if previous_classification['has_classification']: # user already has a classification -> he requests an update
+def handle_user_classification(variant_id, user_id, previous_classifications, new_classification, new_comment, scheme_id, conn):
+    current_datetime = functions.get_now()
+    if scheme_id in previous_classifications: # user already has a classification -> he requests an update
+        previous_classification = previous_classifications[scheme_id]
         if previous_classification['comment'] != new_comment or previous_classification['class'] != new_classification:
-            conn.update_user_classification(previous_classification['id'], new_classification, new_comment, date = current_date)
+            conn.update_user_classification(previous_classification['id'], new_classification, new_comment, date = current_datetime)
             flash(Markup("Successfully updated user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+        return None
     else: # user does not yet have a classification for this variant -> he wants to create a new one
-        conn.insert_user_classification(variant_id, new_classification, user_id, new_comment, date = current_date)
+        conn.insert_user_classification(variant_id, new_classification, user_id, new_comment, current_datetime, scheme_id)
         flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+        return conn.get_last_insert_id()
     
 
 
-def handle_consensus_classification(variant_id, classification, comment, conn):
+def handle_consensus_classification(variant_id, classification, comment, scheme_id, conn):
     ## get relevant information
     annotations = conn.get_all_variant_annotations(variant_id, most_recent_scheme_consensus=False)
     annotations.pop('consensus_classification', None)
     variant_oi = get_variant(conn, variant_id)
-    current_date = datetime.datetime.today().strftime('%Y-%m-%d')
+    current_datetime = functions.get_now()
 
     ## compute pdf containing all annotations
-    evidence_b64 = get_evidence_pdf(variant_oi, annotations, classification, comment, current_date)
+    evidence_b64 = get_evidence_pdf(variant_oi, annotations, classification, comment, current_datetime)
 
     #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/frontend/downloads/consensus_classification_reports/testreport.pdf')
-    conn.insert_consensus_classification_from_variant_id(session['user']['user_id'], variant_id, classification, comment, evidence_document=evidence_b64, date = current_date)
-    
+    conn.insert_consensus_classification_from_variant_id(session['user']['user_id'], variant_id, classification, comment, evidence_document=evidence_b64, date = current_datetime, scheme_id=scheme_id)
+    flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+    return conn.get_last_insert_id() # returns the consensus_classification_id
 
 
 def get_evidence_pdf(variant_oi, annotations, classification, comment, current_date):
@@ -253,13 +264,15 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
     heredicare_center_classifications = annotations.pop('heredicare_center_classifications', None)
     consensus_scheme_classifications = annotations.pop('consensus_scheme_classifications', None)
     user_scheme_classifications = annotations.pop('user_scheme_classifications', None)
+    assays = annotations.pop('assays', None) #TODO
 
     # consequences
     variant_consequences = annotations.pop('variant_consequences', None)
     # basic information
     generator.add_subtitle("Scores & annotations:")
     for key in annotations:
-        generator.add_relevant_information(key, str(annotations[key][4]))
+        print(key)
+        generator.add_relevant_information(key.replace('_', ' '), str(annotations[key][4]))
     if variant_consequences is not None:
         generator.add_subtitle("Variant consequences:")
         generator.add_text("Flags column: first number = is_gencode_basic, second number: is_mane_select, third number: is_mane_plus_clinical, fourth number: is_ensembl_canonical")
@@ -301,7 +314,8 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
         generator.add_relevant_classifications([[x[1], x[3], x[5], x[4]] for x in heredicare_center_classifications], ('Class', 'Center', 'Date', 'Comment'),  [2, 2, 2, 12])
     if clinvar_submissions is not None:
         generator.add_text("ClinVar submissions:")
-        generator.add_relevant_classifications([[x[2], x[3], x[4], x[5][1], x[6], x[7]] for x in clinvar_submissions], ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter', 'Comment'), [1.5, 2, 2, 2, 2, 9])
+        print(clinvar_submissions[5])
+        generator.add_relevant_classifications([[x[2], x[3], x[4], ';'.join([condition[0] for condition in x[5]]), x[6], x[7]] for x in clinvar_submissions], ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter', 'Comment'), [1.5, 2, 2, 2, 2, 9])
     
     generator.save_pdf()
     buffer.seek(io.SEEK_SET)
@@ -310,24 +324,26 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
 
 
 
-def extract_criteria_from_request(request_obj):
+def extract_criteria_from_request(request_obj, scheme_id, conn):
     # test if the scheme classification is valid
     criteria = {}
     non_criterium_form_fields = ['scheme', 'classification_type', 'final_class', 'comment', 'strength_select']
-    for criterium in request_obj:
-        if criterium not in non_criterium_form_fields and '_strength' not in criterium:
-            evidence = request_obj[criterium]
-            strength = request_obj[criterium + '_strength']
-            criteria[criterium] = {'evidence':evidence, 'strength':strength}
+    for criterium_name in request_obj:
+        if criterium_name not in non_criterium_form_fields and '_strength' not in criterium_name:
+            evidence = request_obj[criterium_name]
+            strength = request_obj[criterium_name + '_strength']
+            criterium_id = conn.get_classification_criterium_id(scheme_id, criterium_name)
+            criterium_strength_id = conn.get_classification_criterium_strength_id(criterium_id, strength)
+            criteria[criterium_id] = {'evidence':evidence, 'strength':strength, 'criterium_name': criterium_name, 'criterium_strength_id': criterium_strength_id}
     return criteria
 
 
 
-def get_scheme_classification(criteria, scheme):
+def get_scheme_classification(criteria, scheme_type):
     all_strengths = []
     for entry in criteria:
-        all_strengths.append(entry[3])
-    response = calculate_class(scheme, '+'.join(all_strengths))
+        all_strengths.append(entry[6])
+    response = calculate_class(str(scheme_type), '+'.join(all_strengths))
     return response.get_json()['final_class']
 
 
