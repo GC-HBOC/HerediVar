@@ -194,7 +194,7 @@ def classify(variant_id):
     classification_schemas = conn.get_classification_schemas()
     variant_oi = conn.get_variant_more_info(variant_id)
     if variant_oi is None:
-        abort(404)
+        return abort(404)
 
     do_redirect = False
 
@@ -254,7 +254,7 @@ def consensus_classify(variant_id):
     classification_schemas = conn.get_classification_schemas()
     variant_oi = conn.get_variant_more_info(variant_id)
     if variant_oi is None:
-        abort(404)
+        return abort(404)
 
     previous_classification = {} # keep empty because we always submit a new consensus classification 
     schemes_with_info = {} # this is used to preselect from previous classify submissions
@@ -320,7 +320,7 @@ def classification_history(variant_id):
     conn = get_connection()
     variant_oi = conn.get_variant_more_info(variant_id)
     if variant_oi is None:
-        abort(404)
+        return abort(404)
     consensus_classifications = conn.get_consensus_classifications_extended(variant_id, most_recent=False)
     user_classifications = conn.get_user_classifications_extended(variant_id)
     

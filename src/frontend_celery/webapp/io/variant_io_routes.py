@@ -102,6 +102,8 @@ def submit_clinvar(variant_id):
     else:
         consensus_classification = consensus_classification[0]
     variant_oi = conn.get_variant_more_info(variant_id)
+    if variant_oi is None:
+        return abort(404)
     genes = variant_oi[6]
     if genes is None:
         genes = []

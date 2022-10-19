@@ -336,11 +336,11 @@
                                     {% for classification in annotations['user_classifications'] %}
                                     <tr user_classification_id="{{ classification[0] }}">
                                         <td>{{ classification[1] }}</td>
-                                        <td>{{ classification[9] + ' ' + classification[10] }}</td>
-                                        <td>{{ classification[11] }}</td>
+                                        <td>{{ classification[8] + ' ' + classification[9] }}</td>
+                                        <td>{{ classification[10] }}</td>
                                         <td style="white-space:nowrap;">{{ classification[5] }}</td>
                                         <td><abbr title="{{ classification[4] }}"><div class="Nellipsis" >{{ classification[4] }}</div> </abbr></td>
-                                        <td style="white-space:nowrap;">{{classification[12] | replace('_', ' ')}}</td>
+                                        <td style="white-space:nowrap;">{{classification[11] | replace('_', ' ')}}</td>
                                         <td>{{ macros.draw_criteria_display(classification[13], '4em', '2em') }}</td>
                                         <td>{{ classification[14] }}</td>
                                     </tr>

@@ -11,6 +11,7 @@ import re
 from webapp.variant.variant_routes import add_scheme_classes, prepare_scheme_criteria
 from io import StringIO, BytesIO
 import common.functions as functions
+import time
 
 basepath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 test_data_dir = basepath + "/data"
@@ -23,25 +24,6 @@ def test_login(test_client):
     assert 'tokenResponse' in session
     assert 'user' in session
     assert 'user_id' in session['user']
-
-
-def test_create(test_client):
-    """
-    DOCSTRING
-    """
-    #response = test_client.get("/login", follow_redirects=False)
-    #print(response.request.path)
-    #print(session['tokenResponse'])
-    #print(session['user'])
-
-    # check access
-    response = test_client.get(url_for("variant.create"), follow_redirects=True)
-    #print(response)
-    #print(session['tokenResponse'])
-    #print(response.data)
-    #print(response.status_code)
-
-    assert response.status_code == 200
     
 
 def test_browse(test_client):
@@ -153,14 +135,15 @@ def test_variant_display(test_client):
     ##### test that all data is there #####
     conn = Connection()
     annotations = conn.get_all_variant_annotations(variant_id, group_output=True)
-    if annotations.get('consensus_scheme_classifications', None) is not None:
-        annotations['consensus_scheme_classifications'] = add_scheme_classes(annotations['consensus_scheme_classifications'], 10)
-        annotations['consensus_scheme_classifications'] = prepare_scheme_criteria(annotations['consensus_scheme_classifications'], 10)
+    if annotations.get('consensus_classification', None) is not None:
+        annotations['consensus_classification'] = add_scheme_classes(annotations['consensus_classification'], 14)
+        annotations['consensus_classification'] = prepare_scheme_criteria(annotations['consensus_classification'], 14)[0]
 
-    if annotations.get('user_scheme_classifications', None) is not None:
-        annotations['user_scheme_classifications'] = add_scheme_classes(annotations['user_scheme_classifications'], 9)
-        annotations['user_scheme_classifications'] = prepare_scheme_criteria(annotations['user_scheme_classifications'], 9)
+    if annotations.get('user_classifications', None) is not None:
+        annotations['user_classifications'] = add_scheme_classes(annotations['user_classifications'], 13)
+        annotations['user_classifications'] = prepare_scheme_criteria(annotations['user_classifications'], 13)
     conn.close()
+    
 
     all_anntation_ids_raw = re.findall(r'annotation_id="((\d*;?)*)"', data)
     #print(all_anntation_ids_raw)
@@ -194,24 +177,18 @@ def test_variant_display(test_client):
                 assert 'assay_id="' + str(assay[0]) in data
 
         if key == 'consensus_classification':
-            assert 'consensus_classification_id="' + str(annotations['consensus_classification'][0]) + '"' in data
+            most_recent_consensus_classification = annotations['consensus_classification']
+            assert 'consensus_classification_id="' + str(most_recent_consensus_classification[0]) + '"' in data
+            current_criteria = most_recent_consensus_classification[14]
+            for criterium in current_criteria:
+                assert 'consensus_criterium_applied_id="' + str(criterium[0]) + '"' in data
         
         if key == 'user_classifications':
             for user_classification in annotations['user_classifications']:
                 assert 'user_classification_id="' + str(user_classification[0]) + '"' in data
-            
-        if key == 'consensus_scheme_classifications':
-            for classification in annotations['consensus_scheme_classifications']:
-                assert 'consensus_scheme_classification_id="' + str(classification[0]) in data
-                for scheme_criterium in classification[9]:
-                    assert 'consensus_scheme_classification_id="' + str(scheme_criterium[0]) in data
-
-        if key == 'user_scheme_classifications':
-            for classification in annotations['user_scheme_classifications']:
-                assert 'user_scheme_classification_id="' + str(classification[0]) in data
-                for scheme_criterium in classification[9]:
-                    assert 'selected_scheme_criterium_id="' + str(scheme_criterium[0]) in data
-
+                current_criteria = user_classification[13]
+                for criterium in current_criteria:
+                    assert 'user_criterium_applied_id="' + str(criterium[0]) + '"' in data
             
         if key == 'heredicare_center_classifications':
             for classification in annotations['heredicare_center_classifications']:
@@ -236,73 +213,74 @@ def test_variant_display(test_client):
 
 
 
-def test_clinvar_submission(test_client):
-    """
-    This submitts a variant to the clinvar test api
-    """
-    variant_id = 15
+#def test_clinvar_submission(test_client):
+#    """
+#    This submitts a variant to the clinvar test api
+#    """
+#    variant_id = 15
+#
+#    ##### standard get #####
+#    response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
+#    data = html.unescape(response.data.decode('utf8'))
+#
+#    assert response.status_code == 200
+#    links = get_all_links(data)
+#    for link in links:
+#        response = requests.get(link)
+#        assert response.status_code == 200
+#
+#    ##### Incorrect orphanet #####
+#    response = test_client.post(
+#        url_for("variant_io.submit_clinvar", variant_id=variant_id),
+#        data={
+#            "condition": "This is not an orphanet code",
+#            "gene": "BARD1"
+#        },
+#        follow_redirects=True
+#    )
+#    data = html.unescape(response.data.decode('utf8'))
+#    assert response.status_code == 200
+#    assert "The selected condition contains errors. It MUST be one of the provided autocomplete values." in data
+#    
+#    ##### successul upload to clinvar #####
+#    response = test_client.post(
+#        url_for("variant_io.submit_clinvar", variant_id=variant_id),
+#        data={
+#            "condition": "Hereditary breast and ovarian cancer syndrome: 145",
+#            "gene": "BARD1"
+#        },
+#        follow_redirects=True
+#    )
+#    data = html.unescape(response.data.decode('utf8'))
+#    assert response.status_code == 200
+#    assert request.endpoint == 'variant.display'
+#    assert "ERROR" not in data
+#    assert "WARNING" not in data
+#
+#
+#    ##### too quickly submitted again #####
+#    response = test_client.post(
+#        url_for("variant_io.submit_clinvar", variant_id=variant_id),
+#        data={
+#            "condition": "Hereditary breast and ovarian cancer syndrome: 145",
+#            "gene": "BARD1"
+#        },
+#        follow_redirects=True
+#    )
+#    data = html.unescape(response.data.decode('utf8'))
+#    assert response.status_code == 200
+#    assert request.endpoint == 'variant.display'
+#    assert "Please wait until it is finished before making updates to the previous one." in data
+#
+#    
+#    ##### Variant does not have a consensus classification
+#    variant_id = 71
+#    response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
+#    data = html.unescape(response.data.decode('utf8'))
+#    assert response.status_code == 200
+#    assert request.endpoint == 'variant.display'
+#    assert "There is no consensus classification for this variant! Please create one before submitting to ClinVar!" in data
 
-    ##### standard get #####
-    response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
-    data = html.unescape(response.data.decode('utf8'))
-
-    assert response.status_code == 200
-    links = get_all_links(data)
-    for link in links:
-        response = requests.get(link)
-        assert response.status_code == 200
-
-    ##### Incorrect orphanet #####
-    response = test_client.post(
-        url_for("variant_io.submit_clinvar", variant_id=variant_id),
-        data={
-            "condition": "This is not an orphanet code",
-            "gene": "BARD1"
-        },
-        follow_redirects=True
-    )
-    data = html.unescape(response.data.decode('utf8'))
-    assert response.status_code == 200
-    assert "The selected condition contains errors. It MUST be one of the provided autocomplete values." in data
-    
-    ##### successul upload to clinvar #####
-    response = test_client.post(
-        url_for("variant_io.submit_clinvar", variant_id=variant_id),
-        data={
-            "condition": "Hereditary breast and ovarian cancer syndrome: 145",
-            "gene": "BARD1"
-        },
-        follow_redirects=True
-    )
-    data = html.unescape(response.data.decode('utf8'))
-    assert response.status_code == 200
-    assert request.endpoint == 'variant.display'
-    assert "ERROR" not in data
-    assert "WARNING" not in data
-
-
-    ##### too quickly submitted again #####
-    response = test_client.post(
-        url_for("variant_io.submit_clinvar", variant_id=variant_id),
-        data={
-            "condition": "Hereditary breast and ovarian cancer syndrome: 145",
-            "gene": "BARD1"
-        },
-        follow_redirects=True
-    )
-    data = html.unescape(response.data.decode('utf8'))
-    assert response.status_code == 200
-    assert request.endpoint == 'variant.display'
-    assert "Please wait until it is finished before making updates to the previous one." in data
-
-    
-    ##### Variant does not have a consensus classification
-    variant_id = 71
-    response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
-    data = html.unescape(response.data.decode('utf8'))
-    assert response.status_code == 200
-    assert request.endpoint == 'variant.display'
-    assert "There is no consensus classification for this variant! Please create one before submitting to ClinVar!" in data
 
 
 
@@ -318,11 +296,11 @@ def test_variant_history(test_client):
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
 
+    print(data)
+
     conn = Connection()
-    consensus_classifications = conn.get_consensus_classification(variant_id, sql_modifier=conn.add_userinfo)
-    user_classifications = conn.get_user_classifications(variant_id)
-    user_scheme_classifications = conn.get_user_scheme_classification(variant_id, sql_modifier=conn.add_userinfo)
-    consensus_scheme_classifications = conn.get_consensus_scheme_classification(variant_id, scheme = 'all', most_recent = False, sql_modifier=conn.add_userinfo)
+    consensus_classifications = conn.get_consensus_classifications_extended(variant_id, most_recent=False)
+    user_classifications = conn.get_user_classifications_extended(variant_id)
     conn.close()
 
     # this could be improved by making custom html attributes saving the type & id of the classification 
@@ -330,13 +308,8 @@ def test_variant_history(test_client):
         assert data.count('consensus classification') == len(consensus_classifications) + 2 # add two because this string is also in the caption and the legend
     
     if user_classifications is not None:
-        assert data.count('user_classifications') == len(user_classifications) + 1 # also contained i nthe legend
-    
-    if user_scheme_classifications is not None:
-        assert data.count('user scheme classification') == len(user_scheme_classifications) + 1 
-    
-    if consensus_scheme_classifications is not None:
-        assert data.count('consensus scheme classification') == len(consensus_scheme_classifications) + 1
+        assert data.count('user classification') == len(user_classifications) + 1 # also contained in the legend
+
     
 
 
@@ -347,7 +320,7 @@ def test_classify(test_client):
     This classifies a variant using different schema & checks the consensus classification evidence document
     """
     ##### test access to the classify page #####
-    variant_id = 15
+    variant_id = 130
     response = test_client.get(url_for("variant.classify", variant_id=variant_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
@@ -362,14 +335,15 @@ def test_classify(test_client):
             'ps2': "Evidence for ps2 given in this field",
             'ps1_strength': "ps",
             'ps2_strength': "ps",
-            'scheme': "acmg_standard"
+            'scheme': "2"
         },
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
-    assert "Successfully inserted/updated classification based on classification scheme" in data
     assert "Successfully inserted new user classification" in data
+
+    time.sleep(2) # this is nececssary to not have multiple classifications at the same time
 
     ##### test posting invalid data #####
     response = test_client.post(
@@ -381,15 +355,13 @@ def test_classify(test_client):
             'bs4': "Evidence for bs4 given in this field", # mutually exclusive to pp1
             'pp1_strength': "ps",
             'bs4_strength': "bs",
-            'scheme': "acmg_standard"
+            'scheme': "2"
         },
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
-    assert "There are criteria which are mutually exclusive" in data
-
-    assert "It appears that you already have a classification for this variant. You can edit it here." in data
+    assert "A mutually exclusive criterium to pp1 was selected." in data
 
 
     ##### test posting none as classification scheme #####
@@ -400,15 +372,14 @@ def test_classify(test_client):
             'comment': "This is a test comment update.",
             'pp1': "Evidence for pp1 given in this field", # this should be ignored
             'pp1_strength': "ps", # this should be ignored
-            'scheme': "none"
+            'scheme': "1"
         },
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
-    assert "Successfully inserted/updated classification based on classification scheme" not in data
-    assert "It appears that you already have a classification for this variant. You can edit it here." in data
-    assert "Successfully updated user classification" in data
+    assert "Successfully inserted new user classification" in data
+
 
     ##### test posting invalid strength #####
     response = test_client.post(
@@ -418,17 +389,14 @@ def test_classify(test_client):
             'comment': "This is a test comment update 2.",
             'pp1': "Evidence for pp1 given in this field", 
             'pp1_strength': "ba", 
-            'scheme': "acmg_standard"
+            'scheme': "2"
         },
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
-    assert "Successfully inserted/updated classification based on classification scheme" not in data
-    assert "It appears that you already have a classification for this variant. You can edit it here." in data
     assert "Successfully updated user classification" not in data
     assert "There are criteria with strengths that can not be selected" not in data
-
 
     ##### test posting criteria which can not be selected #####
     response = test_client.post(
@@ -438,16 +406,16 @@ def test_classify(test_client):
             'comment': "This is a test comment update 2.",
             'pm3': "Evidence for pm3 given in this field", # forbidden for amg tp53
             'pm3_strength': "pm", 
-            'scheme': "acmg_TP53"
+            'scheme': "3"
         },
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
-    assert "Successfully inserted/updated classification based on classification scheme" not in data
-    assert "It appears that you already have a classification for this variant. You can edit it here." in data
     assert "Successfully updated user classification" not in data
     assert "There are criteria which can not be activated with the provided scheme (TP_53)" not in data
+
+    time.sleep(2) # this is nececssary to not have multiple classifications at the same time
 
     ##### test inserting a new task force classification #####
     response = test_client.post(
@@ -457,65 +425,23 @@ def test_classify(test_client):
             'comment': "This is a test comment update 2.",
             '4.4': "Evidence for 4.4 given in this field",
             '4.4_strength': "ps", 
-            'scheme': "task-force"
+            'scheme': "5"
         },
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
-    assert "Successfully inserted/updated classification based on classification scheme" in data
-    assert "It appears that you already have a classification for this variant. You can edit it here." in data
+    assert "Successfully inserted new user classification" in data
 
+    
 
     # test that data was saved correctly to db
     conn = Connection()
-    user_scheme_classifications = conn.get_user_scheme_classification(15, 3)
+    user_scheme_classifications = conn.get_user_classifications(variant_id, 3)
     conn.close()
-    assert len(user_scheme_classifications) == 5
+    assert len(user_scheme_classifications) == 3
     
-
-
-def test_acmg_classification_calculation(test_client):
-    """
-    This tests that the class returned by the acmg endpoint is correct
-    """
-
-    scheme = 'acmg_standard'
-
-    assert issue_acmg_endpoint(test_client, scheme, 'pvs1+ps1') == 5
-    assert issue_acmg_endpoint(test_client, scheme, 'pvs1+pm1+pm4') == 5
-    assert issue_acmg_endpoint(test_client, scheme, 'pvs1+pm1+pp5') == 5
-    assert issue_acmg_endpoint(test_client, scheme, 'pvs1+pp1+pp3+pp5') == 5
-    assert issue_acmg_endpoint(test_client, scheme, 'ps1+ps3+ps4') == 5
-    assert issue_acmg_endpoint(test_client, scheme, 'ps1+pm1+pm2+pm3') == 5
-    assert issue_acmg_endpoint(test_client, scheme, 'ps2+pm2+pm4+pp1+pp3') == 5
-    assert issue_acmg_endpoint(test_client, scheme, 'ps3+pm6+pp1+pp2+pp3+pp4') == 5
-
-    assert issue_acmg_endpoint(test_client, scheme, 'pvs1+pm2') == 4
-    assert issue_acmg_endpoint(test_client, scheme, 'ps4+pm1') == 4
-    assert issue_acmg_endpoint(test_client, scheme, 'ps4+pm1+pm2') == 4
-    assert issue_acmg_endpoint(test_client, scheme, 'ps4+pp1+pp3+pp4') == 4
-    assert issue_acmg_endpoint(test_client, scheme, 'pm1+pm2+pm4+pm6') == 4
-    assert issue_acmg_endpoint(test_client, scheme, 'pm1+pm2+pp1+pp2') == 4
-    assert issue_acmg_endpoint(test_client, scheme, 'pm6+pp1+pp2+pp3+pp4+pp5') == 4
-    assert issue_acmg_endpoint(test_client, scheme, 'pm1+pp1+pp2+pp4+pp3') == 4
     
-    assert issue_acmg_endpoint(test_client, scheme, 'ba1') == 1
-    assert issue_acmg_endpoint(test_client, scheme, 'bs1+bs3') == 1
-    assert issue_acmg_endpoint(test_client, scheme, 'bs1+bs2+bp1') == 1
-    assert issue_acmg_endpoint(test_client, scheme, 'bs1+bs2+bp1+bp2') == 1
-
-    assert issue_acmg_endpoint(test_client, scheme, 'bs1+bp1') == 2
-    assert issue_acmg_endpoint(test_client, scheme, 'bp1+bp4') == 2
-
-    assert issue_acmg_endpoint(test_client, scheme, 'bp1+bp4+pvs1+pm2') == 3
-
-
-def issue_acmg_endpoint(test_client, scheme, classes):
-    response = test_client.get(url_for("download.calculate_class", scheme=scheme, selected_classes=classes))
-    data = response.get_json()
-    assert response.status_code == 200
-    return data['final_class']
 
 def test_export_variant_to_vcf(test_client):
     """
@@ -538,7 +464,7 @@ def test_export_variant_to_vcf(test_client):
     with open(test_data_dir + '/variant_52.vcf', 'r') as img1:
         vcf_variant_52 = StringIO(img1.read())
     vcf_variant_52.seek(0)
-    print(data)
+    #print(data)
     
     compare_vcf(vcf_variant_52, data)
 
@@ -560,12 +486,62 @@ def compare_vcf(reference_file, vcf_string):
         assert info[0:7].join('\t') in vcf_string # test that variant is there
 
         for info_entry in info.split(';'):
-            #print(info_entry)
             if 'consequences' in info_entry:
                 for consequence in info_entry.strip('consequences=').split('&'):
                     assert consequence in vcf_string
             else:
+                if (info_entry not in vcf_string):
+                    print(info_entry)
+                    print(vcf_string)
                 assert info_entry.strip() in vcf_string # test that info is there
+
+
+
+
+
+def test_acmg_classification_calculation(test_client):
+    """
+    This tests that the class returned by the acmg endpoint is correct
+    """
+
+    scheme_type = 'acmg'
+
+    assert issue_acmg_endpoint(test_client, scheme_type, 'pvs1+ps1') == 5
+    assert issue_acmg_endpoint(test_client, scheme_type, 'pvs1+pm1+pm4') == 5
+    assert issue_acmg_endpoint(test_client, scheme_type, 'pvs1+pm1+pp5') == 5
+    assert issue_acmg_endpoint(test_client, scheme_type, 'pvs1+pp1+pp3+pp5') == 5
+    assert issue_acmg_endpoint(test_client, scheme_type, 'ps1+ps3+ps4') == 5
+    assert issue_acmg_endpoint(test_client, scheme_type, 'ps1+pm1+pm2+pm3') == 5
+    assert issue_acmg_endpoint(test_client, scheme_type, 'ps2+pm2+pm4+pp1+pp3') == 5
+    assert issue_acmg_endpoint(test_client, scheme_type, 'ps3+pm6+pp1+pp2+pp3+pp4') == 5
+
+    assert issue_acmg_endpoint(test_client, scheme_type, 'pvs1+pm2') == 4
+    assert issue_acmg_endpoint(test_client, scheme_type, 'ps4+pm1') == 4
+    assert issue_acmg_endpoint(test_client, scheme_type, 'ps4+pm1+pm2') == 4
+    assert issue_acmg_endpoint(test_client, scheme_type, 'ps4+pp1+pp3+pp4') == 4
+    assert issue_acmg_endpoint(test_client, scheme_type, 'pm1+pm2+pm4+pm6') == 4
+    assert issue_acmg_endpoint(test_client, scheme_type, 'pm1+pm2+pp1+pp2') == 4
+    assert issue_acmg_endpoint(test_client, scheme_type, 'pm6+pp1+pp2+pp3+pp4+pp5') == 4
+    assert issue_acmg_endpoint(test_client, scheme_type, 'pm1+pp1+pp2+pp4+pp3') == 4
+    
+    assert issue_acmg_endpoint(test_client, scheme_type, 'ba1') == 1
+    assert issue_acmg_endpoint(test_client, scheme_type, 'bs1+bs3') == 1
+    assert issue_acmg_endpoint(test_client, scheme_type, 'bs1+bs2+bp1') == 1
+    assert issue_acmg_endpoint(test_client, scheme_type, 'bs1+bs2+bp1+bp2') == 1
+
+    assert issue_acmg_endpoint(test_client, scheme_type, 'bs1+bp1') == 2
+    assert issue_acmg_endpoint(test_client, scheme_type, 'bp1+bp4') == 2
+
+    assert issue_acmg_endpoint(test_client, scheme_type, 'bp1+bp4+pvs1+pm2') == 3
+
+
+
+def issue_acmg_endpoint(test_client, scheme_type, classes):
+    response = test_client.get(url_for("download.calculate_class", scheme_type=scheme_type, selected_classes=classes))
+    data = response.get_json()
+    assert response.status_code == 200
+    return data['final_class']
+
 
 
 def test_user_lists(test_client):
@@ -641,6 +617,7 @@ def test_user_lists(test_client):
     ##### test showing the list #####
     response = test_client.get(url_for("user.my_lists", view=list_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
+    print(data)
     
     assert response.status_code == 200
     assert data.count('variant_id="') == 4
@@ -681,7 +658,7 @@ def test_user_lists(test_client):
 
     ##### test deleting variants from the list #####
     response = test_client.post(
-        url_for("user.my_lists", type='delete_variant', view=18, variant_id=130), 
+        url_for("user.my_lists", type='delete_variant', view=list_id, variant_id=130), 
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
@@ -723,6 +700,7 @@ def test_user_lists(test_client):
     data = html.unescape(response.data.decode('utf8'))
     
     assert response.status_code == 403
+
 
 
 

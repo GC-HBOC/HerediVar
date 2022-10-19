@@ -211,7 +211,7 @@ def handle_scheme_classification(classification_id, criteria, conn, where = "use
         if where != "consensus":
             current_datetime = functions.get_now()
             conn.update_classification_date(classification_id, current_datetime)
-        flash("Successfully inserted/updated classification based on classification scheme", 'alert-success')
+        #flash("Successfully inserted/updated classification based on classification scheme", 'alert-success')
             
 
 
@@ -327,13 +327,14 @@ def extract_criteria_from_request(request_obj, scheme_id, conn):
     # test if the scheme classification is valid
     criteria = {}
     non_criterium_form_fields = ['scheme', 'classification_type', 'final_class', 'comment', 'strength_select']
-    for criterium_name in request_obj:
-        if criterium_name not in non_criterium_form_fields and '_strength' not in criterium_name:
-            evidence = request_obj[criterium_name]
-            strength = request_obj[criterium_name + '_strength']
-            criterium_id = conn.get_classification_criterium_id(scheme_id, criterium_name)
-            criterium_strength_id = conn.get_classification_criterium_strength_id(criterium_id, strength)
-            criteria[criterium_id] = {'evidence':evidence, 'strength':strength, 'criterium_name': criterium_name, 'criterium_strength_id': criterium_strength_id}
+    if request_obj['scheme'] != '1':
+        for criterium_name in request_obj:
+            if criterium_name not in non_criterium_form_fields and '_strength' not in criterium_name:
+                evidence = request_obj[criterium_name]
+                strength = request_obj[criterium_name + '_strength']
+                criterium_id = conn.get_classification_criterium_id(scheme_id, criterium_name)
+                criterium_strength_id = conn.get_classification_criterium_strength_id(criterium_id, strength)
+                criteria[criterium_id] = {'evidence':evidence, 'strength':strength, 'criterium_name': criterium_name, 'criterium_strength_id': criterium_strength_id}
     return criteria
 
 

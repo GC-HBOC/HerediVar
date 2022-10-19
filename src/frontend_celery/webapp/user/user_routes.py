@@ -126,6 +126,7 @@ def my_lists():
         variant_ids_oi = conn.get_variant_ids_from_list(view_list_id)
         if len(variant_ids_oi) > 0:
             variants, total = conn.get_variants_page_merged(page, per_page, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
+    print(variants)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
     
     return render_template('user/my_lists.html', 

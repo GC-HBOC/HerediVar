@@ -979,8 +979,10 @@ class Connection:
     def get_classification_criterium_strength_id(self, classification_criterium_id, classification_criterium_strength_name):
         command = "SELECT id FROM classification_criterium_strength WHERE name = %s and classification_criterium_id = %s"
         self.cursor.execute(command, (classification_criterium_strength_name, classification_criterium_id))
-        classification_criterium_strength_id = self.cursor.fetchone()[0]
-        return classification_criterium_strength_id
+        classification_criterium_strength_id = self.cursor.fetchone()
+        if classification_criterium_strength_id is None:
+            return -1
+        return classification_criterium_strength_id[0]
 
     def insert_scheme_criterium_applied(self, classification_id, classification_criterium_id, criterium_strength_id, evidence, where="user"):
         if where == "user":

@@ -98,9 +98,9 @@
 </div>
 {% endmacro %}
 
-{% macro draw_criteria_display(criteria, width='6em', height='2.5em') %}
+{% macro draw_criteria_display(criteria, width='6em', height='2.5em', source='user') %}
     {% for criterium in criteria %}
-    <span class="d-inline-block ssr large-tt" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" selected_scheme_criterium_id="{{ criterium[0] }}"
+    <span class="d-inline-block ssr large-tt" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" {% if source=="user" %} user_criterium_applied_id="{{ criterium[0] }}" {% else %} consensus_criterium_applied_id="{{ criterium[0] }}" {% endif %}
         title="Strength: {{ criterium[7] }} <br> Evidence: {{ criterium[4] }}">
         <div class="btn btn-{{ criterium[6] }} light-hover acmg-button" style="width:{{width}}; height:{{height}}">{{ criterium[5] }}</div>
     </span>
