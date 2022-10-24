@@ -213,73 +213,73 @@ def test_variant_display(test_client):
 
 
 
-#def test_clinvar_submission(test_client):
-#    """
-#    This submitts a variant to the clinvar test api
-#    """
-#    variant_id = 15
-#
-#    ##### standard get #####
-#    response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
-#    data = html.unescape(response.data.decode('utf8'))
-#
-#    assert response.status_code == 200
-#    links = get_all_links(data)
-#    for link in links:
-#        response = requests.get(link)
-#        assert response.status_code == 200
-#
-#    ##### Incorrect orphanet #####
-#    response = test_client.post(
-#        url_for("variant_io.submit_clinvar", variant_id=variant_id),
-#        data={
-#            "condition": "This is not an orphanet code",
-#            "gene": "BARD1"
-#        },
-#        follow_redirects=True
-#    )
-#    data = html.unescape(response.data.decode('utf8'))
-#    assert response.status_code == 200
-#    assert "The selected condition contains errors. It MUST be one of the provided autocomplete values." in data
-#    
-#    ##### successul upload to clinvar #####
-#    response = test_client.post(
-#        url_for("variant_io.submit_clinvar", variant_id=variant_id),
-#        data={
-#            "condition": "Hereditary breast and ovarian cancer syndrome: 145",
-#            "gene": "BARD1"
-#        },
-#        follow_redirects=True
-#    )
-#    data = html.unescape(response.data.decode('utf8'))
-#    assert response.status_code == 200
-#    assert request.endpoint == 'variant.display'
-#    assert "ERROR" not in data
-#    assert "WARNING" not in data
-#
-#
-#    ##### too quickly submitted again #####
-#    response = test_client.post(
-#        url_for("variant_io.submit_clinvar", variant_id=variant_id),
-#        data={
-#            "condition": "Hereditary breast and ovarian cancer syndrome: 145",
-#            "gene": "BARD1"
-#        },
-#        follow_redirects=True
-#    )
-#    data = html.unescape(response.data.decode('utf8'))
-#    assert response.status_code == 200
-#    assert request.endpoint == 'variant.display'
-#    assert "Please wait until it is finished before making updates to the previous one." in data
-#
-#    
-#    ##### Variant does not have a consensus classification
-#    variant_id = 71
-#    response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
-#    data = html.unescape(response.data.decode('utf8'))
-#    assert response.status_code == 200
-#    assert request.endpoint == 'variant.display'
-#    assert "There is no consensus classification for this variant! Please create one before submitting to ClinVar!" in data
+def test_clinvar_submission(test_client):
+    """
+    This submitts a variant to the clinvar test api
+    """
+    variant_id = 15
+
+    ##### standard get #####
+    response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+
+    assert response.status_code == 200
+    links = get_all_links(data)
+    for link in links:
+        response = requests.get(link)
+        assert response.status_code == 200
+
+    ##### Incorrect orphanet #####
+    response = test_client.post(
+        url_for("variant_io.submit_clinvar", variant_id=variant_id),
+        data={
+            "condition": "This is not an orphanet code",
+            "gene": "BARD1"
+        },
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "The selected condition contains errors. It MUST be one of the provided autocomplete values." in data
+    
+    ##### successul upload to clinvar #####
+    response = test_client.post(
+        url_for("variant_io.submit_clinvar", variant_id=variant_id),
+        data={
+            "condition": "Hereditary breast and ovarian cancer syndrome: 145",
+            "gene": "BARD1"
+        },
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert request.endpoint == 'variant.display'
+    assert "ERROR" not in data
+    assert "WARNING" not in data
+
+
+    ##### too quickly submitted again #####
+    response = test_client.post(
+        url_for("variant_io.submit_clinvar", variant_id=variant_id),
+        data={
+            "condition": "Hereditary breast and ovarian cancer syndrome: 145",
+            "gene": "BARD1"
+        },
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert request.endpoint == 'variant.display'
+    assert "Please wait until it is finished before making updates to the previous one." in data
+
+    
+    ##### Variant does not have a consensus classification
+    variant_id = 71
+    response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert request.endpoint == 'variant.display'
+    assert "There is no consensus classification for this variant! Please create one before submitting to ClinVar!" in data
 
 
 
@@ -533,6 +533,40 @@ def test_acmg_classification_calculation(test_client):
     assert issue_acmg_endpoint(test_client, scheme_type, 'bp1+bp4') == 2
 
     assert issue_acmg_endpoint(test_client, scheme_type, 'bp1+bp4+pvs1+pm2') == 3
+
+
+
+
+def test_task_force_classification_calculation(test_client):
+    """
+    This tests that the class returned by the task-force class calculation endpoint is correct
+    """
+
+    scheme_type = 'task-force'
+
+    assert issue_acmg_endpoint(test_client, scheme_type, '1.1') == 1
+    assert issue_acmg_endpoint(test_client, scheme_type, '1.1+2.1') == 1
+
+    assert issue_acmg_endpoint(test_client, scheme_type, '2.1') == 2
+    assert issue_acmg_endpoint(test_client, scheme_type, '2.1+5.1') == 2
+
+
+    assert issue_acmg_endpoint(test_client, scheme_type, '5.1') == 5
+    assert issue_acmg_endpoint(test_client, scheme_type, '5.2+5.6') == 5
+    assert issue_acmg_endpoint(test_client, scheme_type, '5.2+5.6+4.3') == 5
+
+    assert issue_acmg_endpoint(test_client, scheme_type, '1.2') == 1
+    assert issue_acmg_endpoint(test_client, scheme_type, '1.2+1.1') == 1
+    assert issue_acmg_endpoint(test_client, scheme_type, '1.2+1.1+2.2') == 1
+
+    assert issue_acmg_endpoint(test_client, scheme_type, '2.5') == 2
+    assert issue_acmg_endpoint(test_client, scheme_type, '2.5+2.2') == 2
+
+    assert issue_acmg_endpoint(test_client, scheme_type, '4.1') == 4
+    assert issue_acmg_endpoint(test_client, scheme_type, '4.2+3.3') == 4
+
+    assert issue_acmg_endpoint(test_client, scheme_type, '3.4') == 3
+
 
 
 

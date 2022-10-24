@@ -169,9 +169,6 @@ def get_variant_vcf_line(variant_id, conn):
 
     annotations = conn.get_all_variant_annotations(variant_id)
     external_variant_ids = conn.get_external_ids_from_variant_id(variant_id)
-
-    
-
     
     #"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO"
     variant_vcf = '\t'.join((str(variant_oi[1]), str(variant_oi[2]), str(variant_oi[0]), str(variant_oi[3]), str(variant_oi[4]), '.', '.'))
@@ -246,7 +243,6 @@ def get_variant_vcf_line(variant_id, conn):
             consensus_classification_vcf = "~7C".join([consensus_class, consensus_comment, submission_date, consensus_scheme, consensus_scheme_class, consensus_criteria_string]) # sep: |
             print("consensus classification: " + functions.encode_vcf(consensus_classification_vcf))
             info = functions.collect_info(info, key + '=', functions.encode_vcf(consensus_classification_vcf))
-            # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
     
         elif key == 'user_classifications':
             # no versioning - handled by date field
@@ -275,13 +271,6 @@ def get_variant_vcf_line(variant_id, conn):
             print("User classification: " + functions.encode_vcf(user_classifications_vcf))
             info = functions.collect_info(info, key + "=", functions.encode_vcf(user_classifications_vcf))
 
-
-        #    for classification in annotations['user_classifications']:
-        #        current_user_classification = '~7C'.join([classification[1], classification[8] + '_' + classification[9], classification[4], classification[5].strftime('%Y-%m-%d')])
-        #        current_user_classification = functions.encode_vcf(current_user_classification)
-        #        all_user_classifications = functions.collect_info(all_user_classifications, '', current_user_classification, sep = '&')
-        #    info = functions.collect_info(info, 'user_classifications=', all_user_classifications)
-
         elif key == 'heredicare_center_classifications':
             # no versioning - handled by date field
             info_headers['heredicare_center_classifications'] = '##INFO=<ID=heredicare_center_classifications,Number=.,Type=String,Description="An & separated list of the variant classifications from centers imported from HerediCare. Format:class|center|comment|date">\n'
@@ -292,51 +281,6 @@ def get_variant_vcf_line(variant_id, conn):
                 all_center_classifications = functions.collect_info(all_center_classifications, '', current_center_classification, sep = '&')
             info = functions.collect_info(info, 'heredicare_center_classifications=', all_center_classifications)
        
-        
-        #elif key == 'user_scheme_classifications':
-        #    content = annotations[key]
-        #    info_headers[key] = '##INFO=<ID=' + key + ',Number=.,Type=String,Description="An & separated list of the variant scheme classifications from individual users. Format:class|user|affiliation|date|chosen_criteria. The chosen criteria is a ~ separated list of critera itself. Format_criteria: criterium+strength+evidence.">\n'
-        #    all_user_scheme_classifications = ''
-        #    for classification in content:
-        #        current_chosen_criteria = classification[9]
-        #        current_scheme = classification[3]
-        #        if 'acmg' in current_scheme:
-        #            all_criteria = [x[3] for x in current_chosen_criteria]
-        #        if 'task-force' in current_scheme:
-        #            all_criteria = [x[2] for x in current_chosen_criteria]
-        #        all_criteria = '+'.join(all_criteria) # this is only required for calculating the class
-        #
-        #        resp = calculate_class(current_scheme, all_criteria)
-        #        current_class = str(resp.get_json()['final_class'])
-        #        chosen_criteria = '~24'.join(['~2B'.join([x[2], x[3], x[4]]) for x in current_chosen_criteria])
-        #        current_user_scheme_classification = '~7C'.join([current_class, classification[6] + '_' + classification[7], classification[8], classification[4].strftime('%Y-%m-%d'), chosen_criteria])
-        #        current_user_scheme_classification = functions.encode_vcf(current_user_scheme_classification)
-        #        all_user_scheme_classifications = functions.collect_info(all_user_scheme_classifications, '', current_user_scheme_classification, sep = '&')
-        #    info = functions.collect_info(info, key + '=', all_user_scheme_classifications)
-        
-
-        #elif key == 'consensus_scheme_classifications':
-        #    content = annotations[key]
-        #    info_key = 'most_recent_' + key
-        #    info_headers[key] = '##INFO=<ID=' + info_key + ',Number=1,Type=String,Description="The most recent' + key.replace('_', ' ') + '. Format:class|user|affiliation|date|chosen_criteria. The chosen criteria is a ~ separated list of critera itself. Format_criteria: criterium+strength+evidence.">\n'
-        #    all_scheme_classifications = ''
-        #    for classification in content:
-        #        current_chosen_criteria = classification[10]
-        #        current_scheme = classification[3]
-        #        if 'acmg' in current_scheme:
-        #            all_criteria = [x[3] for x in current_chosen_criteria]
-        #        if 'task-force' in current_scheme:
-        #            all_criteria = [x[2] for x in current_chosen_criteria]
-        #        all_criteria = '+'.join(all_criteria) # this is only required for calculating the class
-        #
-        #        resp = calculate_class(current_scheme, all_criteria)
-        #        current_class = str(resp.get_json()['final_class'])
-        #        chosen_criteria = '~24'.join(['~2B'.join([x[2], x[3], x[4]]) for x in current_chosen_criteria])
-        #        current_scheme_classification = '~7C'.join([current_class, classification[7] + '_' + classification[8], classification[9], classification[4].strftime('%Y-%m-%d'), chosen_criteria])
-        #        current_scheme_classification = functions.encode_vcf(current_scheme_classification)
-        #        all_scheme_classifications = functions.collect_info(all_scheme_classifications, '', current_scheme_classification, sep = '&')
-        #    info = functions.collect_info(info, info_key + '=', all_scheme_classifications)
-        
         elif key == 'assays':
             content = annotations[key]
             info_key = 'assays'

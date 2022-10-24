@@ -106,12 +106,21 @@ def get_clinvar_submission_status(clinvar_submission_id, headers): # SUB11770209
     return resp
 
 
+def get_role_for_current_user():
+    is_super_user, status_code = request_uma_ticket()
+    if is_super_user:
+        return "super_user_role"
+    return "user_role"
+
+
 def request_has_connection():
     return hasattr(g, 'dbconn')
 
+
 def get_connection():
+    role = get_role_for_current_user()
     if not request_has_connection():
-        g.dbconn = Connection()        
+        g.dbconn = Connection(role)        
         current_app.logger.debug("established db connection")
     return g.dbconn
 

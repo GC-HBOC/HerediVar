@@ -5,42 +5,44 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 import mysql.connector
 from mysql.connector import Error
 import common.functions as functions
+import common.paths as paths
 from operator import itemgetter
 import datetime
 import re
 from functools import cmp_to_key
 import os
 
-def get_db_connection():
+
+def get_db_connection(role):
     conn = None
     try:
-        env = os.environ.get('WEBAPP_ENV', 'dev')
-        if env == 'dev':
-            conn = mysql.connector.connect(user='ahdoebm1', password='20220303',
-                                           host='SRV011.img.med.uni-tuebingen.de',
-                                           database='HerediVar_ahdoebm1', 
-                                           charset = 'utf8')
-        elif env == 'githubtest':
-            conn = mysql.connector.connect(user='test_user', password='password',
-                                           host='0.0.0.0',
-                                           database='test_db', 
-                                           charset = 'utf8')
-        elif env == 'localtest':
-            conn = mysql.connector.connect(user='ahdoebm1', password='20220303',
-                               host='SRV011.img.med.uni-tuebingen.de',
-                               database='HerediVar_ahdoebm1_test', 
+        #env = os.environ.get('WEBAPP_ENV', 'dev')
+        user, pw = get_db_user(role)
+        conn = mysql.connector.connect(user=user, password=pw,
+                               host=paths.db_host,
+                               database=paths.db_name, 
                                charset = 'utf8')
-        elif env == 'prod': ## TODO
-            conn = mysql.connector.connect(user='missing', password='missing',
-                                           host='0.0.0.0',
-                                           database='missing', 
-                                           charset = 'utf8')
-
     except Error as e:
         raise RuntimeError("Error while connecting to HerediVar database " + str(e))
     finally:
         if conn is not None and conn.is_connected():
             return conn
+
+
+def get_db_user(role):
+    if role == "user_role":
+        #print("using user role")
+        return paths.db_user, paths.db_user_pw
+    if role == "super_user_role":
+        #print("using super user role")
+        return paths.db_super_user, paths.db_super_user_pw
+    if role == "annotation_role":
+        #print("using annotation role")
+        return paths.db_annotation_user, paths.db_annotation_user_pw
+    raise ValueError(str(role) + " is not a valid db user role!")
+
+
+
 
 
 def enquote(string):
@@ -55,8 +57,8 @@ def enbrace(string):
 
 
 class Connection:
-    def __init__(self):
-        self.conn = get_db_connection()
+    def __init__(self, role = "user_role"):
+        self.conn = get_db_connection(role)
         self.cursor = self.conn.cursor()
         self.set_connection_encoding()
 
@@ -605,7 +607,7 @@ class Connection:
                 new_constraints_inner = "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM consensus_classification WHERE is_recent=1)"
                 consensus.remove('-')
                 if len(consensus) > 0: # if we have - AND some other class(es) we need to add an or between them
-                    new_constraints_inner = new_constraints_inner + " UNION ALL "
+                    new_constraints_inner = new_constraints_inner + " UNION "
             if len(consensus) > 0: # if we have one or more classes without the -
                 placeholders = ["%s"] * len(consensus)
                 placeholders = ', '.join(placeholders)
@@ -621,16 +623,16 @@ class Connection:
                 actual_information += (user_id, )
                 user.remove('-')
                 if len(user) > 0: # if we have - AND some other class(es) we need to add an or between them
-                    new_constraints_inner = new_constraints_inner + " UNION ALL "
+                    new_constraints_inner = new_constraints_inner + " UNION "
             if len(user) > 0: # if we have one or more classes without the -
                 placeholders = ["%s"] * len(user)
                 placeholders = ', '.join(placeholders)
                 placeholders = enbrace(placeholders)
                 # search for the most recent user classifications from the user which is searching for variants and which are in the list of user classifications (variable: user)
-                new_constraints_inner = new_constraints_inner + "SELECT user_classification.variant_id FROM user_classification \
-                                                                LEFT JOIN user_classification x ON x.variant_id = user_classification.variant_id AND x.date > user_classification.date \
-                                                                    WHERE x.variant_id IS NULL AND user_classification.user_id=%s AND user_classification.classification IN " + placeholders + " \
-                                                                ORDER BY user_classification.variant_id"
+                new_constraints_inner = new_constraints_inner + "SELECT * FROM ( SELECT user_classification.variant_id FROM user_classification \
+                                                                LEFT JOIN user_classification uc ON uc.variant_id = user_classification.variant_id AND uc.date > user_classification.date \
+                                                                    WHERE uc.variant_id IS NULL AND user_classification.user_id=%s AND user_classification.classification IN " + placeholders + " \
+                                                                ORDER BY user_classification.variant_id )ub"
                 actual_information += (user_id, )
                 actual_information += tuple(user)
             new_constraints = "id IN (" + new_constraints_inner + ")"
