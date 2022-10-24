@@ -236,7 +236,7 @@ $(document).ready(function()
     });
 
 
-    $("*[data-href]").mousedown(function(event) {
+    $("*[data-href]").click(function(event) {
         switch (event.which) {
             case 1: // left mouse button
                 window.location = $(this).data("href"); // open link in same tab

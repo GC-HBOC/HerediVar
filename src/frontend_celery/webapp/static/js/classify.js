@@ -190,6 +190,15 @@ $(document).ready(function() {
         preselect_criteria_from_request_form()
     }
 
+
+    
+    // fix for option href handling in edge, chrome (https://stackoverflow.com/questions/9972280/onclick-on-option-tag-not-working-on-ie-and-chrome)
+    $("#classification_type").change(function (){
+        const new_loc = $(this).find(":selected").attr("option-href");
+        window.location = new_loc;
+    });
+
+
 });
 
 // update global scheme field variable
@@ -933,6 +942,14 @@ function update_criterium_strength(obj, criterium_id) {
 //    schemes_with_info['selected'][scheme] = {'selected_criteria': new_selection}
 //}
 //
+
+
+
+
+
+
+
+
 
 
 
