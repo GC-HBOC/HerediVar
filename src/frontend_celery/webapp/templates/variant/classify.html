@@ -19,8 +19,8 @@
         <div class="form-group">
             <label for="classification_type" class="form-label">Select type of classification</label>
             <select class="form-select" name="classification_type" id="classification_type" required>
-                <option data-href="{{ url_for('variant.classify', variant_id=variant_oi[0]) }}" value="user" {% if classification_type == 'user' %}selected{% endif %}>User classification</option>
-                <option data-href="{{ url_for('variant.consensus_classify', variant_id=variant_oi[0]) }}" value="consensus" {% if classification_type == 'consensus' %}selected{% endif %}>Consensus classification</option>
+                <option option-href="{{ url_for('variant.classify', variant_id=variant_oi[0]) }}" value="user" {% if classification_type == 'user' %}selected{% endif %}>User classification</option>
+                <option option-href="{{ url_for('variant.consensus_classify', variant_id=variant_oi[0]) }}" value="consensus" {% if classification_type == 'consensus' %}selected{% endif %}>Consensus classification</option>
             </select>
         </div>
         {% endif %}
