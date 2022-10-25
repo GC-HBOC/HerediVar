@@ -139,6 +139,19 @@ jobs:
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
 
+      # write settings.ini
+      - name: prepare settings
+        run: |
+          cat "DB_HOST=0.0.0.0" > src/common/settings.ini
+          cat "DB_NAME=test_db" >> src/common/settings.ini
+
+          cat "DB_USER=test_user" >> src/common/settings.ini
+          cat "DB_USER_PW=password" >> src/common/settings.ini
+          cat "DB_SUPER_USER=test_user" >> src/common/settings.ini
+          cat "DB_SUPER_USER_PW=password" >> src/common/settings.ini
+          cat "DB_ANNOTATION_USER=test_user" >> src/common/settings.ini
+          cat "DB_ANNOTATION_USER_PW=password" >> src/common/settings.ini
+
 
       # run tests
       - name: test annotation service
@@ -318,14 +331,6 @@ jobs:
           rm hg19ToHg38.over.chain.gz
 
 
-
-
-
-
-
-
-      
-      
       # setup keycloak
       - uses: actions/setup-java@v3
         with:
@@ -342,7 +347,18 @@ jobs:
           src/frontend_celery/tests/script/start_keycloak_for_tests.sh
 
 
+      # write settings.ini
+      - name: prepare settings
+        run: |
+          cat "DB_HOST=0.0.0.0" > src/common/settings.ini
+          cat "DB_NAME=test_db" >> src/common/settings.ini
 
+          cat "DB_USER=test_user" >> src/common/settings.ini
+          cat "DB_USER_PW=password" >> src/common/settings.ini
+          cat "DB_SUPER_USER=test_user" >> src/common/settings.ini
+          cat "DB_SUPER_USER_PW=password" >> src/common/settings.ini
+          cat "DB_ANNOTATION_USER=test_user" >> src/common/settings.ini
+          cat "DB_ANNOTATION_USER_PW=password" >> src/common/settings.ini
 
 
       # run tests
