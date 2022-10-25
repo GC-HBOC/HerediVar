@@ -429,12 +429,12 @@ class Connection:
         result = self.cursor.fetchall()
         return result
     
-    def insert_variant_literature(self, variant_id, pmid, title, authors, journal, year):
+    def insert_variant_literature(self, variant_id, pmid, title, authors, journal, year, source):
         #command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher, year) VALUES (%s, %s, %s, %s, %s, %s)"
-        command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher, year) \
-                    SELECT %s, %s, %s, %s, %s, %s WHERE NOT EXISTS (SELECT * FROM variant_literature \
+        command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher, year, source) \
+                    SELECT %s, %s, %s, %s, %s, %s, %s WHERE NOT EXISTS (SELECT * FROM variant_literature \
                         WHERE `variant_id`=%s AND `pmid`=%s LIMIT 1)"
-        self.cursor.execute(command, (variant_id, pmid, title, authors, journal, year, variant_id, pmid))
+        self.cursor.execute(command, (variant_id, pmid, title, authors, journal, year, source, variant_id, pmid))
         self.conn.commit()
 
     def clean_clinvar(self, variant_id):
@@ -459,6 +459,14 @@ class Connection:
         self.cursor.execute(command, (variant_id, variant_id))
         result = self.cursor.fetchall()
         return result
+    
+    def get_most_recent_annotation_type_id(self, title):
+        command = "SELECT id FROM annotation_type WHERE title = %s ORDER BY version_date DESC LIMIT 1"
+        self.cursor.execute(command, (title, ))
+        result = self.cursor.fetchone()
+        if result is not None:
+            return result[0]
+        return None
     
     def get_variant_annotation(self, variant_id, annotation_type_id):
         command = "SELECT * FROM variant_annotation WHERE variant_id = %s AND annotation_type_id = %s"
@@ -577,6 +585,40 @@ class Connection:
                 
         consequences.sort(key = keyfunc) # sort by preferred transcript
         return consequences
+    
+    
+    def sort_consequences(self, a, b):
+        # sort by ensembl/refseq
+        if a[9] == 'ensembl' and b[9] == 'refseq':
+            return -1
+        elif a[9] == 'refseq' and b[9] == 'ensembl':
+            return 1
+        elif a[9] == b[9]:
+
+            # sort by mane select
+            if a[14] is None or b[14] is None:
+                return 1
+            elif a[14] == 1 and b[14] == 0:
+                return -1
+            elif a[14] == 0 and b[14] == 1:
+                return 1
+            elif a[14] == b[14]:
+
+                # sort by biotype
+                if a[18] == 'protein coding' and b[18] != 'protein coding':
+                    return -1
+                elif a[18] != 'protein coding' and b[18] == 'protein coding':
+                    return 1
+                elif (a[18] != 'protein coding' and b[18] != 'protein coding') or (a[18] == 'protein coding' and b[18] == 'protein coding'):
+
+                    # sort by length
+                    if a[12] > b[12]:
+                        return -1
+                    elif a[12] < b[12]:
+                        return 1
+                    else:
+                        return 0
+
 
     def get_variants_page_merged(self, page, page_size, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None):
         # get one page of variants determined by offset & pagesize
@@ -748,38 +790,6 @@ class Connection:
 
         return matching_variant_ids
 
-
-    def sort_consequences(self, a, b):
-        # sort by ensembl/refseq
-        if a[9] == 'ensembl' and b[9] == 'refseq':
-            return -1
-        elif a[9] == 'refseq' and b[9] == 'ensembl':
-            return 1
-        elif a[9] == b[9]:
-
-            # sort by mane select
-            if a[14] is None or b[14] is None:
-                return 1
-            elif a[14] == 1 and b[14] == 0:
-                return -1
-            elif a[14] == 0 and b[14] == 1:
-                return 1
-            elif a[14] == b[14]:
-
-                # sort by biotype
-                if a[18] == 'protein coding' and b[18] != 'protein coding':
-                    return -1
-                elif a[18] != 'protein coding' and b[18] == 'protein coding':
-                    return 1
-                elif (a[18] != 'protein coding' and b[18] != 'protein coding') or (a[18] == 'protein coding' and b[18] == 'protein coding'):
-
-                    # sort by length
-                    if a[12] > b[12]:
-                        return -1
-                    elif a[12] < b[12]:
-                        return 1
-                    else:
-                        return 0
 
     """
     def get_mane_select_for_gene(self, gene, source):

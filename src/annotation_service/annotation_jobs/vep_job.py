@@ -99,10 +99,9 @@ class vep_job(Job):
         # insert literature
         if self.job_config['insert_literature'] and pmids != '':
             literature_entries = fetch(pmids) # defined in pubmed_parser.py
-            print(len(literature_entries))
             for paper in literature_entries: #[pmid, article_title, authors, journal, year]
-                print(paper[0])
-                conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4])
+                #print(paper[0])
+                conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4], "vep")
 
 
     def _fake_vep(self, variant_id, output_vcf):

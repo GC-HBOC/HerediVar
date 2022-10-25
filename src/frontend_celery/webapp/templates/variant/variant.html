@@ -756,6 +756,7 @@
                                     <th ><div class="sortable">Title</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                     <th><div class="sortable">Journal / Publisher</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                     <th>Link</th>
+                                    <th><div class="sortable">Source</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..."></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -768,6 +769,7 @@
                                     <td style="text-align:center;">
                                         {{ macros.external_link("PMID:" + paper[2]|string, "https://pubmed.ncbi.nlm.nih.gov/" + paper[2]|string) }}
                                     </td>
+                                    <td style="width:1rem">{{ paper[7] }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

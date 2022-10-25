@@ -107,7 +107,7 @@ def get_clinvar_submission_status(clinvar_submission_id, headers): # SUB11770209
 
 
 def get_role_for_current_user():
-    is_super_user, status_code = request_uma_ticket()
+    is_super_user, status_code = request_uma_ticket() # maybe overkill checking this everytime?
     if is_super_user:
         return "super_user_role"
     return "user_role"

@@ -8,6 +8,7 @@ import traceback
 from urllib.error import HTTPError
 from os.path import exists
 from .annotation_jobs import *
+from .annotation_jobs import litvar2_job
 import random
 
 import os
@@ -20,30 +21,31 @@ def get_default_job_config():
         'do_heredicare': False,
 
         # external programs
-        'do_phylop': True,
-        'do_spliceai': True,
-        'do_hexplorer': True,
+        'do_phylop': False,
+        'do_spliceai': False,
+        'do_hexplorer': False,
 
         # vep dependent
         'do_vep': True,
-        'insert_consequence': True,
-        'insert_maxent': True,
+        'insert_consequence': False,
+        'insert_maxent': False,
         'insert_literature': True,
 
         #vcf annotate from vcf
         'do_dbsnp': True,
-        'do_revel': True,
-        'do_cadd': True,
-        'do_clinvar': True,
-        'do_gnomad': True,
-        'do_brca_exchange': True,
-        'do_flossies': True,
-        'do_cancerhotspots': True,
-        'do_arup': True,
-        'do_tp53_database': True,
+        'do_revel': False,
+        'do_cadd': False,
+        'do_clinvar': False,
+        'do_gnomad': False,
+        'do_brca_exchange': False,
+        'do_flossies': False,
+        'do_cancerhotspots': False,
+        'do_arup': False,
+        'do_tp53_database': False,
 
         # additional annotations
-        'do_task_force_protein_domains': True
+        'do_task_force_protein_domains': False,
+        'do_litvar': True
     }
     return job_config
 
@@ -76,7 +78,8 @@ def get_empty_job_config():
         'do_tp53_database': False,
 
         # additional annotations
-        'do_task_force_protein_domains': False
+        'do_task_force_protein_domains': False,
+        'do_litvar': False
     }
     return job_config
 
@@ -89,7 +92,8 @@ def get_jobs(job_config):
         hexplorer_job.hexplorer_job(job_config),
         annotate_from_vcf_job.annotate_from_vcf_job(job_config),
         spliceai_job.spliceai_job(job_config),
-        task_force_protein_domain_job.task_force_protein_domain_job(job_config)
+        task_force_protein_domain_job.task_force_protein_domain_job(job_config),
+        litvar2_job.litvar2_job(job_config) # must be called after vep_jobs & annotate from vcf job
     ]
     return all_jobs
 
