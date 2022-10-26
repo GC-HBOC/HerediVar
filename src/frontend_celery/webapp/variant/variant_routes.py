@@ -117,7 +117,7 @@ def create():
 
 @variant_blueprint.route('/display/<int:variant_id>', methods=['GET', 'POST'])
 @variant_blueprint.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>', methods=['GET', 'POST']) # alternative url using vcf information
-# example: http:#srv023.img.med.uni-tuebingen.de:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http:#srv023.img.med.uni-tuebingen.de:5000/display/17
+# example: http:#srv018.img.med.uni-tuebingen.de:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http:#srv018.img.med.uni-tuebingen.de:5000/display/17
 @require_login
 def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     conn = get_connection()

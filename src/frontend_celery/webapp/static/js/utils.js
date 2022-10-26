@@ -290,7 +290,6 @@ $(document).ready(function()
     });
     
 
-
     ////////// functionality for column filters in tables
     $(".column-filter").on("keyup", function() {
         var table = $(this).parents('table').get(0)
@@ -304,12 +303,16 @@ $(document).ready(function()
             case 1: // left mouse button
                 window.location = $(this).data("href"); // open link in same tab
                 break;
-            case 2: // middle mouse button
-                //alert('Middle mouse button pressed');
-                window.open($(this).data("href")); // open in new tab
-                break;
             case 3: // right mouse button
                 // nothing rn
+                break;
+        }
+    });
+
+    $("*[data-href]").mousedown(function(event) {
+        switch (event.which) {
+            case 2: // middle mouse button
+                window.open($(this).data("href")); // open in new tab
                 break;
         }
     });

@@ -19,8 +19,6 @@ class litvar2_job(Job):
         litvar_code = 0
         litvar_stderr = ""
         litvar_stdout = ""
-        if not self.job_config['do_litvar']:
-            return litvar_code, litvar_stderr, litvar_stdout
 
         self.print_executing()
 
@@ -33,6 +31,9 @@ class litvar2_job(Job):
 
 
     def save_to_db(self, info, variant_id, conn):
+        if not self.job_config['do_litvar']:
+            return
+        
         rsid_annotation_type_id = conn.get_most_recent_annotation_type_id("rsid")
         litvar_pmids = None
 
@@ -51,9 +52,9 @@ class litvar2_job(Job):
                 for consequence in consequences: # search for the first consequence which has a litvar response in order of preferred transcript
                     gene = consequence[7]
                     hgvs = consequence[1] # hgvsc
-                    if hgvs is None: # no hgvsc -> skip
+                    if hgvs is None or gene is None: # no hgvsc -> skip
                         continue
-
+                    
                     litvar_query = gene + " " + hgvs
                     litvar_pmids = self.query_litvar(litvar_query)
                     if litvar_pmids is not None:
@@ -72,6 +73,8 @@ class litvar2_job(Job):
         url = "https://www.ncbi.nlm.nih.gov/research/litvar2-api/variant/autocomplete/?query=" + query
         resp = requests.get(url)
         data = resp.json()
+        if len(data) == 0:
+            return None
         litvar_id = data[0].get('_id')
         if litvar_id is None:
             return None
