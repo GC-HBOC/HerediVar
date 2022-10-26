@@ -8,42 +8,53 @@
   
 <h1 class="bst"> {% block title %} Gene report for {{ gene_info[2] }} {% endblock %} </h1>
 
-<div style="width:40%">
-    <div class="row align-items-start">
-        <div class="col li-label"><abbr title="someinfo">HGNC-ID</abbr></div>
+
+<div class="w-100 ssb">
+    <div class="card variant-banner-color left-space-padding">
         
-        <div class="col li-info">
-            {{ macros.external_link(gene_info[1]|string, "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:" + gene_info[1]|string) }}
-        </div>
-    </div>
-    <div class="row align-items-start">
-        <div class="col li-label"><abbr title="someinfo">Gene symbol</abbr></div>
-        <div class="col li-info">{{ gene_info[2] }}</div>
-    </div>
-    <div class="row align-items-start">
-        <div class="col li-label"><abbr title="someinfo">Description</abbr></div>
-        <div class="col li-info">{{ gene_info[3] }}</div>
-    </div>
-    <div class="row align-items-start">
-        <div class="col li-label"><abbr title="someinfo">Type</abbr></div>
-        <div class="col li-info">{{ gene_info[4] }}</div>
-    </div>
-    <div class="row align-items-start">
-        <div class="col li-label">Links</div>
-        <div class="col li-info">
-            <div class="li-element ssr">
-                {{ macros.external_link("cBioPortal", "https://www.cbioportal.org/results/mutations?case_set_id=all&gene_list=" + gene_info[2]|string + "&cancer_study_list=5c8a7d55e4b046111fee2296") }}
+        <div class="card-text">
+            <div class="table-responsive">
+                <table class="table table-borderless table-slim">
+                    <tbody>
+                        <tr>
+                            <td class="li-label">HGNC-ID</td>
+                            <td>{{ macros.external_link(gene_info[1]|string, "https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/HGNC:" + gene_info[1]|string) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="li-label">Gene symbol</td>
+                            <td>{{ gene_info[2] }}</td>
+                        </tr>
+                        <tr>
+                            <td class="li-label">Description</td>
+                            <td>{{ gene_info[3] }}</td>
+                        </tr>
+                        <tr>
+                            <td class="li-label">Type</td>
+                            <td>{{ gene_info[4] }}</td>
+                        </tr>
+                        <tr>
+                            <td class="li-label">Links</td>
+                            <td style="vertical-align:middle;">
+                                <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
+                                    <li class="list-group-item noboarder-td" >
+                                        {{ macros.external_link("cBioPortal", "https://www.cbioportal.org/results/mutations?case_set_id=all&gene_list=" + gene_info[2]|string + "&cancer_study_list=5c8a7d55e4b046111fee2296") }}
+                                    </li>
+                                    {% if gene_info[5] is not none %}
+                                    <li class="list-group-item noboarder-td" >
+                                        {{ macros.external_link("OMIM", "https://www.omim.org/entry/" + gene_info[5]|string) }}
+                                    </li>
+                                    {% endif %}
+                                    {% if gene_info[6] is not none %}
+                                    <li class="list-group-item noboarder-td" >
+                                        {{ macros.external_link("OrphaNet", "https://www.orpha.net/consor/cgi-bin/Disease_Genes.php?lng=DE&data_id=" + gene_info[6]|string) }}
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            {% if gene_info[5] is not none %}
-            <div class="li-element ssr">
-                {{ macros.external_link("OMIM", "https://www.omim.org/entry/" + gene_info[5]|string) }}
-            </div>
-            {% endif %}
-            {% if gene_info[6] is not none %}
-            <div class="li-element ssr">
-                {{ macros.external_link("OrphaNet", "https://www.orpha.net/consor/cgi-bin/Disease_Genes.php?lng=DE&data_id=" + gene_info[6]|string) }}
-            </div>
-            {% endif %}
         </div>
     </div>
 </div>
@@ -52,10 +63,10 @@
 
 
 <!--transcripts table-->
-<div class="col-lg-5 col-lg-6 mb-4 bst">
+<div class="w-100 ssb sst">
     <div class="card">
         <div class="card-body">
-            <h4 class="card-title">Transcripts</h4>
+            <h4 class="card-subcaption">Transcripts</h4>
             <p class="card-text">
                 Preferred transcripts are shown first (longer and more flags) <br>
                 There are a total of {{ transcripts | length }} transcripts for this gene.
@@ -70,16 +81,16 @@
                 </ul>
                 <div class="tab-content" id="tabContent">
 
-                    <div class="table-responsive"> <!--0gene_id,1name,2biotype,3length,4is_gencode_basic,5is_mane_select,6is_mane_plus_clinical,7is_ensembl_canonical,8total_flags-->
-                        <table class="table table-hover scroll" id="transcriptTable">
+                    <div class="table-responsive tableFixHead"> <!--0gene_id,1name,2biotype,3length,4is_gencode_basic,5is_mane_select,6is_mane_plus_clinical,7is_ensembl_canonical,8total_flags-->
+                        <table class="table table-hover" style="width:100%" id="transcriptTable">
                             <thead>
                                 <tr>
-                                    <th>Transcript name</th>
-                                    <th>Biotype</th>
-                                    <th id="transcripts_length_col">Length</th>
-                                    <th>Flags</th>
-                                    <th style="display:none;"  id="transcripts_source_col">Source</th>
-                                    <th style="display:none;"  id="transcripts_numflags_col">NumFlags</th>
+                                    <th><div class="sortable">Transcript name</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th><div class="sortable">Biotype</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th id="transcript_table_length_col"><div class="sortable">Length</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th id="transcript_table_flags_col"><div class="sortable">Flags</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th id="transcript_table_source_col" style="display:none;"  id="transcripts_source_col">Source</th>
+                                    <th id="transcript_table_num_flags_col" style="display:none;"  id="transcripts_numflags_col">NumFlags</th>
                                 </tr>
                             </thead>
                             <tbody>

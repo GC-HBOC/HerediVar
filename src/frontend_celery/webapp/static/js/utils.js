@@ -37,15 +37,6 @@ function filterTable_one_column(filter, col, table, filter_visible = false) {
 
 
 
-
-
-
-
-
-
-
-
-
 function filterTable_multiple_columns(filter, table, filter_visible = false) {
     filter = filter.toUpperCase();
     var tr = table.getElementsByTagName("tr");
@@ -65,7 +56,6 @@ function filterTable_multiple_columns(filter, table, filter_visible = false) {
             }
         }
     }
-
 
     remove_default_caption(table);
     displayed = 0;
@@ -106,17 +96,6 @@ function filterTable_multiple_columns(filter, table, filter_visible = false) {
         add_default_caption(table)
     }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 function add_default_caption(table) {
@@ -334,6 +313,7 @@ $(document).ready(function()
                 break;
         }
     });
+
 
 
     //$('.wide-tooltip').find('.tooltip-inner').addClass('.wide-inner-tooltip')
