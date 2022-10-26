@@ -142,15 +142,15 @@ jobs:
       # write settings.ini
       - name: prepare settings
         run: |
-          cat "DB_HOST=0.0.0.0" > src/common/settings.ini
-          cat "DB_NAME=test_db" >> src/common/settings.ini
+          echo "DB_HOST=0.0.0.0" > src/common/settings.ini
+          echo "DB_NAME=test_db" >> src/common/settings.ini
 
-          cat "DB_USER=test_user" >> src/common/settings.ini
-          cat "DB_USER_PW=password" >> src/common/settings.ini
-          cat "DB_SUPER_USER=test_user" >> src/common/settings.ini
-          cat "DB_SUPER_USER_PW=password" >> src/common/settings.ini
-          cat "DB_ANNOTATION_USER=test_user" >> src/common/settings.ini
-          cat "DB_ANNOTATION_USER_PW=password" >> src/common/settings.ini
+          echo "DB_USER=test_user" >> src/common/settings.ini
+          echo "DB_USER_PW=password" >> src/common/settings.ini
+          echo "DB_SUPER_USER=test_user" >> src/common/settings.ini
+          echo "DB_SUPER_USER_PW=password" >> src/common/settings.ini
+          echo "DB_ANNOTATION_USER=test_user" >> src/common/settings.ini
+          echo "DB_ANNOTATION_USER_PW=password" >> src/common/settings.ini
 
 
       # run tests
@@ -350,15 +350,15 @@ jobs:
       # write settings.ini
       - name: prepare settings
         run: |
-          cat "DB_HOST=0.0.0.0" > src/common/settings.ini
-          cat "DB_NAME=test_db" >> src/common/settings.ini
+          echo "DB_HOST=0.0.0.0" > src/common/settings.ini
+          echo "DB_NAME=test_db" >> src/common/settings.ini
 
-          cat "DB_USER=test_user" >> src/common/settings.ini
-          cat "DB_USER_PW=password" >> src/common/settings.ini
-          cat "DB_SUPER_USER=test_user" >> src/common/settings.ini
-          cat "DB_SUPER_USER_PW=password" >> src/common/settings.ini
-          cat "DB_ANNOTATION_USER=test_user" >> src/common/settings.ini
-          cat "DB_ANNOTATION_USER_PW=password" >> src/common/settings.ini
+          echo "DB_USER=test_user" >> src/common/settings.ini
+          echo "DB_USER_PW=password" >> src/common/settings.ini
+          echo "DB_SUPER_USER=test_user" >> src/common/settings.ini
+          echo "DB_SUPER_USER_PW=password" >> src/common/settings.ini
+          echo "DB_ANNOTATION_USER=test_user" >> src/common/settings.ini
+          echo "DB_ANNOTATION_USER_PW=password" >> src/common/settings.ini
 
 
       # run tests
