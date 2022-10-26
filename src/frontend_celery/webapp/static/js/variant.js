@@ -19,6 +19,7 @@ sorter(['#assayTableDateCol', '#assayTableAssayTypeCol'], '#assayTable')
 
 // functionality for the consequence table switch between ensembl & refseq
 function filter_consequence_table(source) {
+    console.log('Test')
     const table = document.getElementById('variantConsequenceTable')
     filterTable_one_column(source, 10, table)
     const sort_columns = variant_consequence_table_default_sorting_columns

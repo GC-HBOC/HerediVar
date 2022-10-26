@@ -12,9 +12,9 @@ function filterTable_one_column(filter, col, table, filter_visible = false) {
             tr[i].setAttribute('is-visible', 'false')
         }
     
-        td = tr[i].getElementsByTagName("td");
-        if (col <= td.length && col >= 0) {
-            cell = tr[i].getElementsByTagName("td")[col];
+        tds = tr[i].getElementsByTagName("td");
+        if (col <= tds.length && col >= 0) {
+            cell = tds[col];
             if (cell) {
                 if (cell.innerText.toUpperCase().indexOf(filter) > -1) {
                     if (!filter_visible) {
@@ -34,6 +34,90 @@ function filterTable_one_column(filter, col, table, filter_visible = false) {
         add_default_caption(table)
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+function filterTable_multiple_columns(filter, table, filter_visible = false) {
+    filter = filter.toUpperCase();
+    var tr = table.getElementsByTagName("tr");
+
+    th = table.getElementsByTagName("th");
+    all_filters = []
+    for (i = 0; i < th.length; i++) {
+        current_th = th[i]
+        current_search_inputs = current_th.getElementsByTagName("input")
+        if (current_search_inputs.length > 0) {
+            
+            current_search_input = current_search_inputs[0]
+            current_filter = current_search_input.value.toUpperCase()
+            if (current_filter != '') {
+                new_data = [i, current_filter]
+                all_filters.push(new_data)
+            }
+        }
+    }
+
+
+    remove_default_caption(table);
+    displayed = 0;
+    for (i = 1; i < tr.length; i++) { // loop over rows
+        tr[i].style.display = "none"; // hide row
+        if (!filter_visible) {
+            tr[i].setAttribute('is-visible', 'false')
+        }
+    
+        var tds = tr[i].getElementsByTagName("td");
+        var num_matching = 0;
+        for (var j=0; j < all_filters.length; j++) {
+            var current_filter = all_filters[j][1]
+            var current_col = all_filters[j][0]
+            if (current_col <= tds.length && current_col >= 0) {
+                var cell = tds[current_col];
+                if (cell) {
+                    if (cell.innerText.toUpperCase().indexOf(current_filter) > -1) {
+                        num_matching += 1;
+                    }
+                }
+            }
+        }
+
+        if (num_matching == all_filters.length) {
+            if (!filter_visible) {
+                tr[i].setAttribute('is-visible', 'true')
+            }
+            if (tr[i].getAttribute('is-visible') == 'true' || !tr[i].hasAttribute('is-visible')) {
+                tr[i].style.display = "";
+                displayed += 1
+            }
+        }
+
+    }
+
+    if (displayed == 0) {
+        add_default_caption(table)
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 function add_default_caption(table) {
     const cap = document.createElement("caption");
@@ -231,8 +315,8 @@ $(document).ready(function()
     ////////// functionality for column filters in tables
     $(".column-filter").on("keyup", function() {
         var table = $(this).parents('table').get(0)
-        var index = $(this).parents('th').index()
-        filterTable_one_column($(this).val(), index, table, true)
+        //var index = $(this).parents('th').index()
+        filterTable_multiple_columns($(this).val(), table, true)
     });
 
 

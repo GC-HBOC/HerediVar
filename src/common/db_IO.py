@@ -472,6 +472,8 @@ class Connection:
         command = "SELECT * FROM variant_annotation WHERE variant_id = %s AND annotation_type_id = %s"
         self.cursor.execute(command, (variant_id, annotation_type_id))
         res = self.cursor.fetchall()
+        if len(res) == 0:
+            return None
         return res
 
     def get_all_valid_variant_ids(self):

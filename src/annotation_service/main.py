@@ -21,30 +21,30 @@ def get_default_job_config():
         'do_heredicare': False,
 
         # external programs
-        'do_phylop': False,
-        'do_spliceai': False,
-        'do_hexplorer': False,
+        'do_phylop': True,
+        'do_spliceai': True,
+        'do_hexplorer': True,
 
         # vep dependent
         'do_vep': True,
-        'insert_consequence': False,
-        'insert_maxent': False,
+        'insert_consequence': True,
+        'insert_maxent': True,
         'insert_literature': True,
 
         #vcf annotate from vcf
         'do_dbsnp': True,
-        'do_revel': False,
-        'do_cadd': False,
-        'do_clinvar': False,
-        'do_gnomad': False,
-        'do_brca_exchange': False,
-        'do_flossies': False,
-        'do_cancerhotspots': False,
-        'do_arup': False,
-        'do_tp53_database': False,
+        'do_revel': True,
+        'do_cadd': True,
+        'do_clinvar': True,
+        'do_gnomad': True,
+        'do_brca_exchange': True,
+        'do_flossies': True,
+        'do_cancerhotspots': True,
+        'do_arup': True,
+        'do_tp53_database': True,
 
         # additional annotations
-        'do_task_force_protein_domains': False,
+        'do_task_force_protein_domains': True,
         'do_litvar': True
     }
     return job_config
