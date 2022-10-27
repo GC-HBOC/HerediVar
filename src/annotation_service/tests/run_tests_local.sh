@@ -10,4 +10,4 @@ mysql --host SRV011.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahd
 export WEBAPP_ENV=localtest
 
 cd $BASE_PATH/src/annotation_service
-python -m pytest -k 'test_dev'
+python -m pytest #-k 'test_dev'

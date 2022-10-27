@@ -130,9 +130,10 @@ def test_litvar2_annotation():
     job_config['do_dbsnp'] = True
     job_config['do_litvar'] = True
     job_config['insert_literature'] = True
+    job_config['insert_consequence'] = True
 
     
-    # test standard annotation
+    # test annotation
     variant_id = 139
     conn = Connection()
     conn.insert_annotation_request(variant_id, user_id)

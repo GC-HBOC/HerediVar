@@ -60,7 +60,6 @@ class litvar2_job(Job):
                     if litvar_pmids is not None:
                         break
         
-        #print(litvar_pmids)
         if litvar_pmids is not None and self.job_config['insert_literature']:
             literature_entries = fetch(litvar_pmids) # defined in pubmed_parser.py
             for paper in literature_entries: #[pmid, article_title, authors, journal, year]
@@ -73,6 +72,7 @@ class litvar2_job(Job):
         url = "https://www.ncbi.nlm.nih.gov/research/litvar2-api/variant/autocomplete/?query=" + query
         resp = requests.get(url)
         data = resp.json()
+
         if len(data) == 0:
             return None
         litvar_id = data[0].get('_id')
@@ -81,9 +81,9 @@ class litvar2_job(Job):
 
         litvar_id = urllib.parse.quote(str(litvar_id))
         url = "https://www.ncbi.nlm.nih.gov/research/litvar2-api/variant/get/" + litvar_id + "/publications"
-        #print(url)
         resp = requests.get(url)
         data = resp.json()
+        
 
         pmids_litvar = None
         if 'pmids' in data:
