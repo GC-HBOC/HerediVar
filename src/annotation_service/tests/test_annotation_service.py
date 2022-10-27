@@ -661,7 +661,7 @@ def test_hexplorer_annotation():
     assert res[0][3] == "9.80"
 
     res = conn.get_variant_annotation(variant_id, 47)
-    assert len(res) == 0
+    assert res is None
 
     res = conn.get_variant_annotation(variant_id, 46)
     assert len(res) == 1
