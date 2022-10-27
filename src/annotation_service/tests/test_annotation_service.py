@@ -116,7 +116,44 @@ def test_vep_annotation_job():
     assert maxentscan_ref[0][3] == "8.333"
     assert maxentscan_alt[0][3] == "7.939"
     
+
+
+def test_litvar2_annotation():
+    """
+    This tests the litvar2 literature annotation
+    """
+
+    # setup
+    user_id = 3
+    job_config = get_empty_job_config()
+    job_config['do_vep'] = True
+    job_config['do_dbsnp'] = True
+    job_config['do_litvar'] = True
+    job_config['insert_literature'] = True
+
     
+    # test standard annotation
+    variant_id = 139
+    conn = Connection()
+    conn.insert_annotation_request(variant_id, user_id)
+    annotation_queue_id = conn.get_last_insert_id()
+    conn.close()
+
+
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+
+    
+    # test that literature was inserted correctly
+    conn = Connection()
+    literature = conn.get_variant_literature(variant_id)
+    conn.close()
+
+    assert literature is not None
+    assert len(literature) >= 7
+
+
 
 def test_dbsnp_annotation():
     """
