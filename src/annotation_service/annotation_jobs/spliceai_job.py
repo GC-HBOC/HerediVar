@@ -5,6 +5,7 @@ import common.functions as functions
 import tempfile
 import uuid
 import os
+from os.path import exists
 
 
 ## run SpliecAI on the variants which are not contained in the precomputed file
@@ -37,75 +38,59 @@ class spliceai_job(Job):
 
 
     def annotate_missing_spliceai(self, input_vcf_path, output_vcf_path):
-        input_file = open(input_vcf_path, 'r')
-        temp_path = tempfile.gettempdir() + '/' + str(uuid.uuid4()) + '.vcf'
-        temp_file = open(temp_path, 'w')
+        #input_file = open(input_vcf_path, 'r')
+        #temp_path = tempfile.gettempdir() + '/' + str(uuid.uuid4()) + '.vcf'
+        #temp_file = open(temp_path, 'w')
 
         found_spliceai_header = False
         need_annotation = False
         errors = ''
         spliceai_code = -1
-        splicai_stdout = ''
+        spliceai_stdout = ''
         errors = []
-        for line in input_file:
-            if line.startswith('#'):
-                temp_file.write(line)
-                if line.startswith('##INFO=<ID=SpliceAI'):
-                    found_spliceai_header = True
-                continue
-            else:
-                entries = line.split('\t')
-                if len(entries) != 8: 
-                    errors.append("SpliceAI ERROR: not the correct number of entries in input vcf line: " + line)
+        with open(input_vcf_path, 'r') as input_file:
+            for line in input_file:
+                if line.startswith('#'):
+                    #temp_file.write(line)
+                    if line.startswith('##INFO=<ID=SpliceAI'):
+                        found_spliceai_header = True
                     continue
-                
-                if "SpliceAI=" in line:
-                    continue
-                
-                need_annotation = True
-                temp_file.write(line)
-        temp_file.close()
+                else:
+                    if "SpliceAI=" in line:
+                        continue
+                    
+                    need_annotation = True
+                    #temp_file.write(line)
+        #temp_file.close()
         if not found_spliceai_header:
             errors.append("SpliceAI WARNING: did not find a SpliceAI INFO entry in input vcf, did you annotate the file using a precomputed file before?")
         if need_annotation:
-            returncode, stderr, stdout = functions.execute_command(['sed', '-i', '/SpliceAI/d', temp_path], "sed")
+            returncode, stderr, stdout = functions.execute_command(['sed', '-i', '/SpliceAI/d', input_vcf_path], "sed")
             if returncode != 0:
                 errors.append(stderr)
-            returncode, stderr, stdout = functions.execute_command(['chmod', '777', temp_path], 'chmod')
+            returncode, stderr, stdout = functions.execute_command(['chmod', '777', input_vcf_path], 'chmod')
             if returncode != 0:
                 errors.append(stderr)
             #returncode, stderr, stdout = functions.execute_command(["ls", "-l", "/tmp"], "ls")
             #print(stdout)
-            spliceai_code, spliceai_stderr, splicai_stdout = self.annotate_spliceai_algorithm(temp_path, output_vcf_path)
+            spliceai_code, spliceai_stderr, spliceai_stdout = self.annotate_spliceai_algorithm(input_vcf_path, output_vcf_path)
             errors.append(spliceai_stderr)
 
         # need to insert some code here to merge the newly annotated variants and previously 
         # annotated ones from the db if there are files which contain more than one variant! 
-        input_file.close()
+        #input_file.close()
 
-        #os.remove(temp_path)
 
-        return spliceai_code, '; '.join(errors), splicai_stdout
+
+        return spliceai_code, '; '.join(errors), spliceai_stdout
 
 
 
     def annotate_spliceai_algorithm(self, input_vcf_path, output_vcf_path):
         # prepare input data
         input_vcf_zipped_path = input_vcf_path + ".gz"
-        
 
-        #if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
-        #    command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
-        #    command.append("VcfSort")
-        #else: # use local installation
-        #    command = [paths.ngs_bits_path + "VcfSort"]
-        #command.extend(["-in", input_vcf_path, "-out", input_vcf_path])
-        #returncode, stderr, stdout = functions.execute_command(command, 'VcfSort')
-        #if returncode != 0:
-        #    return returncode, stderr, stdout
-        #functions.execute_command([paths.ngs_bits_path + "VcfSort", "-in", input_vcf_path, "-out", input_vcf_path], 'vcfsort')
-
-
+        # gbzip and index the input file as this is required for spliceai...
         returncode, stderr, stdout = functions.execute_command([paths.htslib_path + 'bgzip', '-f', input_vcf_path], 'bgzip')
         if returncode != 0:
             return returncode, stderr, stdout
@@ -116,6 +101,11 @@ class spliceai_job(Job):
         # execute spliceai
         command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path, '-A', paths.ref_genome_name.lower()]
         returncode, stderr, stdout = functions.execute_command(command, 'SpliceAI')
+
+        if exists(input_vcf_zipped_path):
+            os.remove(input_vcf_zipped_path)
+        if exists(input_vcf_zipped_path + ".tbi"):
+            os.remove(input_vcf_zipped_path + ".tbi")
 
         return returncode, stderr, stdout
 

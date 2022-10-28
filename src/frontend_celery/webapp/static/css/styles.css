@@ -527,3 +527,9 @@ footer {
     background-color:#0d6efd !important; /* this color is the color from the pimary button of bootstrap */
     color:white !important;
 }
+
+
+.search-input-selected {
+    border-color:orange !important;
+    border-width: 2px;
+}

@@ -32,7 +32,7 @@
                 <div class="form-group sst">
                     <label for="Position" class="form-label">Chromosomal position</label>
                     <input type="text" name="pos" pattern="[0-9 ]+" id="Position"
-                           placeholder="pos" class="form-control"
+                           placeholder="pos" class="form-control validationreq"
                            value="{{ request.form['pos'] }}" required>
                     </input>
                     <div class="invalid-feedback">
@@ -43,7 +43,7 @@
                 <div class="form-group sst">
                     <label for="Reference" class="form-label">Reference sequence</label>
                     <input type="text" name="ref"
-                           placeholder="ref" class="form-control"
+                           placeholder="ref" class="form-control validationreq"
                            value="{{ request.form['ref'] }}" id="Reference" required>
                     </input>
                     <div class="invalid-feedback">
@@ -54,7 +54,7 @@
                 <div class="form-group sst" >
                     <label for="Alternative" class="form-label">Alternative sequence</label>
                     <input type="text" name="alt"
-                           placeholder="alt" class="form-control"
+                           placeholder="alt" class="form-control validationreq"
                            value="{{ request.form['alt'] }}" id="Alternative" required>
                     </input>
                     <div class="invalid-feedback">
@@ -85,7 +85,7 @@
                 <div class="form-group sst" >
                     <label for="reference_transcript" class="form-label">Reference transcript</label>
                     <input type="text" name="transcript"
-                           placeholder="reference transcript" class="form-control"
+                           placeholder="reference transcript" class="form-control validationreq"
                            value="{{ request.form['transcript'] }}" id="reference_transcript" required>
                     </input>
                     <div class="invalid-feedback">
@@ -95,7 +95,7 @@
                 <div class="form-group sst">
                     <label for="hgvsc" class="form-label">HGVS c.</label>
                     <input type="text" name="hgvsc"
-                           placeholder="hgvsc" class="form-control"
+                           placeholder="hgvsc" class="form-control validationreq"
                            value="{{ request.form['hgvsc'] }}" id="hgvsc" required>
                     </input>
                     <div class="invalid-feedback">

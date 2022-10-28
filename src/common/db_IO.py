@@ -259,19 +259,6 @@ class Connection:
         self.cursor.execute(command, (variant_id, annotation_type_id, value, value))
         self.conn.commit()
 
-    def insert_variants_from_vcf(self, path):
-        # deprecated
-        variants = functions.read_variants(path)
-
-        for variant in variants:
-            chr = variant.CHROM
-            pos = variant.POS
-            ref = variant.REF
-            alt = variant.ALT
-            command = "INSERT INTO variant (chr, pos, ref, alt) VALUES (%s, %s, %s, %s)"
-            self.cursor().execute(command, (chr, pos, ref, alt))
-        self.conn.commit()
-    
     def insert_variant(self, chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, user_id):
         ref = ref.upper()
         alt = alt.upper()
@@ -281,11 +268,6 @@ class Connection:
         variant_id = self.get_variant_id(chr, pos, ref, alt)
         self.insert_annotation_request(variant_id, user_id)
         return self.get_last_insert_id() # return the annotation_queue_id of the new variant
-    
-    #def insert_external_variant_id_from_vcf(self, chr, pos, ref, alt, external_id, id_source):
-    #    command = "INSERT INTO variant_ids (variant_id, external_id, id_source) (SELECT id, %s, %s FROM variant WHERE chr=%s AND pos=%s AND ref=%s AND alt=%s LIMIT 1)"
-    #    self.cursor.execute(command, (external_id, id_source, chr, pos, ref, alt))
-    #    self.conn.commit()
     
     def insert_external_variant_id(self, variant_id, external_id, id_source):
         command = "INSERT INTO variant_ids (variant_id, external_id, id_source) \

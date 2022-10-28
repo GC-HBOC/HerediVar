@@ -226,7 +226,7 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         
         runtime_error = str(e)
 
-        if  exists(vcf_path): 
+        if exists(vcf_path): 
             os.remove(vcf_path)
         conn.close()
         #raise e #HTTPError(url = e.url, code = e.code, msg = "A HTTP error occured", hdrs = e.hdrs, fp = e.fp)
@@ -238,6 +238,9 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         status = "error"
         runtime_error = str(e)
 
+
+    if exists(vcf_path): 
+        os.remove(vcf_path)
 
 
     conn.close()

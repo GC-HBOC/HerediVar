@@ -5,7 +5,7 @@ transcript_table_ascending = ['true', 'true']
 table = document.getElementById("transcriptTable");
 if (table != null) {
     filterTable_one_column("ensembl", 4, table);
-    sorter(transcript_table_default_sorting_columns, '#transcriptTable')
+    table_sorter(transcript_table_default_sorting_columns, '#transcriptTable')
 }
 
 
@@ -18,5 +18,5 @@ function filter_transcript_table(source) {
     for (var i = 0; i < sort_columns.length; i++) {
         $(sort_columns[i]).attr('asc', transcript_table_ascending[i])
     }
-    sorter(sort_columns, '#' + table.id)
+    table_sorter(sort_columns, '#' + table.id)
 }

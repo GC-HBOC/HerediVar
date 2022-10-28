@@ -115,6 +115,7 @@ function submit_classification() {
 
 
 ///////////// preselect stuff ////////////
+
 // call functions once on page load
 function preselect_final_classification() {
     var comment_text_area = document.getElementById('comment')
@@ -182,24 +183,19 @@ $(document).ready(function() {
         preselect_final_classification()
     }
 
-    
     scheme_select_action(do_revert=!do_request_form_preselect)
-
 
     if (do_request_form_preselect) {
         preselect_criteria_from_request_form()
     }
 
-
-    
     // fix for option href handling in edge, chrome (https://stackoverflow.com/questions/9972280/onclick-on-option-tag-not-working-on-ie-and-chrome)
     $("#classification_type").change(function (){
         const new_loc = $(this).find(":selected").attr("option-href");
         window.location = new_loc;
     });
-
-
 });
+
 
 // update global scheme field variable
 function update_scheme_field_variable() {
@@ -343,20 +339,6 @@ function revert_criteria_container() {
     document.getElementById('additional_content').innerHTML = "";
 }
 
-/*
-function revert_buttons() {
-    var all_buttons = document.querySelectorAll('.btn-check')
-    for (var i = 0; i < all_buttons.length; i++) {
-        var current_button = all_buttons[i];
-        current_button.checked = false;
-        current_button.value = ""
-        current_button.setAttribute('activateable', 'true')
-        current_button.disabled = false
-        update_criterium_button_background(current_button.id)
-    }
-}
-*/
-
 function revert_strength_selects() {
     var all_buttons = document.querySelectorAll('.btn-check')
     for (var i = 0; i < all_buttons.length; i++) {
@@ -461,7 +443,7 @@ function create_criteria_buttons() {
 }
 
 
-
+// sort helper
 function compare_criteria() {
     return function(a, b) {
         if (scheme_type === 'acmg') {
@@ -499,10 +481,7 @@ function compare_criteria() {
     }
 }
 
-
-
-
-
+// sort helper
 function compare_strength() {
     return function(a, b) {
         const strength_order = {'pvs': 1, 'ps': 2, 'pm': 3, 'pp': 4, 'bp': 5, 'bs': 6, 'ba': 7}
@@ -527,6 +506,7 @@ function create_select_option(parent, value, display_text, scheme_type) {
 
 
 function create_criterium_button(criterium_id, strength) {
+    // this is what it should look like in html:
     `
     <div class="form-group">
         <div id="users_selected_pvs1" class="count_label" hidden>0</div>
@@ -636,11 +616,11 @@ function create_table_data(text) {
 function create_user_acmg_details_table() {
     var table_container = document.createElement('div')
     table_container.classList.add('table-responsive')
+    table_container.classList.add('tableFixHead')
 
     var table = document.createElement('table')
     table.classList.add('table')
     table.classList.add('table-hover')
-    table.classList.add('scroll')
     table_container.appendChild(table)
 
     var header = document.createElement('thead')
@@ -683,6 +663,7 @@ function create_sortable_header(text) {
     searchbar.classList.add('column-filter')
     searchbar.classList.add('sst')
     searchbar.setAttribute('placeholder', 'search...')
+    searchbar.setAttribute('autocomplete', 'off')
     new_th.appendChild(searchbar)
     return new_th
 }
@@ -780,13 +761,12 @@ function add_functionality_to_table() {
     ////////// functionality for column filters in tables
     $(".column-filter").on("keyup", function() {
         var table = $(this).parents('table').get(0)
-        var index = $(this).parents('th').index()
-        filterTable_one_column($(this).val(), index, table, true)
+        filterTable_multiple_columns($(this).val(), table, true)
     });
 
     $('.sortable').click(function(e) {
         const table_id = '#' + $(this).parents('table').attr('id')
-        sorter([$(this).parents('th').index()], table_id)
+        table_sorter([$(this).parents('th').index()], table_id)
     });
 }
 

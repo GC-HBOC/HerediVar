@@ -1,75 +1,45 @@
 
 
-// presort the tables on page load
-variant_consequence_table_default_sorting_columns = ['#variant_consequence_numflags_col', '#variant_consequence_length_col', '#variant_consequence_gene_symbol_col']
-variant_consequence_table_ascending = ['true', 'true', "false"]
-table = document.getElementById("variantConsequenceTable");
-if (table != null) {
-    filterTable_one_column("ensembl", 10, table);
-    sorter(variant_consequence_table_default_sorting_columns, '#variantConsequenceTable') // sort first by num of flags, at tie by length and at tie by gene symbol
-}
-sorter(['#userClassificationsTableDateCol'], '#userClassificationsTable')
-sorter(['#literatureTableYearCol'], '#literatureTable')
-sorter(['#clinvarSubmissionsTableLastEvaluatedCol'], '#clinvarSubmissionsTable')
-sorter(['#heredicareCenterClassificationsTableDateCol'], '#heredicareCenterClassificationsTable')
-sorter(['#userSchemeClassificationsTableDateCol'], '#userSchemeClassificationsTable')
-sorter(['#assayTableDateCol', '#assayTableAssayTypeCol'], '#assayTable')
-
-
-
-// functionality for the consequence table switch between ensembl & refseq
-function filter_consequence_table(source) {
-    const table = document.getElementById('variantConsequenceTable')
-    filterTable_one_column(source, 10, table)
-    const sort_columns = variant_consequence_table_default_sorting_columns
-    for (var i = 0; i < sort_columns.length; i++) {
-        $(sort_columns[i]).attr('asc', variant_consequence_table_ascending[i])
-    }
-    sorter(sort_columns, '#' + table.id)
-}
-
-
-
-
-
-function get_variant_type(ref, alt) {
-    const ref_len = ref.length
-    const alt_len = alt.length
-    var variant_type = "Variant display" // default phrase just in case
-    if (ref_len === 1 && alt_len === 1) {
-        variant_type = "SNV"
-    }
-    if (ref_len > alt_len) {
-        variant_type = "Deletion (" + String(ref_len-alt_len) + " bp)"
-    }
-    if (ref_len < alt_len) {
-        variant_type = "Insertion (" + String(alt_len-ref_len) + " bp)"
-    }
-    return variant_type
-}
-
-
+//////////////////////////////////////////////////////////////
+////////////////// activating functionality //////////////////
+//////////////////////////////////////////////////////////////
 
 $(document).ready(function()
 {
-    ////////// functionality for the reannotate button
+    // presort the tables on page load
+    variant_consequence_table_default_sorting_columns = ['#variant_consequence_numflags_col', '#variant_consequence_length_col', '#variant_consequence_gene_symbol_col']
+    variant_consequence_table_ascending = ['true', 'true', "false"]
+    table = document.getElementById("variantConsequenceTable");
+    if (table != null) {
+        filterTable_one_column("ensembl", 10, table);
+        table_sorter(variant_consequence_table_default_sorting_columns, '#variantConsequenceTable') // sort first by num of flags, at tie by length and at tie by gene symbol
+    }
+    table_sorter(['#userClassificationsTableDateCol'], '#userClassificationsTable')
+    table_sorter(['#literatureTableYearCol'], '#literatureTable')
+    table_sorter(['#clinvarSubmissionsTableLastEvaluatedCol'], '#clinvarSubmissionsTable')
+    table_sorter(['#heredicareCenterClassificationsTableDateCol'], '#heredicareCenterClassificationsTable')
+    table_sorter(['#userSchemeClassificationsTableDateCol'], '#userSchemeClassificationsTable')
+    table_sorter(['#assayTableDateCol', '#assayTableAssayTypeCol'], '#assayTable')
+
+    // functionality for the reannotate button
     $('#reannotate-submit').click(function(){
         $('#reannotate_button').attr('disabled', true);
         $('#reannotate-modal').modal('toggle');
         confirm_reannotation_action();
     });
 
-    ////////// functionality for the reload page modal
+    // functionality for the reload page modal
     $('#reload-submit').click(function() {
         location.reload()
     })
 
+    // functionality to add a variant to a user-list
     $('.variant-list-button').click(function() {
         const form_to_submit = $('#add-to-list-form')
         form_to_submit.attr('action', $(this).attr('action'))
     });
 
-    ////////// set the title of the page
+    // set the title of the page
     var variant_page_title_obj = document.getElementById('variant_page_title')
     var title = variant_page_title_obj.innerText
     const ref = variant_page_title_obj.getAttribute('ref')
@@ -77,8 +47,8 @@ $(document).ready(function()
     title = get_variant_type(ref, alt) + title
     variant_page_title_obj.innerText = title
 
-    ////////// functionality for the annotation status
-    //// this is blocking I think so it should be called last!
+    // functionality for the annotation status
+    // this is blocking I think so it should be called last!
     var annotation_status = $('#annotation_status').data()['annotationStatus'];
     var celery_task_id = $('#annotation_status').data()['celeryTaskId'];
     if ((annotation_status === 'pending' || annotation_status == 'retry') && celery_task_id !== null){
@@ -93,6 +63,12 @@ $(document).ready(function()
 
 
 
+
+///////////////////////////////////////////////////////////////////////
+////////////////// reannotation button functionality //////////////////
+///////////////////////////////////////////////////////////////////////
+
+// function triggered on reannotaiton submit button pressed
 function confirm_reannotation_action() {
     // send ajax POST request to start background job
     variant_id = $('#variant_id_container').data()['variantId'];
@@ -113,8 +89,9 @@ function confirm_reannotation_action() {
 }
 
 
+// polling & status display update
 function update_annotation_status(status_url) {
-    // send GET request to status URL
+    // send GET request to status URL (defined by flask)
     $.getJSON(status_url, function(data) {
         console.log(data)
         if (data['state'] == 'PENDING') {
@@ -146,9 +123,7 @@ function update_annotation_status(status_url) {
 }
 
 
-
-
-
+// utility for showing the current annotation status
 function show_annotation_status(color_class, tooltip_text, inner_text) {
     $('#current_status').tooltip('hide')
     var annotation_status_obj = document.getElementById('annotation_status_pills')
@@ -168,15 +143,43 @@ function show_annotation_status(color_class, tooltip_text, inner_text) {
 
 
 
+///////////////////////////////////////////////////////////////
+////////////////// further utility functions //////////////////
+///////////////////////////////////////////////////////////////
+
+// functionality for the consequence table switch between ensembl & refseq
+function filter_consequence_table(source) {
+    const table = document.getElementById('variantConsequenceTable')
+    filterTable_one_column(source, 10, table)
+    const sort_columns = variant_consequence_table_default_sorting_columns
+    for (var i = 0; i < sort_columns.length; i++) {
+        $(sort_columns[i]).attr('asc', variant_consequence_table_ascending[i])
+    }
+    table_sorter(sort_columns, '#' + table.id)
+}
 
 
-
-
-
-
+// Infer the variant type by looking at the number of reference and alternative bases
+// use this in the header of the page
+function get_variant_type(ref, alt) {
+    const ref_len = ref.length
+    const alt_len = alt.length
+    var variant_type = "Variant display" // default phrase just in case
+    if (ref_len === 1 && alt_len === 1) {
+        variant_type = "SNV"
+    }
+    if (ref_len > alt_len) {
+        variant_type = "Deletion (" + String(ref_len-alt_len) + " bp)"
+    }
+    if (ref_len < alt_len) {
+        variant_type = "Insertion (" + String(alt_len-ref_len) + " bp)"
+    }
+    return variant_type
+}
 
 
 // multi level dropdown functionality
+// move to utils.js?
 (function($bs) {
     const CLASS_NAME = 'has-child-dropdown-show';
     $bs.Dropdown.prototype.toggle = function(_orginal) {

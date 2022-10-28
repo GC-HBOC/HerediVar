@@ -4,6 +4,7 @@ import common.paths as paths
 import common.functions as functions
 import tempfile
 import os
+from os.path import exists
 
 from ..pubmed_parser import fetch
 
@@ -31,7 +32,14 @@ class annotate_from_vcf_job(Job):
         vcf_annotate_code, vcf_annotate_stderr, vcf_annotate_stdout = self.annotate_from_vcf(config_file_path, inpath, annotated_inpath)
 
 
+
+
         self.handle_result(inpath, annotated_inpath, vcf_annotate_code)
+
+        warnings_path = annotated_inpath + "_warnings.txt"
+        if exists(warnings_path):
+            os.remove(warnings_path)
+
         return vcf_annotate_code, vcf_annotate_stderr, vcf_annotate_stdout
 
 

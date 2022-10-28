@@ -1,6 +1,6 @@
 $(document).ready(function()
 {
-    ////////// functionality for the import & update button
+    // functionality for the import & update button
 
     $('#import-variants-submit').click(function(){
         $('#import-variantsbutton').attr('disabled', true);

@@ -24,7 +24,7 @@
 
     <div id="report_form_group" class="form-group sst" hidden>
         <label for="report" class="form-label">Upload assay report</label>
-        <input type="file" name="report" class="form-control"
+        <input type="file" name="report" class="form-control validationreq"
                id="report" required>
         </input>
         <div class="invalid-feedback">
@@ -36,7 +36,7 @@
     <div id="score_form_group" class="form-group sst" hidden>
         <label id="score_label" for="score" class="form-label">Score</label>
         <input type="text" pattern="[0-9 ,.]+" name="score"
-               placeholder="score" class="form-control"
+               placeholder="score" class="form-control validationreq"
                value="{{ request.form['score'] }}" id="score" required>
         </input>
         <div class="invalid-feedback">

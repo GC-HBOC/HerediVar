@@ -9,7 +9,7 @@
 
     <form action="" autocomplete="off" method="post" class="needs-validation bst" novalidate>
         <div class="form-group sst">
-            <label for="condition" class="form-label">Condition (From <external-link href="https://www.orpha.net">Orphanet</external-link>)</label>
+            <label for="condition" class="form-label">Condition (From {{ macros.external_link("Orphanet", "https://www.orpha.net") }})</label>
             <div class="autocomplete" style="width:100%">
                 <input value="{{ request.form['condition'] }}" id="condition" class="form-control" type="text" name="condition" placeholder="Select an Orphanet disease condition... start search by typing">
             </div>
