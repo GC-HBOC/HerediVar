@@ -141,7 +141,7 @@ elif webapp_env == 'githubtest':
 
     # tools
     # vep not used atm
-    ngs_bits_path = "./" # inside docker container
+    ngs_bits_path = "" # added to path variable
     htslib_path = "" # added to path variable
 
 

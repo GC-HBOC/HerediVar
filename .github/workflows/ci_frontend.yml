@@ -128,7 +128,7 @@ jobs:
           echo "$GITHUB_WORKSPACE/ngs-bits-${{ env.ngs-bits-version }}/bin" >> $GITHUB_PATH
           cat $GITHUB_PATH
       
-      
+
       - name: test local ngs-bits
         run: ReadQC --help
 
@@ -143,19 +143,19 @@ jobs:
 
 
       # install ngs-bits
-      - name: install ngs-bits
-        run: docker pull quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }}
+      #- name: install ngs-bits
+      #  run: docker pull quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }}
 
-      - name: start ngs-bits container
-        run: |
-          docker images
-          docker run -d -v /tmp:/tmp -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE -it quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }} /bin/bash > ngs-bits-container.txt
-          docker ps -a
+      #- name: start ngs-bits container
+      #  run: |
+      #    docker images
+      #    docker run -d -v /tmp:/tmp -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE -it quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }} /bin/bash > ngs-bits-container.txt
+      #    docker ps -a
 
-      - name: test ngs-bits
-        run: |
-          ngsbitscontainer=$(cat ngs-bits-container.txt)
-          docker exec $ngsbitscontainer ReadQC --help
+      #- name: test ngs-bits
+      #  run: |
+      #    ngsbitscontainer=$(cat ngs-bits-container.txt)
+      #    docker exec $ngsbitscontainer ReadQC --help
 
 
       # init dbs
