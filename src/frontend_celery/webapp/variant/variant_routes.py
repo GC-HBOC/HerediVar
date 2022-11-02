@@ -215,7 +215,7 @@ def classify(variant_id):
         # actually submit the data to the database
         if (not scheme_classification_is_valid) and (not without_scheme): # error in scheme
             flash(message, "alert-danger")
-        if not user_classification_is_valid: # error in user classification
+        elif not user_classification_is_valid: # error in user classification
             flash("Please provide comment & class to submit a user classification!", "alert-danger")
 
         if user_classification_is_valid and scheme_classification_is_valid:
@@ -288,8 +288,8 @@ def consensus_classify(variant_id):
         # actually submit the data to the database
         if (not scheme_classification_is_valid) and (not without_scheme): # error in scheme
             flash(message, "alert-danger")
-        if not user_classification_is_valid: # error in user classification
-            flash("Please provide comment & class to submit a consensus classification", "alert-danger")
+        elif not user_classification_is_valid: # error in user classification
+            flash("Please provide a final classification and a comment to submit the consensus classification. The classification was not submitted.", "alert-danger")
 
         if user_classification_is_valid and scheme_classification_is_valid:
             # insert consensus classification

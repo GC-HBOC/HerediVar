@@ -102,10 +102,10 @@ class spliceai_job(Job):
         command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path, '-A', paths.ref_genome_name.lower()]
         returncode, stderr, stdout = functions.execute_command(command, 'SpliceAI')
 
-        if exists(input_vcf_zipped_path):
-            os.remove(input_vcf_zipped_path)
-        if exists(input_vcf_zipped_path + ".tbi"):
-            os.remove(input_vcf_zipped_path + ".tbi")
+        #if exists(input_vcf_zipped_path):
+        #    os.remove(input_vcf_zipped_path)
+        #if exists(input_vcf_zipped_path + ".tbi"):
+        #    os.remove(input_vcf_zipped_path + ".tbi")
 
         return returncode, stderr, stdout
 

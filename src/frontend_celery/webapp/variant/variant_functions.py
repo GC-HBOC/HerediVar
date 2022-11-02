@@ -361,7 +361,7 @@ def is_valid_scheme(selected_criteria, scheme):
     # ensure that at least one criterium is selected
     if len(selected_criteria) == 0:
         is_valid = False
-        message = "You must select at least one of the classification scheme criteria to submit a classification scheme based classification. The classification scheme based classification was not submitted."
+        message = "You must select at least one of the classification scheme criteria to submit a classification scheme based classification. The classification was not submitted."
 
     all_selected_criteria_names = [selected_criteria[x]['criterium_name'] for x in selected_criteria]
 
@@ -371,25 +371,25 @@ def is_valid_scheme(selected_criteria, scheme):
         # ensure that only valid criteria were submitted
         if criterium_name not in scheme_criteria:
             is_valid = False
-            message = "Criterium " + str(criterium_name) + " is not a valid criterium for the " + scheme_description + " scheme."
+            message = "Criterium " + str(criterium_name) + " is not a valid criterium for the " + scheme_description + " scheme. The classification was not submitted."
             break
         # ensure that the criteria are selectable in the selected scheme
         if scheme_criteria[criterium_name]['is_selectable'] == 0:
             is_valid = False
-            message = "Criterium " + str(criterium_name) + " can not be selected for the " + scheme_description + " scheme."
+            message = "Criterium " + str(criterium_name) + " can not be selected for the " + scheme_description + " scheme. The classification was not submitted."
             break
         # ensure that the strength properties are valid
         current_possible_strengths = scheme_criteria[criterium_name]['possible_strengths']
         selected_strength = selected_criteria[criterium_id]['strength']
         if selected_strength not in current_possible_strengths:
             is_valid = False
-            message = "Criterium " + str(criterium_name) + " received the strength: " + str(selected_strength) + " which is not valid for this criterium. Valid values are: " + str(current_possible_strengths)
+            message = "Criterium " + str(criterium_name) + " received the strength: " + str(selected_strength) + " which is not valid for this criterium. Valid values are: " + str(current_possible_strengths) + ". The classification was not submitted."
             break
         # ensure that no mutually exclusive criteria are selected
         current_mutually_exclusive_criteria = scheme_criteria[criterium_name]['mutually_exclusive_criteria']
         if any([x in current_mutually_exclusive_criteria for x in all_selected_criteria_names]):
             is_valid = False
-            message = "A mutually exclusive criterium to " + str(criterium_name) + " was selected. Remember to not select " + str(criterium_name) + " together with any of " + str(current_mutually_exclusive_criteria)
+            message = "A mutually exclusive criterium to " + str(criterium_name) + " was selected. Remember to not select " + str(criterium_name) + " together with any of " + str(current_mutually_exclusive_criteria) + ". The classification was not submitted."
             break
     
     return is_valid, message
