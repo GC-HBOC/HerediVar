@@ -126,11 +126,6 @@ jobs:
           echo "$GITHUB_WORKSPACE/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
           echo "$GITHUB_WORKSPACE/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
           echo "$GITHUB_WORKSPACE/ngs-bits-${{ env.ngs-bits-version }}/bin" >> $GITHUB_PATH
-          cat $GITHUB_PATH
-      
-
-      - name: test local ngs-bits
-        run: ReadQC --help
 
 
       # download genomes
@@ -249,53 +244,32 @@ jobs:
 
 
       # setup ngs-bits
-      - name: install ngs-bits
-        run: docker pull quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }}
-
-      - name: start ngs-bits container
+      - name: cache ngs-bits
+        id: cache-ngs-bits
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-ngs-bits
+        with:
+          path: ngs-bits-${{ env.ngs-bits-version }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.ngs-bits-version }}
+      - if: ${{ steps.cache-ngs-bits.outputs.cache-hit != 'true' }}
+        name: install ngs-bits local
         run: |
-          docker images
-          docker run -d -v /tmp:/tmp -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE  --network="host" -it quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }} /bin/bash > ngs-bits-container.txt
-          docker ps -a
-
-      - name: test ngs-bits
-        run: |
-          ngsbitscontainer=$(cat ngs-bits-container.txt)
-          docker exec $ngsbitscontainer ReadQC --help
+          git clone --recursive https://github.com/imgag/ngs-bits.git
+          mv ngs-bits ngs-bits-${{ env.ngs-bits-version }}
+          cd ngs-bits-${{ env.ngs-bits-version }}
+          make build_3rdparty build_libs_release build_tools_release
 
       - name: Connect ngs-bits with ngsd
         run: |
-          ngsbitscontainer=$(cat ngs-bits-container.txt)
-          echo "ngsd_host = \"0.0.0.0\"" > settings.ini
-          echo "ngsd_port = 3306" >> settings.ini
-          echo "ngsd_name = \"ngsd\"" >> settings.ini
-          echo "ngsd_user = \"root\"" >> settings.ini
-          echo "ngsd_pass = \"password\"" >> settings.ini
-          docker cp settings.ini $ngsbitscontainer:/usr/local/bin
-          docker exec $ngsbitscontainer cat /usr/local/bin/settings.ini
-        #a6b92e07401f9f9df6e471043c7634d3b38f59307c3bfb2c5e62aa801503ae36
-
-      
-      # build python
-      - name: Set up Python 3.6.9
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.6.9'  # use 3.x to use the most up-to-date python3 version
-          architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
-      - uses: actions/cache@v3 # cache the python environment to speed up tests
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
-      - if: ${{ steps.cache-python-modules.outputs.cache-hit != 'true' }}
-        name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install wheel setuptools
-          python3 -m pip install --upgrade setuptools wheel
-          pip install pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-
+          settingsfile=ngs-bits-${{ env.ngs-bits-version }}/settings.ini
+          echo $settingsfile
+          echo "ngsd_host = \"0.0.0.0\"" > $settingsfile
+          echo "ngsd_port = 3306" >> $settingsfile
+          echo "ngsd_name = \"ngsd\"" >> $settingsfile
+          echo "ngsd_user = \"root\"" >> $settingsfile
+          echo "ngsd_pass = \"password\"" >> $settingsfile
+          cat $settingsfile
 
 
       # install tools dependencies (used for crossmap)
@@ -336,6 +310,27 @@ jobs:
         run: |
           echo "$GITHUB_WORKSPACE/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
           echo "$GITHUB_WORKSPACE/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/ngs-bits-${{ env.ngs-bits-version }}/bin" >> $GITHUB_PATH
+
+
+      # build python
+      - name: Set up Python 3.6.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.6.9'  # use 3.x to use the most up-to-date python3 version
+          architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
+      - uses: actions/cache@v3 # cache the python environment to speed up tests
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
+      - if: ${{ steps.cache-python-modules.outputs.cache-hit != 'true' }}
+        name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install wheel setuptools
+          python3 -m pip install --upgrade setuptools wheel
+          pip install pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
 
       # download genomes
