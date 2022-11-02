@@ -98,11 +98,34 @@ jobs:
           sudo tar -vxjf htslib-${{ env.htslib-version }}.tar.bz2
           cd htslib-${{ env.htslib-version }}
           sudo make
+
+
+
+      - name: cache ngs-bits
+        id: cache-ngs-bits
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-ngs-bits
+        with:
+          path: ngs-bits-${{ env.ngs-bits-version }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.ngs-bits-version }}
+      - if: ${{ steps.cache-ngs-bits.outputs.cache-hit != 'true' }}
+        name: install ngs-bits
+        run: |
+          git clone --recursive https://github.com/imgag/ngs-bits.git
+          mv ngs-bits ngs-bits-${{ env.ngs-bits-version }}
+          cd ngs-bits-${{ env.ngs-bits-version }}"
+        ##git checkout 2021_12 && git submodule update --recursive --init ## select stable version once project is finished!
+          make build_libs_release build_tools_release build_3rdparty
+
+
+
       
       - name: update environment variables
         run: |
           echo "$GITHUB_WORKSPACE/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
           echo "$GITHUB_WORKSPACE/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/ngs-bits-${{ env.ngs-bits-version }}" >> $GITHUB_PATH
 
       # download genomes
       - name: download grch38
