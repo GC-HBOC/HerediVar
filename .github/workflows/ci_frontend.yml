@@ -126,7 +126,7 @@ jobs:
           echo "$GITHUB_WORKSPACE/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
           echo "$GITHUB_WORKSPACE/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
           echo "$GITHUB_WORKSPACE/ngs-bits-${{ env.ngs-bits-version }}" >> $GITHUB_PATH
-          echo $GITHUB_PATH
+          cat $GITHUB_PATH
 
 
       # download genomes
