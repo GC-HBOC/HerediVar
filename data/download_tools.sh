@@ -23,7 +23,7 @@ cd $tools
 git clone --recursive https://github.com/imgag/ngs-bits.git
 cd ngs-bits
 ##git checkout 2021_12 && git submodule update --recursive --init ## select stable version once project is finished!
-make build_libs_release build_tools_release build_3rdparty
+make build_3rdparty build_libs_release build_tools_release
 '
 
 

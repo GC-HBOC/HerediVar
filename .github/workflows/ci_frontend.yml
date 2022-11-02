@@ -118,7 +118,7 @@ jobs:
           git clone --recursive https://github.com/imgag/ngs-bits.git
           mv ngs-bits ngs-bits-${{ env.ngs-bits-version }}
           cd ngs-bits-${{ env.ngs-bits-version }}
-          make build_libs_release build_tools_release build_3rdparty
+          make build_3rdparty build_libs_release build_tools_release
 
 
       - name: update environment variables
