@@ -43,6 +43,9 @@ jobs:
       - name: install OS dependencies
         run: sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev libncursesw5-dev
 
+      - name: install OS dependencies 2
+        run: sudo apt-get install g++ qt5-default libqt5xmlpatterns5-dev libqt5sql5-mysql libcurl4-openssl-dev
+
 
       # setup python
       - name: Set up Python 3.6.9
@@ -110,22 +113,23 @@ jobs:
           path: ngs-bits-${{ env.ngs-bits-version }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.ngs-bits-version }}
       - if: ${{ steps.cache-ngs-bits.outputs.cache-hit != 'true' }}
-        name: install ngs-bits
+        name: install ngs-bits local
         run: |
           git clone --recursive https://github.com/imgag/ngs-bits.git
           mv ngs-bits ngs-bits-${{ env.ngs-bits-version }}
           cd ngs-bits-${{ env.ngs-bits-version }}"
-        ##git checkout 2021_12 && git submodule update --recursive --init ## select stable version once project is finished!
           make build_libs_release build_tools_release build_3rdparty
 
 
-
-      
       - name: update environment variables
         run: |
           echo "$GITHUB_WORKSPACE/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
           echo "$GITHUB_WORKSPACE/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
           echo "$GITHUB_WORKSPACE/ngs-bits-${{ env.ngs-bits-version }}" >> $GITHUB_PATH
+
+
+      - name: test local ngs-bits
+        run: ReadQC --help
 
       # download genomes
       - name: download grch38
