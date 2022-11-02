@@ -224,6 +224,9 @@ jobs:
       - name: install OS dependencies
         run: sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev libncursesw5-dev
 
+      - name: install OS dependencies 2
+        run: sudo apt-get install g++ qt5-default libqt5xmlpatterns5-dev libqt5sql5-mysql libcurl4 libcurl4-openssl-dev
+
       # init dbs
       - name: Verify MySQL connection from container 
         run: |
@@ -320,6 +323,7 @@ jobs:
           python-version: '3.6.9'  # use 3.x to use the most up-to-date python3 version
           architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
       - uses: actions/cache@v3 # cache the python environment to speed up tests
+        id: cache-python-modules
         with:
           path: ${{ env.pythonLocation }}
           key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
@@ -350,7 +354,7 @@ jobs:
 
       - name: download chainfile
         run: |
-          wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz
+          wget -q http://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz
           (gunzip -c hg19ToHg38.over.chain.gz | sed -r 's/chrM/chrMT/g' | bgzip > hg19ToHg38.fixed.over.chain.gz) || true
           rm hg19ToHg38.over.chain.gz
 
