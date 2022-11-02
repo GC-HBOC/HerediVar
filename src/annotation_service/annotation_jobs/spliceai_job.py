@@ -65,12 +65,12 @@ class spliceai_job(Job):
         if not found_spliceai_header:
             errors.append("SpliceAI WARNING: did not find a SpliceAI INFO entry in input vcf, did you annotate the file using a precomputed file before?")
         if need_annotation:
-            returncode, stderr, stdout = functions.execute_command(['sed', '-i', '/SpliceAI/d', input_vcf_path], "sed")
-            if returncode != 0:
-                errors.append(stderr)
-            returncode, stderr, stdout = functions.execute_command(['chmod', '777', input_vcf_path], 'chmod')
-            if returncode != 0:
-                errors.append(stderr)
+            #returncode, stderr, stdout = functions.execute_command(['sed', '-i', '/SpliceAI/d', input_vcf_path], "sed")
+            #if returncode != 0:
+            #    errors.append(stderr)
+            #returncode, stderr, stdout = functions.execute_command(['chmod', '777', input_vcf_path], 'chmod')
+            #if returncode != 0:
+            #    errors.append(stderr)
             #returncode, stderr, stdout = functions.execute_command(["ls", "-l", "/tmp"], "ls")
             #print(stdout)
             spliceai_code, spliceai_stderr, spliceai_stdout = self.annotate_spliceai_algorithm(input_vcf_path, output_vcf_path)

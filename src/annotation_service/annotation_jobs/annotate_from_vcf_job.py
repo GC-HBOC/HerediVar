@@ -116,17 +116,17 @@ class annotate_from_vcf_job(Job):
 
 
     def annotate_from_vcf(self, config_file_path, input_vcf, output_vcf):
-        if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
-            command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
-            command.append("VcfAnnotateFromVcf")
-        else: # use local installation
-            command = [paths.ngs_bits_path + "VcfAnnotateFromVcf"]
+        #if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
+        #    command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
+        #    command.append("VcfAnnotateFromVcf")
+        #else: # use local installation
+        command = [paths.ngs_bits_path + "VcfAnnotateFromVcf"]
         command.extend([ "-config_file", config_file_path, "-in", input_vcf, "-out", output_vcf])
 
         returncode, err_msg, vcf_errors = functions.execute_command(command, 'VcfAnnotateFromVcf')
 
-        if os.environ.get('WEBAPP_ENV') == 'githubtest':
-            functions.execute_command(["chmod", "777", output_vcf], "chmod")
+        #if os.environ.get('WEBAPP_ENV') == 'githubtest':
+        #    functions.execute_command(["chmod", "777", output_vcf], "chmod")
         return returncode, err_msg, vcf_errors
 
 

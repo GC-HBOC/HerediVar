@@ -45,11 +45,11 @@ class hexplorer_job(Job):
     
     def annotate_hexplorer(self, input_vcf_path, output_vcf_path):
 
-        if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
-            command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
-            command.append("VcfAnnotateHexplorer")
-        else: # use local installation
-            command = [paths.ngs_bits_path + "VcfAnnotateHexplorer"]
+        #if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
+        #    command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
+        #    command.append("VcfAnnotateHexplorer")
+        #else: # use local installation
+        command = [paths.ngs_bits_path + "VcfAnnotateHexplorer"]
         command = command + ["-in", input_vcf_path, "-out", output_vcf_path, "-ref", paths.ref_genome_path]
         returncode, stderr, stdout = functions.execute_command(command, 'VcfAnnotateHexplorer')
 
