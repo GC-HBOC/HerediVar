@@ -37,8 +37,8 @@ class annotate_from_vcf_job(Job):
         self.handle_result(inpath, annotated_inpath, vcf_annotate_code)
 
         warnings_path = annotated_inpath + "_warnings.txt"
-        #if exists(warnings_path):
-        #    os.remove(warnings_path)
+        if exists(warnings_path):
+            os.remove(warnings_path)
 
         return vcf_annotate_code, vcf_annotate_stderr, vcf_annotate_stdout
 

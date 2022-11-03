@@ -239,9 +239,9 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         runtime_error = str(e)
 
 
-    #if exists(vcf_path): 
+    if exists(vcf_path): 
     #    #functions.execute_command(["rm", vcf_path], "rm") # this uses sudo in github testing as this is required to delete it 
-    #    os.remove(vcf_path)
+        os.remove(vcf_path)
 
 
     conn.close()
