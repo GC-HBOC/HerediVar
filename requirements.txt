@@ -104,7 +104,6 @@ requests-toolbelt==0.9.1
 rsa==4.8
 six==1.15.0
 spliceai==1.3.1
-SQLAlchemy==1.4.36
 tensorboard==2.6.0
 tensorboard-data-server==0.6.1
 tensorboard-plugin-wit==1.8.1
