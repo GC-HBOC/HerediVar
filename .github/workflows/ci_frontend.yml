@@ -51,7 +51,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.8'  # use 3.x to use the most up-to-date python3 version
+          python-version: '3.6.9'  # use 3.x to use the most up-to-date python3 version
           architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
       - uses: actions/cache@v3 # cache the python environment to speed up tests
         id: cache-python-modules
@@ -135,22 +135,6 @@ jobs:
           (gunzip -c GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz |  sed -r 's/>chrM/>chrMT/g' > GRCh38.fa) || true
           rm GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
           samtools faidx GRCh38.fa
-
-
-      # install ngs-bits
-      #- name: install ngs-bits
-      #  run: docker pull quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }}
-
-      #- name: start ngs-bits container
-      #  run: |
-      #    docker images
-      #    docker run -d -v /tmp:/tmp -v $GITHUB_WORKSPACE:$GITHUB_WORKSPACE -it quay.io/biocontainers/ngs-bits:${{ env.ngs-bits-version }} /bin/bash > ngs-bits-container.txt
-      #    docker ps -a
-
-      #- name: test ngs-bits
-      #  run: |
-      #    ngsbitscontainer=$(cat ngs-bits-container.txt)
-      #    docker exec $ngsbitscontainer ReadQC --help
 
 
       # init dbs
@@ -321,7 +305,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.8'  # use 3.x to use the most up-to-date python3 version
+          python-version: '3.6.9'  # use 3.x to use the most up-to-date python3 version
           architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
       - uses: actions/cache@v3 # cache the python environment to speed up tests
         id: cache-python-modules
