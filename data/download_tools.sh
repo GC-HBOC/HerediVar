@@ -18,17 +18,16 @@ tools=$root/src/tools/
 
 #download and build ngs-bits
 
-cd $tools
-: ' 
+cd $tools 
 git clone --recursive https://github.com/imgag/ngs-bits.git
 cd ngs-bits
 ##git checkout 2021_12 && git submodule update --recursive --init ## select stable version once project is finished!
 make build_3rdparty build_libs_release build_tools_release
-'
+
 
 
 #download and build samtools
-: '
+
 cd $tools
 wget https://github.com/samtools/samtools/releases/download/1.11/samtools-1.11.tar.bz2
 tar xjf samtools-1.11.tar.bz2
@@ -37,18 +36,19 @@ cd samtools-1.11
 make
 cd ..
 mv samtools-1.11 samtools
-'
+
 
 # download and build htslib
+
 cd $tools
 wget https://github.com/samtools/htslib/releases/download/1.16/htslib-1.16.tar.bz2
 tar -vxjf htslib-1.16.tar.bz2
 cd htslib-1.16
 make
+rm -f htslib-1.16.tar.bz2
 
 
-# download python
-
+# python setup
 # create venv and download packages
 : '
 cd $root
@@ -88,7 +88,7 @@ pip install python-dotenv
 #### previous click version: 8.0.4 (before celery installation)
 
 
-#cd $tools
-#wget https://github.com/keycloak/keycloak/releases/download/18.0.0/keycloak-18.0.0.zip
-#unzip keycloak-18.0.0.zip
-#rm keycloak-18.0.0.zip
+cd $tools
+wget https://github.com/keycloak/keycloak/releases/download/18.0.0/keycloak-18.0.0.zip
+unzip keycloak-18.0.0.zip
+rm keycloak-18.0.0.zip
