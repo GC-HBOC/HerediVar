@@ -1,6 +1,11 @@
 import os
+from os import path
+import sys
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+import common.functions as functions
 
-basedir = os.path.abspath(os.path.dirname(__file__))
+
+functions.read_dotenv()
 
 # register users at:
 # http://srv018.img.med.uni-tuebingen.de:5050/admin/HerediVar/console/
@@ -12,7 +17,31 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config(object):
 
-    
+    webapp_env = os.environ.get('WEBAPP_ENV', None)
+
+    if webapp_env is None:
+        raise ValueError("No WEBAPP_ENV environment variable set.")
+
+    HOST = os.environ.get('HOST')
+
+    ##### production config ####
+    TESTING = False
+    DEBUG = False
+    TLS = True
+
+    SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') # should be at least 32 byte, used for signing the session objects
+
+    # keycloak
+    KEYCLOAK_PORT = '5050'
+    ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
+    CLIENTID = os.environ.get('CLIENT_ID')
+    CLIENTSECRET = os.environ.get('CLIENT_SECRET')
+    DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
+
+
+    CLINVAR_API_ENDPOINT = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions" # test endpoint
+
+
 
     # configuration of server side session from flask-session module
     SESSION_PERMANENT = False
@@ -38,83 +67,32 @@ class Config(object):
 
 
 class ProdConfig(Config):
-    HOST = "host not specified"
-    TESTING = False
-    DEBUG = False
-    TLS = True
-
-
-    SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') # should be at least 32 byte, used for signing the session objects
-
-    # keycloak config
-    KEYCLOAK_PORT = '5050'
-    ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
-    CLIENTID = os.environ.get('CLIENT_ID')
-    CLIENTSECRET = os.environ.get('CLIENT_SECRET')
-    DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
-
-
-    CLINVAR_API_ENDPOINT = "TBD"
+    pass
 
     
-    
-
 
 class DevConfig(Config):
-    HOST = 'SRV018.img.med.uni-tuebingen.de'
-    TESTING = False
+    
     DEBUG = True
     TLS = False
 
-    SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', '736670cb10a600b695a55839ca3a5aa54a7d7356cdef815d2ad6e19a2031182b') # should be at least 32 byte, used for signing the session objects
-
-    # keycloak config
-    KEYCLOAK_PORT = '5050'
-    ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
-    CLIENTID = os.environ.get('CLIENT_ID', 'flask-webapp')
-    CLIENTSECRET = os.environ.get('CLIENT_SECRET', 'NRLzlQfotGy9W8hkuYFm3T48Bjnti15k')
-    DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
-    
     os.environ['NO_PROXY'] = 'SRV018.img.med.uni-tuebingen.de'
 
-    CLINVAR_API_ENDPOINT = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions" # test endpoint
+    #HOST = "SRV018.img.med.uni-tuebingen.de"
+    #SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', '736670cb10a600b695a55839ca3a5aa54a7d7356cdef815d2ad6e19a2031182b') # should be at least 32 byte, used for signing the session objects
+    #CLIENTSECRET = os.environ.get('CLIENT_SECRET', 'NRLzlQfotGy9W8hkuYFm3T48Bjnti15k')
 
 
 class GithubtestConfig(Config):
-    HOST = "127.0.0.1" # localhost
+    #HOST = "127.0.0.1" # localhost
     TESTING = True
     DEBUG = True
     TLS = False
-    
-    SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', "missing")
-
-    KEYCLOAK_PORT = '5050'
-    ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
-    CLIENTID = os.environ.get('CLIENT_ID', 'flask-webapp')
-    CLIENTSECRET = os.environ.get('CLIENT_SECRET', 'NRLzlQfotGy9W8hkuYFm3T48Bjnti15k')
-    DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
-
-    CLINVAR_API_ENDPOINT = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions" # test endpoint
-
-    # use docker container for ngs-bits installation
-    # this container should already be running in the system
-    # can be downloaded here: https://bioconda.github.io/recipes/ngs-bits/README.html
-    NGSBITS_CONTAINER_ID = os.environ.get('NGSBITS_CONTAINER_ID')
 
 
 
 class LocaltestConfig(Config):
-    HOST = "SRV018.img.med.uni-tuebingen.de"
+    #HOST = "SRV018.img.med.uni-tuebingen.de"
     TESTING = True
     DEBUG = True
     TLS = False
-    
-    SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', "missing")
-
-    KEYCLOAK_PORT = '5050'
-    ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
-    CLIENTID = os.environ.get('CLIENT_ID', 'flask-webapp')
-    CLIENTSECRET = os.environ.get('CLIENT_SECRET', 'NRLzlQfotGy9W8hkuYFm3T48Bjnti15k')
-    DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
-
-    CLINVAR_API_ENDPOINT = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions" # test endpoint

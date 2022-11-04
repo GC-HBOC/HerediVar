@@ -5,7 +5,6 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 import mysql.connector
 from mysql.connector import Error
 import common.functions as functions
-import common.paths as paths
 from operator import itemgetter
 import datetime
 import re
@@ -15,12 +14,18 @@ import os
 
 def get_db_connection(role):
     conn = None
+
+    host = os.environ.get('DB_HOST')
+    if host is None: # this should be checked to make sure the .env file was read in, especially problematic during testing
+        functions.read_dotenv()
+        host = os.environ.get('DB_HOST')
+
     try:
         #env = os.environ.get('WEBAPP_ENV', 'dev')
         user, pw = get_db_user(role)
         conn = mysql.connector.connect(user=user, password=pw,
-                               host=paths.db_host,
-                               database=paths.db_name, 
+                               host=host,
+                               database=os.environ.get("DB_NAME"), 
                                charset = 'utf8')
     except Error as e:
         raise RuntimeError("Error while connecting to HerediVar database " + str(e))
@@ -29,16 +34,17 @@ def get_db_connection(role):
             return conn
 
 
+
 def get_db_user(role):
     if role == "user_role":
         #print("using user role")
-        return paths.db_user, paths.db_user_pw
+        return os.environ.get("DB_USER"), os.environ.get("DB_USER_PW")
     if role == "super_user_role":
         #print("using super user role")
-        return paths.db_super_user, paths.db_super_user_pw
+        return os.environ.get("DB_SUPER_USER"), os.environ.get("DB_SUPER_USER_PW")
     if role == "annotation_role":
         #print("using annotation role")
-        return paths.db_annotation_user, paths.db_annotation_user_pw
+        return os.environ.get("DB_ANNOTATION_USER"), os.environ.get("DB_ANNOTATION_USER_PW")
     raise ValueError(str(role) + " is not a valid db user role!")
 
 

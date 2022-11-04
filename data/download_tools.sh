@@ -60,22 +60,29 @@ pip install wheel
 pip install setuptools
 python3 -m pip install --upgrade setuptools wheel
 
-pip install mysql-connector
-pip install spliceai
-pip install tensorflow
-pip install flask
-#pip install flask-mysql
-
-pip3 install CrossMap
-
-pip install biopython
-pip install flask-paginate
-
+pip install flask flask-session flask-paginate
 #pip install Flask-OIDC
 pip install authlib
-pip install blinker
+pip install mysql-connector
 
-#pip install lxml
+
+pip install spliceai tensorflow
+pip install CrossMap
+
+
+
+pip install blinker
+pip install lxml
+
+
+pip install celery redis
+
+pip install reportlab
+
+pip install python-dotenv
+
+
+#pip install biopython
 '
 
 #### previous click version: 8.0.4 (before celery installation)

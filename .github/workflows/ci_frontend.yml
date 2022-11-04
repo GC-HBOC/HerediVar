@@ -147,18 +147,27 @@ jobs:
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
 
-      # write settings.ini
+      # write .env file
       - name: prepare settings
         run: |
-          echo "DB_HOST=0.0.0.0" > src/common/settings.ini
-          echo "DB_NAME=test_db" >> src/common/settings.ini
+          echo "HOST=127.0.0.1" > src/common/.env
 
-          echo "DB_USER=test_user" >> src/common/settings.ini
-          echo "DB_USER_PW=password" >> src/common/settings.ini
-          echo "DB_SUPER_USER=test_user" >> src/common/settings.ini
-          echo "DB_SUPER_USER_PW=password" >> src/common/settings.ini
-          echo "DB_ANNOTATION_USER=test_user" >> src/common/settings.ini
-          echo "DB_ANNOTATION_USER_PW=password" >> src/common/settings.ini
+          echo "DB_HOST=0.0.0.0" > src/common/.env
+          echo "DB_NAME=test_db" >> src/common/.env
+
+          echo "DB_USER=test_user" >> src/common/.env
+          echo "DB_USER_PW=password" >> src/common/.env
+          echo "DB_SUPER_USER=test_user" >> src/common/.env
+          echo "DB_SUPER_USER_PW=password" >> src/common/.env
+          echo "DB_ANNOTATION_USER=test_user" >> src/common/.env
+          echo "DB_ANNOTATION_USER_PW=password" >> src/common/.env
+
+          echo "CLINVAR_API_KEY=${{ secrets.CLINVAR_API_KEY }}" >> src/common/.env
+
+          echo "FLASK_SECRET_KEY=The_testing_key" >> src/common/.env
+          
+          echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> src/common/.env
+          echo "CLIENT_SECRET=${{ secrets.CLINVAR_API_KEY }}" >> src/common/.env
 
 
       # run tests
@@ -214,7 +223,6 @@ jobs:
       # init dbs
       - name: Verify MySQL connection from container 
         run: |
-          sudo apt-get update
           sudo apt-get install -y mysql-client
           export MOST_RECENT_DUMP_DATE=$(cat src/tools/database_dumper/most_recent_dump.txt)
           gunzip src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql.gz
@@ -360,18 +368,27 @@ jobs:
           src/frontend_celery/tests/script/start_keycloak_for_tests.sh
 
 
-      # write settings.ini
+      # write .env file
       - name: prepare settings
         run: |
-          echo "DB_HOST=0.0.0.0" > src/common/settings.ini
-          echo "DB_NAME=test_db" >> src/common/settings.ini
+          echo "HOST=127.0.0.1" > src/common/.env
 
-          echo "DB_USER=test_user" >> src/common/settings.ini
-          echo "DB_USER_PW=password" >> src/common/settings.ini
-          echo "DB_SUPER_USER=test_user" >> src/common/settings.ini
-          echo "DB_SUPER_USER_PW=password" >> src/common/settings.ini
-          echo "DB_ANNOTATION_USER=test_user" >> src/common/settings.ini
-          echo "DB_ANNOTATION_USER_PW=password" >> src/common/settings.ini
+          echo "DB_HOST=0.0.0.0" > src/common/.env
+          echo "DB_NAME=test_db" >> src/common/.env
+
+          echo "DB_USER=test_user" >> src/common/.env
+          echo "DB_USER_PW=password" >> src/common/.env
+          echo "DB_SUPER_USER=test_user" >> src/common/.env
+          echo "DB_SUPER_USER_PW=password" >> src/common/.env
+          echo "DB_ANNOTATION_USER=test_user" >> src/common/.env
+          echo "DB_ANNOTATION_USER_PW=password" >> src/common/.env
+
+          echo "CLINVAR_API_KEY=${{ secrets.CLINVAR_API_KEY }}" >> src/common/.env
+
+          echo "FLASK_SECRET_KEY=The_testing_key" >> src/common/.env
+          
+          echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> src/common/.env
+          echo "CLIENT_SECRET=${{ secrets.CLINVAR_API_KEY }}" >> src/common/.env
 
 
       # run tests
@@ -384,10 +401,6 @@ jobs:
         ##### !secrets are loaded from github: https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md
         env:
           WEBAPP_ENV: githubtest
-          FLASK_SECRET_KEY: The_testing_key
-          CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-          CLINVAR_API_KEY: ${{ secrets.CLINVAR_API_KEY }}
         shell: bash
 
       

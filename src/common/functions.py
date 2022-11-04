@@ -11,6 +11,7 @@ import base64
 import io
 import urllib.parse as urlparse
 from urllib.parse import urlencode
+from dotenv import load_dotenv
 
 
 def basedir():
@@ -494,3 +495,21 @@ def is_snv(one_var):
         return False
     else:
         return True
+
+def read_dotenv():
+    basedir = os.path.abspath(os.path.dirname(__file__))
+
+
+    webapp_env = os.environ.get('WEBAPP_ENV', None)
+
+
+    if webapp_env is None:
+        raise ValueError("No WEBAPP_ENV environment variable set.")
+
+
+    dotenvfile = ".env"
+    if webapp_env == "dev": #this is just for fast switching between configurations during development
+        dotenvfile = ".env_dev"
+    if webapp_env == "localtest":
+        dotenvfile = ".env_localtest"
+    load_dotenv(os.path.join(basedir, dotenvfile))

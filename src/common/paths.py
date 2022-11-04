@@ -1,43 +1,9 @@
 import os
 
-def read_settings_file(path):
-    settings_dict = {}
-    with open(path, "r") as settings:
-        for line in settings:
-            if line.startswith('#') or line.strip() == '':
-                continue
-
-            parts = line.strip().split('=')
-            settings_dict[parts[0]] = parts[1]
-    return settings_dict
-
+ref_genome_name = "GRCh38"
 
 
 webapp_env = os.environ.get('WEBAPP_ENV', None)
-
-if webapp_env is None:
-    raise ValueError("No WEBAPP_ENV environment variable set.")
-
-# settings.ini & this file must be in the same folder
-bp = os.path.dirname(os.path.abspath(__file__))
-settings_file_path = bp + "/settings.ini"
-if webapp_env == "dev": #this is just for fast switching between configurations during development
-    settings_file_path = bp +  "/settings.dev.ini"
-if webapp_env == "localtest":
-    settings_file_path = bp + "/settings.localtest.ini"
-settings = read_settings_file(settings_file_path)
-db_host = settings["DB_HOST"]
-db_name = settings["DB_NAME"]
-
-db_user = settings["DB_USER"]
-db_user_pw = settings["DB_USER_PW"]
-db_super_user = settings["DB_SUPER_USER"]
-db_super_user_pw = settings["DB_SUPER_USER_PW"]
-db_annotation_user = settings["DB_ANNOTATION_USER"]
-db_annotation_user_pw = settings["DB_ANNOTATION_USER_PW"]
-
-
-ref_genome_name = "GRCh38"
 
 if webapp_env == 'dev':
     """ configuration for the development environment """
