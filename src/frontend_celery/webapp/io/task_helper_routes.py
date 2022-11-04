@@ -1,5 +1,4 @@
-from turtle import down
-from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for, session, jsonify, Markup
+from flask import Blueprint, abort, request, url_for, jsonify
 from os import path
 import sys
 
@@ -7,11 +6,6 @@ from ..utils import require_login, start_annotation_service
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from common.db_IO import Connection
-import io
-import datetime
-import tempfile
-from shutil import copyfileobj
-import re
 from ..tasks import *
 
 
