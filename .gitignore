@@ -166,3 +166,5 @@ src/nextjs_react/heredivar/.parcel-cache/
 /src/frontend/flask_sessions
 /src/frontend_celery/flask_sessions
 /keycloak-18.0.0/
+/deployment/.vagrant
+/src/tools/litvar_vs_vep
