@@ -82,12 +82,17 @@ pip install reportlab
 pip install python-dotenv
 
 
-#pip install biopython
+pip install biopython
+
+
+
+pip install jsonschema
 '
 
 #### previous click version: 8.0.4 (before celery installation)
 
 
+# install keycloak
 cd $tools
 wget https://github.com/keycloak/keycloak/releases/download/18.0.0/keycloak-18.0.0.zip
 unzip keycloak-18.0.0.zip

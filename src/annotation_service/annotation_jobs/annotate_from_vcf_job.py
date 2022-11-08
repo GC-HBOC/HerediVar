@@ -56,7 +56,7 @@ class annotate_from_vcf_job(Job):
         self.insert_annotation(variant_id, info, "GnomAD_hom=", 13, conn)
         self.insert_annotation(variant_id, info, "GnomAD_hemi=", 14, conn)
         self.insert_annotation(variant_id, info, "GnomAD_het=", 15, conn)
-        self.insert_annotation(variant_id, info, "GnomAD_popmax=", 16, conn)
+        self.insert_annotation(variant_id, info, "GnomAD_popmax=", 16, conn, value_modifier_function = lambda value : value.upper())
         self.insert_annotation(variant_id, info, "GnomAD_AF_popmax=", 51, conn)
         self.insert_annotation(variant_id, info, "GnomADm_AC_hom=", 17, conn)
 

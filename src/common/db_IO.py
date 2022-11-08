@@ -246,14 +246,14 @@ class Connection:
             print("WARNING: there was no row in the gene table for hgnc_id " + str(hgnc_id) + ". Error occured during insertion of gene alias " + str(symbol))
 
 
-    def insert_annotation_type(self, name, description, value_type, version, version_date):
-        command = "SELECT id FROM annotation_type WHERE name = %s AND version = %s AND version_date = %s"
-        self.cursor.execute(command, (name, version, version_date))
-        result = self.cursor.fetchall()
-        if len(result) == 0:
-            command = "INSERT INTO annotation_type (name, description, value_type, version, version_date) VALUES (%s, %s, %s, %s, %s)"
-            self.cursor.execute(command, (name, description, value_type, version, version_date))
-            self.conn.commit()
+    #def insert_annotation_type(self, name, description, value_type, version, version_date):
+    #    command = "SELECT id FROM annotation_type WHERE name = %s AND version = %s AND version_date = %s"
+    #    self.cursor.execute(command, (name, version, version_date))
+    #    result = self.cursor.fetchall()
+    #    if len(result) == 0:
+    #        command = "INSERT INTO annotation_type (name, description, value_type, version, version_date) VALUES (%s, %s, %s, %s, %s)"
+    #        self.cursor.execute(command, (name, description, value_type, version, version_date))
+    #        self.conn.commit()
     
     def insert_variant_annotation(self, variant_id, annotation_type_id, value, supplementary_document = None):
         # supplementary documents are not supported yet! see: https://stackoverflow.com/questions/10729824/how-to-insert-blob-and-clob-files-in-mysql
@@ -432,7 +432,7 @@ class Connection:
 
     
     def get_recent_annotations(self, variant_id): # ! the ordering of the columns in the outer select statement is important and should not be changed
-        command = "SELECT variant_annotation.id, title, description, version, version_date, variant_id, value, supplementary_document, group_name FROM variant_annotation INNER JOIN ( \
+        command = "SELECT variant_annotation.id, title, description, version, version_date, variant_id, value, supplementary_document, group_name, display_title FROM variant_annotation INNER JOIN ( \
                         SELECT * \
 	                        FROM annotation_type WHERE (title, version_date) IN ( \
 		                        select title, MAX(version_date) version_date from annotation_type INNER JOIN ( \
@@ -1259,10 +1259,10 @@ class Connection:
         standard_annotations = {} # used for grouping hierarchy: 'standard_annotations' -> group -> annotation_label
         variant_annot_dict = {}
 
-        if group_output: # all groups are grouped into one dictionary except for the special group 'None' which is inserted as key directly into variant_annot_dict
+        if group_output: # all items from the same group are put into one dictionary except for the special group 'None' which is inserted as key directly into variant_annot_dict
             for annot in variant_annotations:
                 current_group = annot[8]
-                new_value = annot[2:len(annot)] + (annot[0], ) # put annotation id last and remove title
+                new_value = annot[2:len(annot)] + (annot[0], ) # put annotation id last and remove title / display text
                 new_annotation_type = annot[1]
                 if current_group == 'None':
                     variant_annot_dict[new_annotation_type] = new_value
@@ -1323,7 +1323,7 @@ class Connection:
         for consensus_classification in consensus_classifications:
             consensus_classification = list(consensus_classification)
             current_scheme = self.get_classification_scheme(consensus_classification[7])
-            consensus_classification.append(current_scheme[1])# append the scheme name
+            consensus_classification.append(current_scheme[2])# append the scheme description (which is used as display name)
             consensus_classification.append(current_scheme[3]) # append scheme type
             current_scheme_criteria_applied = self.get_scheme_criteria_applied(consensus_classification[0], where = "consensus")
             consensus_classification.append(current_scheme_criteria_applied)
@@ -1338,7 +1338,7 @@ class Connection:
         for user_classification in user_classifications:
             user_classification = list(user_classification)
             current_scheme = self.get_classification_scheme(user_classification[6])
-            user_classification.append(current_scheme[1]) # append the scheme name
+            user_classification.append(current_scheme[2]) # append the scheme description (which is used as display name)
             user_classification.append(current_scheme[3]) # append scheme type
             current_scheme_criteria_applied = self.get_scheme_criteria_applied(user_classification[0], where = "user")
             user_classification.append(current_scheme_criteria_applied)
@@ -1402,7 +1402,7 @@ class Connection:
 
     def get_classification_schemas(self):
         # it should look like this:
-        # {schema_id -> description, reference, criteria, mutually_exclusive_buttons}
+        # {schema_id -> display_name(description), reference, criteria, mutually_exclusive_buttons}
         #                                         -> {name,description,default_strength,possible_strengths,selectable,disable_group}
         command = "SELECT * FROM classification_scheme"
         self.cursor.execute(command)
@@ -1423,7 +1423,7 @@ class Connection:
         result = {}
         for classification_schema in classification_schemas:
             classification_schema_id = classification_schema[0]
-            name = classification_schema[1]
+            #name = classification_schema[1]
             description = classification_schema[2]
             scheme_type = classification_schema[3]
             online_reference = classification_schema[4]

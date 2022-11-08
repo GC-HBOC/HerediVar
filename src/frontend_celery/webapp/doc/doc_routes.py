@@ -26,3 +26,8 @@ def deleted_variant():
 @doc_blueprint.route('/impressum')
 def impressum():
     return render_template('doc/impressum.html')
+
+
+@doc_blueprint.route('/about')
+def about():
+    return render_template('doc/about.html')

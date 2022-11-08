@@ -317,7 +317,7 @@
                     <!-- user classification table -->
                     {% if 'user_classifications' in annotations %}
                     <h4 class="card-subcaption">HerediVar user classifications</h4>
-                    <div class="ssl ssb" style="margin-bottom:0">
+                    <div class="ssl ssb">
                         <div class="table-responsive tableFixHead">
                             <table class="table table-hover" id="userClassificationsTable">
                                 <thead>
@@ -340,7 +340,7 @@
                                         <td>{{ classification[10] }}</td>
                                         <td style="white-space:nowrap;">{{ classification[5] }}</td>
                                         <td><abbr title="{{ classification[4] }}"><div class="Nellipsis" >{{ classification[4] }}</div> </abbr></td>
-                                        <td style="white-space:nowrap;">{{classification[11] | replace('_', ' ')}}</td>
+                                        <td style="white-space:nowrap;">{{ classification[11] }}</td>
                                         <td>{{ macros.draw_criteria_display(classification[13], '4em', '2em') }}</td>
                                         <td>{{ classification[14] }}</td>
                                     </tr>
@@ -488,7 +488,7 @@
                                         {% set current_annotations = standard_annotations[annotation_group] %}
                                         {% for annotation_type in current_annotations %}
                                             {% if annotation_type == 'hexplorer' or annotation_type == 'hexplorer_rev' or annotation_type == 'max_hbond' or annotation_type == 'max_hbond_rev' %} <!-- add details for hexplorer/hbond score -->
-                                                {{ macros.draw_hexplorer_score(annotation_type + '_delta', current_annotations[annotation_type], current_annotations.get(annotation_type + '_wt'), current_annotations.get(annotation_type + '_mut')) }}
+                                                {{ macros.draw_hexplorer_score(current_annotations[annotation_type][7], current_annotations[annotation_type], current_annotations.get(annotation_type + '_wt'), current_annotations.get(annotation_type + '_mut')) }}
                                             {% else %}
                                             {% if 'heredicare' in annotation_type %} <!-- add red exclamation mark for heredicare counts -->
                                                 <div annotation_id="{{current_annotations[annotation_type][7]}}">
@@ -501,7 +501,7 @@
                                             {% if 'spliceai_details' == annotation_type %} <!-- add details for spliceai -->
                                                 {% set spliceai_details_values = current_annotations['spliceai_details'][4].split(',') %}
                                                 <div class="d-flex" annotation_id="{{current_annotations[annotation_type][7]}};{{current_annotations['spliceai_max_delta'][7]}}">
-                                                    <abbr class="ssr" title="{{current_annotations['spliceai_max_delta'][0]}}"><a class="dashed_underline">spliceai:</a></abbr>
+                                                    <abbr class="ssr" title="{{current_annotations['spliceai_max_delta'][0]}}"><a class="dashed_underline">{{ current_annotations[annotation_type][7] }}:</a></abbr>
 
 
                                                     <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
@@ -547,7 +547,7 @@
                                             {% else %}
                                             {% if '_mut' not in annotation_type and '_wt' not in annotation_type and 'spliceai' not in annotation_type %} <!-- standard case -->
                                                 <div style="word-break: break-all;" annotation_id="{{current_annotations[annotation_type][7]}}">
-                                                    <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ annotation_type }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
+                                                    <abbr class="ssr" title="{{current_annotations[annotation_type][0]}}"><a class="dashed_underline">{{ current_annotations[annotation_type][7] }}:</a></abbr>{{ current_annotations[annotation_type][4] }}
                                                 </div>
                                             {% endif %}
                                             {% endif %}

@@ -85,7 +85,7 @@ def my_lists():
             variant_id_to_delete = request.args['variant_id']
             conn.delete_variant_from_list(view_list_id, variant_id_to_delete) # list ownership is already tested at the top of this function
             url_to_deleted_variant = url_for('variant.display', variant_id=variant_id_to_delete)
-            flash(Markup("Successfully removed variant from list! Go <a href='" + url_to_deleted_variant + "'>here</a> to undo this action."), "alert-success")
+            flash(Markup("Successfully removed variant from list! Go <a class='alert-link' href='" + url_to_deleted_variant + "'>here</a> to undo this action."), "alert-success")
 
             return redirect(url_for('user.my_lists', view=view_list_id))
 
@@ -126,7 +126,7 @@ def my_lists():
         variant_ids_oi = conn.get_variant_ids_from_list(view_list_id)
         if len(variant_ids_oi) > 0:
             variants, total = conn.get_variants_page_merged(page, per_page, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
-    print(variants)
+    #print(variants)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
     
     return render_template('user/my_lists.html', 

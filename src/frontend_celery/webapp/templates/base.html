@@ -85,6 +85,7 @@
             {% endif %}
         {% endwith %}
     </div>
+
     
     <!-- main content -->
     <div id="main-content" class="container-fluid">
@@ -95,7 +96,7 @@
     <footer class="border-top bg-light sst" height="6rem">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
-                <a class="navbar-brand" style="padding:0" href="{{url_for('main.index')}}">logo</a>
+                <a class="navbar-brand" style="padding:0" href="{{url_for('main.index')}}">HerediVar</a>
                 <div class="navbar-nav text-muted">© 2022</div>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#footerContent" aria-controls="footerContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -113,7 +114,7 @@
                             <a class="nav-link" href="{{url_for('main.index')}}">Documentation</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{url_for('main.index')}}">About</a>
+                            <a class="nav-link" href="{{url_for('doc.about')}}">About</a>
                         </li>
                     </ul>
                 </div>

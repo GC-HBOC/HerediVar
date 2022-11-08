@@ -161,33 +161,34 @@
                                placeholder="ENST00000260947:c.1972C>T; ..." class="form-control"
                                >{{ request.args.get('hgvs', '') }}</textarea>
                     </div>
-        
+
+
                     <div class="form-group sst">
                         {% set selected_consensus = request.args.getlist('consensus') %}
                         <label for="consensus-select" class="form-label">Consensus classification</label>
                         <div id="consensus-select" class="d-flex">
-                            <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="1" id="cl1" name="consensus" {% if '1' in selected_consensus %}checked{% endif %}>
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="1" id="cl1" name="consensus" {% if '1' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl1">1</label>
                             </div>
-                            <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="2" id="cl2" name="consensus" {% if '2' in selected_consensus %}checked{% endif %}>
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="2" id="cl2" name="consensus" {% if '2' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl2">2</label>
                             </div>
-                            <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="3" id="cl3" name="consensus" {% if '3' in selected_consensus %}checked{% endif %}>
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="3" id="cl3" name="consensus" {% if '3' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl3">3</label>
                             </div>
-                            <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="4" id="cl4" name="consensus" {% if '4' in selected_consensus %}checked{% endif %}>
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="4" id="cl4" name="consensus" {% if '4' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl4">4</label>
                             </div>
-                            <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="5" id="cl5" name="consensus" {% if '5' in selected_consensus %}checked{% endif %}>
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="5" id="cl5" name="consensus" {% if '5' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl5">5</label>
                             </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="-" id="cl-" name="consensus" {% if '-' in selected_consensus %}checked{% endif %}>
+                            <div class="form-check d-flex align-items-center">
+                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="-" id="cl-" name="consensus" {% if '-' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl-">none</label>
                             </div>
                         </div>
@@ -197,28 +198,28 @@
                         {% set selected_user = request.args.getlist('user') %}
                         <label for="user-select" class="form-label">Your classification</label>
                         <div id="user-select" class="d-flex">
-                            <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="1" id="ucl1" name="user" {% if '1' in selected_user %}checked{% endif %}>
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="1" id="ucl1" name="user" {% if '1' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl1">1</label>
                             </div>
-                            <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="2" id="ucl2" name="user" {% if '2' in selected_user %}checked{% endif %}>
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="2" id="ucl2" name="user" {% if '2' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl2">2</label>
                             </div>
-                            <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="3" id="ucl3" name="user" {% if '3' in selected_user %}checked{% endif %}>
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="3" id="ucl3" name="user" {% if '3' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl3">3</label>
                             </div>
-                            <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="4" id="ucl4" name="user" {% if '4' in selected_user %}checked{% endif %}>
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="4" id="ucl4" name="user" {% if '4' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl4">4</label>
                             </div>
-                            <div class="form-check bsr">
-                                <input class="form-check-input" type="checkbox" value="5" id="ucl5" name="user" {% if '5' in selected_user %}checked{% endif %}>
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="5" id="ucl5" name="user" {% if '5' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl5">5</label>
                             </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="-" id="ucl-" name="user" {% if '-' in selected_user %}checked{% endif %}>
+                            <div class="form-check d-flex align-items-center">
+                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="-" id="ucl-" name="user" {% if '-' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl-">none</label>
                             </div>
                         </div>
@@ -308,28 +309,28 @@
 
 <div id="tabnav-bottom" class="ssb">{{ pagination.links }}</div>
 
+
+
 <script>
-    $(document).ready(function () {
-        //save id of collapse to local cookie if it is shown
-        $("#advanced_search").on('show.bs.collapse', function () {
-            var active = 'advanced_search';
-            localStorage.setItem('expandedSearchOptions', active);
-          //  alert(active);
-        });
-        // delte it again if it is not shown anymore
-        $("#advanced_search").on('hide.bs.collapse', function () {
-            localStorage.removeItem('expandedSearchOptions');
-        });
-        // get the value from the cookie & update collapse accordingly
-        var last = localStorage.getItem('expandedSearchOptions');
-        if (last != null) {
-            //remove default collapse settings
-            $("#advanced_search").removeClass('show');
-            //show collapse
-            $("#" + last).addClass("show");
-        }
-        merge_duplicated_rows()
+    // save state of collapse in cookie such that it stays open if the user reloads the page (eg. upon search)
+    document.getElementById("advanced_search").addEventListener("show.bs.collapse", function(e) {
+        var active = 'advanced_search';
+        localStorage.setItem('expandedSearchOptions', active);
     });
+
+    document.getElementById("advanced_search").addEventListener("hide.bs.collapse", function(e) {
+        localStorage.removeItem('expandedSearchOptions');
+    });
+
+    var last = localStorage.getItem('expandedSearchOptions');
+    if (last != null) {
+        //remove default collapse settings
+        document.getElementById("advanced_search").classList.add('show');
+        //show collapse
+        document.getElementById(last).classList.add('show');
+    }
+    merge_duplicated_rows()
+
 
     function merge_duplicated_rows() {
         var table_rows = document.getElementById('variantTableBody').getElementsByTagName('tr')
@@ -337,7 +338,6 @@
         var rows_to_remove = []
         for (var i = 1; i < table_rows.length; i++) {
             var current_row = table_rows[i]
-            
 
             var current_variant_id = current_row.getAttribute('variant_id')
             var last_variant_id = last_row.getAttribute('variant_id')
@@ -358,11 +358,9 @@
         for (var i = 0; i < rows_to_remove.length; i++) {
             rows_to_remove[i].remove()
         }
-
-
-
     }
 </script>
+
 
 {% endmacro %}
 
@@ -370,7 +368,7 @@
 {% macro draw_hexplorer_score(label, delta, wt, mut) %}
 <div annotation_id="{{delta[7]}}{% if wt is not none %};{{wt[7]}}{% endif %}{% if mut is not none %};{{mut[7]}}{% endif %}">
     {% if wt is none or mut is none %}
-    {{ draw_exclamation_mark('There is no wildtype or mutant score. Thus, one of the sequence is missing the motiv! Be careful with the interpretation of the delta score!') }}
+    {{ draw_exclamation_mark('There is no wildtype or mutant score. Thus, one of the sequences is missing the motiv! Be careful with the interpretation of the delta score!') }}
    {% endif %}
    <abbr class="ssr" title="{{delta[0]}}"><a class="dashed_underline">{{ label }}:</a></abbr>{{ delta[4] }}
    <a class="link" tabindex="0" data-bs-html="true" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-content="reference score: {{wt[4]}} <br/> mutant score: {{mut[4]}}">details</a>

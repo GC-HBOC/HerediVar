@@ -329,6 +329,8 @@ def get_variant_vcf_line(variant_id, conn):
 @download_blueprint.route('/calculate_class/<string:scheme_type>/')
 @download_blueprint.route('/calculate_class/<string:scheme_type>')
 def calculate_class(scheme_type, selected_classes = ''):
+    scheme_type = scheme_type.lower()
+    
     if scheme_type == "none":
         return jsonify({'final_class': '-'})
 
