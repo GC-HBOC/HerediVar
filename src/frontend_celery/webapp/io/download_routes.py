@@ -71,6 +71,8 @@ def log_file(log_file):
     return send_from_directory(directory=logs_folder, path='', filename=log_file)
 
 
+
+
 @download_blueprint.route('/download/vcf')
 @require_login
 def variant():
@@ -330,7 +332,7 @@ def get_variant_vcf_line(variant_id, conn):
 @download_blueprint.route('/calculate_class/<string:scheme_type>')
 def calculate_class(scheme_type, selected_classes = ''):
     scheme_type = scheme_type.lower()
-    
+
     if scheme_type == "none":
         return jsonify({'final_class': '-'})
 

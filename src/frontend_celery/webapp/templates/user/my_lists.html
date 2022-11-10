@@ -9,15 +9,18 @@
     
     
     <div class="d-flex bst">
-        <div class="sst" style="width:15%">
+        <div class="sst" style="min-width:15%; max-width:15%">
 
 
             <div class="table-responsive">
                 <table class="table table-hover" id="variant-list-table" style="table-layout:auto;">
                     <thead>
                         <tr>
+                            <th style="padding-right:0; padding-left:0; width:3.5em">
+                                <div class="sortable">access</div><input type="text" class="form-control form-control-sm column-filter" placeholder="search..." autocomplete="off">
+                            </th>
                             <th style="padding-right:0; padding-left:0; min-width:10rem">
-                                <div class="sortable"></div><input type="text" class="form-control form-control-sm column-filter" placeholder="search..." autocomplete="off">
+                                <div class="sortable">list name</div><input type="text" class="form-control form-control-sm column-filter" placeholder="search..." autocomplete="off">
                             </th>
                             <th style="padding-left:0; padding-right:0;">
                                 <button id="create-list-button" type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="create">+</button>
@@ -26,12 +29,34 @@
                     </thead>
                     <tbody>
                         {% for list in user_lists %}
+                        {% set additional_classes = "" %}
+                        {% set additional_styles = "" %}
+                        {% if list[0]|string == request.args.get('view') %}
+                            {% set additional_classes = "selected" %}
+                            {% set additional_styles = "color:white;"%}
+                            <div id="list-permissions" style="display:none" data-owner="{{list[5]}}" data-editable="{{list[4]}}"></div>
+                        {% endif %}
                         <tr>
-                            <td data-href="{{ url_for('user.my_lists', view=list[0]) }}" class="{% if list[0]|string == view_list_id|string %}selected{% endif %} clickable">{{ list[2] }}</td>
-                            <td name="user_list_row" {% if list[0]|string == view_list_id|string %}class="selected"{% endif %}>
-                                <svg type="button" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="edit" data-bs-name="{{ list[2] }}" data-bs-id="{{ list[0] }}" class="clickable" {% if list[0]|string == view_list_id|string %}style="color:white"{% endif %} xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
-                                    <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
-                                </svg>
+                            <td data-href="{{ url_for('user.my_lists', view=list[0]) }}" style="cursor: pointer;">
+                                <div class="d-flex justify-content-center">
+                                    {% if list[3] == 1 %} <!-- is public -->
+                                        {{ macros.draw_public_symbol("Public list") }}
+                                    {% else %} <!-- is public -->
+                                        {{ macros.draw_private_symbol("Private list") }}
+                                    {% endif %}
+                                </div>
+                              </td>
+                            <td data-href="{{ url_for('user.my_lists', view=list[0]) }}" class="{{additional_classes}}" style="cursor: pointer;">{{ list[2] }}</td>
+                            <td name="user_list_row" class="{{additional_classes}}">
+                                {% if list[5] == 1 %}
+                                    <svg type="button" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="edit" data-bs-name="{{ list[2] }}" data-bs-id="{{ list[0] }}" data-bs-public-read="{{ list[3] }}" data-bs-public-edit="{{ list[4] }}" class="clickable" style="{{additional_styles}}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                                        <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                                    </svg>
+                                {% else %}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" class="bi bi-x-lg" viewBox="0 0 16 16" data-bs-toggle="tooltip" title="You can not edit the properties of this list, because you are not the owner of it.">
+                                        <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
+                                    </svg>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
@@ -44,7 +69,7 @@
         <div id="current-list-id" style="display:none" >{{ request.args.get('view') }}</div>
 
         <div id="list-content" class="sst bsl">
-            {% if view_list_id is not none %}
+            {% if request.args.get('view') is not none %}
                 {{ macros.draw_paginated_variant_table(pagination, variants) }}
             {% else %}
                 <div class="display-5" style="text-align:center;">
@@ -80,6 +105,14 @@
                     <div class="form-group mb-3">
                         <label for="list_name" class="col-form-label">List name:</label>
                         <input type="text" class="form-control validationreq" id="list_name" name="list_name">
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="public_read" name="public_read" onchange="public_read_toggle_action()">
+                        <label class="form-check-label" for="public_read">public read</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="public_edit" name="public_edit">
+                        <label class="form-check-label" for="public_edit">public edit</label>
                     </div>
                     <input type='hidden' id="list_id" name="list_id" value="">
                 </form>

@@ -610,8 +610,9 @@ class Connection:
                         return 0
 
 
-    def get_variants_page_merged(self, page, page_size, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None):
+    def get_variants_page_merged(self, page, page_size, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None, do_annotate=True):
         # get one page of variants determined by offset & pagesize
+
         offset = (page - 1) * page_size
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
         postfix = ""
@@ -635,29 +636,29 @@ class Connection:
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if consensus is not None and len(consensus) > 0:
             new_constraints_inner = ''
+            consensus_without_dash = [value for value in consensus if value != '-']
             if '-' in consensus:
                 new_constraints_inner = "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM consensus_classification WHERE is_recent=1)"
-                consensus.remove('-')
-                if len(consensus) > 0: # if we have - AND some other class(es) we need to add an or between them
+                if len(consensus_without_dash) > 0: # if we have - AND some other class(es) we need to add an or between them
                     new_constraints_inner = new_constraints_inner + " UNION "
-            if len(consensus) > 0: # if we have one or more classes without the -
-                placeholders = ["%s"] * len(consensus)
+            if len(consensus_without_dash) > 0: # if we have one or more classes without the -
+                placeholders = ["%s"] * len(consensus_without_dash)
                 placeholders = ', '.join(placeholders)
                 placeholders = enbrace(placeholders)
                 new_constraints_inner = new_constraints_inner + "SELECT variant_id FROM consensus_classification WHERE classification IN " + placeholders + " AND is_recent = 1"
-                actual_information += tuple(consensus)
+                actual_information += tuple(consensus_without_dash)
             new_constraints = "id IN (" + new_constraints_inner + ")"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if user is not None and len(user) > 0:
             new_constraints_inner = ''
+            user_without_dash = [value for value in user if value != '-']
             if '-' in user:
                 new_constraints_inner = "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM user_classification WHERE user_id=%s)"
                 actual_information += (user_id, )
-                user.remove('-')
-                if len(user) > 0: # if we have - AND some other class(es) we need to add an or between them
+                if len(user_without_dash) > 0: # if we have - AND some other class(es) we need to add an or between them
                     new_constraints_inner = new_constraints_inner + " UNION "
-            if len(user) > 0: # if we have one or more classes without the -
-                placeholders = ["%s"] * len(user)
+            if len(user_without_dash) > 0: # if we have one or more classes without the -
+                placeholders = ["%s"] * len(user_without_dash)
                 placeholders = ', '.join(placeholders)
                 placeholders = enbrace(placeholders)
                 # search for the most recent user classifications from the user which is searching for variants and which are in the list of user classifications (variable: user)
@@ -666,7 +667,7 @@ class Connection:
                                                                     WHERE uc.variant_id IS NULL AND user_classification.user_id=%s AND user_classification.classification IN " + placeholders + " \
                                                                 ORDER BY user_classification.variant_id )ub"
                 actual_information += (user_id, )
-                actual_information += tuple(user)
+                actual_information += tuple(user_without_dash)
             new_constraints = "id IN (" + new_constraints_inner + ")"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if hgvs is not None and len(hgvs) > 0:
@@ -700,14 +701,20 @@ class Connection:
             actual_information += tuple(variant_ids_oi)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         
-        command = prefix + postfix + " ORDER BY chr, pos, ref, alt LIMIT %s, %s"
-        actual_information += (offset, page_size)
-        command = self.annotate_genes(command)
-        command = self.annotate_consensus_classification(command)
-        command = self.annotate_specific_user_classification(command)
-        actual_information += (user_id, ) # this is required to get the user-classifications of the currently logged in user for the variants
+        command = prefix + postfix
+        if page_size != 'unlimited':
+            command = command + " ORDER BY chr, pos, ref, alt LIMIT %s, %s"
+            actual_information += (offset, page_size)
+        if do_annotate:
+            command = self.annotate_genes(command)
+            command = self.annotate_consensus_classification(command)
+            command = self.annotate_specific_user_classification(command)
+            actual_information += (user_id, ) # this is required to get the user-classifications of the currently logged in user for the variants
         self.cursor.execute(command, actual_information)
         variants = self.cursor.fetchall()
+
+        if page_size == 'unlimited':
+            return variants, len(variants)
 
         variants_and_transcripts = []
         for variant in variants:
@@ -1193,22 +1200,39 @@ class Connection:
         result = self.cursor.fetchone()[0]
         return result
 
-    def insert_user_variant_list(self, user_id, list_name):
-        command = "INSERT INTO user_variant_lists (user_id, name) VALUES (%s, %s)"
-        self.cursor.execute(command, (user_id, list_name))
+    def insert_user_variant_list(self, user_id, list_name, public_read, public_edit):
+        command = "INSERT INTO user_variant_lists (user_id, name, public_read, public_edit) VALUES (%s, %s, %s, %s)"
+        self.cursor.execute(command, (user_id, list_name, public_read, public_edit))
         self.conn.commit()
 
     # if you set a variant id the result will contain information if this variant is contained in the list or not (list[3] != None ==> variant is conatined in list)
-    def get_lists_for_user(self, user_id, variant_id = None):
+    def get_lists_for_user(self, user_id, variant_id = None, is_editable = False):
         command = "SELECT * FROM user_variant_lists"
         actual_information = ()
         if variant_id is not None:
             command = command + " LEFT JOIN (SELECT list_id FROM list_variants WHERE variant_id=%s) x ON user_variant_lists.id = x.list_id"
             actual_information = actual_information + (variant_id, )
-        command = command + " WHERE user_id = %s ORDER BY id ASC"
+        command = command + " WHERE user_id = %s OR public_read = 1"
+        if is_editable:
+            command = command + " OR public_edit = 1"
+        command = command + " ORDER BY id DESC"
         actual_information = actual_information + (user_id, )
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
+
+        for i in range(len(result)):
+            current_list = result[i]
+            is_owner = 0
+            if current_list[1] == user_id:
+                is_owner = 1
+            current_list = list(current_list) # convert tuple to list
+            current_list.insert(5, is_owner)
+            
+            if variant_id is None:
+                current_list.append('')
+            else:
+                current_list[-1] = "active" if current_list[-1] is not None else "" # this adds the css class if the variant is in that list -> background color to blue
+            result[i] = tuple(current_list) # convert back to tuple
         return result
     
     def add_variant_to_list(self, list_id, variant_id):
@@ -1226,16 +1250,41 @@ class Connection:
         return result
     
     # list_id to get the right list
-    # user_id for security such that you can not edit lists which were not made by you
     # list_name is the value which will be updated
-    def update_user_variant_list(self, list_id, user_id, new_list_name):
-        command = "UPDATE user_variant_lists SET name = %s WHERE id = %s AND user_id = %s"
-        self.cursor.execute(command, (new_list_name, list_id, user_id))
+    def update_user_variant_list(self, list_id, new_list_name, public_read, public_edit):
+        command = "UPDATE user_variant_lists SET name = %s, public_read=%s, public_edit=%s WHERE id = %s"
+        self.cursor.execute(command, (new_list_name, public_read, public_edit, list_id))
         self.conn.commit()
-
     
-    def check_user_list_ownership(self, user_id, list_id):
-        command = "SELECT EXISTS (SELECT * FROM user_variant_lists WHERE user_id = %s AND id = %s)"
+    def get_user_variant_list(self, list_id):
+        command = "SELECT * FROM user_variant_lists WHERE id=%s"
+        self.cursor.execute(command, (list_id,))
+        result = self.cursor.fetchone()
+        return result
+
+    def check_list_permission(self, user_id, list_id):
+        list_oi = self.get_user_variant_list(list_id)
+        if list_oi is None:
+            return None
+        
+        result = {'read': False, 'edit': False, 'owner': False}
+        if list_oi[1] == user_id: # this user is the owner of the list
+            result['read'] = True
+            result['edit'] = True
+            result['owner'] = True
+        if list_oi[3] == 1: # this is a public read list -> the user can read it
+            result['read'] = True
+        if list_oi[4] == 1: # this is a public editable list -> the use rcan edit it as well
+            result['edit'] = True 
+        return result
+
+    #### DELETE LATER!
+    def check_user_list_ownership(self, user_id, list_id, requests_write=False):
+        inner_command = "SELECT * FROM user_variant_lists WHERE (user_id = %s OR public_read = 1)"
+        if requests_write:
+            inner_command += " AND public_edit = 1"
+        inner_command += " AND id = %s"
+        command = "SELECT EXISTS (" + inner_command + ")"
         self.cursor.execute(command, (user_id, list_id))
         result = self.cursor.fetchone()
         result = result[0]

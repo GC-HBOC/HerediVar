@@ -24,6 +24,7 @@ def my_lists():
     conn = get_connection()
     user_lists = conn.get_lists_for_user(user_id)
 
+
     # variant view table of lists in pagination
     view_list_id = request.args.get('view', None)
     variants = []
@@ -35,42 +36,50 @@ def my_lists():
     if view_list_id == '':
         return abort(404)
 
-    if view_list_id is not None:
-        is_list_owner = conn.check_user_list_ownership(user_id, view_list_id)
-        #print(is_list_owner)
-        if not is_list_owner:
-            current_app.logger.error(session['user']['preferred_username'] + " attempted view list with id " + str(view_list_id) + ", but this list was not created by him.")
+    if view_list_id is not None: # the user wants to see the list
+        list_permissions = conn.check_list_permission(user_id, view_list_id)
+        if not list_permissions['read']:
+            current_app.logger.error(session['user']['preferred_username'] + " attempted view list with id " + str(view_list_id) + ", but this list was neither created by him nor is it public.")
             return abort(403)
 
-    #user = session['user']['given_name'] + ' ' + session['user']['family_name']
+
     if request.method == 'POST':
         request_type = request.args['type']
         
         # actions on the lists themselves
         if request_type == 'create':
             list_name = request.form['list_name']
-            conn.insert_user_variant_list(user_id, list_name)
-            flash("Successfully created new list: \"" + list_name + "\"", "alert-success")
-            current_app.logger.info(session['user']['preferred_username'] + " successfully created list " + list_name)
-            return redirect(url_for('user.my_lists'))
+            public_read = True if request.form.get('public_read') else False
+            public_edit = True if request.form.get('public_edit') else False
+
+            if not public_read and public_edit:
+                flash("You can not add a public list which is not publicly readable but publicly editable. List was not created.", 'alert-danger')
+            else:
+                conn.insert_user_variant_list(user_id, list_name, public_read, public_edit)
+                flash("Successfully created new list: \"" + list_name + "\"", "alert-success")
+                current_app.logger.info(session['user']['preferred_username'] + " successfully created list " + list_name)
+                return redirect(url_for('user.my_lists'))
         if request_type == 'edit':
             list_name = request.form['list_name']
             list_id = request.form['list_id']
+            public_read = True if request.form.get('public_read') else False
+            public_edit = True if request.form.get('public_edit') else False
+
             if list_id is not None:
-                is_list_owner = conn.check_user_list_ownership(user_id, list_id)
-                if not is_list_owner:
+                list_permissions = conn.check_list_permission(user_id, list_id)
+                if not list_permissions['owner']:
                     return abort(403)
-            conn.update_user_variant_list(list_id, user_id, list_name)
-            flash("Successfully changed list name to \"" + list_name + "\"", "alert-success")
-            current_app.logger.info(session['user']['preferred_username'] + " successfully changed list " + str(list_id) +" name to " + list_name)
-            return redirect(url_for('user.my_lists'))
+            conn.update_user_variant_list(list_id, list_name, public_read, public_edit)
+            flash("Successfully changed list settings.", "alert-success")
+            current_app.logger.info(session['user']['preferred_username'] + " successfully adopted settings for list: " + str(list_id))
+            return redirect(url_for('user.my_lists', view=list_id))
         if request_type == 'delete_list':
             list_id = request.form['list_id']
             if list_id == "":
                 return abort(404)
             if list_id is not None:
-                is_list_owner = conn.check_user_list_ownership(user_id, list_id)
-                if not is_list_owner:
+                list_permissions = conn.check_list_permission(user_id, list_id)
+                if not list_permissions['owner']:
                     return abort(403)
             conn.delete_user_variant_list(list_id)
             flash("Successfully removed list", "alert-success")
@@ -81,15 +90,15 @@ def my_lists():
         if request_type == 'search':
             pass
 
-        if request_type == 'delete_variant':
+        if request_type == 'delete_variant': 
             variant_id_to_delete = request.args['variant_id']
-            conn.delete_variant_from_list(view_list_id, variant_id_to_delete) # list ownership is already tested at the top of this function
+            if not list_permissions['edit']:
+                return abort(403)
+            conn.delete_variant_from_list(view_list_id, variant_id_to_delete)
             url_to_deleted_variant = url_for('variant.display', variant_id=variant_id_to_delete)
             flash(Markup("Successfully removed variant from list! Go <a class='alert-link' href='" + url_to_deleted_variant + "'>here</a> to undo this action."), "alert-success")
 
             return redirect(url_for('user.my_lists', view=view_list_id))
-
-
 
 
     genes = request.args.get('genes', '')
@@ -134,8 +143,7 @@ def my_lists():
                             variants=variants, 
                             page=page, 
                             per_page=per_page, 
-                            pagination=pagination, 
-                            view_list_id=view_list_id)
+                            pagination=pagination)
 
 
 #

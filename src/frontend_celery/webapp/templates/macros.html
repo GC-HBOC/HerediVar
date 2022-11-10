@@ -387,6 +387,100 @@
 </span>
 {% endmacro %}
 
+
+
+{% macro draw_private_symbol(tooltip) %}
+<span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="{{tooltip}}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
+        <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+        <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+    </svg>
+    <div style="display:none;">private</div> <!-- make the search bar work when this is in a table -->
+</span>
+{% endmacro %}
+
+
+{% macro draw_public_symbol(tooltip) %}
+<span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="{{tooltip}}">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-globe2" viewBox="0 0 16 16">
+        <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm7.5-6.923c-.67.204-1.335.82-1.887 1.855-.143.268-.276.56-.395.872.705.157 1.472.257 2.282.287V1.077zM4.249 3.539c.142-.384.304-.744.481-1.078a6.7 6.7 0 0 1 .597-.933A7.01 7.01 0 0 0 3.051 3.05c.362.184.763.349 1.198.49zM3.509 7.5c.036-1.07.188-2.087.436-3.008a9.124 9.124 0 0 1-1.565-.667A6.964 6.964 0 0 0 1.018 7.5h2.49zm1.4-2.741a12.344 12.344 0 0 0-.4 2.741H7.5V5.091c-.91-.03-1.783-.145-2.591-.332zM8.5 5.09V7.5h2.99a12.342 12.342 0 0 0-.399-2.741c-.808.187-1.681.301-2.591.332zM4.51 8.5c.035.987.176 1.914.399 2.741A13.612 13.612 0 0 1 7.5 10.91V8.5H4.51zm3.99 0v2.409c.91.03 1.783.145 2.591.332.223-.827.364-1.754.4-2.741H8.5zm-3.282 3.696c.12.312.252.604.395.872.552 1.035 1.218 1.65 1.887 1.855V11.91c-.81.03-1.577.13-2.282.287zm.11 2.276a6.696 6.696 0 0 1-.598-.933 8.853 8.853 0 0 1-.481-1.079 8.38 8.38 0 0 0-1.198.49 7.01 7.01 0 0 0 2.276 1.522zm-1.383-2.964A13.36 13.36 0 0 1 3.508 8.5h-2.49a6.963 6.963 0 0 0 1.362 3.675c.47-.258.995-.482 1.565-.667zm6.728 2.964a7.009 7.009 0 0 0 2.275-1.521 8.376 8.376 0 0 0-1.197-.49 8.853 8.853 0 0 1-.481 1.078 6.688 6.688 0 0 1-.597.933zM8.5 11.909v3.014c.67-.204 1.335-.82 1.887-1.855.143-.268.276-.56.395-.872A12.63 12.63 0 0 0 8.5 11.91zm3.555-.401c.57.185 1.095.409 1.565.667A6.963 6.963 0 0 0 14.982 8.5h-2.49a13.36 13.36 0 0 1-.437 3.008zM14.982 7.5a6.963 6.963 0 0 0-1.362-3.675c-.47.258-.995.482-1.565.667.248.92.4 1.938.437 3.008h2.49zM11.27 2.461c.177.334.339.694.482 1.078a8.368 8.368 0 0 0 1.196-.49 7.01 7.01 0 0 0-2.275-1.52c.218.283.418.597.597.932zm-.488 1.343a7.765 7.765 0 0 0-.395-.872C9.835 1.897 9.17 1.282 8.5 1.077V4.09c.81-.03 1.577-.13 2.282-.287z"/>
+    </svg>
+    <div style="display:none;">public</div> <!-- make the search bar work when this is in a table -->
+</span>
+{% endmacro %}
+
+
+
+{% macro select_list_modal(lists, href_loc, arguments, display_text) %}
+
+<!-- modal for showing all lists & each list has a customizable link -->
+<div class="modal fade" id="list-add-modal" tabindex="-1" aria-labelledby="list-add-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="list-add-modal-label">Select a list</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+              <div class="modal-body">
+                <div class="ssb">
+                  {{ display_text }}
+                </div>
+                  
+                <div class="table-responsive tableFixHead" >
+                  <table class="table table-hover" id="list-add-table" style="table-layout:auto;">
+                    <thead>
+                      <tr>
+                        <th style="padding-right:0; padding-left:0; background-color:white; width:3.5rem; min-width:3.5rem;">
+                          <div class="sortable"></div><input type="text" class="form-control form-control-sm column-filter" placeholder="search..." autocomplete="off">
+                        </th>
+                        <th style="padding-right:0; padding-left:0; background-color:white;">
+                          <div class="sortable"></div><input type="text" class="form-control form-control-sm column-filter" placeholder="search..." autocomplete="off">
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for list in lists %}
+                        {% if list[4] == 1 or list[5] == 1 %}
+
+                        <tr>
+                            <td style="padding:0">
+                                <form action="{{ url_for(href_loc, selected_list_id=list[0], **arguments) }}" method="post">
+                                    <button class="d-flex justify-content-center dropdown-item {{list[6]}}" style="padding:0.5rem" type="submit">
+                                        {% if list[3] == 1 %} <!-- is public -->
+                                            {{ draw_public_symbol("Public list") }}
+                                        {% else %} <!-- is private -->
+                                            {{ draw_private_symbol("Private list") }}
+                                        {% endif %}
+                                      </button>
+                                </form>
+                            </td>
+                            <td style="padding:0">
+                                <form action="{{ url_for(href_loc, selected_list_id=list[0], **arguments) }}" method="post">
+                                    <button class="dropdown-item {{list[6]}}" style="padding:0.5rem" type="submit">
+                                        {{ list[2] }}
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endif %}
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                
+              </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+  </div>
+  
+
+{% endmacro %}
+
+
+
 {% macro add_variant_banner(variant_oi) %}
 <div class="w-100 ssb">
     <div class="card variant-banner-color left-space-padding">
@@ -419,23 +513,18 @@
 
 
 {% macro external_link(display_text, url) %}
-
-
-{% if display_text == "" or display_text is none or display_text == "nan" or display_text == "missing" %}
-    <div>missing</div>
-{% else %}
-    {% set words = display_text.split(' ') %}
-    {% set first_words = ' '.join(words[0:-1]) %}
-    {% set last_word = words[-1] %}
-    <a class="external_link" href="{{url}}">{{ first_words }} <nobr>{{ last_word }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
-        <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
-        <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
-    </svg></nobr>
-    </a>
-{% endif %}
-
-
-
+    {% if display_text == "" or display_text is none or display_text == "nan" or display_text == "missing" %}
+        <div>missing</div>
+    {% else %}
+        {% set words = display_text.split(' ') %}
+        {% set first_words = ' '.join(words[0:-1]) %}
+        {% set last_word = words[-1] %}
+        <a class="external_link" href="{{url}}">{{ first_words }} <nobr>{{ last_word }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
+            <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
+        </svg></nobr>
+        </a>
+    {% endif %}
 {% endmacro %}
 
 

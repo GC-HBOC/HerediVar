@@ -13,6 +13,24 @@
 </div>
 
 
+
+<div class="bsl bsb">
+  <button class="btn btn-primary" id="list_add_button" data-bs-toggle="modal" data-bs-target="#list-add-modal">Add to list</button>
+</div>
+
+
+<!-- modal for adding multiple variants to a list -->
+{{ macros.select_list_modal(lists,
+                            'variant.search', 
+                            {'genes':request.args.get('genes'), 
+                             'ranges':request.args.get('ranges'), 
+                             'consensus':request.args.getlist('consensus'), 
+                             'user':request.args.getlist('user'), 
+                             'hgvs':request.args.get('hgvs')}, 
+                            "Select a variant list to add all variants which match the current search to it.") }}
+
+
+
 </div>
 
 

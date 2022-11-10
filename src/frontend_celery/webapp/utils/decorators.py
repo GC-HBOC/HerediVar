@@ -25,6 +25,8 @@ def require_login(f):
         
         token = session['tokenResponse']
 
+        #print(token)
+
         # maybe also add: 
         # state=5AzjFWCkQzjmh4YozUfuE8pHytJj3i
         # nonce=fvdZHHR1mmAHBIbCQtgZ

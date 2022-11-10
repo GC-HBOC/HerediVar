@@ -17,7 +17,7 @@ variant_blueprint = Blueprint(
 
 
 #http:#srv018.img.med.uni-tuebingen.de:5000/search?ranges=chr1%3A0-9999999999999%3Bchr2%3A0-99999999999999999999%3BchrMT%3A0-9999999999999999
-@variant_blueprint.route('/search')  # CDH1  chr1:10295758-17027834; chr11:108229378-108229378
+@variant_blueprint.route('/search', methods=('GET', 'POST'))  # CDH1  chr1:10295758-17027834; chr11:108229378-108229378
 @require_login
 def search():
 
@@ -31,10 +31,10 @@ def search():
     if ranges is None:
         flash("You have an error in your range query(s). Please check the syntax! Results are not filtered by ranges.", "alert-danger")
     
-    consensus = request.args.getlist('consensus')
-    consensus = ';'.join(consensus)
-    consensus = preprocess_query(consensus, r'[12345-]?')
-    if consensus is None:
+    consensus_classifications = request.args.getlist('consensus')
+    consensus_classifications = ';'.join(consensus_classifications)
+    consensus_classifications = preprocess_query(consensus_classifications, r'[12345-]?')
+    if consensus_classifications is None:
         flash("You have an error in your consensus class query(s). It must consist of a number between 1-5. Results are not filtered by consensus classification.", "alert-danger")
 
     user = request.args.getlist('user')
@@ -55,13 +55,33 @@ def search():
     if variant_ids_oi is None:
         flash("You have an error in your variant id query(s). It must contain only numbers. Results are not filtered by variants.", "alert-danger")
 
+    user_id = session['user']['user_id']
+
     page = int(request.args.get('page', 1))
     per_page = 20
     conn = get_connection()
-    variants, total = conn.get_variants_page_merged(page, per_page, user_id=session['user']['user_id'], ranges=ranges, genes = genes, consensus=consensus, user=user, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
-
+    variants, total = conn.get_variants_page_merged(page, per_page, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
+    lists = conn.get_lists_for_user(user_id)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
-    return render_template('variant/search.html', variants=variants, page=page, per_page=per_page, pagination=pagination)
+
+    if request.method == 'POST':
+        list_id = request.args.get('selected_list_id')
+        if list_id:
+            list_permission = conn.check_list_permission(user_id, list_id)
+            if not list_permission['owner'] or not list_permission['edit']:
+                flash("You attempted to insert variants to a list which you do not have access to.", "alert-danger")
+                current_app.logger.info(session['user']['preferred_username'] + " attempted to insert variants from the browse variants page to list: " + str(list_id) + ", but he did not have access to it.")
+            else:
+                variants_for_list, _ = conn.get_variants_page_merged(1, "unlimited", user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user, hgvs=hgvs, variant_ids_oi=variant_ids_oi, do_annotate=False)
+                variant_ids = [x[0] for x in variants_for_list]
+                for variant_id in variant_ids:
+                    conn.add_variant_to_list(list_id, variant_id)
+                flash(Markup("Successfully inserted all variants from the current search to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
+                return redirect(url_for('variant.search', genes=request.args.get('genes'), ranges=request.args.get('ranges'), consensus=request.args.getlist('consensus'), user = request.args.getlist('user'), hgvs= request.args.get('hgvs')))
+
+
+    
+    return render_template('variant/search.html', variants=variants, page=page, per_page=per_page, pagination=pagination, lists=lists)
 
 
 # chr1-17027834-G-A
@@ -133,18 +153,22 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
     if request.method == 'POST':
         user_action = request.args.get('action')
+        list_id = request.args.get('selected_list_id')
+        user_id = session['user']['user_id']
+        list_permissions = conn.check_list_permission(user_id, list_id)
+        if not list_permissions['owner'] or not list_permissions['edit']:
+            current_app.logger.error(session['user']['preferred_username'] + " attempted edit list with id " + str(list_id) + ", but this list was not created by him and did not have the right to edit it.")
+            flash('This action is not allowed', 'alert-danger')
+            return abort(403)
+
         if user_action == 'add_to_list':
-            list_id = request.form['list_id']
-            conn.add_variant_to_list(list_id, variant_id) # MAYBE add a check that this list belongs to you!
+            conn.add_variant_to_list(list_id, variant_id)
+            flash(Markup("Successfully inserted variant to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
             return redirect(url_for('variant.display', variant_id=variant_id))
         if user_action == 'remove_from_list':
-            list_id = request.form['list_id']
-            user_id = session['user']['user_id']
-            is_list_owner = conn.check_user_list_ownership(user_id, list_id)
-            if not is_list_owner:
-                current_app.logger.error(session['user']['preferred_username'] + " attempted view list with id " + str(list_id) + ", but this list was not created by him.")
-                return abort(403)
             conn.delete_variant_from_list(list_id, variant_id)
+            flash(Markup("Successfully removed variant to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
+            return redirect(url_for('variant.display', variant_id=variant_id))
 
     if request.args.get('from_reannotate', 'False') == 'True':
         variant_oi = conn.get_one_variant(variant_id)

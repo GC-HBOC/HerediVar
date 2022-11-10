@@ -180,6 +180,7 @@ function get_variant_type(ref, alt) {
 
 // multi level dropdown functionality
 // move to utils.js?
+/*
 (function($bs) {
     const CLASS_NAME = 'has-child-dropdown-show';
     $bs.Dropdown.prototype.toggle = function(_orginal) {
@@ -228,3 +229,4 @@ function get_variant_type(ref, alt) {
         //$(this).dropdown('toggle');
     })
 })(bootstrap);
+*/

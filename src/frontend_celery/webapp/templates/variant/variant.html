@@ -104,38 +104,14 @@
                                     Submit to ClinVar
                                 </button>
                             </div>
-
                         </li>
                         <li>
-                            {% set title = 'Select a list to add this variant to it. If a list is highlighted in blue the current variant is already in that list' %}
-                            {% if lists | length == 0 %}
-                                {% set title = 'You do not have a variant list. Please navigate to the "my-lists" page to create one. The "my-lists" page can be found when clicking on your name at the top right corner of this page.' %}
-                            {% endif %}
-                            <form id="add-to-list-form" method="post" novalidate>
-                                <div class="dropdown dropdown dropend" data-bs-toggle="tooltip" title="{{ title }}" >
-                                    <button class="dropdown-item dropdown-toggle {% if lists | length == 0 %} disabled {% endif %}" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">Add to list</button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        {% for list in lists %}
-                                            <li><button class="variant-list-button dropdown-item {% if list[3] is not none %}active{% endif %}" name="list_id" value="{{ list[0] }}" type="submit"
-                                                {% if list[3] is not none %}action="{{ url_for('variant.display', variant_id=variant[0], action='remove_from_list') }}"{% else %}action="{{ url_for('variant.display', variant_id=variant[0], action='add_to_list') }}"{% endif %}>
-                                                {{ list[2] }}
-                                            </button></li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            </form>
-
+                            <button class="dropdown-item" id="list_add_button" data-bs-toggle="modal" data-bs-target="#list-add-modal">Add to list</button>
                         </li>
                     </ul>
                 </div>
 
-
-            
-
             </div>
-
-            
-
 
         </div>
 
@@ -201,6 +177,16 @@
 
 
 
+<!-- modal for multiple variant to a list -->
+{% set title = 'Select a list to add this variant to it. If a list is highlighted in blue the current variant is already in that list' %}
+{% if lists | length == 0 %}
+    {% set title = 'You do not have a variant list. Please navigate to the "my-lists" page to create one. The "my-lists" page can be found when clicking on your name at the top right corner of this page.' %}
+{% endif %}
+{{ macros.select_list_modal(lists,
+                            'variant.display', 
+                            {'variant_id':variant[0], 
+                             'action':'add_to_list'}, 
+                            title) }}
 
 
 <!--data-masonry='{"percentPosition": true }'-->

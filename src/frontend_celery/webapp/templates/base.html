@@ -44,6 +44,19 @@
                         <a class="nav-link" href="{{url_for('user.admin_dashboard')}}">Admin dashboard</a>
                     </li>
                     {% endif %}
+                    <li class="nav-item">
+                        <span id="minutes"></span>:<span id="seconds"></span>
+                        <script>
+                            var sec = 0;
+                            function pad ( val ) { return val > 9 ? val : "0" + val; }
+                            setInterval( function(){
+                                $("#seconds").html(pad(++sec%60));
+                                $("#minutes").html(pad(parseInt(sec/60,10)));
+                            }, 1000);
+                        </script>
+
+
+                    </li>
                 </ul>
                 <ul class="navbar-nav ">
                     <div class="d-flex align-items-center">

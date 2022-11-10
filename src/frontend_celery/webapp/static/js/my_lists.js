@@ -1,48 +1,4 @@
 
-
-var create_modal = document.getElementById('createModal')
-create_modal.addEventListener('show.bs.modal', function (event) {
-    var button = event.relatedTarget
-    var action_type = button.getAttribute('data-bs-type')
-    var list_name_select = create_modal.querySelector('#list_name')
-    var modal_title = create_modal.querySelector('.modal-title')
-    var submit_button = create_modal.querySelector('#list-modal-submit')
-    var list_id_meta = create_modal.querySelector('#list_id')
-    var delete_button = create_modal.querySelector('#list-modal-submit-delete')
-
-    var preselected_list_name = ''
-    var title = ''
-    var form_action_type = ''
-    var submit_button_title = ''
-    var list_id = ''
-
-    if (action_type == 'edit') {
-        title = 'Edit \"' + button.getAttribute('data-bs-name') + '\"'
-        preselected_list_name = button.getAttribute('data-bs-name')
-        list_id = button.getAttribute('data-bs-id')
-        form_action_type = '/mylists?type=edit'
-        submit_button_title = 'Update'
-        delete_button.disabled = false
-        delete_button.style.visibility = 'visible'
-    }
-
-    if (action_type == 'create') {
-        title = 'Create a new list'
-        form_action_type = '/mylists?type=create'
-        submit_button_title = 'Create'
-        delete_button.disabled = true
-        delete_button.style.visibility = 'hidden'
-    }
-
-
-    modal_title.textContent = title
-    submit_button.textContent = submit_button_title
-    list_id_meta.setAttribute('value', list_id)
-    list_name_select.setAttribute('value', preselected_list_name)
-    create_modal.querySelector('#list-modal-form').setAttribute('action', form_action_type)
-
-});
-
 $(document).ready(function()
 {
     // edit / create button functionality
@@ -64,13 +20,112 @@ $(document).ready(function()
     // add delete column to list variant view
     var variant_table = $('#variantTable')
     variant_table.find('thead').find('tr').append('<td style="text-align:center; font-weight: 650; width:5%">Del</td>')
+    const list_permissions = $('#list-permissions')
+    const can_edit = list_permissions.attr('data-owner') == 1 || list_permissions.attr('data-editable') == 1 
     variant_table.find('tbody').find('tr').each(function(){
         var trow = $(this)
         var variant_id = trow[0].getAttribute("variant_id")
-        create_trashcan(trow, list_id, variant_id)
+        if (can_edit) {
+            create_trashcan(trow, list_id, variant_id)
+        } else {
+            create_xlg(trow)
+        }
+        
     });
 
 });
+
+
+
+
+function public_read_toggle_action() {
+    var read_elem = document.getElementById('public_read')
+    var edit_elem = document.getElementById('public_edit')
+    if (!read_elem.checked) {
+        
+        edit_elem.checked = false
+        edit_elem.disabled = true
+    } else {
+        edit_elem.disabled = false
+    }
+}
+
+
+
+var create_modal = document.getElementById('createModal')
+create_modal.addEventListener('show.bs.modal', function (event) {
+    var button = event.relatedTarget
+    var action_type = button.getAttribute('data-bs-type')
+    var list_name_select = create_modal.querySelector('#list_name')
+    var modal_title = create_modal.querySelector('.modal-title')
+    var submit_button = create_modal.querySelector('#list-modal-submit')
+    var list_id_meta = create_modal.querySelector('#list_id')
+    var delete_button = create_modal.querySelector('#list-modal-submit-delete')
+    var public_read_toggle = create_modal.querySelector('#public_read')
+    var public_edit_toggle = create_modal.querySelector('#public_edit')
+
+    var preselected_list_name = ''
+    var title = ''
+    var form_action_type = ''
+    var submit_button_title = ''
+    var list_id = ''
+
+    if (action_type == 'edit') {
+        title = 'Edit \"' + button.getAttribute('data-bs-name') + '\"'
+        preselected_list_name = button.getAttribute('data-bs-name')
+        list_id = button.getAttribute('data-bs-id')
+        form_action_type = '/mylists?type=edit'
+        submit_button_title = 'Update'
+        delete_button.disabled = false
+        delete_button.style.visibility = 'visible'
+        public_read_toggle.checked = ((button.getAttribute('data-bs-public-read') == '1') ? true : false)
+        public_edit_toggle.checked = ((button.getAttribute('data-bs-public-edit') == '1') ? true : false)
+        public_edit_toggle.disabled = ((button.getAttribute('data-bs-public-read') == '1') ? false : true)
+    }
+
+    if (action_type == 'create') {
+        title = 'Create a new list'
+        form_action_type = '/mylists?type=create'
+        submit_button_title = 'Create'
+        delete_button.disabled = true
+        delete_button.style.visibility = 'hidden'
+        public_read_toggle.checked = false
+        public_edit_toggle.checked = false
+        public_edit_toggle.disabled = true
+    }
+
+
+    modal_title.textContent = title
+    submit_button.textContent = submit_button_title
+    list_id_meta.setAttribute('value', list_id)
+    list_name_select.setAttribute('value', preselected_list_name)
+    create_modal.querySelector('#list-modal-form').setAttribute('action', form_action_type)
+
+});
+
+
+
+function create_xlg(parent) {
+    var td = document.createElement("td")
+    td.setAttribute('style', "text-align:center")
+    parent[0].appendChild(td)
+
+    var image = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+    image.setAttribute('data-bs-toggle', 'tooltip')
+    image.setAttribute('title', "You can not delete this variant from the list because you do not have edit rights on the list.")
+    image.setAttribute("width", 17)
+    image.setAttribute("height", 17)
+    image.setAttribute("fill", "red")
+    image.classList.add("bi")
+    image.classList.add("bi-x-lg")
+    image.setAttribute("viewBox", "0 0 16 16")
+    td.appendChild(image)
+
+    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z")
+    image.appendChild(path)
+}
+
 
 
 
