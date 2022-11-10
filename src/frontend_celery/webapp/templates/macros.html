@@ -153,15 +153,16 @@
                         <textarea type="text" name="ranges" id="ranges"
                                placeholder="chr1:10295758-17027834; chr11:108229378-108229378; ..." class="form-control"
                                >{{ request.args.get('ranges', '') }}</textarea>
+                        <input type="file" name="bed" class="form-control" id="bed" accept=".bed"></input>
+                        <div id="status"></div>
                     </div>
-        
+
                     <div class="form-group sst">
                         <label for="hgvs" class="form-label">HGVS c.</label>
                         <textarea type="text" name="hgvs" id="hgvs"
                                placeholder="ENST00000260947:c.1972C>T; ..." class="form-control"
                                >{{ request.args.get('hgvs', '') }}</textarea>
                     </div>
-
 
                     <div class="form-group sst">
                         {% set selected_consensus = request.args.getlist('consensus') %}
@@ -223,6 +224,10 @@
                                 <label class="form-check-label" for="ucl-">none</label>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="">
+
                     </div>
 
                     {% if request.args.get('view') is not none %}
@@ -310,6 +315,48 @@
 <div id="tabnav-bottom" class="ssb">{{ pagination.links }}</div>
 
 
+<script>
+    // functionality for the bed file upload           
+    function changeStatus(status) {
+        document.getElementById('status').innerHTML = status;
+    }
+
+    function loaded(e) {
+        const fr = e.target;
+        var bed_text = fr.result;
+        var text_area = document.getElementById('ranges')
+
+        // append to text area
+        bed_lines = bed_text.split(/\r\n|\n/);
+        bed_lines.forEach((line) => {
+            line = line.trim()
+            if (line.startsWith('chr')) {
+                parts = line.split('\t')
+                if (parts.length >= 3 ) {
+                    text_area.value = text_area.value + '\n' + parts[0] + ':' + parts[1] + '-' + (parts[2] - 1)
+                }
+            }
+        })
+        text_area.value = text_area.value.trim()
+    }
+
+    function errorHandler(e) {
+        changeStatus('Error: ' + e.target.error.name);
+    }
+
+    document.getElementById('bed').addEventListener('change', function(e) {
+        const file = document.getElementById('bed').files[0];
+    
+        if (file) {
+            const fr = new FileReader();
+    
+            fr.readAsText(file);
+            fr.addEventListener('loadend', loaded);
+            fr.addEventListener('error', errorHandler);
+        }
+    });
+
+</script>
 
 <script>
     // save state of collapse in cookie such that it stays open if the user reloads the page (eg. upon search)

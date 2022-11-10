@@ -17,7 +17,11 @@ variant_blueprint = Blueprint(
 
 
 #http:#srv018.img.med.uni-tuebingen.de:5000/search?ranges=chr1%3A0-9999999999999%3Bchr2%3A0-99999999999999999999%3BchrMT%3A0-9999999999999999
-@variant_blueprint.route('/search', methods=('GET', 'POST'))  # CDH1  chr1:10295758-17027834; chr11:108229378-108229378
+# examples range search:
+#chr1	10295758	17027835	Pos5	0	+	127479365	127480532	255,0,0
+#chr11	108229378	108229379	Neg4	0	-	127480532	127481699	0,0,255
+# CDH1  chr1:10295758-17027834; chr11:108229378-108229378
+@variant_blueprint.route('/search', methods=('GET', 'POST'))  
 @require_login
 def search():
 
@@ -27,6 +31,8 @@ def search():
         flash("You have an error in your genes query(s). Results are not filtered by genes.", "alert-danger")
 
     ranges = request.args.get('ranges', '')
+    if '\t' in ranges:
+        ranges = bed_ranges_to_heredivar_ranges(ranges)
     ranges = preprocess_query(ranges, pattern= r"chr.+:\d+-\d+")
     if ranges is None:
         flash("You have an error in your range query(s). Please check the syntax! Results are not filtered by ranges.", "alert-danger")

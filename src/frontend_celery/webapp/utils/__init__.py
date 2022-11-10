@@ -84,18 +84,22 @@ def save_redirect(target):
 
 
 def preprocess_query(query, pattern = '.*'):
+    seps = get_search_query_separators()
     query = query.strip()
-    query = ''.join(re.split('[ \r\f\v]', query)) # remove whitespace except for newline and tab
-    pattern = re.compile("^(%s[;,\t\n]*)*$" % (pattern, ))
+    query = ''.join(re.split('[ \r\f\v\t]', query)) # remove whitespace except for newline
+    reg = "^(%s" + seps + "*)*$"
+    pattern = re.compile(reg % (pattern, ))
     result = pattern.match(query)
     #print(result.group(0))
     if result is None:
         return None # means that there is an error!
     # split into list
-    query = re.split('[;,\n\t]', query)
+    query = re.split(seps, query)
     query = [x for x in query if x != '']
     return query
 
+def get_search_query_separators():
+    return '[;,\n]'
 
 def get_clinvar_submission_status(clinvar_submission_id, headers): # SUB11770209
     base_url = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions/%s/actions/" % (clinvar_submission_id, )

@@ -354,9 +354,9 @@ def submit_assay(variant_id):
         assay_report = request.files.get('report')
         assay_score = request.form.get('score')
 
-        print(assay_type)
-        print(assay_report)
-        print(assay_score)
+        #print(assay_type)
+        #print(assay_report)
+        #print(assay_score)
 
 
         if not assay_type or not assay_report or not assay_score or not assay_report.filename:
