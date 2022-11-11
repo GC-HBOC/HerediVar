@@ -70,7 +70,8 @@ def save_redirect(target):
 
 
 def get_clinvar_submission_status(clinvar_submission_id, headers): # SUB11770209
-    base_url = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions/%s/actions/" % (clinvar_submission_id, )
+    #"https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions/%s/actions/"
+    base_url = (current_app.config['CLINVAR_API_ENDPOINT'] + "/%s/actions/") % (clinvar_submission_id, )
     print(base_url)
     resp = requests.get(base_url, headers = headers)
     #print(resp)

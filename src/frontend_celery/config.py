@@ -64,6 +64,7 @@ class Config(object):
 
     # orphanet
     ORPHANET_DISCOVERY_URL = "https://api.orphacode.org/EN/ClinicalEntity"
+    ORPHANET_API_KEY = 'HerediVar'
 
 
 class ProdConfig(Config):

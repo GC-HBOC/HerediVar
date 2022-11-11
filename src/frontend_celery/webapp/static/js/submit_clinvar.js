@@ -1,5 +1,4 @@
 
 
-
-autocomplete(document.getElementById("condition"), orphanet_codes);
+autocomplete(document.getElementById("orpha_name"), document.getElementById('orpha_code'), orphanet_codes);
 

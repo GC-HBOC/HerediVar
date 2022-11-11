@@ -155,7 +155,7 @@ def submit_clinvar(variant_id):
         clinvar_accession = clinvar_accession[0]
 
     # fetch orphanet entities for the autocomplete search bar
-    orphanet_json = requests.get(current_app.config['ORPHANET_DISCOVERY_URL'], headers={'apiKey': 'HerediVar'})
+    orphanet_json = requests.get(current_app.config['ORPHANET_DISCOVERY_URL'], headers={'apiKey': current_app.config['ORPHANET_API_KEY']})
     orphanet_json = json.loads(orphanet_json.text)
     orphanet_codes = []
     for entry in orphanet_json:
@@ -163,19 +163,24 @@ def submit_clinvar(variant_id):
             orpha_code = entry['ORPHAcode']
             preferred_term = entry['Preferred term']
             #orpha_definition = entry['Definition']
-            orphanet_codes.append(preferred_term + ': ' + str(orpha_code))
+            orphanet_codes.append([orpha_code, preferred_term + ': ' + str(orpha_code)])
     
     #orphanet_codes = list(orphanet_codes.items())
     #orphanet_codes = [str(x[1]) + ': ' + str(x[0]) for x in orphanet_codes]
     #print(orphanet_codes)
 
     if request.method == 'POST':
-        selected_condition = request.form['condition']
+        selected_orpha_code = request.form['orpha_code']
+        selected_orpha_name = request.form['orpha_name']
         selected_gene = request.form.get('gene', None)
-        if not selected_condition:
+        is_orphanet_valid = any([x[0] == selected_orpha_code for x in orphanet_codes])
+
+        if not selected_orpha_code and not selected_orpha_name:
             flash("All fields are required!", "alert-danger")
-        elif selected_condition not in orphanet_codes:
-            flash("The selected condition contains errors. It MUST be one of the provided autocomplete values.", 'alert-danger')
+        elif (selected_orpha_name.strip() != '' and selected_orpha_code.strip() == ''):
+            flash("The orphanet condition " + selected_orpha_name + " does not exist. Keep in mind to specify the complete condition as shown in the autocomplete suggestions.", 'alert-danger')
+        elif not is_orphanet_valid :
+            flash("The selected orphanet id (" + str(selected_orpha_code) + ") is not valid.", 'alert-danger')
         else:
             # submit to clinvar api
             #base_url = 'https://submit.ncbi.nlm.nih.gov/api/v1/submissions/?dry-run=true'
@@ -186,8 +191,7 @@ def submit_clinvar(variant_id):
             schema_path = path.join(path.dirname(current_app.root_path), current_app.config['RESOURCES_FOLDER'])
             schema = json.loads(open(schema_path + "clinvar_submission_schema.json").read())
 
-            selected_condition_orphanet_id = str(selected_condition.split(': ')[1])
-            data = get_clinvar_submission_json(variant_oi, consensus_classification, selected_gene, selected_condition_orphanet_id, clinvar_accession)
+            data = get_clinvar_submission_json(variant_oi, consensus_classification, selected_gene, selected_orpha_code, clinvar_accession)
 
     
             try:

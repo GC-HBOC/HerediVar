@@ -309,6 +309,13 @@ function autocomplete(inp, id_container, arr) {
                 a.appendChild(b);
             }
         }
+
+        if (total_displayed >= max_displayed) {
+            const cap = document.createElement("caption");
+            cap.setAttribute('class', 'defaultrow');
+            cap.textContent ='... more options available, but not shown';
+            a.appendChild(cap);
+        }
     });
     /*execute a function presses a key on the keyboard:*/
     inp.addEventListener("keydown", function(e) {
