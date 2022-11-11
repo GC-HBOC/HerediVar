@@ -101,40 +101,26 @@ def my_lists():
             return redirect(url_for('user.my_lists', view=view_list_id))
 
 
-    genes = request.args.get('genes', '')
-    genes = preprocess_query(genes)
-    if genes is None:
-        flash("You have an error in your genes query(s). Results are not filtered by genes.", "alert-danger")
-
-    ranges = request.args.get('ranges', '')
-    ranges = preprocess_query(ranges, pattern= r"chr.+:\d+-\d+")
-    if ranges is None:
-        flash("You have an error in your range query(s). Please check the syntax! Results are not filtered by ranges.", "alert-danger")
-    
-    consensus = request.args.getlist('consensus')
-    consensus = ';'.join(consensus)
-    consensus = preprocess_query(consensus, r'[12345-]?')
-    if consensus is None:
-        flash("You have an error in your consensus class query(s). It must consist of a number between 1-5. Results are not filtered by consensus classification.", "alert-danger")
-
-    hgvs = request.args.get('hgvs', '')
-    hgvs = preprocess_query(hgvs, pattern = r".*:?c\..+")
-    if hgvs is None:
-        flash("You have an error in your hgvs query(s). Please check the syntax! c.HGVS should be prefixed by this pattern: 'transcript:c.' Results are not filtered by hgvs.", "alert-danger")
-    if any(not(x.startswith('ENST') or x.startswith('NM') or x.startswith('NR') or x.startswith('XM') or x.startswith('XR')) for x in hgvs):
-        flash("You are probably searching for a HGVS c-dot string without knowing its transcript. Be careful with the search results as they might not contain the variant you are looking for!", "alert-warning")
-
-    variant_ids_oi = request.args.get('variant_ids_oi', '')
-    variant_ids_oi = preprocess_query(variant_ids_oi, r'\d*')
-    if variant_ids_oi is None:
-        flash("You have an error in your variant id query(s). It must contain only numbers. Results are not filtered by variants.", "alert-danger")
-
-
-
     if view_list_id is not None:
+        genes = extract_genes(request)
+        ranges = extract_ranges(request)
+        consensus_classifications = extract_consensus_classifications(request)
+        user_classifications = extract_user_classifications(request)
+        hgvs = extract_hgvs(request)
+        variant_ids_from_lookup_list = extract_lookup_list(request, user_id, conn)
         variant_ids_oi = conn.get_variant_ids_from_list(view_list_id)
+        if variant_ids_from_lookup_list is not None and len(variant_ids_from_lookup_list) != 0:
+            variant_ids_oi = list(set(none_to_empty_list(variant_ids_from_lookup_list)) & set(none_to_empty_list(variant_ids_oi))) # take the intersection of the two lists
+
         if len(variant_ids_oi) > 0:
-            variants, total = conn.get_variants_page_merged(page, per_page, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
+            variants, total = conn.get_variants_page_merged(page, per_page, 
+                                                            user_id=user_id, 
+                                                            ranges=ranges, 
+                                                            genes = genes, 
+                                                            consensus=consensus_classifications, 
+                                                            user=user_classifications, 
+                                                            hgvs=hgvs, 
+                                                            variant_ids_oi=variant_ids_oi)
     #print(variants)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
     

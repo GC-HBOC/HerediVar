@@ -108,7 +108,7 @@
 {% endmacro %}
 
 
-{% macro draw_paginated_variant_table(pagination, variants) %}
+{% macro draw_paginated_variant_table(pagination, variants, lists=none) %}
 <div id="tabnav-head" class="row align-items-end">
     <div class="col">{{ pagination.links }}</div>
 
@@ -226,9 +226,15 @@
                         </div>
                     </div>
 
-                    <div class="">
-
+                    {% if lists is not none %}
+                    <div class="form-group sst">
+                        <label for="lookup_list_name" class="form-label">List</label>
+                        <div class="autocomplete" style="width:100%">
+                            <input id="lookup_list_id" name="lookup_list_id" type="text" value="{{ request.args.get('lookup_list_id', '') }}" style="display:none">
+                            <input value="{{ request.args.get('lookup_list_name', '') }}" id="lookup_list_name" class="form-control" name="lookup_list_name" type="text" placeholder="Select a list... start search by typing">
+                        </div>
                     </div>
+                    {% endif %}
 
                     {% if request.args.get('view') is not none %}
                         <input type="hidden" name="view" id="view" value="{{request.args.get('view')}}">
@@ -314,6 +320,24 @@
 
 <div id="tabnav-bottom" class="ssb">{{ pagination.links }}</div>
 
+
+<script>
+    const lists = JSON.parse('{{lists | tojson | safe}}');
+
+    for (var i = 0; i < lists.length; i++) {
+        current_list = lists[i]
+        if (current_list[3] == 1 || current_list[5] == 1) {
+            var list_id = lists[i][0]
+            var list_name = lists[i][2]
+            lists[i] = [list_id, list_name]
+        }
+    }
+
+
+    autocomplete(document.getElementById("lookup_list_name"), document.getElementById("lookup_list_id"), lists);
+
+
+</script>
 
 <script>
     // functionality for the bed file upload           

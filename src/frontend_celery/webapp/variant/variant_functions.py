@@ -432,27 +432,3 @@ def get_clinvar_submission(variant_id, conn):
     return clinvar_submission
 
 
-def bed_ranges_to_heredivar_ranges(ranges):
-    ranges = re.split('[\n]', ranges)
-    result = []
-    for range_entry in ranges:
-        range_entry = range_entry.strip()
-        if '\t' in range_entry: # it is a bed style range
-            new_heredivar_range = convert_bed_line_to_heredivar_range(range_entry)
-            if new_heredivar_range is not None:
-                result.append(new_heredivar_range)
-        else: # it is already a heredivar style range
-            result.append(range_entry)
-    return ';'.join(result)
-
-
-def convert_bed_line_to_heredivar_range(bed_line):
-    parts = bed_line.split('\t')
-    chrom = parts[0]
-    chr_num = functions.validate_chr(chrom)
-    if chr_num is None:
-        return None
-    chrom = 'chr' + str(chr_num)
-    start = parts[1] # bed ranges are zero based at the start position
-    end = int(parts[2]) - 1 # bed ranges are one based at the end position -> need to substract one because mysql has start and end zero based when using BETWEEN operator
-    return chrom + ':' + str(start) + '-' + str(end)

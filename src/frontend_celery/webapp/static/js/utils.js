@@ -1,110 +1,5 @@
 
 
-//////////////////////////////////////////////////////////////
-////////////////// activating functionality //////////////////
-//////////////////////////////////////////////////////////////
-
-$(document).ready(function()
-{
-    // form validation
-    // listens on the class validationreq
-    $(".validationreq").focus(function(){
-        $(this).parent().removeClass("was-validated");
-    });
-    $(".validationreq").blur(function(){
-        if ($(this).attr('type') !== 'checkbox'){ // do not show validation colors for checkboxes as they should be fine no matter what you tick!
-            $(this).parent().addClass("was-validated");
-            $(".form-control:valid").parent().removeClass("was-validated");
-        }
-    });
-
-    // add default row to all empty tables
-    $(".table").map(function() {
-        var nrows = $(this).find("tbody").find("tr").length
-        if (nrows === 0) {
-            add_default_caption($(this).get(0))
-        }
-    });
-
-    // activate bootstrap tooltips
-    $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
-    $('.large-tt').tooltip({
-        template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner large"></div></div>'
-    });
-
-    // activate bootstrap popovers
-    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
-    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-      return new bootstrap.Popover(popoverTriggerEl)
-    })
-    
-    // activate table column sorting on click
-    $('.sortable').click(function(e) {
-        const table_id = '#' + $(this).parents('table').attr('id')
-        table_sorter([$(this).parents('th').index()], table_id)
-    });
-
-    // functionality for column filters in tables
-    $(".column-filter").on("keyup", function() {
-        var table = $(this).parents('table').get(0)
-        //var index = $(this).parents('th').index()
-        filterTable_multiple_columns($(this).val(), table, true)
-    });
-
-    // activate links on EVERY object
-    $("*[data-href]").click(function(event) {
-        switch (event.which) {
-            case 1: // left mouse button
-                window.location = $(this).data("href"); // open link in same tab
-                break;
-            case 3: // right mouse button
-                // nothing rn
-                break;
-        }
-    });
-
-    // activate middle mouse button links
-    // mousedown is preferred here because middle mouse button also triggers
-    // fast scrolling on mousedown
-    $("*[data-href]").mousedown(function(event) {
-        switch (event.which) {
-            case 2: // middle mouse button
-                window.open($(this).data("href")); // open in new tab
-                break;
-        }
-    });
-
-    //$('.wide-tooltip').find('.tooltip-inner').addClass('.wide-inner-tooltip')
-
-    // coloring of consensus classification
-    document.getElementsByName('class-label').forEach(function(obj) {
-        var consensus_classification = obj.getAttribute('classification').trim();
-        var base_color = get_consensus_classification_color(consensus_classification)
-
-        obj.setAttribute('style', 'color:'+base_color)
-
-        //$('#class-label').css({'color': base_color});
-    
-        if (["1", "2", "3", "4", "5"].includes(consensus_classification)) {
-            tooltip_text = "This variant has been classified by the VUS task-force with the class " + consensus_classification
-        } else {
-            tooltip_text = "This variant has not been classified by the VUS task-force yet."
-        }
-    
-        obj.querySelector("#theC").setAttribute('title', tooltip_text);
-    });
-
-    document.getElementsByName('consensus_class_display').forEach(function(obj) {
-        var consensus_classification = obj.getAttribute('classification').trim()
-        var base_color = get_consensus_classification_color(consensus_classification)
-        obj.setAttribute('style', 'background-color:'+base_color)
-    });
-});
-
-
-
-
-
 ////////////////////////////////////////////////////////////////
 ////////////////// filter table functionality //////////////////
 ////////////////////////////////////////////////////////////////
@@ -360,6 +255,117 @@ function convert_string_to_bool(s) {
 }
 
 
+
+
+function autocomplete(inp, id_container, arr) {
+    /*the autocomplete function takes two arguments,
+    the text field element and an array of possible autocompleted values:*/
+    // the arr array should contain arrays of length 2 the first index containing an identifier
+    // which is saved to the id container if it is selected and the other containing the display name
+    var currentFocus;
+    /*execute a function when someone writes in the text field:*/
+    inp.addEventListener("input", function(e) {
+        var a, b, i, val = this.value;
+        /*remove id and add it again if we have a match*/
+        id_container.value = '';
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i][1] == val) {
+                id_container.value = arr[i][0];
+            }
+        }
+        /*close any already open lists of autocompleted values*/
+        closeAllLists();
+        if (!val) { return false;}
+        currentFocus = -1;
+        /*create a DIV element that will contain the items (values):*/
+        a = document.createElement("DIV");
+        a.setAttribute("id", this.id + "autocomplete-list");
+        a.setAttribute("class", "autocomplete-items");
+
+        this.parentNode.appendChild(a);
+        var total_displayed = 0;
+        const max_displayed = 100;
+        for (i = 0; i < arr.length; i++) {
+            var element_id = arr[i][0]
+            var element_name = arr[i][1]
+            const match_index = element_name.toUpperCase().indexOf(val.toUpperCase())
+            if (match_index !== -1 && total_displayed < max_displayed) {
+                /*create a DIV element for each matching element:*/
+                b = document.createElement("DIV");
+                total_displayed += 1;
+                /*make the matching letters bold:*/
+                b.innerHTML = element_name.substr(0, match_index);
+                b.innerHTML += "<strong>" + element_name.substr(match_index, val.length) + "</strong>";
+                b.innerHTML += element_name.substr(match_index + val.length);
+                b.setAttribute("data-element-name", element_name)
+                b.setAttribute("data-element-id", element_id)
+                /*execute a function when someone clicks on the item value (DIV element):*/
+                b.addEventListener("click", function(e) {
+                    /*insert the value for the autocomplete text field:*/
+                    inp.value = this.getAttribute("data-element-name");
+                    id_container.value = this.getAttribute("data-element-id");
+                    closeAllLists();
+                });
+                a.appendChild(b);
+            }
+        }
+    });
+    /*execute a function presses a key on the keyboard:*/
+    inp.addEventListener("keydown", function(e) {
+        var x = document.getElementById(this.id + "autocomplete-list");
+        if (x) x = x.getElementsByTagName("div");
+        if (e.keyCode == 40) {
+            /*If the arrow DOWN key is pressed,
+            increase the currentFocus variable:*/
+            currentFocus++;
+            /*and and make the current item more visible:*/
+            addActive(x);
+        } else if (e.keyCode == 38) { //up
+            /*If the arrow UP key is pressed,
+            decrease the currentFocus variable:*/
+            currentFocus--;
+            /*and and make the current item more visible:*/
+            addActive(x);
+        } else if (e.keyCode == 13) {
+            /*If the ENTER key is pressed, prevent the form from being submitted,*/
+            e.preventDefault();
+            if (currentFocus > -1) {
+              /*and simulate a click on the "active" item:*/
+              if (x) x[currentFocus].click();
+            }
+        }
+    });
+    function addActive(x) {
+        /*a function to classify an item as "active":*/
+        if (!x) return false;
+        /*start by removing the "active" class on all items:*/
+        removeActive(x);
+        if (currentFocus >= x.length) currentFocus = 0;
+        if (currentFocus < 0) currentFocus = (x.length - 1);
+        /*add class "autocomplete-active":*/
+        x[currentFocus].classList.add("autocomplete-active");
+    }
+    function removeActive(x) {
+        /*a function to remove the "active" class from all autocomplete items:*/
+        for (var i = 0; i < x.length; i++) {
+            x[i].classList.remove("autocomplete-active");
+        }
+    }
+    function closeAllLists(elmnt) {
+        /*close all autocomplete lists in the document,
+        except the one passed as an argument:*/
+        var x = document.getElementsByClassName("autocomplete-items");
+        for (var i = 0; i < x.length; i++) {
+            if (elmnt != x[i] && elmnt != inp) {
+                x[i].parentNode.removeChild(x[i]);
+            }
+        }
+    }
+    /*execute a function when someone clicks in the document:*/
+    document.addEventListener("click", function (e) {
+        closeAllLists(e.target);
+    });
+} 
 
 
 ///////////////////////////////////////////////////////////////

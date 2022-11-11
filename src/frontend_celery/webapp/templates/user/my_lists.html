@@ -70,7 +70,7 @@
 
         <div id="list-content" class="sst bsl">
             {% if request.args.get('view') is not none %}
-                {{ macros.draw_paginated_variant_table(pagination, variants) }}
+                {{ macros.draw_paginated_variant_table(pagination, variants, lists=user_lists) }}
             {% else %}
                 <div class="display-5" style="text-align:center;">
                     Please select a list to view its content!

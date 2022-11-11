@@ -8,6 +8,7 @@ sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath
 from common.db_IO import Connection
 import common.functions as functions
 from .decorators import *
+from .search_utils import *
 from urllib.parse import urlparse, urljoin
 from ..tasks import annotate_variant
 #import celery_module
@@ -42,26 +43,10 @@ def start_annotation_service(variant_id = None, annotation_queue_id = None):
     return task.id
 
 
-
-
-
-
-def preprocess_search_query(query):
-    res = re.search("(.*)(%.*%)", query)
-    ext = ''
-    if res is not None:
-        query = res.group(1)
-        ext = res.group(2)
-    query = query.strip()
-    if query.startswith(("HGNC:", "hgnc:")):
-        return "gene", query[5:]
-    if "%gene%" in ext:
-        return "gene", query
-    if "c." in query or "p." in query or "%hgvs%" in ext:
-        return "hgvs", query
-    if "-" in query or "%range%" in ext:
-        return "range", query
-    return "standard", query
+def none_to_empty_list(obj):
+    if obj is None:
+        return []
+    return obj
 
 
 # this prevents open redirects
@@ -83,23 +68,6 @@ def save_redirect(target):
     return redirect(target) # url is save to redirect to!
 
 
-def preprocess_query(query, pattern = '.*'):
-    seps = get_search_query_separators()
-    query = query.strip()
-    query = ''.join(re.split('[ \r\f\v\t]', query)) # remove whitespace except for newline
-    reg = "^(%s" + seps + "*)*$"
-    pattern = re.compile(reg % (pattern, ))
-    result = pattern.match(query)
-    #print(result.group(0))
-    if result is None:
-        return None # means that there is an error!
-    # split into list
-    query = re.split(seps, query)
-    query = [x for x in query if x != '']
-    return query
-
-def get_search_query_separators():
-    return '[;,\n]'
 
 def get_clinvar_submission_status(clinvar_submission_id, headers): # SUB11770209
     base_url = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions/%s/actions/" % (clinvar_submission_id, )

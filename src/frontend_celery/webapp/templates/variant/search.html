@@ -9,7 +9,7 @@
 <h1 class="bst"> {% block title %} Browse variants {% endblock %} </h1>
 
 <div id="list-content" class="sst" style="padding-left:1rem; padding-right:1rem">
-  {{ macros.draw_paginated_variant_table(pagination, variants) }}
+  {{ macros.draw_paginated_variant_table(pagination, variants, lists=lists) }}
 </div>
 
 
