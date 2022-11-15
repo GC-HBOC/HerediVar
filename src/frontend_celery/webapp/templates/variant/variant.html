@@ -10,7 +10,7 @@
         <div class="flex-grow-1">
             <!-- title -->
             <h1>
-                <div id="variant_page_title" style="word-break:break-all; width:95%;" ref="{{ variant[3] }}" alt="{{ variant[4] }}">
+                <div id="variant_page_title" style="word-break:break-all; width:95%;" chrom="{{ variant[1] }}" pos="{{ variant[2] }}" ref="{{ variant[3] }}" alt="{{ variant[4] }}">
                     : {% block title %} {{ variant[1] }}-{{ variant[2] }}-{{ variant[3] }}-{{ variant[4] }} {% endblock %}(GRCh38)
                 </div>
             </h1>
@@ -276,11 +276,16 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="literature-tab" data-bs-toggle="tab" data-bs-target="#literature" type="button" role="tab" aria-controls="literature" aria-selected="false">Literature</button>
     </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="igv-tab" data-bs-toggle="tab" data-bs-target="#igv" type="button" role="tab" aria-controls="igv" aria-selected="false">IGV</button>
+    </li>
 </ul>
 
 
 <!-- tab content -->
 <div class="tab-content" id="TabContent">
+
+
     <div class="tab-pane fade show active" id="classification" role="tabpanel" aria-labelledby="classification-tab">
             
             
@@ -768,7 +773,22 @@
 
 
 
+
     </div>
+    <div class="tab-pane fade" id="igv" role="tabpanel" aria-labelledby="igv-tab">
+        <div class="w-100 ssb">
+            <div class="card" style="border-top:0; border-top-left-radius: 0; border-top-right-radius: 0;">
+                <div class="card-body">
+                    <h4 class="card-subcaption">IGV</h4>
+    
+                    <p class="card-text">
+                        <div id="igv-container"></div>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 

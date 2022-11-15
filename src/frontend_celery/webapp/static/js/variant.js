@@ -42,6 +42,8 @@ $(document).ready(function()
     // set the title of the page
     var variant_page_title_obj = document.getElementById('variant_page_title')
     var title = variant_page_title_obj.innerText
+    const chrom = variant_page_title_obj.getAttribute('chrom')
+    const pos = parseInt(variant_page_title_obj.getAttribute('pos'))
     const ref = variant_page_title_obj.getAttribute('ref')
     const alt = variant_page_title_obj.getAttribute('alt')
     title = get_variant_type(ref, alt) + title
@@ -58,6 +60,11 @@ $(document).ready(function()
         console.log(status_url)
         update_annotation_status(status_url);
     }
+
+
+    $('#igv-tab').one('show.bs.tab', function() { // gets called only the first time you switch to the igv tab
+        setup_igv(chrom, pos-100, pos+100, variant_id = $('#variant_id_container').data()['variantId'])
+    })
     
 });
 
@@ -175,6 +182,55 @@ function get_variant_type(ref, alt) {
         variant_type = "Insertion (" + String(alt_len-ref_len) + " bp)"
     }
     return variant_type
+}
+
+
+function setup_igv(chrom, start, end, variant_id) {
+    var igvDiv = document.getElementById("igv-container");
+    loc = chrom.toString() + ":" + start.toString() + '-' + end.toString()
+    var options = {
+        locus: loc,
+        reference: {
+            "id": "GRCh38",
+            "name": "Human (GRCh38/hg38)",
+            "fastaURL": "https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg38/hg38.fa",
+            "indexURL": "https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg38/hg38.fa.fai",
+            "tracks": [
+                {
+                    "name": "Refseq genes",
+                    "url": "https://s3.amazonaws.com/igv.org.genomes/hg38/refGene.txt.gz",
+                    "order": 1000000,
+                    "indexed": false
+                },
+                {
+                    "name": "Variant",
+                    "type": "variant",
+                    "format": "vcf",
+                    "url": "../download/vcf/one_variant?variant_id=" + variant_id.toString(),
+                    "indexed": false,
+                    "color": "red"
+                },
+                {
+                    "name": "Classified variants",
+                    "type": "variant",
+                    "format": "vcf",
+                    "url": "../download/vcf/classified",
+                    "indexed": false,
+                    "color": function(variant) {
+                        if ('consensus_classification' in variant.info) {
+                            const consensus_classification = variant.info['consensus_classification']
+                            const consensus_class = consensus_classification.split('|')[0] // extract the actual class
+                            return get_consensus_classification_color(consensus_class)
+                        } else {
+                            return get_consensus_classification_color('-')
+                        }
+                    }
+                }
+            ]
+        }
+    };
+
+    igv.createBrowser(igvDiv, options)
 }
 
 

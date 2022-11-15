@@ -80,7 +80,7 @@
 
             {% if request.args.get('view') is not none and variants|length > 0 %}
             <div class="d-flex justify-content-end">
-                <button data-href="{{ url_for('download.variant', list_id=request.args.get('view')) }}" class="btn btn-primary">Export list to VCF</button>
+                <button data-href="{{ url_for('download.variant_list', list_id=request.args.get('view')) }}" class="btn btn-primary">Export list to VCF</button>
             </div>
             {% endif %}
         </div>
