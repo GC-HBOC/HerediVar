@@ -10,6 +10,8 @@ import io
 import tempfile
 from shutil import copyfileobj
 import re
+import os
+import uuid
 
 
 download_blueprint = Blueprint(
@@ -73,39 +75,126 @@ def log_file(log_file):
 
 
 
-@download_blueprint.route('/download/vcf')
-@require_login
-def variant():
 
+
+# listens on get parameter:
+@download_blueprint.route('/download/vcf/classified')
+def classified_variants():
+
+    classified_variants_folder = current_app.static_folder + "/files/classified_variants"
+    last_dump_path = classified_variants_folder + "/.last_dump.txt"
+    read_from_file = False
+    last_dump_date = functions.get_today() # override with last dump date if there is one
+    if os.path.isfile(last_dump_path):
+        with open(last_dump_path, 'r') as last_dump_file:
+            last_dump_date = last_dump_file.read()
+            days_since_dump = functions.days_between(functions.get_today(), last_dump_date)
+            if days_since_dump <= 7:
+                read_from_file = True
+            if days_since_dump > 7:
+                last_dump_date = functions.get_today()
+
+    path_to_download = classified_variants_folder + "/" + last_dump_date + ".vcf"
+
+    # generate a new vcf file
+    if not read_from_file:
+        with open(last_dump_path, 'w') as last_dump_file:
+            last_dump_file.write(functions.get_today())
+
+        conn = get_connection()
+        variants_oi = conn.get_variant_ids_with_consensus_classification()
+
+        force_url = url_for("download.classified_variants", force = True)
+        redirect_url = url_for("main.index")
+
+        vcf_file_buffer, x, xx, xxx = get_vcf(variants_oi, conn)
+
+        functions.buffer_to_file_system(vcf_file_buffer, path_to_download)
+
+    returncode, err_msg, vcf_errors = functions.check_vcf(path_to_download)
+
+    if returncode != 0:
+        if request.args.get('force') is None:
+            flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
+            current_app.logger.error(session['user']['preferred_username'] + " tried to download a all classified variants as vcf, but it contains errors: " + vcf_errors)
+            return redirect(redirect_url)
+
+
+    current_app.logger.info(session['user']['preferred_username'] + " successfully downloaded vcf of all classified variants.")
+
+
+    return send_file(path_to_download, as_attachment=True, mimetype="text/vcf")
+
+
+
+
+
+# listens on get parameter: list_id
+@download_blueprint.route('/download/vcf/variant_list')
+@require_login
+def variant_list():
     conn = get_connection()
 
-    variant_id = request.args.get('variant_id')
     list_id = request.args.get('list_id')
-
-    if variant_id is None and list_id is None:
+    if list_id is None:
         return abort(404)
-    
-    if variant_id is not None and list_id is not None:
-        return abort(404)
-    
     variants_oi = None
-    # check if the logged in user is the owner of this list
+    # check that the logged in user is the owner of this list
     if list_id is not None:
         user_id = session['user']['user_id']
         is_list_owner = conn.check_user_list_ownership(user_id, list_id)
         if not is_list_owner:
             current_app.logger.error(session['user']['preferred_username'] + " attempted download of list with id " + str(list_id) + ", but this list was not created by him.")
             return abort(403)
-            #return redirect(url_for('doc.error', code='403', text='No permission to view this variant list!'))
-
-        variants_oi = conn.get_variant_ids_from_list(list_id)
-        #variants_oi = [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 52, 53, 54, 55, 56, 70, 71, 72, 119, 120, 121, 126, 127, 130, 135, 139, 141, 143, 144, 145, 146, 161, 164]
-
-    if variant_id is not None:
-        variants_oi = [variant_id]
-    
+        variants_oi = conn.get_variant_ids_from_list(list_id)    
     if variants_oi is None:
-        abort(505, "No variants were found for download. Remember to put arguments variant_id or list_id in url get parameters.")
+        abort(505, "No variants were found for download. Remember to put arguments list_id in url get parameters.")
+
+    force_url = url_for("download.variant_list", list_id = list_id, force = True)
+    redirect_url = url_for("user.my_lists", view = list_id)
+    download_file_name = "list_" + str(list_id) + ".vcf"
+
+    vcf_file_buffer, status, vcf_errors, err_msg = get_vcf(variants_oi, conn)
+
+    if status == "redirect":
+        flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
+        current_app.logger.error(session['user']['preferred_username'] + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant list " + str(list_id))
+        return redirect(redirect_url)
+
+    current_app.logger.info(session['user']['preferred_username'] + " downloaded vcf of variant list: " + str(list_id))
+    
+    return send_file(vcf_file_buffer, as_attachment=True, download_name=download_file_name, mimetype="text/vcf")
+
+
+
+# listens on get parameter: variant_id
+@download_blueprint.route('/download/vcf/one_variant')
+def variant():
+    conn = get_connection()
+
+    variant_oi = request.args.get('variant_id')
+    if variant_oi is None:
+        return abort(404)
+
+    force_url = url_for("download.variant", variant_id = variant_oi, force=True)
+    redirect_url = url_for('variant.display', variant_id = variant_oi)
+    download_file_name = "variant_" + str(variant_oi) + ".vcf"
+
+    vcf_file_buffer, status, vcf_errors, err_msg = get_vcf([variant_oi], conn)
+
+    if status == 'redirect':
+        flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
+        current_app.logger.error(session['user']['preferred_username'] + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant ids: " + str(variant_oi))
+        return redirect(redirect_url)
+
+    current_app.logger.info(session['user']['preferred_username'] + " downloaded vcf of variant id: " + str(variant_oi))
+
+    return send_file(vcf_file_buffer, as_attachment=True, download_name=download_file_name, mimetype="text/vcf")
+
+
+
+def get_vcf(variants_oi, conn):
+    status = 'success'
 
     final_info_headers = {}
     all_variant_vcf_lines = []
@@ -114,8 +203,6 @@ def variant():
         all_variant_vcf_lines.append(variant_vcf)
         final_info_headers = merge_info_headers(final_info_headers, info_headers)
     
-
-
     helper = io.StringIO()
     printable_info_headers = list(final_info_headers.values())
     printable_info_headers.sort()
@@ -123,44 +210,40 @@ def variant():
     for line in all_variant_vcf_lines:
         helper.write(line + '\n')
 
-
     buffer = io.BytesIO()
     buffer.write(helper.getvalue().encode())
     buffer.seek(0)
 
-
-    temp_file_path = tempfile.gettempdir() + "/variant_download.vcf"
+    temp_file_path = tempfile.gettempdir() + "/variant_download_" + str(uuid.uuid4()) + ".vcf"
     with open(temp_file_path, 'w') as tf:
         helper.seek(0)
         copyfileobj(helper, tf)
     helper.close()
 
-    # set some variables depending on the input data
-    if variant_id is not None:
-        force_url = url_for("download.variant", variant_id = variant_id, force=True)
-        redirect_url = url_for('variant.display', variant_id=variant_id)
-        download_file_name = "variant_" + str(variant_id) + ".vcf"
-    elif list_id is not None:
-        force_url = url_for("download.variant", list_id = list_id, force = True)
-        redirect_url = url_for("user.my_lists", view = list_id)
-        download_file_name = "list_" + str(list_id) + ".vcf"
-
     returncode, err_msg, vcf_errors = functions.check_vcf(temp_file_path)
+
+    os.remove(temp_file_path)
 
     if returncode != 0:
         if request.args.get('force') is None:
-            flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
-            current_app.logger.error(session['user']['preferred_username'] + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant id " + str(variant_id) + " or user variant list " + str(list_id))
-            return redirect(redirect_url)
+            status = "redirect"
+            return None, status, vcf_errors, err_msg
 
-    current_app.logger.info(session['user']['preferred_username'] + " downloaded vcf of variant id: " + str(variant_id) + " or user variant list: " + str(list_id))
+    return buffer, status, "", ""
+
     
-    return send_file(buffer, as_attachment=True, download_name=download_file_name, mimetype="text/vcf")
+
+
+
+
+
+
+
+
 
 
 def merge_info_headers(old_headers, new_headers):
     return {**old_headers, **new_headers}
-
 
 
 def get_variant_vcf_line(variant_id, conn):
@@ -220,7 +303,7 @@ def get_variant_vcf_line(variant_id, conn):
     
         elif key == 'consensus_classification':
             # this has the same format as the individual user_classifications
-            info_headers[key] = '##INFO=<ID=' + key + ',Number=1,Type=Integer,Description="The recent consensus classification by the VUS-task-force. Format: consensus_class|consensus_comment|submission_date|consensus_scheme|consensus_scheme_class|consensus_criteria_string. The consensus criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence ">\n'
+            info_headers[key] = '##INFO=<ID=' + key + ',Number=1,Type=String,Description="The recent consensus classification by the VUS-task-force. Format: consensus_class|consensus_comment|submission_date|consensus_scheme|consensus_scheme_class|consensus_criteria_string. The consensus criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence ">\n'
             consensus_classification = annotations[key][0] # [0], because this contains only the most recent consensus classification
             # no versioning - handled by consensus_date info column
             consensus_class = consensus_classification[3]
@@ -240,7 +323,7 @@ def get_variant_vcf_line(variant_id, conn):
             resp = calculate_class(consensus_classification[13], all_criteria)
             consensus_scheme_class = str(resp.get_json()['final_class'])
             consensus_classification_vcf = "~7C".join([consensus_class, consensus_comment, submission_date, consensus_scheme, consensus_scheme_class, consensus_criteria_string]) # sep: |
-            print("consensus classification: " + functions.encode_vcf(consensus_classification_vcf))
+            #print("consensus classification: " + functions.encode_vcf(consensus_classification_vcf))
             info = functions.collect_info(info, key + '=', functions.encode_vcf(consensus_classification_vcf))
     
         elif key == 'user_classifications':
@@ -267,7 +350,7 @@ def get_variant_vcf_line(variant_id, conn):
                 user_scheme_class = str(resp.get_json()['final_class'])
                 current_user_classification_vcf = "~7C".join([user_class, user_comment, submission_date, user_scheme, user_scheme_class, user_criteria_string]) # sep: |
                 user_classifications_vcf = functions.collect_info(user_classifications_vcf, "", current_user_classification_vcf, sep = "~26") # sep: &
-            print("User classification: " + functions.encode_vcf(user_classifications_vcf))
+            #print("User classification: " + functions.encode_vcf(user_classifications_vcf))
             info = functions.collect_info(info, key + "=", functions.encode_vcf(user_classifications_vcf))
 
         elif key == 'heredicare_center_classifications':

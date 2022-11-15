@@ -70,10 +70,10 @@ def read_vcf_variant(path):
     return all_records
 
 
-def write_vcf_header(info_columns, output_func = print, tail = ""):
+def write_vcf_header(info_columns, output_func = print, tail = "", reference_genome="GRCh38"):
     output_func("##fileformat=VCFv4.2" + tail)
     output_func("##fileDate=" + datetime.datetime.today().strftime('%Y-%m-%d') + tail)
-    output_func("##reference=GRCh38" + tail)
+    output_func("##reference=" + reference_genome + tail)
     for info_column in info_columns:
         output_func(info_column.strip() + tail)
     output_func("#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO" + tail)
@@ -412,9 +412,9 @@ def curate_transcripts(key, value):
     return ','.join(value)
 
 
-def complement(seq):
+def complement(seq, missing_data = "NA"):
     seq = seq.upper()
-    if seq == 'NA': # considered to be missing data (as used in the TP53 database)
+    if seq == missing_data: # considered to be missing data (as used in the TP53 database)
         return ''
     seq = seq.replace('A', 't')
     seq = seq.replace('T', 'a')
@@ -486,6 +486,17 @@ def get_today():
 
 def get_now():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+
+def days_between(d1, d2):
+    d1 = datetime.datetime.strptime(d1, "%Y-%m-%d")
+    d2 = datetime.datetime.strptime(d2, "%Y-%m-%d")
+    return abs((d2 - d1).days)
+
+def buffer_to_file_system(buffer, path):
+    with open(path, 'w') as f:
+        for line in buffer:
+            f.write(line.decode('utf8'))
 
 
 def is_snv(one_var):

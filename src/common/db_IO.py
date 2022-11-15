@@ -470,6 +470,12 @@ class Connection:
         res = self.cursor.fetchall()
         return [x[0] for x in res]
 
+    def get_variant_ids_with_consensus_classification(self):
+        command = "SELECT DISTINCT variant_id FROM consensus_classification"
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        return [x[0] for x in res]
+
 
     def add_constraints_to_command(self, command, constraints, operator = 'AND'): # constraints should not contain actual data, but rather %s placeholders!!!
         if 'WHERE' not in command:
