@@ -1,4 +1,4 @@
-from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for, session, jsonify, Markup
+from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for, session, jsonify, Markup, make_response
 from os import path
 import sys
 
@@ -77,9 +77,12 @@ def log_file(log_file):
 
 
 
-# listens on get parameter:
+# listens on get parameter: raw
 @download_blueprint.route('/download/vcf/classified')
 def classified_variants():
+    return_raw = request.args.get('raw')
+    force_url = url_for("download.classified_variants", raw=return_raw, force = True)
+    redirect_url = url_for("main.index")
 
     classified_variants_folder = current_app.static_folder + "/files/classified_variants"
     last_dump_path = classified_variants_folder + "/.last_dump.txt"
@@ -104,9 +107,6 @@ def classified_variants():
         conn = get_connection()
         variants_oi = conn.get_variant_ids_with_consensus_classification()
 
-        force_url = url_for("download.classified_variants", force = True)
-        redirect_url = url_for("main.index")
-
         vcf_file_buffer, x, xx, xxx = get_vcf(variants_oi, conn)
 
         functions.buffer_to_file_system(vcf_file_buffer, path_to_download)
@@ -122,8 +122,14 @@ def classified_variants():
 
     current_app.logger.info(session['user']['preferred_username'] + " successfully downloaded vcf of all classified variants.")
 
-
-    return send_file(path_to_download, as_attachment=True, mimetype="text/vcf")
+    if return_raw is not None:
+        with open(path_to_download, "r") as file_to_download:
+            download_text = file_to_download.read()
+            resp = make_response(download_text, 200)
+            resp.mimetype = "text/plain"
+            return resp
+    else:
+        return send_file(path_to_download, as_attachment=True, mimetype="text/vcf")
 
 
 

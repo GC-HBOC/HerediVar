@@ -364,17 +364,21 @@ cd $dbs
 mkdir -p HCI_priors
 cd HCI_priors
 
+: '
 python3 $tools/priors_crawler.py -g BRCA1 -e exon2 --header > priors_hg19.vcf
 python3 $tools/priors_crawler.py -g BRCA2 -e exon2 >> priors_hg19.vcf
 
 $ngsbits/VcfCheck -in priors_hg19.vcf -ref $data/genomes/GRCh37.fa -lines 0 > vcferrors_hg19.txt
+$ngsbits/VcfSort -in priors_hg19.vcf -out priors_hg19.vcf
 bgzip -f -c priors_hg19.vcf > priors_hg19.vcf.gz
 tabix -p vcf priors_hg19.vcf.gz
+
 
 ## crossmap to lift from GRCh37 to GRCh37
 CrossMap.py vcf $data/genomes/hg19ToHg38.fixed.over.chain.gz priors_hg19.vcf.gz $genome priors.vcf
 rm priors_hg19.vcf.gz
 rm priors_hg19.vcf.gz.tbi
+'
 
 
 python3 $tools/priors_crawler.py -g MLH1 -e exon1 >> priors.vcf
@@ -382,7 +386,7 @@ python3 $tools/priors_crawler.py -g MSH2 -e exon1 >> priors.vcf
 python3 $tools/priors_crawler.py -g MSH6 -e exon1 >> priors.vcf
 
 
-
+: '
 $ngsbits/VcfSort -in priors.vcf -out priors.vcf
 
 cat priors.vcf | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort > priors.normalized.vcf
@@ -393,7 +397,7 @@ mv priors.normalized.vcf priors.vcf
 bgzip -f -c priors.vcf > priors.vcf.gz
 tabix -p vcf priors.vcf.gz
 $ngsbits/VcfCheck -in priors.vcf.gz -ref $genome > vcferrors.txt
-
+'
 
 
 

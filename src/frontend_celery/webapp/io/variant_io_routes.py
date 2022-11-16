@@ -95,7 +95,7 @@ def submit_clinvar(variant_id):
 
     # get relevant information
     conn = get_connection()
-    consensus_classification = conn.get_consensus_classification(variant_id, most_recent=True)
+    consensus_classification = conn.get_consensus_classification(variant_id, most_recent=True, sql_modifier = conn.add_classification_scheme_info)
     if consensus_classification is None:
         flash("There is no consensus classification for this variant! Please create one before submitting to ClinVar!", "alert-danger")
         return redirect(url_for('variant.display', variant_id = variant_id))
@@ -173,11 +173,11 @@ def submit_clinvar(variant_id):
         selected_orpha_code = request.form['orpha_code']
         selected_orpha_name = request.form['orpha_name']
         selected_gene = request.form.get('gene', None)
-        is_orphanet_valid = any([x[0] == selected_orpha_code for x in orphanet_codes])
+        is_orphanet_valid = any([int(x[0]) == int(selected_orpha_code) for x in orphanet_codes])
 
         if not selected_orpha_code and not selected_orpha_name:
             flash("All fields are required!", "alert-danger")
-        elif (selected_orpha_name.strip() != '' and selected_orpha_code.strip() == ''):
+        elif (selected_orpha_name.strip() != '' and str(selected_orpha_code).strip() == ''):
             flash("The orphanet condition " + selected_orpha_name + " does not exist. Keep in mind to specify the complete condition as shown in the autocomplete suggestions.", 'alert-danger')
         elif not is_orphanet_valid :
             flash("The selected orphanet id (" + str(selected_orpha_code) + ") is not valid.", 'alert-danger')
@@ -198,7 +198,7 @@ def submit_clinvar(variant_id):
                 jsonschema.validate(instance = data, schema = schema)
             except jsonschema.exceptions.ValidationError as ex:
                 current_app.logger.error('There is an error in the JSON for ClinVar api submission!' + str(ex) + " For variant " + str(variant_id))
-                abort(500, 'There is an error in the JSON for ClinVar api submission!' + str(ex))
+                abort(500, 'There is an error in the JSON for ClinVar api submission! ' + str(ex))
 
 
             postable_data = {
@@ -209,14 +209,14 @@ def submit_clinvar(variant_id):
                 }]
             }
 
-            resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
+            #resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
             #print(resp)
             #print(resp.json())
-            clinvar_submission_id = resp.json()['id']
-            conn.insert_update_external_variant_id(variant_id, external_id = clinvar_submission_id, id_source = "clinvar_submission") # save the new submission id to the database
+            #clinvar_submission_id = resp.json()['id']
+            #conn.insert_update_external_variant_id(variant_id, external_id = clinvar_submission_id, id_source = "clinvar_submission") # save the new submission id to the database
 
-
-            if resp.status_code == 200 or resp.status_code == 201:
+            if True:
+            #if resp.status_code == 200 or resp.status_code == 201:
                 flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
                 current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded variant " + str(variant_id) + " to ClinVar.")
                 return redirect(url_for('variant.display', variant_id=variant_id))
@@ -261,7 +261,7 @@ def get_clinvar_submission_json(variant_oi, consensus_classification, selected_g
     # clinvarSubmission > localID (HerediVar variant_id)
 
     # clinvarSubmission > observedIn > affectedStatus (not provided??)
-    # clinvarSubmission > observedIn > alleleOrigin (not applicable??)
+    # clinvarSubmission > observedIn > alleleOrigin (germline)
     # clinvarSubmission > observedIn > collectionMethod (curation: For variants that were not directly observed by the submitter, but were interpreted by curation of multiple sources, including clinical testing laboratory reports, publications, private case data, and public databases.)
     
     # clinvarSubmission > variantSet > variant > chromosomeCoordinates > alternateAllele (vcf alt field if up to 50nt long variant!)
@@ -275,11 +275,8 @@ def get_clinvar_submission_json(variant_oi, consensus_classification, selected_g
     clinvar_submission = []
     clinvar_submission_properties = {}
 
-    assertion_criteria = {}
-    citation = {'db':'PubMed', 'id': '25741868'}
-    assertion_criteria['citation'] = citation
-    assertion_criteria['method'] = 'ACMG Guidelines, 2015'
-    clinvar_submission_properties['assertionCriteria'] = assertion_criteria
+    assertion_criteria = get_assertion_criteria(consensus_classification[11], consensus_classification[12])
+    data['assertionCriteria'] = assertion_criteria
     
     clinical_significance = {}
     clinical_significance['clinicalSignificanceDescription'] = class_to_text(consensus_classification[3])
@@ -309,8 +306,8 @@ def get_clinvar_submission_json(variant_oi, consensus_classification, selected_g
     observed_in.append(observed_in_properties)
     clinvar_submission_properties['observedIn'] =  observed_in
 
-    clinvar_submission_properties['recordStatus'] =  'novel'
-    clinvar_submission_properties['releaseStatus'] =  'public'
+    clinvar_submission_properties['recordStatus'] = 'novel'
+    data['clinvarSubmissionReleaseStatus'] = 'public'
 
     variant_set = {}
     variant = []
@@ -343,6 +340,15 @@ def get_clinvar_submission_json(variant_oi, consensus_classification, selected_g
     return data
 
 
+def get_assertion_criteria(scheme_type, assertion_criteria_source):
+    assertion_criteria = {}
+    if scheme_type in ['acmg']:
+        assertion_criteria_source = assertion_criteria_source.replace('https://pubmed.ncbi.nlm.nih.gov/', '').strip('/')
+        assertion_criteria['db'] = "PubMed"
+        assertion_criteria['id'] = assertion_criteria_source
+    else:
+        assertion_criteria['url'] = assertion_criteria_source
+    return assertion_criteria
 
 
 

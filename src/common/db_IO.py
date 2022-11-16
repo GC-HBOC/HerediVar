@@ -976,6 +976,16 @@ class Connection:
         if len(result) == 0:
             return None
         return result
+
+
+
+    def add_classification_scheme_info(self, command):
+        prefix = 'SELECT * FROM (('
+        postfix = ') cs_a INNER JOIN (SELECT id as outer_id, name, display_name, type, reference FROM classification_scheme) cs_b ON cs_a.classification_scheme_id = cs_b.outer_id)'
+        result = prefix + command + postfix
+        return result
+
+
     
     def get_evidence_document(self, consensus_classificatoin_id):
         command = "SELECT evidence_document FROM consensus_classification WHERE id = %s"
