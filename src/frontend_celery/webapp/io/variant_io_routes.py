@@ -209,14 +209,14 @@ def submit_clinvar(variant_id):
                 }]
             }
 
-            #resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
+            resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
             #print(resp)
             #print(resp.json())
-            #clinvar_submission_id = resp.json()['id']
-            #conn.insert_update_external_variant_id(variant_id, external_id = clinvar_submission_id, id_source = "clinvar_submission") # save the new submission id to the database
+            clinvar_submission_id = resp.json()['id']
+            conn.insert_update_external_variant_id(variant_id, external_id = clinvar_submission_id, id_source = "clinvar_submission") # save the new submission id to the database
 
-            if True:
-            #if resp.status_code == 200 or resp.status_code == 201:
+            #if True:
+            if resp.status_code == 200 or resp.status_code == 201:
                 flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
                 current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded variant " + str(variant_id) + " to ClinVar.")
                 return redirect(url_for('variant.display', variant_id=variant_id))
@@ -229,8 +229,8 @@ def submit_clinvar(variant_id):
         'orphanet_codes': orphanet_codes
     }
 
-    
-    return render_template('variant_io/submit_clinvar.html', variant = variant_oi[0:5], data = data, genes=genes)
+
+    return render_template('variant_io/submit_clinvar.html', variant = variant_oi, data = data, genes=genes, consensus_classification = conn.get_consensus_classifications_extended(variant_id)[0])
 
 
 

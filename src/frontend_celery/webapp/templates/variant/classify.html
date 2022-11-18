@@ -135,6 +135,42 @@
             </div>
         </div>
 
+        <!-- literature select -->
+        <div class="form-group sst">
+            <label for="literature" class="form-label">Literature</label>
+
+
+            <div> 
+                <!-- creates a new row in the selected literature table -->
+                <button id="blank_row_button" class="btn btn-sm btn-secondary" type="button" onclick="create_literature_select(document.getElementById('selectedLiteratureList'))">Add blank row</button>
+                <!-- opens a modal showing all literature entries for this variant, the user selects some and for each one of them a new row in the selected literature table is created -->
+                <button id="text-mining-button" type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#text-mining-modal">Add from text mining</button>
+            </div>
+
+
+            <div id="literature">
+                <div class="table-responsive tableFixHead table-lg">
+                    <table class="table table-hover" id="selectedLiterature">
+                        <thead>
+                            <tr>
+                                <th style="width:10rem">PMID</th>
+                                <th>Text passage</th>
+                                <th style="width:2rem;">Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody id="selectedLiteratureList"> <!-- names: pmid & text_passage -->
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+
+
+
+        </div>
+
 
 
         <!-- submit -->
@@ -149,6 +185,61 @@
         </div>
 
     </form>
+
+
+    <!-- modal for showing all lists & each list has a customizable link -->
+    <div class="modal fade" id="text-mining-modal" tabindex="-1" aria-labelledby="text-mining-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="text-mining-modal-label">Select papers</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                  <div class="modal-body">
+                      
+                    <div class="table-responsive tableFixHead table-lg">
+                        <table class="table table-hover" id="literatureTable">
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th style="width:2.5rem" id="literatureTableYearCol"><div class="sortable">Year</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th><div class="sortable">Authors</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th ><div class="sortable">Title</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th><div class="sortable">Journal / Publisher</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th><div class="sortable">Link</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th><div class="sortable">Source</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for paper in literature %}
+                                <tr>
+                                    <td style="vertical-align: middle; text-align:center;"><input class="form-check-input selected_literature" type="checkbox"></input></td>
+                                    <td>{{paper[6]}}</td>
+                                    <td style="max-width:30rem"><abbr title="{{ paper[4] }}"><div class="Nellipsis">{{ paper[4] }}</div> </abbr></td>
+                                    <td style="min-width:30rem" data-title="{{ paper[3] }}">{{paper[3]}}</td>
+                                    <td style="min-width:10rem">{{paper[5]}}</td>
+                                    <td style="text-align:center;" data-pmid="{{ paper[2] }}">
+                                        {{ macros.external_link("PMID:" + paper[2]|string, "https://pubmed.ncbi.nlm.nih.gov/" + paper[2]|string) }}
+                                    </td>
+                                    <td style="width:1rem">{{ paper[7] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <input class="form-check-input selected_literature" type="checkbox" onclick="select_all_non_hidden_papers(this.checked)"></input> select all shown
+                    
+                  </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="add_all_to_selected_literature()">Add selected</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
       
 </div>
 

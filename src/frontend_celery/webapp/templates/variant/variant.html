@@ -121,7 +121,6 @@
         {% else %}
             {% set _consensus_class = '-' %}
         {% endif %}
-
         <div class="ms-auto" style="margin-right: 1rem;">
             {{ macros.render_consensus_classification_label(_consensus_class) }}
         </div>
@@ -313,27 +312,29 @@
                             <table class="table table-hover" id="userClassificationsTable">
                                 <thead>
                                     <tr>
-                                        <th style="width:2.5rem"><div class="sortable">Final class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th id="userClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th style="min-width: 20rem"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th style="min-width:20rem"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th style="width:3rem"><div class="sortable">Final class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th style="width:10rem"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th style="width:10rem"><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th style="width:15rem" id="userClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th style="width:15rem"><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th style="width:40rem"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         <th style="width:5rem"><div class="sortable">Class by scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th style="width:7rem"><div class="sortable">Literature</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for classification in annotations['user_classifications'] %}
                                     <tr user_classification_id="{{ classification[0] }}">
-                                        <td>{{ classification[1] }}</td>
+                                        <td style="text-align:center">{{ classification[1] }}</td>
                                         <td>{{ classification[8] + ' ' + classification[9] }}</td>
                                         <td>{{ classification[10] }}</td>
                                         <td style="white-space:nowrap;">{{ classification[5] }}</td>
-                                        <td><abbr title="{{ classification[4] }}"><div class="Nellipsis" >{{ classification[4] }}</div> </abbr></td>
+                                        <td><abbr title="{{ classification[4] }}"><div class="Nellipsis">{{ classification[4] }}</div> </abbr></td>
                                         <td style="white-space:nowrap;">{{ classification[11] }}</td>
                                         <td>{{ macros.draw_criteria_display(classification[13], '4em', '2em') }}</td>
-                                        <td>{{ classification[14] }}</td>
+                                        <td>{{ classification[15] }}</td>
+                                        <td>{{ macros.selected_literature_display(classification[14]) }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>

@@ -116,6 +116,22 @@ function submit_classification() {
 
 ///////////// preselect stuff ////////////
 
+
+function preselect_literature() {
+    var selected_scheme =  previous_classification[scheme]
+    if (typeof selected_scheme !== "undefined") { 
+        var previous_selected_literature = selected_scheme['literature']
+        for (var i = 0; i < previous_selected_literature.length; i++) {
+            var current_literature = previous_selected_literature[i]
+            var pmid = current_literature[2]
+            var text_passage = current_literature[3]
+            create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
+        }
+    }
+
+}
+
+
 // call functions once on page load
 function preselect_final_classification() {
     var comment_text_area = document.getElementById('comment')
@@ -125,6 +141,7 @@ function preselect_final_classification() {
         final_class_select.value = previous_classification[scheme]['class']
         comment_text_area.value = previous_classification[scheme]['comment']
         comment_text_area.innerText = previous_classification[scheme]['comment']
+        console.log(previous_classification[scheme]['comment'])
         warning_display.hidden = false
     } else {
         final_class_select.value = 3
@@ -239,6 +256,9 @@ function scheme_select_action(do_revert=true) {
         //update_schemes_with_info()
     }
     preselect_final_classification()
+
+    remove_all_selected_literature()
+    preselect_literature()
 }
 
 function set_user_selection_counts(scheme) {
@@ -379,8 +399,121 @@ function revert_all() {
     revert_count_labels()
 }
 
+function remove_all_selected_literature() {
+    const selected_literature_container = document.getElementById('selectedLiteratureList')
+    const selected_literature = selected_literature_container.getElementsByTagName('tr')
+    const num_selected_literature = selected_literature.length
+    // The problem here is: each time an element is removed it is also removed from the selected_literature array which alters the selected_literature.length
+    // --> Not all elements are removed
+    // The solution: the total number of selected literatures is saved in a const and the for loop iterates using that as reference
+    // Since we know that removing the dom from the html page it also removes it from the array
+    // we can just select the first element of that array and be okay.
+    for (var i  = 0; i < num_selected_literature; i++) {
+        var current_selected_literature = selected_literature[0]
+        delete_selected_literature_row(current_selected_literature)
+    }
+}
+
 
 //////////// create dom object functions ////////////
+
+// create literature select 
+function create_literature_select(parent, pmid="", placeholder="Text citation", text_passage="") {
+    /*
+        <tr>
+            <td><input class="form-control" type="text" name="pmid"></td>
+            <td><textarea class="form-control" style="height:0; width:100%" type="text" name="text_passage"></textarea></td>
+            <td style="text-align:center;"><button class="btn btn-danger" type="button">-</button></td>
+        </tr>
+    */
+    var tr = document.createElement('tr')
+    parent.appendChild(tr)
+
+    // the first column
+    var pmid_td = document.createElement('td')
+    tr.appendChild(pmid_td)
+    var pmid_input = document.createElement('input')
+    pmid_input.classList.add("form-control")
+    pmid_input.setAttribute("type", "text")
+    pmid_input.setAttribute("name", "pmid")
+    pmid_input.setAttribute('value', pmid)
+    pmid_input.setAttribute('placeholder', "pmid")
+    pmid_td.appendChild(pmid_input)
+
+    // the second column
+    var text_passage_td = document.createElement('td')
+    tr.appendChild(text_passage_td)
+    var text_passage_textarea = document.createElement('textarea')
+    text_passage_textarea.setAttribute('style', "height:0; width:100%;")
+    text_passage_textarea.setAttribute('type', "text")
+    text_passage_textarea.setAttribute('name', "text_passage")
+    text_passage_textarea.classList.add("form-control")
+    text_passage_textarea.value = text_passage
+    text_passage_textarea.setAttribute('placeholder', placeholder)
+    text_passage_td.appendChild(text_passage_textarea)
+
+    // the remove column
+    var remove_td = document.createElement('td')
+    remove_td.setAttribute('style', 'text-align:center')
+    tr.appendChild(remove_td)
+    var delete_button = document.createElement('button')
+    delete_button.classList.add("btn")
+    delete_button.classList.add("btn-link")
+    delete_button.setAttribute("type", "button")
+    delete_button.addEventListener("click", function() {delete_selected_literature_row(this.closest('tr'))} );
+    remove_td.appendChild(delete_button)
+    var image = create_trashcan()
+    delete_button.appendChild(image)
+    
+    remove_default_caption(document.getElementById('selectedLiterature'))
+}
+
+
+function delete_selected_literature_row(tr) {
+    if (tr.closest('tbody').children.length == 1) {
+        add_default_caption(tr.closest('table'))
+    }
+    tr.remove()
+}
+
+
+
+function add_all_to_selected_literature() {
+    const tbody = document.getElementById('literatureTable').getElementsByTagName('tbody')[0]
+    var rows = tbody.getElementsByTagName('tr')
+    for (var i = 0; i < rows.length; i++) {
+        var current_row = rows[i]
+        var current_tds = current_row.getElementsByTagName('td')
+        var current_selected_check = current_tds[0].getElementsByTagName('input')[0]
+        if (current_selected_check.checked) { // if was selected add a new row
+            var pmid = current_tds[5].getAttribute('data-pmid')
+            var paper_title = current_tds[3].getAttribute('data-title')
+            create_literature_select(document.getElementById('selectedLiteratureList'), pmid=pmid, placeholder="Paper title: " + paper_title)
+            current_selected_check.checked = false
+        }
+    }
+    $('.modal').modal('hide');
+}
+
+
+
+function select_all_non_hidden_papers(check_or_not) {
+    const tbody = document.getElementById('literatureTable').getElementsByTagName('tbody')[0]
+    var rows = tbody.getElementsByTagName('tr')
+    for (var i = 0; i < rows.length; i++) {
+        var current_row = rows[i]
+        if (current_row.getAttribute('style')) { // check that current row has the style attribute at all
+            if (current_row.getAttribute('style').includes('display: none')) {
+                continue
+            }
+        }
+        var current_tds = current_row.getElementsByTagName('td')
+        var current_selected_check = current_tds[0].getElementsByTagName('input')[0]
+        current_selected_check.checked = check_or_not
+    }
+}
+
+
 
 // creates the criteria buttons depending on mask
 function create_criteria_buttons() {

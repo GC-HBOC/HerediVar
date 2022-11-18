@@ -1395,8 +1395,8 @@ class Connection:
             consensus_classifications_preprocessed.append(consensus_classification)
         return consensus_classifications_preprocessed
 
-    def get_user_classifications_extended(self, variant_id):
-        user_classifications = self.get_user_classifications(variant_id, sql_modifier=self.add_userinfo) # 0id,1classification,2variant_id,3user_id,4comment,5date,6classification_scheme_id,7user_id,8first_name,9last_name,10affiliation
+    def get_user_classifications_extended(self, variant_id, user_id='all'):
+        user_classifications = self.get_user_classifications(variant_id, user_id=user_id, sql_modifier=self.add_userinfo) # 0id,1classification,2variant_id,3user_id,4comment,5date,6classification_scheme_id,7user_id,8first_name,9last_name,10affiliation
         if user_classifications is None:
             return None
         user_classifications_preprocessed = []
@@ -1407,6 +1407,8 @@ class Connection:
             user_classification.append(current_scheme[3]) # append scheme type
             current_scheme_criteria_applied = self.get_scheme_criteria_applied(user_classification[0], where = "user")
             user_classification.append(current_scheme_criteria_applied)
+            previous_selected_literature = self.get_selected_literature(is_user = True, classification_id = user_classification[0])
+            user_classification.append(previous_selected_literature)
             user_classifications_preprocessed.append(user_classification)
         return user_classifications_preprocessed
 
@@ -1467,8 +1469,8 @@ class Connection:
 
     def get_classification_schemas(self):
         # it should look like this:
-        # {schema_id -> display_name(description), reference, criteria, mutually_exclusive_buttons}
-        #                                         -> {name,description,default_strength,possible_strengths,selectable,disable_group}
+        # {schema_id -> display_name(description), scheme_type, reference, criteria}
+        #                                         -> {name,description,default_strength,possible_strengths,selectable,disable_group,mutually_exclusive_buttons}
         command = "SELECT * FROM classification_scheme"
         self.cursor.execute(command)
         classification_schemas = self.cursor.fetchall()
@@ -1527,4 +1529,47 @@ class Connection:
 
             result[classification_schema_id] = {"description": description, "scheme_type": scheme_type, "reference": online_reference, 'criteria': classification_criteria_dict}
 
+        return result
+
+
+
+
+
+
+
+
+    #def insert_selected_literature(self, is_user, classification_id, pmid, text_passage):
+    #    db_table = "user_classification_selected_literature"
+    #    if not is_user:
+    #        db_table = "consensus_classification_selected_literature"
+    #    command = "INSERT INTO " + db_table + " (classification_id, pmid, text_passage) \
+    #                SELECT %s, %s, %s WHERE NOT EXISTS (SELECT * FROM variant_ids \
+	#                    WHERE `classification_id`=%s AND `pmid`=%s LIMIT 1)"
+    #    self.cursor.execute(command, (classification_id, pmid, text_passage, classification_id, pmid))
+    #    self.conn.commit()
+
+
+    def get_selected_literature_table(self, is_user):
+        db_table = "user_classification_selected_literature"
+        if not is_user:
+            db_table = "consensus_classification_selected_literature"
+        return db_table
+
+    def insert_update_selected_literature(self, is_user, classification_id, pmid, text_passage):
+        db_table = self.get_selected_literature_table(is_user)
+        command = "INSERT INTO " + db_table + " (classification_id, pmid, text_passage) VALUES(%s, %s, %s) ON DUPLICATE KEY UPDATE text_passage=VALUES(text_passage)"
+        self.cursor.execute(command, (classification_id, pmid, text_passage))
+        self.conn.commit()
+
+    def delete_selected_literature(self, is_user, classification_id, pmid):
+        db_table = self.get_selected_literature_table(is_user)
+        command = "DELETE FROM " + db_table + " WHERE classification_id = %s AND pmid = %s"
+        self.cursor.execute(command, (classification_id, pmid))
+        self.conn.commit()
+
+    def get_selected_literature(self, is_user, classification_id):
+        db_table = self.get_selected_literature_table(is_user)
+        command = "SELECT * FROM " + db_table + " WHERE classification_id = %s"
+        self.cursor.execute(command, (classification_id, ))
+        result = self.cursor.fetchall()
         return result

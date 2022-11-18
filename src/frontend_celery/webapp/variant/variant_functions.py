@@ -140,7 +140,7 @@ def criterium_to_num(criterium):
 
 
 def get_previous_user_classification(variant_id, user_id, conn):
-    user_classifications = conn.get_user_classifications(variant_id = variant_id, user_id=user_id)
+    user_classifications = conn.get_user_classifications_extended(variant_id = variant_id, user_id=user_id)
     if user_classifications is not None:
         result = {}
         for user_classification in user_classifications:
@@ -148,7 +148,8 @@ def get_previous_user_classification(variant_id, user_id, conn):
             previous_comment=user_classification[4]
             previous_classification_id=user_classification[0]
             scheme_id = user_classification[6]
-            new_entry = {'class': previous_classification, 'comment':previous_comment, 'id':previous_classification_id}
+            selected_literature = user_classification[14]
+            new_entry = {'class': previous_classification, 'comment':previous_comment, 'id':previous_classification_id, 'literature': selected_literature}
             result[scheme_id] = new_entry
         return result
     else:
@@ -326,7 +327,7 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
 def extract_criteria_from_request(request_obj, scheme_id, conn):
     # test if the scheme classification is valid
     criteria = {}
-    non_criterium_form_fields = ['scheme', 'classification_type', 'final_class', 'comment', 'strength_select']
+    non_criterium_form_fields = ['scheme', 'classification_type', 'final_class', 'comment', 'strength_select', 'pmid', 'text_passage']
     if request_obj['scheme'] != '1':
         for criterium_name in request_obj:
             if criterium_name not in non_criterium_form_fields and '_strength' not in criterium_name:
@@ -393,6 +394,49 @@ def is_valid_scheme(selected_criteria, scheme):
             break
     
     return is_valid, message
+
+
+def remove_empty_literature_rows(pmids, text_passages):
+    new_pmids = []
+    new_text_passages = []
+    for pmid, text_passage in zip(pmids, text_passages):
+        pmid = pmid.strip()
+        text_passage = text_passage.strip()
+        if pmid != '' or text_passage != '': # remove all completely empty lines (ie pmid and text passage is missing)
+            new_pmids.append(pmid)
+            new_text_passages.append(text_passage)
+    return new_pmids, new_text_passages
+
+
+def is_valid_literature(pmids, text_passages):
+    message = ''
+    is_valid = True
+    
+    # make sure each paper is only submitted once
+    if len(list(set(pmids))) < len(pmids):
+        message = 'ERROR: Some pmids are duplicated in the selected literature section. Please make them unique.'
+        is_valid = False
+
+    # make sure all information is present
+    for pmid, text_passage in zip(pmids, text_passages):
+        if pmid == '' or text_passage == '': # both empty already filtered out by remove_empty_literature_rows
+            message = 'ERROR: Some of the selected literature is missing information. Please fill both, the pmid and the text passage for all selected papers.'
+            is_valid = False
+
+    return is_valid, message
+
+
+def handle_slected_literature(previous_selected_literature, classification_id, pmids, text_passages, conn):
+    # insert and update
+    for pmid, text_passage in zip(pmids, text_passages):
+        conn.insert_update_selected_literature(is_user = True, classification_id = classification_id, pmid = pmid, text_passage = text_passage)
+    
+    # delete if missing in pmids
+    for entry in previous_selected_literature:
+        previously_selected_pmid = str(entry[2])
+        if previously_selected_pmid not in pmids:
+            classification_id = entry[1]
+            conn.delete_selected_literature(is_user = True, classification_id=classification_id, pmid=previously_selected_pmid)
 
 
 def get_clinvar_submission(variant_id, conn):

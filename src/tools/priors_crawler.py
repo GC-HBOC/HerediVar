@@ -79,7 +79,7 @@ def parse_html(url):
 
 def retry_parse_html(url):
     doc = None
-    wait_time = 0
+    wait_time = 5
     while doc is None:
         time.sleep(wait_time)
         doc = parse_html(url)

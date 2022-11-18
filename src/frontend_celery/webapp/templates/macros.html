@@ -60,7 +60,7 @@
 
             <tr>
                 <td class="li-label">Comment</td>
-                <td>{{ most_recent_consensus_classification[4] }}</td>
+                <td><div style="white-space: pre-wrap;">{{ most_recent_consensus_classification[4] }}</div></td>
             </tr>
 
             {% set selected_criteria = most_recent_consensus_classification[14] %}<!-- the consensus scheme classifications should only contain the most recent classification -->
@@ -100,7 +100,7 @@
 
 {% macro draw_criteria_display(criteria, width='6em', height='2.5em', source='user') %}
     {% for criterium in criteria %}
-    <span class="d-inline-block ssr large-tt" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" {% if source=="user" %} user_criterium_applied_id="{{ criterium[0] }}" {% else %} consensus_criterium_applied_id="{{ criterium[0] }}" {% endif %}
+    <span class="d-inline-block ssr tooltip-lg" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" {% if source=="user" %} user_criterium_applied_id="{{ criterium[0] }}" {% else %} consensus_criterium_applied_id="{{ criterium[0] }}" {% endif %}
         title="Strength: {{ criterium[7] }} <br> Evidence: {{ criterium[4] }}">
         <div class="btn btn-{{ criterium[6] }} light-hover acmg-button" style="width:{{width}}; height:{{height}}">{{ criterium[5] }}</div>
     </span>
@@ -153,7 +153,13 @@
                         <textarea type="text" name="ranges" id="ranges"
                                placeholder="chr1:10295758-17027834; chr11:108229378-108229378; ..." class="form-control"
                                >{{ request.args.get('ranges', '') }}</textarea>
-                        <input type="file" name="bed" class="form-control" id="bed" accept=".bed"></input>
+                        
+                        <div class="d-flex">
+                            <input class="btn btn-secondary fake-upload-button" type="button" id="loadbed" value="select bed..." onclick="document.getElementById('bed').click()" />
+                            <label class="form-control fake-upload-label" for="loadbed" id="filepath_display" style="cursor:pointer">No file selected.</label>
+                            <input type="file" name="bed" class="form-control" id="bed" accept=".bed" style="display:none;" onchange="document.getElementById('filepath_display').innerText = 'selected: ' + this.value.replace(/.*[\/\\]/, '');"></input>
+                        </div>
+
                         <div id="status"></div>
                     </div>
 
@@ -583,6 +589,19 @@
 {% endmacro %}
 
 
+{% macro selected_literature_display(selected_literature) %}
+    <div>
+        {% for paper in selected_literature %}
+        {% set tooltip = "Text passage of interest: " + paper[3] %}
+            <div class="tooltip-lg" data-bs-toggle="tooltip" title="{{tooltip}}">
+                {% set pmid = paper[2] %}
+                {{ external_link(pmid|string, "https://pubmed.ncbi.nlm.nih.gov/" + pmid | string) }}
+            </div>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+
 {% macro external_link(display_text, url) %}
     {% if display_text == "" or display_text is none or display_text == "nan" or display_text == "missing" %}
         <div>missing</div>
@@ -597,6 +616,7 @@
         </a>
     {% endif %}
 {% endmacro %}
+
 
 
 {% macro google_link(display_text, rsid = none, hgvs_c = none, hgvs_p = none, gene_name = none, is_scholar = False) %}

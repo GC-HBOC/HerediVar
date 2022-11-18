@@ -188,13 +188,18 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 def classify(variant_id):
     conn = get_connection()
 
+    variant_oi = conn.get_variant_more_info(variant_id)
+    if variant_oi is None:
+        return abort(404)
+
     user_id = session['user']['user_id']
     schemes_with_info = {user_id: get_schemes_with_info(variant_id, user_id, conn)}
     previous_classification = get_previous_user_classification(variant_id, user_id, conn)
     classification_schemas = conn.get_classification_schemas()
-    variant_oi = conn.get_variant_more_info(variant_id)
-    if variant_oi is None:
-        return abort(404)
+    literature = conn.get_variant_literature(variant_id)
+
+    print(previous_classification)
+
 
     do_redirect = False
 
@@ -204,28 +209,40 @@ def classify(variant_id):
 
         classification = request.form['final_class']
         comment = request.form['comment'].strip()
+        pmids = request.form.getlist('pmid')
+        text_passages = request.form.getlist('text_passage')
         possible_classifications = ["1","2","3","4","5"]
 
         # test if the input is valid
         criteria = extract_criteria_from_request(request.form, scheme_id, conn)
         scheme_classification_is_valid, message = is_valid_scheme(criteria, classification_schemas[scheme_id])
+        pmids, text_passages = remove_empty_literature_rows(pmids, text_passages)
+        literature_is_valid, message = is_valid_literature(pmids, text_passages)
         without_scheme = scheme_id == 1
         user_classification_is_valid = (str(classification) in possible_classifications) and comment
-        
-        # actually submit the data to the database
+
+
+        # flash error messages
         if (not scheme_classification_is_valid) and (not without_scheme): # error in scheme
             flash(message, "alert-danger")
-        elif not user_classification_is_valid: # error in user classification
+        if not user_classification_is_valid: # error in user classification
             flash("Please provide comment & class to submit a user classification!", "alert-danger")
+        if not literature_is_valid:
+            flash(message, "alert-danger")
 
-        if user_classification_is_valid and scheme_classification_is_valid:
-            # always handle the user classification
+
+        # actually submit the data to the database
+        if user_classification_is_valid and scheme_classification_is_valid and literature_is_valid:
+            # always handle the user classification & literature
             user_classification_id = handle_user_classification(variant_id, user_id, previous_classification, classification, comment, scheme_id, conn)
+            previous_selected_literature = [] # a new classification -> no previous sleected literature
+            if user_classification_id is None: # we are processing an update -> pull the classification id from the schemes with info
+                user_classification_id = schemes_with_info[user_id][scheme_id]['classification_id']
+                previous_selected_literature = previous_classification[scheme_id]['literature']
+            handle_slected_literature(previous_selected_literature, user_classification_id, pmids, text_passages, conn)
 
             # handle scheme classification -> insert / update criteria
             if not without_scheme:
-                if user_classification_id is None: # we are processing an update -> pull the classification id from the schemes with info
-                    user_classification_id = schemes_with_info[user_id][scheme_id]['classification_id']
                 handle_scheme_classification(user_classification_id, criteria, conn)
 
             do_redirect = True
@@ -240,7 +257,8 @@ def classify(variant_id):
                                 variant_oi=variant_oi, 
                                 classification_schemas=json.dumps(classification_schemas),
                                 schemes_with_info=json.dumps(schemes_with_info), 
-                                previous_classification=json.dumps(previous_classification)
+                                previous_classification=json.dumps(previous_classification),
+                                literature = literature
                             )
 
 
@@ -251,7 +269,9 @@ def classify(variant_id):
 def consensus_classify(variant_id):
     conn = get_connection()
 
+    literature = conn.get_variant_literature(variant_id)
     classification_schemas = conn.get_classification_schemas()
+    classification_schemas = {schema_id: classification_schemas[schema_id] for schema_id in classification_schemas if classification_schemas[schema_id]['scheme_type'] != "none"} # remove no-scheme classification as this can not be submitted to clinvar
     variant_oi = conn.get_variant_more_info(variant_id)
     if variant_oi is None:
         return abort(404)
@@ -275,32 +295,35 @@ def consensus_classify(variant_id):
         ####### classification based on classification scheme submit 
         scheme_id = int(request.form['scheme'])
 
-        classification = request.form['final_class']
-        comment = request.form['comment'].strip()
-        possible_classifications = ["1","2","3","4","5"]
+        if scheme_id == 1:
+            flash("No consensus classifications without scheme allowed!")
+        else:
+            classification = request.form['final_class']
+            comment = request.form['comment'].strip()
+            possible_classifications = ["1","2","3","4","5"]
 
-        # test if the input is valid
-        criteria = extract_criteria_from_request(request.form, scheme_id, conn)
-        scheme_classification_is_valid, message = is_valid_scheme(criteria, classification_schemas[scheme_id])
-        without_scheme = scheme_id == 1
-        user_classification_is_valid = (str(classification) in possible_classifications) and comment
-        
-        # actually submit the data to the database
-        if (not scheme_classification_is_valid) and (not without_scheme): # error in scheme
-            flash(message, "alert-danger")
-        elif not user_classification_is_valid: # error in user classification
-            flash("Please provide a final classification and a comment to submit the consensus classification. The classification was not submitted.", "alert-danger")
+            # test if the input is valid
+            criteria = extract_criteria_from_request(request.form, scheme_id, conn)
+            scheme_classification_is_valid, message = is_valid_scheme(criteria, classification_schemas[scheme_id])
+            without_scheme = scheme_id == 1 # remove
+            user_classification_is_valid = (str(classification) in possible_classifications) and comment
 
-        if user_classification_is_valid and scheme_classification_is_valid:
-            # insert consensus classification
-            classification_id = handle_consensus_classification(variant_id, classification, comment, scheme_id, conn)
-            
-            # insert scheme criteria
-            if not without_scheme:
-                handle_scheme_classification(classification_id, criteria, conn, where = "consensus")
-            do_redirect = True
+            # actually submit the data to the database
+            if (not scheme_classification_is_valid) and (not without_scheme): # error in scheme
+                flash(message, "alert-danger")
+            elif not user_classification_is_valid: # error in user classification
+                flash("Please provide a final classification and a comment to submit the consensus classification. The classification was not submitted.", "alert-danger")
 
-    if do_redirect: # do redirect if the submissions was successful
+            if user_classification_is_valid and scheme_classification_is_valid:
+                # insert consensus classification
+                classification_id = handle_consensus_classification(variant_id, classification, comment, scheme_id, conn)
+
+                # insert scheme criteria
+                if not without_scheme:
+                    handle_scheme_classification(classification_id, criteria, conn, where = "consensus")
+                do_redirect = True
+
+    if do_redirect: # do redirect if the submission was successful
         current_app.logger.info(session['user']['preferred_username'] + " successfully consensus-classified variant " + str(variant_id) + " with class " + str(classification) + " from scheme_id " + str(scheme_id))
         return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
     else:
@@ -309,7 +332,8 @@ def consensus_classify(variant_id):
                                 variant_oi=variant_oi, 
                                 classification_schemas=json.dumps(classification_schemas),
                                 schemes_with_info=json.dumps(schemes_with_info), 
-                                previous_classification=json.dumps(previous_classification)
+                                previous_classification=json.dumps(previous_classification),
+                                literature = literature
                             )
 
 

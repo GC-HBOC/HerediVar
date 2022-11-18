@@ -27,9 +27,10 @@ $(document).ready(function()
 
     // activate bootstrap tooltips
     $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
-    $('.large-tt').tooltip({
-        template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner large"></div></div>'
+    $('.tooltip-lg').tooltip({
+        template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner tooltip-inner-lg"></div></div>'
     });
+
 
     // activate bootstrap popovers
     var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
@@ -73,7 +74,6 @@ $(document).ready(function()
         }
     });
 
-    //$('.wide-tooltip').find('.tooltip-inner').addClass('.wide-inner-tooltip')
 
     // coloring of consensus classification
     document.getElementsByName('class-label').forEach(function(obj) {

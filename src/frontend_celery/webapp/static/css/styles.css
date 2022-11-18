@@ -55,6 +55,9 @@ abbr[title] {
     white-space: pre;
 }
 
+.wrap-spaces {
+    white-space: pre-wrap;
+}
 
 
 .longTextCss {
@@ -72,6 +75,7 @@ abbr[title] {
     -webkit-line-clamp: 3; /* number of lines to show */
     line-height: X;        /* fallback */
     max-height: X*3;       /* fallback */
+    white-space: pre-wrap;
  }
 
 
@@ -532,4 +536,46 @@ footer {
 .search-input-selected {
     border-color:orange !important;
     border-width: 2px;
+}
+
+
+
+.tooltip-inner-lg {
+    min-width: 100px !important;
+    max-width: 30em !important; 
+}
+
+
+
+.tooltip-inner {
+    white-space: pre-wrap;
+}
+
+
+.fake-upload-button {
+    background-color:#e9ecef;
+    color:black;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border: 1px solid #ced4da;
+}
+
+.fake-upload-button:hover {
+    background-color:#d7dcdf;
+    color: black;
+    border:  1px solid #ced4da;
+}
+
+.fake-upload-button:focus{
+    background-color:#d7dcdf;
+    color: black;
+    border:  1px solid #ced4da;
+    box-shadow:none !important;
+    outline:0px !important;
+}
+
+.fake-upload-label {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left:0;
 }

@@ -381,8 +381,8 @@ rm priors_hg19.vcf.gz.tbi
 '
 
 
-python3 $tools/priors_crawler.py -g MLH1 -e exon1 >> priors.vcf
-python3 $tools/priors_crawler.py -g MSH2 -e exon1 >> priors.vcf
+#python3 $tools/priors_crawler.py -g MLH1 -e exon1 >> priors.vcf
+#python3 $tools/priors_crawler.py -g MSH2 -e exon1 >> priors.vcf
 python3 $tools/priors_crawler.py -g MSH6 -e exon1 >> priors.vcf
 
 
