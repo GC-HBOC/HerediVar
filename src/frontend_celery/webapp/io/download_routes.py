@@ -237,16 +237,6 @@ def get_vcf(variants_oi, conn):
 
     return buffer, status, "", ""
 
-    
-
-
-
-
-
-
-
-
-
 
 def merge_info_headers(old_headers, new_headers):
     return {**old_headers, **new_headers}
@@ -334,7 +324,7 @@ def get_variant_vcf_line(variant_id, conn):
     
         elif key == 'user_classifications':
             # no versioning - handled by date field
-            info_headers[key] = '##INFO=<ID=' + key + ',Number=.,Type=String,Description="Classifications by individual users of HerediVar. Single classifications are separated by & symbols. Format: user_class|user_comment|submission_date|user_scheme|user_scheme_class|user_criteria_string. The user criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence ">\n'
+            info_headers[key] = '##INFO=<ID=' + key + ',Number=.,Type=String,Description="Classifications by individual users of HerediVar. Single classifications are separated by & symbols. Format: user_class|user_comment|submission_date|user_scheme|user_scheme_class|user_criteria_string|text_passages. The user criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence. The text_passages are also $ separated of the form: pmid+selected_text_passage.">\n'
             user_classifications_vcf = ''
             user_classifications = annotations[key]
             for user_classification in user_classifications:
@@ -343,19 +333,28 @@ def get_variant_vcf_line(variant_id, conn):
                 submission_date = user_classification[5].strftime('%Y-%m-%d %H:%M:%S')
                 user_scheme = user_classification[11]
                 user_criteria = user_classification[13]
+                selected_literatures = user_classification[14]
+
                 all_criteria = ""
                 user_criteria_string = ""
-                for criterium in user_criteria:
+                for criterium in user_criteria: # convert classification criteria to string
                     criterium_name = criterium[5]
                     criterium_strength = criterium[7]
                     criterium_evidence = criterium[4]
-                    all_criteria = "+".join([all_criteria, criterium_name])
+                    all_criteria = "+".join([all_criteria, criterium_name]) # for class calculation
                     new_user_criteria_string = "~2B".join([criterium_name, criterium_strength, criterium_evidence]) # sep: +
                     user_criteria_string = functions.collect_info(user_criteria_string, "", new_user_criteria_string, sep = "~24") # sep: $
                 resp = calculate_class(user_classification[12], all_criteria)
                 user_scheme_class = str(resp.get_json()['final_class'])
-                current_user_classification_vcf = "~7C".join([user_class, user_comment, submission_date, user_scheme, user_scheme_class, user_criteria_string]) # sep: |
+                text_passage_string = ""
+                for selected_literature in selected_literatures: # convert literature passages to string
+                    pmid = str(selected_literature[2])
+                    text_passage = selected_literature[3]
+                    new_text_passage_string = "~2B".join([pmid, text_passage]) # sep: +
+                    text_passage_string = functions.collect_info(text_passage_string, "", new_text_passage_string, sep = "~24") # sep: $
+                current_user_classification_vcf = "~7C".join([user_class, user_comment, submission_date, user_scheme, user_scheme_class, user_criteria_string, text_passage_string]) # sep: |
                 user_classifications_vcf = functions.collect_info(user_classifications_vcf, "", current_user_classification_vcf, sep = "~26") # sep: &
+                
             #print("User classification: " + functions.encode_vcf(user_classifications_vcf))
             info = functions.collect_info(info, key + "=", functions.encode_vcf(user_classifications_vcf))
 

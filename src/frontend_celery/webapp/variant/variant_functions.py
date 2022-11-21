@@ -148,8 +148,7 @@ def get_previous_user_classification(variant_id, user_id, conn):
             previous_comment=user_classification[4]
             previous_classification_id=user_classification[0]
             scheme_id = user_classification[6]
-            selected_literature = user_classification[14]
-            new_entry = {'class': previous_classification, 'comment':previous_comment, 'id':previous_classification_id, 'literature': selected_literature}
+            new_entry = {'class': previous_classification, 'comment':previous_comment, 'id':previous_classification_id}
             result[scheme_id] = new_entry
         return result
     else:
@@ -170,7 +169,8 @@ def convert_scheme_criteria_to_dict(criteria):
 def get_schemes_with_info(variant_id, user_id, conn):
     # fetch previous scheme classifications (could be multiple because of different schemes)
     # 0id, 1variant_id, 2user_id, 3scheme, 4date
-    previous_classifications = conn.get_user_classifications(variant_id = variant_id, user_id = user_id)
+    previous_classifications = conn.get_user_classifications_extended(variant_id = variant_id, user_id = user_id)
+    print(previous_classifications)
     # extract scheme and convert to scheme->scheme_classification_id dict
     schemes_with_info = {}
     if previous_classifications is not None:
@@ -178,7 +178,13 @@ def get_schemes_with_info(variant_id, user_id, conn):
             scheme_id = entry[6]
             if scheme_id in schemes_with_info:
                 raise RuntimeError("ERROR: There are multiple user scheme classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme_id + ", user_id: " + str(user_id))
-            schemes_with_info[scheme_id] = {'classification_id':entry[0], 'date':entry[5].strftime('%Y-%m-%d'), 'selected_criteria':conn.get_scheme_criteria_applied(entry[0])}
+            schemes_with_info[scheme_id] = {'classification_id':entry[0], 
+                                            'date':entry[5].strftime('%Y-%m-%d'), 
+                                            'selected_criteria':conn.get_scheme_criteria_applied(entry[0]), 
+                                            'literature':entry[14], 
+                                            'full_name': entry[8] + ' ' + entry[9], 
+                                            'affiliation': entry[10]
+                                        }
     return schemes_with_info
 
 
@@ -264,7 +270,7 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
     heredicare_center_classifications = annotations.pop('heredicare_center_classifications', None)
     consensus_scheme_classifications = annotations.pop('consensus_scheme_classifications', None)
     user_scheme_classifications = annotations.pop('user_scheme_classifications', None)
-    assays = annotations.pop('assays', None) #TODO
+    assays = annotations.pop('assays', None)
     # consequences
     variant_consequences = annotations.pop('variant_consequences', None)
 
@@ -368,7 +374,13 @@ def is_valid_scheme(selected_criteria, scheme):
 
     # ensure that only valid criteria were submitted
     for criterium_id in selected_criteria:
-        criterium_name = selected_criteria[criterium_id]['criterium_name']
+        current_criterium = selected_criteria[criterium_id]
+        criterium_name = current_criterium['criterium_name']
+        #ensure that each criterum has some evidence
+        if current_criterium['evidence'].strip() == '':
+            is_valid = False
+            message = "Criterium " + str(criterium_name) + " is missing evidence. The classification was not submitted."
+            break
         # ensure that only valid criteria were submitted
         if criterium_name not in scheme_criteria:
             is_valid = False
@@ -426,17 +438,17 @@ def is_valid_literature(pmids, text_passages):
     return is_valid, message
 
 
-def handle_slected_literature(previous_selected_literature, classification_id, pmids, text_passages, conn):
+def handle_selected_literature(previous_selected_literature, classification_id, pmids, text_passages, conn, is_user = True):
     # insert and update
     for pmid, text_passage in zip(pmids, text_passages):
-        conn.insert_update_selected_literature(is_user = True, classification_id = classification_id, pmid = pmid, text_passage = text_passage)
+        conn.insert_update_selected_literature(is_user = is_user, classification_id = classification_id, pmid = pmid, text_passage = text_passage)
     
     # delete if missing in pmids
     for entry in previous_selected_literature:
         previously_selected_pmid = str(entry[2])
         if previously_selected_pmid not in pmids:
             classification_id = entry[1]
-            conn.delete_selected_literature(is_user = True, classification_id=classification_id, pmid=previously_selected_pmid)
+            conn.delete_selected_literature(is_user = is_user, classification_id=classification_id, pmid=previously_selected_pmid)
 
 
 def get_clinvar_submission(variant_id, conn):

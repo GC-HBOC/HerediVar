@@ -154,7 +154,7 @@
                                placeholder="chr1:10295758-17027834; chr11:108229378-108229378; ..." class="form-control"
                                >{{ request.args.get('ranges', '') }}</textarea>
                         
-                        <div class="d-flex">
+                        <div class="d-flex"> <!-- custom file upload -->
                             <input class="btn btn-secondary fake-upload-button" type="button" id="loadbed" value="select bed..." onclick="document.getElementById('bed').click()" />
                             <label class="form-control fake-upload-label" for="loadbed" id="filepath_display" style="cursor:pointer">No file selected.</label>
                             <input type="file" name="bed" class="form-control" id="bed" accept=".bed" style="display:none;" onchange="document.getElementById('filepath_display').innerText = 'selected: ' + this.value.replace(/.*[\/\\]/, '');"></input>

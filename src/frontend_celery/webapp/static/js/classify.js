@@ -118,18 +118,32 @@ function submit_classification() {
 
 
 function preselect_literature() {
-    var selected_scheme =  previous_classification[scheme]
-    if (typeof selected_scheme !== "undefined") { 
-        var previous_selected_literature = selected_scheme['literature']
-        for (var i = 0; i < previous_selected_literature.length; i++) {
-            var current_literature = previous_selected_literature[i]
-            var pmid = current_literature[2]
-            var text_passage = current_literature[3]
-            create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
+    
+    for (var user_id in schemes_with_info) {
+        var schemes_from_user = schemes_with_info[user_id]
+        var selected_scheme =  schemes_from_user[scheme]
+        if (typeof selected_scheme !== "undefined") { 
+            var previous_selected_literature = selected_scheme['literature']
+            var provided_by = selected_scheme['full_name']
+            var affiliation = selected_scheme['affiliation']
+            for (var i = 0; i < previous_selected_literature.length; i++) {
+                var current_literature = previous_selected_literature[i]
+                var pmid = current_literature[2]
+                var text_passage = current_literature[3]
+                if (classification_type === 'consensus') { // add to modal table for copying
+                    create_line_consensus_modal(document.getElementById('user_text_passages_for_copy'), pmid = pmid, evidence_text = text_passage, provided_by=provided_by, affiliation=affiliation)
+                } else { // add directly to the literature select
+                    create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
+                }
+            }
         }
     }
 
 }
+
+
+
+
 
 
 // call functions once on page load
@@ -141,7 +155,6 @@ function preselect_final_classification() {
         final_class_select.value = previous_classification[scheme]['class']
         comment_text_area.value = previous_classification[scheme]['comment']
         comment_text_area.innerText = previous_classification[scheme]['comment']
-        console.log(previous_classification[scheme]['comment'])
         warning_display.hidden = false
     } else {
         final_class_select.value = 3
@@ -183,6 +196,13 @@ function preselect_criteria_from_request_form() {
     }
 }
 
+function preselect_selected_literature() {
+    selected_pmids.forEach(function (pmid, index) {
+        var text_passage = selected_text_passages[index]
+        create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
+    })
+}
+
 
 
 $(document).ready(function() {
@@ -204,6 +224,7 @@ $(document).ready(function() {
 
     if (do_request_form_preselect) {
         preselect_criteria_from_request_form()
+        preselect_selected_literature()
     }
 
     // fix for option href handling in edge, chrome (https://stackoverflow.com/questions/9972280/onclick-on-option-tag-not-working-on-ie-and-chrome)
@@ -257,8 +278,11 @@ function scheme_select_action(do_revert=true) {
     }
     preselect_final_classification()
 
-    remove_all_selected_literature()
-    preselect_literature()
+    if (do_revert) {
+        remove_all_selected_literature()
+        preselect_literature()
+    }
+
 }
 
 function set_user_selection_counts(scheme) {
@@ -469,6 +493,40 @@ function create_literature_select(parent, pmid="", placeholder="Text citation", 
 }
 
 
+function create_line_consensus_modal(parent, pmid, evidence_text, provided_by, affiliation) {
+    var  new_row = document.createElement('tr')
+    parent.appendChild(new_row)
+
+    //<td style="vertical-align: middle; text-align:center;"><input class="form-check-input selected_literature" type="checkbox"></input></td>
+    var select_td = document.createElement('td')
+    select_td.setAttribute('style', "vertical-align: middle; text-align:center;")
+    new_row.appendChild(select_td)
+    var new_checkbox = document.createElement('input')
+    new_checkbox.classList.add('form-check-input')
+    new_checkbox.classList.add('selected_user_literature')
+    new_checkbox.setAttribute('type', 'checkbox')
+    select_td.appendChild(new_checkbox)
+
+    var provided_by_td = document.createElement('td')
+    provided_by_td.innerText = provided_by
+    new_row.appendChild(provided_by_td)
+
+    var affiliation_td = document.createElement('td')
+    affiliation_td.innerText = affiliation
+    new_row.appendChild(affiliation_td)
+
+    var pmid_td = document.createElement('td')
+    pmid_td.innerText = pmid
+    new_row.appendChild(pmid_td)
+
+    var evidence_text_td = document.createElement('td')
+    evidence_text_td.innerText = evidence_text
+    new_row.appendChild(evidence_text_td)
+
+    remove_default_caption(document.getElementById('userSelectedLiterature'))
+}   
+
+
 function delete_selected_literature_row(tr) {
     if (tr.closest('tbody').children.length == 1) {
         add_default_caption(tr.closest('table'))
@@ -478,27 +536,58 @@ function delete_selected_literature_row(tr) {
 
 
 
-function add_all_to_selected_literature() {
-    const tbody = document.getElementById('literatureTable').getElementsByTagName('tbody')[0]
+function add_all_to_selected_literature(tname, inner_func) {
+    const tbody = document.getElementById(tname).getElementsByTagName('tbody')[0]
     var rows = tbody.getElementsByTagName('tr')
     for (var i = 0; i < rows.length; i++) {
         var current_row = rows[i]
         var current_tds = current_row.getElementsByTagName('td')
         var current_selected_check = current_tds[0].getElementsByTagName('input')[0]
         if (current_selected_check.checked) { // if was selected add a new row
-            var pmid = current_tds[5].getAttribute('data-pmid')
-            var paper_title = current_tds[3].getAttribute('data-title')
-            create_literature_select(document.getElementById('selectedLiteratureList'), pmid=pmid, placeholder="Paper title: " + paper_title)
+            inner_func(current_tds)
             current_selected_check.checked = false
         }
     }
     $('.modal').modal('hide');
+    $('.selected_literature').prop('checked', false);
 }
 
+function add_from_text_mining(current_tds) {
+    var pmid = current_tds[5].getAttribute('data-pmid')
+    var paper_title = current_tds[3].getAttribute('data-title')
+    create_literature_select(document.getElementById('selectedLiteratureList'), pmid=pmid, placeholder="Paper title: " + paper_title)
+    
+}
+
+function add_from_user_selected(current_tds) {
+    var pmid = current_tds[3].innerText
+    var text_passage = current_tds[4].innerText
+    create_literature_select(document.getElementById('selectedLiteratureList'), pmid=pmid, placeholder="Text citation", text_passage=text_passage)
+}
+
+/*
+function add_all_to_selected_literature_from_user_selected() {
+    const tbody = document.getElementById('userSelectedLiterature').getElementsByTagName('tbody')[0]
+    var rows = tbody.getElementsByTagName('tr')
+    for (var i = 0; i < rows.length; i++) {
+        var current_row = rows[i]
+        var current_tds = current_row.getElementsByTagName('td')
+        var current_selected_check = current_tds[0].getElementsByTagName('input')[0]
+        if (current_selected_check.checked) { // if was selected add a new row
+            var pmid = current_tds[3].innerText
+            var text_passage = current_tds[4].innerText
+            create_literature_select(document.getElementById('selectedLiteratureList'), pmid=pmid, placeholder="Text citation", text_passage=text_passage)
+            current_selected_check.checked = false
+        }
+    }
+    $('.modal').modal('hide');
+    $('.selected_literature').prop('checked', false);
+}
+*/
 
 
-function select_all_non_hidden_papers(check_or_not) {
-    const tbody = document.getElementById('literatureTable').getElementsByTagName('tbody')[0]
+function select_all_non_hidden_papers(check_or_not, table_id) {
+    const tbody = document.getElementById(table_id).getElementsByTagName('tbody')[0]
     var rows = tbody.getElementsByTagName('tr')
     for (var i = 0; i < rows.length; i++) {
         var current_row = rows[i]

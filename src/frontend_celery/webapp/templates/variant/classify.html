@@ -145,6 +145,9 @@
                 <button id="blank_row_button" class="btn btn-sm btn-secondary" type="button" onclick="create_literature_select(document.getElementById('selectedLiteratureList'))">Add blank row</button>
                 <!-- opens a modal showing all literature entries for this variant, the user selects some and for each one of them a new row in the selected literature table is created -->
                 <button id="text-mining-button" type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#text-mining-modal">Add from text mining</button>
+                {% if classification_type == 'consensus' %}
+                <button id="selected-user-literature-button" type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#selected-user-literature-modal">Add from user</button>
+                {% endif %}
             </div>
 
 
@@ -228,11 +231,11 @@
                         </table>
                     </div>
 
-                    <input class="form-check-input selected_literature" type="checkbox" onclick="select_all_non_hidden_papers(this.checked)"></input> select all shown
+                    <input class="form-check-input selected_literature" type="checkbox" onclick="select_all_non_hidden_papers(this.checked, 'literatureTable')"></input> select all shown
                     
                   </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="add_all_to_selected_literature()">Add selected</button>
+                    <button type="button" class="btn btn-primary" onclick="add_all_to_selected_literature('literatureTable', add_from_text_mining)">Add selected</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </div>
@@ -240,10 +243,51 @@
     </div>
 
 
+    {% if classification_type == 'consensus' %}
+    <div class="modal fade" id="selected-user-literature-modal" tabindex="-1" aria-labelledby="selected-user-literature-label" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="selected-user-literature-label">Select papers</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                  <div class="modal-body">
+                      
+                    <div class="table-responsive tableFixHead table-lg">
+                        <table class="table table-hover" id="userSelectedLiterature">
+                            <thead>
+                                <tr>
+                                    <th>Select</th>
+                                    <th><div class="sortable">Provided by</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th><div class="sortable">PMID</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th><div class="sortable">Text passage</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="user_text_passages_for_copy">
+
+    
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <input class="form-check-input selected_literature" type="checkbox" onclick="select_all_non_hidden_papers(this.checked, 'userSelectedLiterature')"></input> select all shown
+                    
+                  </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="add_all_to_selected_literature('userSelectedLiterature', add_from_user_selected)">Add selected</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+
       
 </div>
 
-<meta id="test" data-request-object="{{ request.form.to_dict(flat=True) }}">
+
 
 <!-- this extracts the flask data and makes them available to the scripts -->
 <script>
@@ -258,6 +302,10 @@
     const variant_genes = '{{ variant_oi[6] }}'.split(';');
     const classification_type = '{{ classification_type }}';
     const request_form = JSON.parse('{{request.form.to_dict(flat=True) | tojson | tojson }}'.slice(1, -1))
+    
+    
+    const selected_pmids = JSON.parse('{{request.form.getlist("pmid") | tojson | tojson }}'.slice(1, -1)) // this may be non empty if there were errors in the submission
+    const selected_text_passages = JSON.parse('{{request.form.getlist("text_passage") | tojson | tojson }}'.slice(1, -1)) // this may be non empty if there were errors in the submission
 
 
 </script>

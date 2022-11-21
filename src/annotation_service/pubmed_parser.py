@@ -1,8 +1,9 @@
 from Bio import Entrez
 import common.functions as functions
 import re
+import os
 
-Entrez.email = 'marvin.doebel@med.uni-tuebingen.de'
+Entrez.email = os.environ.get('ENTREZ_MAIL')
 
 def fetch(pmids):
     pmids = pmids.replace('&', ',')
