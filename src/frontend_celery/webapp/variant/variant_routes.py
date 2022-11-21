@@ -198,7 +198,7 @@ def classify(variant_id):
     classification_schemas = conn.get_classification_schemas()
     literature = conn.get_variant_literature(variant_id)
 
-    print(previous_classification)
+    #print(previous_classification)
 
 
     do_redirect = False
@@ -321,7 +321,7 @@ def consensus_classify(variant_id):
 
             if user_classification_is_valid and scheme_classification_is_valid and literature_is_valid:
                 # insert consensus classification
-                classification_id = handle_consensus_classification(variant_id, classification, comment, scheme_id, conn)
+                classification_id = handle_consensus_classification(variant_id, classification, comment, scheme_id, pmids, text_passages, criteria, classification_schemas[scheme_id]['description'], conn)
 
                 # insert literature passages
                 # classification id never none because we always insert a new classification

@@ -307,6 +307,7 @@ def get_variant_vcf_line(variant_id, conn):
             submission_date = consensus_classification[5].strftime('%Y-%m-%d %H:%M:%S')
             consensus_scheme = consensus_classification[12]
             consensus_criteria = consensus_classification[14]
+            selected_literatures = consensus_classification[15]
             all_criteria = ""
             consensus_criteria_string = ""
             for criterium in consensus_criteria:
@@ -318,7 +319,13 @@ def get_variant_vcf_line(variant_id, conn):
                 consensus_criteria_string = functions.collect_info(consensus_criteria_string, "", new_consensus_criteria_string, sep = "~24") # sep: $
             resp = calculate_class(consensus_classification[13], all_criteria)
             consensus_scheme_class = str(resp.get_json()['final_class'])
-            consensus_classification_vcf = "~7C".join([consensus_class, consensus_comment, submission_date, consensus_scheme, consensus_scheme_class, consensus_criteria_string]) # sep: |
+            text_passage_string = ""
+            for selected_literature in selected_literatures: # convert literature passages to string
+                pmid = str(selected_literature[2])
+                text_passage = selected_literature[3]
+                new_text_passage_string = "~2B".join([pmid, text_passage]) # sep: +
+                text_passage_string = functions.collect_info(text_passage_string, "", new_text_passage_string, sep = "~24") # sep: $
+            consensus_classification_vcf = "~7C".join([consensus_class, consensus_comment, submission_date, consensus_scheme, consensus_scheme_class, consensus_criteria_string, text_passage_string]) # sep: |
             #print("consensus classification: " + functions.encode_vcf(consensus_classification_vcf))
             info = functions.collect_info(info, key + '=', functions.encode_vcf(consensus_classification_vcf))
     

@@ -43,13 +43,23 @@ class pdf_gen:
         self.story.append(Paragraph(subtitle, self.subtitle_style))
         self.add_spacer()
 
-    def add_variant_info(self, variant, classification, date, comment, rsid):
+    def add_variant_info(self, variant, classification, date, comment, rsid, selected_literature, scheme_description, selected_criteria):
         tablevalues = [("variant", Paragraph(variant)), ("class", Paragraph(classification)), ("date", Paragraph(date)), ("comment", Paragraph(comment))]
         if rsid is not None:
             rsid = 'rs' + str(rsid)
             tablevalues.append(("rsid", Paragraph(rsid)))
         tab = Table(tablevalues, style=[('VALIGN', (0, 0), (-1, -1), 'TOP')], hAlign='LEFT', colWidths=[3*cm, self.width-3*cm])
         self.story.append(tab)
+        self.add_text("Selected scheme: " + scheme_description)
+        if len(selected_criteria) > 0:
+            self.add_text("Selected criteria: ")
+            self.add_table(selected_criteria, ["Criterium", "Strength", "Evidence"], [2,3.5,13.5])
+
+        if len(selected_literature) > 0:
+            self.add_text("Selected literature: ")
+            self.add_table(selected_literature, ["PMID", "Text passage"], [2, 17])
+        else:
+            self.add_text("No further literature evidence given.")
     
     def add_spacer(self):
         d = Drawing(self.width, 1)
@@ -65,13 +75,13 @@ class pdf_gen:
         pmids = ', '.join(literature_oi)
         self.story.append(Paragraph(pmids))
     
-    def add_relevant_classifications(self, classifications, headers, colwidths): # colwidths in number of chars it is more like a maximal colwidth
-        #classifications = [[self.prepare_text(str(y), colwidth)[0] for y, colwidth in zip(x, colwidths)] for x in classifications]
-        classifications = [[Paragraph(str(y), self.table_text_style) for y in x] for x in classifications]
+    def add_table(self, info, headers, colwidths): # colwidths in number of chars it is more like a maximal colwidth
+        #info = [[self.prepare_text(str(y), colwidth)[0] for y, colwidth in zip(x, colwidths)] for x in info]
+        info = [[Paragraph(str(y), self.table_text_style) for y in x] for x in info]
         colwidths = [x*cm for x in colwidths]
 
-        classifications.insert(0,[Paragraph(str(x), self.table_text_head_style) for x in headers])
-        tab = Table(classifications, hAlign='LEFT', style=self.table_style, repeatRows=1, colWidths=colwidths)
+        info.insert(0,[Paragraph(str(x), self.table_text_head_style) for x in headers])
+        tab = Table(info, hAlign='LEFT', style=self.table_style, repeatRows=1, colWidths=colwidths)
         self.story.append(tab)
 
     

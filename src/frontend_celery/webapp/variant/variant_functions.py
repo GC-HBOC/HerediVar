@@ -170,7 +170,6 @@ def get_schemes_with_info(variant_id, user_id, conn):
     # fetch previous scheme classifications (could be multiple because of different schemes)
     # 0id, 1variant_id, 2user_id, 3scheme, 4date
     previous_classifications = conn.get_user_classifications_extended(variant_id = variant_id, user_id = user_id)
-    print(previous_classifications)
     # extract scheme and convert to scheme->scheme_classification_id dict
     schemes_with_info = {}
     if previous_classifications is not None:
@@ -237,15 +236,17 @@ def handle_user_classification(variant_id, user_id, previous_classifications, ne
     
 
 
-def handle_consensus_classification(variant_id, classification, comment, scheme_id, conn):
+def handle_consensus_classification(variant_id, classification, comment, scheme_id, pmids, text_passages, criteria, scheme_description, conn):
     ## get relevant information
-    annotations = conn.get_all_variant_annotations(variant_id, most_recent_scheme_consensus=False)
+    annotations = conn.get_all_variant_annotations(variant_id)
     annotations.pop('consensus_classification', None)
     variant_oi = get_variant(conn, variant_id)
     current_datetime = functions.get_now()
 
     ## compute pdf containing all annotations
-    evidence_b64 = get_evidence_pdf(variant_oi, annotations, classification, comment, current_datetime)
+    for criterium_id in criteria:
+        criteria[criterium_id]['strength_description'] = conn.get_classification_criterium_strength(criteria[criterium_id]['criterium_strength_id'])[3]
+    evidence_b64 = get_evidence_pdf(variant_oi, annotations, classification, comment, current_datetime, pmids, text_passages, scheme_description, criteria)
 
     #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/frontend/downloads/consensus_classification_reports/testreport.pdf')
     conn.insert_consensus_classification_from_variant_id(session['user']['user_id'], variant_id, classification, comment, evidence_document=evidence_b64, date = current_datetime, scheme_id=scheme_id)
@@ -253,7 +254,7 @@ def handle_consensus_classification(variant_id, classification, comment, scheme_
     return conn.get_last_insert_id() # returns the consensus_classification_id
 
 
-def get_evidence_pdf(variant_oi, annotations, classification, comment, current_date):
+def get_evidence_pdf(variant_oi, annotations, classification, comment, current_date, pmids, text_passages, scheme_description, selected_criteria):
     buffer = io.BytesIO()
     generator = pdf_gen(buffer)
     generator.add_title('Classification report')
@@ -261,15 +262,20 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
     rsid = annotations.pop('rsid', None)
     if rsid is not None:
         rsid = rsid[4]
-    generator.add_variant_info(v, classification, current_date, comment, rsid)
+    selected_literature = list(zip(pmids, text_passages))
+    selected_criteria_table = []
+    for criterium_id in selected_criteria:
+        selected_criteria_table.append([selected_criteria[criterium_id]['criterium_name'], selected_criteria[criterium_id]['strength_description'], selected_criteria[criterium_id]['evidence']])
+
+    generator.add_variant_info(v, classification, current_date, comment, rsid, selected_literature, scheme_description, selected_criteria_table)
 
     # extract & remove special annotations
     literature = annotations.pop('literature', None)
     user_classifications = annotations.pop('user_classifications', None)
     clinvar_submissions = annotations.pop('clinvar_submissions', None)
     heredicare_center_classifications = annotations.pop('heredicare_center_classifications', None)
-    consensus_scheme_classifications = annotations.pop('consensus_scheme_classifications', None)
-    user_scheme_classifications = annotations.pop('user_scheme_classifications', None)
+    #consensus_scheme_classifications = annotations.pop('consensus_scheme_classifications', None)
+    #user_scheme_classifications = annotations.pop('user_scheme_classifications', None)
     assays = annotations.pop('assays', None)
     # consequences
     variant_consequences = annotations.pop('variant_consequences', None)
@@ -282,45 +288,71 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
     if variant_consequences is not None:
         generator.add_subtitle("Variant consequences:")
         generator.add_text("Flags column: first number = is_gencode_basic, second number: is_mane_select, third number: is_mane_plus_clinical, fourth number: is_ensembl_canonical")
-        generator.add_relevant_classifications([[x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[11], str(x[13]) + str(x[14]) + str(x[15]) + str(x[16])] for x in variant_consequences], 
+        generator.add_table([[x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[11], str(x[13]) + str(x[14]) + str(x[15]) + str(x[16])] for x in variant_consequences], 
             ('Transcript Name', 'HGVSc', 'HGVSp', 'Consequence', 'Impact', 'Exon Nr.', 'Intron Nr.', 'Gene Symbol', 'Protein Domain', 'Flags'), [3, 2, 2, 3, 1.5, 1.2, 1.3, 1.5, 1.6, 1.5])
     if literature is not None:
         generator.add_subtitle("PubMed IDs:")
         generator.add_relevant_literature([str(x[2]) for x in literature])
-    if any(x is not None for x in [user_classifications, clinvar_submissions, heredicare_center_classifications, consensus_scheme_classifications, user_scheme_classifications]):
+    if any(x is not None for x in [user_classifications, clinvar_submissions, heredicare_center_classifications]):
         generator.add_subtitle("Classifications:")
-    if consensus_scheme_classifications is not None:
-        generator.add_text("HerediVar consensus scheme classifications:")
-        consensus_scheme_classifications = add_scheme_classes(consensus_scheme_classifications, 10)
-        table_data = []
-        for classification in consensus_scheme_classifications:
-            scheme = classification[3]
-            criteria_string = ' ## '.join([criterium[2] + ' Strength: ' + strength_to_text(criterium[3], scheme) + ' Evidence: ' + criterium[4] for criterium in classification[10]])
-            new_dat = [classification[11], classification[7] + ' ' + classification[8], classification[9], classification[4], scheme, criteria_string]
-            table_data.append(new_dat)
-        generator.add_relevant_classifications(table_data, ('Class', 'Submitter', 'Affiliation', 'Date', 'Scheme', 'Selected criteria'), [1.2, 2, 2, 2, 2.2, 9.3])
+    #if consensus_scheme_classifications is not None:
+    #    generator.add_text("HerediVar consensus scheme classifications:")
+    #    consensus_scheme_classifications = add_scheme_classes(consensus_scheme_classifications, 10)
+    #    table_data = []
+    #    for classification in consensus_scheme_classifications:
+    #        scheme = classification[3]
+    #        criteria_string = ' ## '.join([criterium[2] + ' Strength: ' + strength_to_text(criterium[3], scheme) + ' Evidence: ' + criterium[4] for criterium in classification[10]])
+    #        new_dat = [classification[11], classification[7] + ' ' + classification[8], classification[9], classification[4], scheme, criteria_string]
+    #        table_data.append(new_dat)
+    #    generator.add_relevant_classifications(table_data, ('Class', 'Submitter', 'Affiliation', 'Date', 'Scheme', 'Selected criteria'), [1.2, 2, 2, 2, 2.2, 9.3])
     if user_classifications is not None:
         generator.add_text("HerediVar user classifications:")
-        generator.add_relevant_classifications([[x[1], x[8] + ' ' + x[9], x[10], x[5], x[4]] for x in user_classifications], ('Class', 'Submitter', 'Affiliation', 'Date', 'Comment'), [1.2, 2, 2, 2, 11.5])
-    if user_scheme_classifications is not None:
-        generator.add_text("HerediVar user scheme classifications:")
-        user_scheme_classifications = add_scheme_classes(user_scheme_classifications, 9)
-        table_data = []
-        for classification in user_scheme_classifications:
-            scheme = classification[3]
-            criteria_string = ' ## '.join([criterium[2] + ' Strength: ' + strength_to_text(criterium[3], scheme) + ' Evidence: ' + criterium[4] for criterium in classification[9]])
-            new_dat = [classification[10], classification[6] + ' ' + classification[7], classification[8], classification[4], scheme, criteria_string]
-            table_data.append(new_dat)
-        generator.add_relevant_classifications(table_data, ('Class', 'Submitter', 'Affiliation', 'Date', 'Scheme', 'Selected criteria'), [1.2, 2, 2, 2, 2.2, 9.3])
+
+        for user_classification in user_classifications:
+            generator.add_text("Basic information")
+            generator.add_relevant_information("Class", user_classification[1])
+            generator.add_relevant_information("Full name", user_classification[8] + ' ' + user_classification[9])
+            generator.add_relevant_information("Affiliation", user_classification[10])
+            generator.add_relevant_information("Date", user_classification[5].strftime('%Y-%m-%d  %H:%M:%S'))
+            generator.add_relevant_information("Comment", user_classification[4])
+
+            # add scheme classification
+            scheme = user_classification[11]
+            generator.add_text("Selected scheme: " + scheme)
+            selected_criteria = user_classification[13]
+            if len(selected_criteria) > 0:
+                generator.add_text("Selected criteria:")
+                generator.add_table([[x[5], x[7], x[4]] for x in selected_criteria], ["Criterium", "Strength", "Evidence"], [2,3.5,13.5]) # criterium, strength, evidence
+            
+            # add text passages
+            selected_literature_passages = user_classification[14]
+            if len(selected_literature_passages) > 0:
+                generator.add_text("Selected literature:")
+                generator.add_table([[x[2], x[3]] for x in selected_literature_passages], ["PMID", "Text passage"], [2, 17]) # pmid, text_passage
+            else:
+                generator.add_text("No further literature evidence selected.")
+
+
+        #generator.add_relevant_classifications([[x[1], x[8] + ' ' + x[9], x[10], x[5], x[4]] for x in user_classifications], ('Class', 'Submitter', 'Affiliation', 'Date', 'Comment'), [1.2, 2, 2, 2, 11.5])
+    #if user_scheme_classifications is not None:
+    #    generator.add_text("HerediVar user scheme classifications:")
+    #    user_scheme_classifications = add_scheme_classes(user_scheme_classifications, 9)
+    #    table_data = []
+    #    for classification in user_scheme_classifications:
+    #        scheme = classification[3]
+    #        criteria_string = ' ## '.join([criterium[2] + ' Strength: ' + strength_to_text(criterium[3], scheme) + ' Evidence: ' + criterium[4] for criterium in classification[9]])
+    #        new_dat = [classification[10], classification[6] + ' ' + classification[7], classification[8], classification[4], scheme, criteria_string]
+    #        table_data.append(new_dat)
+    #    generator.add_relevant_classifications(table_data, ('Class', 'Submitter', 'Affiliation', 'Date', 'Scheme', 'Selected criteria'), [1.2, 2, 2, 2, 2.2, 9.3])
     if heredicare_center_classifications is not None:
         generator.add_text("HerediCare center classifications:")
-        generator.add_relevant_classifications([[x[1], x[3], x[5], x[4]] for x in heredicare_center_classifications], ('Class', 'Center', 'Date', 'Comment'),  [2, 2, 2, 12])
+        generator.add_table([[x[1], x[3], x[5], x[4]] for x in heredicare_center_classifications], ('Class', 'Center', 'Date', 'Comment'),  [2, 2, 2, 12])
     if clinvar_submissions is not None:
         generator.add_text("ClinVar submissions:")
-        generator.add_relevant_classifications([[x[2], x[3], x[4], ';'.join([condition[0] for condition in x[5]]), x[6], x[7]] for x in clinvar_submissions], ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter', 'Comment'), [1.5, 2, 2, 2, 2, 9])
+        generator.add_table([[x[2], x[3], x[4], ';'.join([condition[0] for condition in x[5]]), x[6], x[7]] for x in clinvar_submissions], ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter', 'Comment'), [1.5, 2, 2, 2, 2, 9])
     if assays is not None:
         generator.add_text("Assays:")
-        generator.add_relevant_classifications([[x[1], x[2], x[3]] for x in assays], ("Assay type", "Score", "Date"), [3,3,3])
+        generator.add_table([[x[1], x[2], x[3]] for x in assays], ("Assay type", "Score", "Date"), [3,3,3])
 
 
     generator.save_pdf()

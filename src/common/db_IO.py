@@ -1008,6 +1008,12 @@ class Connection:
         if classification_criterium_strength_id is None:
             return -1
         return classification_criterium_strength_id[0]
+    
+    def get_classification_criterium_strength(self, classification_criterium_strength_id):
+        command = "SELECT * FROM classification_criterium_strength WHERE id = %s"
+        self.cursor.execute(command, (classification_criterium_strength_id, ))
+        result = self.cursor.fetchone()
+        return result
 
     def insert_scheme_criterium_applied(self, classification_id, classification_criterium_id, criterium_strength_id, evidence, where="user"):
         if where == "user":
@@ -1319,7 +1325,7 @@ class Connection:
         self.cursor.execute(command, (list_id, ))
         self.conn.commit()
 
-    def get_all_variant_annotations(self, variant_id, group_output=False, most_recent_scheme_consensus=True):
+    def get_all_variant_annotations(self, variant_id, group_output=False):
         variant_annotations = self.get_recent_annotations(variant_id)
         standard_annotations = {} # used for grouping hierarchy: 'standard_annotations' -> group -> annotation_label
         variant_annot_dict = {}
@@ -1392,6 +1398,8 @@ class Connection:
             consensus_classification.append(current_scheme[3]) # append scheme type
             current_scheme_criteria_applied = self.get_scheme_criteria_applied(consensus_classification[0], where = "consensus")
             consensus_classification.append(current_scheme_criteria_applied)
+            previous_selected_literature = self.get_selected_literature(is_user = False, classification_id = consensus_classification[0])
+            consensus_classification.append(previous_selected_literature)
             consensus_classifications_preprocessed.append(consensus_classification)
         return consensus_classifications_preprocessed
 

@@ -65,7 +65,7 @@
 
             {% set selected_criteria = most_recent_consensus_classification[14] %}<!-- the consensus scheme classifications should only contain the most recent classification -->
             {% set selected_scheme = most_recent_consensus_classification[12] %}
-            {% set scheme_determined_class = most_recent_consensus_classification[15] %}
+            {% set scheme_determined_class = most_recent_consensus_classification[16] %}
 
             <tr style="margin-left:0">
                 <td class="li-label" style="width:5rem;">Scheme</td>
@@ -84,6 +84,14 @@
             <tr>
                 <td class="li-label" style="vertical-align:middle">Criteria</td>
                 <td style="vertical-align:middle">{{ draw_criteria_display(selected_criteria, '4em', '1.7em') }}</td>
+            </tr>
+
+            <tr>
+                <td class="li-label" style="vertical-align:middle">Literature</td>
+                <td style="vertical-align:middle">
+                    {{ selected_literature_display(most_recent_consensus_classification[15]) }}
+
+                </td>
             </tr>
 
         </tbody>        
@@ -590,15 +598,16 @@
 
 
 {% macro selected_literature_display(selected_literature) %}
-    <div>
+<div class="d-flex flex-wrap">
         {% for paper in selected_literature %}
         {% set tooltip = "Text passage of interest: " + paper[3] %}
-            <div class="tooltip-lg" data-bs-toggle="tooltip" title="{{tooltip}}">
-                {% set pmid = paper[2] %}
-                {{ external_link(pmid|string, "https://pubmed.ncbi.nlm.nih.gov/" + pmid | string) }}
-            </div>
+        <div class="ssr tooltip-lg" data-bs-toggle="tooltip" title="{{tooltip}}" data-bs-placement="top">
+            {% set pmid = paper[2] %}
+            {{ external_link(pmid|string, "https://pubmed.ncbi.nlm.nih.gov/" + pmid | string) }}
+        </div>
         {% endfor %}
-    </div>
+    </ul>
+</div>
 {% endmacro %}
 
 

@@ -28,6 +28,7 @@ $(document).ready(function()
     // activate bootstrap tooltips
     $("body").tooltip({ selector: '[data-bs-toggle=tooltip]' });
     $('.tooltip-lg').tooltip({
+        container: 'body',
         template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner tooltip-inner-lg"></div></div>'
     });
 
