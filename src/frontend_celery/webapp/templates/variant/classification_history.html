@@ -53,6 +53,7 @@
                     <th id="scheme_col"><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                     <th id="selected_criteria_col" style="min-width:20rem"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                     <th id="class_by_scheme_col" style="max-width:5rem"><div class="sortable">Class by scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th id="class_by_scheme_col" style="max-width:5rem"><div class="sortable">Literature</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                     <th id="document_col">Document</th>
                 </tr>
             </thead>
@@ -69,6 +70,7 @@
                     <td>{{classification['scheme']}}</td>
                     <td>{{ macros.draw_criteria_display(classification['selected_criteria'], '4em', '2em') }}</td>
                     <td>{{classification['class_by_scheme']}}</td>
+                    <td>{{macros.selected_literature_display(classification['selected_literature'])}}</td>
                     <td>{% if 'evidence_document_url' in classification %}<a href="{{ classification['evidence_document_url'] }}">download</a>{% endif %}</td>
 
 

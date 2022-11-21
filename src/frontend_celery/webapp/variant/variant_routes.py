@@ -373,7 +373,8 @@ def classification_history(variant_id):
                                      'evidence_document_url':url_for('download.evidence_document', consensus_classification_id=x[0]),
                                      'scheme':x[12].replace('_', ' '),
                                      'selected_criteria':x[14],
-                                     'class_by_scheme': x[15]
+                                     'class_by_scheme': x[16],
+                                     'selected_literature': x[15]
                                     } for x in consensus_classifications])
     if user_classifications is not None:
         user_classifications = add_scheme_classes(user_classifications, 13)
@@ -387,7 +388,8 @@ def classification_history(variant_id):
                                           'comment':x[4],
                                           'scheme':x[11].replace('_', ' '),
                                           'selected_criteria':x[13],
-                                          'class_by_scheme': x[14]
+                                          'class_by_scheme': x[15],
+                                          'selected_literature': x[14]
                                         } for x in user_classifications])
 
     return render_template('variant/classification_history.html', 
