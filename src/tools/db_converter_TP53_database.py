@@ -33,8 +33,8 @@ info_headers = [
     "##INFO=<ID=DNE_class,Number=.,Type=String,Description=\"Dominant-negative effect on transactivation by wild-type p53. Yes: dominant-negative activity on WAF1 and RGC promoters, Moderate: dominant-negative activity on some but not all promoters, No: no dominant-negative activity on both WAF1 and RGC promoters, or none of the promoters in the large studies. \">",
     "##INFO=<ID=domain_function,Number=.,Type=String,Description=\"Function of the domain in which the mutated residue is located. \">",
     "##INFO=<ID=pubmed,Number=.,Type=String,Description=\"PubMed of the publications in which was reported the polymorphic status of the variant. \">",
-    "##INFO=<ID=number_individuals,Number=1,Type=String,Description=\"The number of individuals with this variant. \">"
-    "##INFO=<ID=age_at_diagnosis,Number=.,Type=String,Description=\"A unique list of the ages of individuals at the time the disease was diagnosed. Items are separated with an ampersand (&). \">"
+    "##INFO=<ID=number_individuals,Number=1,Type=String,Description=\"The number of individuals with this variant. \">",
+    "##INFO=<ID=cases,Number=.,Type=String,Description=\"A list of diseased individuals carrying the variant. Items are separated with an ampersand (&). Format: family_id|age|age_at_diagnosis|topology|morphology \">"
     #"##INFO=<ID=hotspot,Number=1,Type=String,Description=\"Yes: variant is located in a codon defined as a cancer hotspot\">"
 ]
 functions.write_vcf_header(info_headers)
@@ -54,6 +54,11 @@ variants = {}
 missing_individual_id = 0
 
 for parts in reader:
+    # skip entries which are unknown if they actually have the variant
+    germline_carrier = parts[51]
+    if germline_carrier.lower() not in ['confirmed', 'obligatory']:
+        continue
+
     chr = 'chr17' # there are only variants from TP53!
     pos = parts[12].strip()
     ref = parts[20].strip()
@@ -62,7 +67,7 @@ for parts in reader:
     variant_id = pos + '_' + ref + '_' + alt
 
     if variant_id not in variants:
-        variants[variant_id] = {'class': [], 'bayes_del': [], 'transactivation_class': [], 'DNE_LOF_class': [], 'DNE_class': [], 'domain_function': [], 'pubmed': [], 'age_at_diagnosis': [], 'individual_ids': []}
+        variants[variant_id] = {'class': [], 'bayes_del': [], 'transactivation_class': [], 'DNE_LOF_class': [], 'DNE_class': [], 'domain_function': [], 'pubmed': [], 'age_at_diagnosis': [], 'individual_ids': [], 'cases': []}
 
     individual_id = parts[45].strip()
     new_info = {'class': parts[6].strip(),
@@ -72,13 +77,13 @@ for parts in reader:
                 'DNE_class': parts[37].strip(), 
                 'domain_function': parts[43].strip(), 
                 'pubmed': parts[73].strip().replace('https://www.ncbi.nlm.nih.gov/pubmed/', ''),
-                'age_at_diagnosis': parts[60].strip(),
+                'cases': '|'.join([parts[0], parts[55], parts[60].strip(), parts[58], parts[59]]), # family_id|age|age_at_diagnosis|topology|morphology
                 'individual_ids': str(missing_individual_id) + 'a' if individual_id == '' else individual_id
                 }
 
 
     for key in new_info:
-        if new_info[key] != 'NA' and new_info[key] != '' and new_info[key] not in variants[variant_id][key]:
+        if new_info[key].upper() != 'NA' and new_info[key] != '' and new_info[key] not in variants[variant_id][key]:
             variants[variant_id][key].append(new_info[key])
 
     missing_individual_id += 1
