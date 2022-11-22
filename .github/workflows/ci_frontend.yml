@@ -390,12 +390,12 @@ jobs:
           echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> src/common/.env
           echo "CLIENT_SECRET=${{ secrets.CLINVAR_API_KEY }}" >> src/common/.env
 
+          echo "ENTREZ_MAIL=${{ secrets.ENTREZ_MAIL }}" >> src/common/.env
+
 
       # run tests
       - name: run tests
         run: |
-          export NGSBITS_CONTAINER_ID=$(cat ngs-bits-container.txt)
-
           chmod 755 src/frontend_celery/tests/script/run_tests.sh
           src/frontend_celery/tests/script/run_tests.sh
         ##### !secrets are loaded from github: https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md

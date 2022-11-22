@@ -311,7 +311,7 @@ def test_gnomad_annotation():
     
     res = conn.get_variant_annotation(variant_id, 16)
     assert len(res) == 1
-    assert res[0][3] == "eas"
+    assert res[0][3] == "EAS"
     
     res = conn.get_variant_annotation(variant_id, 17)
     assert res is None
