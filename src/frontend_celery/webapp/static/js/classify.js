@@ -142,10 +142,6 @@ function preselect_literature() {
 }
 
 
-
-
-
-
 // call functions once on page load
 function preselect_final_classification() {
     var comment_text_area = document.getElementById('comment')
@@ -157,9 +153,9 @@ function preselect_final_classification() {
         comment_text_area.innerText = previous_classification[scheme]['comment']
         warning_display.hidden = false
     } else {
-        final_class_select.value = 3
-        comment_text_area.value = ''
-        comment_text_area.innerText = ''
+        final_class_select.value = request_form['final_class'] || '3'
+        comment_text_area.value = request_form['comment'] || ''
+        comment_text_area.innerText = request_form['comment'] || ''
         warning_display.hidden = true
     }
 }
@@ -194,6 +190,7 @@ function preselect_criteria_from_request_form() {
 
         }
     }
+    update_classification_preview()
 }
 
 function preselect_selected_literature() {

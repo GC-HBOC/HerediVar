@@ -10,6 +10,7 @@ import textwrap
 import math
 import os
 from reportlab.lib import colors
+from xml.sax.saxutils import escape
 
 class pdf_gen:
 
@@ -34,20 +35,20 @@ class pdf_gen:
 
 
     def add_title(self, title):
-        self.story.append(Paragraph(title, self.title_style))
+        self.story.append(self.get_paragraph(title, self.title_style))
         #self.draw_wrapped_text(title)
         #self.canvas.drawString(self.cursor.x, self.cursor.y, title)
         #self.skip(0, height)
     
     def add_subtitle(self, subtitle):
-        self.story.append(Paragraph(subtitle, self.subtitle_style))
+        self.story.append(self.get_paragraph(subtitle, self.subtitle_style))
         self.add_spacer()
 
     def add_variant_info(self, variant, classification, date, comment, rsid, selected_literature, scheme_description, selected_criteria):
-        tablevalues = [("variant", Paragraph(variant)), ("class", Paragraph(classification)), ("date", Paragraph(date)), ("comment", Paragraph(comment))]
+        tablevalues = [("variant", self.get_paragraph(variant)), ("class", self.get_paragraph(classification)), ("date", self.get_paragraph(date)), ("comment", self.get_paragraph(comment))]
         if rsid is not None:
             rsid = 'rs' + str(rsid)
-            tablevalues.append(("rsid", Paragraph(rsid)))
+            tablevalues.append(("rsid", self.get_paragraph(rsid)))
         tab = Table(tablevalues, style=[('VALIGN', (0, 0), (-1, -1), 'TOP')], hAlign='LEFT', colWidths=[3*cm, self.width-3*cm])
         self.story.append(tab)
         self.add_text("Selected scheme: " + scheme_description)
@@ -68,25 +69,25 @@ class pdf_gen:
         self.story.append(Spacer(self.width, 0.3*cm))
     
     def add_relevant_information(self, title, value):
-        tab = Table([(title, Paragraph(value))], colWidths=[self.col1width, self.col2width], hAlign='LEFT')
+        tab = Table([(title, self.get_paragraph(value))], colWidths=[self.col1width, self.col2width], hAlign='LEFT')
         self.story.append(tab)
     
     def add_relevant_literature(self, literature_oi):
         pmids = ', '.join(literature_oi)
-        self.story.append(Paragraph(pmids))
+        self.story.append(self.get_paragraph(pmids))
     
     def add_table(self, info, headers, colwidths): # colwidths in number of chars it is more like a maximal colwidth
         #info = [[self.prepare_text(str(y), colwidth)[0] for y, colwidth in zip(x, colwidths)] for x in info]
-        info = [[Paragraph(str(y), self.table_text_style) for y in x] for x in info]
+        info = [[self.get_paragraph(str(y), self.table_text_style) for y in x] for x in info]
         colwidths = [x*cm for x in colwidths]
 
-        info.insert(0,[Paragraph(str(x), self.table_text_head_style) for x in headers])
+        info.insert(0,[self.get_paragraph(escape(str(x)), self.table_text_head_style) for x in headers])
         tab = Table(info, hAlign='LEFT', style=self.table_style, repeatRows=1, colWidths=colwidths)
         self.story.append(tab)
 
     
     def add_text(self, text):
-        self.story.append(Paragraph(text, ParagraphStyle("basic", spaceBefore=0.2*cm, spaceAfter=0.2*cm)))
+        self.story.append(self.get_paragraph(text, ParagraphStyle("basic", spaceBefore=0.2*cm, spaceAfter=0.2*cm)))
     
     
     def prepare_text(self, text, n=75):
@@ -99,8 +100,11 @@ class pdf_gen:
 
 
     def generate_default_report(self, reason):
-        self.story.append(Paragraph("This variant classification does not have a report. Reason: " + reason + "."))
+        self.story.append(self.get_paragraph("This variant classification does not have a report. Reason: " + reason + "."))
         self.save_pdf()
+
+    def get_paragraph(self, text, paragraph_style = None):
+        return Paragraph(escape(str(text)), paragraph_style)
         
 
     def save_pdf(self):
