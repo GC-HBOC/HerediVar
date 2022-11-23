@@ -154,26 +154,27 @@ jobs:
       # write .env file
       - name: prepare settings
         run: |
-          echo "HOST=127.0.0.1" > src/common/.env
+          cd HerediVar/src/common
+          echo "HOST=127.0.0.1" > .env
 
-          echo "DB_HOST=0.0.0.0" > src/common/.env
-          echo "DB_NAME=test_db" >> src/common/.env
+          echo "DB_HOST=0.0.0.0" > .env
+          echo "DB_NAME=test_db" >> .env
 
-          echo "DB_USER=test_user" >> src/common/.env
-          echo "DB_USER_PW=password" >> src/common/.env
-          echo "DB_SUPER_USER=test_user" >> src/common/.env
-          echo "DB_SUPER_USER_PW=password" >> src/common/.env
-          echo "DB_ANNOTATION_USER=test_user" >> src/common/.env
-          echo "DB_ANNOTATION_USER_PW=password" >> src/common/.env
+          echo "DB_USER=test_user" >> .env
+          echo "DB_USER_PW=password" >> .env
+          echo "DB_SUPER_USER=test_user" >> .env
+          echo "DB_SUPER_USER_PW=password" >> .env
+          echo "DB_ANNOTATION_USER=test_user" >> .env
+          echo "DB_ANNOTATION_USER_PW=password" >> .env
 
-          echo "CLINVAR_API_KEY=${{ secrets.CLINVAR_API_KEY }}" >> src/common/.env
+          echo "CLINVAR_API_KEY=${{ secrets.CLINVAR_API_KEY }}" >> .env
 
-          echo "FLASK_SECRET_KEY=The_testing_key" >> src/common/.env
+          echo "FLASK_SECRET_KEY=The_testing_key" >> .env
           
-          echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> src/common/.env
-          echo "CLIENT_SECRET=${{ secrets.CLINVAR_API_KEY }}" >> src/common/.env
+          echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
+          echo "CLIENT_SECRET=${{ secrets.CLINVAR_API_KEY }}" >> .env
 
-          echo "ENTREZ_MAIL=${{ secrets.ENTREZ_MAIL }}" >> src/common/.env
+          echo "ENTREZ_MAIL=${{ secrets.ENTREZ_MAIL }}" >> .env
 
 
       # run tests
@@ -377,26 +378,27 @@ jobs:
       # write .env file
       - name: prepare settings
         run: |
-          echo "HOST=127.0.0.1" > src/common/.env
+          cd HerediVar/src/common
+          echo "HOST=127.0.0.1" > .env
 
-          echo "DB_HOST=0.0.0.0" > src/common/.env
-          echo "DB_NAME=test_db" >> src/common/.env
+          echo "DB_HOST=0.0.0.0" > .env
+          echo "DB_NAME=test_db" >> .env
 
-          echo "DB_USER=test_user" >> src/common/.env
-          echo "DB_USER_PW=password" >> src/common/.env
-          echo "DB_SUPER_USER=test_user" >> src/common/.env
-          echo "DB_SUPER_USER_PW=password" >> src/common/.env
-          echo "DB_ANNOTATION_USER=test_user" >> src/common/.env
-          echo "DB_ANNOTATION_USER_PW=password" >> src/common/.env
+          echo "DB_USER=test_user" >> .env
+          echo "DB_USER_PW=password" >> .env
+          echo "DB_SUPER_USER=test_user" >> .env
+          echo "DB_SUPER_USER_PW=password" >> .env
+          echo "DB_ANNOTATION_USER=test_user" >> .env
+          echo "DB_ANNOTATION_USER_PW=password" >> .env
 
-          echo "CLINVAR_API_KEY=${{ secrets.CLINVAR_API_KEY }}" >> src/common/.env
+          echo "CLINVAR_API_KEY=${{ secrets.CLINVAR_API_KEY }}" >> .env
 
-          echo "FLASK_SECRET_KEY=The_testing_key" >> src/common/.env
+          echo "FLASK_SECRET_KEY=The_testing_key" >> .env
           
-          echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> src/common/.env
-          echo "CLIENT_SECRET=${{ secrets.CLINVAR_API_KEY }}" >> src/common/.env
+          echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
+          echo "CLIENT_SECRET=${{ secrets.CLINVAR_API_KEY }}" >> .env
 
-          echo "ENTREZ_MAIL=${{ secrets.ENTREZ_MAIL }}" >> src/common/.env
+          echo "ENTREZ_MAIL=${{ secrets.ENTREZ_MAIL }}" >> .env
 
 
       # run tests
