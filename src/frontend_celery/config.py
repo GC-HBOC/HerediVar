@@ -23,8 +23,6 @@ class Config(object):
         raise ValueError("No WEBAPP_ENV environment variable set.")
 
     HOST = os.environ.get('HOST')
-    print("HOSTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT:")
-    print(HOST)
 
     ##### production config ####
     TESTING = False

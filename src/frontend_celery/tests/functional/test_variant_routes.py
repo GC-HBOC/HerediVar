@@ -218,7 +218,7 @@ def test_variant_display(test_client):
         time.sleep(2)
         if 'cosmic' not in link:
             response = requests.get(link)
-            assert response.status_code == 200
+            assert response.status_code == 200 or response.status_code == 429
     #check cosmic:
     link = 'https://cancer.sanger.ac.uk/cosmic/search?q=BARD1+c.1972C>T'
     response = requests.get(link)
@@ -356,6 +356,7 @@ def test_classify(test_client):
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
+    print(data)
     assert response.status_code == 200
     assert "Successfully inserted new user classification" in data
 
