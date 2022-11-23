@@ -118,6 +118,41 @@ def test_vep_annotation_job():
     
 
 
+def test_phylop():
+    """
+    This tests that the phylop annotation works properly
+    """
+
+    # setup
+    user_id = 3
+    variant_id = 72
+    job_config = get_empty_job_config()
+    job_config['do_phylop'] = True
+    conn = Connection()
+
+    # insert annotation request
+    conn.insert_annotation_request(variant_id, user_id)
+    annotation_queue_id = conn.get_last_insert_id()
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    conn = Connection()
+    res = conn.get_variant_annotation(variant_id, 4)
+    assert len(res) == 1
+    assert res[0][3] == "1.174"
+
+
+    # cleanup
+    conn.close()
+
+
+
 def test_litvar2_annotation():
     """
     This tests the litvar2 literature annotation
