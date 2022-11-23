@@ -157,7 +157,7 @@ jobs:
           cd src/common
           echo "HOST=127.0.0.1" > .env
 
-          echo "DB_HOST=0.0.0.0" > .env
+          echo "DB_HOST=0.0.0.0" >> .env
           echo "DB_NAME=test_db" >> .env
 
           echo "DB_USER=test_user" >> .env
@@ -175,8 +175,6 @@ jobs:
           echo "CLIENT_SECRET=${{ secrets.CLINVAR_API_KEY }}" >> .env
 
           echo "ENTREZ_MAIL=${{ secrets.ENTREZ_MAIL }}" >> .env
-
-          ls -l
 
 
       # run tests
@@ -384,7 +382,7 @@ jobs:
           cd src/common
           echo "HOST=127.0.0.1" > .env
 
-          echo "DB_HOST=0.0.0.0" > .env
+          echo "DB_HOST=0.0.0.0" >> .env
           echo "DB_NAME=test_db" >> .env
 
           echo "DB_USER=test_user" >> .env
