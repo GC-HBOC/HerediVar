@@ -524,8 +524,8 @@ def read_dotenv():
     if webapp_env == "localtest":
         dotenvfile = ".env_localtest"
     
-
-    with os.path.join(basedir, dotenvfile) as f:
+    print(os.path.join(basedir, dotenvfile))
+    with open(os.path.join(basedir, dotenvfile), 'r') as f:
         for line in f:
             print(line)
     
