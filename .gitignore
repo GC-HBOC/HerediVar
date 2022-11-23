@@ -168,3 +168,6 @@ src/nextjs_react/heredivar/.parcel-cache/
 /keycloak-18.0.0/
 /deployment/.vagrant
 /src/tools/litvar_vs_vep
+.env
+.env_localtest
+.env_dev
