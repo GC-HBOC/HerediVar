@@ -156,6 +156,8 @@ jobs:
         run: |
           cd src/common
           echo "HOST=127.0.0.1" > .env
+          
+          echo "ISSUER=http://0.0.0.0:5050/realms/HerediVar/protocol/openid-connect/token" >> .env
 
           echo "DB_HOST=0.0.0.0" >> .env
           echo "DB_NAME=test_db" >> .env
