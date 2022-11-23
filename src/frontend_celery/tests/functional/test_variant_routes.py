@@ -26,13 +26,14 @@ def test_login(test_client):
     assert 'user_id' in session['user']
     
 
+
 def test_browse(test_client):
     """
     This tests if the browse variant table works properly
     """
     response = test_client.get(url_for("variant.search"), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
-    print(data)
+    #print(data)
     assert response.status_code == 200
     assert 'id="variantTable"' in data
     assert data.count('name="variant_row"') == 11 # always +1 because there are duplicated rows which are merged with js
@@ -52,7 +53,6 @@ def test_browse(test_client):
     assert 'c.9866C>T' in data
     assert 'MUTYH' in data
     assert 'HPDL' in data
-    
 
     # search for genes
     response = test_client.get(url_for("variant.search", genes="BARD1"))
@@ -119,6 +119,17 @@ def test_browse(test_client):
     assert 'variant_id="15"' in data
     assert 'variant_id="139"' in data
 
+    response = test_client.get(url_for("variant.search", lookup_list_id=8, lookup_list_name="public read"))
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="15"' in data
+
+    response = test_client.get(url_for("variant.search", lookup_list_id=10, lookup_list_name="private inaccessible"))
+    data = response.data.decode('utf8')
+    assert response.status_code == 403
+
+
         
 
 def test_variant_display(test_client):
@@ -144,6 +155,7 @@ def test_variant_display(test_client):
         annotations['user_classifications'] = prepare_scheme_criteria(annotations['user_classifications'], 13)
     conn.close()
     
+    #print('\n'.join([line for line in data.split('\n') if line.strip() != '']))
 
     all_anntation_ids_raw = re.findall(r'annotation_id="((\d*;?)*)"', data)
     #print(all_anntation_ids_raw)
@@ -203,6 +215,7 @@ def test_variant_display(test_client):
     links = get_all_links(data)
     for link in links:
         print(link)
+        time.sleep(2)
         if 'cosmic' not in link:
             response = requests.get(link)
             assert response.status_code == 200
@@ -233,20 +246,23 @@ def test_clinvar_submission(test_client):
     response = test_client.post(
         url_for("variant_io.submit_clinvar", variant_id=variant_id),
         data={
-            "condition": "This is not an orphanet code",
+            "orpha_code": "1234567890",
+            "orpha_name": "missing_orpha_name",
             "gene": "BARD1"
         },
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
+    print(data)
     assert response.status_code == 200
-    assert "The selected condition contains errors. It MUST be one of the provided autocomplete values." in data
+    assert "The selected orphanet id (1234567890) is not valid." in data
     
     ##### successul upload to clinvar #####
     response = test_client.post(
         url_for("variant_io.submit_clinvar", variant_id=variant_id),
         data={
-            "condition": "Hereditary breast and ovarian cancer syndrome: 145",
+            "orpha_code": "145",
+            "orpha_name": "Hereditary breast and ovarian cancer syndrome",
             "gene": "BARD1"
         },
         follow_redirects=True
@@ -314,13 +330,13 @@ def test_variant_history(test_client):
 
 
 
-
 def test_classify(test_client):
     """
     This classifies a variant using different schema & checks the consensus classification evidence document
     """
     ##### test access to the classify page #####
     variant_id = 130
+    user_id = 3
     response = test_client.get(url_for("variant.classify", variant_id=variant_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
@@ -440,8 +456,53 @@ def test_classify(test_client):
     user_scheme_classifications = conn.get_user_classifications(variant_id, 3)
     conn.close()
     assert len(user_scheme_classifications) == 3
+
+
+    ##### test inserting literature passages & uddating the classification #####
+
+    response = test_client.post(
+        url_for("variant.classify", variant_id=variant_id),
+        data = {
+            'final_class': "1",
+            'comment': "This is a test comment update0",
+            'ps1': "Evidence for ps1 given in this field update1",
+            'ps2': "Evidence for ps2 given in this field update2",
+            'ps3': "Evidence for ps3 given in this field",
+            'ps1_strength': "ps",
+            'ps2_strength': "ps",
+            'ps3_strength': "ps",
+            'scheme': "2",
+            'pmid': [35205822, 33099839],
+            'text_passage': ["This is a text passage...", "This is another text passage..."]
+        },
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Successfully updated user classification" in data
+
+    conn = Connection()
+    classification = conn.get_user_classifications_extended(variant_id, user_id, scheme_id=2)[0]
+    selected_literature = conn.get_selected_literature(is_user=True, classification_id=classification[0])
+    assert len(selected_literature) == 2
+    all_pmids = [str(x[2]) for x in selected_literature]
+    all_text_passages = [x[3] for x in selected_literature]
+    assert "35205822" in all_pmids
+    assert "This is a text passage..." in all_text_passages
+    assert "33099839" in all_pmids
+    assert "This is another text passage..." in all_text_passages
+
+    assert len(classification[13]) == 3
+    all_criteria_evidence = [x[4] for x in classification[13]]
+    assert "Evidence for ps1 given in this field update1" in all_criteria_evidence
+    assert "Evidence for ps2 given in this field update2" in all_criteria_evidence
+    assert "Evidence for ps3 given in this field" in all_criteria_evidence
+    assert "This is a test comment update0" == classification[4]
+
+    conn.close()
     
     
+
 
 def test_export_variant_to_vcf(test_client):
     """
@@ -460,11 +521,9 @@ def test_export_variant_to_vcf(test_client):
     assert response.status_code == 200
     assert "Error during VCF Check" not in data
 
-    
     with open(test_data_dir + '/variant_52.vcf', 'r') as img1:
         vcf_variant_52 = StringIO(img1.read())
     vcf_variant_52.seek(0)
-    #print(data)
     
     compare_vcf(vcf_variant_52, data)
 
@@ -494,7 +553,6 @@ def compare_vcf(reference_file, vcf_string):
                     print(info_entry)
                     print(vcf_string)
                 assert info_entry.strip() in vcf_string # test that info is there
-
 
 
 
@@ -588,7 +646,7 @@ def test_user_lists(test_client):
     data = html.unescape(response.data.decode('utf8'))
 
     assert response.status_code == 200
-    assert 'name="user_list_row"' not in data
+    assert data.count('name="user_list_row"') == 2
     assert 'Please select a list to view its content!' in data
 
 
@@ -602,6 +660,8 @@ def test_user_lists(test_client):
     )
     data = html.unescape(response.data.decode('utf8'))
 
+
+
     assert response.status_code == 200
     assert 'Successfully created new list' in data
 
@@ -609,8 +669,8 @@ def test_user_lists(test_client):
     conn = Connection()
 
     user_lists = conn.get_lists_for_user(session['user']['user_id'])
-    assert len(user_lists) == 1
-    list_id = user_lists[0][0]
+    assert len(user_lists) == 3
+    list_id = conn.get_latest_list_id()
 
     conn.close()
 
@@ -618,10 +678,7 @@ def test_user_lists(test_client):
     ##### add variants to the list #####
     variant_id = 52
     response = test_client.post(
-        url_for("variant.display", variant_id=variant_id, action='add_to_list'),
-        data={
-            "list_id": list_id
-        }, 
+        url_for("user.modify_list_content", variant_id=variant_id, action='add_to_list', selected_list_id=list_id),
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
@@ -629,10 +686,7 @@ def test_user_lists(test_client):
 
     variant_id = 130
     response = test_client.post(
-        url_for("variant.display", variant_id=variant_id, action='add_to_list'),
-        data={
-            "list_id": list_id
-        }, 
+        url_for("user.modify_list_content", variant_id=variant_id, action='add_to_list', selected_list_id=list_id),
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
@@ -651,7 +705,7 @@ def test_user_lists(test_client):
     ##### test showing the list #####
     response = test_client.get(url_for("user.my_lists", view=list_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
-    print(data)
+    #print(data)
     
     assert response.status_code == 200
     assert data.count('variant_id="') == 4
@@ -679,13 +733,13 @@ def test_user_lists(test_client):
     data = html.unescape(response.data.decode('utf8'))
 
     assert response.status_code == 200
-    assert 'Successfully changed list name' in data
+    assert 'Successfully changed list settings' in data
     
     conn = Connection()
 
     user_lists = conn.get_lists_for_user(session['user']['user_id'])
-    assert len(user_lists) == 1
-    assert user_lists[0][2] == "first list update"
+    assert len(user_lists) == 3
+    assert conn.get_user_variant_list(list_id)[2] == "first list update"
 
     conn.close()
 
@@ -724,16 +778,130 @@ def test_user_lists(test_client):
     conn = Connection()
 
     user_lists = conn.get_lists_for_user(session['user']['user_id'])
-    assert len(user_lists) == 0
+    assert len(user_lists) == 2
 
     conn.close()
 
 
-    ##### test accessing the list from another user #####
+    ##### test accessing the private list from another user #####
+    response = test_client.get(url_for("user.my_lists", view=10), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+
+    assert response.status_code == 403
+
+
+    ##### test accessing the public list from another user #####
     response = test_client.get(url_for("user.my_lists", view=8), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
+
+    assert response.status_code == 200
+
+
+    ##### test accessing the public&editable list from another user #####
+    response = test_client.get(url_for("user.my_lists", view=9), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
     
+    assert response.status_code == 200
+
+
+    ##### test deleting the public list from another user #####
+    response = test_client.post(
+        url_for("user.my_lists", type='delete_list'), 
+        data={
+            "list_id": 9
+        },
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+
     assert response.status_code == 403
+
+    ##### test adding variants to the public list from another user #####
+    list_id = 9 # public read & edit -> should work
+    variant_id = 52
+    response = test_client.post(
+        url_for("user.modify_list_content", variant_id=variant_id, action='add_to_list', selected_list_id=list_id),
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+
+    conn = Connection()
+    variants_in_list = conn.get_variant_ids_from_list(list_id)
+    assert len(variants_in_list) == 1
+    assert '52' in variants_in_list
+    conn.close()
+
+    list_id = 8 # only public read -> should not work
+    response = test_client.post(
+        url_for("user.modify_list_content", variant_id=variant_id, action='add_to_list', selected_list_id=list_id),
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 403
+
+    ##### test renaming & changing the permission bits a public list from another user #####
+    list_id = 9
+    response = test_client.post(
+        url_for("user.my_lists", type='edit'), 
+        data={
+            "list_name": "first list update",
+            "list_id": list_id
+        },
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+
+    assert response.status_code == 403
+
+    ##### test deleting variants from the public list #####
+    list_id = 9 # should work
+    response = test_client.post(
+        url_for("user.my_lists", type='delete_variant', view=list_id, variant_id=52), 
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+
+    assert response.status_code == 200
+    assert 'Successfully removed variant from list!' in data
+
+    conn = Connection()
+    variants_in_list = conn.get_variant_ids_from_list(list_id)
+    assert len(variants_in_list) == 0
+    conn.close()
+
+    list_id = 8 # should not work
+    response = test_client.post(
+        url_for("user.my_lists", type='delete_variant', view=list_id, variant_id=52), 
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+
+    assert response.status_code == 403
+
+
+    ##### test creating a public list #####
+    response = test_client.post(
+        url_for("user.my_lists", type='create'), 
+        data={
+            "list_name": "new public list",
+            "public_read": "true",
+            "public_edit": "true"
+        },
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+
+    assert response.status_code == 200
+    assert 'Successfully created new list' in data
+
+    # check that the public and private bits are set correctly
+    conn = Connection()
+    public_list_id = conn.get_latest_list_id()
+    list_oi = conn.get_user_variant_list(public_list_id)
+    assert list_oi[3] == 1
+    assert list_oi[4] == 1
+    conn.close()
 
 
 

@@ -16,6 +16,37 @@ user_blueprint = Blueprint(
     __name__
 )
 
+@user_blueprint.route('/mylists/modify_content', methods=['POST'])
+@require_login
+def modify_list_content():
+    conn = get_connection()
+
+    next_url = request.args.get('next')
+    if next_url is None:
+        next_url = url_for('main.index')
+
+    if request.method == 'POST':
+        user_action = request.args.get('action')
+        list_id = request.args.get('selected_list_id')
+        variant_id = request.args.get('variant_id')
+        if not user_action or not list_id or not variant_id:
+            flash('Please specify an action (either add_to_list or remove_from_list) and a list_id as well as a variant_id.', 'alert-danger')
+            abort(404)
+        user_id = session['user']['user_id']
+        list_permissions = conn.check_list_permission(user_id, list_id)
+        if not list_permissions['owner'] and not list_permissions['edit']:
+            current_app.logger.error(session['user']['preferred_username'] + " attempted edit list with id " + str(list_id) + ", but this list was not created by him and did not have the right to edit it.")
+            flash('This action is not allowed', 'alert-danger')
+            return abort(403)
+
+        if user_action == 'add_to_list':
+            conn.add_variant_to_list(list_id, variant_id)
+            flash(Markup("Successfully inserted variant to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
+        if user_action == 'remove_from_list':
+            conn.delete_variant_from_list(list_id, variant_id)
+            flash(Markup("Successfully removed variant to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
+    return save_redirect(next_url)
+
 
 @user_blueprint.route('/mylists', methods=['GET', 'POST'])
 @require_login

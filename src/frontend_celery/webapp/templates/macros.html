@@ -83,7 +83,7 @@
 
             <tr>
                 <td class="li-label" style="vertical-align:middle">Criteria</td>
-                <td style="vertical-align:middle">{{ draw_criteria_display(selected_criteria, '4em', '1.7em') }}</td>
+                <td style="vertical-align:middle">{{ draw_criteria_display(selected_criteria, '4em', '1.7em', source='consensus') }}</td>
             </tr>
 
             <tr>
@@ -451,7 +451,7 @@
 
 
 {% macro draw_hexplorer_score(label, delta, wt, mut) %}
-<div annotation_id="{{delta[7]}}{% if wt is not none %};{{wt[7]}}{% endif %}{% if mut is not none %};{{mut[7]}}{% endif %}">
+<div annotation_id="{{delta[8]}}{% if wt is not none %};{{wt[8]}}{% endif %}{% if mut is not none %};{{mut[8]}}{% endif %}">
     {% if wt is none or mut is none %}
     {{ draw_exclamation_mark('There is no wildtype or mutant score. Thus, one of the sequences is missing the motiv! Be careful with the interpretation of the delta score!') }}
    {% endif %}

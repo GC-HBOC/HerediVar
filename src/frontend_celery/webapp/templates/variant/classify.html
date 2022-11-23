@@ -214,6 +214,7 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                {% if literature is not none %}
                                 {% for paper in literature %}
                                 <tr>
                                     <td style="vertical-align: middle; text-align:center;"><input class="form-check-input selected_literature" type="checkbox"></input></td>
@@ -227,6 +228,7 @@
                                     <td style="width:1rem">{{ paper[7] }}</td>
                                 </tr>
                                 {% endfor %}
+                                {% endif %}
                             </tbody>
                         </table>
                     </div>

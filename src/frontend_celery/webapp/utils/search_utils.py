@@ -93,25 +93,26 @@ def extract_hgvs(request_obj):
 def extract_lookup_list(request_obj, user_id, conn):
     lookup_list_name = request_obj.args.get('lookup_list_name', '')
     lookup_list_id = request_obj.args.get('lookup_list_id', '')
+    variant_ids_oi = []
     if (lookup_list_name.strip() != '' and lookup_list_id.strip() == ''):
         flash("The list you are trying to access does not exist. Results are not filtered by list.", 'alert-danger')
-    lookup_list_id = preprocess_query(lookup_list_id, r'\d*') # either none if there was an error or a list of list_ids
-    variant_ids_oi = []
-    if len(lookup_list_id) > 1: # only one list_id can be searched at a time
-        flash("You have submitted multiple lists which is not allowed. Defaulting to the first one given: " + lookup_list_id[0], "alert-warning")
-    if lookup_list_id is None:
-        flash("You have an error in your variant id query(s). It must contain only numbers. Results are not filtered by variants.", "alert-danger")
-    elif len(lookup_list_id) >= 1:
-        lookup_list_id = lookup_list_id[0] # unpack list & set default if there are multiple list_ids
-        list_permissions = conn.check_list_permission(user_id, lookup_list_id)
-        if list_permissions is not None:
-            if not list_permissions['owner'] and not list_permissions['read']:
-                return abort(403)
+    else:
+        lookup_list_id = preprocess_query(lookup_list_id, r'\d*') # either none if there was an error or a list_id
+        if len(lookup_list_id) > 1: # only one list_id can be searched at a time
+            flash("You have submitted multiple lists which is not allowed. Defaulting to the first one given: " + lookup_list_id[0], "alert-warning")
+        if lookup_list_id is None:
+            flash("You have an error in your variant id query(s). It must contain only numbers. Results are not filtered by variants.", "alert-danger")
+        elif len(lookup_list_id) >= 1:
+            lookup_list_id = lookup_list_id[0] # unpack list & set default if there are multiple list_ids
+            list_permissions = conn.check_list_permission(user_id, lookup_list_id)
+            if list_permissions is not None:
+                if not list_permissions['owner'] and not list_permissions['read']:
+                    return abort(403)
+                else:
+                    variant_ids_oi = conn.get_variant_ids_from_list(lookup_list_id)
+                    if len(variant_ids_oi) == 0:
+                        flash("The list you are trying to access is empty.", "alert-warning")
+                        variant_ids_oi = [-1]
             else:
-                variant_ids_oi = conn.get_variant_ids_from_list(lookup_list_id)
-                if len(variant_ids_oi) == 0:
-                    flash("The list you are trying to access is empty.", "alert-warning")
-                    variant_ids_oi = [-1]
-        else:
-            flash("The list which you are trying to access does not exist.", "alert-danger")
+                flash("The list which you are trying to access does not exist.", "alert-danger")
     return variant_ids_oi

@@ -111,6 +111,7 @@ def create():
     return render_template('variant/create.html', chrs=chrs)
 
 
+
 @variant_blueprint.route('/display/<int:variant_id>', methods=['GET', 'POST'])
 @variant_blueprint.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>', methods=['GET', 'POST']) # alternative url using vcf information
 # example: http:#srv018.img.med.uni-tuebingen.de:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http:#srv018.img.med.uni-tuebingen.de:5000/display/17
@@ -126,25 +127,6 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
         if current_annotation_status[4] == 'pending' and current_annotation_status[7] is None:
             celery_task_id = start_annotation_service(variant_id = variant_id)
             current_annotation_status = current_annotation_status[0:7] + (celery_task_id, )
-
-    if request.method == 'POST':
-        user_action = request.args.get('action')
-        list_id = request.args.get('selected_list_id')
-        user_id = session['user']['user_id']
-        list_permissions = conn.check_list_permission(user_id, list_id)
-        if not list_permissions['owner'] or not list_permissions['edit']:
-            current_app.logger.error(session['user']['preferred_username'] + " attempted edit list with id " + str(list_id) + ", but this list was not created by him and did not have the right to edit it.")
-            flash('This action is not allowed', 'alert-danger')
-            return abort(403)
-
-        if user_action == 'add_to_list':
-            conn.add_variant_to_list(list_id, variant_id)
-            flash(Markup("Successfully inserted variant to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
-            return redirect(url_for('variant.display', variant_id=variant_id))
-        if user_action == 'remove_from_list':
-            conn.delete_variant_from_list(list_id, variant_id)
-            flash(Markup("Successfully removed variant to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
-            return redirect(url_for('variant.display', variant_id=variant_id))
 
     if request.args.get('from_reannotate', 'False') == 'True':
         variant_oi = conn.get_one_variant(variant_id)
@@ -234,16 +216,20 @@ def classify(variant_id):
         # actually submit the data to the database
         if user_classification_is_valid and scheme_classification_is_valid and literature_is_valid:
             # always handle the user classification & literature
-            user_classification_id = handle_user_classification(variant_id, user_id, previous_classification, classification, comment, scheme_id, conn)
+            user_classification_id, classification_received_update = handle_user_classification(variant_id, user_id, previous_classification, classification, comment, scheme_id, conn)
             previous_selected_literature = [] # a new classification -> no previous sleected literature
             if user_classification_id is None: # we are processing an update -> pull the classification id from the schemes with info
                 user_classification_id = schemes_with_info[user_id][scheme_id]['classification_id']
                 previous_selected_literature = schemes_with_info[user_id][scheme_id]['literature']
-            handle_selected_literature(previous_selected_literature, user_classification_id, pmids, text_passages, conn)
+            literature_received_update = handle_selected_literature(previous_selected_literature, user_classification_id, pmids, text_passages, conn)
 
             # handle scheme classification -> insert / update criteria
+            scheme_received_update = False
             if not without_scheme:
-                handle_scheme_classification(user_classification_id, criteria, conn)
+                scheme_received_update = handle_scheme_classification(user_classification_id, criteria, conn)
+
+            if any([classification_received_update, literature_received_update, scheme_received_update]):
+                flash(Markup("Successfully updated user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
 
             do_redirect = True
 

@@ -45,6 +45,8 @@ def get_db_user(role):
     if role == "annotation_role":
         #print("using annotation role")
         return os.environ.get("DB_ANNOTATION_USER"), os.environ.get("DB_ANNOTATION_USER_PW")
+    if role == "readonly_role":
+        return os.environ.get("DB_USER"), os.environ.get("DB_USER_PW") # TODO !!!!!!!!!!!!!!!!!!!!!!!
     raise ValueError(str(role) + " is not a valid db user role!")
 
 
@@ -1301,19 +1303,29 @@ class Connection:
         return result
 
     #### DELETE LATER!
-    def check_user_list_ownership(self, user_id, list_id, requests_write=False):
-        inner_command = "SELECT * FROM user_variant_lists WHERE (user_id = %s OR public_read = 1)"
-        if requests_write:
-            inner_command += " AND public_edit = 1"
-        inner_command += " AND id = %s"
-        command = "SELECT EXISTS (" + inner_command + ")"
-        self.cursor.execute(command, (user_id, list_id))
-        result = self.cursor.fetchone()
-        result = result[0]
-        if result == 1:
-            return True
-        else:
-            return False
+    #def check_user_list_ownership(self, user_id, list_id, requests_write=False):
+    #    inner_command = "SELECT * FROM user_variant_lists WHERE (user_id = %s OR public_read = 1)"
+    #    if requests_write:
+    #        inner_command += " AND public_edit = 1"
+    #    inner_command += " AND id = %s"
+    #    command = "SELECT EXISTS (" + inner_command + ")"
+    #    self.cursor.execute(command, (user_id, list_id))
+    #    result = self.cursor.fetchone()
+    #    result = result[0]
+    #    if result == 1:
+    #        return True
+    #    else:
+    #        return False
+    
+    # this is used in tests
+    def get_latest_list_id(self):
+        command = "SELECT MAX(id) FROM user_variant_lists"
+        self.cursor.execute(command)
+        res = self.cursor.fetchone()
+        if res is not None:
+            return res[0]
+        return None
+
 
     def delete_variant_from_list(self, list_id, variant_id):
         command = "DELETE FROM list_variants WHERE list_id=%s AND variant_id=%s"
@@ -1403,8 +1415,8 @@ class Connection:
             consensus_classifications_preprocessed.append(consensus_classification)
         return consensus_classifications_preprocessed
 
-    def get_user_classifications_extended(self, variant_id, user_id='all'):
-        user_classifications = self.get_user_classifications(variant_id, user_id=user_id, sql_modifier=self.add_userinfo) # 0id,1classification,2variant_id,3user_id,4comment,5date,6classification_scheme_id,7user_id,8first_name,9last_name,10affiliation
+    def get_user_classifications_extended(self, variant_id, user_id='all', scheme_id='all'):
+        user_classifications = self.get_user_classifications(variant_id, user_id=user_id, scheme_id=scheme_id, sql_modifier=self.add_userinfo) # 0id,1classification,2variant_id,3user_id,4comment,5date,6classification_scheme_id,7user_id,8first_name,9last_name,10affiliation
         if user_classifications is None:
             return None
         user_classifications_preprocessed = []

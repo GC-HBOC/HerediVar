@@ -80,11 +80,26 @@ def get_clinvar_submission_status(clinvar_submission_id, headers): # SUB11770209
 
 
 def get_role_for_current_user():
-    is_super_user, status_code = request_uma_ticket() # maybe overkill checking this everytime?
-    if is_super_user:
-        return "super_user_role"
-    return "user_role"
+    if is_user_logged_in():
+        is_super_user, status_code = request_uma_ticket() # maybe overkill checking this everytime?
+        if is_super_user:
+            return "super_user_role"
+        return "user_role"
+    else:
+        return "readonly_role"
 
+
+def is_user_logged_in():
+    resp = session.get('tokenResponse', None)
+    if resp is None:
+        return False
+    return True
+
+def get_preferred_username():
+    user_obj = session.get('user', None)
+    if user_obj is not None:
+        return user_obj['preferred_username']
+    return "Anonymous user"
 
 def request_has_connection():
     return hasattr(g, 'dbconn')

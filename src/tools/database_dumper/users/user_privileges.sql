@@ -61,4 +61,3 @@ GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.consensus_classification_sele
 
 
 
-

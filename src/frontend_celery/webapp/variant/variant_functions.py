@@ -218,21 +218,23 @@ def handle_scheme_classification(classification_id, criteria, conn, where = "use
             current_datetime = functions.get_now()
             conn.update_classification_date(classification_id, current_datetime)
         #flash("Successfully inserted/updated classification based on classification scheme", 'alert-success')
-            
+    
+    return scheme_classification_got_update
 
 
 def handle_user_classification(variant_id, user_id, previous_classifications, new_classification, new_comment, scheme_id, conn):
     current_datetime = functions.get_now()
+    received_update = False
     if scheme_id in previous_classifications: # user already has a classification -> he requests an update
         previous_classification = previous_classifications[scheme_id]
         if previous_classification['comment'] != new_comment or previous_classification['class'] != new_classification:
             conn.update_user_classification(previous_classification['id'], new_classification, new_comment, date = current_datetime)
-            flash(Markup("Successfully updated user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
-        return None
+            received_update = True
+        return None, received_update
     else: # user does not yet have a classification for this variant -> he wants to create a new one
         conn.insert_user_classification(variant_id, new_classification, user_id, new_comment, current_datetime, scheme_id)
         flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
-        return conn.get_last_insert_id()
+        return conn.get_last_insert_id(), received_update
     
 
 
@@ -471,9 +473,11 @@ def is_valid_literature(pmids, text_passages):
 
 
 def handle_selected_literature(previous_selected_literature, classification_id, pmids, text_passages, conn, is_user = True):
+    received_update = False
     # insert and update
     for pmid, text_passage in zip(pmids, text_passages):
         conn.insert_update_selected_literature(is_user = is_user, classification_id = classification_id, pmid = pmid, text_passage = text_passage)
+        received_update = True
     
     # delete if missing in pmids
     for entry in previous_selected_literature:
@@ -481,10 +485,14 @@ def handle_selected_literature(previous_selected_literature, classification_id, 
         if previously_selected_pmid not in pmids:
             classification_id = entry[1]
             conn.delete_selected_literature(is_user = is_user, classification_id=classification_id, pmid=previously_selected_pmid)
+            received_update = True
+    
+    return received_update
 
 
 def get_clinvar_submission(variant_id, conn):
     clinvar_submission_id = conn.get_external_ids_from_variant_id(variant_id, id_source="clinvar_submission")
+    print(clinvar_submission_id)
     clinvar_submission = {'status': None, 'date': None, 'message': None}
     if len(clinvar_submission_id) > 1: # this should not happen!
         clinvar_submission_id = clinvar_submission_id[len(clinvar_submission_id) - 1]

@@ -2,7 +2,7 @@ from flask import Blueprint, abort, current_app, send_from_directory, send_file,
 from os import path
 import sys
 
-from ..utils import require_login, get_connection
+from ..utils import require_login, get_connection, get_preferred_username
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from common.db_IO import Connection
@@ -116,11 +116,11 @@ def classified_variants():
     if returncode != 0:
         if request.args.get('force') is None:
             flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
-            current_app.logger.error(session['user']['preferred_username'] + " tried to download a all classified variants as vcf, but it contains errors: " + vcf_errors)
+            current_app.logger.error(get_preferred_username() + " tried to download a all classified variants as vcf, but it contains errors: " + vcf_errors)
             return redirect(redirect_url)
 
 
-    current_app.logger.info(session['user']['preferred_username'] + " successfully downloaded vcf of all classified variants.")
+    current_app.logger.info(get_preferred_username() + " successfully downloaded vcf of all classified variants.")
 
     if return_raw is not None:
         with open(path_to_download, "r") as file_to_download:
@@ -148,9 +148,9 @@ def variant_list():
     # check that the logged in user is the owner of this list
     if list_id is not None:
         user_id = session['user']['user_id']
-        is_list_owner = conn.check_user_list_ownership(user_id, list_id)
-        if not is_list_owner:
-            current_app.logger.error(session['user']['preferred_username'] + " attempted download of list with id " + str(list_id) + ", but this list was not created by him.")
+        list_permissions = conn.check_list_permission(user_id, list_id)
+        if not list_permissions['read']:
+            current_app.logger.error(session['user']['preferred_username'] + " attempted download of list with id " + str(list_id) + ", but the user had no permission to do so.")
             return abort(403)
         variants_oi = conn.get_variant_ids_from_list(list_id)    
     if variants_oi is None:
@@ -190,10 +190,10 @@ def variant():
 
     if status == 'redirect':
         flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
-        current_app.logger.error(session['user']['preferred_username'] + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant ids: " + str(variant_oi))
+        current_app.logger.error(get_preferred_username() + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant ids: " + str(variant_oi))
         return redirect(redirect_url)
 
-    current_app.logger.info(session['user']['preferred_username'] + " downloaded vcf of variant id: " + str(variant_oi))
+    current_app.logger.info(get_preferred_username() + " downloaded vcf of variant id: " + str(variant_oi))
 
     return send_file(vcf_file_buffer, as_attachment=True, download_name=download_file_name, mimetype="text/vcf")
 
