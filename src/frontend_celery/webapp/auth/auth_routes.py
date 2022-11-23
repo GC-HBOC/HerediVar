@@ -35,6 +35,7 @@ def login():
         token_response = requests.post(url = url, data=data)
         print(url)
         print(token_response.status_code)
+        print(token_response.json())
         assert token_response.status_code == 200
         session['tokenResponse'] = token_response.json()
 
