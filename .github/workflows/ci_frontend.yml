@@ -138,7 +138,7 @@ jobs:
         
       # download other dependencies
       - name: download phylop
-        run: wget http://hgdownload.soe.ucsc.edu/goldenPath/hg38/phyloP100way/hg38.phyloP100way.bw
+        run: wget -q http://hgdownload.soe.ucsc.edu/goldenPath/hg38/phyloP100way/hg38.phyloP100way.bw
 
 
       # init dbs
@@ -226,6 +226,13 @@ jobs:
 
       - name: install OS dependencies 2
         run: sudo apt-get install g++ qt5-default libqt5xmlpatterns5-dev libqt5sql5-mysql libcurl4 libcurl4-openssl-dev
+
+
+      - name: test
+        run: |
+          ls -l
+          cd src
+          ls -l
 
       # init dbs
       - name: Verify MySQL connection from container 
