@@ -2,12 +2,15 @@
 
 from ..main import process_one_request, get_empty_job_config, get_temp_vcf_path
 from common.db_IO import Connection
+import common.functions as functions
 from os import path
 
 def test_vep_annotation_job():
     """
     This tests the vep annotation
     """
+
+    functions.read_dotenv()
 
     # setup
     user_id = 3
@@ -157,6 +160,8 @@ def test_litvar2_annotation():
     """
     This tests the litvar2 literature annotation
     """
+
+    functions.read_dotenv()
 
     # setup
     user_id = 3
