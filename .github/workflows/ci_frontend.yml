@@ -172,7 +172,7 @@ jobs:
           echo "FLASK_SECRET_KEY=The_testing_key" >> .env
           
           echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
-          echo "CLIENT_SECRET=${{ secrets.CLINVAR_API_KEY }}" >> .env
+          echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> .env
 
           echo "ENTREZ_MAIL=${{ secrets.ENTREZ_MAIL }}" >> .env
 
@@ -399,9 +399,10 @@ jobs:
           echo "FLASK_SECRET_KEY=The_testing_key" >> .env
           
           echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
-          echo "CLIENT_SECRET=${{ secrets.CLINVAR_API_KEY }}" >> .env
+          echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> .env
 
           echo "ENTREZ_MAIL=${{ secrets.ENTREZ_MAIL }}" >> .env
+
 
 
       # run tests
