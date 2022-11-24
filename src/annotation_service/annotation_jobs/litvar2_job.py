@@ -20,7 +20,8 @@ class litvar2_job(Job):
         litvar_stderr = ""
         litvar_stdout = ""
 
-        self.print_executing()
+        if self.job_config['do_litvar']:
+            self.print_executing()
 
         
         #litvar_code, litvar_stderr, litvar_stdout = self.annotate_litvar(inpath, annotated_inpath)
