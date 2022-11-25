@@ -53,6 +53,27 @@
       "containerId" : "HerediVar",
       "attributes" : { }
     }, {
+      "id" : "8a6161b7-0751-4926-b323-27f1557eea95",
+      "name" : "read_only",
+      "description" : "Users with this role are allowed to view information in HerediVar, but they can not edit them",
+      "composite" : false,
+      "clientRole" : false,
+      "containerId" : "HerediVar",
+      "attributes" : { }
+    }, {
+      "id" : "788ca15c-6c7a-4ffe-9a63-da0fcfb1960e",
+      "name" : "account_manager",
+      "description" : "Users with this role are allowed to manage other users",
+      "composite" : true,
+      "composites" : {
+        "client" : {
+          "realm-management" : [ "query-users", "manage-users", "view-users" ]
+        }
+      },
+      "clientRole" : false,
+      "containerId" : "HerediVar",
+      "attributes" : { }
+    }, {
       "id" : "3d0e76e4-df7e-44a1-93f6-0242caaf84e9",
       "name" : "default-roles-heredivar",
       "description" : "${role_default-roles}",
@@ -67,10 +88,24 @@
       "containerId" : "HerediVar",
       "attributes" : { }
     }, {
-      "id" : "ab993489-bc7c-49a0-9a7f-eb8702a33641",
-      "name" : "visitor",
-      "description" : "A HerediVar visitor which is able to see information in HerediVar",
-      "composite" : false,
+      "id" : "882841ac-dc3b-493b-9f22-5a85e4ee5556",
+      "name" : "super_user",
+      "description" : "This user can do everything including adding new users",
+      "composite" : true,
+      "composites" : {
+        "realm" : [ "user" ]
+      },
+      "clientRole" : false,
+      "containerId" : "HerediVar",
+      "attributes" : { }
+    }, {
+      "id" : "0b038169-b378-4c20-a744-4005c9bee3de",
+      "name" : "user",
+      "description" : "This is the standard issue user which is allowed to view resources and edit them, but they do not have the administrator super user rights",
+      "composite" : true,
+      "composites" : {
+        "realm" : [ "read_only" ]
+      },
       "clientRole" : false,
       "containerId" : "HerediVar",
       "attributes" : { }
@@ -405,6 +440,31 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
+    "id" : "cfc303df-915f-49cd-b2cb-c3f0bd5be8c9",
+    "createdTimestamp" : 1669284323135,
+    "username" : "readonly",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Ava-Rose",
+    "lastName" : "Cresswell",
+    "email" : "readonly@sth.com",
+    "attributes" : {
+      "affiliation" : [ "affiliation1" ]
+    },
+    "credentials" : [ {
+      "id" : "4cfd9231-3cbe-42a4-8811-99e5a849e6bd",
+      "type" : "password",
+      "createdDate" : 1669299138239,
+      "secretData" : "{\"value\":\"9r7mfgdibd/dRu+JsKp1Er3dtMBfjCOG3z4/8H1/KmPbtgXXFM+lti4l6SnCy3JTtIbHkg/RW6YvYn0/grmzcw==\",\"salt\":\"qrwNCAydUGeeD3XlanrMww==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "read_only", "default-roles-heredivar" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
     "id" : "7a86740e-3a7b-49c9-9d8d-f6cfef0d789c",
     "createdTimestamp" : 1652180190609,
     "username" : "service-account-flask-webapp",
@@ -419,6 +479,31 @@
     "clientRoles" : {
       "flask-webapp" : [ "uma_protection" ]
     },
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "3fab0e7f-0a56-4982-83e4-de6145b0238f",
+    "createdTimestamp" : 1669298932134,
+    "username" : "superuser",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Lydia",
+    "lastName" : "Todd",
+    "email" : "superuser@testmail.com",
+    "attributes" : {
+      "affiliation" : [ "affiliation3" ]
+    },
+    "credentials" : [ {
+      "id" : "52a52942-a829-4606-9155-a4f20c0cef49",
+      "type" : "password",
+      "createdDate" : 1669298943654,
+      "secretData" : "{\"value\":\"J+/U5aKMPGrmso/X44wugcvS/GxI6EH49OSweilnoWS5ar+zxJh+9OxWbT6PlauDASqN4Tw79at18ysNzbZTaw==\",\"salt\":\"Sg5pTUAjK65crNy4S46bZw==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-heredivar", "account_manager", "super_user" ],
     "notBefore" : 0,
     "groups" : [ ]
   }, {
@@ -437,16 +522,41 @@
     "credentials" : [ {
       "id" : "8c248b22-9904-49c0-988a-7564137bf05e",
       "type" : "password",
-      "createdDate" : 1651737533985,
-      "secretData" : "{\"value\":\"GRMZkLwt60ZBKEUxci0MEPv+m+sHlDQnZdX6JSa5ALEHkGgfPz6pS1T+s7bj1GdAeXOxy2aKse421zWA59o+9Q==\",\"salt\":\"QGvCO8LxdYu72wOC0H3kng==\",\"additionalParameters\":{}}",
+      "createdDate" : 1669284391661,
+      "secretData" : "{\"value\":\"wRqk9s19AujjLVganacQsIiQn4LF9H5RPjHTo/8vS+0NehxDeOQG6VDdgFzIJfY5A2QgkrDU7413XR+v4W9G/g==\",\"salt\":\"3s81nkrQQqOtmoGud/wHuw==\",\"additionalParameters\":{}}",
       "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-heredivar", "visitor" ],
+    "realmRoles" : [ "read_only", "default-roles-heredivar" ],
     "clientRoles" : {
       "realm-management" : [ "manage-users", "view-users" ]
     },
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "455ccea8-1a50-4ffb-a567-5bb92dfd7155",
+    "createdTimestamp" : 1669299015815,
+    "username" : "user",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Manon",
+    "lastName" : "Oconnor",
+    "email" : "stduser@testmail.com",
+    "attributes" : {
+      "affiliation" : [ "affiliation2" ]
+    },
+    "credentials" : [ {
+      "id" : "68df3efd-4d28-4428-93fe-8f5a767901cf",
+      "type" : "password",
+      "createdDate" : 1669299025765,
+      "secretData" : "{\"value\":\"6kyxtHb4QdIdJgWM0cxph/0u66geD5erFuQRPufG4dNtMWp8NrCIMZ2KSoFVZAWI6TrCChxeNHzhFNHYCfRg6g==\",\"salt\":\"Be0mp1Ni9x90K3oy9MG9dA==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-heredivar", "user" ],
     "notBefore" : 0,
     "groups" : [ ]
   } ],
@@ -662,6 +772,20 @@
         "jsonType.label" : "String"
       }
     }, {
+      "id" : "e0f898fd-aa46-43e1-a70e-a775b54dc095",
+      "name" : "roles mapper",
+      "protocol" : "openid-connect",
+      "protocolMapper" : "oidc-usermodel-realm-role-mapper",
+      "consentRequired" : false,
+      "config" : {
+        "multivalued" : "true",
+        "userinfo.token.claim" : "true",
+        "id.token.claim" : "true",
+        "access.token.claim" : "true",
+        "claim.name" : "roles",
+        "jsonType.label" : "String"
+      }
+    }, {
       "id" : "a81304dd-4633-45c6-80e3-179c89a78803",
       "name" : "Client ID",
       "protocol" : "openid-connect",
@@ -694,39 +818,103 @@
       "allowRemoteResourceManagement" : true,
       "policyEnforcementMode" : "ENFORCING",
       "resources" : [ {
-        "name" : "View HerediVar",
+        "name" : "read_resources",
         "ownerManagedAccess" : false,
-        "displayName" : "View HerediVar",
+        "displayName" : "read_resources",
         "attributes" : { },
-        "_id" : "55625023-94d8-42c3-9d79-b9a933e82dbb",
-        "uris" : [ "http://SRV023.img.med.uni-tuebingen.de:5000/api" ],
+        "_id" : "058e4fb4-a2ae-476e-9700-0883f279e429",
+        "uris" : [ ],
         "scopes" : [ {
-          "name" : "account:view"
+          "name" : "read_scope"
+        } ]
+      }, {
+        "name" : "edit_resources",
+        "ownerManagedAccess" : false,
+        "displayName" : "edit_resources",
+        "attributes" : { },
+        "_id" : "b50247ab-0d19-4ecc-af95-0aba85157803",
+        "uris" : [ ],
+        "scopes" : [ {
+          "name" : "edit_scope"
+        } ]
+      }, {
+        "name" : "admin_resources",
+        "ownerManagedAccess" : false,
+        "displayName" : "admin_resources",
+        "attributes" : { },
+        "_id" : "7ffde2cc-d1cd-4a9a-b9e7-27d057a9bb1a",
+        "uris" : [ ],
+        "scopes" : [ {
+          "name" : "admin_scope"
         } ]
       } ],
       "policies" : [ {
-        "id" : "10ff43f6-50b9-40a0-9240-193d18f6c268",
-        "name" : "View Resources Policy",
+        "id" : "dce51f85-e4d5-45fb-b471-c15a9f24fbfe",
+        "name" : "read_policy",
         "type" : "role",
         "logic" : "POSITIVE",
         "decisionStrategy" : "UNANIMOUS",
         "config" : {
-          "roles" : "[{\"id\":\"visitor\",\"required\":true}]"
+          "roles" : "[{\"id\":\"read_only\",\"required\":true}]"
         }
       }, {
-        "id" : "77e37032-9c77-40b5-8489-bfb38e2120b7",
-        "name" : "View HerediVar Permission",
+        "id" : "c4f2fc51-acbf-4eda-b0a0-747500076b6d",
+        "name" : "edit_policy",
+        "type" : "role",
+        "logic" : "POSITIVE",
+        "decisionStrategy" : "UNANIMOUS",
+        "config" : {
+          "roles" : "[{\"id\":\"user\",\"required\":true}]"
+        }
+      }, {
+        "id" : "c3db8125-09a2-4100-9ccd-9366dd709930",
+        "name" : "admin_policy",
+        "type" : "role",
+        "logic" : "POSITIVE",
+        "decisionStrategy" : "UNANIMOUS",
+        "config" : {
+          "roles" : "[{\"id\":\"super_user\",\"required\":true}]"
+        }
+      }, {
+        "id" : "6b913739-1cbc-4d33-8761-00b32e8dfb5f",
+        "name" : "read_permission",
         "type" : "resource",
         "logic" : "POSITIVE",
         "decisionStrategy" : "UNANIMOUS",
         "config" : {
-          "resources" : "[\"View HerediVar\"]",
-          "applyPolicies" : "[\"View Resources Policy\"]"
+          "resources" : "[\"read_resources\"]",
+          "applyPolicies" : "[\"read_policy\"]"
+        }
+      }, {
+        "id" : "2d63a5bd-3505-4035-b471-4e36bea6b0e6",
+        "name" : "edit_permission",
+        "type" : "resource",
+        "logic" : "POSITIVE",
+        "decisionStrategy" : "UNANIMOUS",
+        "config" : {
+          "resources" : "[\"edit_resources\"]",
+          "applyPolicies" : "[\"edit_policy\"]"
+        }
+      }, {
+        "id" : "50776d67-a933-4fe2-a90c-f2f590fbfc42",
+        "name" : "admin_permission",
+        "type" : "resource",
+        "logic" : "POSITIVE",
+        "decisionStrategy" : "UNANIMOUS",
+        "config" : {
+          "resources" : "[\"admin_resources\"]",
+          "applyPolicies" : "[\"admin_policy\"]"
         }
       } ],
       "scopes" : [ {
-        "id" : "b271cfd5-0f3e-4ac5-9e2b-b7fcc6e2a894",
-        "name" : "account:view"
+        "id" : "1421265d-0ed6-4560-9bcd-15c6fe7fdba2",
+        "name" : "admin_scope"
+      }, {
+        "id" : "22c2d3c6-ea4f-48a1-b876-c88ca97801bb",
+        "name" : "edit_scope"
+      }, {
+        "id" : "18bb5d06-8fe2-4de8-be0c-3b4694b72da3",
+        "name" : "read_scope"
       } ],
       "decisionStrategy" : "UNANIMOUS"
     }
@@ -790,111 +978,8 @@
     "authorizationSettings" : {
       "allowRemoteResourceManagement" : false,
       "policyEnforcementMode" : "ENFORCING",
-      "resources" : [ {
-        "name" : "client.resource.5ad7bea2-ec76-4c8c-98df-65fbfafae12c",
-        "type" : "Client",
-        "ownerManagedAccess" : false,
-        "attributes" : { },
-        "_id" : "6cf0ae2c-6fb9-4822-acd6-826ae468deed",
-        "uris" : [ ],
-        "scopes" : [ {
-          "name" : "view"
-        }, {
-          "name" : "map-roles-client-scope"
-        }, {
-          "name" : "configure"
-        }, {
-          "name" : "map-roles"
-        }, {
-          "name" : "manage"
-        }, {
-          "name" : "token-exchange"
-        }, {
-          "name" : "map-roles-composite"
-        } ]
-      } ],
-      "policies" : [ {
-        "id" : "1f216a6d-3b9b-4f65-aa55-8c28046d88c3",
-        "name" : "heredivar-account-manager",
-        "description" : "with this role you are able to register & inactivate users",
-        "type" : "user",
-        "logic" : "POSITIVE",
-        "decisionStrategy" : "UNANIMOUS",
-        "config" : {
-          "users" : "[\"testuser\"]"
-        }
-      }, {
-        "id" : "ef531d80-a5e0-4c2d-aeee-33f813f493f1",
-        "name" : "manage.permission.client.5ad7bea2-ec76-4c8c-98df-65fbfafae12c",
-        "type" : "scope",
-        "logic" : "POSITIVE",
-        "decisionStrategy" : "UNANIMOUS",
-        "config" : {
-          "resources" : "[\"client.resource.5ad7bea2-ec76-4c8c-98df-65fbfafae12c\"]",
-          "scopes" : "[\"manage\"]",
-          "applyPolicies" : "[\"heredivar-account-manager\"]"
-        }
-      }, {
-        "id" : "f2d47a7e-da67-4f42-b106-e84161d0150e",
-        "name" : "configure.permission.client.5ad7bea2-ec76-4c8c-98df-65fbfafae12c",
-        "type" : "scope",
-        "logic" : "POSITIVE",
-        "decisionStrategy" : "UNANIMOUS",
-        "config" : {
-          "resources" : "[\"client.resource.5ad7bea2-ec76-4c8c-98df-65fbfafae12c\"]",
-          "scopes" : "[\"configure\"]"
-        }
-      }, {
-        "id" : "3918fc9e-e8e1-4796-a358-9dc6434d6351",
-        "name" : "view.permission.client.5ad7bea2-ec76-4c8c-98df-65fbfafae12c",
-        "type" : "scope",
-        "logic" : "POSITIVE",
-        "decisionStrategy" : "UNANIMOUS",
-        "config" : {
-          "resources" : "[\"client.resource.5ad7bea2-ec76-4c8c-98df-65fbfafae12c\"]",
-          "scopes" : "[\"view\"]"
-        }
-      }, {
-        "id" : "4c7a952a-b260-4a99-80f8-014932432f82",
-        "name" : "map-roles.permission.client.5ad7bea2-ec76-4c8c-98df-65fbfafae12c",
-        "type" : "scope",
-        "logic" : "POSITIVE",
-        "decisionStrategy" : "UNANIMOUS",
-        "config" : {
-          "resources" : "[\"client.resource.5ad7bea2-ec76-4c8c-98df-65fbfafae12c\"]",
-          "scopes" : "[\"map-roles\"]"
-        }
-      }, {
-        "id" : "e5c52918-34dd-46ed-b770-1139eb337887",
-        "name" : "map-roles-client-scope.permission.client.5ad7bea2-ec76-4c8c-98df-65fbfafae12c",
-        "type" : "scope",
-        "logic" : "POSITIVE",
-        "decisionStrategy" : "UNANIMOUS",
-        "config" : {
-          "resources" : "[\"client.resource.5ad7bea2-ec76-4c8c-98df-65fbfafae12c\"]",
-          "scopes" : "[\"map-roles-client-scope\"]"
-        }
-      }, {
-        "id" : "e5f2d321-fef7-4e3d-9eeb-68114a1a815b",
-        "name" : "map-roles-composite.permission.client.5ad7bea2-ec76-4c8c-98df-65fbfafae12c",
-        "type" : "scope",
-        "logic" : "POSITIVE",
-        "decisionStrategy" : "UNANIMOUS",
-        "config" : {
-          "resources" : "[\"client.resource.5ad7bea2-ec76-4c8c-98df-65fbfafae12c\"]",
-          "scopes" : "[\"map-roles-composite\"]"
-        }
-      }, {
-        "id" : "01050386-1d46-4161-a081-fc8f6d0318ab",
-        "name" : "token-exchange.permission.client.5ad7bea2-ec76-4c8c-98df-65fbfafae12c",
-        "type" : "scope",
-        "logic" : "POSITIVE",
-        "decisionStrategy" : "UNANIMOUS",
-        "config" : {
-          "resources" : "[\"client.resource.5ad7bea2-ec76-4c8c-98df-65fbfafae12c\"]",
-          "scopes" : "[\"token-exchange\"]"
-        }
-      } ],
+      "resources" : [ ],
+      "policies" : [ ],
       "scopes" : [ {
         "id" : "7a7366f1-dc5d-4034-a022-154dadb3b93d",
         "name" : "manage"
@@ -916,6 +1001,15 @@
       }, {
         "id" : "f4c9328b-f51f-4660-888c-1d12a390b101",
         "name" : "token-exchange"
+      }, {
+        "id" : "80c4cb9e-5d76-4e99-b4f1-a6fa0749e2a7",
+        "name" : "map-role"
+      }, {
+        "id" : "3575a966-d3c6-45a4-b3d0-a6df28ca9a1c",
+        "name" : "map-role-client-scope"
+      }, {
+        "id" : "bacaa2a8-9a15-47f2-9990-2fcdd80ad1ee",
+        "name" : "map-role-composite"
       } ],
       "decisionStrategy" : "UNANIMOUS"
     }
