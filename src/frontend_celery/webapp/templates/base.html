@@ -62,7 +62,7 @@
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     {{ session.get('user').get('preferred_username')}}
                                 </a>
-                                <ul class="dropdown-menu" aria-labelledby="navbarDropdown" style="min-width: 1rem;">
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" style="min-width: 1rem;">
                                     <li><a class="dropdown-item" href="{{config['HOST']}}:5050/realms/HerediVar/account/#/personal-info">Profile</a></li>
                                     <li><a class="dropdown-item" href="{{ url_for('user.my_lists') }}">My lists</a></li>
                                     <li><a class="dropdown-item" href="https://github.com/GC-HBOC/HerediVar/issues">Feedback</a></li>
