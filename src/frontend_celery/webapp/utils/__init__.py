@@ -108,8 +108,9 @@ def request_has_connection():
 def get_connection():
     user = session.get('user')
     if user is None:
-        abort(401, "Not logged in")
-    roles = user.get('roles', [])
+        roles = ['read_only']
+    else:
+        roles = user.get('roles', ['read_only'])
     if not request_has_connection():
         #print(roles)
         g.dbconn = Connection(roles)        

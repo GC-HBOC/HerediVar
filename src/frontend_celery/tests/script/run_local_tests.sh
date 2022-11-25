@@ -2,7 +2,7 @@
 
 # keep in mind to set the clinvar api key via console: export CLINVAR_API_KEY=.....
 # stop any running keycloak instances if there are any
-#export WEBAPP_ENV=localtest
+export WEBAPP_ENV=localtest
 #export NO_PROXY=SRV018.img.med.uni-tuebingen.de
 #export CLIENT_SECRET=NRLzlQfotGy9W8hkuYFm3T48Bjnti15k
 #export CLIENT_ID=flask-webapp

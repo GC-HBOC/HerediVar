@@ -144,7 +144,7 @@ def test_variant_display(test_client):
     assert "chr2-214730440-G-A (GRCh38)" in data
 
     ##### test that all data is there #####
-    conn = Connection()
+    conn = Connection(["super_user"])
     annotations = conn.get_all_variant_annotations(variant_id, group_output=True)
     if annotations.get('consensus_classification', None) is not None:
         annotations['consensus_classification'] = add_scheme_classes(annotations['consensus_classification'], 14)
@@ -215,7 +215,6 @@ def test_variant_display(test_client):
     links = get_all_links(data)
     for link in links:
         print(link)
-        time.sleep(2)
         if 'cosmic' not in link:
             response = requests.get(link)
             assert response.status_code == 200 or response.status_code == 429
@@ -314,7 +313,7 @@ def test_variant_history(test_client):
 
     print(data)
 
-    conn = Connection()
+    conn = Connection(['super_user'])
     consensus_classifications = conn.get_consensus_classifications_extended(variant_id, most_recent=False)
     user_classifications = conn.get_user_classifications_extended(variant_id)
     conn.close()
@@ -453,7 +452,7 @@ def test_classify(test_client):
     
 
     # test that data was saved correctly to db
-    conn = Connection()
+    conn = Connection(['super_user'])
     user_scheme_classifications = conn.get_user_classifications(variant_id, 3)
     conn.close()
     assert len(user_scheme_classifications) == 3
@@ -482,7 +481,7 @@ def test_classify(test_client):
     assert response.status_code == 200
     assert "Successfully updated user classification" in data
 
-    conn = Connection()
+    conn = Connection(['super_user'])
     classification = conn.get_user_classifications_extended(variant_id, user_id, scheme_id=2)[0]
     selected_literature = conn.get_selected_literature(is_user=True, classification_id=classification[0])
     assert len(selected_literature) == 2
@@ -503,6 +502,10 @@ def test_classify(test_client):
     conn.close()
     
     
+
+
+
+
 
 
 def test_export_variant_to_vcf(test_client):
@@ -667,7 +670,7 @@ def test_user_lists(test_client):
     assert 'Successfully created new list' in data
 
 
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     user_lists = conn.get_lists_for_user(session['user']['user_id'])
     assert len(user_lists) == 3
@@ -677,7 +680,7 @@ def test_user_lists(test_client):
 
 
     ##### add variants to the list #####
-    variant_id = 52
+    variant_id = 71
     response = test_client.post(
         url_for("user.modify_list_content", variant_id=variant_id, action='add_to_list', selected_list_id=list_id),
         follow_redirects=True
@@ -685,7 +688,7 @@ def test_user_lists(test_client):
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
 
-    variant_id = 130
+    variant_id = 72
     response = test_client.post(
         url_for("user.modify_list_content", variant_id=variant_id, action='add_to_list', selected_list_id=list_id),
         follow_redirects=True
@@ -694,12 +697,12 @@ def test_user_lists(test_client):
     assert response.status_code == 200
 
     ##### test that the variants are in the list #####
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     variants_in_list = conn.get_variant_ids_from_list(list_id)
     assert len(variants_in_list) == 2
-    assert '52' in variants_in_list
-    assert '130' in variants_in_list
+    assert '71' in variants_in_list
+    assert '72' in variants_in_list
 
     conn.close()
 
@@ -709,18 +712,17 @@ def test_user_lists(test_client):
     print(data)
     
     assert response.status_code == 200
-    assert data.count('variant_id="') == 4
-    # these variants occur twice as they have two mane select transcripts -> these rows are merged by javascript which can not be tested here
-    assert data.count('variant_id="52"') == 2 
-    assert data.count('variant_id="130"') == 2
+    assert data.count('variant_id="') == 2
+    assert data.count('variant_id="71"') == 1
+    assert data.count('variant_id="72"') == 1
 
     ##### test searching the list #####
-    response = test_client.get(url_for("user.my_lists", view=list_id, genes='BRCA2'), follow_redirects=True)
+    response = test_client.get(url_for("user.my_lists", view=list_id, genes='BRCA1'), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
     
     assert response.status_code == 200
-    assert data.count('variant_id="') == 2
-    assert data.count('variant_id="52"') == 2
+    assert data.count('variant_id="') == 1
+    assert data.count('variant_id="71"') == 1
 
     ##### test renaming the list #####
     response = test_client.post(
@@ -736,7 +738,7 @@ def test_user_lists(test_client):
     assert response.status_code == 200
     assert 'Successfully changed list settings' in data
     
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     user_lists = conn.get_lists_for_user(session['user']['user_id'])
     assert len(user_lists) == 3
@@ -747,7 +749,7 @@ def test_user_lists(test_client):
 
     ##### test deleting variants from the list #####
     response = test_client.post(
-        url_for("user.my_lists", type='delete_variant', view=list_id, variant_id=130), 
+        url_for("user.my_lists", type='delete_variant', view=list_id, variant_id=71), 
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
@@ -755,11 +757,11 @@ def test_user_lists(test_client):
     assert response.status_code == 200
     assert 'Successfully removed variant from list!' in data
 
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     variants_in_list = conn.get_variant_ids_from_list(list_id)
     assert len(variants_in_list) == 1
-    assert '52' in variants_in_list
+    assert '72' in variants_in_list
 
     conn.close()
     
@@ -776,7 +778,7 @@ def test_user_lists(test_client):
     assert response.status_code == 200
     assert 'Successfully removed list' in data
 
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     user_lists = conn.get_lists_for_user(session['user']['user_id'])
     assert len(user_lists) == 2
@@ -819,7 +821,7 @@ def test_user_lists(test_client):
 
     ##### test adding variants to the public list from another user #####
     list_id = 9 # public read & edit -> should work
-    variant_id = 52
+    variant_id = 71
     response = test_client.post(
         url_for("user.modify_list_content", variant_id=variant_id, action='add_to_list', selected_list_id=list_id),
         follow_redirects=True
@@ -827,10 +829,10 @@ def test_user_lists(test_client):
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
 
-    conn = Connection()
+    conn = Connection(['super_user'])
     variants_in_list = conn.get_variant_ids_from_list(list_id)
     assert len(variants_in_list) == 1
-    assert '52' in variants_in_list
+    assert '71' in variants_in_list
     conn.close()
 
     list_id = 8 # only public read -> should not work
@@ -858,7 +860,7 @@ def test_user_lists(test_client):
     ##### test deleting variants from the public list #####
     list_id = 9 # should work
     response = test_client.post(
-        url_for("user.my_lists", type='delete_variant', view=list_id, variant_id=52), 
+        url_for("user.my_lists", type='delete_variant', view=list_id, variant_id=71), 
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
@@ -866,7 +868,7 @@ def test_user_lists(test_client):
     assert response.status_code == 200
     assert 'Successfully removed variant from list!' in data
 
-    conn = Connection()
+    conn = Connection(['super_user'])
     variants_in_list = conn.get_variant_ids_from_list(list_id)
     assert len(variants_in_list) == 0
     conn.close()
@@ -897,13 +899,12 @@ def test_user_lists(test_client):
     assert 'Successfully created new list' in data
 
     # check that the public and private bits are set correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     public_list_id = conn.get_latest_list_id()
     list_oi = conn.get_user_variant_list(public_list_id)
     assert list_oi[3] == 1
     assert list_oi[4] == 1
     conn.close()
-
 
 
 
@@ -939,7 +940,7 @@ def test_submit_assay(test_client):
     assert "Successfully uploaded a new assay" in data
 
 
-    conn = Connection()
+    conn = Connection(['super_user'])
     all_assays = conn.get_assays(variant_id)
     assert len(all_assays) == 1
 
