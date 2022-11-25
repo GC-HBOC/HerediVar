@@ -166,6 +166,8 @@ jobs:
           echo "DB_SUPER_USER_PW=password" >> .env
           echo "DB_ANNOTATION_USER=test_user" >> .env
           echo "DB_ANNOTATION_USER_PW=password" >> .env
+          echo "DB_READ_ONLY=test_user" >> .env
+          echo "DB_READ_ONLY_PW=password" >> .env
 
           echo "CLINVAR_API_KEY=${{ secrets.CLINVAR_API_KEY }}" >> .env
 
@@ -393,6 +395,8 @@ jobs:
           echo "DB_SUPER_USER_PW=password" >> .env
           echo "DB_ANNOTATION_USER=test_user" >> .env
           echo "DB_ANNOTATION_USER_PW=password" >> .env
+          echo "DB_READ_ONLY=test_user" >> .env
+          echo "DB_READ_ONLY_PW=password" >> .env
 
           echo "CLINVAR_API_KEY=${{ secrets.CLINVAR_API_KEY }}" >> .env
 
