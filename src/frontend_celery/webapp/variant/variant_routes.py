@@ -22,7 +22,7 @@ variant_blueprint = Blueprint(
 #chr11	108229378	108229379	Neg4	0	-	127480532	127481699	0,0,255
 # CDH1  chr1:10295758-17027834; chr11:108229378-108229378
 @variant_blueprint.route('/search', methods=('GET', 'POST'))  
-@require_login
+@require_permission(['read_resources'])
 def search():
 
     conn = get_connection()
@@ -62,7 +62,7 @@ def search():
 
 # chr1-17027834-G-A
 @variant_blueprint.route('/create', methods=('GET', 'POST'))
-@require_login
+@require_permission(['edit_resources'])
 def create():
     chrs = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
             'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY', 'chrMT']
@@ -115,7 +115,7 @@ def create():
 @variant_blueprint.route('/display/<int:variant_id>', methods=['GET', 'POST'])
 @variant_blueprint.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>', methods=['GET', 'POST']) # alternative url using vcf information
 # example: http:#srv018.img.med.uni-tuebingen.de:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http:#srv018.img.med.uni-tuebingen.de:5000/display/17
-@require_login
+@require_permission(['read_resources'])
 def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     conn = get_connection()
 
@@ -166,7 +166,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
 
 @variant_blueprint.route('/classify/<int:variant_id>', methods=['GET', 'POST'])
-@require_login
+@require_permission(['edit_resources'])
 def classify(variant_id):
     conn = get_connection()
 
@@ -251,7 +251,7 @@ def classify(variant_id):
 
 
 @variant_blueprint.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])
-@require_permission
+@require_permission(['admin_resources'])
 def consensus_classify(variant_id):
     conn = get_connection()
 
@@ -334,7 +334,7 @@ def consensus_classify(variant_id):
 
 
 @variant_blueprint.route('/display/<int:variant_id>/classification_history')
-@require_login
+@require_permission(['read_resources'])
 def classification_history(variant_id):
     conn = get_connection()
     variant_oi = conn.get_variant_more_info(variant_id)

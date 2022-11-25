@@ -15,7 +15,7 @@
     <form class="bst" action="" id="acmg-form" autocomplete="off" method="post" novalidate>
 
         <!-- user/consensus select-->
-        {% if session.get('user') is not none and session['user']['is_admin'] %}
+        {% if session.get('user') is not none and 'super_user' in session['user']['roles']%}
         <div class="form-group">
             <label for="classification_type" class="form-label">Select type of classification</label>
             <select class="form-select" name="classification_type" id="classification_type" required>
@@ -35,7 +35,7 @@
 
         <div class="collapse show" aria-expanded="true" id="classification_schema_wrapper">
         
-            <div class="sst">Go <a id="scheme_reference" href="#">here</a> for more details about the currently selected ACMG scheme.</div>
+            <div class="sst">Go <a id="scheme_reference" href="#">here</a> for more details about the currently selected scheme.</div>
         
             <!-- acmg criteria -->
             <div class="d-flex justify-content-center sst">

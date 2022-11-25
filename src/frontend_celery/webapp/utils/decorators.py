@@ -59,29 +59,61 @@ def require_login(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+#def require_permission(f):
+#    @require_login
+#    @wraps(f)
+#    def decorated_function(*args, **kwargs):
+#        grant_access, status_code = request_uma_ticket()
+#        if not grant_access:
+#            abort(status_code)
+#        return f(*args, **kwargs)
+#    return decorated_function
+#
+#def request_uma_ticket():
+#    token = session['tokenResponse']
+#    issuer = current_app.config['ISSUER']
+#    url = f'{issuer}/protocol/openid-connect/token'
+#    data = {'grant_type':'urn:ietf:params:oauth:grant-type:uma-ticket', 'audience':current_app.config['CLIENTID']}
+#    header = {'Authorization': f'Bearer {token.get("access_token")}'}
+#    resp = requests.post(url, data=data, headers=header)
+#    if resp.status_code != 200:
+#        current_app.logger.error(session['user']['preferred_username'] + " tried to access a protected route, but had not the required permissions.")
+#        return False, resp.status_code
+#    return True, 200
+
+
 # how to add new permission policies: https://stackoverflow.com/questions/42186537/resources-scopes-permissions-and-policies-in-keycloak (i was using the resource based permissions)
-def require_permission(f):
-    @require_login
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        grant_access, status_code = request_uma_ticket()
-        if not grant_access:
-            abort(status_code)
-        return f(*args, **kwargs)
-    return decorated_function
+def require_permission(resources):
+    def decorator(f):
+        @require_login
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            grant_access, status_code = request_uma_ticket(resources)
+            if not grant_access:
+                abort(status_code)
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
 
 
-def request_uma_ticket():
+def request_uma_ticket(resources):
     token = session['tokenResponse']
     issuer = current_app.config['ISSUER']
     url = f'{issuer}/protocol/openid-connect/token'
-    data = {'grant_type':'urn:ietf:params:oauth:grant-type:uma-ticket', 'audience':current_app.config['CLIENTID']}
+    client_id = current_app.config['CLIENTID']
+    data = {'grant_type':'urn:ietf:params:oauth:grant-type:uma-ticket', 'audience':client_id, "permission":resources, 'response_mode':'decision'}
     header = {'Authorization': f'Bearer {token.get("access_token")}'}
     resp = requests.post(url, data=data, headers=header)
+    #print(resp.json())
+    decision = True
     if resp.status_code != 200:
+        decision = False
         current_app.logger.error(session['user']['preferred_username'] + " tried to access a protected route, but had not the required permissions.")
-        return False, resp.status_code
-    return True, 200
+    return decision, resp.status_code
+
+
+
 
 # not exactly a decorator, but a helper function for them
 # this function uses the refresh token to get a new access token and returns the status code from this call

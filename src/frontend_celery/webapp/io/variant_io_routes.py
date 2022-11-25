@@ -7,7 +7,7 @@ from werkzeug.exceptions import abort
 import common.functions as functions
 import annotation_service.fetch_heredicare_variants as heredicare
 from datetime import datetime
-from ..utils import require_permission, require_login, get_clinvar_submission_status, get_connection
+from ..utils import require_permission, get_clinvar_submission_status, get_connection
 import jsonschema
 import json
 import requests
@@ -24,7 +24,7 @@ variant_io_blueprint = Blueprint(
 
 #http://srv018.img.med.uni-tuebingen.de:5000/import-variants/summary%3Fdate%3D2022-06-15-11-44-25
 @variant_io_blueprint.route('/import-variants/summary?date=<string:year>-<string:month>-<string:day>-<string:hour>-<string:minute>-<string:second>')
-@require_login
+@require_permission(['read_resources'])
 def import_summary(year, month, day, hour, minute, second):
     logs_folder = path.join(path.dirname(current_app.root_path), current_app.config['LOGS_FOLDER'])
     requested_at = '-'.join([year, month, day, hour, minute, second])
@@ -85,7 +85,7 @@ def import_summary(year, month, day, hour, minute, second):
 
 
 @variant_io_blueprint.route('/submit_clinvar/<int:variant_id>', methods=['GET', 'POST'])
-@require_permission
+@require_permission(['admin_resources'])
 def submit_clinvar(variant_id):
     
 
@@ -353,10 +353,8 @@ def get_assertion_criteria(scheme_type, assertion_criteria_source):
 
 
 @variant_io_blueprint.route('/submit_assay/<int:variant_id>', methods=['GET', 'POST'])
-@require_login
+@require_permission(['edit_resources'])
 def submit_assay(variant_id):
-
-    print(request.method)
 
     do_redirect = False
     if request.method == 'POST':

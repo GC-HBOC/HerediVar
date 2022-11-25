@@ -199,7 +199,7 @@ def handle_scheme_classification(classification_id, criteria, conn, where = "use
         # insert new criteria
         if criterium_id not in previous_criteria_dict:
             conn.insert_scheme_criterium_applied(classification_id, criterium_id, strength_id, evidence, where=where)
-            scheme_classification_got_update = True
+            #scheme_classification_got_update = True
         # update records if they were present before
         elif evidence != previous_criteria_dict[criterium_id]['evidence'] or strength_id != previous_criteria_dict[criterium_id]['strength_id']:
             conn.update_scheme_criterium_applied(previous_criteria_dict[criterium_id]['id'], strength_id, evidence, where="user")

@@ -2,7 +2,7 @@ from flask import Blueprint, abort, request, url_for, jsonify
 from os import path
 import sys
 
-from ..utils import require_login, start_annotation_service
+from ..utils import require_permission, start_annotation_service
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from common.db_IO import Connection
@@ -19,7 +19,7 @@ task_helper_blueprint = Blueprint(
 
 # this route listens on the GET parameter: annotation_queue_id or variant_id
 @task_helper_blueprint.route('/task/run_annotation_service', methods=['POST'])
-@require_login
+@require_permission(['edit_resources'])
 def run_annotation_service():
     annotation_queue_id = request.args.get('annotation_queue_id')
     variant_id = request.args.get('variant_id')
@@ -33,7 +33,7 @@ def run_annotation_service():
 
 
 @task_helper_blueprint.route('/task/annotation_status/<task_id>')
-@require_login
+@require_permission(['read_resources'])
 def annotation_status(task_id):
     task = annotate_variant.AsyncResult(task_id)
 

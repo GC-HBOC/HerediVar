@@ -39,10 +39,12 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{url_for('variant.search')}}">Browse variants</a>
                     </li>
+                    {% if session.get('user') is not none and 'user' in session['user']['roles'] %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{url_for('variant.create')}}">New variant</a>
                     </li>
-                    {% if session.get('user') is not none and session['user']['is_admin'] %}
+                    {% endif %}
+                    {% if session.get('user') is not none and 'super_user' in session['user']['roles'] %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{url_for('user.admin_dashboard')}}">Admin dashboard</a>
                     </li>
@@ -50,7 +52,7 @@
                 </ul>
                 <ul class="navbar-nav ">
                     <div class="d-flex align-items-center">
-                        {% if session.get('user') is not none and session['user']['is_admin'] %}
+                        {% if session.get('user') is not none and 'super_user' in session['user']['roles'] %}
                             <a class="nav-link" href="{{ url_for('auth.register') }}">create user</a>
                         {% endif %}
                         {% if session.get('user') is none %}

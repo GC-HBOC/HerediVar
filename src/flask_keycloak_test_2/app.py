@@ -107,18 +107,41 @@ def require_login(f):
     return decorated_function
 
 # how to add new permission policies: https://stackoverflow.com/questions/42186537/resources-scopes-permissions-and-policies-in-keycloak (i was using the resource based permissions)
-def require_permission(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        token = session['tokenResponse']
-        url = f'{issuer}/protocol/openid-connect/token'
-        data = {'grant_type':'urn:ietf:params:oauth:grant-type:uma-ticket', 'audience':clientId}
-        header = {'Authorization': f'Bearer {token.get("access_token")}'}
-        resp = requests.post(url, data=data, headers=header)
-        if resp.status_code != 200:
-            return str(resp.status_code) + ' ' + resp.text # redirect to error page here
-        return f(*args, **kwargs)
-    return decorated_function
+#def require_permission(f, resources):
+#    @wraps(f)
+#    def decorated_function(*args, **kwargs):
+#        token = session['tokenResponse']
+#        url = f'{issuer}/protocol/openid-connect/token'
+#        #scopes = ["read_resources"] #["edit_resources"] 
+#        data = {'grant_type':'urn:ietf:params:oauth:grant-type:uma-ticket', 'audience':clientId, "permission":resources}
+#        header = {'Authorization': f'Bearer {token.get("access_token")}'}
+#        resp = requests.post(url, data=data, headers=header)
+#        if resp.status_code != 200:
+#            return str(resp.status_code) + ' ' + resp.text # redirect to error page here
+#        return f(*args, **kwargs)
+#    return decorated_function
+#
+
+
+def require_permission(resources):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            token = session['tokenResponse']
+            url = f'{issuer}/protocol/openid-connect/token'
+            #scopes = ["read_resources"] #["edit_resources"] 
+            data = {'grant_type':'urn:ietf:params:oauth:grant-type:uma-ticket', 'audience':clientId, "permission":resources, 'response_mode':'decision'}
+            header = {'Authorization': f'Bearer {token.get("access_token")}'}
+            resp = requests.post(url, data=data, headers=header)
+            print(resp.json()['result'])
+            if resp.status_code != 200:
+                return str(resp.status_code) + ' ' + resp.text # redirect to error page here
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+
 
 
 # this function uses the refresh token to get a new access token and returns the status code from this call
@@ -188,10 +211,10 @@ def auth():
     return redirect(request.args.get('next_login', url_for('index')))
 
 
-@app.route('/api')
+@app.route('/readonly')
 @require_login
-@require_permission
-def api():
+@require_permission(['read_resources'])
+def readonly():
     # the following should be much easier...
     # see https://docs.authlib.org/en/latest/client/frameworks.html#auto-update-token
     token = session['tokenResponse']
@@ -203,12 +226,58 @@ def api():
     # if current access token is valid, use token for request
 
     # call userinfo endpoint as an example
-    access_token = token['access_token']
-    userInfoEndpoint = f'{issuer}/protocol/openid-connect/userinfo'
-    userInfoResponse = requests.post(userInfoEndpoint,
-                                     headers={'Authorization': f'Bearer {access_token}', 'Accept': 'application/json'})
+    #access_token = token['access_token']
+    #userInfoEndpoint = f'{issuer}/protocol/openid-connect/userinfo'
+    #userInfoResponse = requests.post(userInfoEndpoint,
+    #                                 headers={'Authorization': f'Bearer {access_token}', 'Accept': 'application/json'})
 
-    return userInfoResponse.text, 200
+    return "read route", 200
+
+
+@app.route('/edit')
+@require_login
+@require_permission(['edit_resources'])
+def edit():
+    # the following should be much easier...
+    # see https://docs.authlib.org/en/latest/client/frameworks.html#auto-update-token
+    token = session['tokenResponse']
+    # get current access token
+    # check if access token is still valid
+    # if current access token is valid, use token for request
+    # if current access token is invalid, use refresh token to obtain new access token
+    # if sucessfull, update current access token, current refresh token
+    # if current access token is valid, use token for request
+
+    # call userinfo endpoint as an example
+    #access_token = token['access_token']
+    #userInfoEndpoint = f'{issuer}/protocol/openid-connect/userinfo'
+    #userInfoResponse = requests.post(userInfoEndpoint,
+    #                                 headers={'Authorization': f'Bearer {access_token}', 'Accept': 'application/json'})
+
+    return "edit route", 200
+
+
+@app.route('/admin')
+@require_login
+@require_permission(['admin_resources'])
+def admin():
+    # the following should be much easier...
+    # see https://docs.authlib.org/en/latest/client/frameworks.html#auto-update-token
+    token = session['tokenResponse']
+    # get current access token
+    # check if access token is still valid
+    # if current access token is valid, use token for request
+    # if current access token is invalid, use refresh token to obtain new access token
+    # if sucessfull, update current access token, current refresh token
+    # if current access token is valid, use token for request
+
+    # call userinfo endpoint as an example
+    #access_token = token['access_token']
+    #userInfoEndpoint = f'{issuer}/protocol/openid-connect/userinfo'
+    #userInfoResponse = requests.post(userInfoEndpoint,
+    #                                 headers={'Authorization': f'Bearer {access_token}', 'Accept': 'application/json'})
+
+    return "admin_route", 200
 
 
 @app.route('/testprotect')

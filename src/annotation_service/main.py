@@ -126,7 +126,7 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
 
     all_jobs = get_jobs(job_config)
 
-    conn = Connection(role="annotation_role")
+    conn = Connection(roles=["annotation"])
     vcf_path = get_temp_vcf_path(annotation_queue_id)
     runtime_error = ""
 

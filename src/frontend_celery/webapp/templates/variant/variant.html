@@ -67,6 +67,7 @@
                         </svg>
                     </button>
                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                        {% if session.get('user') is not none and 'user' in session['user']['roles']%}
                         <li>
                             <button id="reannotate_button" type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#reannotate-modal">(Re-)Annotate</button>
                         </li>
@@ -80,12 +81,6 @@
                             <a id="classify_button" type="button" class="dropdown-item" href="{{url_for('variant.classify', variant_id = variant[0])}}" 
                             data-bs-toggle="tooltip"  title="Submit a new variant classification or edit your previous classification(s).">
                                 Classify
-                            </a>
-                        </li>
-                        <li>
-                            <a id="vcf_export_button" type="button" class="dropdown-item" href="{{url_for('download.variant', variant_id = variant[0])}}" 
-                            data-bs-toggle="tooltip" title="Download this variant & all annotations as VCF.">
-                                Export to VCF
                             </a>
                         </li>
                         <li>
@@ -104,6 +99,13 @@
                                     Submit to ClinVar
                                 </button>
                             </div>
+                        </li>
+                        {% endif %}
+                        <li>
+                            <a id="vcf_export_button" type="button" class="dropdown-item" href="{{url_for('download.variant', variant_id = variant[0])}}" 
+                            data-bs-toggle="tooltip" title="Download this variant & all annotations as VCF.">
+                                Export to VCF
+                            </a>
                         </li>
                         <li>
                             <button class="dropdown-item" id="list_add_button" data-bs-toggle="modal" data-bs-target="#list-add-modal">Add to list</button>

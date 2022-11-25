@@ -4,7 +4,7 @@ import sys
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from common.db_IO import Connection
-from ..utils import require_login
+from ..utils import require_permission
 
 doc_blueprint = Blueprint(
     'doc',
@@ -13,13 +13,13 @@ doc_blueprint = Blueprint(
 
 # static info pages
 @doc_blueprint.route('/help/search')
-@require_login
+@require_permission(['read_resources'])
 def search_help():
     return render_template('doc/search_help.html')
 
 
 @doc_blueprint.route('/deleted_variant_info')
-@require_login
+@require_permission(['read_resources'])
 def deleted_variant():
     return render_template('doc/deleted_variant.html')
 

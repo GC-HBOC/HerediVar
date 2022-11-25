@@ -12,7 +12,7 @@ from functools import cmp_to_key
 import os
 
 
-def get_db_connection(role):
+def get_db_connection(roles):
     conn = None
 
     host = os.environ.get('DB_HOST')
@@ -22,7 +22,7 @@ def get_db_connection(role):
 
     try:
         #env = os.environ.get('WEBAPP_ENV', 'dev')
-        user, pw = get_db_user(role)
+        user, pw = get_db_user(roles)
         conn = mysql.connector.connect(user=user, password=pw,
                                host=host,
                                database=os.environ.get("DB_NAME"), 
@@ -35,20 +35,19 @@ def get_db_connection(role):
 
 
 
-def get_db_user(role):
-    if role == "user_role":
-        #print("using user role")
-        return os.environ.get("DB_USER"), os.environ.get("DB_USER_PW")
-    if role == "super_user_role":
+def get_db_user(roles):
+    if "super_user" in roles:
         #print("using super user role")
         return os.environ.get("DB_SUPER_USER"), os.environ.get("DB_SUPER_USER_PW")
-    if role == "annotation_role":
+    if "user" in roles:
+        #print("using user role")
+        return os.environ.get("DB_USER"), os.environ.get("DB_USER_PW")
+    if 'annotation' in roles:
         #print("using annotation role")
         return os.environ.get("DB_ANNOTATION_USER"), os.environ.get("DB_ANNOTATION_USER_PW")
-    if role == "readonly_role":
-        return os.environ.get("DB_USER"), os.environ.get("DB_USER_PW") # TODO !!!!!!!!!!!!!!!!!!!!!!!
-    raise ValueError(str(role) + " is not a valid db user role!")
-
+    if 'read_only' in roles:
+        return os.environ.get("DB_READ_ONLY"), os.environ.get("DB_READ_ONLY_PW")
+    raise ValueError(str(roles) + " doesn't contain a valid db user role!")
 
 
 
@@ -65,8 +64,8 @@ def enbrace(string):
 
 
 class Connection:
-    def __init__(self, role = "user_role"):
-        self.conn = get_db_connection(role)
+    def __init__(self, roles = ["read_only"]):
+        self.conn = get_db_connection(roles)
         self.cursor = self.conn.cursor()
         self.set_connection_encoding()
 

@@ -79,14 +79,14 @@ def get_clinvar_submission_status(clinvar_submission_id, headers): # SUB11770209
     return resp
 
 
-def get_role_for_current_user():
-    if is_user_logged_in():
-        is_super_user, status_code = request_uma_ticket() # maybe overkill checking this everytime?
-        if is_super_user:
-            return "super_user_role"
-        return "user_role"
-    else:
-        return "readonly_role"
+#def get_role_for_current_user():
+#    if is_user_logged_in():
+#        is_super_user, status_code = request_uma_ticket() # maybe overkill checking this everytime?
+#        if is_super_user:
+#            return "super_user_role"
+#        return "user_role"
+#    else:
+#        return "readonly_role"
 
 
 def is_user_logged_in():
@@ -106,9 +106,13 @@ def request_has_connection():
 
 
 def get_connection():
-    role = get_role_for_current_user()
+    user = session.get('user')
+    if user is None:
+        abort(401, "Not logged in")
+    roles = user.get('roles', [])
     if not request_has_connection():
-        g.dbconn = Connection(role)        
+        #print(roles)
+        g.dbconn = Connection(roles)        
         current_app.logger.debug("established db connection")
     return g.dbconn
 

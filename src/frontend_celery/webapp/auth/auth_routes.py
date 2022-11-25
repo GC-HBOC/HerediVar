@@ -93,21 +93,21 @@ def auth():
         first_name = user_info['given_name']
         last_name = user_info['family_name']
         affiliation = user_info.get('affiliation')
-        if affiliation is None or affiliation.strip() == '':
-            flash('LOGIN ERROR: You are missing the affiliation tag ask a HerediVar administrator to add it!', 'alert-danger')
-            current_app.logger.error("Could not login user " + username + ", because the user was missing affiliation tag in keycloak.")
-            return redirect(url_for('auth.logout', auto_logout='True'))
-        conn = Connection()
-        conn.insert_user(username, first_name, last_name, affiliation) # this inserts only if the user is not already in the database and updates the information if the information changed (except for username this one has to stay)
-        user_info['user_id'] = conn.get_user_id(username)
-        conn.close()
-
 
         # init the session
         session['user'] = user_info
         session['tokenResponse'] = token_response
 
-        session['user']['is_admin'] = request_uma_ticket()[0]
+        print(session['user'])
+
+        if affiliation is None or affiliation.strip() == '':
+            flash('LOGIN ERROR: You are missing the affiliation tag ask a HerediVar administrator to add it!', 'alert-danger')
+            current_app.logger.error("Could not login user " + username + ", because the user was missing affiliation tag in keycloak.")
+            return redirect(url_for('auth.logout', auto_logout='True'))
+        conn = Connection(session['user']['roles'])
+        conn.insert_user(username, first_name, last_name, affiliation) # this inserts only if the user is not already in the database and updates the information if the information changed (except for username this one has to stay)
+        user_info['user_id'] = conn.get_user_id(username)
+        conn.close()
 
         current_app.logger.info("User " + user_info['preferred_username'] + ' (' + user_info.get('affiliation') + ") successfully logged in.")
 
@@ -150,7 +150,7 @@ def logout():
 
 
 @auth_blueprint.route('/register')
-@require_permission
+@require_permission(['admin_resources'])
 def register():
     if current_app.config['TLS']:
         prefix = 'https://'

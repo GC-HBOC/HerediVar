@@ -17,7 +17,7 @@ user_blueprint = Blueprint(
 )
 
 @user_blueprint.route('/mylists/modify_content', methods=['POST'])
-@require_login
+@require_permission(['read_resources'])
 def modify_list_content():
     conn = get_connection()
 
@@ -49,7 +49,7 @@ def modify_list_content():
 
 
 @user_blueprint.route('/mylists', methods=['GET', 'POST'])
-@require_login
+@require_permission(['read_resources'])
 def my_lists():
     user_id = session['user']['user_id']
     conn = get_connection()
@@ -165,7 +165,7 @@ def my_lists():
 
 #
 @user_blueprint.route('/admin_dashboard', methods=('GET', 'POST'))
-@require_permission
+@require_permission(['admin_resources'])
 def admin_dashboard():
     conn = get_connection()
     most_recent_import_request = conn.get_most_recent_import_request()

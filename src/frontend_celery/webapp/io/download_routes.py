@@ -2,7 +2,7 @@ from flask import Blueprint, abort, current_app, send_from_directory, send_file,
 from os import path
 import sys
 
-from ..utils import require_login, get_connection, get_preferred_username
+from ..utils import require_permission, get_connection, get_preferred_username
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from common.db_IO import Connection
@@ -21,7 +21,7 @@ download_blueprint = Blueprint(
 
 # downloads
 @download_blueprint.route('/download/evidence_document/<int:consensus_classification_id>')
-@require_login
+@require_permission(['read_resources'])
 def evidence_document(consensus_classification_id):
     conn = get_connection()
     consensus_classification = conn.get_evidence_document(consensus_classification_id)
@@ -45,7 +45,7 @@ def evidence_document(consensus_classification_id):
 
 
 @download_blueprint.route('/download/assay_report/<int:assay_id>')
-@require_login
+@require_permission(['read_resources'])
 def assay_report(assay_id):
     conn = get_connection()
     assay = conn.get_assay_report(assay_id)
@@ -67,7 +67,7 @@ def assay_report(assay_id):
 
 
 @download_blueprint.route('/import-variants/summary/download?file=<string:log_file>')
-@require_login
+@require_permission(['read_resources'])
 def log_file(log_file):
     logs_folder = path.join(path.dirname(current_app.root_path), current_app.config['LOGS_FOLDER'])
     return send_from_directory(directory=logs_folder, path='', filename=log_file)
@@ -137,7 +137,7 @@ def classified_variants():
 
 # listens on get parameter: list_id
 @download_blueprint.route('/download/vcf/variant_list')
-@require_login
+@require_permission(['read_resources'])
 def variant_list():
     conn = get_connection()
 

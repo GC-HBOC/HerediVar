@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, abort, current_app, send_from_directory
-from ..utils import require_login, get_connection
+from ..utils import require_login, require_permission, get_connection
 
 
 extended_information_blueprint = Blueprint(
@@ -8,7 +8,7 @@ extended_information_blueprint = Blueprint(
 )
 
 @extended_information_blueprint.route('/gene/<int:gene_id>')
-@require_login
+@require_permission(['read_resources'])
 def gene(gene_id):
     conn = get_connection()
     gene_info = conn.get_gene(gene_id)

@@ -7,5 +7,7 @@
 <a href="/login">login</a>
 {% endif %}
 
-<a href="{{ url_for('api', _external=True) }}">API</a>
+<a href="{{ url_for('readonly', _external=True) }}">read</a>
+<a href="{{ url_for('edit', _external=True) }}">edit</a>
+<a href="{{ url_for('admin', _external=True) }}">admin</a>
 <a href="{{ url_for('testprotect', _external=True) }}">testprotect</a>
