@@ -370,7 +370,7 @@ UNLOCK TABLES;
 LOCK TABLES `user` WRITE;
 /*The outdated information will be overwritten with the data stored in keycloak upon login of that person*/;
 INSERT INTO `user` VALUES 
-	(3,'testuser','outdated_first_name','outdated_last_name','outdated_affiliation'),
+	(3,'superuser','outdated_first_name','outdated_last_name','outdated_affiliation'),
 	(4,'norights','fn','ln','aff');
 UNLOCK TABLES;
 
