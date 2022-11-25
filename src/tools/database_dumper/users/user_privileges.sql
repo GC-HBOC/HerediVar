@@ -6,6 +6,7 @@
 CREATE USER 'HerediVar_superuser'@'%' IDENTIFIED BY '20220303s' PASSWORD EXPIRE NEVER;
 CREATE USER 'HerediVar_annotation'@'%' IDENTIFIED BY '20220303a' PASSWORD EXPIRE NEVER;
 CREATE USER 'HerediVar_user'@'%' IDENTIFIED BY '20220303u' PASSWORD EXPIRE NEVER;
+CREATE USER 'HerediVar_read_only'@'%' IDENTIFIED BY '20220303r' PASSWORD EXPIRE NEVER;
 */
 
 
@@ -60,4 +61,9 @@ GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.user_classification_selected_
 GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.consensus_classification_selected_literature TO 'HerediVar_superuser'
 
 
-
+/* grant priviliges to read only user */
+GRANT SELECT, SHOW VIEW ON HerediVar_ahdoebm1.* TO 'HerediVar_read_only'@'%';
+GRANT SELECT, SHOW VIEW ON HerediVar_ahdoebm1_test.* TO 'HerediVar_read_only'@'%';
+GRANT INSERT, UPDATE ON HerediVar_ahdoebm1.user TO 'HerediVar_read_only';
+GRANT INSERT, DELETE ON HerediVar_ahdoebm1.list_variants TO 'HerediVar_read_only';
+GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.user_variant_lists TO 'HerediVar_read_only';
