@@ -31,7 +31,7 @@ def login():
     if current_app.config.get('TESTING', False):
         issuer = current_app.config['ISSUER']
         url = f'{issuer}/protocol/openid-connect/token'
-        data = {'client_id':current_app.config['CLIENTID'], 'client_secret': current_app.config['CLIENTSECRET'], 'grant_type': 'password', 'username': 'testuser', 'password': '12345'}
+        data = {'client_id':current_app.config['CLIENTID'], 'client_secret': current_app.config['CLIENTSECRET'], 'grant_type': 'password', 'username': 'superuser', 'password': '12345'}
         token_response = requests.post(url = url, data=data)
         assert token_response.status_code == 200
         session['tokenResponse'] = token_response.json()
