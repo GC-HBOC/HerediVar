@@ -68,3 +68,15 @@ def annotate_variant(self, annotation_queue_id):
                         'custom': '...'})
         annotate_variant.retry()
     self.update_state(state=status, meta={'annotation_queue_id':annotation_queue_id})
+
+
+#
+
+# this uses exponential backoff in case there is a http error
+# this will retry 3 times before giving up
+# first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
+@celery.task(bind=True, retry_backoff=5, max_retries=3)
+def generate_consensus_only_vcf_task(self):
+    """Background task for generating consensus only vcf"""
+    from webapp.io.download_routes import generate_consensus_only_vcf
+    generate_consensus_only_vcf()

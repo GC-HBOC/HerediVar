@@ -11,6 +11,7 @@ from .decorators import *
 from .search_utils import *
 from urllib.parse import urlparse, urljoin
 from ..tasks import annotate_variant
+import pathlib
 #import celery_module
 
 
@@ -41,6 +42,20 @@ def start_annotation_service(variant_id = None, annotation_queue_id = None):
     current_app.logger.info(session['user']['preferred_username'] + " started the annotation service for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task.id))
     conn.insert_celery_task_id(annotation_queue_id, task.id)
     return task.id
+
+
+def remove_oldest_file(folder, maxfiles=10):
+    if os.path.exists(folder):
+        list_of_files = os.listdir(folder)
+        full_paths = [os.path.abspath(os.path.join(folder, x)) for x in list_of_files if not os.path.basename(x).startswith('.')]
+
+        if len(list_of_files) >= maxfiles:
+            oldest_file = min(full_paths, key=os.path.getctime)
+            os.remove(oldest_file)
+
+
+def mkdir_recursive(dirpath):
+    pathlib.Path(dirpath).mkdir(parents=True, exist_ok=True)
 
 
 def none_to_empty_list(obj):
@@ -116,6 +131,8 @@ def get_connection():
         g.dbconn = Connection(roles)        
         current_app.logger.debug("established db connection")
     return g.dbconn
+
+
 
 
 def strength_to_text(strength, scheme):

@@ -5,6 +5,7 @@ from ..utils import *
 import sys
 from os import path
 from .variant_functions import *
+from ..tasks import generate_consensus_only_vcf_task
 
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
@@ -320,6 +321,7 @@ def consensus_classify(variant_id):
 
     if do_redirect: # do redirect if the submission was successful
         current_app.logger.info(session['user']['preferred_username'] + " successfully consensus-classified variant " + str(variant_id) + " with class " + str(classification) + " from scheme_id " + str(scheme_id))
+        task = generate_consensus_only_vcf_task.apply_async()
         return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
     else:
         return render_template('variant/classify.html', 

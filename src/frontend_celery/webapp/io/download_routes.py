@@ -2,7 +2,7 @@ from flask import Blueprint, abort, current_app, send_from_directory, send_file,
 from os import path
 import sys
 
-from ..utils import require_permission, get_connection, get_preferred_username
+from ..utils import require_permission, get_connection, get_preferred_username, remove_oldest_file, mkdir_recursive
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from common.db_IO import Connection
@@ -12,6 +12,7 @@ from shutil import copyfileobj
 import re
 import os
 import uuid
+import pathlib
 
 
 download_blueprint = Blueprint(
@@ -78,50 +79,78 @@ def log_file(log_file):
 
 
 # listens on get parameter: raw
+#@download_blueprint.route('/download/vcf/classified')
+#def classified_variants():
+#    return_raw = request.args.get('raw')
+#    force_url = url_for("download.classified_variants", raw=return_raw, force = True)
+#    redirect_url = url_for("main.index")
+#
+#    classified_variants_folder = current_app.static_folder + "/files/classified_variants"
+#    last_dump_path = classified_variants_folder + "/.last_dump.txt"
+#    read_from_file = False
+#    last_dump_date = functions.get_today() # override with last dump date if there is one
+#    if os.path.isfile(last_dump_path):
+#        with open(last_dump_path, 'r') as last_dump_file:
+#            last_dump_date = last_dump_file.read()
+#            days_since_dump = functions.days_between(functions.get_today(), last_dump_date)
+#            if days_since_dump <= 7:
+#                read_from_file = True
+#            if days_since_dump > 7:
+#                last_dump_date = functions.get_today()
+#
+#    path_to_download = classified_variants_folder + "/" + last_dump_date + ".vcf"
+#
+#    # generate a new vcf file
+#    if not read_from_file:
+#        with open(last_dump_path, 'w') as last_dump_file:
+#            last_dump_file.write(functions.get_today())
+#
+#        conn = get_connection()
+#        variants_oi = conn.get_variant_ids_with_consensus_classification()
+#
+#        vcf_file_buffer, x, xx, xxx = get_vcf(variants_oi, conn, get_variant_vcf_line_only_consensus)
+#
+#        functions.buffer_to_file_system(vcf_file_buffer, path_to_download)
+#
+#    returncode, err_msg, vcf_errors = functions.check_vcf(path_to_download)
+#
+#    if returncode != 0:
+#        if request.args.get('force') is None:
+#            flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
+#            current_app.logger.error(get_preferred_username() + " tried to download a all classified variants as vcf, but it contains errors: " + vcf_errors)
+#            return redirect(redirect_url)
+#
+#
+#    current_app.logger.info(get_preferred_username() + " successfully downloaded vcf of all classified variants.")
+#
+#    if return_raw is not None:
+#        with open(path_to_download, "r") as file_to_download:
+#            download_text = file_to_download.read()
+#            resp = make_response(download_text, 200)
+#            resp.mimetype = "text/plain"
+#            return resp
+#    else:
+#        return send_file(path_to_download, as_attachment=True, mimetype="text/vcf")
+
+
+
+
+# listens on get parameter: raw
 @download_blueprint.route('/download/vcf/classified')
 def classified_variants():
-    return_raw = request.args.get('raw')
-    force_url = url_for("download.classified_variants", raw=return_raw, force = True)
-    redirect_url = url_for("main.index")
+    generate_consensus_only_vcf()
 
+    return_raw = request.args.get('raw')
     classified_variants_folder = current_app.static_folder + "/files/classified_variants"
     last_dump_path = classified_variants_folder + "/.last_dump.txt"
-    read_from_file = False
-    last_dump_date = functions.get_today() # override with last dump date if there is one
+
     if os.path.isfile(last_dump_path):
         with open(last_dump_path, 'r') as last_dump_file:
             last_dump_date = last_dump_file.read()
-            days_since_dump = functions.days_between(functions.get_today(), last_dump_date)
-            if days_since_dump <= 7:
-                read_from_file = True
-            if days_since_dump > 7:
-                last_dump_date = functions.get_today()
+    else:
+        abort(404)
 
     path_to_download = classified_variants_folder + "/" + last_dump_date + ".vcf"
-
-    # generate a new vcf file
-    if not read_from_file:
-        with open(last_dump_path, 'w') as last_dump_file:
-            last_dump_file.write(functions.get_today())
-
-        conn = get_connection()
-        variants_oi = conn.get_variant_ids_with_consensus_classification()
-
-        vcf_file_buffer, x, xx, xxx = get_vcf(variants_oi, conn)
-
-        functions.buffer_to_file_system(vcf_file_buffer, path_to_download)
-
-    returncode, err_msg, vcf_errors = functions.check_vcf(path_to_download)
-
-    if returncode != 0:
-        if request.args.get('force') is None:
-            flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
-            current_app.logger.error(get_preferred_username() + " tried to download a all classified variants as vcf, but it contains errors: " + vcf_errors)
-            return redirect(redirect_url)
-
-
-    current_app.logger.info(get_preferred_username() + " successfully downloaded vcf of all classified variants.")
-
     if return_raw is not None:
         with open(path_to_download, "r") as file_to_download:
             download_text = file_to_download.read()
@@ -129,10 +158,25 @@ def classified_variants():
             resp.mimetype = "text/plain"
             return resp
     else:
-        return send_file(path_to_download, as_attachment=True, mimetype="text/vcf")
+        return send_file(path_to_download, download_name="HerediVar-classified-" + functions.get_today(), as_attachment=True, mimetype="text/vcf")  
 
+def generate_consensus_only_vcf():
+    classified_variants_folder = current_app.static_folder + "/files/classified_variants"
+    mkdir_recursive(classified_variants_folder)
+    last_dump_path = classified_variants_folder + "/.last_dump.txt"
+    last_dump_date = functions.get_today()
+    path_to_download = classified_variants_folder + "/" + last_dump_date + ".vcf"
 
+    remove_oldest_file(classified_variants_folder, maxfiles=10)
 
+    conn = Connection(['read_only'])
+    variants_oi = conn.get_variant_ids_with_consensus_classification()
+    vcf_file_buffer, x, xx, xxx = get_vcf(variants_oi, conn, get_variant_vcf_line_only_consensus)
+    functions.buffer_to_file_system(vcf_file_buffer, path_to_download)
+    conn.close()
+
+    with open(last_dump_path, 'w') as last_dump_file:
+        last_dump_file.write(functions.get_today())
 
 
 # listens on get parameter: list_id
@@ -175,6 +219,7 @@ def variant_list():
 
 # listens on get parameter: variant_id
 @download_blueprint.route('/download/vcf/one_variant')
+@require_permission(['read_resources'])
 def variant():
     conn = get_connection()
 
@@ -199,47 +244,42 @@ def variant():
 
 
 
-def get_vcf(variants_oi, conn):
-    status = 'success'
 
-    final_info_headers = {}
-    all_variant_vcf_lines = []
-    for id in variants_oi:
-        variant_vcf, info_headers = get_variant_vcf_line(id, conn)
-        all_variant_vcf_lines.append(variant_vcf)
-        final_info_headers = merge_info_headers(final_info_headers, info_headers)
-    
-    helper = io.StringIO()
-    printable_info_headers = list(final_info_headers.values())
-    printable_info_headers.sort()
-    functions.write_vcf_header(printable_info_headers, helper.write, tail='\n')
-    for line in all_variant_vcf_lines:
-        helper.write(line + '\n')
-
-    buffer = io.BytesIO()
-    buffer.write(helper.getvalue().encode())
-    buffer.seek(0)
-
-    temp_file_path = tempfile.gettempdir() + "/variant_download_" + str(uuid.uuid4()) + ".vcf"
-    with open(temp_file_path, 'w') as tf:
-        helper.seek(0)
-        copyfileobj(helper, tf)
-    helper.close()
-
-    returncode, err_msg, vcf_errors = functions.check_vcf(temp_file_path)
-
-    os.remove(temp_file_path)
-
-    if returncode != 0:
-        if request.args.get('force') is None:
-            status = "redirect"
-            return None, status, vcf_errors, err_msg
-
-    return buffer, status, "", ""
 
 
 def merge_info_headers(old_headers, new_headers):
     return {**old_headers, **new_headers}
+
+
+def variant_oi_to_vcf(variant_oi, info):
+    #"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER
+    variant_vcf = '\t'.join((str(variant_oi[1]), str(variant_oi[2]), str(variant_oi[0]), str(variant_oi[3]), str(variant_oi[4]), '.', '.', info))
+    return variant_vcf
+
+
+def get_variant_vcf_line_only_consensus(variant_id, conn):
+    
+    variant_oi = conn.get_one_variant(variant_id)
+
+    consensus_classification = conn.get_consensus_classification(variant_id, most_recent = True)[0]
+    info_headers = {}
+    if consensus_classification is None:
+        info = '.'
+    else:
+        info_headers["class"] = '##INFO=<ID=class,Number=1,Type=Integer,Description="The consensus classification from the VUS-task-force. Either 1 (benign), 2 (likely benign), 3 (uncertain), 4 (likely pathogenic) or 5 (pathogenic)">\n'
+        info_headers["date"] = '##INFO=<ID=date,Number=1,Type=String,Description="The date when the consensus classification was submitted. FORMAT: %Y-%m-%d %H:%M:%S">\n'
+        info_headers["classification"] = '##INFO=<ID=classification_scheme,Number=String,Type=The classification scheme which was used to classify the variant.">\n'
+        #id,user_id,variant_id,classification,comment,date,is_recent,classification_scheme_id
+        info = ""
+        info = functions.collect_info(info, "class=", consensus_classification[3])
+        info = functions.collect_info(info, "date=", functions.encode_vcf(consensus_classification[5].strftime('%Y-%m-%d %H:%M:%S')))
+        info = functions.collect_info(info, "classification_scheme=", functions.encode_vcf(conn.get_classification_scheme(consensus_classification[7])[1]))
+
+    variant_vcf = variant_oi_to_vcf(variant_oi, info)
+    return variant_vcf, info_headers
+
+
+
 
 
 def get_variant_vcf_line(variant_id, conn):
@@ -248,9 +288,6 @@ def get_variant_vcf_line(variant_id, conn):
     annotations = conn.get_all_variant_annotations(variant_id)
     external_variant_ids = conn.get_external_ids_from_variant_id(variant_id)
     
-    #"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO"
-    variant_vcf = '\t'.join((str(variant_oi[1]), str(variant_oi[2]), str(variant_oi[0]), str(variant_oi[3]), str(variant_oi[4]), '.', '.'))
-
     info = ''
     info_headers = {}
     # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
@@ -416,8 +453,49 @@ def get_variant_vcf_line(variant_id, conn):
     if info == '':
         info = '.'
 
+    variant_vcf = variant_oi_to_vcf(variant_oi, info)
+    return variant_vcf, info_headers
 
-    return variant_vcf + '\t' + info, info_headers
+
+
+def get_vcf(variants_oi, conn, worker=get_variant_vcf_line):
+    status = 'success'
+
+    final_info_headers = {}
+    all_variant_vcf_lines = []
+    for id in variants_oi:
+        variant_vcf, info_headers = worker(id, conn)
+        all_variant_vcf_lines.append(variant_vcf)
+        final_info_headers = merge_info_headers(final_info_headers, info_headers)
+    
+    helper = io.StringIO()
+    printable_info_headers = list(final_info_headers.values())
+    printable_info_headers.sort()
+    functions.write_vcf_header(printable_info_headers, helper.write, tail='\n')
+    for line in all_variant_vcf_lines:
+        helper.write(line + '\n')
+
+    buffer = io.BytesIO()
+    buffer.write(helper.getvalue().encode())
+    buffer.seek(0)
+
+    temp_file_path = tempfile.gettempdir() + "/variant_download_" + str(uuid.uuid4()) + ".vcf"
+    with open(temp_file_path, 'w') as tf:
+        helper.seek(0)
+        copyfileobj(helper, tf)
+    helper.close()
+
+    returncode, err_msg, vcf_errors = functions.check_vcf(temp_file_path)
+
+    os.remove(temp_file_path)
+
+    if returncode != 0:
+        if request.args.get('force') is None:
+            status = "redirect"
+            return None, status, vcf_errors, err_msg
+
+    return buffer, status, "", ""
+
 
 
 
