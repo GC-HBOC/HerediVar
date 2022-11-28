@@ -58,6 +58,6 @@ class Job(metaclass=abc.ABCMeta):
         if value_modifier_function is not None:
             value = value_modifier_function(value)
 
-        #print(value)
+        print(info_name + str(value))
 
         conn.insert_variant_annotation(variant_id, annotation_type_id, value)

@@ -42,6 +42,7 @@ if webapp_env == 'dev':
     cancerhotspots_path = datadir + "cancerhotspots/cancerhotspots.v2.final.vcf.gz"
     arup_brca_path = datadir + "ARUP/ARUP_BRCA_2022_04_01.vcf.gz"
     tp53_db = datadir + "TP53_database/GermlineDownload_r20.normalized.vcf.gz"
+    hci_priors = datadir + "HCI_priors/priors.vcf.gz"
 
     # data for init_db
     hgnc_path = datadir + "HGNC/hgnc_complete_set.tsv"
@@ -134,6 +135,7 @@ elif webapp_env == 'githubtest':
     cancerhotspots_path = datadir + "cancerhotspots.vcf.gz"
     arup_brca_path = datadir + "ARUP_BRCA.vcf.gz"
     tp53_db = datadir + "TP53_database.vcf.gz"
+
 
 
 elif webapp_env == 'production':

@@ -42,6 +42,7 @@ def get_default_job_config():
         'do_cancerhotspots': True,
         'do_arup': True,
         'do_tp53_database': True,
+        'do_priors': True,
 
         # additional annotations
         'do_task_force_protein_domains': True,
@@ -76,6 +77,7 @@ def get_empty_job_config():
         'do_cancerhotspots': False,
         'do_arup': False,
         'do_tp53_database': False,
+        'do_priors': False,
 
         # additional annotations
         'do_task_force_protein_domains': False,
@@ -239,9 +241,9 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         runtime_error = str(e)
 
 
-    if exists(vcf_path): 
-    #    #functions.execute_command(["rm", vcf_path], "rm") # this uses sudo in github testing as this is required to delete it 
-        os.remove(vcf_path)
+    #if exists(vcf_path): 
+    ##    #functions.execute_command(["rm", vcf_path], "rm") # this uses sudo in github testing as this is required to delete it 
+    #    os.remove(vcf_path)
 
 
     conn.close()

@@ -138,19 +138,27 @@ def log_file(log_file):
 # listens on get parameter: raw
 @download_blueprint.route('/download/vcf/classified')
 def classified_variants():
-    generate_consensus_only_vcf()
-
     return_raw = request.args.get('raw')
     classified_variants_folder = current_app.static_folder + "/files/classified_variants"
     last_dump_path = classified_variants_folder + "/.last_dump.txt"
+    force_url = url_for("download.classified_variants", raw=return_raw, force = True)
+    redirect_url = url_for("main.index")
 
     if os.path.isfile(last_dump_path):
         with open(last_dump_path, 'r') as last_dump_file:
             last_dump_date = last_dump_file.read()
-    else:
-        abort(404)
-
+    else: # generate a new file if it is missing...
+        generate_consensus_only_vcf()
+    
     path_to_download = classified_variants_folder + "/" + last_dump_date + ".vcf"
+    returncode, err_msg, vcf_errors = functions.check_vcf(path_to_download)
+
+    if returncode != 0:
+        if request.args.get('force') is None:
+            flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
+            current_app.logger.error(get_preferred_username() + " tried to download a all classified variants as vcf, but it contains errors: " + vcf_errors)
+            return redirect(redirect_url)
+
     if return_raw is not None:
         with open(path_to_download, "r") as file_to_download:
             download_text = file_to_download.read()

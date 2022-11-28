@@ -71,6 +71,8 @@ class annotate_from_vcf_job(Job):
 
         self.insert_annotation(variant_id, info, "ARUP_classification=", 21, conn)
 
+        self.insert_annotation(variant_id, info, "HCI_prior=", 52, conn)
+
         # spliceai is saved to the database in the dedicated spliceai job (which must be called after this job anyway)
         #self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )
         #self.insert_annotation(variant_id, info, 'SpliceAI=', 8, conn, value_modifier_function= lambda value : ','.join([str(max([float(x) for x in x.split('|')[2:6]])) for x in value.split(',')]) )
@@ -180,7 +182,11 @@ class annotate_from_vcf_job(Job):
 
         ## add TP53 database information
         if self.job_config['do_tp53_database']:
-            config_file.write(paths.tp53_db + "\ttp53db\tclass,bayes_del,transactivation_class,DNE_LOF_class,DNE_class,domain_function,pubmed\t")
+            config_file.write(paths.tp53_db + "\ttp53db\tclass,bayes_del,transactivation_class,DNE_LOF_class,DNE_class,domain_function,pubmed\t\n")
+
+        ## add priors
+        if self.job_config['do_priors']:
+            config_file.write(paths.hci_priors + "\t\tHCI_prior\t\n")
 
         config_file.close()
         return config_file_path

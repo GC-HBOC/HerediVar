@@ -60,29 +60,6 @@ def require_login(f):
     return decorated_function
 
 
-#def require_permission(f):
-#    @require_login
-#    @wraps(f)
-#    def decorated_function(*args, **kwargs):
-#        grant_access, status_code = request_uma_ticket()
-#        if not grant_access:
-#            abort(status_code)
-#        return f(*args, **kwargs)
-#    return decorated_function
-#
-#def request_uma_ticket():
-#    token = session['tokenResponse']
-#    issuer = current_app.config['ISSUER']
-#    url = f'{issuer}/protocol/openid-connect/token'
-#    data = {'grant_type':'urn:ietf:params:oauth:grant-type:uma-ticket', 'audience':current_app.config['CLIENTID']}
-#    header = {'Authorization': f'Bearer {token.get("access_token")}'}
-#    resp = requests.post(url, data=data, headers=header)
-#    if resp.status_code != 200:
-#        current_app.logger.error(session['user']['preferred_username'] + " tried to access a protected route, but had not the required permissions.")
-#        return False, resp.status_code
-#    return True, 200
-
-
 # how to add new permission policies: https://stackoverflow.com/questions/42186537/resources-scopes-permissions-and-policies-in-keycloak (i was using the resource based permissions)
 def require_permission(resources):
     def decorator(f):
