@@ -84,7 +84,7 @@ elif webapp_env == 'localtest':
     #metadata
     gnomad_path = datadir + "gnomAD.vcf.gz"
     gnomad_m_path  = datadir + "gnomAD_mito.vcf.gz"
-    phylop_file_path = "https://portal.img.med.uni-tuebingen.de/ahsturm1/hg38_phyloP100way_vertebrate.bw" # "/mnt/users/ahdoebm1/HerediVar/data/dbs/phyloP/hg38.phyloP100way.bw" #"https://download.imgag.de/public/dbs/phyloP/hg38_phyloP100way_vertebrate.bw"
+    phylop_file_path = "/mnt/users/ahdoebm1/HerediVar/data/dbs/phyloP/hg38.phyloP100way.bw"#"https://download.imgag.de/public/dbs/phyloP/hg38_phyloP100way_vertebrate.bw"
     dbsnp_path = datadir + "dbSNP.vcf.gz"
     revel_path = datadir + "revel.vcf.gz"
     spliceai_path = datadir + "SpliceAI.vcf.gz"
@@ -97,7 +97,7 @@ elif webapp_env == 'localtest':
     cancerhotspots_path = datadir + "cancerhotspots.vcf.gz"
     arup_brca_path = datadir + "ARUP_BRCA.vcf.gz"
     tp53_db = datadir + "TP53_database.vcf.gz"
-
+    hci_priors = datadir + "HCI_priors.vcf.gz"
 
 elif webapp_env == 'githubtest':   
     """ configuration for the testing environment on github actions """
@@ -135,6 +135,7 @@ elif webapp_env == 'githubtest':
     cancerhotspots_path = datadir + "cancerhotspots.vcf.gz"
     arup_brca_path = datadir + "ARUP_BRCA.vcf.gz"
     tp53_db = datadir + "TP53_database.vcf.gz"
+    hci_priors = datadir + "HCI_priors.vcf.gz"
 
 
 
