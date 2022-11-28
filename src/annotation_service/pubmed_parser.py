@@ -3,6 +3,8 @@ import common.functions as functions
 import re
 import os
 
+if os.environ.get('ENTREZ_MAIL') is None: # required for testing
+    functions.read_dotenv()
 Entrez.email = os.environ.get('ENTREZ_MAIL')
 
 def fetch(pmids):

@@ -99,3 +99,9 @@ bgzip -f $testdatadir/SpliceAI.vcf
 tabix -fp vcf $testdatadir/SpliceAI.vcf.gz
 
 
+# get HCI_priors
+zcat $datadir/HCI_priors/priors.vcf.gz | grep "^#" > $testdatadir/HCI_priors.vcf
+zcat $datadir/HCI_priors/priors.vcf.gz | grep "43095845" >> $testdatadir/HCI_priors.vcf
+#chr17	43095845	.	C	G	.	.	HCI_prior=0.5
+bgzip -f $testdatadir/HCI_priors.vcf
+tabix -fp vcf $testdatadir/HCI_priors.vcf.gz

@@ -23,7 +23,7 @@ def test_vep_annotation_job():
 
     # test standard annotation
     variant_id = 139
-    conn = Connection()
+    conn = Connection(['super_user'])
     conn.insert_annotation_request(variant_id, user_id)
     annotation_queue_id = conn.get_last_insert_id()
     conn.close()
@@ -52,7 +52,7 @@ def test_vep_annotation_job():
 	#NM_015074.3|NM_015074.3:c.1977+7031T>C||intron_variant|MODIFIER||20/46||KIF1B|
 	#NM_183416.4|NM_183416.4:c.3092T>C|NP_904325.2:p.Ile1031Thr|missense_variant|MODERATE|21/21|||KIF1B|
 
-    conn = Connection()
+    conn = Connection(['super_user'])
     consequences = conn.get_variant_consequences(variant_id)
     all_gene_ids = list(set([consequence[8] for consequence in consequences]))
     conn.close()
@@ -63,7 +63,7 @@ def test_vep_annotation_job():
 
     # test pfam protein domains
     variant_id = 146
-    conn = Connection()
+    conn = Connection(['super_user'])
     conn.insert_annotation_request(variant_id, user_id)
     annotation_queue_id = conn.get_last_insert_id()
     conn.close()
@@ -72,7 +72,7 @@ def test_vep_annotation_job():
     print(runtime_error)
     assert status == 'success'
     
-    conn = Connection()
+    conn = Connection(['super_user'])
     consequences = conn.get_variant_consequences(variant_id)
     conn.close()
 
@@ -86,7 +86,7 @@ def test_vep_annotation_job():
 
 
     # test that literature was inserted correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     literature = conn.get_variant_literature(variant_id)
     conn.close()
 
@@ -100,7 +100,7 @@ def test_vep_annotation_job():
 
     # test insert of maxentscan
     variant_id = 32
-    conn = Connection()
+    conn = Connection(['super_user'])
     conn.insert_annotation_request(variant_id, user_id)
     annotation_queue_id = conn.get_last_insert_id()
     conn.close()
@@ -109,7 +109,7 @@ def test_vep_annotation_job():
     print(runtime_error)
     assert status == 'success'
 
-    conn = Connection()
+    conn = Connection(['super_user'])
     maxentscan_ref = conn.get_variant_annotation(variant_id, 9)
     maxentscan_alt = conn.get_variant_annotation(variant_id, 10)
     conn.close()
@@ -131,7 +131,7 @@ def test_phylop():
     variant_id = 72
     job_config = get_empty_job_config()
     job_config['do_phylop'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # insert annotation request
     conn.insert_annotation_request(variant_id, user_id)
@@ -145,7 +145,7 @@ def test_phylop():
     conn.close()
 
     # check that annotation was inserted correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     res = conn.get_variant_annotation(variant_id, 4)
     assert len(res) == 1
     assert res[0][3] == "1.174"
@@ -175,7 +175,7 @@ def test_litvar2_annotation():
     
     # test annotation
     variant_id = 139
-    conn = Connection()
+    conn = Connection(['super_user'])
     conn.insert_annotation_request(variant_id, user_id)
     annotation_queue_id = conn.get_last_insert_id()
     conn.close()
@@ -187,7 +187,7 @@ def test_litvar2_annotation():
 
     
     # test that literature was inserted correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     literature = conn.get_variant_literature(variant_id)
     conn.close()
 
@@ -205,7 +205,7 @@ def test_dbsnp_annotation():
     user_id = 3
     job_config = get_empty_job_config()
     job_config['do_dbsnp'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # insert annotation request
     annotation_queue_id = conn.insert_variant(chr='chr1', pos=10001, ref='T', alt='A', orig_chr='chr1', orig_pos=10001, orig_ref='T', orig_alt='A', user_id=user_id)
@@ -219,7 +219,7 @@ def test_dbsnp_annotation():
     conn.close()
 
     # check that annotation was inserted correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     rs_num = conn.get_variant_annotation(variant_id, 3)
     assert len(rs_num) == 1
     assert rs_num[0][3] == "1570391677"
@@ -238,7 +238,7 @@ def test_revel_annotation():
     user_id = 3
     job_config = get_empty_job_config()
     job_config['do_revel'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # insert annotation request
     annotation_queue_id = conn.insert_variant(chr='chr1', pos=35142, ref='G', alt='A', orig_chr='chr1', orig_pos=35142, orig_ref='G', orig_alt='A', user_id=user_id)
@@ -252,7 +252,7 @@ def test_revel_annotation():
     conn.close()
 
     # check that annotation was inserted correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     res = conn.get_variant_annotation(variant_id, 6)
     assert len(res) == 1
     assert res[0][3] == "0.027"
@@ -271,7 +271,7 @@ def test_cadd_annotation():
     user_id = 3
     job_config = get_empty_job_config()
     job_config['do_cadd'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # insert annotation request
     #chr1    10009   .       A       T       .       .       CADD=8.518
@@ -286,7 +286,7 @@ def test_cadd_annotation():
     conn.close()
 
     # check that annotation was inserted correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     res = conn.get_variant_annotation(variant_id, 5)
     assert len(res) == 1
     assert res[0][3] == "8.518"
@@ -306,7 +306,7 @@ def test_gnomad_annotation():
     user_id = 3
     job_config = get_empty_job_config()
     job_config['do_gnomad'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # insert annotation request
     #chr1	10037	.	T	C	.	AS_VQSR	AF=2.60139e-05;AC=2;hom=0;popmax=eas;AC_popmax=1;AN_popmax=2456;AF_popmax=0.000407166;het=2
@@ -329,7 +329,7 @@ def test_gnomad_annotation():
     #16	gnomad_popmax
     #17	gnomadm_ac_hom
     #51	gnomad_popmax_AF
-    conn = Connection()
+    conn = Connection(['super_user'])
     res = conn.get_variant_annotation(variant_id, 11)
     assert len(res) == 1
     assert res[0][3] == "2"
@@ -374,7 +374,7 @@ def test_brca_exchange_annotation():
     user_id = 3
     job_config = get_empty_job_config()
     job_config['do_brca_exchange'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # insert annotation request
     #chr13   32315226        .       G       A       .       .       clin_sig_detail=Benign(ENIGMA),_Benign_(ClinVar);clin_sig_short=Benign_/_Little_Clinical_Significance
@@ -390,7 +390,7 @@ def test_brca_exchange_annotation():
     conn.close()
 
     # check that annotation was inserted correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     res = conn.get_variant_annotation(variant_id, 18)
     assert len(res) == 1
     assert res[0][3] == "Benign / Little Clinical Significance" # '_' are replaced with spaces
@@ -409,7 +409,7 @@ def test_flossies_annotation():
     user_id = 3
     job_config = get_empty_job_config()
     job_config['do_flossies'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # insert annotation request
     #chr2	17753961	.	G	C	.	.	num_eur=1;num_afr=0
@@ -425,7 +425,7 @@ def test_flossies_annotation():
     conn.close()
 
     # check that annotation was inserted correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     res = conn.get_variant_annotation(variant_id, 19)
     assert len(res) == 1
     assert res[0][3] == "0"
@@ -448,7 +448,7 @@ def test_cancerhotspots_annotation():
     user_id = 3
     job_config = get_empty_job_config()
     job_config['do_cancerhotspots'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # insert annotation request
     #chr1	939434	.	A	AT	.	.	cancertypes=Colorectal_Adenocarcinoma:bowel|Invasive_Breast_Carcinoma:breast|Cutaneous_Melanoma:skin|Low-Grade_Glioma:cnsbrain;AC=4;AF=0.00016503692701241903
@@ -463,7 +463,7 @@ def test_cancerhotspots_annotation():
     conn.close()
 
     # check that annotation was inserted correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     res = conn.get_variant_annotation(variant_id, 22)
     assert len(res) == 1
     assert res[0][3] == "Colorectal_Adenocarcinoma:bowel|Invasive_Breast_Carcinoma:breast|Cutaneous_Melanoma:skin|Low-Grade_Glioma:cnsbrain"
@@ -492,7 +492,7 @@ def test_arup_brca_annotation():
     user_id = 3
     job_config = get_empty_job_config()
     job_config['do_arup'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # insert annotation request
     #chr13	32316453	.	AGGTAAAAATGCCTATT	A	.	.	HGVSc=ENST00000380152:c.-5_11del;classification=5
@@ -507,7 +507,7 @@ def test_arup_brca_annotation():
     conn.close()
 
     # check that annotation was inserted correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     res = conn.get_variant_annotation(variant_id, 21)
     assert len(res) == 1
     assert res[0][3] == "5"
@@ -528,7 +528,7 @@ def test_tp53_db_annotation():
     job_config = get_empty_job_config()
     job_config['do_tp53_database'] = True
     job_config['insert_literature'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # insert annotation request
     #chr17	7670613	.	A	C	.	.	class=FH;bayes_del=0.1186;transactivation_class=functional;DNE_LOF_class=notDNE_notLOF;DNE_class=No;domain_function=Regulation;pubmed=12672316&18511570
@@ -549,7 +549,7 @@ def test_tp53_db_annotation():
     #31	tp53db_DNE_class
     #32	tp53db_domain_function
     #33	tp53db_transactivation_class
-    conn = Connection()
+    conn = Connection(['super_user'])
     res = conn.get_variant_annotation(variant_id, 27)
     assert len(res) == 1
     assert res[0][3] == "FH"
@@ -595,7 +595,7 @@ def test_clinvar_annotation():
     user_id = 3
     job_config = get_empty_job_config()
     job_config['do_clinvar'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # insert annotation request
     #chr1	925952	1019397	G	A	.	.	
@@ -620,7 +620,7 @@ def test_clinvar_annotation():
     #31	tp53db_DNE_class
     #32	tp53db_domain_function
     #33	tp53db_transactivation_class
-    conn = Connection()
+    conn = Connection(['super_user'])
     clinvar_variant_annotation = conn.get_clinvar_variant_annotation(variant_id)
     clinvar_variation_id = clinvar_variant_annotation[2]
     print("Clinvar variant annotation: " + str(clinvar_variant_annotation))
@@ -655,7 +655,7 @@ def test_task_force_protein_domain_annotation():
     variant_id = 32
     job_config = get_empty_job_config()
     job_config['do_task_force_protein_domains'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # insert annotation request
     conn.insert_annotation_request(variant_id, user_id)
@@ -669,7 +669,7 @@ def test_task_force_protein_domain_annotation():
     conn.close()
 
     # check that annotation was inserted correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     protein_domains = conn.get_variant_annotation(variant_id, 36)
     assert len(protein_domains) == 1
     assert protein_domains[0][3].strip() == "C-terminal RAD51 binding domain (inkl. NLS1 und BRC-)"
@@ -694,7 +694,7 @@ def test_hexplorer_annotation():
     variant_id = 164
     job_config = get_empty_job_config()
     job_config['do_hexplorer'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # insert annotation request
     #chr1-45332791-C-T
@@ -709,7 +709,7 @@ def test_hexplorer_annotation():
     conn.close()
 
     # check that annotation was inserted correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     res = conn.get_variant_annotation(variant_id, 39)
     assert len(res) == 1
     assert res[0][3] == "1.51"
@@ -771,7 +771,7 @@ def test_spliceai_annotation():
     variant_id = 32
     job_config = get_empty_job_config()
     job_config['do_spliceai'] = True
-    conn = Connection()
+    conn = Connection(['super_user'])
 
     # test variant where the annotation was read from the preannotated file
     # insert annotation request
@@ -787,7 +787,7 @@ def test_spliceai_annotation():
     conn.close()
 
     # check that annotation was inserted correctly
-    conn = Connection()
+    conn = Connection(['super_user'])
     res = conn.get_variant_annotation(variant_id, 7)
     assert len(res) == 1
     assert res[0][3] == "OR4F5|0.01|0.00|0.09|0.01|41|42|1|23"
@@ -800,7 +800,7 @@ def test_spliceai_annotation():
     conn.close()
 
     # test running spliceai
-    conn = Connection()
+    conn = Connection(['super_user'])
     #164	chr14	39335204	A	G	0		chr14	39335204	A	G
     variant_id = 164
     conn.insert_annotation_request(variant_id, user_id)
@@ -811,7 +811,7 @@ def test_spliceai_annotation():
     assert status == "success"
     conn.close()
 
-    conn = Connection()
+    conn = Connection(['super_user'])
     res = conn.get_variant_annotation(variant_id, 7)
     assert len(res) == 1
     assert res[0][3] == "RP11-407N17.3|0.00|0.00|0.00|0.00|-38|14|-1|-44,CTAGE5|0.00|0.00|0.00|0.00|-38|14|-1|-44"
@@ -822,4 +822,38 @@ def test_spliceai_annotation():
 
     conn.close()
 
+
+
+def test_priors():
+    """
+    This tests that the phylop annotation works properly
+    """
+
+    # setup
+    user_id = 3
+    variant_id = 168
+    job_config = get_empty_job_config()
+    job_config['do_priors'] = True
+    conn = Connection(['super_user'])
+
+    # insert annotation request
+    conn.insert_annotation_request(variant_id, user_id)
+    annotation_queue_id = conn.get_last_insert_id()
+
+
+    # start annotation service
+    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    print(runtime_error)
+    assert status == 'success'
+    conn.close()
+
+    # check that annotation was inserted correctly
+    conn = Connection(['super_user'])
+    res = conn.get_variant_annotation(variant_id, 52)
+    assert len(res) == 1
+    assert res[0][3] == "0.5"
+
+
+    # cleanup
+    conn.close()
 

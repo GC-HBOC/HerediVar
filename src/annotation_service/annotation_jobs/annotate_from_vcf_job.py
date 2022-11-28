@@ -22,7 +22,7 @@ class annotate_from_vcf_job(Job):
                                                 'do_brca_exchange', 
                                                 'do_flossies', 
                                                 'do_cancerhotspots', 
-                                                'do_arup', 'do_tp53_database']):
+                                                'do_arup', 'do_tp53_database', 'do_priors']):
             return 0, '', ''
 
         self.print_executing()
@@ -72,6 +72,7 @@ class annotate_from_vcf_job(Job):
         self.insert_annotation(variant_id, info, "ARUP_classification=", 21, conn)
 
         self.insert_annotation(variant_id, info, "HCI_prior=", 52, conn)
+        print(info)
 
         # spliceai is saved to the database in the dedicated spliceai job (which must be called after this job anyway)
         #self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )
@@ -118,17 +119,11 @@ class annotate_from_vcf_job(Job):
 
 
     def annotate_from_vcf(self, config_file_path, input_vcf, output_vcf):
-        #if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
-        #    command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
-        #    command.append("VcfAnnotateFromVcf")
-        #else: # use local installation
         command = [paths.ngs_bits_path + "VcfAnnotateFromVcf"]
         command.extend([ "-config_file", config_file_path, "-in", input_vcf, "-out", output_vcf])
 
         returncode, err_msg, vcf_errors = functions.execute_command(command, 'VcfAnnotateFromVcf')
 
-        #if os.environ.get('WEBAPP_ENV') == 'githubtest':
-        #    functions.execute_command(["chmod", "777", output_vcf], "chmod")
         return returncode, err_msg, vcf_errors
 
 
