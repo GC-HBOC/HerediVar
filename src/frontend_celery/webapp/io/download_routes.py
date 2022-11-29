@@ -75,66 +75,6 @@ def log_file(log_file):
 
 
 
-
-
-
-# listens on get parameter: raw
-#@download_blueprint.route('/download/vcf/classified')
-#def classified_variants():
-#    return_raw = request.args.get('raw')
-#    force_url = url_for("download.classified_variants", raw=return_raw, force = True)
-#    redirect_url = url_for("main.index")
-#
-#    classified_variants_folder = current_app.static_folder + "/files/classified_variants"
-#    last_dump_path = classified_variants_folder + "/.last_dump.txt"
-#    read_from_file = False
-#    last_dump_date = functions.get_today() # override with last dump date if there is one
-#    if os.path.isfile(last_dump_path):
-#        with open(last_dump_path, 'r') as last_dump_file:
-#            last_dump_date = last_dump_file.read()
-#            days_since_dump = functions.days_between(functions.get_today(), last_dump_date)
-#            if days_since_dump <= 7:
-#                read_from_file = True
-#            if days_since_dump > 7:
-#                last_dump_date = functions.get_today()
-#
-#    path_to_download = classified_variants_folder + "/" + last_dump_date + ".vcf"
-#
-#    # generate a new vcf file
-#    if not read_from_file:
-#        with open(last_dump_path, 'w') as last_dump_file:
-#            last_dump_file.write(functions.get_today())
-#
-#        conn = get_connection()
-#        variants_oi = conn.get_variant_ids_with_consensus_classification()
-#
-#        vcf_file_buffer, x, xx, xxx = get_vcf(variants_oi, conn, get_variant_vcf_line_only_consensus)
-#
-#        functions.buffer_to_file_system(vcf_file_buffer, path_to_download)
-#
-#    returncode, err_msg, vcf_errors = functions.check_vcf(path_to_download)
-#
-#    if returncode != 0:
-#        if request.args.get('force') is None:
-#            flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
-#            current_app.logger.error(get_preferred_username() + " tried to download a all classified variants as vcf, but it contains errors: " + vcf_errors)
-#            return redirect(redirect_url)
-#
-#
-#    current_app.logger.info(get_preferred_username() + " successfully downloaded vcf of all classified variants.")
-#
-#    if return_raw is not None:
-#        with open(path_to_download, "r") as file_to_download:
-#            download_text = file_to_download.read()
-#            resp = make_response(download_text, 200)
-#            resp.mimetype = "text/plain"
-#            return resp
-#    else:
-#        return send_file(path_to_download, as_attachment=True, mimetype="text/vcf")
-
-
-
-
 # listens on get parameter: raw
 @download_blueprint.route('/download/vcf/classified')
 def classified_variants():
@@ -265,7 +205,7 @@ def variant_oi_to_vcf(variant_oi, info):
     return variant_vcf
 
 
-def get_variant_vcf_line_only_consensus(variant_id, conn):
+def get_variant_vcf_line_only_consensus(variant_id, conn: Connection):
     
     variant_oi = conn.get_one_variant(variant_id)
 
@@ -290,7 +230,7 @@ def get_variant_vcf_line_only_consensus(variant_id, conn):
 
 
 
-def get_variant_vcf_line(variant_id, conn):
+def get_variant_vcf_line(variant_id, conn: Connection):
     variant_oi = conn.get_one_variant(variant_id)
 
     annotations = conn.get_all_variant_annotations(variant_id)

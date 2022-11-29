@@ -155,6 +155,11 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
     clinvar_submission = get_clinvar_submission(variant_id, conn)
 
+    ######## TESTSECTION ########
+    #from .testobj import Variant
+    #anotherobj = Variant(id=1, chrom="chr1", pos=1234, ref="A")
+    #anotherobj.alt = "C"
+
     return render_template('variant/variant.html', 
                             variant=variant_oi, 
                             annotations = annotations,
@@ -162,6 +167,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             clinvar_submission = clinvar_submission,
                             has_multiple_vids=has_multiple_vids,
                             lists = lists
+                            #testobj=anotherobj.to_json()
                         )
 
 

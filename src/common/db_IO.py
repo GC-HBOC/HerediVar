@@ -1551,23 +1551,6 @@ class Connection:
         return result
 
 
-
-
-
-
-
-
-    #def insert_selected_literature(self, is_user, classification_id, pmid, text_passage):
-    #    db_table = "user_classification_selected_literature"
-    #    if not is_user:
-    #        db_table = "consensus_classification_selected_literature"
-    #    command = "INSERT INTO " + db_table + " (classification_id, pmid, text_passage) \
-    #                SELECT %s, %s, %s WHERE NOT EXISTS (SELECT * FROM variant_ids \
-	#                    WHERE `classification_id`=%s AND `pmid`=%s LIMIT 1)"
-    #    self.cursor.execute(command, (classification_id, pmid, text_passage, classification_id, pmid))
-    #    self.conn.commit()
-
-
     def get_selected_literature_table(self, is_user):
         db_table = "user_classification_selected_literature"
         if not is_user:

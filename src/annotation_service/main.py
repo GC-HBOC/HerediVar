@@ -50,40 +50,15 @@ def get_default_job_config():
     }
     return job_config
 
-def get_empty_job_config():
-    job_config = {
-        # heredicare annotations
-        'do_heredicare': False,
-
-        # external programs
-        'do_phylop': False,
-        'do_spliceai': False,
-        'do_hexplorer': False,
-
-        # vep dependent
-        'do_vep': False,
-        'insert_consequence': False,
-        'insert_maxent': False,
-        'insert_literature': False,
-
-        #vcf annotate from vcf
-        'do_dbsnp': False,
-        'do_revel': False,
-        'do_cadd': False,
-        'do_clinvar': False,
-        'do_gnomad': False,
-        'do_brca_exchange': False,
-        'do_flossies': False,
-        'do_cancerhotspots': False,
-        'do_arup': False,
-        'do_tp53_database': False,
-        'do_priors': False,
-
-        # additional annotations
-        'do_task_force_protein_domains': False,
-        'do_litvar': False
-    }
+def get_job_config(items_to_select):
+    job_config = get_default_job_config()
+    for key in job_config:
+        if key in items_to_select:
+            job_config[key] = True
+        else:
+            job_config[key] = False
     return job_config
+
 
 # annotation job definitions
 def get_jobs(job_config):
@@ -196,14 +171,17 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         ########### 3: save the collected data to the db ###########
         ############################################################
         print("saving to database...")
-        headers, info = functions.read_vcf_info(vcf_path)
 
-        for vcf_variant_idx in range(len(info)):
-            current_info = info[vcf_variant_idx]
-
+        file = open(vcf_path, "r")
+        for line in file:
+            line = line.strip()
+            if line.startswith('#') or line == '':
+                continue
+            
+            info = line.split('\t')[7]
             for job in all_jobs:
-                job.save_to_db(current_info, variant_id, conn=conn)
-
+                job.save_to_db(info, variant_id, conn=conn)
+        file.close()
 
 
         print("~~~")
@@ -242,7 +220,6 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
 
 
     if exists(vcf_path): 
-    #    #functions.execute_command(["rm", vcf_path], "rm") # this uses sudo in github testing as this is required to delete it 
         os.remove(vcf_path)
 
 

@@ -1,4 +1,3 @@
-from doctest import ELLIPSIS_MARKER
 import os
 import collections
 import datetime
@@ -8,7 +7,6 @@ import subprocess
 import common.paths as paths
 import tempfile
 import base64
-import io
 import urllib.parse as urlparse
 from urllib.parse import urlencode
 from dotenv import load_dotenv
@@ -37,42 +35,47 @@ def variant_to_vcf(chr, pos, ref, alt, path):
     file.close()
     return True
 
-def read_vcf_info(path):
-    file = open(path, "r")
-    entries = []
-    info_headers = []
-    for line in file:
-        if line.strip() == '':
-            continue
-        if line.startswith('##INFO'):
-            info_headers.append(line.strip())
-            continue
-        if not line.startswith('#'):
-            l = line.split('\t')[7]
-            entries.append(l.strip())
-    file.close()
-    return info_headers, entries
+#def read_vcf_info(path):
+#    file = open(path, "r")
+#    entries = []
+#    info_headers = []
+#    for line in file:
+#        if line.strip() == '':
+#            continue
+#        if line.startswith('##INFO'):
+#            info_headers.append(line.strip())
+#            continue
+#        if not line.startswith('#'):
+#            l = line.split('\t')[7]
+#            entries.append(l.strip())
+#    file.close()
+#    return info_headers, entries
 
 
-Record = collections.namedtuple('Record', [
-    'CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER'
-])
+#Record = collections.namedtuple('Record', [
+#    'CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER'
+#])
 
 
 # doesnt collect FORMAT/INFO fields
-def read_vcf_variant(path):
-    all_records = []
-    for line in open(path, "r"):
-        if not line.startswith("#"):
-            prep_line = line.strip().split("\t")#[0:upper_bound]
-            rec = Record(prep_line[0], prep_line[1], prep_line[2], prep_line[3], prep_line[4], prep_line[5], prep_line[6])
-            all_records.append(rec)
-    return all_records
+#def read_vcf_variant(path):
+#    all_records = []
+#    for line in open(path, "r"):
+#        if not line.startswith("#"):
+#            prep_line = line.strip().split("\t")#[0:upper_bound]
+#            rec = Record(prep_line[0], prep_line[1], prep_line[2], prep_line[3], prep_line[4], prep_line[5], prep_line[6])
+#            all_records.append(rec)
+#    return all_records
+#    #variant = functions.read_vcf_variant(tmp_file_path)[0] # accessing only the first element of the returned list is save because we process only one variant at a time
+#    #new_chr = variant.CHROM
+#    #new_pos = variant.POS
+#    #new_ref = variant.REF
+#    #new_alt = variant.ALT
 
 
 def write_vcf_header(info_columns, output_func = print, tail = "", reference_genome="GRCh38"):
     output_func("##fileformat=VCFv4.2" + tail)
-    output_func("##fileDate=" + datetime.datetime.today().strftime('%Y-%m-%d') + tail)
+    output_func("##fileDate=" + get_today() + tail)
     output_func("##reference=" + reference_genome + tail)
     for info_column in info_columns:
         output_func(info_column.strip() + tail)
@@ -97,21 +100,17 @@ def validate_chr(chr, max = 22):
     else:
         return chr
 
+
 def collect_info(old_info, new_info_name, new_value, sep = ';'):
-    if new_value is not None:
-        new_value = str(new_value)
-    if old_info is not None:
-        old_info = str(old_info)
-    if old_info != '' and old_info is not None:
-        if new_value == '' or new_value is None: # only old value has content
-            return old_info
-        else: # both values have content
-            return old_info + sep + new_info_name + new_value
-    else: # old value is empty
-        if new_value == '' or new_value is None: # both values are empty
-            return ''
-        else: # only new info has content
-            return new_info_name + new_value
+    values_to_join = []
+    if old_info is not None and old_info != '':
+        values_to_join.append(str(old_info))
+    if new_value is not None and new_value != '':
+        values_to_join.append(new_info_name + str(new_value))
+
+    return sep.join(values_to_join)
+
+
 
 def trim_hgnc(hgnc_id):
     hgnc_id = hgnc_id.upper()
@@ -139,13 +138,8 @@ def convert_none_infinite(x):
         return x
 
 def execute_command(command, process_name, use_prefix_error_log = True):
-    #if os.environ.get("WEBAPP_ENV") == "githubtest" and process_name not in ["SpliceAI", "bgzip", "tabix", "CrossMap"]:
-    #    # need to sudo the mv in github actions otherwise it will result in permission denied...
-    #    command.insert(0, "sudo")
-
     completed_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     std_out, std_err = completed_process.communicate()#[1].strip().decode("utf-8") # catch errors and warnings and convert to str
-    #vcf_errors = completed_process.communicate()[0].strip().decode("utf-8") # catch errors and warnings and convert to str
     std_err = std_err.strip().decode("utf-8")
     command_output = std_out.strip().decode("utf-8")
     err_msg = ""
@@ -160,21 +154,12 @@ def execute_command(command, process_name, use_prefix_error_log = True):
     return completed_process.returncode, err_msg, command_output
 
 
-
-def get_docker_instructions(container_id):
-    return ["docker", "exec", container_id]
-
-
-
-
 def preprocess_variant(infile, do_liftover=False):
-    
     final_returncode = 0
     err_msg = ""
     command_output = ""
     vcf_errors_pre = ""
     vcf_errors_post = ""
-
 
     if do_liftover:
         returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh37")
@@ -207,11 +192,6 @@ def preprocess_variant(infile, do_liftover=False):
     return final_returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
 
 
-
-
-
-
-
 # infile has to be .gz
 def perform_liftover(infile, outfile, from_genome="GRCh37", to_genome="GRCh38"):
     if from_genome == "GRCh37" and to_genome == "GRCh38":
@@ -232,21 +212,10 @@ def check_vcf(path, ref_genome = 'GRCh38'):
     elif ref_genome == 'GRCh38': 
         genome_path = paths.ref_genome_path
 
-    #if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
-    #    command = get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
-    #    command.append("VcfCheck")
-    #else: # use local installation
     command = [paths.ngs_bits_path + "VcfCheck"]
     command.extend(["-in", path, "-lines", "0", "-ref", genome_path])
-
     returncode, err_msg, vcf_errors = execute_command(command, 'VcfCheck')
 
-    #if os.environ.get('WEBAPP_ENV') == 'githubtest':
-    #    returncode, err_msg, command_output = execute_command(["docker", "exec", os.environ.get("NGSBITS_CONTAINER_ID"), "chmod", "777", path], "chmod")
-    #    print(returncode)
-    #    print(err_msg)
-    #if os.environ.get('WEBAPP_ENV') == 'githubtest':
-    #    execute_command(["chmod", "777", path], "chmod")
     return returncode, err_msg, vcf_errors
 
 def left_align_vcf(infile, outfile, ref_genome = 'GRCh38'):
@@ -255,48 +224,25 @@ def left_align_vcf(infile, outfile, ref_genome = 'GRCh38'):
         genome_path = paths.ref_genome_path_grch37
     elif ref_genome == 'GRCh38': 
         genome_path = paths.ref_genome_path
-    
-    #command = [paths.ngs_bits_path + "VcfLeftNormalize",
-    #           "-in", path, "-stream", "-ref", genome_path]
-    #if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
-    #    command = get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
-    #    command.append("VcfLeftNormalize")
-    #else: # use local installation
+
     command = [paths.ngs_bits_path + "VcfLeftNormalize"]
     command.extend(["-in", infile, "-out", outfile, "-stream", "-ref", genome_path])
-
-
     returncode, err_msg, command_output = execute_command(command, 'VcfLeftNormalize')
 
-    #if os.environ.get('WEBAPP_ENV') == 'githubtest':
-    #    # this must be done because in github actions the outfile is generated by the docker container
-    #    # thus, the user does not have permissions to open this file...
-    #    execute_command(["chmod", "777", outfile], "chmod")
     return returncode, err_msg, command_output
 
 
 def hgvsc_to_vcf(hgvs):
     tmp_file_path = tempfile.gettempdir() + "/hgvs_to_vcf"
-
     tmp_file = open(tmp_file_path + ".tsv", "w")
     tmp_file.write("#reference	hgvs_c\n")
     reference, hgvs = split_hgvs(hgvs)
     tmp_file.write(reference + "\t" + hgvs + "\n")
     tmp_file.close()
 
-    #command = [paths.ngs_bits_path + "HgvsToVcf", '-in', tmp_file_path + '.tsv', '-ref', paths.ref_genome_path, '-out', tmp_file_path + '.vcf']
-    #if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
-    #    command = get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
-    #    command.append("HgvsToVcf")
-    #else: # use local installation
     command = [paths.ngs_bits_path + "HgvsToVcf"]
     command.extend(['-in', tmp_file_path + '.tsv', '-ref', paths.ref_genome_path, '-out', tmp_file_path + '.vcf'])
     returncode, err_msg, command_output = execute_command(command, "HgvsToVcf", use_prefix_error_log=False)
-
-    #if os.environ.get('WEBAPP_ENV') == 'githubtest':
-    #    # this must be done because in github actions the outfile is generated by the docker container
-    #    # thus, the user does not have permissions to open this file...
-    #    execute_command(["chmod", "777", tmp_file_path], "chmod")
     
     chr = None
     pos = None

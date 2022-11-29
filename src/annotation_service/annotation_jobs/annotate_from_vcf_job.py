@@ -72,7 +72,6 @@ class annotate_from_vcf_job(Job):
         self.insert_annotation(variant_id, info, "ARUP_classification=", 21, conn)
 
         self.insert_annotation(variant_id, info, "HCI_prior=", 52, conn)
-        print(info)
 
         # spliceai is saved to the database in the dedicated spliceai job (which must be called after this job anyway)
         #self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )

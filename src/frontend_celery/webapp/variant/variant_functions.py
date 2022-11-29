@@ -54,11 +54,19 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
         return was_successful
 
     if was_successful:
-        variant = functions.read_vcf_variant(tmp_file_path)[0] # accessing only the first element of the returned list is save because we process only one variant at a time
-        new_chr = variant.CHROM
-        new_pos = variant.POS
-        new_ref = variant.REF
-        new_alt = variant.ALT
+        tmp_file = open(tmp_file_path, 'r')
+        for line in tmp_file:
+            line = line.strip()
+            if line.startswith('#') or line == '':
+                continue
+            parts = line.split('\t')
+            new_chr = parts[0]
+            new_pos = parts[1]
+            new_ref = parts[3]
+            new_alt = parts[4]
+            break # there is only one variant in the file
+        tmp_file.close()
+
 
         conn = get_connection()
         is_duplicate = conn.check_variant_duplicate(new_chr, new_pos, new_ref, new_alt) # check if variant is already contained

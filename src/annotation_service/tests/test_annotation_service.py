@@ -1,9 +1,13 @@
 
 
-from ..main import process_one_request, get_empty_job_config, get_temp_vcf_path
+from ..main import process_one_request, get_job_config
 from common.db_IO import Connection
 import common.functions as functions
 from os import path
+
+
+
+    
 
 def test_vep_annotation_job():
     """
@@ -14,11 +18,7 @@ def test_vep_annotation_job():
 
     # setup
     user_id = 3
-    job_config = get_empty_job_config()
-    job_config['do_vep'] = True
-    job_config['insert_consequence'] = True
-    job_config['insert_maxent'] = True
-    job_config['insert_literature'] = True
+    job_config = get_job_config(['do_vep', 'insert_consequence', 'insert_maxent', 'insert_literature'])
     
 
     # test standard annotation
@@ -129,8 +129,7 @@ def test_phylop():
     # setup
     user_id = 3
     variant_id = 72
-    job_config = get_empty_job_config()
-    job_config['do_phylop'] = True
+    job_config = get_job_config(['do_phylop'])
     conn = Connection(['super_user'])
 
     # insert annotation request
@@ -165,12 +164,7 @@ def test_litvar2_annotation():
 
     # setup
     user_id = 3
-    job_config = get_empty_job_config()
-    job_config['do_vep'] = True
-    job_config['do_dbsnp'] = True
-    job_config['do_litvar'] = True
-    job_config['insert_literature'] = True
-    job_config['insert_consequence'] = True
+    job_config = get_job_config(['do_vep', 'do_dbsnp', 'do_litvar', 'insert_literature', 'insert_consequence'])
 
     
     # test annotation
@@ -203,8 +197,7 @@ def test_dbsnp_annotation():
 
     # setup
     user_id = 3
-    job_config = get_empty_job_config()
-    job_config['do_dbsnp'] = True
+    job_config = get_job_config(['do_dbsnp'])
     conn = Connection(['super_user'])
 
     # insert annotation request
@@ -236,8 +229,7 @@ def test_revel_annotation():
 
     # setup
     user_id = 3
-    job_config = get_empty_job_config()
-    job_config['do_revel'] = True
+    job_config = get_job_config(['do_revel'])
     conn = Connection(['super_user'])
 
     # insert annotation request
@@ -269,8 +261,7 @@ def test_cadd_annotation():
 
     # setup
     user_id = 3
-    job_config = get_empty_job_config()
-    job_config['do_cadd'] = True
+    job_config = get_job_config(['do_cadd'])
     conn = Connection(['super_user'])
 
     # insert annotation request
@@ -304,8 +295,7 @@ def test_gnomad_annotation():
 
     # setup
     user_id = 3
-    job_config = get_empty_job_config()
-    job_config['do_gnomad'] = True
+    job_config = get_job_config(['do_gnomad'])
     conn = Connection(['super_user'])
 
     # insert annotation request
@@ -372,8 +362,7 @@ def test_brca_exchange_annotation():
 
     # setup
     user_id = 3
-    job_config = get_empty_job_config()
-    job_config['do_brca_exchange'] = True
+    job_config = get_job_config(['do_brca_exchange'])
     conn = Connection(['super_user'])
 
     # insert annotation request
@@ -407,8 +396,7 @@ def test_flossies_annotation():
 
     # setup
     user_id = 3
-    job_config = get_empty_job_config()
-    job_config['do_flossies'] = True
+    job_config = get_job_config(['do_flossies'])
     conn = Connection(['super_user'])
 
     # insert annotation request
@@ -446,8 +434,7 @@ def test_cancerhotspots_annotation():
 
     # setup
     user_id = 3
-    job_config = get_empty_job_config()
-    job_config['do_cancerhotspots'] = True
+    job_config = get_job_config(['do_cancerhotspots'])
     conn = Connection(['super_user'])
 
     # insert annotation request
@@ -490,8 +477,7 @@ def test_arup_brca_annotation():
 
     # setup
     user_id = 3
-    job_config = get_empty_job_config()
-    job_config['do_arup'] = True
+    job_config = get_job_config(['do_arup'])
     conn = Connection(['super_user'])
 
     # insert annotation request
@@ -525,9 +511,7 @@ def test_tp53_db_annotation():
 
     # setup
     user_id = 3
-    job_config = get_empty_job_config()
-    job_config['do_tp53_database'] = True
-    job_config['insert_literature'] = True
+    job_config = get_job_config(['do_tp53_database', 'insert_literature'])
     conn = Connection(['super_user'])
 
     # insert annotation request
@@ -593,8 +577,7 @@ def test_clinvar_annotation():
 
     # setup
     user_id = 3
-    job_config = get_empty_job_config()
-    job_config['do_clinvar'] = True
+    job_config = get_job_config(['do_clinvar'])
     conn = Connection(['super_user'])
 
     # insert annotation request
@@ -653,8 +636,7 @@ def test_task_force_protein_domain_annotation():
     # setup
     user_id = 3
     variant_id = 32
-    job_config = get_empty_job_config()
-    job_config['do_task_force_protein_domains'] = True
+    job_config = get_job_config(['do_task_force_protein_domains'])
     conn = Connection(['super_user'])
 
     # insert annotation request
@@ -692,8 +674,7 @@ def test_hexplorer_annotation():
     # setup
     user_id = 3
     variant_id = 164
-    job_config = get_empty_job_config()
-    job_config['do_hexplorer'] = True
+    job_config = get_job_config(['do_hexplorer'])
     conn = Connection(['super_user'])
 
     # insert annotation request
@@ -769,8 +750,7 @@ def test_spliceai_annotation():
     # setup
     user_id = 3
     variant_id = 32
-    job_config = get_empty_job_config()
-    job_config['do_spliceai'] = True
+    job_config = get_job_config(['do_spliceai'])
     conn = Connection(['super_user'])
 
     # test variant where the annotation was read from the preannotated file
@@ -832,8 +812,7 @@ def test_priors():
     # setup
     user_id = 3
     variant_id = 168
-    job_config = get_empty_job_config()
-    job_config['do_priors'] = True
+    job_config = get_job_config(['do_priors'])
     conn = Connection(['super_user'])
 
     # insert annotation request
