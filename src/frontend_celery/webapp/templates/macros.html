@@ -1,3 +1,8 @@
+
+
+
+
+
 {% macro render_consensus_classification_label(class, width='6em') %}
 <!-- position this element when you use it! -->
     <div name="class-label" style="height:auto;" classification="{{ class }}" >
@@ -5,21 +10,21 @@
             <path d="M212.5,172.3c-16.9,31.1-49.8,52.2-87.6,52.2c-54.9,0-99.5-44.6-99.5-99.5c0-54.9,44.6-99.5,99.5-99.5   c38.3,0,71.6,21.8,88.2,53.6h28C222.9,32.8,177.7,0,125,0C56.1,0,0,56.1,0,125c0,68.9,56.1,125,125,125c52.2,0,97-32.2,115.7-77.7   H212.5z"/>
         </svg>
 
-        {% if class == '1' or class == '2' or class == '3' or class == '4' or class == '5' %}
+        {% if class == 1 or class == 2 or class == 3 or class == 4 or class == 5 %}
         <svg name="consensus_class_svg" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" viewBox="-7.6 6.2 30 30" preserveAspectRatio="xMidYMid meet" fill="currentColor">
-            {% if class == '1' %}
+            {% if class == 1 %}
             <path d="M9.442,30.084H7.333V16.643c-0.508,0.484-1.174,0.969-1.998,1.453s-1.564,0.848-2.221,1.09v-2.039   c1.18-0.555,2.211-1.227,3.094-2.016s1.508-1.555,1.875-2.297h1.359V30.084z"/>
             {% endif %}
-            {% if class == '2' %}
+            {% if class == 2 %}
             <path d="M12.583,28.057v2.027H1.228c-0.016-0.508,0.066-0.996,0.246-1.465c0.289-0.773,0.752-1.535,1.389-2.285   s1.557-1.617,2.76-2.602c1.867-1.531,3.129-2.744,3.785-3.639s0.984-1.74,0.984-2.537c0-0.836-0.299-1.541-0.896-2.115   s-1.377-0.861-2.338-0.861c-1.016,0-1.828,0.305-2.438,0.914s-0.918,1.453-0.926,2.531l-2.168-0.223   c0.148-1.617,0.707-2.85,1.676-3.697s2.27-1.271,3.902-1.271c1.648,0,2.953,0.457,3.914,1.371s1.441,2.047,1.441,3.398   c0,0.688-0.141,1.363-0.422,2.027s-0.748,1.363-1.4,2.098s-1.736,1.742-3.252,3.023c-1.266,1.063-2.078,1.783-2.438,2.162   s-0.656,0.76-0.891,1.143H12.583z"/>
             {% endif %}
-            {% if class == '3' %}
+            {% if class == 3 %}
             <path d="M1.509,25.549l2.109-0.281c0.242,1.195,0.654,2.057,1.236,2.584s1.291,0.791,2.127,0.791c0.992,0,1.83-0.344,2.514-1.031   s1.025-1.539,1.025-2.555c0-0.969-0.316-1.768-0.949-2.396s-1.438-0.943-2.414-0.943c-0.398,0-0.895,0.078-1.488,0.234L5.903,20.1   c0.141,0.016,0.254,0.023,0.34,0.023c0.898,0,1.707-0.234,2.426-0.703s1.078-1.191,1.078-2.168c0-0.773-0.262-1.414-0.785-1.922   s-1.199-0.762-2.027-0.762c-0.82,0-1.504,0.258-2.051,0.773s-0.898,1.289-1.055,2.32L1.72,17.288   c0.258-1.414,0.844-2.51,1.758-3.287s2.051-1.166,3.41-1.166c0.938,0,1.801,0.201,2.59,0.604s1.393,0.951,1.811,1.646   s0.627,1.434,0.627,2.215c0,0.742-0.199,1.418-0.598,2.027s-0.988,1.094-1.77,1.453c1.016,0.234,1.805,0.721,2.367,1.459   s0.844,1.662,0.844,2.771c0,1.5-0.547,2.771-1.641,3.814s-2.477,1.564-4.148,1.564c-1.508,0-2.76-0.449-3.756-1.348   S1.649,26.979,1.509,25.549z"/>
             {% endif %}
-            {% if class == '4' %}
+            {% if class == 4 %}
             <path d="M8.259,30.084v-4.113H0.806v-1.934l7.84-11.133h1.723v11.133h2.32v1.934h-2.32v4.113H8.259z M8.259,24.038v-7.746   L2.88,24.038H8.259z"/>
             {% endif %}
-            {% if class == '5' %}
+            {% if class == 5 %}
             <path d="M1.497,25.584l2.215-0.188c0.164,1.078,0.545,1.889,1.143,2.432s1.318,0.814,2.162,0.814c1.016,0,1.875-0.383,2.578-1.148   s1.055-1.781,1.055-3.047c0-1.203-0.338-2.152-1.014-2.848s-1.561-1.043-2.654-1.043c-0.68,0-1.293,0.154-1.84,0.463   s-0.977,0.709-1.289,1.201l-1.98-0.258l1.664-8.824h8.543v2.016H5.224l-0.926,4.617c1.031-0.719,2.113-1.078,3.246-1.078   c1.5,0,2.766,0.52,3.797,1.559s1.547,2.375,1.547,4.008c0,1.555-0.453,2.898-1.359,4.031c-1.102,1.391-2.605,2.086-4.512,2.086   c-1.563,0-2.838-0.438-3.826-1.313S1.638,27.03,1.497,25.584z"/>
             {% endif %}
         </svg>
@@ -37,80 +42,85 @@
 
 
 {% macro draw_most_recent_consensus_classification(most_recent_consensus_classification) %}
-<div class="classification-gradient left-space-padding" name="consensus_class_display" classification="{{ most_recent_consensus_classification[3] }}">
-    {% if most_recent_consensus_classification is not none %}
-    <table class="table table-borderless table-slim" consensus_classification_id="{{ most_recent_consensus_classification[0] }}">
-        <tbody>
-            <tr style="margin-left:0">
-                <td style="width:6rem;" class="li-label">Data</td>
-                <td style="vertical-align:middle;">
-                    <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
-                        <li class="list-group-item noboarder-td">
-                            Class: {{ most_recent_consensus_classification[3] }}
-                        </li>
-                        <li class="list-group-item noboarder-td">
-                            Date: {{ most_recent_consensus_classification[5] }}
-                        </li>
-                        <li class="list-group-item noboarder-td">
-                            Evidence document: <a href="{{url_for('download.evidence_document', consensus_classification_id=most_recent_consensus_classification[0]) }}">download</a>
-                        </li>
-                    </ul>
-                </td>
-            </tr>
+{% if most_recent_consensus_classification is not none %}
+    <div class="classification-gradient left-space-padding" name="consensus_class_display" classification="{{ most_recent_consensus_classification.selected_class }}">
+        <table class="table table-borderless table-slim" consensus_classification_id="{{ most_recent_consensus_classification.id }}">
+            <tbody>
+                <tr style="margin-left:0">
+                    <td style="width:6rem;" class="li-label">Data</td>
+                    <td style="vertical-align:middle;">
+                        <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
+                            <li class="list-group-item noboarder-td">
+                                Class: {{ most_recent_consensus_classification.selected_class }}
+                            </li>
+                            <li class="list-group-item noboarder-td">
+                                Date: {{ most_recent_consensus_classification.date }}
+                            </li>
+                            <li class="list-group-item noboarder-td">
+                                Evidence document: <a href="{{url_for('download.evidence_document', consensus_classification_id=most_recent_consensus_classification.id ) }}">download</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
 
-            <tr>
-                <td class="li-label">Comment</td>
-                <td><div style="white-space: pre-wrap;">{{ most_recent_consensus_classification[4] }}</div></td>
-            </tr>
+                <tr>
+                    <td class="li-label">Comment</td>
+                    <td><div style="white-space: pre-wrap;">{{ most_recent_consensus_classification.comment }}</div></td>
+                </tr>
 
-            {% set selected_criteria = most_recent_consensus_classification[14] %}<!-- the consensus scheme classifications should only contain the most recent classification -->
-            {% set selected_scheme = most_recent_consensus_classification[12] %}
-            {% set scheme_determined_class = most_recent_consensus_classification[16] %}
+                {% set selected_scheme = most_recent_consensus_classification.scheme %}
+                {% set selected_criteria = selected_scheme.get_criteria_sorted() %}<!-- the consensus scheme classifications should only contain the most recent classification -->
+                {% set scheme_determined_class = most_recent_consensus_classification.selected_class %}
 
-            <tr style="margin-left:0">
-                <td class="li-label" style="width:5rem;">Scheme</td>
-                <td style="vertical-align:middle;">
-                    <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
-                        <li class="list-group-item noboarder-td">
-                            Class by scheme: {{ scheme_determined_class }}
-                        </li>
-                        <li class="list-group-item noboarder-td">
-                            Scheme: {{ selected_scheme }}
-                        </li>
-                    </ul>
-                </td>
-            </tr>
+                <tr style="margin-left:0">
+                    <td class="li-label" style="width:5rem;">Scheme</td>
+                    <td style="vertical-align:middle;">
+                        <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
+                            <li class="list-group-item noboarder-td">
+                                Class by scheme: {{ scheme_determined_class }}
+                            </li>
+                            <li class="list-group-item noboarder-td">
+                                Scheme: {{ selected_scheme.display_name }}
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
 
-            <tr>
-                <td class="li-label" style="vertical-align:middle">Criteria</td>
-                <td style="vertical-align:middle">{{ draw_criteria_display(selected_criteria, '4em', '1.7em', source='consensus') }}</td>
-            </tr>
+                {% if selected_criteria is not none %}
+                <tr>
+                    <td class="li-label" style="vertical-align:middle">Criteria</td>
+                    <td style="vertical-align:middle">{{ draw_criteria_display(selected_criteria, '4em', '1.7em', source='consensus') }}</td>
+                </tr>
+                {% endif %}
 
-            <tr>
-                <td class="li-label" style="vertical-align:middle">Literature</td>
-                <td style="vertical-align:middle">
-                    {{ selected_literature_display(most_recent_consensus_classification[15]) }}
+                {% if most_recent_consensus_classification.literature is not none %}
+                <tr>
+                    <td class="li-label" style="vertical-align:middle">Literature</td>
+                    <td style="vertical-align:middle">
+                        {{ selected_literature_display(most_recent_consensus_classification.literature) }}
+                    </td>
+                </tr>
+                {% endif %}
 
-                </td>
-            </tr>
-
-        </tbody>        
-    </table>
-
-    {% else %}
-    <div class="li-label" style="padding:1em">
-        There is no consensus classification for this variant, yet.
+            </tbody>        
+        </table>
     </div>
-    {% endif %}
+{% else %}
+    <div class="classification-gradient left-space-padding" name="consensus_class_display" classification="-">
+        <div class="li-label" style="padding:1em">
+            There is no consensus classification for this variant, yet.
+        </div>
+    </div>
+{% endif %}
 
-</div>
 {% endmacro %}
+
 
 {% macro draw_criteria_display(criteria, width='6em', height='2.5em', source='user') %}
     {% for criterium in criteria %}
-    <span class="d-inline-block ssr tooltip-lg" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" {% if source=="user" %} user_criterium_applied_id="{{ criterium[0] }}" {% else %} consensus_criterium_applied_id="{{ criterium[0] }}" {% endif %}
-        title="Strength: {{ criterium[7] }} <br> Evidence: {{ criterium[4] }}">
-        <div class="btn btn-{{ criterium[6] }} light-hover acmg-button" style="width:{{width}}; height:{{height}}">{{ criterium[5] }}</div>
+    <span class="d-inline-block ssr tooltip-lg" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" {% if source=="user" %} user_criterium_applied_id="{{ criterium.id }}" {% else %} consensus_criterium_applied_id="{{ criterium.id }}" {% endif %}
+        title="Strength: {{ criterium.strength }} <br> Evidence: {{ criterium.evidence }}">
+        <div class="btn btn-{{ criterium.type }} light-hover acmg-button" style="width:{{width}}; height:{{height}}">{{ criterium.name }}</div>
     </span>
     {% endfor %}
 {% endmacro %}
@@ -288,43 +298,57 @@
     </thead>
     <tbody id="variantTableBody">
       {% for variant in variants %}
-      <tr name="variant_row" style="line-height: 28px;" variant_id="{{ variant[0] }}">
-        <td style="display:none;">{{ variant[0] }}</td>
-        <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable" style="white-space: nowrap;">{{ variant[1] }}</td>
-        <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable" style="white-space: nowrap;">{{ variant[2] }}</td>
-        <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss"><abbr title="{{ variant[3] }}">{{ variant[3] }}</abbr></td>
-        <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss"><abbr title="{{ variant[4] }}">{{ variant[4] }}</abbr></td>
-        <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss" style="white-space: nowrap;">
-            <div>
-                {% if variant[10] is not none %}
-                    <abbr title="{{ variant[10] }}">{{ variant[10] }}</abbr>
-                {% else %}
-                    -
-                {% endif %}
-            </div>
-        </td>
-        <td data-href="{{ url_for('variant.display', variant_id=variant[0]) }}" class="clickable longTextCss" style="white-space: nowrap;">
-            <div>
-                {% if variant[11] is not none %}
-                    <abbr title="{{ variant[11] }}">{{ variant[11] }}</abbr>
-                {% else %}
-                    -
-                {% endif %}
-            </div>
-
-        </td>
-        <td>
-            {% if variant[17] is not none %}
-                <div>
-                    <a href="{{ url_for('extended_information.gene', gene_id=variant[17] | int) }}">{{ variant[16] }}</a>
-                </div>
-            {% else %}
-                -
+      {% set preferred_transcripts = variant.get_preferred_transcripts() %}
+      <tr name="variant_row" style="line-height: 28px;" variant_id="{{ variant.id }}">
+        <td style="display:none;">{{ variant.id }}</td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable" style="white-space: nowrap;">{{ variant.chrom }}</td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable" style="white-space: nowrap;">{{ variant.pos }}</td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss"><abbr title="{{ variant.ref }}">{{ variant.ref }}</abbr></td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss"><abbr title="{{ variant.alt }}">{{ variant.alt }}</abbr></td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss" style="white-space: nowrap;">
+            {% if preferred_transcripts is not none %}
+                {% for consequence in preferred_transcripts %}
+                    {% if consequence.hgvs_c is not none %} {% set hgvs_c = consequence.hgvs_c %} {% else %} {% set hgvs_c = '-' %} {% endif %}
+                    <div>
+                        <abbr title="{{ hgvs_c }}">{{ hgvs_c }}</abbr>
+                    </div>
+                {% endfor %}
             {% endif %}
         </td>
-        <td style="text-align:center;">{% if variant[8] is not none %} {{ variant[8] }} {% else %}-{%endif%}</td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss" style="white-space: nowrap;">
+            {% if preferred_transcripts is not none %}
+                {% for consequence in preferred_transcripts %}
+                    {% if consequence.hgvs_p is not none %} {% set hgvs_p = consequence.hgvs_p %} {% else %} {% set hgvs_p = '-' %} {% endif %}
+                    <div>
+                        <abbr title="{{ hgvs_p }}">{{ hgvs_p }}</abbr>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </td>
+        <td>
+            {% if preferred_transcripts is not none %}
+                {% for consequence in preferred_transcripts %}
+                    <div>
+                        {% if consequence.gene is not none %} 
+                            {% if consequence.gene.symbol is not none %} {% set gene_symbol = consequence.gene.symbol %} {% else %} {% set gene_symbol = '-' %} {% endif %}
+                            <a href="{{ url_for('extended_information.gene', gene_id=consequence.gene.id | int) }}">{{ gene_symbol }}</a>
+                        {% else %}
+                            <div>-</div>
+                        {% endif %}
+                    </div>
+
+                {% endfor %}
+            {% endif %}
+        </td>
+        <td style="text-align:center;">
+            {% set your_classification = variant.get_recent_user_classification(session['user']['user_id']) %}
+            {% if your_classification is not none %} {{ your_classification.selected_class }} {% else %}-{%endif%}
+        </td>
         <!--<td style="text-align:center;">{% if variant[7] is not none %} {{ variant[7] }} {% else %}-{%endif%}</td>-->
-        <td style="text-align:center;">{{ render_consensus_classification_label(variant[7], '2em') }}</td>
+        <td style="text-align:center;">
+            {% set most_recent_consensus_classification = variant.get_recent_consensus_classification() %}
+            {{ render_consensus_classification_label(most_recent_consensus_classification.selected_class, '2em') }}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
@@ -347,10 +371,7 @@
         }
     }
 
-
     autocomplete(document.getElementById("lookup_list_name"), document.getElementById("lookup_list_id"), lists);
-
-
 </script>
 
 <script>
@@ -393,7 +414,6 @@
             fr.addEventListener('error', errorHandler);
         }
     });
-
 </script>
 
 <script>
@@ -414,50 +434,19 @@
         //show collapse
         document.getElementById(last).classList.add('show');
     }
-    merge_duplicated_rows()
-
-
-    function merge_duplicated_rows() {
-        var table_rows = document.getElementById('variantTableBody').getElementsByTagName('tr')
-        var last_row = table_rows[0]
-        var rows_to_remove = []
-        for (var i = 1; i < table_rows.length; i++) {
-            var current_row = table_rows[i]
-
-            var current_variant_id = current_row.getAttribute('variant_id')
-            var last_variant_id = last_row.getAttribute('variant_id')
-        
-            if (current_variant_id === last_variant_id) {
-                var current_tds = current_row.getElementsByTagName('td')
-                var last_tds = last_row.getElementsByTagName('td')
-                last_tds[5].innerHTML += current_tds[5].innerHTML
-                last_tds[6].innerHTML += current_tds[6].innerHTML
-                last_tds[7].innerHTML += current_tds[7].innerHTML
-                rows_to_remove.push(current_row)
-            } else {
-                last_row = current_row
-            }
-
-        }
-
-        for (var i = 0; i < rows_to_remove.length; i++) {
-            rows_to_remove[i].remove()
-        }
-    }
 </script>
 
 
 {% endmacro %}
 
 
-{% macro draw_hexplorer_score(label, delta, wt, mut) %}
-<div annotation_id="{{delta[8]}}{% if wt is not none %};{{wt[8]}}{% endif %}{% if mut is not none %};{{mut[8]}}{% endif %}">
+{% macro draw_hexplorer_score(delta, wt, mut) %}
+<div annotation_id="{{ delta.id }}{% if wt is not none %};{{ wt.id }}{% endif %}{% if mut is not none %};{{ mut.id }}{% endif %}">
     {% if wt is none or mut is none %}
     {{ draw_exclamation_mark('There is no wildtype or mutant score. Thus, one of the sequences is missing the motiv! Be careful with the interpretation of the delta score!') }}
    {% endif %}
-   <abbr class="ssr" title="{{delta[0]}}"><a class="dashed_underline">{{ label }}:</a></abbr>{{ delta[4] }}
-   <a class="link" tabindex="0" data-bs-html="true" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-content="reference score: {{wt[4]}} <br/> mutant score: {{mut[4]}}">details</a>
-   
+   <abbr class="ssr" title="{{ delta.description }}"><a class="dashed_underline">{{ delta.display_title }}:</a></abbr>{{ delta.value }}
+   <a class="link" tabindex="0" data-bs-html="true" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-content="reference score: {% if wt is not none %}{{ wt.value }}{% else %}-{% endif %} <br/> mutant score: {% if mut is not none %}{{ mut.value }}{% else %}-{% endif %}">details</a>
 </div>
 
 {% endmacro %}
@@ -566,7 +555,7 @@
 
 
 
-{% macro add_variant_banner(variant_oi) %}
+{% macro add_variant_banner(variant) %}
 <div class="w-100 ssb">
     <div class="card variant-banner-color left-space-padding">
         
@@ -578,13 +567,18 @@
                             <td style="width:10rem" class="li-label">Variant</td>
                             <td > 
                                 <div style="word-break:break-all;">
-                                    {{ variant_oi[1] }}-{{ variant_oi[2] }}-{{ variant_oi[3] }}-{{ variant_oi[4] }}
+                                    {{ variant.chrom }}-{{ variant.pos }}-{{ variant.ref }}-{{ variant.alt }}
                                 </div>
                             </td>
                         </tr>
                         <tr>
                             <td class="li-label">Gene(s)</td>
-                            <td >{{ variant_oi[6] }}</td>
+                            <td>
+                                {% set genes = variant.get_genes() %}
+                                {% for gene in genes %}
+                                    <a href="{{ url_for('extended_information.gene', gene_id=gene.id | int) }}">{{ gene.symbol }}</a>
+                                {% endfor %}
+                            </td>
                         </tr>
                         
                     </tbody>
@@ -598,16 +592,17 @@
 
 
 {% macro selected_literature_display(selected_literature) %}
+{% if selected_literature is not none %}
 <div class="d-flex flex-wrap">
-        {% for paper in selected_literature %}
-        {% set tooltip = "Text passage of interest: " + paper[3] %}
-        <div class="ssr tooltip-lg" data-bs-toggle="tooltip" title="{{tooltip}}" data-bs-placement="top">
-            {% set pmid = paper[2] %}
-            {{ external_link(pmid|string, "https://pubmed.ncbi.nlm.nih.gov/" + pmid | string) }}
-        </div>
-        {% endfor %}
-    </ul>
+    {% for paper in selected_literature %}
+    {% set tooltip = "Text passage of interest: " + paper.text_passage %}
+    <div class="ssr tooltip-lg" data-bs-toggle="tooltip" title="{{tooltip}}" data-bs-placement="top">
+        {% set pmid = paper.pmid %}
+        {{ external_link(pmid|string, "https://pubmed.ncbi.nlm.nih.gov/" + pmid | string) }}
+    </div>
+    {% endfor %}
 </div>
+{% endif %}
 {% endmacro %}
 
 
@@ -628,7 +623,7 @@
 
 
 
-{% macro google_link(display_text, rsid = none, hgvs_c = none, hgvs_p = none, gene_name = none, is_scholar = False) %}
+{% macro google_link(display_text, rsid = none, hgvs_c = none, hgvs_p = none, gene_symbol = none, is_scholar = False) %}
 
 {% if is_scholar %}
     {% set link = "https://scholar.google.de/scholar?q=" %}
@@ -636,8 +631,8 @@
     {% set link = "https://www.google.com/search?q=" %}
 {% endif%}
 
-{% if gene_name is not none %}
-    {% set link = link + gene_name %}
+{% if gene_symbol is not none %}
+    {% set link = link + gene_symbol %}
 {% endif %}
 
 {% set stuff_for_braces = [] %}
@@ -688,7 +683,7 @@
 
 
 {% if stuff_for_braces | length > 0 %}
-    {% if gene_name != "" %}
+    {% if gene_symbol != "" %}
         {% set link = link + "+AND+(" %}
     {% endif %}
     {% set link = link + "+OR+".join(stuff_for_braces) %}

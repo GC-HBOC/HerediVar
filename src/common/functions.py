@@ -398,12 +398,14 @@ def encode_vcf(text):
                  .replace('+', '%2B') \
                  .replace('&', '%26') \
                  .replace('|', '%7C') \
+                 .replace('=', '%1Y') \
                  .replace('~3B', ';') \
                  .replace('~24', '$') \
                  .replace('~23', '#') \
                  .replace('~2B', '+') \
                  .replace('~26', '&') \
-                 .replace('~7C', '|')
+                 .replace('~7C', '|') \
+                 .replace('~1Y', '=')
     return result
 
 def decode_vcf(text):
@@ -413,8 +415,21 @@ def decode_vcf(text):
                  .replace('%23', '#') \
                  .replace('%2B', '+') \
                  .replace('%26', '&') \
-                 .replace('%7C', '|')
+                 .replace('%7C', '|') \
+                 .replace('%1Y', '=')
     return result
+
+
+# a helper function for the generation of vcf lines
+def process_multiple(list_of_objects, sep = '~26', do_prefix = True):
+    infos = [] # collect info vcfs in here
+    for obj in list_of_objects:
+        new_info = obj.to_vcf(prefix = do_prefix)
+        infos.append(new_info)
+        do_prefix = False
+    new_info = sep.join(infos)
+    return new_info
+
 
 # new_params should be a dict
 def add_args_to_url(url, new_params):

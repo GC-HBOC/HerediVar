@@ -47,12 +47,12 @@ def search():
         list_id = request.args.get('selected_list_id')
         if list_id:
             list_permission = conn.check_list_permission(user_id, list_id)
-            if not list_permission['owner'] or not list_permission['edit']:
+            if not list_permission['owner'] and not list_permission['edit']:
                 flash("You attempted to insert variants to a list which you do not have access to.", "alert-danger")
                 current_app.logger.info(session['user']['preferred_username'] + " attempted to insert variants from the browse variants page to list: " + str(list_id) + ", but he did not have access to it.")
             else:
-                variants_for_list, _ = conn.get_variants_page_merged(1, "unlimited", user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user_classifications, hgvs=hgvs, variant_ids_oi=variant_ids_oi, do_annotate=False)
-                variant_ids = [x[0] for x in variants_for_list]
+                variants_for_list, _ = conn.get_variants_page_merged(1, "unlimited", user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user_classifications, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
+                variant_ids = [variant.id for variant in variants_for_list]
                 for variant_id in variant_ids:
                     conn.add_variant_to_list(list_id, variant_id)
                 flash(Markup("Successfully inserted all variants from the current search to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
@@ -142,31 +142,24 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     else:
         has_multiple_vids = False
     
-    annotations = conn.get_all_variant_annotations(variant_id, group_output=True)
-    if annotations.get('consensus_classification', None) is not None:
-        annotations['consensus_classification'] = add_scheme_classes(annotations['consensus_classification'], 14)
-        annotations['consensus_classification'] = prepare_scheme_criteria(annotations['consensus_classification'], 14)[0]
-
-    if annotations.get('user_classifications', None) is not None:
-        annotations['user_classifications'] = add_scheme_classes(annotations['user_classifications'], 13)
-        annotations['user_classifications'] = prepare_scheme_criteria(annotations['user_classifications'], 13)
+    variant = conn.get_variant(variant_id)
 
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
-    clinvar_submission = get_clinvar_submission(variant_id, conn)
+    clinvar_submission = check_update_clinvar_status(variant_id, conn)
 
     ######## TESTSECTION ########
     #from .testobj import Variant
     #anotherobj = Variant(id=1, chrom="chr1", pos=1234, ref="A")
     #anotherobj.alt = "C"
+    
 
-    return render_template('variant/variant.html', 
-                            variant=variant_oi, 
-                            annotations = annotations,
+    return render_template('variant/variant.html',
                             current_annotation_status=current_annotation_status,
                             clinvar_submission = clinvar_submission,
                             has_multiple_vids=has_multiple_vids,
-                            lists = lists
+                            lists = lists,
+                            variant = variant
                             #testobj=anotherobj.to_json()
                         )
 
@@ -177,8 +170,8 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 def classify(variant_id):
     conn = get_connection()
 
-    variant_oi = conn.get_variant_more_info(variant_id)
-    if variant_oi is None:
+    variant = conn.get_variant(variant_id)
+    if variant is None:
         return abort(404)
 
     user_id = session['user']['user_id']
@@ -223,7 +216,7 @@ def classify(variant_id):
         # actually submit the data to the database
         if user_classification_is_valid and scheme_classification_is_valid and literature_is_valid:
             # always handle the user classification & literature
-            user_classification_id, classification_received_update = handle_user_classification(variant_id, user_id, previous_classification, classification, comment, scheme_id, conn)
+            user_classification_id, classification_received_update, is_new_classification = handle_user_classification(variant_id, user_id, previous_classification, classification, comment, scheme_id, conn)
             previous_selected_literature = [] # a new classification -> no previous sleected literature
             if user_classification_id is None: # we are processing an update -> pull the classification id from the schemes with info
                 user_classification_id = schemes_with_info[user_id][scheme_id]['classification_id']
@@ -235,7 +228,7 @@ def classify(variant_id):
             if not without_scheme:
                 scheme_received_update = handle_scheme_classification(user_classification_id, criteria, conn)
 
-            if any([classification_received_update, literature_received_update, scheme_received_update]):
+            if any([classification_received_update, literature_received_update, scheme_received_update]) and not is_new_classification:
                 flash(Markup("Successfully updated user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
 
             do_redirect = True
@@ -247,7 +240,7 @@ def classify(variant_id):
     else:
         return render_template('variant/classify.html',
                                 classification_type='user',
-                                variant_oi=variant_oi, 
+                                variant=variant, 
                                 classification_schemas=json.dumps(classification_schemas),
                                 schemes_with_info=json.dumps(schemes_with_info), 
                                 previous_classification=json.dumps(previous_classification),
@@ -265,8 +258,8 @@ def consensus_classify(variant_id):
     literature = conn.get_variant_literature(variant_id)
     classification_schemas = conn.get_classification_schemas()
     classification_schemas = {schema_id: classification_schemas[schema_id] for schema_id in classification_schemas if classification_schemas[schema_id]['scheme_type'] != "none"} # remove no-scheme classification as this can not be submitted to clinvar
-    variant_oi = conn.get_variant_more_info(variant_id)
-    if variant_oi is None:
+    variant = conn.get_variant(variant_id)
+    if variant is None:
         return abort(404)
 
     previous_classification = {} # keep empty because we always submit a new consensus classification 
@@ -332,7 +325,7 @@ def consensus_classify(variant_id):
     else:
         return render_template('variant/classify.html', 
                                 classification_type='consensus',
-                                variant_oi=variant_oi, 
+                                variant=variant, 
                                 classification_schemas=json.dumps(classification_schemas),
                                 schemes_with_info=json.dumps(schemes_with_info), 
                                 previous_classification=json.dumps(previous_classification),
@@ -345,48 +338,50 @@ def consensus_classify(variant_id):
 @require_permission(['read_resources'])
 def classification_history(variant_id):
     conn = get_connection()
-    variant_oi = conn.get_variant_more_info(variant_id)
-    if variant_oi is None:
+    variant = conn.get_variant(variant_id)
+    #variant_oi = conn.get_variant_more_info(variant_id)
+    if variant is None:
         return abort(404)
-    consensus_classifications = conn.get_consensus_classifications_extended(variant_id, most_recent=False)
-    user_classifications = conn.get_user_classifications_extended(variant_id)
+    #consensus_classifications = conn.get_consensus_classifications_extended(variant_id, most_recent=False)
+    #user_classifications = conn.get_user_classifications_extended(variant_id)
     
-    recorded_classifications = []
-    most_recent_consensus_classification = None
-    if consensus_classifications is not None:
-        most_recent_consensus_classification = [x for x in consensus_classifications if x[6] == 1][0]
-        consensus_classifications = add_scheme_classes(consensus_classifications, 14)
-        consensus_classifications = prepare_scheme_criteria(consensus_classifications, 14)
-        recorded_classifications.extend([{'type':'consensus classification', 
-                                     'submitter': x[9] + ' ' + x[10],
-                                     'affiliation':x[11],
-                                     'class':x[3], 
-                                     'date':x[5], 
-                                     # additional information
-                                     'comment':x[4], 
-                                     'evidence_document_url':url_for('download.evidence_document', consensus_classification_id=x[0]),
-                                     'scheme':x[12].replace('_', ' '),
-                                     'selected_criteria':x[14],
-                                     'class_by_scheme': x[16],
-                                     'selected_literature': x[15]
-                                    } for x in consensus_classifications])
-    if user_classifications is not None:
-        user_classifications = add_scheme_classes(user_classifications, 13)
-        user_classifications = prepare_scheme_criteria(user_classifications, 13)
-        recorded_classifications.extend([{'type':'user classification',
-                                          'submitter':x[8] + ' ' + x[9],
-                                          'affiliation':x[10],
-                                          'class':x[1],
-                                          'date':x[5], 
-                                          # additional information
-                                          'comment':x[4],
-                                          'scheme':x[11].replace('_', ' '),
-                                          'selected_criteria':x[13],
-                                          'class_by_scheme': x[15],
-                                          'selected_literature': x[14]
-                                        } for x in user_classifications])
+    #recorded_classifications = []
+    #most_recent_consensus_classification = None
+    #if consensus_classifications is not None:
+    #    most_recent_consensus_classification = [x for x in consensus_classifications if x[6] == 1][0]
+    #    consensus_classifications = add_scheme_classes(consensus_classifications, 14)
+    #    consensus_classifications = prepare_scheme_criteria(consensus_classifications, 14)
+    #    recorded_classifications.extend([{'type':'consensus classification', 
+    #                                 'submitter': x[9] + ' ' + x[10],
+    #                                 'affiliation':x[11],
+    #                                 'class':x[3], 
+    #                                 'date':x[5], 
+    #                                 # additional information
+    #                                 'comment':x[4], 
+    #                                 'evidence_document_url':url_for('download.evidence_document', consensus_classification_id=x[0]),
+    #                                 'scheme':x[12].replace('_', ' '),
+    #                                 'selected_criteria':x[14],
+    #                                 'class_by_scheme': x[16],
+    #                                 'selected_literature': x[15]
+    #                                } for x in consensus_classifications])
+    #if user_classifications is not None:
+    #    user_classifications = add_scheme_classes(user_classifications, 13)
+    #    user_classifications = prepare_scheme_criteria(user_classifications, 13)
+    #    recorded_classifications.extend([{'type':'user classification',
+    #                                      'submitter':x[8] + ' ' + x[9],
+    #                                      'affiliation':x[10],
+    #                                      'class':x[1],
+    #                                      'date':x[5], 
+    #                                      # additional information
+    #                                      'comment':x[4],
+    #                                      'scheme':x[11].replace('_', ' '),
+    #                                      'selected_criteria':x[13],
+    #                                      'class_by_scheme': x[15],
+    #                                      'selected_literature': x[14]
+    #                                    } for x in user_classifications])
 
     return render_template('variant/classification_history.html', 
-                            variant_oi = variant_oi,
-                            most_recent_consensus_classification=most_recent_consensus_classification, 
-                            recorded_classifications=recorded_classifications)
+                            variant = variant,
+                            #most_recent_consensus_classification=most_recent_consensus_classification, 
+                            #recorded_classifications=recorded_classifications
+                            )

@@ -5,6 +5,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 import mysql.connector
 from mysql.connector import Error
 import common.functions as functions
+import common.models as models
 from operator import itemgetter
 import datetime
 import re
@@ -82,22 +83,7 @@ class Connection:
         command = "DELETE FROM %s WHERE %s IN (SELECT * FROM (SELECT %s FROM %s GROUP BY %s HAVING (COUNT(*) > 1)) AS A)"
         self.cursor.execute(command, (table, unique_column, unique_column, table, unique_column))
         self.conn.commit()
-    
 
-    def get_one_variant(self, variant_id):
-        command = "SELECT id,chr,pos,ref,alt FROM variant WHERE id = %s"
-        self.cursor.execute(command, (variant_id, ))
-        result = self.cursor.fetchone()
-        return result
-    
-    def get_variant_id(self, chr, pos, ref, alt):
-        #command = "SELECT id FROM variant WHERE chr = " + enquote(chr) + " AND pos = " + str(pos) + " AND ref = " + enquote(ref) + " AND alt = " + enquote(alt)
-        command = "SELECT id FROM variant WHERE chr = %s AND pos = %s AND ref = %s AND alt = %s"
-        self.cursor.execute(command, (chr, pos, ref, alt))
-        variant_id = self.cursor.fetchone()
-        if variant_id is not None:
-            return variant_id[0]
-        return None
     
     def get_gene_id_by_hgnc_id(self, hgnc_id):
         hgnc_id = functions.trim_hgnc(hgnc_id)
@@ -431,23 +417,7 @@ class Connection:
         self.cursor.execute(command, (variant_id, ))
         self.conn.commit()
 
-    
-    def get_recent_annotations(self, variant_id): # ! the ordering of the columns in the outer select statement is important and should not be changed
-        command = "SELECT variant_annotation.id, title, description, version, version_date, variant_id, value, supplementary_document, group_name, display_title FROM variant_annotation INNER JOIN ( \
-                        SELECT * \
-	                        FROM annotation_type WHERE (title, version_date) IN ( \
-		                        select title, MAX(version_date) version_date from annotation_type INNER JOIN ( \
-				                    select variant_id, annotation_type_id, value, supplementary_document from variant_annotation where variant_id=%s \
-			                ) x \
-			                ON annotation_type.id = x.annotation_type_id \
-		                    GROUP BY title \
-	                    )  \
-                    ) y  \
-                    ON y.id = variant_annotation.annotation_type_id \
-                    WHERE variant_id=%s"
-        self.cursor.execute(command, (variant_id, variant_id))
-        result = self.cursor.fetchall()
-        return result
+
     
     def get_most_recent_annotation_type_id(self, title):
         command = "SELECT id FROM annotation_type WHERE title = %s ORDER BY version_date DESC LIMIT 1"
@@ -556,6 +526,7 @@ class Connection:
         """
         return prefix + command + postfix
 
+    ### DEPRECATED!
     # this function returns a list of variant tuples (can have length more than one if there are multiple mane select transcripts for this variant)
     def annotate_preferred_transcripts(self, variant):
         result = []
@@ -577,13 +548,14 @@ class Connection:
             result.append(variant + (None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None))
         return result
     
+    # DEPRECATED
     def order_consequences(self, consequences):
         keyfunc = cmp_to_key(mycmp = self.sort_consequences)
                 
         consequences.sort(key = keyfunc) # sort by preferred transcript
         return consequences
     
-    
+    # DEPRECATED
     def sort_consequences(self, a, b):
         # sort by ensembl/refseq
         if a[9] == 'ensembl' and b[9] == 'refseq':
@@ -617,7 +589,7 @@ class Connection:
                         return 0
 
 
-    def get_variants_page_merged(self, page, page_size, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None, do_annotate=True):
+    def get_variants_page_merged(self, page, page_size, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None):
         # get one page of variants determined by offset & pagesize
 
         offset = (page - 1) * page_size
@@ -712,28 +684,30 @@ class Connection:
         if page_size != 'unlimited':
             command = command + " ORDER BY chr, pos, ref, alt LIMIT %s, %s"
             actual_information += (offset, page_size)
-        if do_annotate:
-            command = self.annotate_genes(command)
-            command = self.annotate_consensus_classification(command)
-            command = self.annotate_specific_user_classification(command)
-            actual_information += (user_id, ) # this is required to get the user-classifications of the currently logged in user for the variants
         self.cursor.execute(command, actual_information)
-        variants = self.cursor.fetchall()
+        variants_raw = self.cursor.fetchall()
+
+        # get variant objects
+        variants = []
+        for variant_raw in variants_raw:
+            variant = self.get_variant(variant_id=variant_raw[0], include_annotations = False, include_heredicare_classifications = False, include_clinvar = False, include_assays = False, include_literature = False)
+            variants.append(variant)
 
         if page_size == 'unlimited':
             return variants, len(variants)
 
-        variants_and_transcripts = []
-        for variant in variants:
-            annotated_variant = self.annotate_preferred_transcripts(variant)
-            variants_and_transcripts.extend(annotated_variant)
-        variants = variants_and_transcripts
+        # DEPRECATED -> done in models now
+        #variants_and_transcripts = []
+        #for variant in variants:
+        #    annotated_variant = self.annotate_preferred_transcripts(variant)
+        #    variants_and_transcripts.extend(annotated_variant)
+        #variants = variants_and_transcripts
         #print(variants)
 
         # get number of variants
         prefix = "SELECT COUNT(id) FROM variant"
         command = prefix + postfix
-        self.cursor.execute(command, actual_information[:len(actual_information)-3])
+        self.cursor.execute(command, actual_information[:len(actual_information)-2])
         num_variants = self.cursor.fetchone()
         if num_variants is None:
             return [], 0
@@ -1085,7 +1059,7 @@ class Connection:
         self.conn.commit()
 
     def get_classification_scheme(self, scheme_id):
-        command = "SELECT * from classification_scheme WHERE id = %s"
+        command = "SELECT id,name,display_name,type,reference from classification_scheme WHERE id = %s"
         self.cursor.execute(command, (scheme_id, ))
         scheme_id = self.cursor.fetchone()
         return scheme_id
@@ -1103,7 +1077,7 @@ class Connection:
 
 
     def get_user_classifications(self, variant_id, user_id = 'all', scheme_id = 'all', sql_modifier = None):
-        command = "SELECT * FROM user_classification WHERE variant_id=%s"
+        command = "SELECT id, classification, variant_id, user_id, comment, date, classification_scheme_id FROM user_classification WHERE variant_id=%s"
         actual_information = (variant_id, )
         if user_id != 'all':
             command = command + ' AND user_id=%s'
@@ -1212,7 +1186,7 @@ class Connection:
         self.conn.commit()
     
     def get_user(self, user_id):
-        command = "SELECT * FROM user WHERE id=%s"
+        command = "SELECT id,username,first_name,last_name,affiliation FROM user WHERE id=%s"
         self.cursor.execute(command, (user_id,))
         result = self.cursor.fetchone()
         return result
@@ -1336,6 +1310,316 @@ class Connection:
         self.cursor.execute(command, (list_id, ))
         self.conn.commit()
 
+
+
+
+    def get_one_variant(self, variant_id):
+        command = "SELECT id,chr,pos,ref,alt FROM variant WHERE id = %s"
+        self.cursor.execute(command, (variant_id, ))
+        result = self.cursor.fetchone()
+        return result
+    
+    def get_variant_id(self, chr, pos, ref, alt):
+        #command = "SELECT id FROM variant WHERE chr = " + enquote(chr) + " AND pos = " + str(pos) + " AND ref = " + enquote(ref) + " AND alt = " + enquote(alt)
+        command = "SELECT id FROM variant WHERE chr = %s AND pos = %s AND ref = %s AND alt = %s"
+        self.cursor.execute(command, (chr, pos, ref, alt))
+        variant_id = self.cursor.fetchone()
+        if variant_id is not None:
+            return variant_id[0]
+        return None
+
+
+    def get_recent_annotations(self, variant_id): # ! the ordering of the columns in the outer select statement is important and should not be changed
+        command = "SELECT variant_annotation.id, title, description, version, version_date, variant_id, value, supplementary_document, group_name, display_title, value_type FROM variant_annotation INNER JOIN ( \
+                        SELECT * \
+	                        FROM annotation_type WHERE (title, version_date) IN ( \
+		                        select title, MAX(version_date) version_date from annotation_type INNER JOIN ( \
+				                    select variant_id, annotation_type_id, value, supplementary_document from variant_annotation where variant_id=%s \
+			                ) x \
+			                ON annotation_type.id = x.annotation_type_id \
+		                    GROUP BY title \
+	                    )  \
+                    ) y  \
+                    ON y.id = variant_annotation.annotation_type_id \
+                    WHERE variant_id=%s"
+        self.cursor.execute(command, (variant_id, variant_id))
+        result = self.cursor.fetchall()
+        return result
+
+
+
+
+    def get_consensus_classifications_extended(self, variant_id, most_recent = True):
+        consensus_classifications = self.get_consensus_classification(variant_id, most_recent=most_recent, sql_modifier=self.add_userinfo)
+        if consensus_classifications is None:
+            return None
+        consensus_classifications_preprocessed = []
+        for consensus_classification in consensus_classifications:
+            consensus_classification = list(consensus_classification)
+            current_scheme = self.get_classification_scheme(consensus_classification[7])
+            consensus_classification.append(current_scheme[2])# append the scheme description (which is used as display name)
+            consensus_classification.append(current_scheme[3]) # append scheme type
+            current_scheme_criteria_applied = self.get_scheme_criteria_applied(consensus_classification[0], where = "consensus")
+            consensus_classification.append(current_scheme_criteria_applied)
+            previous_selected_literature = self.get_selected_literature(is_user = False, classification_id = consensus_classification[0])
+            consensus_classification.append(previous_selected_literature)
+            consensus_classifications_preprocessed.append(consensus_classification)
+        return consensus_classifications_preprocessed
+
+    def get_user_classifications_extended(self, variant_id, user_id='all', scheme_id='all'):
+        user_classifications = self.get_user_classifications(variant_id, user_id=user_id, scheme_id=scheme_id, sql_modifier=self.add_userinfo) # 0id,1classification,2variant_id,3user_id,4comment,5date,6classification_scheme_id,7user_id,8first_name,9last_name,10affiliation
+        if user_classifications is None:
+            return None
+        user_classifications_preprocessed = []
+        for user_classification in user_classifications:
+            user_classification = list(user_classification)
+            current_scheme = self.get_classification_scheme(user_classification[6])
+            user_classification.append(current_scheme[2]) # append the scheme description (which is used as display name)
+            user_classification.append(current_scheme[3]) # append scheme type
+            current_scheme_criteria_applied = self.get_scheme_criteria_applied(user_classification[0], where = "user")
+            user_classification.append(current_scheme_criteria_applied)
+            previous_selected_literature = self.get_selected_literature(is_user = True, classification_id = user_classification[0])
+            user_classification.append(previous_selected_literature)
+            user_classifications_preprocessed.append(user_classification)
+        return user_classifications_preprocessed
+
+
+
+
+
+
+
+
+
+
+    def get_variant(self, variant_id, include_annotations = True, include_consensus = True, include_user_classifications = True, include_heredicare_classifications = True, include_clinvar = True, include_consequences = True, include_assays = True, include_literature = True) -> models.Variant:
+        variant_raw = self.get_one_variant(variant_id)
+        if variant_raw is None:
+            return None
+
+        variant_id = variant_raw[0]
+        chrom = variant_raw[1]
+        pos = variant_raw[2]
+        ref = variant_raw[3]
+        alt = variant_raw[4]
+
+        annotations = None
+        if include_annotations:
+            annotations = models.AllAnnotations()
+            annotations_raw = self.get_recent_annotations(variant_id)
+
+            for annot in annotations_raw:
+                annotation_id = annot[0]
+                title = annot[1]
+                display_title = annot[9]
+                description = annot[2]
+                version = annot[3]
+                version_date = annot[4]
+                value = annot[6]
+                value_type = annot[10]
+
+                new_annotation = models.Annotation(id = annotation_id, value = value, title = title, display_title = display_title, description = description, version = version, version_date = version_date, value_type = value_type)
+                setattr(annotations, annot[1], new_annotation)
+                #annotations.insert_annotation(new_annotation)
+            
+            annotations.flag_linked_annotations()
+        
+        # add most recent consensus classification
+        consensus_classifications = None
+        if include_consensus:
+            cls_raw = self.get_consensus_classification(variant_id) # get all consensus classifications
+
+            if cls_raw is not None:
+                consensus_classifications = []
+
+                for cl_raw in cls_raw:
+
+                    # basic information
+                    selected_class = int(cl_raw[3])
+                    comment = cl_raw[4]
+                    date = cl_raw[5].strftime('%Y-%m-%d %H:%M:%S')
+                    classification_id = int(cl_raw[0])
+
+                    # get further information from database (could use join to get them as well)
+                    current_userinfo = self.get_user(user_id = cl_raw[1]) # id,username,first_name,last_name,affiliation
+                    current_scheme = self.get_classification_scheme(scheme_id = cl_raw[7]) # id,name,display_name,type,reference
+                    current_scheme_criteria_applied = self.get_scheme_criteria_applied(classification_id, where = "consensus") # id,classification_id,classification_criterium_id,criterium_strength_id,evidence,classification_criterium_name,classification_criterium_strength_name,strength_description (display name)
+                    previous_selected_literature = self.get_selected_literature(is_user = False, classification_id = classification_id)
+
+
+                    # user information
+                    user = models.User(id = current_userinfo[0], 
+                                       full_name = current_userinfo[2] + ' ' + current_userinfo[3], 
+                                       affiliation = current_userinfo[4])
+
+                    # scheme information
+                    scheme_type = current_scheme[3]
+                    scheme_display_name = current_scheme[2]
+                    criteria = []
+                    for criterium_raw in current_scheme_criteria_applied:
+                        criterium_id = criterium_raw[0] # criterium applied id
+                        criterium_name = criterium_raw[5]
+                        criterium_type = criterium_raw[6]
+                        criterium_evidence = criterium_raw[4]
+                        criterium_strength = criterium_raw[7]
+                        criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength)
+                        criteria.append(criterium)
+                    scheme = models.Scheme(display_name = scheme_display_name, type = scheme_type, criteria = criteria)
+
+                    # selected literature information
+                    literatures = None
+                    for literature_raw in previous_selected_literature:
+                        if literatures is None:
+                            literatures = []
+                        new_literature = models.SelectedLiterature(id = literature_raw[0], pmid = literature_raw[2], text_passage = literature_raw[3])
+                        literatures.append(new_literature)
+
+                    # save the new classification object
+                    new_classification = models.Classification(id = classification_id, type = 'consensus classification', selected_class=selected_class, comment=comment, date=date, submitter=user, scheme=scheme, literature = literatures)
+                    consensus_classifications.append(new_classification)
+
+
+        # add all user classifications
+        user_classifications = None
+        if include_user_classifications:
+            user_classifications_raw = self.get_user_classifications(variant_id) # id, classification, variant_id, user_id, comment, date, classification_scheme_id
+            if user_classifications_raw is not None:
+                user_classifications = []
+                for cl_raw in user_classifications_raw:
+
+                    # basic information
+                    selected_class = int(cl_raw[1])
+                    comment = cl_raw[4]
+                    date = cl_raw[5].strftime('%Y-%m-%d %H:%M:%S')
+                    classification_id = int(cl_raw[0])
+
+
+                    # get further information
+                    current_userinfo = self.get_user(user_id = cl_raw[3])
+                    current_scheme = self.get_classification_scheme(cl_raw[6])
+                    current_scheme_criteria_applied = self.get_scheme_criteria_applied(classification_id = classification_id, where = "user")
+                    previous_selected_literature = self.get_selected_literature(is_user = True, classification_id = classification_id)
+
+                    # user information
+                    user = models.User(id = current_userinfo[0], 
+                                       full_name = current_userinfo[2] + ' ' + current_userinfo[3], 
+                                       affiliation = current_userinfo[4])
+
+                    # scheme information
+                    scheme_type = current_scheme[3]
+                    scheme_display_name = current_scheme[2]
+                    criteria = []
+                    for criterium_raw in current_scheme_criteria_applied:
+                        criterium_id = criterium_raw[0] # criterium applied id
+                        criterium_name = criterium_raw[5]
+                        criterium_type = criterium_raw[6]
+                        criterium_evidence = criterium_raw[4]
+                        criterium_strength = criterium_raw[7]
+                        criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength)
+                        criteria.append(criterium)
+                    scheme = models.Scheme(display_name = scheme_display_name, type = scheme_type, criteria = criteria)
+
+                    # selected literature information
+                    literatures = None
+                    for literature_raw in previous_selected_literature:
+                        if literatures is None:
+                            literatures = []
+                        new_literature = models.SelectedLiterature(id = literature_raw[0], pmid = literature_raw[2], text_passage = literature_raw[3])
+                        literatures.append(new_literature)
+                    
+                    new_user_classification = models.Classification(id = classification_id, type = 'user classification', selected_class=selected_class, comment=comment, date=date, submitter=user, scheme=scheme, literature = literatures)
+                    user_classifications.append(new_user_classification)
+        
+        heredicare_classifications = None
+        if include_heredicare_classifications:
+            heredicare_classifications_raw = self.get_heredicare_center_classifications(variant_id)
+            if heredicare_classifications_raw is not None:
+                heredicare_classifications = []
+                for cl_raw in heredicare_classifications_raw:
+                    id = int(cl_raw[0])
+                    selected_class = cl_raw[1]
+                    comment = cl_raw[4]
+                    center = cl_raw[3]
+                    date = cl_raw[5].strftime('%Y-%m-%d')
+                    new_heredicare_classification = models.HeredicareClassification(id = id, selected_class = selected_class, comment = comment, center = center, date = date)
+                    heredicare_classifications.append(new_heredicare_classification)
+        
+        # add clinvar annotation
+        clinvar = None
+        if include_clinvar:
+            clinvar_summary = self.get_clinvar_variant_annotation(variant_id)
+            if clinvar_summary is not None:
+                id = clinvar_summary[0]
+                variation_id = clinvar_summary[2]
+                review_status = clinvar_summary[4]
+                interpretation = clinvar_summary[3]
+
+                submissions_raw = self.get_clinvar_submissions(id)
+                clinvar_submissions = None
+                if submissions_raw is not None:
+                    clinvar_submissions = []
+                    for submission in submissions_raw:
+                        conditions = []
+                        for condition in submission[5]:
+                            conditions.append(models.ClinvarCondition(condition_id = condition[0], title = condition[1]))
+                        last_evaluated = submission[3]
+                        if last_evaluated is not None:
+                            last_evaluated = last_evaluated.strftime('%Y-%m-%d')
+                        new_clinvar_submission = models.ClinvarSubmission(id = int(submission[0]), interpretation = submission[2], last_evaluated = last_evaluated, review_status = submission[4], conditions=conditions, submitter = submission[6], comment = submission[7])
+                        clinvar_submissions.append(new_clinvar_submission)
+            
+                clinvar = models.Clinvar(id = id, variation_id = variation_id, review_status = review_status, interpretation_summary = interpretation, submissions = clinvar_submissions)
+        
+        # add consequences
+        consequences = None
+        if include_consequences:
+            consequences_raw = self.get_variant_consequences(variant_id)
+            if consequences_raw is not None:
+                consequences = []
+                for consequence in consequences_raw:
+                    new_consequence = models.Consequence(transcript = consequence[0], hgvs_c = consequence[1], hgvs_p = consequence[2], consequence = consequence[3], impact = consequence[4], exon = consequence[5], intron = consequence[6],
+                                                         gene = models.Gene(symbol = consequence[7], id = consequence[8]), protein_domain_title = consequence[10], protein_domain_id = consequence[11], is_gencode_basic = consequence[13],
+                                                         is_mane_select = consequence[14], is_mane_plus_clinical = consequence[15], is_ensembl_canonical = consequence[16], source = consequence[9], length = consequence[12], biotype = consequence[18])
+                    consequences.append(new_consequence)
+        
+        assays = None
+        if include_assays:
+            assays_raw = self.get_assays(variant_id, assay_types = 'all')
+            if assays_raw is not None:
+                assays = []
+                for assay in assays_raw:
+                    new_assay = models.Assay(id = int(assay[0]), type = assay[1], score = assay[2], date = assay[3].strftime('%Y-%m-%d'))
+                    assays.append(new_assay)
+        
+
+        literature = None
+        if include_literature:
+            literature_raw = self.get_variant_literature(variant_id, sort_year=False)
+            if literature_raw is not None:
+                literature = []
+                for paper in literature_raw:
+                    new_paper = models.Paper(year = paper[6], authors = paper[4], title = paper[3], journal = paper[5], pmid = paper[2], source = paper[7])
+                    literature.append(new_paper)
+
+        variant = models.Variant(id=variant_id, chrom = chrom, pos = pos, ref = ref, alt = alt, 
+                                annotations = annotations, 
+                                consensus_classifications = consensus_classifications, 
+                                user_classifications = user_classifications,
+                                heredicare_classifications = heredicare_classifications,
+                                clinvar = clinvar,
+                                consequences = consequences,
+                                assays = assays,
+                                literature = literature)
+        return variant
+
+
+
+
+
+
+
+
+
     def get_all_variant_annotations(self, variant_id, group_output=False):
         variant_annotations = self.get_recent_annotations(variant_id)
         standard_annotations = {} # used for grouping hierarchy: 'standard_annotations' -> group -> annotation_label
@@ -1397,46 +1681,13 @@ class Connection:
         return variant_annot_dict
 
 
-    def get_consensus_classifications_extended(self, variant_id, most_recent = True):
-        consensus_classifications = self.get_consensus_classification(variant_id, most_recent=most_recent, sql_modifier=self.add_userinfo)
-        if consensus_classifications is None:
-            return None
-        consensus_classifications_preprocessed = []
-        for consensus_classification in consensus_classifications:
-            consensus_classification = list(consensus_classification)
-            current_scheme = self.get_classification_scheme(consensus_classification[7])
-            consensus_classification.append(current_scheme[2])# append the scheme description (which is used as display name)
-            consensus_classification.append(current_scheme[3]) # append scheme type
-            current_scheme_criteria_applied = self.get_scheme_criteria_applied(consensus_classification[0], where = "consensus")
-            consensus_classification.append(current_scheme_criteria_applied)
-            previous_selected_literature = self.get_selected_literature(is_user = False, classification_id = consensus_classification[0])
-            consensus_classification.append(previous_selected_literature)
-            consensus_classifications_preprocessed.append(consensus_classification)
-        return consensus_classifications_preprocessed
-
-    def get_user_classifications_extended(self, variant_id, user_id='all', scheme_id='all'):
-        user_classifications = self.get_user_classifications(variant_id, user_id=user_id, scheme_id=scheme_id, sql_modifier=self.add_userinfo) # 0id,1classification,2variant_id,3user_id,4comment,5date,6classification_scheme_id,7user_id,8first_name,9last_name,10affiliation
-        if user_classifications is None:
-            return None
-        user_classifications_preprocessed = []
-        for user_classification in user_classifications:
-            user_classification = list(user_classification)
-            current_scheme = self.get_classification_scheme(user_classification[6])
-            user_classification.append(current_scheme[2]) # append the scheme description (which is used as display name)
-            user_classification.append(current_scheme[3]) # append scheme type
-            current_scheme_criteria_applied = self.get_scheme_criteria_applied(user_classification[0], where = "user")
-            user_classification.append(current_scheme_criteria_applied)
-            previous_selected_literature = self.get_selected_literature(is_user = True, classification_id = user_classification[0])
-            user_classification.append(previous_selected_literature)
-            user_classifications_preprocessed.append(user_classification)
-        return user_classifications_preprocessed
 
 
     def get_assays(self, variant_id, assay_types = 'all'):
         command = "SELECT id, assay_type, score, date FROM assay WHERE variant_id = %s"
         actual_information = (variant_id, )
 
-        if assay_types is not 'all':
+        if assay_types != 'all':
             placeholders = ["%s"] * len(assay_types)
             placeholders = ', '.join(placeholders)
             placeholders = enbrace(placeholders)
@@ -1575,3 +1826,22 @@ class Connection:
         self.cursor.execute(command, (classification_id, ))
         result = self.cursor.fetchall()
         return result
+
+
+
+
+    def insert_update_heredivar_clinvar_submission(self, variant_id, submission_id, accession_id, status, message, last_updated):
+        command = "INSERT INTO heredivar_clinvar_submissions (variant_id, submission_id, accession_id, status, message, last_updated) VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE submission_id=VALUES(submission_id), accession_id=VALUES(accession_id), status=VALUES(status),message=VALUES(message), last_updated=VALUES(last_updated)"
+        self.cursor.execute(command, (variant_id, submission_id, accession_id, status, message, last_updated))
+        self.conn.commit()
+
+    def get_heredivar_clinvar_submission(self, variant_id):
+        command = "SELECT id,variant_id,submission_id,accession_id,status,message,last_updated FROM heredivar_clinvar_submissions WHERE variant_id = %s"
+        self.cursor.execute(command, (variant_id, ))
+        result = self.cursor.fetchone()
+        return result
+
+    #def update_heredivar_clinvar_submission_accession_id(self, accession_id):
+    #    command = "UPDATE heredivar_clinvar_submissions SET accession_id = %s"
+    #    self.cursor.execute(command, (accession_id, ))
+    #    self.conn.commit()

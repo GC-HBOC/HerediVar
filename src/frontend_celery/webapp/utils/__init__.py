@@ -9,6 +9,7 @@ from common.db_IO import Connection
 import common.functions as functions
 from .decorators import *
 from .search_utils import *
+from .clinvar_utils import *
 from urllib.parse import urlparse, urljoin
 from ..tasks import annotate_variant
 import pathlib
@@ -82,16 +83,6 @@ def save_redirect(target):
         return redirect(url_for('main.index')) # maybe use abort() here??
     return redirect(target) # url is save to redirect to!
 
-
-
-def get_clinvar_submission_status(clinvar_submission_id, headers): # SUB11770209
-    #"https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions/%s/actions/"
-    base_url = (current_app.config['CLINVAR_API_ENDPOINT'] + "/%s/actions/") % (clinvar_submission_id, )
-    print(base_url)
-    resp = requests.get(base_url, headers = headers)
-    #print(resp)
-    print(resp.json())
-    return resp
 
 
 #def get_role_for_current_user():

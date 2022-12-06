@@ -60,6 +60,8 @@ GRANT INSERT ON HerediVar_ahdoebm1.import_queue TO 'HerediVar_superuser';
 GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.user_classification_selected_literature TO 'HerediVar_superuser'
 GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.consensus_classification_selected_literature TO 'HerediVar_superuser'
 
+GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.heredivar_clinvar_submissions TO 'HerediVar_superuser'
+
 
 /* grant priviliges to read only user */
 GRANT SELECT, SHOW VIEW ON HerediVar_ahdoebm1.* TO 'HerediVar_read_only'@'%';

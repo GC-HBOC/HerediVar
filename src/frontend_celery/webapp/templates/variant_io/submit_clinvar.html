@@ -7,7 +7,7 @@
     <div class="bst">This classification will be submitted to ClinVar:</div>
 
     <div>{{ macros.add_variant_banner(variant) }}</div>    
-    <div>{{ macros.draw_most_recent_consensus_classification(consensus_classification) }}</div>
+    <div>{{ macros.draw_most_recent_consensus_classification(variant.get_recent_consensus_classification()) }}</div>
 
     <form action="" autocomplete="off" method="post" class="needs-validation bst" novalidate>
         <div class="form-group sst">
@@ -24,8 +24,8 @@
         <div class="form-group sst">
             <label for="gene" class="form-label">Select a gene</label>
             <select class="form-select" name="gene" id="gene" {% if genes | length == 0 %}disabled{% endif %}>
-                {% for gene in genes %}
-                   <option value="{{ gene }}" {% if (gene == request.form['gene']) %} selected="selected" {% endif %}> {{ gene }} </option>
+                {% for gene in variant.get_genes() %}
+                   <option value="{{ gene.id }}" {% if (gene.id == request.form['gene']) %} selected="selected" {% endif %}> {{ gene.symbol }} </option>
                 {% endfor %}
                 {% if genes | length == 0 %}
                     <option value="None"> There is no gene associated to the variant consequences. Submission will be without gene. </option>
@@ -40,9 +40,7 @@
 
 <!-- this extracts the orphanet codes and makes them available to the scripts -->
 <script>
-    const flaskData = JSON.parse('{{data | tojson | safe}}');
-    const orphanet_codes = flaskData.orphanet_codes;
-    
+    const orphanet_codes = JSON.parse('{{ orphanet_codes | tojson }}'.slice(1, -1));
 </script>
 
 {% endblock %}

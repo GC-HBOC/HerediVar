@@ -7,18 +7,19 @@
     <h1 class="sst ssb">{% block title %} Classification history {% endblock %}</h1>
 
 
-    {{ macros.add_variant_banner(variant_oi) }}
+    {{ macros.add_variant_banner(variant) }}
 
 
     <div class="d-flex align-items-center">
+        {% set most_recent_consensus_classification = variant.get_recent_consensus_classification() %}
         <div class="flex-grow-1">
-            <div class="card-subcaption ssb">Current consensus classification</div>
+            <!--<div class="card-subcaption ssb">Current consensus classification</div>-->
             {{ macros.draw_most_recent_consensus_classification(most_recent_consensus_classification) }}
         </div>
 
         <div class="ms-auto" style="margin-right:1em;">
             {% if most_recent_consensus_classification is not none %}
-                {% set consensus_class = most_recent_consensus_classification[3] %}
+                {% set consensus_class = most_recent_consensus_classification.selected_class %}
             {% else %}
                 {% set consensus_class = '-' %}
             {% endif %}
@@ -26,7 +27,6 @@
             {{ macros.render_consensus_classification_label(consensus_class) }}
         </div>
     </div>
-    
 
 </div>
 
@@ -58,23 +58,25 @@
                 </tr>
             </thead>
             <tbody>
-                {% for classification in recorded_classifications %}
+                {% for classification in variant.consensus_classifications + variant.user_classifications %}
+                {% if 'consensus' in classification.type %}
+                    {% set rowcolor = 'rgb(255, 236, 242)' %}
+                {% else %}
+                    {% set rowcolor = 'rgb(245, 242, 219)' %}
+                {% endif %}
                 
-                <tr>
-                    <td class="{{classification['type'] | replace(' ', '_')}}_style">{{classification['type']}}</td>
-                    <td>{{classification['submitter']}}</td>
-                    <td>{{classification['affiliation']}}</td>
-                    <td>{{classification['class']}}</td>
-                    <td style="white-space:nowrap;">{{classification['date']}}</td>
-                    <td>{{classification['comment']}}</td>
-                    <td>{{classification['scheme']}}</td>
-                    <td>{{ macros.draw_criteria_display(classification['selected_criteria'], '4em', '2em') }}</td>
-                    <td>{{classification['class_by_scheme']}}</td>
-                    <td>{{macros.selected_literature_display(classification['selected_literature'])}}</td>
-                    <td>{% if 'evidence_document_url' in classification %}<a href="{{ classification['evidence_document_url'] }}">download</a>{% endif %}</td>
-
-
-
+                <tr style="background-color:{{rowcolor}}">
+                    <td class="{{classification.type | replace(' ', '_')}}_style">{{classification.type}}</td>
+                    <td>{{classification.submitter.full_name}}</td>
+                    <td>{{classification.submitter.affiliation}}</td>
+                    <td>{{classification.selected_class}}</td>
+                    <td style="white-space:nowrap;">{{classification.date}}</td>
+                    <td>{{classification.comment}}</td>
+                    <td>{{classification.scheme.display_name}}</td>
+                    <td>{{ macros.draw_criteria_display(classification.scheme.criteria, '4em', '2em') }}</td>
+                    <td>{{classification.scheme.selected_class}}</td>
+                    <td>{{macros.selected_literature_display(classification.literature)}}</td>
+                    <td>{% if 'consensus' in classification.type %}<a href="{{ url_for('download.evidence_document', consensus_classification_id=classification.id) }}">download</a>{% endif %}</td>
                 </tr>
 
                 {% endfor %}

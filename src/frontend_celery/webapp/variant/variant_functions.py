@@ -85,7 +85,7 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
 
 
 
-
+# DEPRECATED
 def add_scheme_classes(classifications, index): # the index is the index where the classification criteria are located
     annotated_classifications = []
     for classification in classifications:
@@ -95,7 +95,7 @@ def add_scheme_classes(classifications, index): # the index is the index where t
     return annotated_classifications
 
 
-
+# DEPRECATED!
 # sort & append strength to text
 def prepare_scheme_criteria(classifications, index):
     new_classifications = []
@@ -233,16 +233,18 @@ def handle_scheme_classification(classification_id, criteria, conn, where = "use
 def handle_user_classification(variant_id, user_id, previous_classifications, new_classification, new_comment, scheme_id, conn):
     current_datetime = functions.get_now()
     received_update = False
+    is_new_classification = False
     if scheme_id in previous_classifications: # user already has a classification -> he requests an update
         previous_classification = previous_classifications[scheme_id]
         if previous_classification['comment'] != new_comment or previous_classification['class'] != new_classification:
             conn.update_user_classification(previous_classification['id'], new_classification, new_comment, date = current_datetime)
             received_update = True
-        return None, received_update
+        return None, received_update, is_new_classification
     else: # user does not yet have a classification for this variant -> he wants to create a new one
+        is_new_classification = True
         conn.insert_user_classification(variant_id, new_classification, user_id, new_comment, current_datetime, scheme_id)
         flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
-        return conn.get_last_insert_id(), received_update
+        return conn.get_last_insert_id(), received_update, is_new_classification
     
 
 
@@ -305,19 +307,8 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
         generator.add_relevant_literature([str(x[2]) for x in literature])
     if any(x is not None for x in [user_classifications, clinvar_submissions, heredicare_center_classifications]):
         generator.add_subtitle("Classifications:")
-    #if consensus_scheme_classifications is not None:
-    #    generator.add_text("HerediVar consensus scheme classifications:")
-    #    consensus_scheme_classifications = add_scheme_classes(consensus_scheme_classifications, 10)
-    #    table_data = []
-    #    for classification in consensus_scheme_classifications:
-    #        scheme = classification[3]
-    #        criteria_string = ' ## '.join([criterium[2] + ' Strength: ' + strength_to_text(criterium[3], scheme) + ' Evidence: ' + criterium[4] for criterium in classification[10]])
-    #        new_dat = [classification[11], classification[7] + ' ' + classification[8], classification[9], classification[4], scheme, criteria_string]
-    #        table_data.append(new_dat)
-    #    generator.add_relevant_classifications(table_data, ('Class', 'Submitter', 'Affiliation', 'Date', 'Scheme', 'Selected criteria'), [1.2, 2, 2, 2, 2.2, 9.3])
     if user_classifications is not None:
         generator.add_text("HerediVar user classifications:")
-
         for user_classification in user_classifications:
             generator.add_text("Basic information")
             generator.add_relevant_information("Class", user_classification[1])
@@ -341,19 +332,6 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
                 generator.add_table([[x[2], x[3]] for x in selected_literature_passages], ["PMID", "Text passage"], [2, 17]) # pmid, text_passage
             else:
                 generator.add_text("No further literature evidence selected.")
-
-
-        #generator.add_relevant_classifications([[x[1], x[8] + ' ' + x[9], x[10], x[5], x[4]] for x in user_classifications], ('Class', 'Submitter', 'Affiliation', 'Date', 'Comment'), [1.2, 2, 2, 2, 11.5])
-    #if user_scheme_classifications is not None:
-    #    generator.add_text("HerediVar user scheme classifications:")
-    #    user_scheme_classifications = add_scheme_classes(user_scheme_classifications, 9)
-    #    table_data = []
-    #    for classification in user_scheme_classifications:
-    #        scheme = classification[3]
-    #        criteria_string = ' ## '.join([criterium[2] + ' Strength: ' + strength_to_text(criterium[3], scheme) + ' Evidence: ' + criterium[4] for criterium in classification[9]])
-    #        new_dat = [classification[10], classification[6] + ' ' + classification[7], classification[8], classification[4], scheme, criteria_string]
-    #        table_data.append(new_dat)
-    #    generator.add_relevant_classifications(table_data, ('Class', 'Submitter', 'Affiliation', 'Date', 'Scheme', 'Selected criteria'), [1.2, 2, 2, 2, 2.2, 9.3])
     if heredicare_center_classifications is not None:
         generator.add_text("HerediCare center classifications:")
         generator.add_table([[x[1], x[3], x[5], x[4]] for x in heredicare_center_classifications], ('Class', 'Center', 'Date', 'Comment'),  [2, 2, 2, 12])
@@ -387,7 +365,7 @@ def extract_criteria_from_request(request_obj, scheme_id, conn):
     return criteria
 
 
-
+# DEPRECATED!
 def get_scheme_classification(criteria, scheme_type):
     all_strengths = []
     for entry in criteria:
@@ -498,41 +476,6 @@ def handle_selected_literature(previous_selected_literature, classification_id, 
     return received_update
 
 
-def get_clinvar_submission(variant_id, conn):
-    clinvar_submission_id = conn.get_external_ids_from_variant_id(variant_id, id_source="clinvar_submission")
-    print(clinvar_submission_id)
-    clinvar_submission = {'status': None, 'date': None, 'message': None}
-    if len(clinvar_submission_id) > 1: # this should not happen!
-        clinvar_submission_id = clinvar_submission_id[len(clinvar_submission_id) - 1]
-        flash("WARNING: There are multiple clinvar submission ids for this variant. There is probably an old clinvar submission somewhere in the system which should be deleted. Using " + str(clinvar_submission_id) + " now.", "alert-warning")
-    if len(clinvar_submission_id) == 1: # variant was already submitted to clinvar
-        clinvar_submission_id = clinvar_submission_id[0]
-    if len(clinvar_submission_id) > 0:
-        api_key = current_app.config['CLINVAR_API_KEY']
-        headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
-        resp = get_clinvar_submission_status(clinvar_submission_id, headers = headers)
-        if resp.status_code not in [200]:
-            raise RuntimeError("Status check failed:\n" + resp.content.decode("UTF-8"))
-        response_content = resp.json()['actions'][0]
-        clinvar_submission_status = response_content['status']
-        clinvar_submission['status'] = clinvar_submission_status
-        if clinvar_submission_status in ['submitted', 'processing']:
-            clinvar_submission_date = response_content['updated']
-            clinvar_submission['date'] = clinvar_submission_date.replace('T', '\n').replace('Z', '')
-        else:
-            clinvar_submission_file_url = response_content['responses'][0]['files'][0]['url']
-            submission_file_response = requests.get(clinvar_submission_file_url, headers = headers)
-            if submission_file_response.status_code != 200:
-                raise RuntimeError("Status check failed:" + "\n" + clinvar_submission_file_url + "\n" + submission_file_response.content.decode("UTF-8"))
-            submission_file_response = submission_file_response.json()
-            clinvar_submission_date = submission_file_response['submissionDate']
-            clinvar_submission['date'] = clinvar_submission_date
-            if clinvar_submission_status == 'error':
-                clinvar_submission_messages = submission_file_response['submissions'][0]['errors'][0]['output']['errors']
-                clinvar_submission_messages = [x['userMessage'] for x in clinvar_submission_messages]
-                clinvar_submission_message = ';'.join(clinvar_submission_messages)
-                clinvar_submission['message'] = clinvar_submission_message
-    
-    return clinvar_submission
+
 
 

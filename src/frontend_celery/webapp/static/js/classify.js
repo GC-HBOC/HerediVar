@@ -163,7 +163,7 @@ function preselect_final_classification() {
 
 function preselect_scheme() {
     var scheme_select = document.getElementById('scheme')
-    const lower_case_variant_genes = variant_genes.join('|').toLowerCase().split('|') // convert all genes to lower case
+    const lower_case_variant_genes = variant_genes.toLowerCase().split(';') // convert all genes to lower case
     if (lower_case_variant_genes.includes('tp53')) {
         scheme_select.value = 3 //'acmg_TP53'
     } else if (lower_case_variant_genes.includes('cdh1')) {
@@ -258,7 +258,7 @@ function scheme_select_action(do_revert=true) {
         colors = load_colors()
         set_default_strengths()
         set_activatable_property()
-    
+        
         if (classification_type === 'user' && do_revert) {
             preselect_criteria_from_database(scheme)
         }
@@ -314,6 +314,7 @@ function preselect_criteria_from_database(scheme) {
     const current_scheme_with_info = schemes_with_info[user_id][scheme]
     if (typeof current_scheme_with_info !== "undefined") { // only preselect if there is data for it
         selected_criteria = current_scheme_with_info['selected_criteria']
+        console.log(selected_criteria)
         for(var i = 0; i < selected_criteria.length; i++) {
             var current_data = selected_criteria[i];
             var current_criterium = current_data[5].toLowerCase();

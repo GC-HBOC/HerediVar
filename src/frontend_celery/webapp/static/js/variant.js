@@ -200,7 +200,8 @@ function setup_igv(chrom, start, end, variant_id) {
                     "name": "Refseq genes",
                     "url": "https://s3.amazonaws.com/igv.org.genomes/hg38/refGene.txt.gz",
                     "order": 1000000,
-                    "indexed": false
+                    "indexed": false,
+                    "autoHeight": true
                 },
                 {
                     "name": "Variant",
@@ -208,7 +209,9 @@ function setup_igv(chrom, start, end, variant_id) {
                     "format": "vcf",
                     "url": "../download/vcf/one_variant?variant_id=" + variant_id.toString(),
                     "indexed": false,
-                    "color": "red"
+                    "color": "red",
+                    "autoHeight": true,
+                    "infoURL": "https://www.ncbi.nlm.nih.gov/gene/?term=$$"
                 },
                 {
                     "name": "Classified variants",
@@ -216,11 +219,11 @@ function setup_igv(chrom, start, end, variant_id) {
                     "format": "vcf",
                     "url": "../download/vcf/classified",
                     "indexed": false,
+                    "autoHeight": true,
                     "color": function(variant) {
-                        if ('consensus_classification' in variant.info) {
-                            const consensus_classification = variant.info['consensus_classification']
-                            const consensus_class = consensus_classification.split('|')[0] // extract the actual class
-                            return get_consensus_classification_color(consensus_class)
+                        if ('classification' in variant.info) {
+                            const classification = variant.info['classification']
+                            return get_consensus_classification_color(classification)
                         } else {
                             return get_consensus_classification_color('-')
                         }
@@ -230,7 +233,54 @@ function setup_igv(chrom, start, end, variant_id) {
         }
     };
 
-    igv.createBrowser(igvDiv, options)
+
+    igv.createBrowser(igvDiv, options).then(function (browser) {
+        browser.on('trackclick', function(track, popoverData) { // override the default popovers
+            var markup = '<div style="overflow-x:auto">'
+            markup += '<table class="styled-table" >';
+
+            // Don't show a pop-over when there's no data.
+            if (!popoverData || !popoverData.length) {
+                return false;
+            }
+
+            vid = -1
+
+            popoverData.forEach(function (nameValue) {
+
+                if (nameValue.name == 'ID') {
+                    vid = nameValue.value
+                }
+
+                if (nameValue.name) {
+                    markup +=get_row_markup(["<strong>" + nameValue.name + "</strong>", nameValue.value])
+                }
+                else if (nameValue.toString() == "<hr/>") { // not a name/value pair
+                    markup += "<tr><td colspan='2'><hr/></td></tr>" 
+                    if (vid != -1) {
+                        variant_url = variant_page_url.replace('-1', vid)
+                        markup += get_row_markup(['<a href="' + variant_url + '">HerediVar</a>', ''])
+                        markup += "<tr><td colspan='2'><hr/></td></tr>" 
+                    }
+                    
+                }
+            });
+
+            markup += "</table>";
+            markup += "</div>"
+
+            // By returning a string from the trackclick handler we're asking IGV to use our custom HTML in its pop-over.
+            return markup;
+        });
+    });
+
+    function get_row_markup(values) {
+        markup = '<tr>';
+        for (var i = 0; i < values.length; i++) {
+            markup += "<td>" + values[i] + "</td>";
+        }
+        return markup;
+    }
 }
 
 

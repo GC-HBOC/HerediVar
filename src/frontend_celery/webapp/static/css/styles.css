@@ -279,14 +279,8 @@ table.scroll th {
 
 
 
-.user_scheme_classification_style {
-    background-color: palegreen !important;
-}
 .user_classification_style {
-    background-color: palegoldenrod !important;
-}
-.consensus_scheme_classification_style {
-    background-color: paleturquoise !important;
+    background-color: rgb(235, 229, 172) !important;
 }
 .consensus_classification_style {
     background-color:  rgb(238, 156, 183) !important;
