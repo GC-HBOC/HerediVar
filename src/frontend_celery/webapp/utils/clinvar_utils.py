@@ -61,7 +61,6 @@ def check_update_clinvar_status(variant_id, conn: Connection, force_update = Fal
     if previous_clinvar_submission is None:
         return None
     
-    variant_id = previous_clinvar_submission[1]
     submission_id = previous_clinvar_submission[2]
     previous_clinvar_submission_status = previous_clinvar_submission[4]
 

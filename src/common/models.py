@@ -250,10 +250,13 @@ class Criterium:
 
 @dataclass
 class Scheme:
+    id: int
     display_name: str
     type: str
     criteria: Any # list of criterium
+    reference: str
     selected_class: int = 'missing'
+    
 
     def get_criteria_sorted(self):
         sorted_criteria = sorted(self.criteria, key=cmp_to_key(self.compare))
@@ -307,6 +310,11 @@ class Classification:
     scheme: Scheme
     literature: Any = None # list of selected literature
 
+    def to_json(self):
+        return json.dumps(asdict(self))
+    def to_dict(self):
+        return asdict(self)
+
     def to_vcf(self, prefix = True, simple = False):
         if not simple:
             key = functions.encode_vcf(self.type)
@@ -328,6 +336,21 @@ class Classification:
                                  'date~1Y' + self.date, 
                                  'scheme~1Y' + self.scheme.display_name]) # sep: ;
         return cl_vcf
+    
+    def class_to_text(self, classification = None):
+        if classification is None:
+            classification = self.selected_class
+        classification = str(classification)
+        if classification == '1':
+            return 'Benign'
+        if classification == '2':
+            return 'Likely benign'
+        if classification == '3':
+            return 'Uncertain significance'
+        if classification == '4':
+            return 'Likely pathogenic'
+        if classification == '5':
+            return 'Pathogenic'
     
     def get_header(self, simple = False):
         if not simple:
@@ -558,7 +581,13 @@ class Variant:
         return headers, variant_vcf
     
 
-
+    def get_user_classifications(self, user_id):
+        result = []
+        if self.user_classifications is not None:
+            for classification in self.user_classifications:
+                if classification.submitter.id == user_id:
+                    result.append(classification)
+        return result
 
 
     #def get_annotation_keys(self):
@@ -578,11 +607,11 @@ class Variant:
                         result = classification
         return result
 
-    def get_recent_user_classification(self, user_id):
+    def get_recent_user_classification(self, user_id = 'all', scheme_id = 'all'):
         result = None
         if self.user_classifications is not None:
             for classification in self.user_classifications:
-                if classification.submitter.id == user_id:
+                if (classification.submitter.id == user_id or user_id == 'all') and (classification.scheme.id == scheme_id or scheme_id == 'all'):
                     if result is None: # the first classification for this user seen
                         result = classification
                     else:

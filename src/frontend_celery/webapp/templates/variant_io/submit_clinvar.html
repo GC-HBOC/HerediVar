@@ -24,7 +24,7 @@
         <div class="form-group sst">
             <label for="gene" class="form-label">Select a gene</label>
             <select class="form-select" name="gene" id="gene" {% if genes | length == 0 %}disabled{% endif %}>
-                {% for gene in variant.get_genes() %}
+                {% for gene in genes %}
                    <option value="{{ gene.id }}" {% if (gene.id == request.form['gene']) %} selected="selected" {% endif %}> {{ gene.symbol }} </option>
                 {% endfor %}
                 {% if genes | length == 0 %}

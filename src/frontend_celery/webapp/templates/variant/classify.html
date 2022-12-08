@@ -214,18 +214,18 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% if literature is not none %}
-                                {% for paper in literature %}
+                                {% if variant.literature is not none %}
+                                {% for paper in variant.literature %}
                                 <tr>
                                     <td style="vertical-align: middle; text-align:center;"><input class="form-check-input selected_literature" type="checkbox"></input></td>
-                                    <td>{{paper[6]}}</td>
-                                    <td style="max-width:30rem"><abbr title="{{ paper[4] }}"><div class="Nellipsis">{{ paper[4] }}</div> </abbr></td>
-                                    <td style="min-width:30rem" data-title="{{ paper[3] }}">{{paper[3]}}</td>
-                                    <td style="min-width:10rem">{{paper[5]}}</td>
-                                    <td style="text-align:center;" data-pmid="{{ paper[2] }}">
-                                        {{ macros.external_link("PMID:" + paper[2]|string, "https://pubmed.ncbi.nlm.nih.gov/" + paper[2]|string) }}
+                                    <td>{{ paper.year }}</td>
+                                    <td style="max-width:30rem"><abbr title="{{ paper.authors }}"><div class="Nellipsis">{{ paper.authors }}</div> </abbr></td>
+                                    <td style="min-width:30rem" data-title="{{ paper.title }}">{{ paper.title }}</td>
+                                    <td style="min-width:10rem">{{ paper.journal }}</td>
+                                    <td style="text-align:center;" data-pmid="{{ paper.pmid }}">
+                                        {{ macros.external_link("PMID:" + paper.pmid|string, "https://pubmed.ncbi.nlm.nih.gov/" + paper.pmid|string) }}
                                     </td>
-                                    <td style="width:1rem">{{ paper[7] }}</td>
+                                    <td style="width:1rem">{{ paper.source }}</td>
                                 </tr>
                                 {% endfor %}
                                 {% endif %}
@@ -293,15 +293,16 @@
 
 <!-- this extracts the flask data and makes them available to the scripts -->
 <script>
+    const logged_in_user_id = '{{ logged_in_user_id }}'
 
     const classification_schemas = JSON.parse('{{ classification_schemas | tojson }}'.slice(1, -1))
     //console.log(classification_schemas)
 
-    const schemes_with_info = JSON.parse('{{ schemes_with_info | tojson }}'.slice(1, -1))
-    console.log(schemes_with_info)
+    //console.log(schemes_with_info)
     // example schemes with info: {3: {'none': {'classification_id': 4, 'date': '2022-07-15', 'selected_criteria': [(26, 4, 'pvs1', 'pvs', 'egsa'), (27, 4, 'pp1', 'pm', 'edfsg'), (28, 4, 'bs1', 'bs', 'fdsaf')]}, 'TP53': {'classification_id': 10, 'date': '2022-07-13', 'selected_criteria': [(21, 10, 'bp2', 'bp', 'erwhgerwb'), (22, 10, 'bs1', 'bs', 'ababasc')]}}, 14: {'none': {'classification_id': 23, 'date': '2022-07-18', 'selected_criteria': [(36, 23, 'pm3', 'pm', 'asfdsaf'), (37, 23, 'pp1', 'pvs', 'VERRRRYYY STRONG!')]}, 'TP53': {'classification_id': 24, 'date': '2022-07-18', 'selected_criteria': [(38, 24, 'ps1', 'ps', 'c vxc ysa'), (39, 24, 'ps2', 'ps', 'asdfafafd'), (40, 24, 'pm2', 'pm', 'afdasfasdf'), (41, 24, 'pm5', 'pm', 'daffafd')]}}}
 
-    const previous_classification = JSON.parse('{{ previous_classification | tojson }}'.slice(1, -1))
+    const previous_classifications = JSON.parse('{{ previous_classifications | tojson }}'.slice(1, -1))
+    console.log(previous_classifications)
     const variant_genes = '{{ variant.get_genes(how = "string") }}';
     const classification_type = '{{ classification_type }}';
     const request_form = JSON.parse('{{request.form.to_dict(flat=True) | tojson | tojson }}'.slice(1, -1))

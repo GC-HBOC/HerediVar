@@ -146,7 +146,7 @@ def criterium_to_num(criterium):
 
 
 
-
+# DEPRECATED!
 def get_previous_user_classification(variant_id, user_id, conn):
     user_classifications = conn.get_user_classifications_extended(variant_id = variant_id, user_id=user_id)
     if user_classifications is not None:
@@ -230,20 +230,20 @@ def handle_scheme_classification(classification_id, criteria, conn, where = "use
     return scheme_classification_got_update
 
 
-def handle_user_classification(variant_id, user_id, previous_classifications, new_classification, new_comment, scheme_id, conn):
+def handle_user_classification(variant, user_id, new_classification, new_comment, scheme_id, conn):
     current_datetime = functions.get_now()
     received_update = False
     is_new_classification = False
-    if scheme_id in previous_classifications: # user already has a classification -> he requests an update
-        previous_classification = previous_classifications[scheme_id]
-        if previous_classification['comment'] != new_comment or previous_classification['class'] != new_classification:
-            conn.update_user_classification(previous_classification['id'], new_classification, new_comment, date = current_datetime)
+    previous_classification_oi = variant.get_recent_user_classification(user_id, scheme_id)
+    if previous_classification_oi is not None: # user already has a classification -> he requests an update
+        if previous_classification_oi.comment != new_comment or previous_classification_oi.selected_class != new_classification:
+            conn.update_user_classification(previous_classification_oi.id, new_classification, new_comment, date = current_datetime)
             received_update = True
         return None, received_update, is_new_classification
     else: # user does not yet have a classification for this variant -> he wants to create a new one
         is_new_classification = True
-        conn.insert_user_classification(variant_id, new_classification, user_id, new_comment, current_datetime, scheme_id)
-        flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+        conn.insert_user_classification(variant.id, new_classification, user_id, new_comment, current_datetime, scheme_id)
+        flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant.id) + " class='alert-link'>here</a> to view it!"), "alert-success")
         return conn.get_last_insert_id(), received_update, is_new_classification
     
 
@@ -467,9 +467,9 @@ def handle_selected_literature(previous_selected_literature, classification_id, 
     
     # delete if missing in pmids
     for entry in previous_selected_literature:
-        previously_selected_pmid = str(entry[2])
+        previously_selected_pmid = str(entry['pmid'])
         if previously_selected_pmid not in pmids:
-            classification_id = entry[1]
+            #classification_id = entry[1]
             conn.delete_selected_literature(is_user = is_user, classification_id=classification_id, pmid=previously_selected_pmid)
             received_update = True
     

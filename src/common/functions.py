@@ -430,6 +430,14 @@ def process_multiple(list_of_objects, sep = '~26', do_prefix = True):
     new_info = sep.join(infos)
     return new_info
 
+def list_of_objects_to_dict(list_of_objects, key_func = lambda a : a, val_func = lambda a : a):
+    result = {}
+    for object in list_of_objects:
+        key = key_func(object)
+        value = val_func(object)
+        result[key] = value
+    return result
+
 
 # new_params should be a dict
 def add_args_to_url(url, new_params):

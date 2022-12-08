@@ -119,24 +119,24 @@ function submit_classification() {
 
 function preselect_literature() {
     
-    for (var user_id in schemes_with_info) {
-        var schemes_from_user = schemes_with_info[user_id]
-        var selected_scheme =  schemes_from_user[scheme]
-        if (typeof selected_scheme !== "undefined") { 
-            var previous_selected_literature = selected_scheme['literature']
-            var provided_by = selected_scheme['full_name']
-            var affiliation = selected_scheme['affiliation']
-            for (var i = 0; i < previous_selected_literature.length; i++) {
-                var current_literature = previous_selected_literature[i]
-                var pmid = current_literature[2]
-                var text_passage = current_literature[3]
-                if (classification_type === 'consensus') { // add to modal table for copying
-                    create_line_consensus_modal(document.getElementById('user_text_passages_for_copy'), pmid = pmid, evidence_text = text_passage, provided_by=provided_by, affiliation=affiliation)
-                } else { // add directly to the literature select
-                    create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
-                }
+    for (var user_id in previous_classifications) {
+        var all_user_classifications = previous_classifications[user_id]
+        var selected_classification = all_user_classifications[scheme] ?? {}
+        var previous_selected_literature = selected_classification['literature'] ?? []
+        var submitter = selected_classification['submitter'] ?? {}
+        var provided_by = submitter['full_name']
+        var affiliation = submitter['affiliation']
+        for (var i = 0; i < previous_selected_literature.length; i++) {
+            var current_literature = previous_selected_literature[i]
+            var pmid = current_literature['pmid']
+            var text_passage = current_literature['text_passage']
+            if (classification_type === 'consensus') { // add to modal table for copying
+                create_line_consensus_modal(document.getElementById('user_text_passages_for_copy'), pmid = pmid, evidence_text = text_passage, provided_by=provided_by, affiliation=affiliation)
+            } else { // add directly to the literature select
+                create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
             }
         }
+
     }
 
 }
@@ -147,10 +147,11 @@ function preselect_final_classification() {
     var comment_text_area = document.getElementById('comment')
     var final_class_select = document.getElementById('final_class')
     var warning_display = document.getElementById('warning_alert_previous_classification')
-    if (scheme in previous_classification){
-        final_class_select.value = previous_classification[scheme]['class']
-        comment_text_area.value = previous_classification[scheme]['comment']
-        comment_text_area.innerText = previous_classification[scheme]['comment']
+    var current_previous_classifications = previous_classifications[logged_in_user_id] ?? {}
+    if (scheme in current_previous_classifications){
+        final_class_select.value = current_previous_classifications[scheme]['selected_class']
+        comment_text_area.value = current_previous_classifications[scheme]['comment']
+        comment_text_area.innerText = current_previous_classifications[scheme]['comment']
         warning_display.hidden = false
     } else {
         final_class_select.value = request_form['final_class'] || '3'
@@ -283,13 +284,15 @@ function scheme_select_action(do_revert=true) {
 }
 
 function set_user_selection_counts(scheme) {
-    for (var user_id in schemes_with_info) {
-        var current_schemes_with_info = schemes_with_info[user_id]
-        var scheme_with_info = current_schemes_with_info[scheme] ?? {} // get an empty dict if the user does not have a user classification for this scheme
-        var selected_criteria = scheme_with_info['selected_criteria'] ?? {} // propagate the above
+    console.log(scheme)
+    for (var user_id in previous_classifications) {
+        var current_classifications = previous_classifications[user_id]
+        var scheme_with_info = current_classifications[scheme] ?? {} // get an empty dict if the user does not have a user classification for this scheme
+        var scheme_with_info = scheme_with_info['scheme'] ?? {} 
+        var selected_criteria = scheme_with_info['criteria'] ?? [] // propagate the above
         for (var i in selected_criteria) {
             var criterium = selected_criteria[i]
-            var criterium_id = criterium[5]
+            var criterium_id = criterium['name']
             var count_label = document.getElementById('users_selected_' + criterium_id)
             count_label.innerText = parseInt(count_label.innerText) + 1
             count_label.hidden = false;
@@ -310,16 +313,16 @@ function set_default_strengths() {
 }
 
 function preselect_criteria_from_database(scheme) {
-    const user_id = Object.keys(schemes_with_info)[0]
-    const current_scheme_with_info = schemes_with_info[user_id][scheme]
+    //const user_id = Object.keys(previous_classifications)[0]
+    const current_scheme_with_info = previous_classifications[logged_in_user_id][scheme]
     if (typeof current_scheme_with_info !== "undefined") { // only preselect if there is data for it
-        selected_criteria = current_scheme_with_info['selected_criteria']
-        console.log(selected_criteria)
+        selected_criteria = current_scheme_with_info['scheme']['criteria']
+        //console.log(selected_criteria)
         for(var i = 0; i < selected_criteria.length; i++) {
             var current_data = selected_criteria[i];
-            var current_criterium = current_data[5].toLowerCase();
-            var current_evidence = current_data[4];
-            var current_strength = current_data[6];
+            var current_criterium = current_data['name'].toLowerCase();
+            var current_evidence = current_data['evidence'];
+            var current_strength = current_data['type'];
 
             var selected_button = document.getElementById(current_criterium);
             selected_button.value = current_evidence;
@@ -355,15 +358,6 @@ function set_scheme_select_options() {
         create_select_option(scheme_select, key, classification_schemas[key]['description'], classification_schemas[key]['scheme_type'])
     }
 }
-
-//function update_last_submitted_date(scheme) {
-//    var date = '-'
-//    const current_scheme_with_info = schemes_with_info[scheme]
-//    if (typeof current_scheme_with_info !== "undefined") { // only preselect if there is data for it
-//        date = current_scheme_with_info['date']
-//    }
-//    //document.getElementById('submitted_at_date').textContent = date
-//}
 
 
 
@@ -944,19 +938,18 @@ function add_user_acmg_classification_details(criterium_id) {
     // add the table
     const tab = create_user_acmg_details_table()
     additional_content.appendChild(tab)
-    for (var user_id in schemes_with_info) {
-        var current_schemes_with_info = schemes_with_info[user_id]
-        var user = current_schemes_with_info['user']['2'] + ' ' + current_schemes_with_info['user'][3]
-        var affiliation = current_schemes_with_info['user'][4]
-        var scheme_with_info = current_schemes_with_info[scheme]
-        if (typeof scheme_with_info !== 'undefined') {
-            var current_date = scheme_with_info['date']
-            var selected_criteria = scheme_with_info['selected_criteria'] // (28, 4, 'bs1', 'bs', 'fdsaf')
+    for (var user_id in previous_classifications) {
+        var current_classification = previous_classifications[user_id][scheme]
+        if (typeof current_classification !== 'undefined') {
+            var user = current_classification['submitter']['full_name']
+            var affiliation = current_classification['submitter']['affiliation']
+            var current_date = current_classification['date']
+            var selected_criteria = current_classification['scheme']['criteria']
             for (var i in selected_criteria) {
                 var criterium = selected_criteria[i]
-                var current_criterium_id = criterium[5]
-                var current_strength = criterium[6]
-                var current_evidence = criterium[4]
+                var current_criterium_id = criterium['name']
+                var current_strength = criterium['type']
+                var current_evidence = criterium['evidence']
                 if (current_criterium_id === criterium_id) {
                     var new_row = create_row_user_acmg_details(user, affiliation, current_strength, current_evidence, current_date)
                     document.getElementById('user_acmg_details').appendChild(new_row)
@@ -1075,7 +1068,8 @@ function update_classification_preview() {
     }).then(function (text) {
         const final_class = text.final_class
         document.getElementById('classification_preview').textContent = final_class
-        if (!(scheme in previous_classification) && !do_request_form_preselect) {
+        pc = previous_classifications[logged_in_user_id] ?? {}
+        if (!(scheme in pc) && !do_request_form_preselect) {
             document.getElementById('final_class').value = final_class
         }
         

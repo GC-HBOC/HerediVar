@@ -89,22 +89,18 @@ def submit_clinvar(variant_id):
     conn = get_connection()
 
     # get variant information & abort if the variant does not exist
-    variant_oi = conn.get_variant_more_info(variant_id)
-    if variant_oi is None:
+    variant = conn.get_variant(variant_id, include_annotations = False, include_user_classifications=False, include_heredicare_classifications=False,include_clinvar=False, include_assays=False)
+    if variant is None:
         return abort(404)
-    genes = variant_oi[6]
+    genes = variant.get_genes()
     if genes is None:
         genes = []
-    else:
-        genes = genes.split(';')
 
     # get current consensus classification & abort if the variant does not have a consensus classification
-    consensus_classification = conn.get_consensus_classifications_extended(variant_id, most_recent=True)
+    consensus_classification = variant.get_recent_consensus_classification()
     if consensus_classification is None:
         flash("There is no consensus classification for this variant! Please create one before submitting to ClinVar!", "alert-danger")
         return redirect(url_for('variant.display', variant_id = variant_id))
-    else:
-        consensus_classification = consensus_classification[0]
 
     # get orphanet codes
     orphanet_codes = get_orphanet_codes()
@@ -142,7 +138,7 @@ def submit_clinvar(variant_id):
             # prepare json data to be submitted to ClinVar
             schema_path = path.join(path.dirname(current_app.root_path), current_app.config['RESOURCES_FOLDER'])
             schema = json.loads(open(schema_path + "clinvar_submission_schema.json").read())
-            data = get_clinvar_submission_json(variant_oi, conn.get_consensus_classification(variant_id, most_recent=True, sql_modifier = conn.add_classification_scheme_info)[0], selected_gene, selected_orpha_code, clinvar_accession)
+            data = get_clinvar_submission_json(variant, selected_gene, selected_orpha_code, clinvar_accession)
 
             # check that the generated data is valid by checking against json schema
             try:
@@ -182,7 +178,7 @@ def submit_clinvar(variant_id):
     
 
     return render_template('variant_io/submit_clinvar.html', 
-                            variant = conn.get_variant(variant_id), 
+                            variant = variant, 
                             orphanet_codes = json.dumps(orphanet_codes), 
                             genes = genes)
 
@@ -201,21 +197,10 @@ def get_orphanet_codes():
     return orphanet_codes
 
 
-def class_to_text(classification):
-    classification = str(classification)
-    if classification == '1':
-        return 'Benign'
-    if classification == '2':
-        return 'Likely benign'
-    if classification == '3':
-        return 'Uncertain significance'
-    if classification == '4':
-        return 'Likely pathogenic'
-    if classification == '5':
-        return 'Pathogenic'
 
 
-def get_clinvar_submission_json(variant_oi, consensus_classification, selected_gene, selected_condition_orphanet_id, clinvar_accession = None):
+
+def get_clinvar_submission_json(variant, selected_gene, selected_condition_orphanet_id, clinvar_accession = None):
     # required fields: 
     # clinvarSubmission > clinicalSignificance > clinicalSignificanceDescription (one of: "Pathogenic", "Likely pathogenic", "Uncertain significance", "Likely benign", "Benign", "Pathogenic, low penetrance", "Uncertain risk allele", "Likely pathogenic, low penetrance", "Established risk allele", "Likely risk allele", "affects", "association", "drug response", "confers sensitivity", "protective", "other", "not provided")
     # clinvarSubmission > clinicalSignificance > comment
@@ -237,19 +222,20 @@ def get_clinvar_submission_json(variant_oi, consensus_classification, selected_g
     # clinvarSubmission > variantSet > variant > referenceAllele (vcf ref field)
     # clinvarSubmission > variantSet > variant > start (vcf pos field: 1-based coordinates)
     # clinvarSubmission > variantSet > variant > stop (vcf pos field + length of variant)
+    mrcc = variant.get_recent_consensus_classification()
 
     data = {}
     clinvar_submission = []
     clinvar_submission_properties = {}
 
-    assertion_criteria = get_assertion_criteria(consensus_classification[11], consensus_classification[12])
+    assertion_criteria = get_assertion_criteria(mrcc.scheme.type, mrcc.scheme.reference)
     data['assertionCriteria'] = assertion_criteria
     
     clinical_significance = {}
-    clinical_significance['clinicalSignificanceDescription'] = class_to_text(consensus_classification[3])
-    clinical_significance['comment'] = consensus_classification[4]
+    clinical_significance['clinicalSignificanceDescription'] = mrcc.class_to_text()
+    clinical_significance['comment'] = mrcc.comment
     clinical_significance['customAssertionScore'] = 0
-    clinical_significance['dateLastEvaluated'] = consensus_classification[5].strftime('%Y-%m-%d')
+    clinical_significance['dateLastEvaluated'] = mrcc.date.split(' ')[0] # only grab the date and trim the time
     clinvar_submission_properties['clinicalSignificance'] =  clinical_significance
 
     if clinvar_accession is not None:
@@ -262,7 +248,7 @@ def get_clinvar_submission_json(variant_oi, consensus_classification, selected_g
     condition_set['condition'] = condition
     clinvar_submission_properties['conditionSet'] =  condition_set
 
-    clinvar_submission_properties['localID'] =  str(variant_oi[0])
+    clinvar_submission_properties['localID'] =  str(variant.id)
 
     observed_in = []
 
@@ -277,18 +263,16 @@ def get_clinvar_submission_json(variant_oi, consensus_classification, selected_g
     data['clinvarSubmissionReleaseStatus'] = 'public'
 
     variant_set = {}
-    variant = []
+    variant_json = []
     variant_properties = {}
 
-
-
     # id,chr,pos,ref,alt
-    variant_properties['chromosomeCoordinates'] = {'alternateAllele': variant_oi[4], 
+    variant_properties['chromosomeCoordinates'] = {'alternateAllele': variant.alt, 
                                                    'assembly': 'GRCh38', 
-                                                   'chromosome': variant_oi[1].strip('chr'), 
-                                                   'referenceAllele': variant_oi[3], 
-                                                   'start': variant_oi[2],
-                                                   'stop': int(variant_oi[2]) + len(variant_oi[3])-1}
+                                                   'chromosome': variant.chrom.strip('chr'), 
+                                                   'referenceAllele': variant.ref, 
+                                                   'start': variant.pos,
+                                                   'stop': int(variant.pos) + len(variant.ref)-1}
 
     if selected_gene is not None:
         gene = []
@@ -296,14 +280,14 @@ def get_clinvar_submission_json(variant_oi, consensus_classification, selected_g
         gene.append(gene_properties)
         variant_properties['gene'] = gene
     
-    variant.append(variant_properties)
-    variant_set['variant'] = variant
+    variant_json.append(variant_properties)
+    variant_set['variant'] = variant_json
     clinvar_submission_properties['variantSet'] =  variant_set
 
     clinvar_submission.append(clinvar_submission_properties)
 
     data['clinvarSubmission'] = clinvar_submission
-    print(data)
+    #print(data)
     return data
 
 

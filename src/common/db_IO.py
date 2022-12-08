@@ -1348,7 +1348,7 @@ class Connection:
 
 
 
-
+    # DEPRECATED!!!
     def get_consensus_classifications_extended(self, variant_id, most_recent = True):
         consensus_classifications = self.get_consensus_classification(variant_id, most_recent=most_recent, sql_modifier=self.add_userinfo)
         if consensus_classifications is None:
@@ -1365,7 +1365,7 @@ class Connection:
             consensus_classification.append(previous_selected_literature)
             consensus_classifications_preprocessed.append(consensus_classification)
         return consensus_classifications_preprocessed
-
+    # DEPRECATED!!!
     def get_user_classifications_extended(self, variant_id, user_id='all', scheme_id='all'):
         user_classifications = self.get_user_classifications(variant_id, user_id=user_id, scheme_id=scheme_id, sql_modifier=self.add_userinfo) # 0id,1classification,2variant_id,3user_id,4comment,5date,6classification_scheme_id,7user_id,8first_name,9last_name,10affiliation
         if user_classifications is None:
@@ -1453,8 +1453,10 @@ class Connection:
                                        affiliation = current_userinfo[4])
 
                     # scheme information
+                    scheme_id = current_scheme[0]
                     scheme_type = current_scheme[3]
                     scheme_display_name = current_scheme[2]
+                    reference = current_scheme[4]
                     criteria = []
                     for criterium_raw in current_scheme_criteria_applied:
                         criterium_id = criterium_raw[0] # criterium applied id
@@ -1464,7 +1466,7 @@ class Connection:
                         criterium_strength = criterium_raw[7]
                         criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength)
                         criteria.append(criterium)
-                    scheme = models.Scheme(display_name = scheme_display_name, type = scheme_type, criteria = criteria)
+                    scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference)
 
                     # selected literature information
                     literatures = None
@@ -1506,8 +1508,10 @@ class Connection:
                                        affiliation = current_userinfo[4])
 
                     # scheme information
+                    scheme_id = current_scheme[0]
                     scheme_type = current_scheme[3]
                     scheme_display_name = current_scheme[2]
+                    reference = current_scheme[4]
                     criteria = []
                     for criterium_raw in current_scheme_criteria_applied:
                         criterium_id = criterium_raw[0] # criterium applied id
@@ -1517,7 +1521,7 @@ class Connection:
                         criterium_strength = criterium_raw[7]
                         criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength)
                         criteria.append(criterium)
-                    scheme = models.Scheme(display_name = scheme_display_name, type = scheme_type, criteria = criteria)
+                    scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference)
 
                     # selected literature information
                     literatures = None

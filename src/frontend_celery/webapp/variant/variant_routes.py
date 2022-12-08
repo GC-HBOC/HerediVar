@@ -170,15 +170,15 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 def classify(variant_id):
     conn = get_connection()
 
-    variant = conn.get_variant(variant_id)
+    variant = conn.get_variant(variant_id, include_annotations=False, include_heredicare_classifications=False, include_clinvar=False, include_assays=False)
     if variant is None:
         return abort(404)
 
     user_id = session['user']['user_id']
-    schemes_with_info = {user_id: get_schemes_with_info(variant_id, user_id, conn)}
-    previous_classification = get_previous_user_classification(variant_id, user_id, conn)
+    #schemes_with_info = {user_id: get_schemes_with_info(variant_id, user_id, conn)}
+    #previous_classification = get_previous_user_classification(variant_id, user_id, conn)
+    previous_classifications = {user_id: functions.list_of_objects_to_dict(variant.get_user_classifications(user_id), key_func = lambda a : a.scheme.id, val_func = lambda a : a.to_dict())}
     classification_schemas = conn.get_classification_schemas()
-    literature = conn.get_variant_literature(variant_id)
 
     #print(previous_classification)
 
@@ -216,11 +216,11 @@ def classify(variant_id):
         # actually submit the data to the database
         if user_classification_is_valid and scheme_classification_is_valid and literature_is_valid:
             # always handle the user classification & literature
-            user_classification_id, classification_received_update, is_new_classification = handle_user_classification(variant_id, user_id, previous_classification, classification, comment, scheme_id, conn)
+            user_classification_id, classification_received_update, is_new_classification = handle_user_classification(variant, user_id, classification, comment, scheme_id, conn)
             previous_selected_literature = [] # a new classification -> no previous sleected literature
             if user_classification_id is None: # we are processing an update -> pull the classification id from the schemes with info
-                user_classification_id = schemes_with_info[user_id][scheme_id]['classification_id']
-                previous_selected_literature = schemes_with_info[user_id][scheme_id]['literature']
+                user_classification_id = previous_classifications[user_id][scheme_id]['id']
+                previous_selected_literature = previous_classifications[user_id][scheme_id]['literature']
             literature_received_update = handle_selected_literature(previous_selected_literature, user_classification_id, pmids, text_passages, conn)
 
             # handle scheme classification -> insert / update criteria
@@ -241,10 +241,10 @@ def classify(variant_id):
         return render_template('variant/classify.html',
                                 classification_type='user',
                                 variant=variant, 
+                                logged_in_user_id = user_id,
                                 classification_schemas=json.dumps(classification_schemas),
-                                schemes_with_info=json.dumps(schemes_with_info), 
-                                previous_classification=json.dumps(previous_classification),
-                                literature = literature
+                                #schemes_with_info=json.dumps(schemes_with_info), 
+                                previous_classifications=json.dumps(previous_classifications)
                             )
 
 
@@ -255,24 +255,24 @@ def classify(variant_id):
 def consensus_classify(variant_id):
     conn = get_connection()
 
-    literature = conn.get_variant_literature(variant_id)
+    #literature = conn.get_variant_literature(variant_id)
     classification_schemas = conn.get_classification_schemas()
     classification_schemas = {schema_id: classification_schemas[schema_id] for schema_id in classification_schemas if classification_schemas[schema_id]['scheme_type'] != "none"} # remove no-scheme classification as this can not be submitted to clinvar
-    variant = conn.get_variant(variant_id)
+    variant = conn.get_variant(variant_id, include_annotations=False, include_heredicare_classifications=False, include_clinvar=False, include_assays=False)
     if variant is None:
         return abort(404)
 
-    previous_classification = {} # keep empty because we always submit a new consensus classification 
-    schemes_with_info = {} # this is used to preselect from previous classify submissions
+    #previous_classification = {} # keep empty because we always submit a new consensus classification 
+    previous_classifications = {} # this is used to preselect from previous classify submissions
 
     # get dict of all previous user classifications
-    user_classifications = conn.get_user_classifications(variant_id = variant_id, user_id='all', scheme_id='all')
+    user_classifications = variant.user_classifications
     if user_classifications is not None:
         for classification in user_classifications:
-            current_user_id = classification[3]
-            current_schemes_with_info = get_schemes_with_info(variant_id, current_user_id, conn)
-            current_schemes_with_info['user'] = conn.get_user(current_user_id)
-            schemes_with_info[current_user_id] = current_schemes_with_info
+            current_user_id = classification.submitter.id
+            #current_schemes_with_info = get_schemes_with_info(variant_id, current_user_id, conn)
+            #current_schemes_with_info['user'] = conn.get_user(current_user_id)
+            previous_classifications[current_user_id] = functions.list_of_objects_to_dict(variant.get_user_classifications(current_user_id), key_func = lambda a : a.scheme.id, val_func = lambda a : a.to_dict())
 
     #print(schemes_with_info)
 
@@ -325,11 +325,10 @@ def consensus_classify(variant_id):
     else:
         return render_template('variant/classify.html', 
                                 classification_type='consensus',
-                                variant=variant, 
+                                variant=variant,
+                                #logged_in_user_id = session['user']['user_id'],
                                 classification_schemas=json.dumps(classification_schemas),
-                                schemes_with_info=json.dumps(schemes_with_info), 
-                                previous_classification=json.dumps(previous_classification),
-                                literature = literature
+                                previous_classifications=json.dumps(previous_classifications)
                             )
 
 
