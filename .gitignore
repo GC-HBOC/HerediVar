@@ -172,3 +172,4 @@ src/nextjs_react/heredivar/.parcel-cache/
 .env
 .env_localtest
 .env_dev
+src/frontend_celery/logs
