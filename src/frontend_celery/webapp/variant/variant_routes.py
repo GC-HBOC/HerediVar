@@ -129,12 +129,13 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
             celery_task_id = start_annotation_service(variant_id = variant_id)
             current_annotation_status = current_annotation_status[0:7] + (celery_task_id, )
 
-    if request.args.get('from_reannotate', 'False') == 'True':
-        variant_oi = conn.get_one_variant(variant_id)
-        if variant_oi is None:
+    variant = conn.get_variant(variant_id)
+    if variant is None:
+        # show another error message if the variant was deleted vs the variant does not exist anyway
+        if request.args.get('from_reannotate', 'False') == 'True': 
             return redirect(url_for('doc.deleted_variant'))
-    else:
-        variant_oi = get_variant(conn, variant_id) # this redirects to 404 page if the variant was not found  
+        else:
+            abort(404)  
     
     vids = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
     if len(vids) > 1:
@@ -142,17 +143,10 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     else:
         has_multiple_vids = False
     
-    variant = conn.get_variant(variant_id)
-
+    
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
     clinvar_submission = check_update_clinvar_status(variant_id, conn)
-
-    ######## TESTSECTION ########
-    #from .testobj import Variant
-    #anotherobj = Variant(id=1, chrom="chr1", pos=1234, ref="A")
-    #anotherobj.alt = "C"
-    
 
     return render_template('variant/variant.html',
                             current_annotation_status=current_annotation_status,
@@ -160,7 +154,6 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             has_multiple_vids=has_multiple_vids,
                             lists = lists,
                             variant = variant
-                            #testobj=anotherobj.to_json()
                         )
 
 

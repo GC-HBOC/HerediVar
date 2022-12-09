@@ -16,13 +16,13 @@ import pathlib
 #import celery_module
 
 
-def get_variant(conn, variant_id):
-    if variant_id is None:
-        abort(404)
-    variant = conn.get_one_variant(variant_id)
-    if variant is None:
-        abort(404)
-    return variant
+#def get_variant(conn, variant_id):
+#    if variant_id is None:
+#        abort(404)
+#    variant = conn.get_one_variant(variant_id)
+#    if variant is None:
+#        abort(404)
+#    return variant
 
 def get_variant_id(conn, chr, pos, ref, alt):
     if chr is None or pos is None or ref is None or alt is None:

@@ -130,33 +130,10 @@ def generate_consensus_only_vcf():
 
 
 def get_variant_vcf_line_only_consensus(variant_id, conn: Connection):
-    
-    #variant_oi = conn.get_one_variant(variant_id)
     variant = conn.get_variant(variant_id)
-
-    #consensus_classification = variant.get_recent_consensus_classification()
-    #info_headers = {}
-    #if consensus_classification is None:
-    #    info = '.'
-    #else:
-    #    info_headers = consensus_classification.get_headers()
-    #    info = consensus_classification.to_vcf()
-    #    #id,user_id,variant_id,classification,comment,date,is_recent,classification_scheme_id
-    #    #info = ""
-    #    #info = functions.collect_info(info, "class=", consensus_classification[3])
-    #    #info = functions.collect_info(info, "date=", functions.encode_vcf(consensus_classification[5].strftime('%Y-%m-%d %H:%M:%S')))
-    #    #info = functions.collect_info(info, "classification_scheme=", functions.encode_vcf(conn.get_classification_scheme(consensus_classification[7])[1]))
-
-    #variant_vcf = variant_oi_to_vcf(variant_oi, info)
-
     headers, info = variant.to_vcf(simple = True)
 
-    #print(info)
-
-
     return headers, info
-
-
 
 
 
@@ -225,22 +202,8 @@ def variant():
 
 
 
-
-
-
 def merge_info_headers(old_headers, new_headers):
     return {**old_headers, **new_headers}
-
-
-#def variant_oi_to_vcf(variant_oi, info):
-#    #"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER
-#    variant_vcf = '\t'.join((str(variant_oi[1]), str(variant_oi[2]), str(variant_oi[0]), str(variant_oi[3]), str(variant_oi[4]), '.', '.', info))
-#    return variant_vcf
-
-
-
-
-
 
 
 def get_variant_vcf_line(variant_id, conn: Connection):
@@ -248,8 +211,6 @@ def get_variant_vcf_line(variant_id, conn: Connection):
     # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
     headers, info = variant.to_vcf()
     return headers, info
-
-
 
 
 
