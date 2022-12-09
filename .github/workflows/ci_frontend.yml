@@ -54,7 +54,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'  # use 3.x to use the most up-to-date python3 version
+          python-version: '3.8.10'  # use 3.x to use the most up-to-date python3 version
           architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
       - uses: actions/cache@v3 # cache the python environment to speed up tests
         id: cache-python-modules
@@ -328,7 +328,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'  # use 3.x to use the most up-to-date python3 version
+          python-version: '3.8.10'  # use 3.x to use the most up-to-date python3 version
           architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
       - uses: actions/cache@v3 # cache the python environment to speed up tests
         id: cache-python-modules
