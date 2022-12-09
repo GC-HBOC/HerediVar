@@ -216,7 +216,7 @@
                             </td>
                         </tr>
                         {% if variant.annotations.rsid is not none %}
-                        <tr>
+                        <tr annotation_id="{{variant.annotations.rsid.id}}">
                             <td class="li-label"><abbr title="RSID from dbSNP">RSID</abbr></td>
                             <td >{{ macros.external_link("rs" + variant.annotations.rsid.value, "https://www.ncbi.nlm.nih.gov/snp/rs" + variant.annotations.rsid.value) }}</td>
                         </tr>
@@ -243,7 +243,7 @@
                                     {% endif %}
                                     {% if variant.clinvar is not none %}
                                     <li class="list-group-item noboarder-td">
-                                        {{ macros.external_link("ClinVar", "https://www.ncbi.nlm.nih.gov/clinvar/variation/" + variant.annotations.rsid.value|string) }}
+                                        {{ macros.external_link("ClinVar", "https://www.ncbi.nlm.nih.gov/clinvar/variation/" + variant.clinvar.variation_id|string) }}
                                     </li>
                                     {% endif %}
                                     {% if variant.consequences is not none %}

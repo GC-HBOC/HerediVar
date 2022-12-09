@@ -40,7 +40,7 @@
 
 <!-- this extracts the orphanet codes and makes them available to the scripts -->
 <script>
-    const orphanet_codes = JSON.parse('{{ orphanet_codes | tojson }}'.slice(1, -1));
+    var orphanet_codes = JSON.parse('{{ orphanet_codes | tojson }}'.slice(1, -1));
 </script>
 
 {% endblock %}

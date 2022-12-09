@@ -8,7 +8,6 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from common.db_IO import Connection
 import re
-from webapp.variant.variant_routes import add_scheme_classes, prepare_scheme_criteria
 from io import StringIO, BytesIO
 import common.functions as functions
 import time
@@ -34,7 +33,7 @@ def test_browse(test_client):
     #print(data)
     assert response.status_code == 200
     assert 'id="variantTable"' in data
-    assert data.count('name="variant_row"') == 12 # always +1 because there are duplicated rows which are merged with js
+    assert data.count('name="variant_row"') == 10
     assert 'data-href="' + url_for('variant.display', variant_id="15") + '"' in data # make sure link was built correctly
     assert 'c.1972C>T' in data # make sure mane select hgvs is displayed
     assert 'p.Arg658Cys' in data
@@ -144,14 +143,7 @@ def test_variant_display(test_client):
 
     ##### test that all data is there #####
     conn = Connection(["super_user"])
-    annotations = conn.get_all_variant_annotations(variant_id, group_output=True)
-    if annotations.get('consensus_classification', None) is not None:
-        annotations['consensus_classification'] = add_scheme_classes(annotations['consensus_classification'], 14)
-        annotations['consensus_classification'] = prepare_scheme_criteria(annotations['consensus_classification'], 14)[0]
-
-    if annotations.get('user_classifications', None) is not None:
-        annotations['user_classifications'] = add_scheme_classes(annotations['user_classifications'], 13)
-        annotations['user_classifications'] = prepare_scheme_criteria(annotations['user_classifications'], 13)
+    v = conn.get_variant(variant_id)
     conn.close()
     
     #print('\n'.join([line for line in data.split('\n') if line.strip() != '']))
@@ -164,46 +156,52 @@ def test_variant_display(test_client):
         all_annotation_ids.extend(ids)
     #print(all_annotation_ids)
 
-    for key in annotations:
-        if key == 'standard_annotations':
-            for group in annotations['standard_annotations']:
-                for annotation in annotations['standard_annotations'][group]:
-                    value = str(annotations['standard_annotations'][group][annotation][-1])
-                    assert value in all_annotation_ids
+    annotations = v.annotations
+    for key in annotations.get_all_annotation_names():
+        current_annotation = getattr(annotations, key)
+        if current_annotation is not None:
+            assert str(current_annotation.id) in all_annotation_ids
 
-        if key == 'clinvar_submissions':
-            for submission in annotations['clinvar_submissions']:
-                assert 'clinvar_id="' + str(submission[0]) + '"' in data
+    clinvar_submissions = v.clinvar.submissions
+    if clinvar_submissions is not None:
+        for submission in clinvar_submissions:
+            assert 'clinvar_id="' + str(submission.id) + '"' in data
+
+    consequences = v.consequences
+    if consequences is not None:
+        for consequence in consequences:
+            assert consequence.transcript in data
         
-        if key == 'variant_consequences':
-            for consequence in annotations['variant_consequences']:
-                assert consequence[0] in data
-            
-        if key == 'literature':
-            for paper in annotations['literature']:
-                assert "PMID:" + str(paper[2]) in data
+    literature = v.literature
+    if literature is not None:
+        for paper in literature:
+            assert "PMID:" + str(paper.pmid) in data
 
-        if key == 'assays':
-            for assay in annotations['assays']:
-                assert 'assay_id="' + str(assay[0]) in data
+    assays = v.assays
+    if assays is not None:
+        for assay in assays:
+            assert 'assay_id="' + str(assay.id) in data
 
-        if key == 'consensus_classification':
-            most_recent_consensus_classification = annotations['consensus_classification']
-            assert 'consensus_classification_id="' + str(most_recent_consensus_classification[0]) + '"' in data
-            current_criteria = most_recent_consensus_classification[14]
+    consensus_classification = v.get_recent_consensus_classification()
+    if consensus_classification is not None:
+        assert 'consensus_classification_id="' + str(consensus_classification.id) + '"' in data
+        current_criteria = consensus_classification.scheme.criteria
+        for criterium in current_criteria:
+            assert 'consensus_criterium_applied_id="' + str(criterium.id) + '"' in data
+
+    user_classifications = v.user_classifications
+    if user_classifications is not None:
+        for classification in user_classifications:
+            assert 'user_classification_id="' + str(classification.id) + '"' in data
+            current_criteria = classification.scheme.criteria
             for criterium in current_criteria:
-                assert 'consensus_criterium_applied_id="' + str(criterium[0]) + '"' in data
+                assert 'user_criterium_applied_id="' + str(criterium.id) + '"' in data    
         
-        if key == 'user_classifications':
-            for user_classification in annotations['user_classifications']:
-                assert 'user_classification_id="' + str(user_classification[0]) + '"' in data
-                current_criteria = user_classification[13]
-                for criterium in current_criteria:
-                    assert 'user_criterium_applied_id="' + str(criterium[0]) + '"' in data
-            
-        if key == 'heredicare_center_classifications':
-            for classification in annotations['heredicare_center_classifications']:
-                assert 'heredicare_center_classification_id="' + str(classification[0]) + '"' in data
+    heredicare_classifications = v.heredicare_classifications
+    if heredicare_classifications is not None:
+        for classification in heredicare_classifications:
+            assert 'heredicare_center_classification_id="' + str(classification.id) + '"' in data
+
 
     ##### test that links are built properly #####
     assert url_for('variant_io.submit_assay', variant_id=variant_id) in data
@@ -254,7 +252,6 @@ def test_variant_history(test_client):
     
 
 
-
 def test_classify(test_client):
     """
     This classifies a variant using different schema & checks the consensus classification evidence document
@@ -281,7 +278,7 @@ def test_classify(test_client):
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
-    print(data)
+    #print(data)
     assert response.status_code == 200
     assert "Successfully inserted new user classification" in data
 
@@ -305,15 +302,12 @@ def test_classify(test_client):
     assert response.status_code == 200
     assert "A mutually exclusive criterium to pp1 was selected." in data
 
-
     ##### test posting none as classification scheme #####
     response = test_client.post(
         url_for("variant.classify", variant_id=variant_id),
         data = {
             'final_class': "2",
             'comment': "This is a test comment update.",
-            'pp1': "Evidence for pp1 given in this field", # this should be ignored
-            'pp1_strength': "ps", # this should be ignored
             'scheme': "1"
         },
         follow_redirects=True
@@ -321,6 +315,21 @@ def test_classify(test_client):
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
     assert "Successfully inserted new user classification" in data
+
+    ##### test invalid criteria (they do not exist) #####
+    response = test_client.post(
+        url_for("variant.classify", variant_id=variant_id),
+        data = {
+            'final_class': "2",
+            'comment': "This is a test comment update.",
+            'non_exist': "Evidence", 
+            'non_exist_strength': "ba", 
+            'scheme': "2"
+        },
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 500
 
 
     ##### test posting invalid strength #####
@@ -376,15 +385,7 @@ def test_classify(test_client):
     assert "Successfully inserted new user classification" in data
 
     
-
-    # test that data was saved correctly to db
-    conn = Connection(['super_user'])
-    user_scheme_classifications = conn.get_user_classifications(variant_id, 3)
-    conn.close()
-    assert len(user_scheme_classifications) == 3
-
-
-    ##### test inserting literature passages & uddating the classification #####
+    ##### test inserting literature passages & updating the classification #####
 
     response = test_client.post(
         url_for("variant.classify", variant_id=variant_id),
@@ -407,25 +408,31 @@ def test_classify(test_client):
     assert response.status_code == 200
     assert "Successfully updated user classification" in data
 
+    # test that data was saved correctly to db
     conn = Connection(['super_user'])
-    classification = conn.get_user_classifications_extended(variant_id, user_id, scheme_id=2)[0]
-    selected_literature = conn.get_selected_literature(is_user=True, classification_id=classification[0])
+    variant = conn.get_variant(variant_id, include_annotations = False, include_heredicare_classifications=False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
+    assert len(variant.user_classifications) == 3
+
+    classification = variant.user_classifications[0]
+    selected_literature = classification.literature
     assert len(selected_literature) == 2
-    all_pmids = [str(x[2]) for x in selected_literature]
-    all_text_passages = [x[3] for x in selected_literature]
+    all_pmids = [str(x.pmid) for x in selected_literature]
+    all_text_passages = [x.text_passage for x in selected_literature]
     assert "35205822" in all_pmids
     assert "This is a text passage..." in all_text_passages
     assert "33099839" in all_pmids
     assert "This is another text passage..." in all_text_passages
 
-    assert len(classification[13]) == 3
-    all_criteria_evidence = [x[4] for x in classification[13]]
+    selected_criteria = classification.scheme.criteria
+    assert len(selected_criteria) == 3
+    all_criteria_evidence = [x.evidence for x in selected_criteria]
     assert "Evidence for ps1 given in this field update1" in all_criteria_evidence
     assert "Evidence for ps2 given in this field update2" in all_criteria_evidence
     assert "Evidence for ps3 given in this field" in all_criteria_evidence
-    assert "This is a test comment update0" == classification[4]
+    assert "This is a test comment update0" == classification.comment
 
     conn.close()
+
 
     
 

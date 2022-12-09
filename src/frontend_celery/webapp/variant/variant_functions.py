@@ -11,13 +11,12 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
     was_successful = True
     # validate request
     tmp_file_path = tempfile.gettempdir() + "/new_variant.vcf"
-    tmp_vcfcheck_out_path = tempfile.gettempdir() + "/frontend_variant_import_vcf_errors.txt"
+    #tmp_vcfcheck_out_path = tempfile.gettempdir() + "/frontend_variant_import_vcf_errors.txt"
     functions.variant_to_vcf(chr, pos, ref, alt, tmp_file_path)
 
     do_liftover = genome_build == 'GRCh37'
     returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post = functions.preprocess_variant(tmp_file_path, do_liftover = do_liftover)
     
-
     #command = ['/mnt/users/ahdoebm1/HerediVar/src/common/scripts/preprocess_variant.sh', '-i', tmp_file_path, '-o', tmp_vcfcheck_out_path]
 
     #if genome_build == 'GRCh37':
@@ -67,7 +66,6 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
             break # there is only one variant in the file
         tmp_file.close()
 
-
         conn = get_connection()
         is_duplicate = conn.check_variant_duplicate(new_chr, new_pos, new_ref, new_alt) # check if variant is already contained
         if not is_duplicate:
@@ -85,85 +83,10 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
 
 
 
-# DEPRECATED
-def add_scheme_classes(classifications, index): # the index is the index where the classification criteria are located
-    annotated_classifications = []
-    for classification in classifications:
-        current_class = get_scheme_classification(classification[index], classification[index-1])
-        classification.append(current_class)
-        annotated_classifications.append(classification)
-    return annotated_classifications
-
-
-# DEPRECATED!
-# sort & append strength to text
-def prepare_scheme_criteria(classifications, index):
-    new_classifications = []
-    for classification in classifications:
-        classification = list(classification) # needed because of append
-        current_criteria = classification[index]
-
-        current_criteria = sorted(current_criteria, key=cmp_to_key(compare))
-        #current_scheme = classification[3]
-        #for i in range(len(current_criteria)):
-            #current_criteria[i] = list(current_criteria[i])
-            #current_criteria[i].append(strength_to_text(current_criteria[i][3], current_scheme))
-        classification[index] = current_criteria
-        new_classifications.append(classification)
-    return new_classifications
-
-def compare(a, b):
-    a = criterium_to_num(a[5])
-    b = criterium_to_num(b[5])
-    return a - b
-
-def criterium_to_num(criterium):
-    if 'pvs' in criterium:
-        return 1
-    if 'ps' in criterium:
-        return 2
-    if 'pm' in criterium:
-        return 3
-    if 'pp' in criterium:
-        return 4
-    if 'bp' in criterium:
-        return 5
-    if 'bs' in criterium:
-        return 6
-    if 'ba' in criterium:
-        return 7
-    if '1.' in criterium:
-        return 5
-    if '2.' in criterium:
-        return 4
-    if '3.' in criterium:
-        return 3
-    if '4.' in criterium:
-        return 2
-    if '5.' in criterium:
-        return 1
 
 
 
 
-# DEPRECATED!
-def get_previous_user_classification(variant_id, user_id, conn):
-    user_classifications = conn.get_user_classifications_extended(variant_id = variant_id, user_id=user_id)
-    if user_classifications is not None:
-        result = {}
-        for user_classification in user_classifications:
-            previous_classification=user_classification[1]
-            previous_comment=user_classification[4]
-            previous_classification_id=user_classification[0]
-            scheme_id = user_classification[6]
-            new_entry = {'class': previous_classification, 'comment':previous_comment, 'id':previous_classification_id}
-            result[scheme_id] = new_entry
-        return result
-    else:
-        return {}
-
-def get_default_previous_classification():
-    return {'has_classification': False, 'class': 3, 'comment':'', 'id':None}
 
 def convert_scheme_criteria_to_dict(criteria):
     criteria_dict = {} # convert to dict criterium->criterium_id,strength,evidence
@@ -172,31 +95,7 @@ def convert_scheme_criteria_to_dict(criteria):
         criteria_dict[criterium_id] = {'id':entry[0], 'strength_id':entry[3], 'evidence':entry[4]}
     return criteria_dict
 
-
-
-def get_schemes_with_info(variant_id, user_id, conn):
-    # fetch previous scheme classifications (could be multiple because of different schemes)
-    # 0id, 1variant_id, 2user_id, 3scheme, 4date
-    previous_classifications = conn.get_user_classifications_extended(variant_id = variant_id, user_id = user_id)
-    # extract scheme and convert to scheme->scheme_classification_id dict
-    schemes_with_info = {}
-    if previous_classifications is not None:
-        for entry in previous_classifications:
-            scheme_id = entry[6]
-            if scheme_id in schemes_with_info:
-                raise RuntimeError("ERROR: There are multiple user scheme classifications for variant_id: " + str(variant_id) + ", scheme: " + scheme_id + ", user_id: " + str(user_id))
-            schemes_with_info[scheme_id] = {'classification_id':entry[0], 
-                                            'date':entry[5].strftime('%Y-%m-%d'), 
-                                            'selected_criteria':conn.get_scheme_criteria_applied(entry[0]), 
-                                            'literature':entry[14], 
-                                            'full_name': entry[8] + ' ' + entry[9], 
-                                            'affiliation': entry[10]
-                                        }
-    return schemes_with_info
-
-
-
-def handle_scheme_classification(classification_id, criteria, conn, where = "user"):
+def handle_scheme_classification(classification_id, criteria, conn: Connection, where = "user"):
     previous_criteria = conn.get_scheme_criteria_applied(classification_id, where = where)
     previous_criteria_dict = convert_scheme_criteria_to_dict(previous_criteria)
     
@@ -212,7 +111,6 @@ def handle_scheme_classification(classification_id, criteria, conn, where = "use
         elif evidence != previous_criteria_dict[criterium_id]['evidence'] or strength_id != previous_criteria_dict[criterium_id]['strength_id']:
             conn.update_scheme_criterium_applied(previous_criteria_dict[criterium_id]['id'], strength_id, evidence, where="user")
             scheme_classification_got_update = True
-    
     
     # delete unselected criterium tags
     criteria_to_delete = [x for x in previous_criteria_dict if x not in criteria]
@@ -230,50 +128,48 @@ def handle_scheme_classification(classification_id, criteria, conn, where = "use
     return scheme_classification_got_update
 
 
-def handle_user_classification(variant, user_id, new_classification, new_comment, scheme_id, conn):
+def handle_user_classification(variant, user_id, new_classification, new_comment, scheme_id, scheme_class, conn: Connection):
     current_datetime = functions.get_now()
     received_update = False
     is_new_classification = False
     previous_classification_oi = variant.get_recent_user_classification(user_id, scheme_id)
     if previous_classification_oi is not None: # user already has a classification -> he requests an update
         if previous_classification_oi.comment != new_comment or previous_classification_oi.selected_class != new_classification:
-            conn.update_user_classification(previous_classification_oi.id, new_classification, new_comment, date = current_datetime)
+            conn.update_user_classification(previous_classification_oi.id, new_classification, new_comment, date = current_datetime, scheme_class = scheme_class)
             received_update = True
         return None, received_update, is_new_classification
     else: # user does not yet have a classification for this variant -> he wants to create a new one
         is_new_classification = True
-        conn.insert_user_classification(variant.id, new_classification, user_id, new_comment, current_datetime, scheme_id)
+
+        conn.insert_user_classification(variant.id, new_classification, user_id, new_comment, current_datetime, scheme_id, scheme_class)
         flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant.id) + " class='alert-link'>here</a> to view it!"), "alert-success")
         return conn.get_last_insert_id(), received_update, is_new_classification
     
 
 
-def handle_consensus_classification(variant_id, classification, comment, scheme_id, pmids, text_passages, criteria, scheme_description, conn):
-    ## get relevant information
-    annotations = conn.get_all_variant_annotations(variant_id)
-    annotations.pop('consensus_classification', None)
-    variant_oi = get_variant(conn, variant_id)
+def handle_consensus_classification(variant, classification, comment, scheme_id, pmids, text_passages, criteria, scheme_description, scheme_class, conn: Connection):
     current_datetime = functions.get_now()
 
     ## compute pdf containing all annotations
     for criterium_id in criteria:
         criteria[criterium_id]['strength_description'] = conn.get_classification_criterium_strength(criteria[criterium_id]['criterium_strength_id'])[3]
-    evidence_b64 = get_evidence_pdf(variant_oi, annotations, classification, comment, current_datetime, pmids, text_passages, scheme_description, criteria)
+    evidence_b64 = get_evidence_pdf(variant, classification, comment, current_datetime, pmids, text_passages, scheme_description, criteria)
 
     #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/frontend/downloads/consensus_classification_reports/testreport.pdf')
-    conn.insert_consensus_classification_from_variant_id(session['user']['user_id'], variant_id, classification, comment, evidence_document=evidence_b64, date = current_datetime, scheme_id=scheme_id)
-    flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+    conn.insert_consensus_classification(session['user']['user_id'], variant.id, classification, comment, evidence_document=evidence_b64, date = current_datetime, scheme_id = scheme_id, scheme_class = scheme_class)
+    flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant.id) + " class='alert-link'>here</a> to view it!"), "alert-success")
     return conn.get_last_insert_id() # returns the consensus_classification_id
 
 
-def get_evidence_pdf(variant_oi, annotations, classification, comment, current_date, pmids, text_passages, scheme_description, selected_criteria):
+def get_evidence_pdf(variant, classification, comment, current_date, pmids, text_passages, scheme_description, selected_criteria):
     buffer = io.BytesIO()
     generator = pdf_gen(buffer)
     generator.add_title('Classification report')
-    v = str(variant_oi[1]) + '-' + str(variant_oi[2]) + '-' + str(variant_oi[3]) + '-' + str(variant_oi[4])
-    rsid = annotations.pop('rsid', None)
-    if rsid is not None:
-        rsid = rsid[4]
+    v = str(variant.chrom) + '-' + str(variant.pos) + '-' + str(variant.ref) + '-' + str(variant.alt)
+    if variant.annotations is not None:
+        rsid = variant.annotations.rsid
+        if rsid is not None:
+            rsid = rsid.value
     selected_literature = list(zip(pmids, text_passages))
     selected_criteria_table = []
     for criterium_id in selected_criteria:
@@ -281,67 +177,62 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
 
     generator.add_variant_info(v, classification, current_date, comment, rsid, selected_literature, scheme_description, selected_criteria_table)
 
-    # extract & remove special annotations
-    literature = annotations.pop('literature', None)
-    user_classifications = annotations.pop('user_classifications', None)
-    clinvar_submissions = annotations.pop('clinvar_submissions', None)
-    heredicare_center_classifications = annotations.pop('heredicare_center_classifications', None)
-    #consensus_scheme_classifications = annotations.pop('consensus_scheme_classifications', None)
-    #user_scheme_classifications = annotations.pop('user_scheme_classifications', None)
-    assays = annotations.pop('assays', None)
-    # consequences
-    variant_consequences = annotations.pop('variant_consequences', None)
-
     # basic information
     generator.add_subtitle("Scores & annotations:")
-    for key in annotations:
-        #print(key)
-        generator.add_relevant_information(key.replace('_', ' '), str(annotations[key][4]))
-    if variant_consequences is not None:
+    annotations = variant.annotations
+    if annotations is not None:
+        for key in annotations.get_all_annotation_names():
+            #print(key)
+            current_obj = getattr(annotations, key)
+            if current_obj is not None: 
+                generator.add_relevant_information(key.replace('_', ' '), str(current_obj.value))
+    if variant.consequences is not None:
         generator.add_subtitle("Variant consequences:")
         generator.add_text("Flags column: first number = is_gencode_basic, second number: is_mane_select, third number: is_mane_plus_clinical, fourth number: is_ensembl_canonical")
-        generator.add_table([[x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7], x[11], str(x[13]) + str(x[14]) + str(x[15]) + str(x[16])] for x in variant_consequences], 
+        generator.add_table([[x.transcript, x.hgvs_c, x.hgvs_p, x.consequence, x.impact, x.exon, x.intron, x.gene.symbol, x.protein_domain_title, str(x.is_gencode_basic) + str(x.is_mane_select) + str(x.is_mane_plus_clinical) + str(x.is_ensembl_canonical)] for x in variant.consequences], 
             ('Transcript Name', 'HGVSc', 'HGVSp', 'Consequence', 'Impact', 'Exon Nr.', 'Intron Nr.', 'Gene Symbol', 'Protein Domain', 'Flags'), [3, 2, 2, 3, 1.5, 1.2, 1.3, 1.5, 1.6, 1.5])
-    if literature is not None:
+    if variant.literature is not None:
         generator.add_subtitle("PubMed IDs:")
-        generator.add_relevant_literature([str(x[2]) for x in literature])
-    if any(x is not None for x in [user_classifications, clinvar_submissions, heredicare_center_classifications]):
+        generator.add_relevant_literature([str(x.pmid) for x in variant.literature])
+    if any(x is not None for x in [variant.user_classifications, variant.clinvar, variant.heredicare_classifications]):
         generator.add_subtitle("Classifications:")
-    if user_classifications is not None:
+    if variant.user_classifications is not None:
         generator.add_text("HerediVar user classifications:")
-        for user_classification in user_classifications:
+        for user_classification in variant.user_classifications:
             generator.add_text("Basic information")
-            generator.add_relevant_information("Class", user_classification[1])
-            generator.add_relevant_information("Full name", user_classification[8] + ' ' + user_classification[9])
-            generator.add_relevant_information("Affiliation", user_classification[10])
-            generator.add_relevant_information("Date", user_classification[5].strftime('%Y-%m-%d  %H:%M:%S'))
-            generator.add_relevant_information("Comment", user_classification[4])
+            generator.add_relevant_information("Class", user_classification.selected_class)
+            generator.add_relevant_information("Full name", user_classification.submitter.full_name)
+            generator.add_relevant_information("Affiliation", user_classification.submitter.affiliation)
+            generator.add_relevant_information("Date", user_classification.date)
+            generator.add_relevant_information("Comment", user_classification.comment)
 
             # add scheme classification
-            scheme = user_classification[11]
-            generator.add_text("Selected scheme: " + scheme)
-            selected_criteria = user_classification[13]
-            if len(selected_criteria) > 0:
+            scheme = user_classification.scheme
+            generator.add_text("Selected scheme: " + scheme.display_name)
+            selected_criteria = scheme.criteria
+            if selected_criteria is not None and len(selected_criteria) > 0:
                 generator.add_text("Selected criteria:")
-                generator.add_table([[x[5], x[7], x[4]] for x in selected_criteria], ["Criterium", "Strength", "Evidence"], [2,3.5,13.5]) # criterium, strength, evidence
+                generator.add_table([[x.name, x.strength, x.evidence] for x in selected_criteria], ["Criterium", "Strength", "Evidence"], [2,3.5,13.5]) # criterium, strength, evidence
             
             # add text passages
-            selected_literature_passages = user_classification[14]
-            if len(selected_literature_passages) > 0:
+            selected_literature = user_classification.literature
+            if selected_literature is not None:
                 generator.add_text("Selected literature:")
-                generator.add_table([[x[2], x[3]] for x in selected_literature_passages], ["PMID", "Text passage"], [2, 17]) # pmid, text_passage
+                generator.add_table([[x.pmid, x.text_passage] for x in selected_literature], ["PMID", "Text passage"], [2, 17]) # pmid, text_passage
             else:
                 generator.add_text("No further literature evidence selected.")
-    if heredicare_center_classifications is not None:
+    if variant.heredicare_classifications is not None:
         generator.add_text("HerediCare center classifications:")
-        generator.add_table([[x[1], x[3], x[5], x[4]] for x in heredicare_center_classifications], ('Class', 'Center', 'Date', 'Comment'),  [2, 2, 2, 12])
-    if clinvar_submissions is not None:
-        generator.add_text("ClinVar submissions:")
-        generator.add_table([[x[2], x[3], x[4], ';'.join([condition[0] for condition in x[5]]), x[6], x[7]] for x in clinvar_submissions], ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter', 'Comment'), [1.5, 2, 2, 2, 2, 9])
-    if assays is not None:
+        generator.add_table([[x.selected_class, x.center, x.date, x.comment] for x in variant.heredicare_classifications], ('Class', 'Center', 'Date', 'Comment'),  [2, 2, 2, 12])
+    if variant.clinvar is not None:
+        clinvar_submissions = variant.clinvar.submissions
+        if clinvar_submissions is not None:
+            generator.add_text("ClinVar submissions:")
+            generator.add_table([[x.interpretation, x.last_evaluated, x.review_status, ';'.join([condition.title for condition in x.conditions]), x.submitter, x.comment] for x in clinvar_submissions], 
+                ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter', 'Comment'), [1.5, 2, 2, 2, 2, 9])
+    if variant.assays is not None:
         generator.add_text("Assays:")
-        generator.add_table([[x[1], x[2], x[3]] for x in assays], ("Assay type", "Score", "Date"), [3,3,3])
-
+        generator.add_table([[x.type, str(x.score), x.date] for x in variant.assays], ("Assay type", "Score", "Date"), [3,3,3])
 
     generator.save_pdf()
     buffer.seek(io.SEEK_SET)
@@ -350,29 +241,32 @@ def get_evidence_pdf(variant_oi, annotations, classification, comment, current_d
 
 
 
-def extract_criteria_from_request(request_obj, scheme_id, conn):
-    # test if the scheme classification is valid
+def extract_criteria_from_request(request_obj, scheme_id, conn: Connection):
     criteria = {}
     non_criterium_form_fields = ['scheme', 'classification_type', 'final_class', 'comment', 'strength_select', 'pmid', 'text_passage']
-    if request_obj['scheme'] != '1':
-        for criterium_name in request_obj:
-            if criterium_name not in non_criterium_form_fields and '_strength' not in criterium_name:
-                evidence = request_obj[criterium_name]
-                strength = request_obj[criterium_name + '_strength']
-                criterium_id = conn.get_classification_criterium_id(scheme_id, criterium_name)
-                criterium_strength_id = conn.get_classification_criterium_strength_id(criterium_id, strength)
-                criteria[criterium_id] = {'evidence':evidence, 'strength':strength, 'criterium_name': criterium_name, 'criterium_strength_id': criterium_strength_id}
+    for criterium_name in request_obj:
+        if criterium_name not in non_criterium_form_fields and '_strength' not in criterium_name:
+            evidence = request_obj[criterium_name]
+            strength = request_obj[criterium_name + '_strength']
+            criterium_id = conn.get_classification_criterium_id(scheme_id, criterium_name)
+            if criterium_id is None:
+                abort(500, "A criterium was selected that does not exist for this scheme.")
+            criterium_strength_id = conn.get_classification_criterium_strength_id(criterium_id, strength)
+            criteria[criterium_id] = {'evidence':evidence, 'strength':strength, 'criterium_name': criterium_name, 'criterium_strength_id': criterium_strength_id}
     return criteria
 
-
-# DEPRECATED!
-def get_scheme_classification(criteria, scheme_type):
-    all_strengths = []
-    for entry in criteria:
-        all_strengths.append(entry[6])
-    response = calculate_class(str(scheme_type), '+'.join(all_strengths))
-    return response.get_json()['final_class']
-
+# criteria dict from the extract criteria request function is the input
+def get_scheme_class(criteria_dict, scheme_type):
+    all_criteria_strengths = []
+    if scheme_type == 'task-force':
+        keyval = 'criterium_name'
+    elif scheme_type == 'acmg':
+        keyval = 'strength'
+    for key in criteria_dict:
+        all_criteria_strengths.append(criteria_dict[key][keyval])
+    all_criteria_string = '+'.join(all_criteria_strengths)
+    scheme_class = calculate_class(scheme_type, all_criteria_string)
+    return scheme_class
 
 
 def is_valid_scheme(selected_criteria, scheme):
@@ -458,20 +352,21 @@ def is_valid_literature(pmids, text_passages):
     return is_valid, message
 
 
-def handle_selected_literature(previous_selected_literature, classification_id, pmids, text_passages, conn, is_user = True):
+def handle_selected_literature(previous_selected_literature, classification_id, pmids, text_passages, conn: Connection, is_user = True):
     received_update = False
     # insert and update
     for pmid, text_passage in zip(pmids, text_passages):
         conn.insert_update_selected_literature(is_user = is_user, classification_id = classification_id, pmid = pmid, text_passage = text_passage)
         received_update = True
     
-    # delete if missing in pmids
-    for entry in previous_selected_literature:
-        previously_selected_pmid = str(entry['pmid'])
-        if previously_selected_pmid not in pmids:
-            #classification_id = entry[1]
-            conn.delete_selected_literature(is_user = is_user, classification_id=classification_id, pmid=previously_selected_pmid)
-            received_update = True
+    if previous_selected_literature is not None:
+        # delete if missing in pmids
+        for entry in previous_selected_literature:
+            previously_selected_pmid = str(entry['pmid'])
+            if previously_selected_pmid not in pmids:
+                #classification_id = entry[1]
+                conn.delete_selected_literature(is_user = is_user, classification_id=classification_id, pmid=previously_selected_pmid)
+                received_update = True
     
     return received_update
 

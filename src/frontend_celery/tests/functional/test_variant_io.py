@@ -7,7 +7,6 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from common.db_IO import Connection
 import re
-from webapp.variant.variant_routes import add_scheme_classes, prepare_scheme_criteria
 from io import StringIO, BytesIO
 import common.functions as functions
 import time
@@ -48,7 +47,6 @@ def test_clinvar_submission(test_client):
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
-    print(data)
     assert response.status_code == 200
     assert "The selected orphanet id (1234567890) is not valid." in data
     
@@ -64,7 +62,6 @@ def test_clinvar_submission(test_client):
     )
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
-    assert request.endpoint == 'variant.display'
     assert "ERROR" not in data
     assert "WARNING" not in data
 
@@ -80,8 +77,7 @@ def test_clinvar_submission(test_client):
     )
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
-    assert request.endpoint == 'variant.display'
-    assert "Please wait until it is finished before making updates to the previous one." in data
+    assert "Please wait for ClinVar to finish processing it before submitting making changes to it. " in data
 
     
     ##### Variant does not have a consensus classification
@@ -89,8 +85,8 @@ def test_clinvar_submission(test_client):
     response = test_client.get(url_for("variant_io.submit_clinvar", variant_id=variant_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
-    assert request.endpoint == 'variant.display'
     assert "There is no consensus classification for this variant! Please create one before submitting to ClinVar!" in data
+
 
 
 
@@ -109,6 +105,7 @@ def test_export_variant_to_vcf(test_client):
     variant_id = 52
     response = test_client.get(url_for("download.variant", variant_id=variant_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
+    print(data)
     assert response.status_code == 200
     assert "Error during VCF Check" not in data
 
@@ -144,6 +141,7 @@ def compare_vcf(reference_file, vcf_string):
                     print(info_entry)
                     print(vcf_string)
                 assert info_entry.strip() in vcf_string # test that info is there
+
 
 def test_submit_assay(test_client):
     """

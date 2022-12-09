@@ -175,8 +175,6 @@ def classify(variant_id):
         return abort(404)
 
     user_id = session['user']['user_id']
-    #schemes_with_info = {user_id: get_schemes_with_info(variant_id, user_id, conn)}
-    #previous_classification = get_previous_user_classification(variant_id, user_id, conn)
     previous_classifications = {user_id: functions.list_of_objects_to_dict(variant.get_user_classifications(user_id), key_func = lambda a : a.scheme.id, val_func = lambda a : a.to_dict())}
     classification_schemas = conn.get_classification_schemas()
 
@@ -184,7 +182,6 @@ def classify(variant_id):
 
 
     do_redirect = False
-
     if request.method == 'POST':
         ####### classification based on classification scheme submit 
         scheme_id = int(request.form['scheme'])
@@ -200,9 +197,14 @@ def classify(variant_id):
         scheme_classification_is_valid, scheme_message = is_valid_scheme(criteria, classification_schemas[scheme_id])
         pmids, text_passages = remove_empty_literature_rows(pmids, text_passages)
         literature_is_valid, literature_message = is_valid_literature(pmids, text_passages)
+        
         without_scheme = scheme_id == 1
         user_classification_is_valid = (str(classification) in possible_classifications) and comment
 
+        scheme_class = '-'
+        if not without_scheme:
+            scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type'])
+            scheme_class = scheme_class.json['final_class']
 
         # flash error messages
         if (not scheme_classification_is_valid) and (not without_scheme): # error in scheme
@@ -212,11 +214,10 @@ def classify(variant_id):
         if not literature_is_valid:
             flash(literature_message, "alert-danger")
 
-
         # actually submit the data to the database
         if user_classification_is_valid and scheme_classification_is_valid and literature_is_valid:
             # always handle the user classification & literature
-            user_classification_id, classification_received_update, is_new_classification = handle_user_classification(variant, user_id, classification, comment, scheme_id, conn)
+            user_classification_id, classification_received_update, is_new_classification = handle_user_classification(variant, user_id, classification, comment, scheme_id, scheme_class, conn)
             previous_selected_literature = [] # a new classification -> no previous sleected literature
             if user_classification_id is None: # we are processing an update -> pull the classification id from the schemes with info
                 user_classification_id = previous_classifications[user_id][scheme_id]['id']
@@ -243,7 +244,6 @@ def classify(variant_id):
                                 variant=variant, 
                                 logged_in_user_id = user_id,
                                 classification_schemas=json.dumps(classification_schemas),
-                                #schemes_with_info=json.dumps(schemes_with_info), 
                                 previous_classifications=json.dumps(previous_classifications)
                             )
 
@@ -258,27 +258,23 @@ def consensus_classify(variant_id):
     #literature = conn.get_variant_literature(variant_id)
     classification_schemas = conn.get_classification_schemas()
     classification_schemas = {schema_id: classification_schemas[schema_id] for schema_id in classification_schemas if classification_schemas[schema_id]['scheme_type'] != "none"} # remove no-scheme classification as this can not be submitted to clinvar
-    variant = conn.get_variant(variant_id, include_annotations=False, include_heredicare_classifications=False, include_clinvar=False, include_assays=False)
+    variant = conn.get_variant(variant_id)
     if variant is None:
         return abort(404)
 
-    #previous_classification = {} # keep empty because we always submit a new consensus classification 
-    previous_classifications = {} # this is used to preselect from previous classify submissions
+    previous_classifications = {} # this is used to preselect from previous user classify submissions
 
     # get dict of all previous user classifications
     user_classifications = variant.user_classifications
     if user_classifications is not None:
         for classification in user_classifications:
             current_user_id = classification.submitter.id
-            #current_schemes_with_info = get_schemes_with_info(variant_id, current_user_id, conn)
-            #current_schemes_with_info['user'] = conn.get_user(current_user_id)
             previous_classifications[current_user_id] = functions.list_of_objects_to_dict(variant.get_user_classifications(current_user_id), key_func = lambda a : a.scheme.id, val_func = lambda a : a.to_dict())
 
     #print(schemes_with_info)
 
     do_redirect=False
     if request.method == 'POST':
-        ####### classification based on classification scheme submit 
         scheme_id = int(request.form['scheme'])
 
         if scheme_id == 1:
@@ -297,6 +293,9 @@ def consensus_classify(variant_id):
             scheme_classification_is_valid, scheme_message = is_valid_scheme(criteria, classification_schemas[scheme_id])
             user_classification_is_valid = (str(classification) in possible_classifications) and comment
 
+            scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type']) # always calculate scheme class because no scheme is not allowed here!
+            scheme_class = scheme_class.json['final_class']
+
             # actually submit the data to the database
             if not scheme_classification_is_valid: # error in scheme
                 flash(scheme_message, "alert-danger")
@@ -307,7 +306,7 @@ def consensus_classify(variant_id):
 
             if user_classification_is_valid and scheme_classification_is_valid and literature_is_valid:
                 # insert consensus classification
-                classification_id = handle_consensus_classification(variant_id, classification, comment, scheme_id, pmids, text_passages, criteria, classification_schemas[scheme_id]['description'], conn)
+                classification_id = handle_consensus_classification(variant, classification, comment, scheme_id, pmids, text_passages, criteria, classification_schemas[scheme_id]['description'], scheme_class, conn)
 
                 # insert literature passages
                 # classification id never none because we always insert a new classification
@@ -338,49 +337,9 @@ def consensus_classify(variant_id):
 def classification_history(variant_id):
     conn = get_connection()
     variant = conn.get_variant(variant_id)
-    #variant_oi = conn.get_variant_more_info(variant_id)
     if variant is None:
         return abort(404)
-    #consensus_classifications = conn.get_consensus_classifications_extended(variant_id, most_recent=False)
-    #user_classifications = conn.get_user_classifications_extended(variant_id)
-    
-    #recorded_classifications = []
-    #most_recent_consensus_classification = None
-    #if consensus_classifications is not None:
-    #    most_recent_consensus_classification = [x for x in consensus_classifications if x[6] == 1][0]
-    #    consensus_classifications = add_scheme_classes(consensus_classifications, 14)
-    #    consensus_classifications = prepare_scheme_criteria(consensus_classifications, 14)
-    #    recorded_classifications.extend([{'type':'consensus classification', 
-    #                                 'submitter': x[9] + ' ' + x[10],
-    #                                 'affiliation':x[11],
-    #                                 'class':x[3], 
-    #                                 'date':x[5], 
-    #                                 # additional information
-    #                                 'comment':x[4], 
-    #                                 'evidence_document_url':url_for('download.evidence_document', consensus_classification_id=x[0]),
-    #                                 'scheme':x[12].replace('_', ' '),
-    #                                 'selected_criteria':x[14],
-    #                                 'class_by_scheme': x[16],
-    #                                 'selected_literature': x[15]
-    #                                } for x in consensus_classifications])
-    #if user_classifications is not None:
-    #    user_classifications = add_scheme_classes(user_classifications, 13)
-    #    user_classifications = prepare_scheme_criteria(user_classifications, 13)
-    #    recorded_classifications.extend([{'type':'user classification',
-    #                                      'submitter':x[8] + ' ' + x[9],
-    #                                      'affiliation':x[10],
-    #                                      'class':x[1],
-    #                                      'date':x[5], 
-    #                                      # additional information
-    #                                      'comment':x[4],
-    #                                      'scheme':x[11].replace('_', ' '),
-    #                                      'selected_criteria':x[13],
-    #                                      'class_by_scheme': x[15],
-    #                                      'selected_literature': x[14]
-    #                                    } for x in user_classifications])
 
     return render_template('variant/classification_history.html', 
-                            variant = variant,
-                            #most_recent_consensus_classification=most_recent_consensus_classification, 
-                            #recorded_classifications=recorded_classifications
+                            variant = variant
                             )

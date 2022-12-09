@@ -87,6 +87,8 @@ pip install biopython
 
 
 pip install jsonschema
+
+pip install pytest
 '
 
 #### previous click version: 8.0.4 (before celery installation)

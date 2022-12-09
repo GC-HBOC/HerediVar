@@ -32,7 +32,7 @@ class Annotation:
         return data
     
     def get_header(self):
-        header = '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + ' (version: ' + self.version +  ', version date: ' + str(self.version_date) + ' )">\n'
+        header = '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + ' (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'
         return header
 
 
@@ -96,6 +96,9 @@ class AllAnnotations:
     max_hbond_rev_wt: Annotation = None
 
     hci_prior: Annotation = None
+
+    def get_all_annotation_names(self):
+        return self.__annotations__
 
     def to_vcf(self):
         headers = {}
@@ -255,8 +258,7 @@ class Scheme:
     type: str
     criteria: Any # list of criterium
     reference: str
-    selected_class: int = 'missing'
-    
+    selected_class: str # can be '-' if the type is 'no scheme'
 
     def get_criteria_sorted(self):
         sorted_criteria = sorted(self.criteria, key=cmp_to_key(self.compare))

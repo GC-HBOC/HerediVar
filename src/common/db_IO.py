@@ -894,10 +894,10 @@ class Connection:
         result = self.cursor.fetchall()
         return [x[0] for x in result]
 
-    def insert_consensus_classification_from_variant_id(self, user_id, variant_id, consensus_classification, comment, evidence_document, date, scheme_id):
+    def insert_consensus_classification(self, user_id, variant_id, consensus_classification, comment, evidence_document, date, scheme_id, scheme_class):
         self.invalidate_previous_consensus_classifications(variant_id)
-        command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document, classification_scheme_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (user_id, variant_id, consensus_classification, comment, date, evidence_document.decode(), scheme_id))
+        command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document, classification_scheme_id, scheme_class) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (user_id, variant_id, consensus_classification, comment, date, evidence_document.decode(), scheme_id, scheme_class))
         self.conn.commit()
     
     def invalidate_previous_consensus_classifications(self, variant_id):
@@ -937,7 +937,7 @@ class Connection:
         return result
 
     def get_consensus_classification(self, variant_id, most_recent = False, sql_modifier=None): # it is possible to have multiple consensus classifications
-        command = "SELECT id,user_id,variant_id,classification,comment,date,is_recent,classification_scheme_id FROM consensus_classification WHERE variant_id = %s"
+        command = "SELECT id,user_id,variant_id,classification,comment,date,is_recent,classification_scheme_id,scheme_class FROM consensus_classification WHERE variant_id = %s"
         if most_recent:
             command = command  + " AND is_recent = '1'"
         else:
@@ -972,8 +972,10 @@ class Connection:
         #classification_scheme_id = self.get_scheme_id_from_scheme_name(scheme)
         command = "SELECT id FROM classification_criterium WHERE name = %s and classification_scheme_id = %s"
         self.cursor.execute(command, (classification_criterium_name, scheme_id))
-        classification_criterium_id = self.cursor.fetchone()[0]
-        return classification_criterium_id
+        classification_criterium_id = self.cursor.fetchone()
+        if classification_criterium_id is not None:
+            return classification_criterium_id[0]
+        return None
 
 
     def get_classification_criterium_strength_id(self, classification_criterium_id, classification_criterium_strength_name):
@@ -1064,20 +1066,19 @@ class Connection:
         scheme_id = self.cursor.fetchone()
         return scheme_id
 
-    def insert_user_classification(self, variant_id, classification, user_id, comment, date, scheme_id):
-        command = "INSERT INTO user_classification (variant_id, classification, user_id, comment, date, classification_scheme_id) VALUES (%s, %s, %s, %s, %s, %s)"
-        
-        self.cursor.execute(command, (variant_id, classification, user_id, comment, date, scheme_id))
+    def insert_user_classification(self, variant_id, classification, user_id, comment, date, scheme_id, scheme_class):
+        command = "INSERT INTO user_classification (variant_id, classification, user_id, comment, date, classification_scheme_id, scheme_class) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, classification, user_id, comment, date, scheme_id, str(scheme_class)))
         self.conn.commit()
 
-    def update_user_classification(self, user_classification_id, classification, comment, date):
-        command = "UPDATE user_classification SET classification = %s, comment = %s, date = %s WHERE id = %s"
-        self.cursor.execute(command, (classification, comment, date, user_classification_id))
+    def update_user_classification(self, user_classification_id, classification, comment, date, scheme_class):
+        command = "UPDATE user_classification SET classification = %s, comment = %s, date = %s, scheme_class = %s WHERE id = %s"
+        self.cursor.execute(command, (classification, comment, date, str(scheme_class), user_classification_id))
         self.conn.commit()
 
 
     def get_user_classifications(self, variant_id, user_id = 'all', scheme_id = 'all', sql_modifier = None):
-        command = "SELECT id, classification, variant_id, user_id, comment, date, classification_scheme_id FROM user_classification WHERE variant_id=%s"
+        command = "SELECT id, classification, variant_id, user_id, comment, date, classification_scheme_id, scheme_class FROM user_classification WHERE variant_id=%s"
         actual_information = (variant_id, )
         if user_id != 'all':
             command = command + ' AND user_id=%s'
@@ -1414,7 +1415,7 @@ class Connection:
                 display_title = annot[9]
                 description = annot[2]
                 version = annot[3]
-                version_date = annot[4]
+                version_date = annot[4].strftime('%Y-%m-%d')
                 value = annot[6]
                 value_type = annot[10]
 
@@ -1424,7 +1425,7 @@ class Connection:
             
             annotations.flag_linked_annotations()
         
-        # add most recent consensus classification
+        # add all consensus classifications
         consensus_classifications = None
         if include_consensus:
             cls_raw = self.get_consensus_classification(variant_id) # get all consensus classifications
@@ -1439,6 +1440,7 @@ class Connection:
                     comment = cl_raw[4]
                     date = cl_raw[5].strftime('%Y-%m-%d %H:%M:%S')
                     classification_id = int(cl_raw[0])
+                    scheme_class = cl_raw[8]
 
                     # get further information from database (could use join to get them as well)
                     current_userinfo = self.get_user(user_id = cl_raw[1]) # id,username,first_name,last_name,affiliation
@@ -1466,7 +1468,7 @@ class Connection:
                         criterium_strength = criterium_raw[7]
                         criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength)
                         criteria.append(criterium)
-                    scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference)
+                    scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class)
 
                     # selected literature information
                     literatures = None
@@ -1494,7 +1496,7 @@ class Connection:
                     comment = cl_raw[4]
                     date = cl_raw[5].strftime('%Y-%m-%d %H:%M:%S')
                     classification_id = int(cl_raw[0])
-
+                    scheme_class = cl_raw[7]
 
                     # get further information
                     current_userinfo = self.get_user(user_id = cl_raw[3])
@@ -1521,7 +1523,7 @@ class Connection:
                         criterium_strength = criterium_raw[7]
                         criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength)
                         criteria.append(criterium)
-                    scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference)
+                    scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class)
 
                     # selected literature information
                     literatures = None

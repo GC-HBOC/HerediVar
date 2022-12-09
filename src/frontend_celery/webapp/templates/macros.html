@@ -70,7 +70,7 @@
 
                 {% set selected_scheme = most_recent_consensus_classification.scheme %}
                 {% set selected_criteria = selected_scheme.get_criteria_sorted() %}<!-- the consensus scheme classifications should only contain the most recent classification -->
-                {% set scheme_determined_class = most_recent_consensus_classification.selected_class %}
+                {% set scheme_determined_class = selected_scheme.selected_class %}
 
                 <tr style="margin-left:0">
                     <td class="li-label" style="width:5rem;">Scheme</td>
