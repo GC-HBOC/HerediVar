@@ -48,14 +48,6 @@ def convert_bed_line_to_heredivar_range(bed_line):
     end = int(parts[2]) - 1 # bed ranges are one based at the end position -> need to substract one because mysql has start and end zero based when using BETWEEN operator
     return chrom + ':' + str(start) + '-' + str(end)
 
-
-def extract_genes(request_obj):
-    genes = request_obj.args.get('genes', '')
-    genes = preprocess_query(genes)
-    if genes is None:
-        flash("You have an error in your genes query(s). Results are not filtered by genes.", "alert-danger")
-    return genes
-
 def extract_ranges(request_obj):
     ranges = request_obj.args.get('ranges', '')
     if '\t' in ranges:
@@ -64,6 +56,15 @@ def extract_ranges(request_obj):
     if ranges is None:
         flash("You have an error in your range query(s). Please check the syntax! Results are not filtered by ranges.", "alert-danger")
     return ranges
+
+def extract_genes(request_obj):
+    genes = request_obj.args.get('genes', '')
+    genes = preprocess_query(genes)
+    if genes is None:
+        flash("You have an error in your genes query(s). Results are not filtered by genes.", "alert-danger")
+    return genes
+
+
 
 def extract_consensus_classifications(request_obj):
     consensus_classifications = request_obj.args.getlist('consensus')

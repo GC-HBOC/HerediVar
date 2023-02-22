@@ -30,24 +30,21 @@ jobs:
 
       - name: set environment variables
         run: |
-          echo "ngs-bits-version=2022_10--py310hf1a0324_1" >> $GITHUB_ENV
+          echo "ngs-bits-version=2022_10" >> $GITHUB_ENV
           echo "samtools-version=1.11" >> $GITHUB_ENV
           echo "htslib-version=1.16" >> $GITHUB_ENV
+          echo "install_scripts_path=src/tools/script" >> $GITHUB_ENV
         # echo "job-name=test_annotation_service" >> $GITHUB_ENV
       
 
       # install os dependencies
-      - name: update OS repositories
-        run: sudo apt-get update
-
       - name: install OS dependencies
-        run: sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev libncursesw5-dev
-
-      - name: install OS dependencies 2
-        run: sudo apt-get install g++ libqt5xmlpatterns5-dev libqt5sql5-mysql libcurl4 libcurl4-openssl-dev
-      
-      - name: install OS dependencies 3
-        run: sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev libncursesw5-dev
+          sudo apt-get install g++ libqt5xmlpatterns5-dev libqt5sql5-mysql libcurl4 libcurl4-openssl-dev
+          sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
+          sudo apt-get install -y mysql-client
 
 
       # setup python
@@ -64,11 +61,9 @@ jobs:
       - if: ${{ steps.cache-python-modules.outputs.cache-hit != 'true' }}
         name: Install dependencies
         run: |
-          python3 -m pip install --upgrade pip
-          pip install wheel setuptools
-          python3 -m pip install --upgrade setuptools wheel
-          pip install pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          echo ${{ env.install_scripts_path }}/install_python.sh
+          pwd
+          ${{ env.install_scripts_path }}/install_python.sh -p ${{ env.pythonLocation }}
 
 
       # install tools dependencies
@@ -147,7 +142,6 @@ jobs:
       # init dbs
       - name: Init heredivar database
         run: |
-          sudo apt-get install -y mysql-client
           export MOST_RECENT_DUMP_DATE=$(cat src/tools/database_dumper/most_recent_dump.txt)
           gunzip src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql.gz
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
