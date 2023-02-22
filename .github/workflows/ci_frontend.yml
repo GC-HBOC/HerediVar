@@ -63,6 +63,8 @@ jobs:
         run: |
           echo ${{ env.install_scripts_path }}/install_python.sh
           pwd
+          chmod 755 ${{ env.install_scripts_path }}/install_python.sh
+          ls -l ${{ env.install_scripts_path }}
           ${{ env.install_scripts_path }}/install_python.sh -p ${{ env.pythonLocation }}
 
 
