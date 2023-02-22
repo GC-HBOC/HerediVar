@@ -33,7 +33,9 @@ jobs:
           echo "ngs-bits-version=2022_10" >> $GITHUB_ENV
           echo "samtools-version=1.11" >> $GITHUB_ENV
           echo "htslib-version=1.16" >> $GITHUB_ENV
-          echo "install_scripts_path=src/tools/script" >> $GITHUB_ENV
+          echo "toolspath=src/tools" >> $GITHUB_ENV
+          echo "install_scripts_path=${{ toolspath }}/script" >> $GITHUB_ENV
+          
         # echo "job-name=test_annotation_service" >> $GITHUB_ENV
       
 
@@ -61,10 +63,7 @@ jobs:
       - if: ${{ steps.cache-python-modules.outputs.cache-hit != 'true' }}
         name: Install dependencies
         run: |
-          echo ${{ env.install_scripts_path }}/install_python.sh
-          pwd
           chmod 755 ${{ env.install_scripts_path }}/install_python.sh
-          ls -l ${{ env.install_scripts_path }}
           ${{ env.install_scripts_path }}/install_python.sh -p ${{ env.pythonLocation }}
 
 
@@ -75,16 +74,13 @@ jobs:
         env:
           cache-name: cache-samtools
         with:
-          path: samtools-${{ env.samtools-version }}
+          path: ${{ toolspath }}/samtools-${{ env.samtools-version }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.samtools-version }}
       - if: ${{ steps.cache-samtools.outputs.cache-hit != 'true' }}
         name: install samtools
         run: |
-          sudo wget -q https://github.com/samtools/samtools/releases/download/${{ env.samtools-version }}/samtools-${{ env.samtools-version }}.tar.bz2
-          sudo tar xjf samtools-${{ env.samtools-version }}.tar.bz2
-          sudo rm samtools-${{ env.samtools-version }}.tar.bz2
-          cd samtools-${{ env.samtools-version }}
-          sudo make
+          chmod 755 ${{ env.install_scripts_path }}/install_samtools.sh
+          ${{ env.install_scripts_path }}/install_samtools.sh -p ${{ toolspath }} -v ${{ env.samtools-version }}
 
       - name: cache htslib
         id: cache-htslib
@@ -92,15 +88,13 @@ jobs:
         env:
           cache-name: cache-htslib
         with:
-          path: htslib-${{ env.htslib-version }}
+          path: ${{ toolspath }}/htslib-${{ env.htslib-version }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.htslib-version }}
       - if: ${{ steps.cache-htslib.outputs.cache-hit != 'true' }}
         name: install htslib
         run: |
-          sudo wget -q https://github.com/samtools/htslib/releases/download/${{ env.htslib-version }}/htslib-${{ env.htslib-version }}.tar.bz2
-          sudo tar -vxjf htslib-${{ env.htslib-version }}.tar.bz2
-          cd htslib-${{ env.htslib-version }}
-          sudo make
+          chmod 755 ${{ env.install_scripts_path }}/install_htslib.sh
+          ${{ env.install_scripts_path }}/install_htslib.sh -p ${{ toolspath }} -v ${{ env.htslib-version }}
 
 
 
@@ -110,22 +104,20 @@ jobs:
         env:
           cache-name: cache-ngs-bits
         with:
-          path: ngs-bits-${{ env.ngs-bits-version }}
+          path: ${{ toolspath }}/ngs-bits-${{ env.ngs-bits-version }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.ngs-bits-version }}
       - if: ${{ steps.cache-ngs-bits.outputs.cache-hit != 'true' }}
         name: install ngs-bits local
         run: |
-          git clone --recursive https://github.com/imgag/ngs-bits.git
-          mv ngs-bits ngs-bits-${{ env.ngs-bits-version }}
-          cd ngs-bits-${{ env.ngs-bits-version }}
-          make build_3rdparty build_libs_release build_tools_release
+          chmod 755 ${{ env.install_scripts_path }}/install_ngs_bits.sh
+          ${{ env.install_scripts_path }}/install_ngs_bits.sh -p ${{ toolspath }} -v ${{ env.ngs-bits-version }}
 
 
       - name: update environment variables
         run: |
-          echo "$GITHUB_WORKSPACE/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
-          echo "$GITHUB_WORKSPACE/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
-          echo "$GITHUB_WORKSPACE/ngs-bits-${{ env.ngs-bits-version }}/bin" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/${{ toolspath }}/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/${{ toolspath }}/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/${{ toolspath }}/ngs-bits-${{ env.ngs-bits-version }}/bin" >> $GITHUB_PATH
 
 
       # download genomes
