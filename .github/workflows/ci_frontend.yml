@@ -34,7 +34,7 @@ jobs:
           echo "samtools-version=1.11" >> $GITHUB_ENV
           echo "htslib-version=1.16" >> $GITHUB_ENV
           echo "toolspath=src/tools" >> $GITHUB_ENV
-          echo "install_scripts_path=${{ env.toolspath }}/script" >> $GITHUB_ENV
+          echo "install_scripts_path=src/tools/script" >> $GITHUB_ENV
           
         # echo "job-name=test_annotation_service" >> $GITHUB_ENV
       
