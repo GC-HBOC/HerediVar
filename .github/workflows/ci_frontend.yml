@@ -49,7 +49,7 @@ jobs:
           sudo apt-get install -y mysql-client
 
 
-      # setup python
+      # build python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -63,8 +63,11 @@ jobs:
       - if: ${{ steps.cache-python-modules.outputs.cache-hit != 'true' }}
         name: Install dependencies
         run: |
-          chmod 755 ${{ env.install_scripts_path }}/install_python.sh
-          ${{ env.install_scripts_path }}/install_python.sh -p ${{ env.pythonLocation }}
+          python3 -m pip install --upgrade pip
+          pip install wheel setuptools
+          python3 -m pip install --upgrade setuptools wheel
+          pip install pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
 
       # install tools dependencies
@@ -95,8 +98,6 @@ jobs:
         run: |
           chmod 755 ${{ env.install_scripts_path }}/install_htslib.sh
           ${{ env.install_scripts_path }}/install_htslib.sh -p ${{ env.toolspath }} -v ${{ env.htslib-version }}
-
-
 
       - name: cache ngs-bits
         id: cache-ngs-bits
@@ -248,15 +249,13 @@ jobs:
         env:
           cache-name: cache-ngs-bits
         with:
-          path: ngs-bits-${{ env.ngs-bits-version }}
+          path: ${{ env.toolspath }}/ngs-bits-${{ env.ngs-bits-version }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.ngs-bits-version }}
       - if: ${{ steps.cache-ngs-bits.outputs.cache-hit != 'true' }}
         name: install ngs-bits local
         run: |
-          git clone --recursive https://github.com/imgag/ngs-bits.git
-          mv ngs-bits ngs-bits-${{ env.ngs-bits-version }}
-          cd ngs-bits-${{ env.ngs-bits-version }}
-          make build_3rdparty build_libs_release build_tools_release
+          chmod 755 ${{ env.install_scripts_path }}/install_ngs_bits.sh
+          ${{ env.install_scripts_path }}/install_ngs_bits.sh -p ${{ env.toolspath }} -v ${{ env.ngs-bits-version }}
 
       - name: Connect ngs-bits with ngsd
         run: |
@@ -272,22 +271,20 @@ jobs:
 
 
       # install tools dependencies (used for crossmap)
+      # install tools dependencies
       - name: cache samtools
         id: cache-samtools
         uses: actions/cache@v3
         env:
           cache-name: cache-samtools
         with:
-          path: samtools-${{ env.samtools-version }}
+          path: ${{ env.toolspath }}/samtools-${{ env.samtools-version }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.samtools-version }}
       - if: ${{ steps.cache-samtools.outputs.cache-hit != 'true' }}
         name: install samtools
         run: |
-          sudo wget -q https://github.com/samtools/samtools/releases/download/${{ env.samtools-version }}/samtools-${{ env.samtools-version }}.tar.bz2
-          sudo tar xjf samtools-${{ env.samtools-version }}.tar.bz2
-          sudo rm samtools-${{ env.samtools-version }}.tar.bz2
-          cd samtools-${{ env.samtools-version }}
-          sudo make
+          chmod 755 ${{ env.install_scripts_path }}/install_samtools.sh
+          ${{ env.install_scripts_path }}/install_samtools.sh -p ${{ env.toolspath }} -v ${{ env.samtools-version }}
 
       - name: cache htslib
         id: cache-htslib
@@ -295,15 +292,13 @@ jobs:
         env:
           cache-name: cache-htslib
         with:
-          path: htslib-${{ env.htslib-version }}
+          path: ${{ env.toolspath }}/htslib-${{ env.htslib-version }}
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.htslib-version }}
       - if: ${{ steps.cache-htslib.outputs.cache-hit != 'true' }}
         name: install htslib
         run: |
-          sudo wget -q https://github.com/samtools/htslib/releases/download/${{ env.htslib-version }}/htslib-${{ env.htslib-version }}.tar.bz2
-          sudo tar -vxjf htslib-${{ env.htslib-version }}.tar.bz2
-          cd htslib-${{ env.htslib-version }}
-          sudo make
+          chmod 755 ${{ env.install_scripts_path }}/install_htslib.sh
+          ${{ env.install_scripts_path }}/install_htslib.sh -p ${{ env.toolspath }} -v ${{ env.htslib-version }}
 
       - name: update environment variables
         run: |
