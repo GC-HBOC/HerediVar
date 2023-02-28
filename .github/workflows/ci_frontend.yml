@@ -90,8 +90,6 @@ jobs:
           echo "ngsd_name = \"ngsd\"" >> $settingsfile
           echo "ngsd_user = \"root\"" >> $settingsfile
           echo "ngsd_pass = \"password\"" >> $settingsfile
-          cat $settingsfile
-          ls -l ngs-bits-${{ env.ngs-bits-version }}/
 
 
       # install tools dependencies (used for crossmap)
