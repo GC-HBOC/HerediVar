@@ -48,6 +48,9 @@ class vep_job(Job):
         if csq_info == '' or csq_info is None:
             return
 
+        if self.job_config['insert_consequence']:
+            conn.delete_variant_consequences(variant_id, is_refseq = self.refseq)
+
         vep_entries = csq_info.split(',')
         transcript_independent_saved = False
         pmids = ''

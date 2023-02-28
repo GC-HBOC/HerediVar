@@ -34,8 +34,8 @@ echo "Installing htslib $version to $basedir..."
 
 
 cd $basedir
-wget https://github.com/samtools/htslib/releases/download/$version/htslib-$version.tar.bz2
+wget -q https://github.com/samtools/htslib/releases/download/$version/htslib-$version.tar.bz2
 tar -vxjf htslib-$version.tar.bz2
 cd htslib-$version
 make
-rm -f htslib-$version.tar.bz2
+#rm -f htslib-$version.tar.bz2

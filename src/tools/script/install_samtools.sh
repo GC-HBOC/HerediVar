@@ -35,11 +35,11 @@ echo "Installing samtools $version to $basedir..."
 
 
 cd $basedir
-wget https://github.com/samtools/samtools/releases/download/$version/samtools-$version.tar.bz2
+wget -q https://github.com/samtools/samtools/releases/download/$version/samtools-$version.tar.bz2
 tar xjf samtools-$version.tar.bz2
 cd samtools-$version
 make
-rm samtools-$version.tar.bz2
+#rm samtools-$version.tar.bz2
 #cd ..
 #mv samtools-$version samtools
 

@@ -14,7 +14,7 @@ CREATE USER 'HerediVar_read_only'@'%' IDENTIFIED BY '20220303r' PASSWORD EXPIRE 
 /* grant priviliges to annotation user */
 GRANT SELECT, INSERT, UPDATE ON HerediVar_ahdoebm1.variant_annotation TO 'HerediVar_annotation';
 GRANT SELECT, INSERT ON HerediVar_ahdoebm1.variant_literature TO 'HerediVar_annotation';
-GRANT SELECT, INSERT ON HerediVar_ahdoebm1.variant_consequence TO 'HerediVar_annotation';
+GRANT SELECT, INSERT, DELETE ON HerediVar_ahdoebm1.variant_consequence TO 'HerediVar_annotation';
 GRANT SELECT ON HerediVar_ahdoebm1.annotation_type TO 'HerediVar_annotation';
 GRANT SELECT ON HerediVar_ahdoebm1.gene TO 'HerediVar_annotation';
 GRANT SELECT ON HerediVar_ahdoebm1.transcript TO 'HerediVar_annotation';

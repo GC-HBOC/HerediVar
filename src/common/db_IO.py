@@ -183,12 +183,20 @@ class Connection:
                 print("WARNING: there was no row in the gene table for symbol " + str(symbol) + ". geneid will be empty even though symbol was given. Error occured during insertion of variant consequence: " + str(variant_id) + ", " + str(transcript_name) + ", " + str(hgvs_c) + ", " +str(hgvs_p) + ", " +str(consequence) + ", " + str(impact) + ", " + str(exon_nr) + ", " + str(intron_nr) + ", " + str(hgnc_id) + ", " + str(symbol) + ", " + str(consequence_source))
         placeholders = "%s, "*len(actual_information)
         placeholders = placeholders[:len(placeholders)-2]
-        #command = "INSERT INTO variant_consequence (" + columns_with_info + ") VALUES (" + placeholders + ")"
-        command = "INSERT INTO variant_consequence (" + columns_with_info + ") \
-                    SELECT " + placeholders +  " WHERE NOT EXISTS (SELECT * FROM variant_consequence \
-                        WHERE " + columns_with_info.replace(', ', '=%s AND ') + '=%s ' + " LIMIT 1)"
-        #print(command)
-        self.cursor.execute(command, actual_information + actual_information)
+        command = "INSERT INTO variant_consequence (" + columns_with_info + ") VALUES (" + placeholders + ")"
+        #command = "INSERT INTO variant_consequence (" + columns_with_info + ") \
+        #            SELECT " + placeholders +  " FROM DUAL WHERE NOT EXISTS (SELECT * FROM variant_consequence \
+        #                WHERE " + columns_with_info.replace(', ', '=%s AND ') + '=%s ' + " LIMIT 1)"
+        #actual_information = actual_information * 2
+        self.cursor.execute(command, actual_information)
+        self.conn.commit()
+
+    def delete_variant_consequences(self, variant_id, is_refseq = False):
+        command = "DELETE FROM variant_consequence WHERE variant_id = %s AND source = %s"
+        source = 'ensembl'
+        if is_refseq:
+            source = 'refseq'
+        self.cursor.execute(command, (variant_id, source))
         self.conn.commit()
 
     def get_gene_id_by_symbol(self, symbol):
@@ -245,7 +253,7 @@ class Connection:
     def insert_variant_annotation(self, variant_id, annotation_type_id, value, supplementary_document = None):
         # supplementary documents are not supported yet! see: https://stackoverflow.com/questions/10729824/how-to-insert-blob-and-clob-files-in-mysql
         #command = "INSERT INTO variant_annotation (`variant_id`, `annotation_type_id`, `value`) \
-        #           SELECT %s, %s, %s WHERE NOT EXISTS (SELECT * FROM variant_annotation \
+        #           SELECT %s, %s, %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM variant_annotation \
         #                WHERE `variant_id`=%s AND `annotation_type_id`=%s AND `value`=%s LIMIT 1)"
         #self.cursor.execute(command, (variant_id, annotation_type_id, value, variant_id, annotation_type_id, value))
         command = "INSERT INTO variant_annotation (`variant_id`, `annotation_type_id`, `value`) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE `value`=%s"
@@ -264,7 +272,7 @@ class Connection:
     
     def insert_external_variant_id(self, variant_id, external_id, id_source):
         command = "INSERT INTO variant_ids (variant_id, external_id, id_source) \
-                    SELECT %s, %s, %s WHERE NOT EXISTS (SELECT * FROM variant_ids \
+                    SELECT %s, %s, %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM variant_ids \
 	                    WHERE `variant_id`=%s AND `external_id`=%s AND `id_source`=%s LIMIT 1)"
         self.cursor.execute(command, (variant_id, external_id, id_source, variant_id, external_id, id_source))
         self.conn.commit()
@@ -285,7 +293,7 @@ class Connection:
     def insert_annotation_request(self, variant_id, user_id): # this inserts only if there is not an annotation request for this variant which is still pending
         #command = "INSERT INTO annotation_queue (variant_id, status, user_id) VALUES (%s, %s, %s)"
         command = "INSERT INTO annotation_queue (`variant_id`, `user_id`) \
-                    SELECT %s, %s WHERE NOT EXISTS (SELECT * FROM annotation_queue \
+                    SELECT %s, %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM annotation_queue \
 	                    WHERE `variant_id`=%s AND `status`='pending' LIMIT 1)"
         self.cursor.execute(command, (variant_id, user_id, variant_id))
         self.conn.commit()
@@ -407,7 +415,7 @@ class Connection:
     def insert_variant_literature(self, variant_id, pmid, title, authors, journal, year, source):
         #command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher, year) VALUES (%s, %s, %s, %s, %s, %s)"
         command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher, year, source) \
-                    SELECT %s, %s, %s, %s, %s, %s, %s WHERE NOT EXISTS (SELECT * FROM variant_literature \
+                    SELECT %s, %s, %s, %s, %s, %s, %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM variant_literature \
                         WHERE `variant_id`=%s AND `pmid`=%s LIMIT 1)"
         self.cursor.execute(command, (variant_id, pmid, title, authors, journal, year, source, variant_id, pmid))
         self.conn.commit()
@@ -1180,7 +1188,7 @@ class Connection:
     
     def insert_user(self, username, first_name, last_name, affiliation):
         #command = "INSERT INTO user (username, first_name, last_name, affiliation) \
-        #            SELECT %s WHERE NOT EXISTS (SELECT * FROM user \
+        #            SELECT %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM user \
         #                WHERE `username`=%s LIMIT 1)"
         command = "INSERT INTO user (username, first_name, last_name, affiliation) VALUES (%s, %s, %s, %s) ON DUPLICATE KEY UPDATE first_name=%s, last_name=%s, affiliation=%s"
         self.cursor.execute(command, (username, first_name, last_name, affiliation, first_name, last_name, affiliation))
@@ -1235,7 +1243,7 @@ class Connection:
     
     def add_variant_to_list(self, list_id, variant_id):
         command = "INSERT INTO list_variants (list_id, variant_id) \
-                    SELECT %s, %s WHERE NOT EXISTS (SELECT * FROM list_variants \
+                    SELECT %s, %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM list_variants \
                         WHERE `list_id`=%s AND `variant_id`=%s LIMIT 1)"
         self.cursor.execute(command, (list_id, variant_id, list_id, variant_id))
         self.conn.commit()

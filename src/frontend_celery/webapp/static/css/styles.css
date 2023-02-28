@@ -91,7 +91,7 @@ table.scroll {
 }
 
 
-.tableFixHead          { overflow: auto; max-height: 15rem; }
+.tableFixHead          { overflow: auto; max-height: 30rem; }
 .tableFixHead thead th { position: sticky; top: 0; z-index: 1; }
 
 .tableFixHead table  { border-collapse: collapse; width: 100%; table-layout: auto;}

@@ -42,7 +42,7 @@ vep_data_dir=$basedir/ensembl-vep-data-$version/
 # download ensembl-vep
 mkdir -p $vep_install_dir
 cd $basedir
-wget https://github.com/Ensembl/ensembl-vep/archive/release/$version.tar.gz
+wget -q https://github.com/Ensembl/ensembl-vep/archive/release/$version.tar.gz
 tar -C $vep_install_dir --strip-components=1 -xzf $version.tar.gz
 rm $version.tar.gz
 
@@ -55,8 +55,8 @@ mkdir -p $vep_data_dir
 cd $vep_data_dir
 mkdir -p ftp
 cd ftp
-wget ftp://ftp.ensembl.org/pub/release-$dataversion/variation/indexed_vep_cache/homo_sapiens_vep_$dataversion_GRCh38.tar.gz
-wget ftp://ftp.ensembl.org/pub/release-$dataversion/variation/indexed_vep_cache/homo_sapiens_refseq_vep_$dataversion_GRCh38.tar.gz
+wget -q ftp://ftp.ensembl.org/pub/release-$dataversion/variation/indexed_vep_cache/homo_sapiens_vep_$dataversion_GRCh38.tar.gz
+wget -q ftp://ftp.ensembl.org/pub/release-$dataversion/variation/indexed_vep_cache/homo_sapiens_refseq_vep_$dataversion_GRCh38.tar.gz
 
 #install ensembl-vep
 PERL5LIB=$vep_install_dir/Bio/:$vep_cpan_dir/lib/perl5/:$PERL5LIB

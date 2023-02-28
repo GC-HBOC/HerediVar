@@ -34,6 +34,6 @@ echo "Installing keycloak $version to $basedir..."
 
 
 cd $basedir
-wget https://github.com/keycloak/keycloak/releases/download/$version/keycloak-$version.zip
+wget -q https://github.com/keycloak/keycloak/releases/download/$version/keycloak-$version.zip
 unzip keycloak-$version.zip
 rm keycloak-$version.zip

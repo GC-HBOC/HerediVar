@@ -303,20 +303,21 @@
     <div class="w-100 ssb">
         <div class="card" style="border-top:0; border-top-left-radius: 0; border-top-right-radius: 0;">
             <div class="card-body">
-
-                    <div class="d-flex align-items-center">
-                        <h4 class="card-subcaption flex-grow-1">HerediVar classifications</h4>
-                        <a class="btn btn-outline-primary" href="{{ url_for('variant.classification_history', variant_id=variant.id) }}">view history</a>
-                    </div>
-
                     <!-- HEREDIVAR -->
-                    <!-- most recent consensus classification -->
-                    <div class="ssl ssb">
-                        {{ macros.draw_most_recent_consensus_classification(variant.get_recent_consensus_classification()) }}
+                    <div>
+                        <div class="d-flex align-items-center">
+                            <h4 class="card-subcaption flex-grow-1">Consensus classification</h4>
+                            <a class="btn btn-outline-primary" href="{{ url_for('variant.classification_history', variant_id=variant.id) }}">view history</a>
+                        </div>
+                        <!-- most recent consensus classification -->
+                        <div class="ssl ssb">
+                            {{ macros.draw_most_recent_consensus_classification(variant.get_recent_consensus_classification()) }}
+                        </div>
                     </div>
+
                     <!-- user classification table -->
                     {% if variant.user_classifications is not none %}
-                    <div class="left-space-padding">
+                    <div>
                         <h4 class="card-subcaption">HerediVar user classifications</h4>
                         <div class="ssl ssb">
                             <div class="table-responsive tableFixHead">
@@ -357,7 +358,7 @@
 
                     <!-- heredicare center classifications -->
                     {% if variant.heredicare_classifications is not none %}
-                    <div class="left-space-padding">
+                    <div>
                         <h4 class="card-subcaption">HerediCare center classifications</h4>
                         <div class="ssl sst ssb">
                             <div class="table-responsive tableFixHead">
@@ -389,7 +390,7 @@
                     <!-- CLINVAR -->
                     {% if variant.clinvar is not none %}
                     {% set clinvar = variant.clinvar %}
-                    <div class="left-space-padding">
+                    <div>
                         <h4 class="card-subcaption">ClinVar classifications</h4>
 
                         <div class="ssl sst ssb">
@@ -443,7 +444,7 @@
                     
                     <!-- BRCA-EXCHANGE -->
                     {% if variant.annotations.brca_exchange_clinical_significance is not none %}
-                    <div class="left-space-padding">
+                    <div>
                         <h4 class="card-subcaption">BRCA exchange classification</h4>
                         <div class="ssl">
                             {{variant.annotations.brca_exchange_clinical_significance.value}}
@@ -453,7 +454,7 @@
 
                     <!-- ARUP -->
                     {% if variant.annotations.arup_classification is not none %}
-                    <div class="left-space-padding">
+                    <div>
                         <h4 class="card-subcaption">ARUP BRCA classification</h4>
                         <div class="ssl">
                             {{variant.annotations.arup_classification.value}}

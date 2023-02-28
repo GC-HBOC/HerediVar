@@ -642,8 +642,12 @@ class Variant:
     def get_preferred_transcripts(self):
         result = []
         consequences = self.consequences
-        if consequences is not None:
-            consequences = [c for c in consequences if c.source == 'ensembl'] # filter for ensembl transcripts
+
+        if consequences is None:
+            return None
+
+        consequences = [c for c in consequences if c.source == 'ensembl'] # filter for ensembl transcripts
+        if len(consequences) > 0:
             consequences = self.order_consequences(consequences)
             result.append(consequences.pop(0)) # always append the first one
 

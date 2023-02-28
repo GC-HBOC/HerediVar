@@ -313,6 +313,10 @@
                         <abbr title="{{ hgvs_c }}">{{ hgvs_c }}</abbr>
                     </div>
                 {% endfor %}
+            {% else %}
+                <div>
+                    <abbr title="-">-</abbr>
+                </div>
             {% endif %}
         </td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss" style="white-space: nowrap;">
@@ -323,6 +327,10 @@
                         <abbr title="{{ hgvs_p }}">{{ hgvs_p }}</abbr>
                     </div>
                 {% endfor %}
+            {% else %}
+                <div>
+                    <abbr title="-">-</abbr>
+                </div>
             {% endif %}
         </td>
         <td>
@@ -336,8 +344,11 @@
                             <div>-</div>
                         {% endif %}
                     </div>
-
                 {% endfor %}
+            {% else %}
+                <div>
+                    <abbr title="-">-</abbr>
+                </div>
             {% endif %}
         </td>
         <td style="text-align:center;">
