@@ -8,182 +8,6 @@ on:
 
 jobs:
 
-  test_annotation_service:
-    runs-on: ubuntu-20.04
-
-    services:
-      mysql:
-        image: mysql:5.7
-        env:
-            MYSQL_ALLOW_EMPTY_PASSWORD: yes
-            MYSQL_USER: test_user
-            MYSQL_PASSWORD: password
-            MYSQL_ROOT_PASSWORD: password
-            MYSQL_DATABASE: test_db
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-
-    steps:
-      - uses: actions/checkout@v3
-
-
-      - name: set environment variables
-        run: |
-          echo "ngs-bits-version=2022_10" >> $GITHUB_ENV
-          echo "samtools-version=1.11" >> $GITHUB_ENV
-          echo "htslib-version=1.16" >> $GITHUB_ENV
-          echo "toolspath=src/tools" >> $GITHUB_ENV
-          echo "install_scripts_path=src/tools/script" >> $GITHUB_ENV
-          
-        # echo "job-name=test_annotation_service" >> $GITHUB_ENV
-      
-
-      # install os dependencies
-      - name: install OS dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev libncursesw5-dev
-          sudo apt-get install g++ libqt5xmlpatterns5-dev libqt5sql5-mysql libcurl4 libcurl4-openssl-dev
-          sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
-          sudo apt-get install -y mysql-client
-
-
-      # build python
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.8.10'  # use 3.x to use the most up-to-date python3 version
-          architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
-      - uses: actions/cache@v3 # cache the python environment to speed up tests
-        id: cache-python-modules
-        with:
-          path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
-      - if: ${{ steps.cache-python-modules.outputs.cache-hit != 'true' }}
-        name: Install dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install wheel setuptools
-          python3 -m pip install --upgrade setuptools wheel
-          pip install pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
-
-      # install tools dependencies
-      - name: cache samtools
-        id: cache-samtools
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-samtools
-        with:
-          path: ${{ env.toolspath }}/samtools-${{ env.samtools-version }}
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.samtools-version }}
-      - if: ${{ steps.cache-samtools.outputs.cache-hit != 'true' }}
-        name: install samtools
-        run: |
-          chmod 755 ${{ env.install_scripts_path }}/install_samtools.sh
-          ${{ env.install_scripts_path }}/install_samtools.sh -p ${{ env.toolspath }} -v ${{ env.samtools-version }}
-
-      - name: cache htslib
-        id: cache-htslib
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-htslib
-        with:
-          path: ${{ env.toolspath }}/htslib-${{ env.htslib-version }}
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.htslib-version }}
-      - if: ${{ steps.cache-htslib.outputs.cache-hit != 'true' }}
-        name: install htslib
-        run: |
-          chmod 755 ${{ env.install_scripts_path }}/install_htslib.sh
-          ${{ env.install_scripts_path }}/install_htslib.sh -p ${{ env.toolspath }} -v ${{ env.htslib-version }}
-
-      - name: cache ngs-bits
-        id: cache-ngs-bits
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-ngs-bits
-        with:
-          path: ${{ env.toolspath }}/ngs-bits-${{ env.ngs-bits-version }}
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.ngs-bits-version }}
-      - if: ${{ steps.cache-ngs-bits.outputs.cache-hit != 'true' }}
-        name: install ngs-bits local
-        run: |
-          chmod 755 ${{ env.install_scripts_path }}/install_ngs_bits.sh
-          ${{ env.install_scripts_path }}/install_ngs_bits.sh -p ${{ env.toolspath }} -v ${{ env.ngs-bits-version }}
-
-
-      - name: update environment variables
-        run: |
-          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
-          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
-          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/ngs-bits-${{ env.ngs-bits-version }}/bin" >> $GITHUB_PATH
-
-
-      # download genomes
-      - name: download grch38
-        run: |  
-          wget -q ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
-          (gunzip -c GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz |  sed -r 's/>chrM/>chrMT/g' > GRCh38.fa) || true
-          rm GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
-          samtools faidx GRCh38.fa
-        
-      # download other dependencies
-      - name: download phylop
-        run: wget -q http://hgdownload.soe.ucsc.edu/goldenPath/hg38/phyloP100way/hg38.phyloP100way.bw
-
-
-      # init dbs
-      - name: Init heredivar database
-        run: |
-          export MOST_RECENT_DUMP_DATE=$(cat src/tools/database_dumper/most_recent_dump.txt)
-          gunzip src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql.gz
-          mysql --host 0.0.0.0 -uroot -ppassword test_db < src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
-          mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
-          mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
-
-      # write .env file
-      - name: prepare settings
-        run: |
-          cd src/common
-          echo "HOST=127.0.0.1" > .env
-
-          echo "DB_HOST=0.0.0.0" >> .env
-          echo "DB_NAME=test_db" >> .env
-
-          echo "DB_USER=test_user" >> .env
-          echo "DB_USER_PW=password" >> .env
-          echo "DB_SUPER_USER=test_user" >> .env
-          echo "DB_SUPER_USER_PW=password" >> .env
-          echo "DB_ANNOTATION_USER=test_user" >> .env
-          echo "DB_ANNOTATION_USER_PW=password" >> .env
-          echo "DB_READ_ONLY=test_user" >> .env
-          echo "DB_READ_ONLY_PW=password" >> .env
-
-          echo "CLINVAR_API_KEY=${{ secrets.CLINVAR_API_KEY }}" >> .env
-
-          echo "FLASK_SECRET_KEY=The_testing_key" >> .env
-          
-          echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
-          echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> .env
-
-          echo "ENTREZ_MAIL=${{ secrets.ENTREZ_MAIL }}" >> .env
-
-
-      # run tests
-      - name: test annotation service
-        run: |
-          echo $PATH
-          export NGSBITS_CONTAINER_ID=$(cat ngs-bits-container.txt)
-
-          chmod 755 src/annotation_service/tests/run_tests.sh
-          src/annotation_service/tests/run_tests.sh
-        env:
-          WEBAPP_ENV: githubtest
-        shell: bash
-
-
 
   test_frontend:
     runs-on: ubuntu-20.04
@@ -205,34 +29,34 @@ jobs:
       # download repository
       - uses: actions/checkout@v3
 
-      - name: set versions
+      - name: set environment variables
         run: |
-          echo "ngs-bits-version=2022_10--py310hf1a0324_1" >> $GITHUB_ENV
+          echo "ngs-bits-version=2022_10" >> $GITHUB_ENV
           echo "samtools-version=1.11" >> $GITHUB_ENV
           echo "htslib-version=1.16" >> $GITHUB_ENV
+          echo "toolspath=src/tools" >> $GITHUB_ENV
+          echo "install_scripts_path=src/tools/script" >> $GITHUB_ENV
+          
+        # echo "job-name=test_annotation_service" >> $GITHUB_ENV
 
       # install os dependencies
-      - name: update OS repositories
-        run: sudo apt-get update
-
       - name: install OS dependencies
-        run: sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev libncursesw5-dev
-
-      - name: install OS dependencies 2
-        run: sudo apt-get install g++ libqt5xmlpatterns5-dev libqt5sql5-mysql libcurl4 libcurl4-openssl-dev
-
-      - name: install OS dependencies 3
-        run: sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev libncursesw5-dev
+          sudo apt-get install g++ libqt5xmlpatterns5-dev libqt5sql5-mysql libcurl4 libcurl4-openssl-dev
+          sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
+          sudo apt-get install -y mysql-client
 
       # init dbs
       - name: Verify MySQL connection from container 
         run: |
-          sudo apt-get install -y mysql-client
           export MOST_RECENT_DUMP_DATE=$(cat src/tools/database_dumper/most_recent_dump.txt)
           gunzip src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql.gz
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/tools/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
           mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
+
 
       - name: Init NGSD
         run: |
@@ -302,9 +126,9 @@ jobs:
 
       - name: update environment variables
         run: |
-          echo "$GITHUB_WORKSPACE/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
-          echo "$GITHUB_WORKSPACE/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
-          echo "$GITHUB_WORKSPACE/ngs-bits-${{ env.ngs-bits-version }}/bin" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/ngs-bits-${{ env.ngs-bits-version }}/bin" >> $GITHUB_PATH
 
 
       # build python
@@ -349,6 +173,9 @@ jobs:
           (gunzip -c hg19ToHg38.over.chain.gz | sed -r 's/chrM/chrMT/g' | bgzip > hg19ToHg38.fixed.over.chain.gz) || true
           rm hg19ToHg38.over.chain.gz
 
+      # download other dependencies
+      - name: download phylop
+        run: wget -q http://hgdownload.soe.ucsc.edu/goldenPath/hg38/phyloP100way/hg38.phyloP100way.bw
 
       # setup keycloak
       - uses: actions/setup-java@v3
@@ -396,9 +223,8 @@ jobs:
           echo "ENTREZ_MAIL=${{ secrets.ENTREZ_MAIL }}" >> .env
 
 
-
       # run tests
-      - name: run tests
+      - name: test frontend
         run: |
           chmod 755 src/frontend_celery/tests/script/run_tests.sh
           src/frontend_celery/tests/script/run_tests.sh
@@ -407,6 +233,15 @@ jobs:
           WEBAPP_ENV: githubtest
         shell: bash
 
+      # run tests
+      - name: test annotation service
+        run: |
+          echo $PATH
+          chmod 755 src/annotation_service/tests/run_tests.sh
+          src/annotation_service/tests/run_tests.sh
+        env:
+          WEBAPP_ENV: githubtest
+        shell: bash
       
 
       #- name: Lint with flake8
