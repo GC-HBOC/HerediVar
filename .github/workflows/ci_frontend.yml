@@ -48,6 +48,24 @@ jobs:
           sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
           sudo apt-get install -y mysql-client
 
+      # setup keycloak
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 11
+      - name: Prepare Keycloak
+        run: |
+          chmod 755 src/frontend_celery/tests/script/prepare_keycloak.sh
+          echo TEST
+          src/frontend_celery/tests/script/prepare_keycloak.sh
+
+      - name: Start Keycloak
+        run: |
+          chmod 755 src/frontend_celery/tests/script/start_keycloak_for_tests.sh
+          src/frontend_celery/tests/script/start_keycloak_for_tests.sh
+
+
+
       # init dbs
       - name: Verify MySQL connection from container 
         run: |
@@ -174,21 +192,6 @@ jobs:
       # download other dependencies
       - name: download phylop
         run: wget -q http://hgdownload.soe.ucsc.edu/goldenPath/hg38/phyloP100way/hg38.phyloP100way.bw
-
-      # setup keycloak
-      - uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: 11
-      - name: Prepare Keycloak
-        run: |
-          chmod 755 src/frontend_celery/tests/script/prepare_keycloak.sh
-          src/frontend_celery/tests/script/prepare_keycloak.sh
-
-      - name: Start Keycloak
-        run: |
-          chmod 755 src/frontend_celery/tests/script/start_keycloak_for_tests.sh
-          src/frontend_celery/tests/script/start_keycloak_for_tests.sh
 
 
       # write .env file
