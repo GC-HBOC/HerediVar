@@ -168,17 +168,21 @@ class Connection:
             columns_with_info = columns_with_info + ", intron_nr"
             actual_information = actual_information + (intron_nr,)
         if hgnc_id != '':
-            gene_id = self.get_gene_id_by_hgnc_id(hgnc_id)
-            if gene_id is not None:
-                columns_with_info = columns_with_info + ", gene_id"
-                actual_information = actual_information + (gene_id,)
-            else:
-                print("WARNING: there was no row in the gene table for hgnc_id " + str(hgnc_id) + ". geneid will be empty even though hgncid was given. Error occured during insertion of variant consequence: " + str(variant_id) + ", " + str(transcript_name) + ", " + str(hgvs_c) + ", " +str(hgvs_p) + ", " +str(consequence) + ", " + str(impact) + ", " + str(exon_nr) + ", " + str(intron_nr) + ", " + str(hgnc_id) + ", " + str(symbol) + ", " + str(consequence_source))
+            hgnc_id = functions.trim_hgnc(hgnc_id)
+            columns_with_info = columns_with_info + ", hgnc_id"
+            actual_information = actual_information + (hgnc_id, )
+            #gene_id = self.get_gene_id_by_hgnc_id(hgnc_id)
+            #if gene_id is not None:
+            #    columns_with_info = columns_with_info + ", gene_id"
+            #    actual_information = actual_information + (gene_id,)
+            #else:
+            #    print("WARNING: there was no row in the gene table for hgnc_id " + str(hgnc_id) + ". geneid will be empty even though hgncid was given. Error occured during insertion of variant consequence: " + str(variant_id) + ", " + str(transcript_name) + ", " + str(hgvs_c) + ", " +str(hgvs_p) + ", " +str(consequence) + ", " + str(impact) + ", " + str(exon_nr) + ", " + str(intron_nr) + ", " + str(hgnc_id) + ", " + str(symbol) + ", " + str(consequence_source))
         elif symbol != '':
             gene_id = self.get_gene_id_by_symbol(symbol)
             if gene_id is not None:
-                columns_with_info = columns_with_info + ", gene_id"
-                actual_information = actual_information + (gene_id,)
+                gene = self.get_gene(gene_id)
+                columns_with_info = columns_with_info + ", hgnc_id"
+                actual_information = actual_information + (gene[1], )
             else:
                 print("WARNING: there was no row in the gene table for symbol " + str(symbol) + ". geneid will be empty even though symbol was given. Error occured during insertion of variant consequence: " + str(variant_id) + ", " + str(transcript_name) + ", " + str(hgvs_c) + ", " +str(hgvs_p) + ", " +str(consequence) + ", " + str(impact) + ", " + str(exon_nr) + ", " + str(intron_nr) + ", " + str(hgnc_id) + ", " + str(symbol) + ", " + str(consequence_source))
         placeholders = "%s, "*len(actual_information)
@@ -831,10 +835,10 @@ class Connection:
     
     def get_variant_consequences(self, variant_id):
         command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,x.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype FROM transcript RIGHT JOIN ( \
-	                    SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,gene_id,exon_nr,intron_nr,source,pfam_accession,pfam_description FROM gene RIGHT JOIN ( \
+	                    SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,gene.id gene_id,exon_nr,intron_nr,source,pfam_accession,pfam_description FROM gene RIGHT JOIN ( \
 		                    SELECT * FROM variant_consequence WHERE variant_id=%s \
 	                    ) y \
-	                    ON gene.id = y.gene_id \
+	                    ON gene.hgnc_id = y.hgnc_id \
                     ) x \
                     ON transcript.name = x.transcript_name"
         self.cursor.execute(command, (variant_id, ))
