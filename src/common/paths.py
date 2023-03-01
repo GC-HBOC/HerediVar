@@ -9,7 +9,7 @@ if webapp_env == 'dev':
     """ configuration for the development environment """
     
     # workdir
-    workdir = "/mnt/users/ahdoebm1/HerediVar/"
+    workdir = "/mnt/storage3/users/ahdoebm1/HerediVar/"
     datadir = workdir + "data/dbs/"
 
     #tools
