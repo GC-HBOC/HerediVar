@@ -129,7 +129,7 @@ $ngsbits/VcfCheck -in $flossies_file.gz -ref $genome
 
 
 # download dbSNP
-cd dbs
+cd $dbs
 mkdir -p dbSNP
 cd dbSNP
 wget -O - https://ftp.ncbi.nih.gov/snp/latest_release/VCF/GCF_000001405.39.gz | gunzip | python3 $tools/vcf_refseq_to_chrnum.py | $ngsbits/VcfBreakMulti | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort > dbSNP_v155.vcf
