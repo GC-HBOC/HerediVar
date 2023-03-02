@@ -485,7 +485,7 @@ class Connection:
         if gene_id is None:
             gene_id = self.get_gene_id_by_hgnc_id(string)
         return gene_id # can return none
-    
+
 
     def get_variant_more_info(self, variant_id, user_id = None):
         command = "SELECT * FROM variant WHERE id = %s"
@@ -618,11 +618,11 @@ class Connection:
             new_constraints = enbrace(new_constraints)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if genes is not None and len(genes) > 0:
-            genes = [self.convert_to_gene_id(x) for x in genes]
+            genes = [self.get_gene(self.convert_to_gene_id(x))[1] for x in genes]
             placeholders = ["%s"] * len(genes)
             placeholders = ', '.join(placeholders)
             placeholders = enbrace(placeholders)
-            new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE gene_id IN " + placeholders + ")"
+            new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE hgnc_id IN " + placeholders + ")"
             actual_information += tuple(genes)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if consensus is not None and len(consensus) > 0:
