@@ -18,13 +18,13 @@ mkdir -p $dbs
 
 # download GRCH38 genome
 cd $data
-chmod 755 ./download_GRCh38.sh
+chmod 755 download_GRCh38.sh
 ./download_GRCh38.sh
 
 
 # download GRCH37 reference_genome (used for lifting)
 cd $data
-chmod 755 ./download_GRCh37.sh
+chmod 755 download_GRCh37.sh
 ./download_GRCh37.sh
 
 
@@ -331,6 +331,7 @@ rm priors_hg19.vcf.gz.tbi
 
 
 # download gnomAD genome data
+: '
 cd $dbs
 mkdir -p gnomAD2
 cd gnomAD2
@@ -360,11 +361,11 @@ wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/3.1.2/v
 wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/3.1.2/vcf/genomes/gnomad.genomes.v3.1.2.sites.chrY.vcf.bgz | gunzip  | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | python3 $tools/db_filter_gnomad.py >> gnomAD_genome_v3.1.2_GRCh38.vcf
 bgzip gnomAD_genome_v3.1.2_GRCh38.vcf
 tabix -p vcf gnomAD_genome_v3.1.2_GRCh38.vcf.gz
+'
 
-
-wget -O - https://gnomad-public-us-east-1.s3.amazonaws.com/release/3.1/vcf/genomes/gnomad.genomes.v3.1.sites.chrM.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | sed 's/chrM/chrMT/g' > gnomAD_genome_v3.1.mito_GRCh38.vcf
-bgzip gnomAD_genome_v3.1.mito_GRCh38.vcf
-tabix -p vcf gnomAD_genome_v3.1.mito_GRCh38.vcf.gz
+#wget -O - https://gnomad-public-us-east-1.s3.amazonaws.com/release/3.1/vcf/genomes/gnomad.genomes.v3.1.sites.chrM.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | sed 's/chrM/chrMT/g' > gnomAD_genome_v3.1.mito_GRCh38.vcf
+#bgzip gnomAD_genome_v3.1.mito_GRCh38.vcf
+#tabix -p vcf gnomAD_genome_v3.1.mito_GRCh38.vcf.gz
 
 
 
