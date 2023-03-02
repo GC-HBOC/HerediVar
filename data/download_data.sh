@@ -61,7 +61,7 @@ chmod 755 download_GRCh37.sh
 
 # download HGNC
 cd $dbs
-mkdir HGNC
+mkdir -p HGNC
 cd HGNC
 wget -O - http://ftp.ebi.ac.uk/pub/databases/genenames/hgnc/tsv/hgnc_complete_set.txt > hgnc_complete_set.tsv
 
@@ -81,7 +81,7 @@ python3 $tools/db_converter_brca_exchange.py -i built_with_change_types.tsv | $n
 tabix -p vcf BRCA_exchange_02-22-22.vcf.gz
 
 
-
+: '
 # download ensembl transcripts (http://ftp.ensembl.org/pub/current_gff3/homo_sapiens/)
 cd $dbs
 mkdir -p ensembl
@@ -90,14 +90,15 @@ wget http://ftp.ensembl.org/pub/current_gff3/homo_sapiens/Homo_sapiens.GRCh38.10
 gunzip Homo_sapiens.GRCh38.105.gff3.gz
 ## download ensembl canonical transcripts (http://ftp.ensembl.org/pub/current_tsv/homo_sapiens)
 wget -O - http://ftp.ensembl.org/pub/release-105/tsv/homo_sapiens/Homo_sapiens.GRCh38.105.canonical.tsv.gz | gunzip > Homo_sapiens.GRCh38.105.canonical.tsv
+'
 
-
+: '
 # download mane select (https://ftp.ncbi.nlm.nih.gov/refseq/MANE/)
 cd $dbs
 mkdir -p MANE
 cd MANE
 wget -O - https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/release_1.0/MANE.GRCh38.v1.0.ensembl_genomic.gff.gz | gunzip > MANE.GRCh38.v1.0.ensembl_genomic.gff
-
+'
 
 
 
@@ -178,13 +179,14 @@ rm -f revel_tmp.tsv.gz h revel_grch38_all_chromosomes.tsv
 $ngsbits/VcfCheck -in revel_grch38_all_chromosomes.vcf.gz -ref $genome -lines 0
 
 
+: '
 # download annotation file for SpliceAI
 cd $dbs
 mkdir -p SpliceAI
 cd SpliceAI
 wget https://download.imgag.de/ahsturm1/spliceai_scores_2022_02_09_GRCh38.vcf.gz
 tabix -p vcf spliceai_scores_2022_02_09_GRCh38.vcf.gz
-
+'
 
 
 # download ClinVar (https://www.ncbi.nlm.nih.gov/clinvar/)
@@ -204,19 +206,21 @@ wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20220320.vcf.gz
 gunzip -c clinvar_20220320.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary_preprocessed.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_20220320_converted_GRCh38.vcf.gz
 tabix -p vcf clinvar_20220320_converted_GRCh38.vcf.gz
 
+: '
 # CNVs - not used atm
 wget -O - http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive/variant_summary_2021-12.txt.gz | gunzip > variant_summary_2021-12.txt
 cat variant_summary_2021-12.txt | php $src/Tools/db_converter_clinvar_cnvs.php 5 "Pathogenic/Likely pathogenic" | sort | uniq > clinvar_cnvs_2021-12.bed
 $ngsbits/BedSort -with_name -in clinvar_cnvs_2021-12.bed -out clinvar_cnvs_2021-12.bed
+'
 
-
+: '
 ## download PFAM (last accessed at realease 35.0)
 cd $dbs
 mkdir -p PFAM
 cd PFAM
 wget -O - http://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.seed.gz | zcat | iconv -f utf-8 -t utf-8 -c | python3 $tools/db_converter_pfam.py > pfam_id_mapping.tsv
 wget -O - ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.dead.gz | zcat | iconv -f utf-8 -t utf-8 -c | python3 $tools/db_converter_pfam.py --deadfile > pfam_legacy.tsv
-
+'
 
 
 # download oncotree (version: oncotree_2021_11_02, downloaded from: http://oncotree.mskcc.org/#/home?tab=api)
@@ -260,34 +264,35 @@ $ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $genome
 tabix -p vcf $cancerhotspotsfile.final.vcf.gz
 
 
-
+: '
 # download refseq transcripts release 110
 cd $dbs
 mkdir -p RefSeq
 cd RefSeq
 
 wget -O - https://ftp.ncbi.nlm.nih.gov/genomes/refseq/vertebrate_mammalian/Homo_sapiens/annotation_releases/110/GCF_000001405.40_GRCh38.p14/GCF_000001405.40_GRCh38.p14_genomic.gff.gz > refseq_transcripts_110.gff.gz
+'
 
-
+: '
 # download ensembl refseq transcript id mapping table
 cd $dbs
 mkdir -p mapping_tables
 cd mapping_tables
 wget https://github.com/imgag/ngs-bits/raw/master/src/cppNGS/Resources/hg38_ensembl_transcript_matches.tsv
+'
 
 
-
-
+: '
 ## download OMIM mapping table (downloaded 02.05.2022)
 cd $dbs
 mkdir -p OMIM
 cd OMIM
 
 wget https://www.omim.org/static/omim/data/mim2gene.txt
+'
 
 
 # download orphanet mapping table (downloaded 02.05.2022)
-
 cd $dbs
 mkdir -p OrphaNet
 cd OrphaNet
@@ -338,31 +343,7 @@ $ngsbits/VcfCheck -in $tp_db.normalized.vcf.gz -ref $genome
 
 rm -f $tp_db.vcf
 
-
-
-## download HCI prior probabilities of pathogenicity (http://priors.hci.utah.edu/PRIORS/index.php)
-cd $dbs
-mkdir -p HCI_priors
-cd HCI_priors
-
-python3 $tools/priors_crawler.py -g BRCA1 -e exon2 --header > priors_hg19.vcf
-python3 $tools/priors_crawler.py -g BRCA2 -e exon2 >> priors_hg19.vcf
-
-$ngsbits/VcfCheck -in priors_hg19.vcf -ref $data/genomes/GRCh37.fa -lines 0 > vcferrors_hg19.txt
-$ngsbits/VcfSort -in priors_hg19.vcf -out priors_hg19.vcf
-bgzip -f -c priors_hg19.vcf > priors_hg19.vcf.gz
-tabix -p vcf priors_hg19.vcf.gz
-
-
-## crossmap to lift from GRCh37 to GRCh38
-CrossMap.py vcf $data/genomes/hg19ToHg38.fixed.over.chain.gz priors_hg19.vcf.gz $genome priors.vcf
-rm priors_hg19.vcf.gz
-rm priors_hg19.vcf.gz.tbi
-
-
-
 # download gnomAD genome data
-: '
 cd $dbs
 mkdir -p gnomAD2
 cd gnomAD2
@@ -392,12 +373,32 @@ wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/3.1.2/v
 wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/3.1.2/vcf/genomes/gnomad.genomes.v3.1.2.sites.chrY.vcf.bgz | gunzip  | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | python3 $tools/db_filter_gnomad.py >> gnomAD_genome_v3.1.2_GRCh38.vcf
 bgzip gnomAD_genome_v3.1.2_GRCh38.vcf
 tabix -p vcf gnomAD_genome_v3.1.2_GRCh38.vcf.gz
-'
 
-#wget -O - https://gnomad-public-us-east-1.s3.amazonaws.com/release/3.1/vcf/genomes/gnomad.genomes.v3.1.sites.chrM.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | sed 's/chrM/chrMT/g' > gnomAD_genome_v3.1.mito_GRCh38.vcf
-#bgzip gnomAD_genome_v3.1.mito_GRCh38.vcf
-#tabix -p vcf gnomAD_genome_v3.1.mito_GRCh38.vcf.gz
+wget -O - https://gnomad-public-us-east-1.s3.amazonaws.com/release/3.1/vcf/genomes/gnomad.genomes.v3.1.sites.chrM.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | sed 's/chrM/chrMT/g' > gnomAD_genome_v3.1.mito_GRCh38.vcf
+bgzip gnomAD_genome_v3.1.mito_GRCh38.vcf
+tabix -p vcf gnomAD_genome_v3.1.mito_GRCh38.vcf.gz
 
+
+
+: '
+## download HCI prior probabilities of pathogenicity (http://priors.hci.utah.edu/PRIORS/index.php)
+cd $dbs
+mkdir -p HCI_priors
+cd HCI_priors
+
+python3 $tools/priors_crawler.py -g BRCA1 -e exon2 --header > priors_hg19.vcf
+python3 $tools/priors_crawler.py -g BRCA2 -e exon2 >> priors_hg19.vcf
+
+$ngsbits/VcfCheck -in priors_hg19.vcf -ref $data/genomes/GRCh37.fa -lines 0 > vcferrors_hg19.txt
+$ngsbits/VcfSort -in priors_hg19.vcf -out priors_hg19.vcf
+bgzip -f -c priors_hg19.vcf > priors_hg19.vcf.gz
+tabix -p vcf priors_hg19.vcf.gz
+
+
+## crossmap to lift from GRCh37 to GRCh38
+CrossMap.py vcf $data/genomes/hg19ToHg38.fixed.over.chain.gz priors_hg19.vcf.gz $genome priors.vcf
+rm priors_hg19.vcf.gz
+rm priors_hg19.vcf.gz.tbi
 
 
 #python3 $tools/priors_crawler.py -g MLH1 -e exon1 >> priors.vcf
@@ -414,7 +415,7 @@ tabix -p vcf gnomAD_genome_v3.1.2_GRCh38.vcf.gz
 #bgzip -f -c priors.vcf > priors.vcf.gz
 #tabix -p vcf priors.vcf.gz
 #$ngsbits/VcfCheck -in priors.vcf.gz -ref $genome > vcferrors.txt
-
+'
 
 
 
