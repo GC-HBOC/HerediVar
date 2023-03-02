@@ -3,11 +3,42 @@ set -e
 set -o pipefail
 set -o verbose
 
+
+helpFunction()
+{
+   echo ""
+   echo "Usage: $0 -p path"
+   echo "This script installs htslib"
+   echo -e "\t-p The path htslib will be installed"
+   exit 1 # Exit script after printing help
+}
+
+while getopts "p:" opt
+do
+   case "$opt" in
+      p ) basedir="$OPTARG" ;;
+      ? ) helpFunction ;; # Print helpFunction in case parameter is non-existent
+   esac
+done
+
+# Print helpFunction in case parameters are empty
+if [ -z "$basedir" ]
+then
+   echo "Some or all of the parameters are empty";
+   helpFunction
+fi
+
+# Begin script in case all parameters are correct
+echo "Downloading data to $basedir..."
+
+
+
+
 ###
 # This script provides a wrapper for all data download needed to run HerediVar annotation scripts
 ###
 
-root="$(dirname `pwd`)"
+root=$basedir
 tools=$root/src/tools
 data=$root/data
 dbs=$data/dbs
