@@ -515,7 +515,7 @@
     "emailVerified" : true,
     "firstName" : "Max",
     "lastName" : "Mustermann",
-    "email" : "test@abc.com",
+    "email" : "doebel.marvin@med.uni-tuebingen.de",
     "attributes" : {
       "affiliation" : [ "testaffiliation" ]
     },
@@ -698,7 +698,7 @@
     "alwaysDisplayInConsole" : false,
     "clientAuthenticatorType" : "client-secret",
     "secret" : "NRLzlQfotGy9W8hkuYFm3T48Bjnti15k",
-    "redirectUris" : [ "http://srv018.img.med.uni-tuebingen.de:5000/*" ],
+    "redirectUris" : [ "http://srv018.img.med.uni-tuebingen.de:5002/*", "http://srv018.img.med.uni-tuebingen.de:5000/*" ],
     "webOrigins" : [ "http://srv018.img.med.uni-tuebingen.de" ],
     "notBefore" : 0,
     "bearerOnly" : false,
@@ -1531,7 +1531,17 @@
     "xXSSProtection" : "1; mode=block",
     "strictTransportSecurity" : "max-age=31536000; includeSubDomains"
   },
-  "smtpServer" : { },
+  "smtpServer" : {
+    "password" : "",
+    "starttls" : "",
+    "auth" : "false",
+    "port" : "465",
+    "host" : "smtp.gmail.com",
+    "from" : "HerediVar@gmail.com",
+    "fromDisplayName" : "HerediVar",
+    "ssl" : "true",
+    "user" : ""
+  },
   "eventsEnabled" : false,
   "eventsExpiration" : 3600,
   "eventsListeners" : [ "jboss-logging" ],
@@ -1542,6 +1552,13 @@
   "identityProviderMappers" : [ ],
   "components" : {
     "org.keycloak.services.clientregistration.policy.ClientRegistrationPolicy" : [ {
+      "id" : "86d3fddb-1fd5-4b7a-83af-517735855a05",
+      "name" : "Consent Required",
+      "providerId" : "consent-required",
+      "subType" : "anonymous",
+      "subComponents" : { },
+      "config" : { }
+    }, {
       "id" : "79a895cf-a76e-4b28-8002-1201ce1d575b",
       "name" : "Allowed Client Scopes",
       "providerId" : "allowed-client-templates",
@@ -1550,39 +1567,6 @@
       "config" : {
         "allow-default-scopes" : [ "true" ]
       }
-    }, {
-      "id" : "4b4e888a-6933-4a9b-8707-8638ff90c8d1",
-      "name" : "Allowed Protocol Mapper Types",
-      "providerId" : "allowed-protocol-mappers",
-      "subType" : "anonymous",
-      "subComponents" : { },
-      "config" : {
-        "allowed-protocol-mapper-types" : [ "oidc-sha256-pairwise-sub-mapper", "oidc-address-mapper", "oidc-usermodel-property-mapper", "saml-user-attribute-mapper", "saml-user-property-mapper", "saml-role-list-mapper", "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper" ]
-      }
-    }, {
-      "id" : "cd284b32-a2fc-4178-83b8-774d457254fa",
-      "name" : "Full Scope Disabled",
-      "providerId" : "scope",
-      "subType" : "anonymous",
-      "subComponents" : { },
-      "config" : { }
-    }, {
-      "id" : "932c62db-875a-402f-add8-f05ca0a8070d",
-      "name" : "Trusted Hosts",
-      "providerId" : "trusted-hosts",
-      "subType" : "anonymous",
-      "subComponents" : { },
-      "config" : {
-        "host-sending-registration-request-must-match" : [ "true" ],
-        "client-uris-must-match" : [ "true" ]
-      }
-    }, {
-      "id" : "86d3fddb-1fd5-4b7a-83af-517735855a05",
-      "name" : "Consent Required",
-      "providerId" : "consent-required",
-      "subType" : "anonymous",
-      "subComponents" : { },
-      "config" : { }
     }, {
       "id" : "e5eb8361-8733-492c-b317-eea6ccfd4cd3",
       "name" : "Allowed Protocol Mapper Types",
@@ -1610,36 +1594,34 @@
       "config" : {
         "max-clients" : [ "200" ]
       }
-    } ],
-    "org.keycloak.userprofile.UserProfileProvider" : [ {
-      "id" : "963a301b-002f-4b45-8515-dc7e96b14bf5",
-      "providerId" : "declarative-user-profile",
+    }, {
+      "id" : "4b4e888a-6933-4a9b-8707-8638ff90c8d1",
+      "name" : "Allowed Protocol Mapper Types",
+      "providerId" : "allowed-protocol-mappers",
+      "subType" : "anonymous",
+      "subComponents" : { },
+      "config" : {
+        "allowed-protocol-mapper-types" : [ "oidc-sha256-pairwise-sub-mapper", "oidc-address-mapper", "oidc-usermodel-property-mapper", "saml-user-attribute-mapper", "saml-user-property-mapper", "saml-role-list-mapper", "oidc-usermodel-attribute-mapper", "oidc-full-name-mapper" ]
+      }
+    }, {
+      "id" : "cd284b32-a2fc-4178-83b8-774d457254fa",
+      "name" : "Full Scope Disabled",
+      "providerId" : "scope",
+      "subType" : "anonymous",
       "subComponents" : { },
       "config" : { }
+    }, {
+      "id" : "932c62db-875a-402f-add8-f05ca0a8070d",
+      "name" : "Trusted Hosts",
+      "providerId" : "trusted-hosts",
+      "subType" : "anonymous",
+      "subComponents" : { },
+      "config" : {
+        "host-sending-registration-request-must-match" : [ "true" ],
+        "client-uris-must-match" : [ "true" ]
+      }
     } ],
     "org.keycloak.keys.KeyProvider" : [ {
-      "id" : "c4808d7a-00f0-4e87-9665-c05fb7a0a2bc",
-      "name" : "hmac-generated",
-      "providerId" : "hmac-generated",
-      "subComponents" : { },
-      "config" : {
-        "kid" : [ "f13ac41a-7c9e-4e68-9eed-01e685eeb207" ],
-        "secret" : [ "LSe0kwnqV3MxYIJZLpKgXZgmeaujgwSHNMOYsJMAHuVO2Uxs0PfeVqo6Qm8quDmDt3sXf--jSFcZKr8rubc9dg" ],
-        "priority" : [ "100" ],
-        "algorithm" : [ "HS256" ]
-      }
-    }, {
-      "id" : "c6d94718-17c0-4e1d-a9a4-2d1ab36ed2a4",
-      "name" : "rsa-generated",
-      "providerId" : "rsa-generated",
-      "subComponents" : { },
-      "config" : {
-        "privateKey" : [ "MIIEowIBAAKCAQEAnrW2XKunDY+bd0mdB3QgqNdvoHvNSTh5aU/b59qsjmYvNj0vlKzf/h9u1CXa8xKydkdXnzUvVb0La+Kp14t12U2SgIVVtPefFjWvzHt2NhoMAKE5K9Kg9t/5eJe5B0HdTvULhWQsYzT1derCOGy5yLlXpsfFBVXyB8nxCEtUXhJ5zDhWLFkIP1XKLieWX1+avNuotcB25SEWiTnoAtunVpXHCn72nWOs4I26f16WboKMWkL94gN2sWNuyZAHOtr1LZ1kFmXnZH8S6zCeeuRtAf/8K3tGtnjSALox0vesTV8xAIBE4+E0WAV1rT4f0DO7W6uQv7ivH6hlvZLecYhRwwIDAQABAoIBAGBslDwfSeJSUqkZv17M7h7GrRo6vVF0D0etbjSiRd5KNPrmF6djlL8nR8V6rliqDmUQGSswO+8CaRMF5hx/rXz1xUFyQM0u+KecvI8mn35lOs+TJFH8qTD0iPP8cjz3hka3WGWVo+YuQcd/drqjTAiomplIm+oO+npC9b8NTVfNOnW17HPT/TTmQVeCcIHfDnznGmLK/BCOaIHQ4d15rMsdWtN06zYOmA1UXk5bfEcEfECKoSHCW9P6XJYhZBrtvu0/fS0vVNA3WQyH3fIYPewj1+nQ9OB8Oum547+SrVqSmQN7YK5bzK/5KndNjgYBZ6DYwJLnT/3DEW2X2GmBh/kCgYEA1go1DAEWX1pZrEExAfSgfJp0XSBMNlh3THxY70+GCszVYEeN79lwofPie9/ChpVPvqxoOo9UrFaUc+zcEKjm0GDTg9OW3GjTj5lpye+ky/HZ9kFhJOGli3MngTMdjXQYbfGLV5UJtuuqWUbsXCy3m1F4W4PFFfeAs8vIHP7iZpUCgYEAvdK2yPpZV63HZowhlgQSVNEbLpZ6/bf5pGXxZpOxGa57WzcpR44G8ottgVsrepEqMVW6MZQZUnNNqVclF/gI0llkCazIEsw4SIXyC7O/CMlPjOOsaonsA2/HxkngCt712BAUUh3Qe0iikItGiU6vP27c6N4o9Od0mj9zfuAb+PcCgYEAouArk9H0A2WOnX0SXQmZYphqej9Mn4JcbhCl4J3kQ62xpc1tnhoaErOzIk6ZCa7vewpZWk6dwXM1Dq4snGTbF7DG5CcMQvdmHn1AulEpV6TYFwOTd+xZ/C8J3dBW6cBxoqBPR7t7I/5bqApHbLD+myu46fLw9BFel/M3eZEgGa0CgYBkM63/S4AL85T1wfUcvot6sGM75X2JHyutp46VilMLbnp5fRXSStvJ/uXQSfMaoTR3lHxUHYx8ZJdTU8gl7e2iNEPFg6qdmaYASoyptrmaBsJyaeCi4Klwavo25tpYgred1WcUrd5WpdICoTKb2qhRwNDmMBfIp8F6hxINoHnDowKBgA0jPNphMwKwcuagpm8XYV8ALwe8RB6xurn1MA+9bCsnqZysHih800BP9bgAnQXMisI+RmTCl5U19ww/ap8oSy9XP0f9LisoYJ5yk7N5gA61JlzuVDLrRynetdKiilHKC/wMf+JIARnKbl1Jmbj6Xg8cWtTWlLDV8RFVmN4QJubh" ],
-        "keyUse" : [ "SIG" ],
-        "certificate" : [ "MIICoTCCAYkCBgGAjzM73TANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAlIZXJlZGlWYXIwHhcNMjIwNTA0MTMxMDQxWhcNMzIwNTA0MTMxMjIxWjAUMRIwEAYDVQQDDAlIZXJlZGlWYXIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCetbZcq6cNj5t3SZ0HdCCo12+ge81JOHlpT9vn2qyOZi82PS+UrN/+H27UJdrzErJ2R1efNS9VvQtr4qnXi3XZTZKAhVW0958WNa/Me3Y2GgwAoTkr0qD23/l4l7kHQd1O9QuFZCxjNPV16sI4bLnIuVemx8UFVfIHyfEIS1ReEnnMOFYsWQg/VcouJ5ZfX5q826i1wHblIRaJOegC26dWlccKfvadY6zgjbp/XpZugoxaQv3iA3axY27JkAc62vUtnWQWZedkfxLrMJ565G0B//wre0a2eNIAujHS96xNXzEAgETj4TRYBXWtPh/QM7tbq5C/uK8fqGW9kt5xiFHDAgMBAAEwDQYJKoZIhvcNAQELBQADggEBABSmhUINY2VpEhyu7MxaxHKUKhj1fR/onR14Nqb1988Ii5wjLelmrX6Fv7ZMsM3GkYZozcgXzVuwU/DrX+Eegm+DTGNGEr3E/IAYX+eps5qDEiWn9CW9ke1gntm5EP/Fvm25x06vooWf9DsS3RBLZAsrkdEYaJDUsGrJAe0iDwiGHTcyUMXxSeLkvevwwR0Q0/CU596+uFZdqKF9iA3YACCgQjB//xinqG+VGERkqIWGaz14w4i4FeW0WWwCGx5SaqtS+BYzE3JYZ4HjVh06f6pkaxrxV00188n9/BoRt+CRukLeKouIr07ViDpy7crVjaRO1FIwGhue7ftiJmSAkMs=" ],
-        "priority" : [ "100" ]
-      }
-    }, {
       "id" : "73fbccdf-1b3d-4068-a366-45212ed2c549",
       "name" : "rsa-enc-generated",
       "providerId" : "rsa-enc-generated",
@@ -1652,6 +1634,17 @@
         "algorithm" : [ "RSA-OAEP" ]
       }
     }, {
+      "id" : "c4808d7a-00f0-4e87-9665-c05fb7a0a2bc",
+      "name" : "hmac-generated",
+      "providerId" : "hmac-generated",
+      "subComponents" : { },
+      "config" : {
+        "kid" : [ "f13ac41a-7c9e-4e68-9eed-01e685eeb207" ],
+        "secret" : [ "LSe0kwnqV3MxYIJZLpKgXZgmeaujgwSHNMOYsJMAHuVO2Uxs0PfeVqo6Qm8quDmDt3sXf--jSFcZKr8rubc9dg" ],
+        "priority" : [ "100" ],
+        "algorithm" : [ "HS256" ]
+      }
+    }, {
       "id" : "335d0e64-aa3e-40a1-a338-7710522ca135",
       "name" : "aes-generated",
       "providerId" : "aes-generated",
@@ -1659,6 +1652,17 @@
       "config" : {
         "kid" : [ "01e5bd9a-2198-4604-977e-321f50830eff" ],
         "secret" : [ "ioEOmZazgsCaJF08PDiU_w" ],
+        "priority" : [ "100" ]
+      }
+    }, {
+      "id" : "c6d94718-17c0-4e1d-a9a4-2d1ab36ed2a4",
+      "name" : "rsa-generated",
+      "providerId" : "rsa-generated",
+      "subComponents" : { },
+      "config" : {
+        "privateKey" : [ "MIIEowIBAAKCAQEAnrW2XKunDY+bd0mdB3QgqNdvoHvNSTh5aU/b59qsjmYvNj0vlKzf/h9u1CXa8xKydkdXnzUvVb0La+Kp14t12U2SgIVVtPefFjWvzHt2NhoMAKE5K9Kg9t/5eJe5B0HdTvULhWQsYzT1derCOGy5yLlXpsfFBVXyB8nxCEtUXhJ5zDhWLFkIP1XKLieWX1+avNuotcB25SEWiTnoAtunVpXHCn72nWOs4I26f16WboKMWkL94gN2sWNuyZAHOtr1LZ1kFmXnZH8S6zCeeuRtAf/8K3tGtnjSALox0vesTV8xAIBE4+E0WAV1rT4f0DO7W6uQv7ivH6hlvZLecYhRwwIDAQABAoIBAGBslDwfSeJSUqkZv17M7h7GrRo6vVF0D0etbjSiRd5KNPrmF6djlL8nR8V6rliqDmUQGSswO+8CaRMF5hx/rXz1xUFyQM0u+KecvI8mn35lOs+TJFH8qTD0iPP8cjz3hka3WGWVo+YuQcd/drqjTAiomplIm+oO+npC9b8NTVfNOnW17HPT/TTmQVeCcIHfDnznGmLK/BCOaIHQ4d15rMsdWtN06zYOmA1UXk5bfEcEfECKoSHCW9P6XJYhZBrtvu0/fS0vVNA3WQyH3fIYPewj1+nQ9OB8Oum547+SrVqSmQN7YK5bzK/5KndNjgYBZ6DYwJLnT/3DEW2X2GmBh/kCgYEA1go1DAEWX1pZrEExAfSgfJp0XSBMNlh3THxY70+GCszVYEeN79lwofPie9/ChpVPvqxoOo9UrFaUc+zcEKjm0GDTg9OW3GjTj5lpye+ky/HZ9kFhJOGli3MngTMdjXQYbfGLV5UJtuuqWUbsXCy3m1F4W4PFFfeAs8vIHP7iZpUCgYEAvdK2yPpZV63HZowhlgQSVNEbLpZ6/bf5pGXxZpOxGa57WzcpR44G8ottgVsrepEqMVW6MZQZUnNNqVclF/gI0llkCazIEsw4SIXyC7O/CMlPjOOsaonsA2/HxkngCt712BAUUh3Qe0iikItGiU6vP27c6N4o9Od0mj9zfuAb+PcCgYEAouArk9H0A2WOnX0SXQmZYphqej9Mn4JcbhCl4J3kQ62xpc1tnhoaErOzIk6ZCa7vewpZWk6dwXM1Dq4snGTbF7DG5CcMQvdmHn1AulEpV6TYFwOTd+xZ/C8J3dBW6cBxoqBPR7t7I/5bqApHbLD+myu46fLw9BFel/M3eZEgGa0CgYBkM63/S4AL85T1wfUcvot6sGM75X2JHyutp46VilMLbnp5fRXSStvJ/uXQSfMaoTR3lHxUHYx8ZJdTU8gl7e2iNEPFg6qdmaYASoyptrmaBsJyaeCi4Klwavo25tpYgred1WcUrd5WpdICoTKb2qhRwNDmMBfIp8F6hxINoHnDowKBgA0jPNphMwKwcuagpm8XYV8ALwe8RB6xurn1MA+9bCsnqZysHih800BP9bgAnQXMisI+RmTCl5U19ww/ap8oSy9XP0f9LisoYJ5yk7N5gA61JlzuVDLrRynetdKiilHKC/wMf+JIARnKbl1Jmbj6Xg8cWtTWlLDV8RFVmN4QJubh" ],
+        "keyUse" : [ "SIG" ],
+        "certificate" : [ "MIICoTCCAYkCBgGAjzM73TANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAlIZXJlZGlWYXIwHhcNMjIwNTA0MTMxMDQxWhcNMzIwNTA0MTMxMjIxWjAUMRIwEAYDVQQDDAlIZXJlZGlWYXIwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCetbZcq6cNj5t3SZ0HdCCo12+ge81JOHlpT9vn2qyOZi82PS+UrN/+H27UJdrzErJ2R1efNS9VvQtr4qnXi3XZTZKAhVW0958WNa/Me3Y2GgwAoTkr0qD23/l4l7kHQd1O9QuFZCxjNPV16sI4bLnIuVemx8UFVfIHyfEIS1ReEnnMOFYsWQg/VcouJ5ZfX5q826i1wHblIRaJOegC26dWlccKfvadY6zgjbp/XpZugoxaQv3iA3axY27JkAc62vUtnWQWZedkfxLrMJ565G0B//wre0a2eNIAujHS96xNXzEAgETj4TRYBXWtPh/QM7tbq5C/uK8fqGW9kt5xiFHDAgMBAAEwDQYJKoZIhvcNAQELBQADggEBABSmhUINY2VpEhyu7MxaxHKUKhj1fR/onR14Nqb1988Ii5wjLelmrX6Fv7ZMsM3GkYZozcgXzVuwU/DrX+Eegm+DTGNGEr3E/IAYX+eps5qDEiWn9CW9ke1gntm5EP/Fvm25x06vooWf9DsS3RBLZAsrkdEYaJDUsGrJAe0iDwiGHTcyUMXxSeLkvevwwR0Q0/CU596+uFZdqKF9iA3YACCgQjB//xinqG+VGERkqIWGaz14w4i4FeW0WWwCGx5SaqtS+BYzE3JYZ4HjVh06f6pkaxrxV00188n9/BoRt+CRukLeKouIr07ViDpy7crVjaRO1FIwGhue7ftiJmSAkMs=" ],
         "priority" : [ "100" ]
       }
     } ]
