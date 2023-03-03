@@ -2,7 +2,8 @@
 
 
 
-/* create users 
+/* create users
+CREATE DATABASE HerediVar CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 CREATE USER 'HerediVar_superuser'@'%' IDENTIFIED BY '20220303s' PASSWORD EXPIRE NEVER;
 CREATE USER 'HerediVar_annotation'@'%' IDENTIFIED BY '20220303a' PASSWORD EXPIRE NEVER;
 CREATE USER 'HerediVar_user'@'%' IDENTIFIED BY '20220303u' PASSWORD EXPIRE NEVER;
