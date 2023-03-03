@@ -170,14 +170,14 @@ mkdir -p ClinVar
 cd ClinVar
 
 ## submissions table for 'Submitted interpretations and evidence' table from website
-#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
-#ncomment_lines=$(zgrep '^#' submission_summary.txt.gz | wc -l)
-#source $tools/zhead.sh
-#zhead submission_summary.txt.gz $ncomment_lines | tail -1 | cut -c 2- > h # nochmal auf die encoding schauen (SâˆšÂ°nchez-GutiâˆšÂ©rrez_2002_PMID:12417303; Sebastio_1991_PMID:18)
-#zgrep -v '^#' submission_summary.txt.gz | cat h - | bgzip > submission_summary_preprocessed.txt.gz
+wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
+ncomment_lines=$(zgrep '^#' submission_summary.txt.gz | wc -l)
+source $tools/zhead.sh
+zhead submission_summary.txt.gz $ncomment_lines | tail -1 | cut -c 2- > h # nochmal auf die encoding schauen (SâˆšÂ°nchez-GutiâˆšÂ©rrez_2002_PMID:12417303; Sebastio_1991_PMID:18)
+zgrep -v '^#' submission_summary.txt.gz | cat h - | bgzip > submission_summary_preprocessed.txt.gz
 
 # most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # previous version used: clinvar_20220320.vcf.gz 
-wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz
+wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # newest version: clinvar_20230226.vcf.gz  
 gunzip -c clinvar.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary_preprocessed.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_converted_GRCh38.vcf.gz
 tabix -p vcf clinvar_converted_GRCh38.vcf.gz
 
