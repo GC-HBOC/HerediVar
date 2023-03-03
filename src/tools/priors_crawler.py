@@ -24,7 +24,7 @@ parser.add_argument("--header", action='store_true', help="boolean, specify if t
 
 args = parser.parse_args()
 
-if args.outfile is not "":
+if args.outfile != "":
     sys.stdout = open(args.outfile, 'w')
 
 gene = args.gene

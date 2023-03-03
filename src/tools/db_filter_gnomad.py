@@ -12,10 +12,10 @@ parser.add_argument("--header", action='store_true', help="boolean, specify if t
 
 args = parser.parse_args()
 
-if args.output is not "":
+if args.output != "":
     sys.stdout = open(args.output, 'w')
 
-if args.input is not "":
+if args.input != "":
     input_file = open(args.input, 'r')
 else:
     input_file = sys.stdin

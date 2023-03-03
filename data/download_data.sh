@@ -133,10 +133,10 @@ mkdir -p $dbs
 #zcat CADD_SNVs_1.6_GRCh38.tsv.gz | python3 $tools/db_converter_cadd.py | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > CADD_SNVs_1.6_GRCh38.vcf.gz
 #tabix -f -p vcf CADD_SNVs_1.6_GRCh38.vcf.gz
 #rm -f CADD_SNVs_1.6_GRCh38.tsv.gz
-$ngsbits/VcfCheck -in CADD_SNVs_1.6_GRCh38.vcf.gz -ref $genome #-lines 0
+#$ngsbits/VcfCheck -in CADD_SNVs_1.6_GRCh38.vcf.gz -ref $genome #-lines 0
 
 
-wget -O - https://kircherlab.bihealth.org/download/CADD/v1.6/GRCh38/gnomad.genomes.r3.0.indel.tsv.gz > CADD_InDels_1.6_GRCh38.tsv.gz
+#wget -O - https://kircherlab.bihealth.org/download/CADD/v1.6/GRCh38/gnomad.genomes.r3.0.indel.tsv.gz > CADD_InDels_1.6_GRCh38.tsv.gz
 zcat CADD_InDels_1.6_GRCh38.tsv.gz | python3 $tools/db_converter_cadd.py | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > CADD_InDels_1.6_GRCh38.vcf.gz
 tabix -f -p vcf CADD_InDels_1.6_GRCh38.vcf.gz
 rm -f CADD_InDels_1.6_GRCh38.tsv.gz

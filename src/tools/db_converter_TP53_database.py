@@ -14,10 +14,10 @@ parser.add_argument("-s", "--sep", default=",", help="separating character in th
 
 args = parser.parse_args()
 
-if args.output is not "":
+if args.output != "":
     sys.stdout = open(args.output, 'w')
 
-if args.input is not "":
+if args.input != "":
     input_file = open(args.input, 'r')
 else:
     input_file = sys.stdin

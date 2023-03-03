@@ -16,10 +16,10 @@ parser.add_argument("--oncotree", help="Path to Oncotree json file: http://oncot
 
 args = parser.parse_args()
 
-if args.output is not "":
+if args.output != "":
     sys.stdout = open(args.output, 'w')
 
-if args.input is not "":
+if args.input != "":
     input_file = open(args.input, 'r', encoding='utf-8', errors='ignore')
 else:
     input_file = sys.stdin

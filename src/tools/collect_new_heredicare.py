@@ -31,7 +31,7 @@ parser.add_argument('--legacysymbols', default='legacy_gene_names.tsv', help="pa
 
 args = parser.parse_args()
 
-if args.output is not "":
+if args.output != "":
     sys.stdout = open(args.output, 'w')
 
 sep = args.sep
