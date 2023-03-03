@@ -137,10 +137,10 @@ mkdir -p $dbs
 
 
 #wget -O - https://kircherlab.bihealth.org/download/CADD/v1.6/GRCh38/gnomad.genomes.r3.0.indel.tsv.gz > CADD_InDels_1.6_GRCh38.tsv.gz
-zcat CADD_InDels_1.6_GRCh38.tsv.gz | python3 $tools/db_converter_cadd.py | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > CADD_InDels_1.6_GRCh38.vcf.gz
-tabix -f -p vcf CADD_InDels_1.6_GRCh38.vcf.gz
-rm -f CADD_InDels_1.6_GRCh38.tsv.gz
-$ngsbits/VcfCheck -in CADD_InDels_1.6_GRCh38.vcf.gz -ref $genome #-lines 0
+#zcat CADD_InDels_1.6_GRCh38.tsv.gz | python3 $tools/db_converter_cadd.py | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > CADD_InDels_1.6_GRCh38.vcf.gz
+#tabix -f -p vcf CADD_InDels_1.6_GRCh38.vcf.gz
+#rm -f CADD_InDels_1.6_GRCh38.tsv.gz
+#$ngsbits/VcfCheck -in CADD_InDels_1.6_GRCh38.vcf.gz -ref $genome #-lines 0
 
 
 
@@ -149,7 +149,9 @@ cd $dbs
 mkdir -p REVEL
 cd REVEL
 source $tools/zhead.sh
-wget https://rothsj06.u.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip
+#old url:
+#wget https://rothsj06.u.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
+wget https://rothsj06.dmz.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
 unzip -p revel-v1.3_all_chromosomes.zip | tr ',' '\t' | sed '1s/.*/#&/' | bgzip > revel_tmp.tsv.gz
 zhead revel_tmp.tsv.gz 1 > h
 zgrep -h -v '^#chr' revel_tmp.tsv.gz | $ngsbits/TsvFilter -numeric -v -filter '3 is .' | egrep -v '^#\s' | sort -k1,1 -k3,3n - | cat h - | cut -f1-8 > revel_grch38_all_chromosomes.tsv
