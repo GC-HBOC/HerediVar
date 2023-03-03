@@ -145,20 +145,20 @@ mkdir -p $dbs
 
 
 # download REVEL (https://sites.google.com/site/revelgenomics/downloads)
-cd $dbs
-mkdir -p REVEL
-cd REVEL
-source $tools/zhead.sh
-#old url:
-#wget https://rothsj06.u.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
-wget https://rothsj06.dmz.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
-unzip -p revel-v1.3_all_chromosomes.zip | tr ',' '\t' | sed '1s/.*/#&/' | bgzip > revel_tmp.tsv.gz
-zhead revel_tmp.tsv.gz 1 > h
-zgrep -h -v '^#chr' revel_tmp.tsv.gz | $ngsbits/TsvFilter -numeric -v -filter '3 is .' | egrep -v '^#\s' | sort -k1,1 -k3,3n - | cat h - | cut -f1-8 > revel_grch38_all_chromosomes.tsv
-python3 $tools/db_converter_revel.py -i revel_grch38_all_chromosomes.tsv | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip -c > revel_grch38_all_chromosomes.vcf.gz
-tabix -f -p vcf revel_grch38_all_chromosomes.vcf.gz
-rm -f revel_tmp.tsv.gz h revel_grch38_all_chromosomes.tsv
-$ngsbits/VcfCheck -in revel_grch38_all_chromosomes.vcf.gz -ref $genome -lines 0
+#cd $dbs
+#mkdir -p REVEL
+#cd REVEL
+#source $tools/zhead.sh
+##old url:
+##wget https://rothsj06.u.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
+#wget https://rothsj06.dmz.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
+#unzip -p revel-v1.3_all_chromosomes.zip | tr ',' '\t' | sed '1s/.*/#&/' | bgzip > revel_tmp.tsv.gz
+#zhead revel_tmp.tsv.gz 1 > h
+#zgrep -h -v '^#chr' revel_tmp.tsv.gz | $ngsbits/TsvFilter -numeric -v -filter '3 is .' | egrep -v '^#\s' | sort -k1,1 -k3,3n - | cat h - | cut -f1-8 > revel_grch38_all_chromosomes.tsv
+#python3 $tools/db_converter_revel.py -i revel_grch38_all_chromosomes.tsv | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip -c > revel_grch38_all_chromosomes.vcf.gz
+#tabix -f -p vcf revel_grch38_all_chromosomes.vcf.gz
+#rm -f revel_tmp.tsv.gz h revel_grch38_all_chromosomes.tsv
+#$ngsbits/VcfCheck -in revel_grch38_all_chromosomes.vcf.gz -ref $genome -lines 0
 
 
 
@@ -170,16 +170,16 @@ mkdir -p ClinVar
 cd ClinVar
 
 ## submissions table for 'Submitted interpretations and evidence' table from website
-wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
-ncomment_lines=$(zgrep '^#' submission_summary.txt.gz | wc -l)
-source $tools/zhead.sh
-zhead submission_summary.txt.gz $ncomment_lines | tail -1 | cut -c 2- > h # nochmal auf die encoding schauen (SâˆšÂ°nchez-GutiâˆšÂ©rrez_2002_PMID:12417303; Sebastio_1991_PMID:18)
-zgrep -v '^#' submission_summary.txt.gz | cat h - | bgzip > submission_summary_preprocessed.txt.gz
+#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
+#ncomment_lines=$(zgrep '^#' submission_summary.txt.gz | wc -l)
+#source $tools/zhead.sh
+#zhead submission_summary.txt.gz $ncomment_lines | tail -1 | cut -c 2- > h # nochmal auf die encoding schauen (SâˆšÂ°nchez-GutiâˆšÂ©rrez_2002_PMID:12417303; Sebastio_1991_PMID:18)
+#zgrep -v '^#' submission_summary.txt.gz | cat h - | bgzip > submission_summary_preprocessed.txt.gz
 
-# most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz
-wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar_20220320.vcf.gz 
-gunzip -c clinvar_20220320.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary_preprocessed.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_20220320_converted_GRCh38.vcf.gz
-tabix -p vcf clinvar_20220320_converted_GRCh38.vcf.gz
+# most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # previous version used: clinvar_20220320.vcf.gz 
+wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz
+gunzip -c clinvar.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary_preprocessed.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_converted_GRCh38.vcf.gz
+tabix -p vcf clinvar_converted_GRCh38.vcf.gz
 
 : '
 # CNVs - not used atm
