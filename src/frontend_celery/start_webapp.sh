@@ -19,6 +19,6 @@ fi
 
 if [ "${WEBAPP_ENV}" == "prod" ]
 then
-    #gunicorn -b heredivar.uni-koeln.de -w 4 'webapp:create_app()'
-    gunicorn -b SRV018.img.med.uni-tuebingen.de:8001 -w 1 'webapp:create_app()'
+    gunicorn -b heredivar.uni-koeln.de:8000 -w 4 'webapp:create_app()'
+    #gunicorn -b SRV018.img.med.uni-tuebingen.de:8001 -w 1 'webapp:create_app()'
 fi
