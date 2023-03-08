@@ -56,7 +56,6 @@ jobs:
       - name: Prepare Keycloak
         run: |
           chmod 755 src/frontend_celery/tests/script/prepare_keycloak.sh
-          echo TEST
           src/frontend_celery/tests/script/prepare_keycloak.sh
 
       - name: Start Keycloak

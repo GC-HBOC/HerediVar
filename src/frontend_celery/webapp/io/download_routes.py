@@ -268,6 +268,8 @@ def calculate_class(scheme_type, selected_classes = ''):
     selected_classes = selected_classes.split('+')
     #scheme = request.args.get('scheme')
 
+    print(selected_classes)
+
     final_class = None
     if scheme_type == 'acmg':
         selected_classes = [re.sub(r'[0-9]+', '', x) for x in selected_classes] # remove numbers from critera if there are any

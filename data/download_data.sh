@@ -164,22 +164,22 @@ mkdir -p $dbs
 
 
 
-# download ClinVar (https://www.ncbi.nlm.nih.gov/clinvar/)
-cd $dbs
-mkdir -p ClinVar
-cd ClinVar
-
-## submissions table for 'Submitted interpretations and evidence' table from website
-wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
-ncomment_lines=$(zgrep '^#' submission_summary.txt.gz | wc -l)
-source $tools/zhead.sh
-zhead submission_summary.txt.gz $ncomment_lines | tail -1 | cut -c 2- > h # nochmal auf die encoding schauen (SâˆšÂ°nchez-GutiâˆšÂ©rrez_2002_PMID:12417303; Sebastio_1991_PMID:18)
-zgrep -v '^#' submission_summary.txt.gz | cat h - | bgzip > submission_summary_preprocessed.txt.gz
-
-# most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # previous version used: clinvar_20220320.vcf.gz 
-wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # newest version: clinvar_20230226.vcf.gz  
-gunzip -c clinvar.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary_preprocessed.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_converted_GRCh38.vcf.gz
-tabix -p vcf clinvar_converted_GRCh38.vcf.gz
+## download ClinVar (https://www.ncbi.nlm.nih.gov/clinvar/)
+#cd $dbs
+#mkdir -p ClinVar
+#cd ClinVar
+#
+### submissions table for 'Submitted interpretations and evidence' table from website
+#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
+#ncomment_lines=$(zgrep '^#' submission_summary.txt.gz | wc -l)
+#source $tools/zhead.sh
+#zhead submission_summary.txt.gz $ncomment_lines | tail -1 | cut -c 2- > h # nochmal auf die encoding schauen (SâˆšÂ°nchez-GutiâˆšÂ©rrez_2002_PMID:12417303; Sebastio_1991_PMID:18)
+#zgrep -v '^#' submission_summary.txt.gz | cat h - | bgzip > submission_summary_preprocessed.txt.gz
+#
+## most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # previous version used: clinvar_20220320.vcf.gz 
+#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # newest version: clinvar_20230226.vcf.gz  
+#gunzip -c clinvar.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary_preprocessed.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_converted_GRCh38.vcf.gz
+#tabix -p vcf clinvar_converted_GRCh38.vcf.gz
 
 : '
 # CNVs - not used atm
@@ -189,54 +189,54 @@ $ngsbits/BedSort -with_name -in clinvar_cnvs_2021-12.bed -out clinvar_cnvs_2021-
 '
 
 
-# download oncotree (version: oncotree_2021_11_02, downloaded from: http://oncotree.mskcc.org/#/home?tab=api)
-cd $dbs
-mkdir -p cancerhotspots
-cd cancerhotspots
-oncotree_name=oncotree_2021_11_02.json
-wget -O - http://oncotree.mskcc.org/api/tumorTypes?version=oncotree_2021_11_02 > $oncotree_name
+## download oncotree (version: oncotree_2021_11_02, downloaded from: http://oncotree.mskcc.org/#/home?tab=api)
+#cd $dbs
+#mkdir -p cancerhotspots
+#cd cancerhotspots
+#oncotree_name=oncotree_2021_11_02.json
+#wget -O - http://oncotree.mskcc.org/api/tumorTypes?version=oncotree_2021_11_02 > $oncotree_name
 
 
-# download CancerHotspots.org (version date: 2017-12-15 corresponds to the release date of the publication: Accelerating Discovery of Functional Mutant Alleles in Cancer, Chang et al. (PMCID: PMC5809279 ))
-cd $dbs
-mkdir -p cancerhotspots
-cd cancerhotspots
+## download CancerHotspots.org (version date: 2017-12-15 corresponds to the release date of the publication: Accelerating Discovery of Functional Mutant Alleles in Cancer, Chang et al. (PMCID: PMC5809279 ))
+#cd $dbs
+#mkdir -p cancerhotspots
+#cd cancerhotspots
+#
+#cancerhotspotsfile=cancerhotspots.v2
+#wget -O $cancerhotspotsfile.maf.gz http://download.cbioportal.org/cancerhotspots/cancerhotspots.v2.maf.gz
+#gunzip $cancerhotspotsfile.maf.gz
+#(head -n 2  $cancerhotspotsfile.maf && tail -n +3  $cancerhotspotsfile.maf | sort -t$'\t' -f -k5,5V -k6,6n -k11,11 -k13,13) >  $cancerhotspotsfile.sorted.maf
+#
+#cancerhotspotssamples=$(awk -F '\t' '{print $16}' $cancerhotspotsfile.sorted.maf | sort | uniq -c | wc -l)
+#python3 $tools/db_converter_cancerhotspots.py -i $cancerhotspotsfile.sorted.maf --samples $cancerhotspotssamples --oncotree $oncotree_name -o $cancerhotspotsfile.vcf
+#$ngsbits/VcfSort -in $cancerhotspotsfile.vcf -out $cancerhotspotsfile.vcf
+#cat $cancerhotspotsfile.vcf | $ngsbits/VcfLeftNormalize -stream -ref $data/genomes/GRCh37.fa | $ngsbits/VcfStreamSort > $cancerhotspotsfile.final.vcf
+#awk -v OFS="\t" '!/##/ {$9=$10=""}1' $cancerhotspotsfile.final.vcf | sed 's/^\s\+//g' > $cancerhotspotsfile.final.vcf.2 # remove SAMPLE and FORMAT columns from vcf as they are added by vcfsort
+#mv -f $cancerhotspotsfile.final.vcf.2 $cancerhotspotsfile.final.vcf
+#bgzip -f $cancerhotspotsfile.final.vcf
+#
+#$ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $data/genomes/GRCh37.fa
+#
+## crossmap to lift from GRCh37 to GRCh37
+#CrossMap.py vcf $data/genomes/hg19ToHg38.fixed.over.chain.gz $cancerhotspotsfile.final.vcf.gz $genome $cancerhotspotsfile.final.vcf
+#cat $cancerhotspotsfile.final.vcf | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > $cancerhotspotsfile.final.vcf.gz
+#rm -f $cancerhotspotsfile.final.vcf
+#rm -f $cancerhotspotsfile.vcf
+#rm -f $cancerhotspotsfile.maf
+#rm -f $cancerhotspotsfile.sorted.maf
+#
+#$ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $genome
+#
+#tabix -p vcf $cancerhotspotsfile.final.vcf.gz
 
-cancerhotspotsfile=cancerhotspots.v2
-wget -O $cancerhotspotsfile.maf.gz http://download.cbioportal.org/cancerhotspots/cancerhotspots.v2.maf.gz
-gunzip $cancerhotspotsfile.maf.gz
-(head -n 2  $cancerhotspotsfile.maf && tail -n +3  $cancerhotspotsfile.maf | sort -t$'\t' -f -k5,5V -k6,6n -k11,11 -k13,13) >  $cancerhotspotsfile.sorted.maf
-
-cancerhotspotssamples=$(awk -F '\t' '{print $16}' $cancerhotspotsfile.sorted.maf | sort | uniq -c | wc -l)
-python3 $tools/db_converter_cancerhotspots.py -i $cancerhotspotsfile.sorted.maf --samples $cancerhotspotssamples --oncotree $oncotree_name -o $cancerhotspotsfile.vcf
-$ngsbits/VcfSort -in $cancerhotspotsfile.vcf -out $cancerhotspotsfile.vcf
-cat $cancerhotspotsfile.vcf | $ngsbits/VcfLeftNormalize -stream -ref $data/genomes/GRCh37.fa | $ngsbits/VcfStreamSort > $cancerhotspotsfile.final.vcf
-awk -v OFS="\t" '!/##/ {$9=$10=""}1' $cancerhotspotsfile.final.vcf | sed 's/^\s\+//g' > $cancerhotspotsfile.final.vcf.2 # remove SAMPLE and FORMAT columns from vcf as they are added by vcfsort
-mv -f $cancerhotspotsfile.final.vcf.2 $cancerhotspotsfile.final.vcf
-bgzip -f $cancerhotspotsfile.final.vcf
-
-$ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $data/genomes/GRCh37.fa
-
-# crossmap to lift from GRCh37 to GRCh37
-CrossMap.py vcf $data/genomes/hg19ToHg38.fixed.over.chain.gz $cancerhotspotsfile.final.vcf.gz $genome $cancerhotspotsfile.final.vcf
-cat $cancerhotspotsfile.final.vcf | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > $cancerhotspotsfile.final.vcf.gz
-rm -f $cancerhotspotsfile.final.vcf
-rm -f $cancerhotspotsfile.vcf
-rm -f $cancerhotspotsfile.maf
-rm -f $cancerhotspotsfile.sorted.maf
-
-$ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $genome
-
-tabix -p vcf $cancerhotspotsfile.final.vcf.gz
 
 
-
-# download orphanet mapping table (downloaded 02.05.2022)
-cd $dbs
-mkdir -p OrphaNet
-cd OrphaNet
-
-wget http://www.orphadata.org/data/xml/en_product6.xml
+## download orphanet mapping table (downloaded 02.05.2022)
+#cd $dbs
+#mkdir -p OrphaNet
+#cd OrphaNet
+#
+#wget http://www.orphadata.org/data/xml/en_product6.xml
 
 
 

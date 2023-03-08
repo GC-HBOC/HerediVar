@@ -58,7 +58,14 @@
                 </tr>
             </thead>
             <tbody>
-                {% for classification in variant.consensus_classifications + variant.user_classifications %}
+                {% set all_classifications = [] %}
+                {% if variant.consensus_classifications is not none %}
+                    {% set all_classifications = all_classifications + variant.consensus_classifications %}
+                {% endif %}
+                {% if variant.user_classifications is not none %}
+                    {% set all_classifications = all_classifications + variant.user_classifications %}
+                {% endif %}
+                {% for classification in all_classifications %}
                 {% if 'consensus' in classification.type %}
                     {% set rowcolor = 'rgb(255, 236, 242)' %}
                 {% else %}
