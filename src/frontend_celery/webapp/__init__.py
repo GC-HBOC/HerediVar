@@ -5,6 +5,10 @@ from urllib.parse import urlparse, urljoin
 # for celery
 from celery import Celery
 from config import Config
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+from common import paths, functions
 # for logging
 import logging
 from flask.logging import default_handler
@@ -17,7 +21,7 @@ sess = Session()
 celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)
 
 
-def create_app(object_name):
+def create_app():
     """
     An flask application factory, as explained here:
     http://flask.pocoo.org/docs/patterns/appfactories/
@@ -25,6 +29,9 @@ def create_app(object_name):
         object_name: the python path of the config object,
                      e.g. project.config.ProdConfig
     """
+
+    env = os.environ.get('WEBAPP_ENV', 'dev')
+    object_name = 'config.%sConfig' % env.capitalize()
 
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config.from_object(object_name)
