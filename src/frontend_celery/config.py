@@ -27,7 +27,7 @@ class Config(object):
     ##### production config ####
     TESTING = False
     DEBUG = False
-    TLS = True
+    TLS = False
 
     SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') # should be at least 32 byte, used for signing the session objects
 
