@@ -118,7 +118,8 @@ def login():
 
 @auth_blueprint.route('/auth')
 def auth():
-    token_response = oauth.keycloak.authorize_access_token()
+    with no_ssl_verification():
+        token_response = oauth.keycloak.authorize_access_token()
 
     #userinfo = oauth.keycloak.userinfo(request)
     #idToken = oauth.keycloak.parse_id_token(tokenResponse)
