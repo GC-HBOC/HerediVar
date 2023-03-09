@@ -68,7 +68,13 @@ class Config(object):
 
 
 class ProdConfig(Config):
-    pass
+    HOST = os.environ.get('HOST')
+    # keycloak
+    KEYCLOAK_PORT = '8080'
+    ISSUER = os.environ.get('ISSUER', "http://"+HOST+':'+KEYCLOAK_PORT+'/kc/realms/HerediVar')
+    CLIENTID = os.environ.get('CLIENT_ID')
+    CLIENTSECRET = os.environ.get('CLIENT_SECRET')
+    DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
 
     
 
@@ -97,3 +103,4 @@ class LocaltestConfig(Config):
     TESTING = True
     DEBUG = True
     TLS = False
+

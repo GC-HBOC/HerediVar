@@ -1,3 +1,4 @@
+# put this in /etc/nginx/sites-enabled/heredivar
 server {
     # listen on port 80 (http)
     listen 80;
@@ -35,3 +36,6 @@ server {
         expires 30d;
     }
 }
+
+# useful headers:
+#add_header X-Content-Type-Options nosniff;
