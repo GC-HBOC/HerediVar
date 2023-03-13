@@ -40,7 +40,7 @@ GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.user_classification_criteria_
 GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.user_variant_lists TO 'HerediVar_user';
 GRANT INSERT ON HerediVar_ahdoebm1.variant TO 'HerediVar_user';
 GRANT INSERT, UPDATE ON HerediVar_ahdoebm1.annotation_queue TO 'HerediVar_user';
-GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.user_classification_selected_literature TO 'HerediVar_user'
+GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.user_classification_selected_literature TO 'HerediVar_user';
 GRANT SELECT ON HerediVar_ahdoebm1.gene_alias TO 'HerediVar_user';
 
 /* grant priviliges to super user */
