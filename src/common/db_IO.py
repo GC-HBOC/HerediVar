@@ -39,6 +39,8 @@ def get_db_connection(roles):
 def get_db_user(roles):
     if "super_user" in roles:
         #print("using super user role")
+        print(os.environ.get("DB_SUPER_USER"))
+        print(os.environ.get("DB_SUPER_USER_PW"))
         return os.environ.get("DB_SUPER_USER"), os.environ.get("DB_SUPER_USER_PW")
     if "user" in roles:
         #print("using user role")
