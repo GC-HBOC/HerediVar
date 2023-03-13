@@ -16,48 +16,6 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 
-############################ REMOVE LATER!!!! ############################
-import warnings
-import contextlib
-
-import requests
-from urllib3.exceptions import InsecureRequestWarning
-old_merge_environment_settings = requests.Session.merge_environment_settings
-
-@contextlib.contextmanager
-def no_ssl_verification():
-    opened_adapters = set()
-
-    def merge_environment_settings(self, url, proxies, stream, verify, cert):
-        # Verification happens only once per connection so we need to close
-        # all the opened adapters once we're done. Otherwise, the effects of
-        # verify=False persist beyond the end of this context manager.
-        opened_adapters.add(self.get_adapter(url))
-
-        settings = old_merge_environment_settings(self, url, proxies, stream, verify, cert)
-        settings['verify'] = False
-
-        return settings
-
-    requests.Session.merge_environment_settings = merge_environment_settings
-
-    try:
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', InsecureRequestWarning)
-            yield
-    finally:
-        requests.Session.merge_environment_settings = old_merge_environment_settings
-
-        for adapter in opened_adapters:
-            try:
-                adapter.close()
-            except:
-                pass
-
-############################ STOP REMOVE ############################
-
-
-
 
 oauth = OAuth()
 sess = Session()
@@ -65,68 +23,67 @@ celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)
 
 
 def create_app():
-    with no_ssl_verification():
-        """
-        An flask application factory, as explained here:
-        http://flask.pocoo.org/docs/patterns/appfactories/
-        Arguments:
-            object_name: the python path of the config object,
-                         e.g. project.config.ProdConfig
-        """
-    
-        env = os.environ.get('WEBAPP_ENV', 'dev')
-        object_name = 'config.%sConfig' % env.capitalize()
-    
-        app = Flask(__name__, template_folder="templates", static_folder="static")
-        app.config.from_object(object_name)
-        sess.init_app(app=app)
-    
-        oauth.init_app(app=app)
-        oauth.register(
-            name='keycloak',
-            client_id=app.config['CLIENTID'],
-            client_secret=app.config['CLIENTSECRET'],
-            server_metadata_url=app.config['DISCOVERYURL'],
-            client_kwargs={
-                'scope': 'openid email profile',
-                'code_challenge_method': 'S256'  # enable PKCE
-            }
-        )
-    
-        celery.conf.update(app.config)
-    
-    
-        from .main import create_module as main_create_module
-        from .variant import create_module as variant_create_module
-        from .doc import create_module as doc_create_module
-        from .extended_information import create_module as extended_information_create_module
-        from .io import create_module as io_create_module
-        from .auth import create_module as auth_create_module
-        from .user import create_module as user_create_module
-        from .errorhandlers import create_module as errorhandlers_create_module
-    
-        main_create_module(app)
-        variant_create_module(app)
-        io_create_module(app)
-        doc_create_module(app)
-        extended_information_create_module(app)
-        auth_create_module(app)
-        user_create_module(app)
-        errorhandlers_create_module(app)
-    
-    
-        configure_logging(app)
-    
-        from .utils import request_has_connection, get_connection
-        @app.teardown_request
-        def close_db_connection(ex):
-            if not app.config['TESTING']:
-                if request_has_connection():
-                    conn = get_connection()
-                    conn.close()
-                    app.logger.debug("Closed db connection")
-    
-        return app
+    """
+    An flask application factory, as explained here:
+    http://flask.pocoo.org/docs/patterns/appfactories/
+    Arguments:
+        object_name: the python path of the config object,
+                     e.g. project.config.ProdConfig
+    """
+
+    env = os.environ.get('WEBAPP_ENV', 'dev')
+    object_name = 'config.%sConfig' % env.capitalize()
+
+    app = Flask(__name__, template_folder="templates", static_folder="static")
+    app.config.from_object(object_name)
+    sess.init_app(app=app)
+
+    oauth.init_app(app=app)
+    oauth.register(
+        name='keycloak',
+        client_id=app.config['CLIENTID'],
+        client_secret=app.config['CLIENTSECRET'],
+        server_metadata_url=app.config['DISCOVERYURL'],
+        client_kwargs={
+            'scope': 'openid email profile',
+            'code_challenge_method': 'S256'  # enable PKCE
+        }
+    )
+
+    celery.conf.update(app.config)
+
+
+    from .main import create_module as main_create_module
+    from .variant import create_module as variant_create_module
+    from .doc import create_module as doc_create_module
+    from .extended_information import create_module as extended_information_create_module
+    from .io import create_module as io_create_module
+    from .auth import create_module as auth_create_module
+    from .user import create_module as user_create_module
+    from .errorhandlers import create_module as errorhandlers_create_module
+
+    main_create_module(app)
+    variant_create_module(app)
+    io_create_module(app)
+    doc_create_module(app)
+    extended_information_create_module(app)
+    auth_create_module(app)
+    user_create_module(app)
+    errorhandlers_create_module(app)
+
+
+    configure_logging(app)
+
+    from .utils import request_has_connection, get_connection
+    @app.teardown_request
+    def close_db_connection(ex):
+        if not app.config['TESTING']:
+            if request_has_connection():
+                conn = get_connection()
+                conn.close()
+                app.logger.debug("Closed db connection")
+
+    return app
 
 
 
