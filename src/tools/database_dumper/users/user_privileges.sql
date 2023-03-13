@@ -59,10 +59,10 @@ GRANT INSERT, UPDATE ON HerediVar_ahdoebm1.consensus_classification TO 'HerediVa
 GRANT INSERT ON HerediVar_ahdoebm1.consensus_classification_criteria_applied TO 'HerediVar_superuser';
 GRANT INSERT ON HerediVar_ahdoebm1.import_queue TO 'HerediVar_superuser';
 
-GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.user_classification_selected_literature TO 'HerediVar_superuser'
-GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.consensus_classification_selected_literature TO 'HerediVar_superuser'
+GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.user_classification_selected_literature TO 'HerediVar_superuser';
+GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.consensus_classification_selected_literature TO 'HerediVar_superuser';
 
-GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.heredivar_clinvar_submissions TO 'HerediVar_superuser'
+GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.heredivar_clinvar_submissions TO 'HerediVar_superuser';
 
 GRANT SELECT ON HerediVar_ahdoebm1.gene_alias TO 'HerediVar_superuser';
 
