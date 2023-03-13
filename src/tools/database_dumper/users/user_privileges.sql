@@ -67,8 +67,8 @@ GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.heredivar_clinvar_submissions
 GRANT SELECT ON HerediVar_ahdoebm1.gene_alias TO 'HerediVar_superuser';
 
 /* grant priviliges to read only user */
-GRANT SELECT, SHOW VIEW ON HerediVar_ahdoebm1.* TO 'HerediVar_read_only'@'%';
-GRANT SELECT, SHOW VIEW ON HerediVar_ahdoebm1_test.* TO 'HerediVar_read_only'@'%';
+GRANT SELECT, SHOW VIEW ON HerediVar_ahdoebm1.* TO 'HerediVar_read_only';
+/*GRANT SELECT, SHOW VIEW ON HerediVar_ahdoebm1_test.* TO 'HerediVar_read_only';*/
 GRANT INSERT, UPDATE ON HerediVar_ahdoebm1.user TO 'HerediVar_read_only';
 GRANT INSERT, DELETE ON HerediVar_ahdoebm1.list_variants TO 'HerediVar_read_only';
 GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.user_variant_lists TO 'HerediVar_read_only';
