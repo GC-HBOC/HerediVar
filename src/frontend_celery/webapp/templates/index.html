@@ -9,7 +9,9 @@
 <h1> {% block title %} Welcome to HerediVar {% endblock %} </h1>
 
 
-
+<form action="{{ url_for('auth.test') }}" method="POST">
+    <button type="submit">submit</button>
+</form>
 
 
 </div>
