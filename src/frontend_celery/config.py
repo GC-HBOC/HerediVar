@@ -68,7 +68,7 @@ class Config(object):
     ORPHANET_API_KEY = 'HerediVar'
 
 
-import ssl
+
 class ProdConfig(Config):
     KEYCLOAK_HOST = os.environ.get('KEYCLOAK_HOST', 'localhost')
     # keycloak
@@ -77,9 +77,6 @@ class ProdConfig(Config):
     CLIENTID = os.environ.get('CLIENT_ID')
     CLIENTSECRET = os.environ.get('CLIENT_SECRET')
     DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
-
-
-    ssl.SSLContext.verify_mode = property(lambda self: ssl.CERT_NONE, lambda self, newval: None)
 
     
 
