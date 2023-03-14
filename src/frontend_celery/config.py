@@ -34,6 +34,7 @@ class Config(object):
     # keycloak
     KEYCLOAK_PORT = '5050'
     KEYCLOAK_HOST = os.environ.get('KEYCLOAK_HOST', 'localhost')
+    KEYCLOAK_BASEPATH = "http://"+KEYCLOAK_HOST + ":" + KEYCLOAK_PORT
     ISSUER = os.environ.get('ISSUER', "http://"+KEYCLOAK_HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
     CLIENTID = os.environ.get('CLIENT_ID')
     CLIENTSECRET = os.environ.get('CLIENT_SECRET')
@@ -73,7 +74,8 @@ class ProdConfig(Config):
     KEYCLOAK_HOST = os.environ.get('KEYCLOAK_HOST', 'localhost')
     # keycloak
     KEYCLOAK_PORT = '8080'
-    ISSUER = os.environ.get('ISSUER', "http://"+KEYCLOAK_HOST+'/kc/realms/HerediVar')
+    KEYCLOAK_BASEPATH = "https://"+KEYCLOAK_HOST+"/kc"
+    ISSUER = os.environ.get('ISSUER', KEYCLOAK_BASEPATH + "/realms/HerediVar")
     CLIENTID = os.environ.get('CLIENT_ID')
     CLIENTSECRET = os.environ.get('CLIENT_SECRET')
     DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'

@@ -168,6 +168,6 @@ def register():
     #    prefix = 'https://'
     #else:
     #    prefix = 'http://'
-    issuer = current_app.config['ISSUER']
-    url = f'{issuer}/admin/HerediVar/console/'
+    KEYCLOAK_BASEPATH = current_app.config['KEYCLOAK_BASEPATH']
+    url = f'{KEYCLOAK_BASEPATH}/admin/HerediVar/console/'
     return redirect(url)
