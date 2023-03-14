@@ -41,16 +41,16 @@ vep_install_dir=$path/ensembl-vep-release-107.0
 vep_data_dir=$path/ensembl-vep-release-107.0/data
 cpan_dir=$path/ensembl-vep-release-107.0/cpan
 
-# download ensembl-vep
-mkdir -p $vep_install_dir
-cd $vep_install_dir
-wget https://github.com/Ensembl/ensembl-vep/archive/release/107.0.tar.gz
-tar -C $vep_install_dir --strip-components=1 -xzf 107.0.tar.gz
-rm 107.0.tar.gz
-
-#install dependencies
-mkdir -p $cpan_dir
-cpanm -l $cpan_dir -L $cpan_dir Set::IntervalTree URI::Escape DB_File Carp::Assert JSON::XS PerlIO::gzip DBI
+## download ensembl-vep
+#mkdir -p $vep_install_dir
+#cd $vep_install_dir
+#wget https://github.com/Ensembl/ensembl-vep/archive/release/107.0.tar.gz
+#tar -C $vep_install_dir --strip-components=1 -xzf 107.0.tar.gz
+#rm 107.0.tar.gz
+#
+##install dependencies
+#mkdir -p $cpan_dir
+#cpanm -l $cpan_dir -L $cpan_dir Set::IntervalTree URI::Escape DB_File Carp::Assert JSON::XS PerlIO::gzip DBI
 
 #download VEP cache data
 mkdir -p $vep_data_dir
