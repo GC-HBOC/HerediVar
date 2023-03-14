@@ -164,8 +164,10 @@ def logout():
 @auth_blueprint.route('/register')
 @require_permission(['admin_resources'])
 def register():
-    if current_app.config['TLS']:
-        prefix = 'https://'
-    else:
-        prefix = 'http://'
-    return redirect(prefix + current_app.config['HOST'] + ':' + current_app.config['KEYCLOAK_PORT'] + '/admin/HerediVar/console/')
+    #if current_app.config['TLS']:
+    #    prefix = 'https://'
+    #else:
+    #    prefix = 'http://'
+    issuer = current_app.config['ISSUER']
+    url = f'{issuer}/admin/HerediVar/console/'
+    return redirect(url)
