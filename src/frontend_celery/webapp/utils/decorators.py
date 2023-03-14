@@ -34,6 +34,7 @@ def require_login(f):
         # code_challenge_method=S256
         
         issuer = current_app.config['ISSUER']
+        issuer = "localhost:8080/kc/realms/HerediVar"
         url = f'{issuer}/protocol/openid-connect/token/introspect'
         data = {'token': token.get("access_token"), 'token_type_hint': 'access_token', 'username': session['user']['preferred_username'], 'client_secret': current_app.config['CLIENTSECRET'], 'client_id': current_app.config['CLIENTID']}
         header = {'Authorization': f'Bearer {token.get("access_token")}'}
