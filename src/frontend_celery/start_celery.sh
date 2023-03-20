@@ -63,5 +63,5 @@ fi
 
 if [ "${WEBAPP_ENV}" == "prod" ]
 then
-    celery -A celery_worker.celery worker --loglevel=info -Ofair --concurrency=5 --without-heartbeat --without-gossip --without-mingle
+    celery -A celery_worker.celery worker --loglevel=info --detach -Ofair --concurrency=5 --without-heartbeat --without-gossip --without-mingle
 fi
