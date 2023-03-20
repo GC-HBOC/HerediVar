@@ -6,6 +6,7 @@ ref_genome_name = "GRCh38"
 
 webapp_env = os.environ.get('WEBAPP_ENV', None)
 
+
 if webapp_env == 'dev':
     """ configuration for the development environment """
     
@@ -150,10 +151,10 @@ elif webapp_env == 'prod':
     #tools
     vep_path = path.join(toolsdir, "ensembl-vep-release-107.0")
     vep_cache_dir = path.join(vep_path, "data/cache")
+    os.environ['PERL5LIB'] = vep_path + "/Bio/:" + vep_path + "/cpan/lib/perl5/:" + os.environ.get('PERL5LIB', '')
     #ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-70-g53bce65c/"
     ngs_bits_path = path.join(toolsdir, "ngs-bits/bin")
     htslib_path = path.join(toolsdir, "htslib-1.16")
-
 
     # data
     ref_genome_path = path.join(workdir, "data/genomes/GRCh38.fa")
