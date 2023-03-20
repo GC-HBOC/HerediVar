@@ -162,6 +162,7 @@ fabric.properties
 /src/tools/redis-stable/
 /src/tools/node-v16.15.0-linux-x64/
 /src/tools/keycloak-18.0.0
+/src/tools/ensembl-vep-release-107.0
 /src/frontend/flask_sessions
 /src/frontend_celery/flask_sessions
 /keycloak-18.0.0/
