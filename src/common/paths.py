@@ -1,4 +1,5 @@
 import os
+from os import path
 
 ref_genome_name = "GRCh38"
 
@@ -141,5 +142,40 @@ elif webapp_env == 'githubtest':
 
 elif webapp_env == 'production':
     """ configuration for the production environment """
-    # TODO
+    workdir = "/mnt/storage1/HerediVar"
+    datadir = path.join(workdir, "/data/dbs")
+    toolsdir = path.join(workdir, "/src/tools")
+
+    
+    #tools
+    vep_path = path.join(toolsdir, "ensembl-vep-release-107.0")
+    vep_cache_dir = path.join(vep_path, "data/cache")
+    #ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-70-g53bce65c/"
+    ngs_bits_path = path.join(toolsdir, "ngs-bits/bin")
+    htslib_path = path.join(toolsdir, "htslib-1.16")
+
+
+    # data
+    ref_genome_path = path.join(workdir, "data/genomes/GRCh38.fa")
+    ref_genome_path_grch37 = path.join(workdir, "data/genomes/GRCh37.fa")
+    chainfile_path = path.join(workdir, "data/genomes/hg19ToHg38.fixed.over.chain.gz")
+
+    
+    #metadata
+    gnomad_path = path.join(datadir, "gnomAD/gnomAD_genome_v3.1.2_GRCh38.vcf.gz")
+    gnomad_m_path  = path.join(datadir, "gnomAD/gnomAD_genome_v3.1.mito_GRCh38.vcf.gz")
+    phylop_file_path = path.join(datadir, "phyloP/hg38.phyloP100way.bw")
+    dbsnp_path = path.join(datadir, "dbSNP/dbSNP_v155.vcf.gz")
+    revel_path = path.join(datadir, "REVEL/revel_grch38_all_chromosomes.vcf.gz")
+    spliceai_path = path.join(datadir, "SpliceAI/spliceai_scores_2022_02_09_GRCh38.vcf.gz")
+    cadd_snvs_path = path.join(datadir, "CADD/CADD_SNVs_1.6_GRCh38.vcf.gz")
+    cadd_indels_path = path.join(datadir, "CADD/CADD_InDels_1.6_GRCh38.vcf.gz")
+    clinvar_path = path.join(datadir, "ClinVar/clinvar_20220320_converted_GRCh38.vcf.gz")
+    submission_summary_path = path.join(datadir, "ClinVar/submission_summary_preprocessed.txt.gz")
+    BRCA_exchange_path = path.join(datadir, "BRCA_exchange/BRCA_exchange_02-22-22.vcf.gz")
+    FLOSSIES_path = path.join(datadir, "FLOSSIES/FLOSSIES_25-03-2022.vcf.gz")
+    cancerhotspots_path = path.join(datadir, "cancerhotspots/cancerhotspots.v2.final.vcf.gz")
+    arup_brca_path = path.join(datadir, "ARUP/ARUP_BRCA_2022_04_01.vcf.gz")
+    tp53_db = path.join(datadir, "TP53_database/GermlineDownload_r20.normalized.vcf.gz")
+    hci_priors = path.join(datadir, "HCI_priors/priors.vcf.gz")
 
