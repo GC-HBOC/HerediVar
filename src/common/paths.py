@@ -13,8 +13,8 @@ if webapp_env == 'dev':
     datadir = workdir + "data/dbs/"
 
     #tools
-    vep_path = "/mnt/storage2/GRCh38/share/opt/ensembl-vep-release-104.3"
-    vep_cache_dir = "/mnt/storage2/GRCh38/share/data/dbs/ensembl-vep-104/cache"
+    vep_path = "/mnt/storage2/megSAP/tools/ensembl-vep-release-107.0"
+    vep_cache_dir = "/mnt/storage2/megSAP/data/dbs/ensembl-vep-107/cache"
     #ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_10-1-gcb80a2dd/"
     ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
     htslib_path = workdir + "src/tools/htslib-1.16/"
