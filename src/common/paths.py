@@ -143,8 +143,8 @@ elif webapp_env == 'githubtest':
 elif webapp_env == 'prod':
     """ configuration for the production environment """
     workdir = "/mnt/storage1/HerediVar"
-    datadir = path.join(workdir, "/data/dbs")
-    toolsdir = path.join(workdir, "/src/tools")
+    datadir = path.join(workdir, "data/dbs")
+    toolsdir = path.join(workdir, "src/tools")
 
     
     #tools
