@@ -110,3 +110,12 @@ cd $tools
 wget https://github.com/keycloak/keycloak/releases/download/18.0.0/keycloak-18.0.0.zip
 unzip keycloak-18.0.0.zip
 rm keycloak-18.0.0.zip
+
+
+# install redis
+cd $tools
+wget http://download.redis.io/redis-stable.tar.gz
+tar xvzf redis-stable.tar.gz
+rm redis-stable.tar.gz
+cd redis-stable
+make
