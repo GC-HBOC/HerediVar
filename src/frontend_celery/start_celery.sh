@@ -47,6 +47,7 @@ source .venv/bin/activate
 export WEBAPP_ENV=$we
 
 
+
 if [ -z "${WEBAPP_ENV}" ]
 then
     echo Environment variable WEBAPP_ENV not set.
