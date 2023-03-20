@@ -91,10 +91,10 @@ class spliceai_job(Job):
         input_vcf_zipped_path = input_vcf_path + ".gz"
 
         # gbzip and index the input file as this is required for spliceai...
-        returncode, stderr, stdout = functions.execute_command([paths.htslib_path + 'bgzip', '-f', input_vcf_path], 'bgzip')
+        returncode, stderr, stdout = functions.execute_command([os.path.join(paths.htslib_path, 'bgzip'), '-f', input_vcf_path], 'bgzip')
         if returncode != 0:
             return returncode, stderr, stdout
-        returncode, stderr, stdout = functions.execute_command([paths.htslib_path + 'tabix', "-f", "-p", "vcf", input_vcf_zipped_path], 'tabix')
+        returncode, stderr, stdout = functions.execute_command([os.path.join(paths.htslib_path, 'tabix'), "-f", "-p", "vcf", input_vcf_zipped_path], 'tabix')
         if returncode != 0:
             return returncode, stderr, stdout
 

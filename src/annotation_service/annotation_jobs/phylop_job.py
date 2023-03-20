@@ -37,7 +37,7 @@ class phylop_job(Job):
         #    command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
         #    command.append("VcfAnnotateFromBigWig")
         #else: # use local installation
-        command = [paths.ngs_bits_path + "VcfAnnotateFromBigWig"]
+        command = [os.path.join(paths.ngs_bits_path, "VcfAnnotateFromBigWig")]
         command.extend(["-in", input_vcf, "-bw", paths.phylop_file_path,
                    "-name", "PHYLOP", "-desc", "PhyloP 100-way conservation scores (Annotation file used: " + paths.phylop_file_path + ", annotated using ngs-bits/VcfAnnotateFromBigWig - mode max)",
                    "-mode", "max", 

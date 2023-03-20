@@ -118,7 +118,7 @@ class annotate_from_vcf_job(Job):
 
 
     def annotate_from_vcf(self, config_file_path, input_vcf, output_vcf):
-        command = [paths.ngs_bits_path + "VcfAnnotateFromVcf"]
+        command = [os.path.join(paths.ngs_bits_path, "VcfAnnotateFromVcf")]
         command.extend([ "-config_file", config_file_path, "-in", input_vcf, "-out", output_vcf])
 
         returncode, err_msg, vcf_errors = functions.execute_command(command, 'VcfAnnotateFromVcf')

@@ -165,7 +165,7 @@ def preprocess_variant(infile, do_liftover=False):
     if do_liftover:
         returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh37")
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
-        returncode, err_msg, command_output = execute_command([paths.htslib_path + 'bgzip', '-f', '-k', infile], process_name="bgzip")
+        returncode, err_msg, command_output = execute_command([os.path.join(paths.htslib_path, 'bgzip'), '-f', '-k', infile], process_name="bgzip")
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
         returncode, err_msg, command_output = perform_liftover(infile, infile + ".lifted")
         if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
@@ -213,7 +213,7 @@ def check_vcf(path, ref_genome = 'GRCh38'):
     elif ref_genome == 'GRCh38': 
         genome_path = paths.ref_genome_path
 
-    command = [paths.ngs_bits_path + "VcfCheck"]
+    command = [os.path.join(paths.ngs_bits_path, "VcfCheck")]
     command.extend(["-in", path, "-lines", "0", "-ref", genome_path])
     returncode, err_msg, vcf_errors = execute_command(command, 'VcfCheck')
 
@@ -226,7 +226,7 @@ def left_align_vcf(infile, outfile, ref_genome = 'GRCh38'):
     elif ref_genome == 'GRCh38': 
         genome_path = paths.ref_genome_path
 
-    command = [paths.ngs_bits_path + "VcfLeftNormalize"]
+    command = [os.path.join(paths.ngs_bits_path, "VcfLeftNormalize")]
     command.extend(["-in", infile, "-out", outfile, "-stream", "-ref", genome_path])
     returncode, err_msg, command_output = execute_command(command, 'VcfLeftNormalize')
 
@@ -241,7 +241,7 @@ def hgvsc_to_vcf(hgvs):
     tmp_file.write(reference + "\t" + hgvs + "\n")
     tmp_file.close()
 
-    command = [paths.ngs_bits_path + "HgvsToVcf"]
+    command = [os.path.join(paths.ngs_bits_path, "HgvsToVcf")]
     command.extend(['-in', tmp_file_path + '.tsv', '-ref', paths.ref_genome_path, '-out', tmp_file_path + '.vcf'])
     returncode, err_msg, command_output = execute_command(command, "HgvsToVcf", use_prefix_error_log=False)
     

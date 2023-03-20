@@ -117,7 +117,7 @@ class vep_job(Job):
     #"/mnt/storage2/GRCh38/share/data/genomes/GRCh38.fa"
     def _annotate_vep(self, input_vcf, output_vcf):
         fields_oi_base = "Feature,HGVSc,HGVSp,Consequence,IMPACT,EXON,INTRON,HGNC_ID,SYMBOL,DOMAINS"
-        command = [paths.vep_path + "/vep",
+        command = [os.path.join(paths.vep_path, "vep"),
                    "-i", input_vcf, "--format", "vcf",
                    "-o", output_vcf, "--vcf", "--no_stats", "--force_overwrite",
                    "--species", "homo_sapiens", "--assembly", paths.ref_genome_name,
@@ -133,7 +133,7 @@ class vep_job(Job):
             #gnomAD_AF,gnomAD_AFR_AF,gnomAD_AMR_AF,gnomAD_EAS_AF,gnomAD_NFE_AF,gnomAD_SAS_AF, "--af_gnomad",
             #DOMAINS,SIFT,PolyPhen,PUBMED,AF
             fields_oi = fields_oi_base + ",MaxEntScan_ref,MaxEntScan_alt,PUBMED"
-            command = command + ["--plugin", "MaxEntScan," + paths.vep_path + "/MaxEntScan/",
+            command = command + ["--plugin", "MaxEntScan," + os.path.join(paths.vep_path, "MaxEntScan"),
                                  "--regulatory",
                                  "--pubmed",
                                  "--fields", fields_oi]

@@ -49,7 +49,7 @@ class hexplorer_job(Job):
         #    command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
         #    command.append("VcfAnnotateHexplorer")
         #else: # use local installation
-        command = [paths.ngs_bits_path + "VcfAnnotateHexplorer"]
+        command = [os.path.join(paths.ngs_bits_path, "VcfAnnotateHexplorer")]
         command = command + ["-in", input_vcf_path, "-out", output_vcf_path, "-ref", paths.ref_genome_path]
         returncode, stderr, stdout = functions.execute_command(command, 'VcfAnnotateHexplorer')
 
