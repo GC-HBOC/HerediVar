@@ -54,6 +54,7 @@ then
     exit 1
 fi
 
+cd src/frontend_celery/
 
 if [ "${WEBAPP_ENV}" == "dev" ]
 then
