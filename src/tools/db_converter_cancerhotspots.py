@@ -98,11 +98,11 @@ def convert_oncotree_symbol(oncotree_symbol):
 
 
 # cancertype is oncotreecancertype:oncotreetissue
-def prepare_cancertype(cancertype):
+def prepare_cancertype(cancertype, ac):
     parts = cancertype.split(':')
     oncotree_name = convert_oncotree_symbol(parts[0])
     oncotree_name = oncotree_name.replace(' ', '_')
-    return oncotree_name + ':' + parts[1]
+    return ':'.join([parts[0], oncotree_name, parts[1], str(ac)])
 
 
 
@@ -164,11 +164,11 @@ for line in input_file:
                 i_ref = i
             elif part == 'Tumor_Seq_Allele2': # this is the alt allele
                 i_alt = i
-            elif part == 'Tumor_Seq_Allele1': # this is the alt allele
-                i_alt_1 = i
-            elif part == 'TUMORTYPE':
-                i_cancertype = i
-            elif part == 'Tumor_Sample_Barcode':
+            #elif part == 'Tumor_Seq_Allele1': # this is the alt allele
+            #    i_alt_1 = i
+            #elif part == 'TUMORTYPE':
+            #    i_cancertype = i
+            elif part == 'oncotree_detailed':
                 i_barcode = i
             elif part == "oncotree_organtype":
                 i_tissue = i
@@ -184,7 +184,7 @@ for line in input_file:
     pos = parts[i_start]
     ref = parts[i_ref]
     alt = parts[i_alt]
-    alt_1 = parts[i_alt_1]
+    #alt_1 = parts[i_alt_1]
     barcode = parts[i_barcode]
 
     if is_first_variant:
@@ -193,7 +193,7 @@ for line in input_file:
         previous_ref = ref
         previous_alt = alt
         previous_barcode = barcode
-        all_cancer_types = []
+        all_cancer_types = {}
         ac = 1
         is_first_variant = False
     
@@ -202,9 +202,9 @@ for line in input_file:
     # test if previous variant is equal to the current one
     if chr != previous_chr or pos != previous_pos or ref != previous_ref or alt != previous_alt:
         info = ''
-        info = functions.collect_info(info, 'cancertypes=', '|'.join([prepare_cancertype(x) for x in set(all_cancer_types)]))
+        info = functions.collect_info(info, 'cancertypes=', '|'.join([prepare_cancertype(x, all_cancer_types[x]) for x in all_cancer_types]))
         info = functions.collect_info(info, 'AC=', ac)
-        info = functions.collect_info(info, 'AF=', ac/tot_samples)
+        info = functions.collect_info(info, 'AF=', round(ac/tot_samples, 3))
         print_variant(previous_chr, previous_pos, previous_ref, previous_alt, info)
 
         previous_chr = chr
@@ -212,14 +212,21 @@ for line in input_file:
         previous_ref = ref
         previous_alt = alt
         previous_barcode = barcode
-        if parts[i_cancertype] != '' or parts[i_tissue] != '': # collect cancertypes only if there is at least some information available
-            all_cancer_types = [parts[i_cancertype] + ':' + parts[i_tissue]]
-        else:
-            all_cancer_types = []
+        all_cancer_types = {}
+        if parts[i_barcode] != '':
+            current_key = parts[i_barcode] + ':' + parts[i_tissue]
+            if current_key in all_cancer_types:
+                all_cancer_types[current_key] += 1
+            else:
+                all_cancer_types[current_key] = 1
         ac = 1
     else:
-        if parts[i_cancertype] != '' or parts[i_tissue] != '':
-            all_cancer_types.append(parts[i_cancertype] + ':' + parts[i_tissue])
+        if parts[i_barcode] != '':
+            current_key = parts[i_barcode] + ':' + parts[i_tissue]
+            if current_key in all_cancer_types:
+                all_cancer_types[current_key] += 1
+            else:
+                all_cancer_types[current_key] = 1
         if previous_barcode != barcode:
             ac += 1
 
