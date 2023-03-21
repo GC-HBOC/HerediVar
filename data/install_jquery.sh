@@ -31,12 +31,12 @@ then
 fi
 
 # Begin script in case all parameters are correct
-echo "Downloading jQuery $version to $path."
+echo "Downloading jQuery $version to $path/jquery."
 
 
-mkdir -p $path
+mkdir -p $path/jquery
 
-cd $path
+cd $path/jquery
 
 wget -q https://code.jquery.com/jquery-$version.min.js
 

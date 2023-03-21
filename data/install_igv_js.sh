@@ -31,12 +31,12 @@ then
 fi
 
 # Begin script in case all parameters are correct
-echo "Downloading igv $version to $path."
+echo "Downloading igv $version to $path/igv."
 
 
-mkdir -p $path
+mkdir -p $path/igv
 
-cd $path
+cd $path/igv
 
 wget -q https://cdn.jsdelivr.net/npm/igv@$version/dist/igv.min.js
 

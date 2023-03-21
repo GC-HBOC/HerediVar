@@ -127,7 +127,7 @@ cd $root
 
 # install igv
 cd $root
-./install_igv.sh -p ../HerediVar/src/frontend_celery/webapp/static -v 2.13.9
+./install_igv_js.sh -p ../HerediVar/src/frontend_celery/webapp/static -v 2.13.9
 
 # install jquery
 cd $root
