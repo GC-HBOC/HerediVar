@@ -119,3 +119,16 @@ tar xvzf redis-stable.tar.gz
 rm redis-stable.tar.gz
 cd redis-stable
 make
+
+
+# install bootstrap
+cd $root
+./install_bootstrap.sh -p ../HerediVar/src/frontend_celery/webapp/static -v 5.2.3
+
+# install igv
+cd $root
+./install_igv.sh -p ../HerediVar/src/frontend_celery/webapp/static -v 2.13.9
+
+# install jquery
+cd $root
+./install_jquery.sh -p ../HerediVar/src/frontend_celery/webapp/static -v 3.6.3
