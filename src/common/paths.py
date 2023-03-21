@@ -171,7 +171,7 @@ elif webapp_env == 'prod':
     spliceai_path = path.join(datadir, "SpliceAI/spliceai_scores_2022_02_09_GRCh38.vcf.gz")
     cadd_snvs_path = path.join(datadir, "CADD/CADD_SNVs_1.6_GRCh38.vcf.gz")
     cadd_indels_path = path.join(datadir, "CADD/CADD_InDels_1.6_GRCh38.vcf.gz")
-    clinvar_path = path.join(datadir, "ClinVar/clinvar_20220320_converted_GRCh38.vcf.gz")
+    clinvar_path = path.join(datadir, "ClinVar/clinvar_converted_GRCh38.vcf.gz")
     submission_summary_path = path.join(datadir, "ClinVar/submission_summary_preprocessed.txt.gz")
     BRCA_exchange_path = path.join(datadir, "BRCA_exchange/BRCA_exchange_02-22-22.vcf.gz")
     FLOSSIES_path = path.join(datadir, "FLOSSIES/FLOSSIES_25-03-2022.vcf.gz")
