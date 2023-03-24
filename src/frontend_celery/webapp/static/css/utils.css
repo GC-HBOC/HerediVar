@@ -1,0 +1,188 @@
+/************** padding & margins **************/
+
+.bst {
+    margin-top: 1em;
+}
+.sst {
+    margin-top: 0.5em;
+}
+
+
+.bsb {
+    margin-bottom: 1em;
+}
+.ssb {
+    margin-bottom: 0.5em;
+}
+
+
+.bsr {
+    margin-right: 1em;
+}
+.ssr {
+    margin-right: 0.5em;
+}
+.vssr {
+    margin-right: 0.2em;
+}
+
+
+.bsl {
+    margin-left: 1em;
+}
+.ssl {
+    margin-left: 0.5em;
+}
+.vssl {
+    margin-left: 0.2em;
+}
+.nsl {
+    margin-left: 0;
+}
+
+
+.nopad {
+    padding: 0 !important;
+}
+.padding_big {
+    padding:1rem;
+}
+.padding_small {
+    padding: 0.5rem;
+}
+
+.left-space-padding {
+    padding:0.5rem; 
+    padding-left:1rem;
+}
+
+
+/************** sizing **************/
+.full_page {
+    min-width:80rem; 
+    width:100%;
+}
+.container {
+    min-width:80rem;
+}
+.width_very_large {
+    min-width:40em;
+    width:40em;
+}
+.width_large {
+    min-width:30em;
+    width:30em;
+}
+.width_medium {
+    min-width:20em;
+    width:20em;
+}
+.width_small {
+    min-width:10em;
+    width:10em;
+}
+.width_very_small {
+    min-width:5em;
+    width:5em;
+}
+.width_minimal {
+    min-width:3.5em;
+    width:3.5em;
+}
+.width_very_minimal {
+    min-width:2em;
+    width:2em;
+}
+.height_zero {
+    height:0;
+}
+
+.scale_150 {
+    transform:scale(1.5)
+}
+
+
+/************** alignment **************/
+.float_right {
+    float: right;
+}
+
+.vertical_align_middle {
+    vertical-align:middle;
+}
+
+
+/************** text **************/
+.break_text_all {
+    word-break: break-all;
+}
+.keep-spaces {
+    white-space: pre;
+}
+.wrap-spaces {
+    white-space: pre-wrap;
+}
+.nowrap {
+    white-space: nowrap;
+}
+
+
+.text_align_center {
+    text-align: center;
+}
+.items_align_center {
+    align-items: center;
+}
+
+.bold {
+    font-weight:bold;
+}
+.large_text {
+    font-size:x-large
+}
+
+.underline {
+    text-decoration: underline;
+}
+
+
+/************** overflow **************/
+.overflow_x_auto {
+    overflow-x:auto !important;
+}
+.hyphens {
+    -webkit-hyphens: auto;
+    -moz-hyphens: auto;
+    -ms-hyphens: auto;
+    hyphens: auto;
+}
+
+/************** border **************/
+.noboarder-td {
+    border-top:0 !important;
+    border-bottom:0 !important;
+}
+
+.noboarder_top {
+    border-top:0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.noborder {
+    border-top:0 !important;
+    border-bottom:0 !important;
+    border-left:0 !important;
+    border-right:0 !important;
+}
+
+
+
+/************** misc **************/
+.cursor_pointer {
+    cursor:pointer;
+}
+
+.visually_hidden {
+    display: none;
+}

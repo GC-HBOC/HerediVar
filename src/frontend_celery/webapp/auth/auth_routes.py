@@ -22,13 +22,6 @@ auth_blueprint = Blueprint(
 )
 
 
-@auth_blueprint.route('/test', methods=['POST', 'GET'])
-def test():
-    print(request.method)
-    return request.method
-
-
-
 @auth_blueprint.route('/login')
 def login():
 

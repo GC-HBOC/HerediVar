@@ -66,8 +66,8 @@
                     <label for="reference-genome" class="form-label">Reference genome build</label>
                     <select class="form-select" name="genome" id="reference-genome" required>
                         <option value="" {% if ('GRCh38' != request.form['genome'] and 'GRCh37' != request.form['genome']) %} selected="selected" {% endif %} disabled hidden>Choose reference genome build</option>
-                        <option value="GRCh38" style="color:black;" {% if ('GRCh38' == request.form['genome']) %} selected="selected" {% endif %}>GRCh38 (hg38)</option>
-                        <option value="GRCh37" style="color:black;" {% if ('GRCh37' == request.form['genome']) %} selected="selected" {% endif %}>GRCh37 (hg19)</option>
+                        <option value="GRCh38" class="color_black" {% if ('GRCh38' == request.form['genome']) %} selected="selected" {% endif %}>GRCh38 (hg38)</option>
+                        <option value="GRCh37" class="color_black" {% if ('GRCh37' == request.form['genome']) %} selected="selected" {% endif %}>GRCh37 (hg19)</option>
                    </select>
                    <div class="invalid-feedback">
                        Please select a reference genome build.

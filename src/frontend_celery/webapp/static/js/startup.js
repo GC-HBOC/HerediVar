@@ -78,25 +78,31 @@ $(document).ready(function()
 
     // coloring of consensus classification
     document.getElementsByName('class-label').forEach(function(obj) {
+        const possible_classes = ["1", "2", "3", "4", "5"]
         var consensus_classification = obj.getAttribute('classification').trim();
-        var base_color = get_consensus_classification_color(consensus_classification)
-
-        obj.setAttribute('style', 'color:'+base_color)
-
-        //$('#class-label').css({'color': base_color});
-    
-        if (["1", "2", "3", "4", "5"].includes(consensus_classification)) {
-            tooltip_text = "This variant has been classified by the VUS task-force with the class " + consensus_classification
-        } else {
+        if (!possible_classes.includes(consensus_classification)) {
+            consensus_classification = "none"
             tooltip_text = "This variant has not been classified by the VUS task-force yet."
+        } else {
+            tooltip_text = "This variant has been classified by the VUS task-force with the class " + consensus_classification
         }
+
+        $(obj).addClass("classification_" + consensus_classification + "_col")
+
     
         obj.querySelector("#theC").setAttribute('title', tooltip_text);
     });
 
     document.getElementsByName('consensus_class_display').forEach(function(obj) {
+        const possible_classes = ["1", "2", "3", "4", "5"]
         var consensus_classification = obj.getAttribute('classification').trim()
-        var base_color = get_consensus_classification_color(consensus_classification)
-        obj.setAttribute('style', 'background-color:'+base_color)
+        if (!possible_classes.includes(consensus_classification)) {
+            consensus_classification = "none"
+            tooltip_text = "This variant has not been classified by the VUS task-force yet."
+        } else {
+            tooltip_text = "This variant has been classified by the VUS task-force with the class " + consensus_classification
+        }
+
+        $(obj).addClass("classification_" + consensus_classification + "_col")
     });
 });

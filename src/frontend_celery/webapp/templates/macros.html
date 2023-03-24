@@ -5,8 +5,8 @@
 
 {% macro render_consensus_classification_label(class, width='6em') %}
 <!-- position this element when you use it! -->
-    <div name="class-label" style="height:auto;" classification="{{ class }}" >
-        <svg id="theC" data-bs-toggle="tooltip" title="" data-bs-placement="left" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" viewBox="0 0 250 250" preserveAspectRatio="xMidYMid meet" style="position: absolute; z-index:1;" fill="currentColor">
+    <div class="class_label" name="class-label" classification="{{ class }}" >
+        <svg id="theC" class="the_c" data-bs-toggle="tooltip" title="" data-bs-placement="left" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" viewBox="0 0 250 250" preserveAspectRatio="xMidYMid meet" fill="currentColor">
             <path d="M212.5,172.3c-16.9,31.1-49.8,52.2-87.6,52.2c-54.9,0-99.5-44.6-99.5-99.5c0-54.9,44.6-99.5,99.5-99.5   c38.3,0,71.6,21.8,88.2,53.6h28C222.9,32.8,177.7,0,125,0C56.1,0,0,56.1,0,125c0,68.9,56.1,125,125,125c52.2,0,97-32.2,115.7-77.7   H212.5z"/>
         </svg>
 
@@ -46,9 +46,9 @@
     <div class="classification-gradient left-space-padding" name="consensus_class_display" classification="{{ most_recent_consensus_classification.selected_class }}">
         <table class="table table-borderless table-slim" consensus_classification_id="{{ most_recent_consensus_classification.id }}">
             <tbody>
-                <tr style="margin-left:0">
-                    <td style="width:6rem;" class="li-label">Data</td>
-                    <td style="vertical-align:middle;">
+                <tr class="nsl">
+                    <td class="li-label width_very_small">Data</td>
+                    <td class="vertical_align_middle">
                         <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
                             <li class="list-group-item noboarder-td">
                                 Class: {{ most_recent_consensus_classification.selected_class }}
@@ -65,16 +65,16 @@
 
                 <tr>
                     <td class="li-label">Comment</td>
-                    <td><div style="white-space: pre-wrap;">{{ most_recent_consensus_classification.comment }}</div></td>
+                    <td><div class="wrap-spaces">{{ most_recent_consensus_classification.comment }}</div></td>
                 </tr>
 
                 {% set selected_scheme = most_recent_consensus_classification.scheme %}
                 {% set selected_criteria = selected_scheme.get_criteria_sorted() %}<!-- the consensus scheme classifications should only contain the most recent classification -->
                 {% set scheme_determined_class = selected_scheme.selected_class %}
 
-                <tr style="margin-left:0">
-                    <td class="li-label" style="width:5rem;">Scheme</td>
-                    <td style="vertical-align:middle;">
+                <tr class="nsl">
+                    <td class="li-label width_very_small">Scheme</td>
+                    <td class="vertical_align_middle">
                         <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
                             <li class="list-group-item noboarder-td">
                                 Class by scheme: {{ scheme_determined_class }}
@@ -88,15 +88,15 @@
 
                 {% if selected_criteria is not none %}
                 <tr>
-                    <td class="li-label" style="vertical-align:middle">Criteria</td>
-                    <td style="vertical-align:middle">{{ draw_criteria_display(selected_criteria, '4em', '1.7em', source='consensus') }}</td>
+                    <td class="li-label width_very_small vertical_align_middle" >Criteria</td>
+                    <td class="vertical_align_middle">{{ draw_criteria_display(selected_criteria, source='consensus') }}</td>
                 </tr>
                 {% endif %}
 
                 {% if most_recent_consensus_classification.literature is not none %}
                 <tr>
-                    <td class="li-label" style="vertical-align:middle">Literature</td>
-                    <td style="vertical-align:middle">
+                    <td class="li-label width_very_small vertical_align_middle">Literature</td>
+                    <td class="vertical_align_middle">
                         {{ selected_literature_display(most_recent_consensus_classification.literature) }}
                     </td>
                 </tr>
@@ -107,7 +107,7 @@
     </div>
 {% else %}
     <div class="classification-gradient left-space-padding" name="consensus_class_display" classification="-">
-        <div class="li-label" style="padding:1em">
+        <div class="li-label padding_big">
             There is no consensus classification for this variant, yet.
         </div>
     </div>
@@ -116,11 +116,11 @@
 {% endmacro %}
 
 
-{% macro draw_criteria_display(criteria, width='6em', height='2.5em', source='user') %}
+{% macro draw_criteria_display(criteria, source='user') %}
     {% for criterium in criteria %}
     <span class="d-inline-block ssr tooltip-lg" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" {% if source=="user" %} user_criterium_applied_id="{{ criterium.id }}" {% else %} consensus_criterium_applied_id="{{ criterium.id }}" {% endif %}
         title="Strength: {{ criterium.strength }} <br> Evidence: {{ criterium.evidence }}">
-        <div class="btn btn-{{ criterium.type }} light-hover acmg-button" style="width:{{width}}; height:{{height}}">{{ criterium.name }}</div>
+        <div class="btn btn-{{ criterium.type }} light-hover acmg-button acmg-button-small">{{ criterium.name }}</div>
     </span>
     {% endfor %}
 {% endmacro %}
@@ -132,21 +132,20 @@
 
     <div class="col">
         
-        <a class="btn btn-sm btn-primary" data-bs-toggle="collapse" id="searchOptionsToggle" style="float:right" href="#advanced_search" role="button" aria-expanded="false" aria-controls="advanced_search" >
+        <a class="btn btn-sm btn-primary float_right" data-bs-toggle="collapse" id="searchOptionsToggle" href="#advanced_search" role="button" aria-expanded="false" aria-controls="advanced_search" >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
             </svg>
         </a>
         
 
-        <a class="btn btn-sm btn-danger" style="margin-right:0.1em; float:right" href="{{ url_for(request.url_rule.endpoint) }}" data-bs-toggle="tooltip" title="Clear all filters.">
+        <a class="btn btn-sm btn-danger float_right" href="{{ url_for(request.url_rule.endpoint) }}" data-bs-toggle="tooltip" title="Clear all filters.">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
                 
                 <g transform="scale(1.5)">
                     <g transform="translate(-4,-2.5)">
                         <path d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
-
                     </g>
                 </g>
             </svg>
@@ -173,9 +172,9 @@
                                >{{ request.args.get('ranges', '') }}</textarea>
                         
                         <div class="d-flex"> <!-- custom file upload -->
-                            <input class="btn btn-secondary fake-upload-button" type="button" id="loadbed" value="select bed..." onclick="document.getElementById('bed').click()" />
-                            <label class="form-control fake-upload-label" for="loadbed" id="filepath_display" style="cursor:pointer">No file selected.</label>
-                            <input type="file" name="bed" class="form-control" id="bed" accept=".bed" style="display:none;" onchange="document.getElementById('filepath_display').innerText = 'selected: ' + this.value.replace(/.*[\/\\]/, '');"></input>
+                            <input class="btn btn-secondary fake-upload-button" type="button" id="loadbed" value="select bed..." />
+                            <label class="form-control fake-upload-label cursor_pointer" for="loadbed" id="filepath_display">No file selected.</label>
+                            <input type="file" name="bed" class="form-control visually-hidden" id="bed" accept=".bed"></input>
                         </div>
 
                         <div id="status"></div>
@@ -193,27 +192,27 @@
                         <label for="consensus-select" class="form-label">Consensus classification</label>
                         <div id="consensus-select" class="d-flex">
                             <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="1" id="cl1" name="consensus" {% if '1' in selected_consensus %}checked{% endif %}>
+                                <input class="form-check-input ssr" type="checkbox" value="1" id="cl1" name="consensus" {% if '1' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl1">1</label>
                             </div>
                             <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="2" id="cl2" name="consensus" {% if '2' in selected_consensus %}checked{% endif %}>
+                                <input class="form-check-input ssr" type="checkbox" value="2" id="cl2" name="consensus" {% if '2' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl2">2</label>
                             </div>
                             <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="3" id="cl3" name="consensus" {% if '3' in selected_consensus %}checked{% endif %}>
+                                <input class="form-check-input ssr" type="checkbox" value="3" id="cl3" name="consensus" {% if '3' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl3">3</label>
                             </div>
                             <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="4" id="cl4" name="consensus" {% if '4' in selected_consensus %}checked{% endif %}>
+                                <input class="form-check-input ssr" type="checkbox" value="4" id="cl4" name="consensus" {% if '4' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl4">4</label>
                             </div>
                             <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="5" id="cl5" name="consensus" {% if '5' in selected_consensus %}checked{% endif %}>
+                                <input class="form-check-input ssr" type="checkbox" value="5" id="cl5" name="consensus" {% if '5' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl5">5</label>
                             </div>
                             <div class="form-check d-flex align-items-center">
-                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="-" id="cl-" name="consensus" {% if '-' in selected_consensus %}checked{% endif %}>
+                                <input class="form-check-input ssr" type="checkbox" value="-" id="cl-" name="consensus" {% if '-' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl-">none</label>
                             </div>
                         </div>
@@ -224,27 +223,27 @@
                         <label for="user-select" class="form-label">Your classification</label>
                         <div id="user-select" class="d-flex">
                             <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="1" id="ucl1" name="user" {% if '1' in selected_user %}checked{% endif %}>
+                                <input class="form-check-input ssr" type="checkbox" value="1" id="ucl1" name="user" {% if '1' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl1">1</label>
                             </div>
                             <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="2" id="ucl2" name="user" {% if '2' in selected_user %}checked{% endif %}>
+                                <input class="form-check-input ssr" type="checkbox" value="2" id="ucl2" name="user" {% if '2' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl2">2</label>
                             </div>
                             <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="3" id="ucl3" name="user" {% if '3' in selected_user %}checked{% endif %}>
+                                <input class="form-check-input ssr" type="checkbox" value="3" id="ucl3" name="user" {% if '3' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl3">3</label>
                             </div>
                             <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="4" id="ucl4" name="user" {% if '4' in selected_user %}checked{% endif %}>
+                                <input class="form-check-input ssr" type="checkbox" value="4" id="ucl4" name="user" {% if '4' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl4">4</label>
                             </div>
                             <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="5" id="ucl5" name="user" {% if '5' in selected_user %}checked{% endif %}>
+                                <input class="form-check-input ssr" type="checkbox" value="5" id="ucl5" name="user" {% if '5' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl5">5</label>
                             </div>
                             <div class="form-check d-flex align-items-center">
-                                <input class="form-check-input" style="margin-right:0.3rem" type="checkbox" value="-" id="ucl-" name="user" {% if '-' in selected_user %}checked{% endif %}>
+                                <input class="form-check-input ssr" type="checkbox" value="-" id="ucl-" name="user" {% if '-' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl-">none</label>
                             </div>
                         </div>
@@ -253,8 +252,8 @@
                     {% if lists is not none %}
                     <div class="form-group sst">
                         <label for="lookup_list_name" class="form-label">List</label>
-                        <div class="autocomplete" style="width:100%">
-                            <input id="lookup_list_id" name="lookup_list_id" type="text" value="{{ request.args.get('lookup_list_id', '') }}" style="display:none">
+                        <div class="autocomplete full_page">
+                            <input id="lookup_list_id" name="lookup_list_id" class="visually_hidden" type="text" value="{{ request.args.get('lookup_list_id', '') }}">
                             <input value="{{ request.args.get('lookup_list_name', '') }}" id="lookup_list_name" class="form-control" name="lookup_list_name" type="text" placeholder="Select a list... start search by typing">
                         </div>
                     </div>
@@ -267,9 +266,9 @@
         
                     <div class="d-flex justify-content-end align-items-center">
                         <div>
-                            <a class="ssr" href="{{url_for('doc.search_help')}}" style="float:right" >Help</a>
+                            <a class="ssr float_right" href="{{url_for('doc.search_help')}}">Help</a>
                         </div>
-                        <button style="float:right" class="btn btn-primary" type="submit">search</button>
+                        <button class="btn btn-primary float_right" type="submit">search</button>
                     </div>
         
                 </form>
@@ -284,28 +283,28 @@
   <table class="table table-hover ssb" id="variantTable">
     <thead id="variantTableHead">
       <tr>
-        <th style="display:none;">id</th>
-        <th style="width: 7%">CHR</th>
-        <th style="width: 10%">POS</th>
-        <th style="width: 30%">REF</th>
-        <th style="width: 30%">ALT</th>
-        <th style="width: 8%">HGVS c.</th>
-        <th style="width: 8%">HGVS p.</th>
-        <th style="width: 8%;">GENE</th>
-        <th style="width:12%; text-align:center;">Your classification</th>
-        <th style="width:12%; text-align: center;">Consensus classification</th>
+        <th class="visually_hidden">id</th>
+        <th class="text_align_center width_very_small">CHR</th>
+        <th class="width_small">POS</th>
+        <th class="width_large">REF</th>
+        <th class="width_large">ALT</th>
+        <th class="width_small">HGVS c.</th>
+        <th class="width_small">HGVS p.</th>
+        <th class="width_small">GENE</th>
+        <th class="text_align_center width_small">Your classification</th>
+        <th class="text_align_center width_small">Consensus classification</th>
       </tr>
     </thead>
     <tbody id="variantTableBody">
       {% for variant in variants %}
       {% set preferred_transcripts = variant.get_preferred_transcripts() %}
-      <tr name="variant_row" style="line-height: 28px;" variant_id="{{ variant.id }}">
-        <td style="display:none;">{{ variant.id }}</td>
-        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable" style="white-space: nowrap;">{{ variant.chrom }}</td>
-        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable" style="white-space: nowrap;">{{ variant.pos }}</td>
+      <tr name="variant_row" variant_id="{{ variant.id }}">
+        <td class="visually_hidden">{{ variant.id }}</td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="text_align_center clickable nowrap">{{ variant.chrom }}</td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable nowrap">{{ variant.pos }}</td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss"><abbr title="{{ variant.ref }}">{{ variant.ref }}</abbr></td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss"><abbr title="{{ variant.alt }}">{{ variant.alt }}</abbr></td>
-        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss" style="white-space: nowrap;">
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss nowrap">
             {% if preferred_transcripts is not none %}
                 {% for consequence in preferred_transcripts %}
                     {% if consequence.hgvs_c is not none %} {% set hgvs_c = consequence.hgvs_c %} {% else %} {% set hgvs_c = '-' %} {% endif %}
@@ -319,7 +318,7 @@
                 </div>
             {% endif %}
         </td>
-        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss" style="white-space: nowrap;">
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss nowrap">
             {% if preferred_transcripts is not none %}
                 {% for consequence in preferred_transcripts %}
                     {% if consequence.hgvs_p is not none %} {% set hgvs_p = consequence.hgvs_p %} {% else %} {% set hgvs_p = '-' %} {% endif %}
@@ -351,12 +350,12 @@
                 </div>
             {% endif %}
         </td>
-        <td style="text-align:center;">
+        <td class="text_align_center">
             {% set your_classification = variant.get_recent_user_classification(session['user']['user_id']) %}
             {% if your_classification is not none %} {{ your_classification.selected_class }} {% else %}-{%endif%}
         </td>
         <!--<td style="text-align:center;">{% if variant[7] is not none %} {{ variant[7] }} {% else %}-{%endif%}</td>-->
-        <td style="text-align:center;">
+        <td class="text_align_center">
             {% set most_recent_consensus_classification = variant.get_recent_consensus_classification() %}
             {{ render_consensus_classification_label(most_recent_consensus_classification.selected_class, '2em') }}
         </td>
@@ -369,83 +368,9 @@
 
 <div id="tabnav-bottom" class="ssb">{{ pagination.links }}</div>
 
+<input type='hidden' id='targetid' data-lists='{{lists | tojson | safe}}' />
+<script src="/static/js/paginated_variants.js"></script>
 
-<script>
-    const lists = JSON.parse('{{lists | tojson | safe}}');
-
-    for (var i = 0; i < lists.length; i++) {
-        current_list = lists[i]
-        if (current_list[3] == 1 || current_list[5] == 1) {
-            var list_id = lists[i][0]
-            var list_name = lists[i][2]
-            lists[i] = [list_id, list_name]
-        }
-    }
-
-    autocomplete(document.getElementById("lookup_list_name"), document.getElementById("lookup_list_id"), lists);
-</script>
-
-<script>
-    // functionality for the bed file upload           
-    function changeStatus(status) {
-        document.getElementById('status').innerHTML = status;
-    }
-
-    function loaded(e) {
-        const fr = e.target;
-        var bed_text = fr.result;
-        var text_area = document.getElementById('ranges')
-
-        // append to text area
-        bed_lines = bed_text.split(/\r\n|\n/);
-        bed_lines.forEach((line) => {
-            line = line.trim()
-            if (line.startsWith('chr')) {
-                parts = line.split('\t')
-                if (parts.length >= 3 ) {
-                    text_area.value = text_area.value + '\n' + parts[0] + ':' + parts[1] + '-' + (parts[2] - 1)
-                }
-            }
-        })
-        text_area.value = text_area.value.trim()
-    }
-
-    function errorHandler(e) {
-        changeStatus('Error: ' + e.target.error.name);
-    }
-
-    document.getElementById('bed').addEventListener('change', function(e) {
-        const file = document.getElementById('bed').files[0];
-    
-        if (file) {
-            const fr = new FileReader();
-    
-            fr.readAsText(file);
-            fr.addEventListener('loadend', loaded);
-            fr.addEventListener('error', errorHandler);
-        }
-    });
-</script>
-
-<script>
-    // save state of collapse in cookie such that it stays open if the user reloads the page (eg. upon search)
-    document.getElementById("advanced_search").addEventListener("show.bs.collapse", function(e) {
-        var active = 'advanced_search';
-        localStorage.setItem('expandedSearchOptions', active);
-    });
-
-    document.getElementById("advanced_search").addEventListener("hide.bs.collapse", function(e) {
-        localStorage.removeItem('expandedSearchOptions');
-    });
-
-    var last = localStorage.getItem('expandedSearchOptions');
-    if (last != null) {
-        //remove default collapse settings
-        document.getElementById("advanced_search").classList.add('show');
-        //show collapse
-        document.getElementById(last).classList.add('show');
-    }
-</script>
 
 
 {% endmacro %}
@@ -480,7 +405,7 @@
         <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
         <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
     </svg>
-    <div style="display:none;">private</div> <!-- make the search bar work when this is in a table -->
+    <div class="visually_hidden">private</div> <!-- make the search bar work when this is in a table -->
 </span>
 {% endmacro %}
 
@@ -490,7 +415,7 @@
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-globe2" viewBox="0 0 16 16">
         <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm7.5-6.923c-.67.204-1.335.82-1.887 1.855-.143.268-.276.56-.395.872.705.157 1.472.257 2.282.287V1.077zM4.249 3.539c.142-.384.304-.744.481-1.078a6.7 6.7 0 0 1 .597-.933A7.01 7.01 0 0 0 3.051 3.05c.362.184.763.349 1.198.49zM3.509 7.5c.036-1.07.188-2.087.436-3.008a9.124 9.124 0 0 1-1.565-.667A6.964 6.964 0 0 0 1.018 7.5h2.49zm1.4-2.741a12.344 12.344 0 0 0-.4 2.741H7.5V5.091c-.91-.03-1.783-.145-2.591-.332zM8.5 5.09V7.5h2.99a12.342 12.342 0 0 0-.399-2.741c-.808.187-1.681.301-2.591.332zM4.51 8.5c.035.987.176 1.914.399 2.741A13.612 13.612 0 0 1 7.5 10.91V8.5H4.51zm3.99 0v2.409c.91.03 1.783.145 2.591.332.223-.827.364-1.754.4-2.741H8.5zm-3.282 3.696c.12.312.252.604.395.872.552 1.035 1.218 1.65 1.887 1.855V11.91c-.81.03-1.577.13-2.282.287zm.11 2.276a6.696 6.696 0 0 1-.598-.933 8.853 8.853 0 0 1-.481-1.079 8.38 8.38 0 0 0-1.198.49 7.01 7.01 0 0 0 2.276 1.522zm-1.383-2.964A13.36 13.36 0 0 1 3.508 8.5h-2.49a6.963 6.963 0 0 0 1.362 3.675c.47-.258.995-.482 1.565-.667zm6.728 2.964a7.009 7.009 0 0 0 2.275-1.521 8.376 8.376 0 0 0-1.197-.49 8.853 8.853 0 0 1-.481 1.078 6.688 6.688 0 0 1-.597.933zM8.5 11.909v3.014c.67-.204 1.335-.82 1.887-1.855.143-.268.276-.56.395-.872A12.63 12.63 0 0 0 8.5 11.91zm3.555-.401c.57.185 1.095.409 1.565.667A6.963 6.963 0 0 0 14.982 8.5h-2.49a13.36 13.36 0 0 1-.437 3.008zM14.982 7.5a6.963 6.963 0 0 0-1.362-3.675c-.47.258-.995.482-1.565.667.248.92.4 1.938.437 3.008h2.49zM11.27 2.461c.177.334.339.694.482 1.078a8.368 8.368 0 0 0 1.196-.49 7.01 7.01 0 0 0-2.275-1.52c.218.283.418.597.597.932zm-.488 1.343a7.765 7.765 0 0 0-.395-.872C9.835 1.897 9.17 1.282 8.5 1.077V4.09c.81-.03 1.577-.13 2.282-.287z"/>
     </svg>
-    <div style="display:none;">public</div> <!-- make the search bar work when this is in a table -->
+    <div class="visually_hidden">public</div> <!-- make the search bar work when this is in a table -->
 </span>
 {% endmacro %}
 
@@ -512,13 +437,13 @@
                 </div>
                   
                 <div class="table-responsive tableFixHead" >
-                  <table class="table table-hover" id="list-add-table" style="table-layout:auto;">
+                  <table class="table table-hover" id="list-add-table">
                     <thead>
                       <tr>
-                        <th style="padding-right:0; padding-left:0; background-color:white; width:3.5rem; min-width:3.5rem;">
+                        <th class="nopad bg-light width_very_minimal">
                           <div class="sortable"></div><input type="text" class="form-control form-control-sm column-filter" placeholder="search..." autocomplete="off">
                         </th>
-                        <th style="padding-right:0; padding-left:0; background-color:white;">
+                        <th class="nopad bg-light">
                           <div class="sortable"></div><input type="text" class="form-control form-control-sm column-filter" placeholder="search..." autocomplete="off">
                         </th>
                       </tr>
@@ -528,9 +453,9 @@
                         {% if list[4] == 1 or list[5] == 1 %}
 
                         <tr>
-                            <td style="padding:0">
+                            <td class="nopad">
                                 <form action="{{ url_for(href_loc, selected_list_id=list[0], **arguments) }}" method="post">
-                                    <button class="d-flex justify-content-center dropdown-item {{list[6]}}" style="padding:0.5rem" type="submit">
+                                    <button class="d-flex justify-content-center dropdown-item {{list[6]}} padding_small" type="submit">
                                         {% if list[3] == 1 %} <!-- is public -->
                                             {{ draw_public_symbol("Public list") }}
                                         {% else %} <!-- is private -->
@@ -539,10 +464,10 @@
                                       </button>
                                 </form>
                             </td>
-                            <td style="padding:0">
+                            <td class="nopad hyphens">
                                 <form action="{{ url_for(href_loc, selected_list_id=list[0], **arguments) }}" method="post">
-                                    <button class="dropdown-item {{list[6]}}" style="padding:0.5rem" type="submit">
-                                        {{ list[2] }}
+                                    <button class="dropdown-item {{list[6]}} padding_small" type="submit">
+                                        <div class="wrap-spaces">{{ list[2] }}</div>
                                     </button>
                                 </form>
                             </td>
@@ -575,9 +500,9 @@
                 <table class="table table-borderless table-slim">
                     <tbody>
                         <tr>
-                            <td style="width:10rem" class="li-label">Variant</td>
+                            <td class="li-label width_small">Variant</td>
                             <td > 
-                                <div style="word-break:break-all;">
+                                <div class="break_text_all">
                                     {{ variant.chrom }}-{{ variant.pos }}-{{ variant.ref }}-{{ variant.alt }}
                                 </div>
                             </td>

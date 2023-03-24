@@ -3,6 +3,10 @@
 
 $(document).ready(function(){
     on_page_load()
+
+    $('#assay_type').click(function() {
+        select_assay_type_action(this.value);
+    });
 });
 
 

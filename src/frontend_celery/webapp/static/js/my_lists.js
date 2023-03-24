@@ -19,7 +19,7 @@ $(document).ready(function()
 
     // add delete column to list variant view
     var variant_table = $('#variantTable')
-    variant_table.find('thead').find('tr').append('<td style="text-align:center; font-weight: 650; width:5%">Del</td>')
+    variant_table.find('thead').find('tr').append('<td class="text_align_center bold width_minimal">Del</td>')
     const list_permissions = $('#list-permissions')
     const can_edit = list_permissions.attr('data-owner') == 1 || list_permissions.attr('data-editable') == 1 
     variant_table.find('tbody').find('tr').each(function(){
@@ -32,6 +32,11 @@ $(document).ready(function()
         }
         
     });
+
+    // add event listeners
+    $('#public_read').change(function() {
+        public_read_toggle_action()
+    })
 
 });
 
@@ -52,7 +57,7 @@ function create_delete_button(parent, list_id, variant_id) {
     */
 
     var td = document.createElement("td")
-    td.setAttribute('style', "text-align:center")
+    td.classList.add('text_align_center')
     parent[0].appendChild(td)
 
     var form = document.createElement("form")
@@ -64,7 +69,7 @@ function create_delete_button(parent, list_id, variant_id) {
     button.setAttribute("type", "submit")
     button.classList.add('btn')
     button.classList.add("btn-link")
-    button.setAttribute("style", "padding:0")
+    button.classList.add("nopad")
     form.appendChild(button)
 
     image = create_trashcan()
@@ -143,7 +148,7 @@ create_modal.addEventListener('show.bs.modal', function (event) {
 
 function create_xlg(parent) {
     var td = document.createElement("td")
-    td.setAttribute('style', "text-align:center")
+    td.classList.add('text_align_center')
     parent[0].appendChild(td)
 
     var image = document.createElementNS("http://www.w3.org/2000/svg", "svg")

@@ -12,10 +12,10 @@
 <form method="post" class="needs-validation" enctype=multipart/form-data novalidate>
     <div class="form-group sst">
         <label for="assay_type" class="form-label">Assay type</label>
-        <select class="form-select" name="assay_type" id="assay_type" initvalue="{{ request.form['assay_type'] }}" onchange="select_assay_type_action(this.value)" required>
+        <select class="form-select" name="assay_type" id="assay_type" initvalue="{{ request.form['assay_type'] }}" required>
             <option value="" selected="selected" disabled hidden>Choose assay type</option>
-            <option value="functional" style="color:black;">functional assay</option>
-            <option value="splicing" style="color:black;">splicing assay</option>
+            <option value="functional" class="color_black">functional assay</option>
+            <option value="splicing" class="color_black">splicing assay</option>
        </select>
        <div class="invalid-feedback">
            Please select an assay type.
@@ -57,6 +57,5 @@
 {% endblock %}
 
 {% block special_scripts %}
-    <script src="/static/js/formValidator.js"></script>
     <script src="/static/js/submit_assay.js"></script>
 {% endblock%}

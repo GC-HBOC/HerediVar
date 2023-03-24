@@ -6,6 +6,7 @@ from ..utils import require_permission, get_connection, get_preferred_username, 
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from common.db_IO import Connection
+import common.paths as paths
 import io
 import tempfile
 from shutil import copyfileobj
@@ -385,3 +386,19 @@ def decide_for_class_acmg(possible_classes):
         final_class = 3
     
     return final_class
+
+
+@download_blueprint.route('/download/refgene_ngsd.gff3')
+def refgene_ngsd():
+    filename = "refgene_ngsd.gff3"
+    return send_from_directory(directory=paths.igv_data_path, path=filename, download_name="refgene_ngsd.gff3", as_attachment=True, mimetype="text")
+
+@download_blueprint.route('/download/hg38.fa')
+def ref_genome():
+    filename = "GRCh38.fa"
+    return send_from_directory(directory=paths.ref_genome_dir, path=filename, download_name="GRCh38.fa", as_attachment=True, mimetype="text")
+
+@download_blueprint.route('/download/hg38.fa.fai')
+def ref_genome_index():
+    filename = "GRCh38.fa.fai"
+    return send_from_directory(directory=paths.ref_genome_dir, path=filename, download_name="GRCh38.fa.fai", as_attachment=True, mimetype="text")

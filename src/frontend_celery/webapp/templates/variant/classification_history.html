@@ -17,7 +17,7 @@
             {{ macros.draw_most_recent_consensus_classification(most_recent_consensus_classification) }}
         </div>
 
-        <div class="ms-auto" style="margin-right:1em;">
+        <div class="ms-auto ssr">
             {% if most_recent_consensus_classification is not none %}
                 {% set consensus_class = most_recent_consensus_classification.selected_class %}
             {% else %}
@@ -41,20 +41,20 @@
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover" id="historyTable" style="table-layout: auto;">
+        <table class="table table-hover" id="historyTable">
             <thead>
                 <tr>
-                    <th id="type_col" asc="false"><div class="sortable">Type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th id="submitter_col"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th id="affiliation_col"><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th id="class_col" ><div class="sortable">User defined class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th id="date_col" asc="true"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th style="min-width:30rem" id="comment_col"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th id="scheme_col"><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th id="selected_criteria_col" style="min-width:20rem"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th id="class_by_scheme_col" style="max-width:5rem"><div class="sortable">Class by scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th id="class_by_scheme_col" style="max-width:5rem"><div class="sortable">Literature</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th id="document_col">Document</th>
+                    <th id="type_col" class="width_small" asc="false"><div class="sortable">Type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th id="submitter_col" class="width_small"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th id="affiliation_col" class="width_small"><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th id="class_col" class="width_very_small" ><div class="sortable">User defined class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th id="date_col" asc="true" class="width_small"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th id="comment_col"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th id="scheme_col" class="width_small"><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th id="selected_criteria_col" class="width_medium"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th id="class_by_scheme_col" class="width_very_small"><div class="sortable">Class by scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th id="class_by_scheme_col" class="width_small"><div class="sortable">Literature</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th id="document_col" class="width_small">Document</th>
                 </tr>
             </thead>
             <tbody>
@@ -66,21 +66,16 @@
                     {% set all_classifications = all_classifications + variant.user_classifications %}
                 {% endif %}
                 {% for classification in all_classifications %}
-                {% if 'consensus' in classification.type %}
-                    {% set rowcolor = 'rgb(255, 236, 242)' %}
-                {% else %}
-                    {% set rowcolor = 'rgb(245, 242, 219)' %}
-                {% endif %}
                 
-                <tr style="background-color:{{rowcolor}}">
+                <tr>
                     <td class="{{classification.type | replace(' ', '_')}}_style">{{classification.type}}</td>
                     <td>{{classification.submitter.full_name}}</td>
                     <td>{{classification.submitter.affiliation}}</td>
                     <td>{{classification.selected_class}}</td>
-                    <td style="white-space:nowrap;">{{classification.date}}</td>
+                    <td class="nowrap">{{classification.date}}</td>
                     <td>{{classification.comment}}</td>
                     <td>{{classification.scheme.display_name}}</td>
-                    <td>{{ macros.draw_criteria_display(classification.scheme.criteria, '4em', '2em') }}</td>
+                    <td>{{ macros.draw_criteria_display(classification.scheme.criteria) }}</td>
                     <td>{{classification.scheme.selected_class}}</td>
                     <td>{{macros.selected_literature_display(classification.literature)}}</td>
                     <td>{% if 'consensus' in classification.type %}<a href="{{ url_for('download.evidence_document', consensus_classification_id=classification.id) }}">download</a>{% endif %}</td>
@@ -115,6 +110,5 @@
 {% endblock %}
 
 {% block special_scripts %}
-<script src="/static/js/colors.js"></script>
 <script src="/static/js/classification_history.js"></script>
 {% endblock%}

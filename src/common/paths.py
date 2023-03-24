@@ -22,9 +22,10 @@ if webapp_env == 'dev':
     htslib_path = workdir + "src/tools/htslib-1.16/"
 
     # data
-    ref_genome_path = workdir + "data/genomes/GRCh38.fa"
-    ref_genome_path_grch37 = workdir + "data/genomes/GRCh37.fa"
-    chainfile_path = workdir + "data/genomes/hg19ToHg38.fixed.over.chain.gz"
+    ref_genome_dir = workdir + "data/genomes/"
+    ref_genome_path = ref_genome_dir + "GRCh38.fa"
+    ref_genome_path_grch37 = ref_genome_dir + "GRCh37.fa"
+    chainfile_path = ref_genome_dir + "hg19ToHg38.fixed.over.chain.gz"
     
     #metadata
     gnomad_path = datadir + "gnomAD/gnomAD_genome_v3.1.2_GRCh38.vcf.gz"
@@ -61,6 +62,11 @@ if webapp_env == 'dev':
     # further data
     parsing_refseq_ensembl = datadir + "mapping_tables/hg38_ensembl_transcript_matches.tsv"
     gene_to_ensembl_transcript_path = datadir + "mapping_tables/gene_to_ensembl_transcript.tsv"
+
+
+    # IGV data
+    igv_data_path = workdir + "src/frontend_celery/webapp/static/packages/igv/data"
+
 
 elif webapp_env == 'localtest':
     """ configuration when the tests are run locally and not through github actions """

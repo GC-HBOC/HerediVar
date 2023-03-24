@@ -10,7 +10,7 @@ helpFunction()
    echo "Usage: $0 -p path -v version"
    echo "Download the specified igv.js version to the specified directory"
    echo -e "\t-p The path where igv.js will be installed"
-   echo -e "\t-p The bootstrap version. Eg. 2.13.9"
+   echo -e "\t-p The bootstrap version. Eg. 2.15.0"
    exit 1 # Exit script after printing help
 }
 

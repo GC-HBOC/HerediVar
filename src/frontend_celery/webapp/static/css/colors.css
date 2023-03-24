@@ -1,0 +1,187 @@
+
+.stylish-color-dark {
+    background-color: #3e4551 !important;
+}
+
+.bg_white {
+    background:white !important;
+}
+
+.variant-banner-color {
+    background-color:rgb(238, 238, 238);
+    border-color: rgb(206, 206, 206);
+}
+
+.selected {
+    background-color:#0d6efd !important; /* this color is the color from the pimary button of bootstrap */
+    color:white !important;
+}
+
+input.invalid {
+    background-color: #ffdddd;
+}
+
+.user_classification_style {
+    background-color: rgb(235, 229, 172) !important;
+}
+.consensus_classification_style {
+    background-color:  rgb(238, 156, 183) !important;
+}
+.color_lighter {
+    filter: brightness(120%);
+}
+
+.color_black {
+    color:black !important;
+}
+.color_white {
+    color:white !important;
+}
+
+
+
+
+
+
+
+
+.btn-pvs {
+    color: #960000;
+    background-color: #ffffff;
+    background: white;
+    border-color: #d8d8d8;
+}
+.btn-pvs:hover {
+    color: rgb(255, 255, 255);
+    background-color: #9c0000;
+    border-color: #d8d8d8;
+}
+.btn-pvs:focus, .btn-pvs.focus, .btn-pvs:active:focus, .open>.dropdown-toggle.btn-pvs, input[type=checkbox]:checked + label.btn-pvs {
+    color: rgb(255, 255, 255);
+    background-color: #960000;
+    border-color: #d8d8d8;
+}
+.btn-ps {
+    color: #ff7300;
+    background-color: #ffffff;
+    border-color: #d8d8d8;
+}
+.btn-ps:hover {
+    color: rgb(255, 255, 255);
+    background-color: #ff8017;
+    border-color: #d8d8d8;
+}
+.btn-ps:focus, .btn-ps.focus, .btn-ps:active:focus, .open>.dropdown-toggle.btn-ps, input[type=checkbox]:checked + label.btn-ps {
+    color: rgb(255, 255, 255);
+    background-color: #ff7300;
+    border-color: #d8d8d8;
+}
+.btn-pm {
+    color: #d8be19;
+    background-color: #ffffff;
+    border-color: #d8d8d8;
+}
+.btn-pm:hover {
+    color: rgb(255, 255, 255);
+    background-color: #dbc114;
+    border-color: #d8d8d8;
+}
+.btn-pm:focus, .btn-pm.focus, .btn-pm:active:focus, .open>.dropdown-toggle.btn-pm, input[type=checkbox]:checked + label.btn-pm {
+    color: rgb(255, 255, 255);
+    background-color: #f1d620;
+    border-color: #d8d8d8;
+}
+.btn-pp {
+    color: #108800;
+    background-color: #ffffff;
+    border-color: #d8d8d8;
+}
+.btn-pp:hover {
+    color: rgb(255, 255, 255);
+    background-color: #108800;
+    border-color: #d8d8d8;
+}
+.btn-pp:focus, .btn-pp.focus, .btn-pp:active:focus, .open>.dropdown-toggle.btn-pp, input[type=checkbox]:checked + label.btn-pp {
+    color: rgb(255, 255, 255);
+    background-color: #108800;
+    border-color: #d8d8d8;
+}
+.btn-bp {
+    color: #1db5cf;
+    background-color: #ffffff;
+    border-color: #d8d8d8;
+}
+.btn-bp:hover {
+    color: rgb(255, 255, 255);
+    background-color: rgb(23, 173, 199);
+    border-color: #d8d8d8;
+}
+.btn-bp:focus, .btn-bp.focus, .btn-bp:active:focus, .open>.dropdown-toggle.btn-bp, input[type=checkbox]:checked + label.btn-bp {
+    color: rgb(255, 255, 255);
+    background-color: #1db5cf;
+    border-color: #d8d8d8;
+}
+.btn-bs {
+    color: #6f15a3;
+    background-color: #ffffff;
+    border-color: #d8d8d8;
+}
+.btn-bs:hover {
+    color: rgb(255, 255, 255);
+    background-color: #7e0dc0;
+    border-color: #d8d8d8;
+}
+.btn-bs:focus, .btn-bs.focus, .btn-bs:active:focus, .open>.dropdown-toggle.btn-bs, input[type=checkbox]:checked + label.btn-bs {
+    color: rgb(255, 255, 255);
+    background-color: #6f15a3;
+    border-color: #d8d8d8;
+}
+.btn-ba {
+    color: #000d58;
+    background-color: #ffffff;
+    border-color: #d8d8d8;
+}
+.btn-ba:hover {
+    color: rgb(255, 255, 255);
+    background-color: #000f64;
+    border-color: #d8d8d8;
+}
+.btn-ba:focus, .btn-ba.focus, .btn-ba:active:focus, .open>.dropdown-toggle.btn-ba, input[type=checkbox]:checked + label.btn-ba {
+    color: rgb(255, 255, 255);
+    background-color: #000d58;
+    border-color: #d8d8d8;
+}
+
+
+
+
+
+.classification_1_col {
+    color:rgba(60,210,60,1);
+}
+
+.classification_2_col {
+    color:rgba(149,233,0,1);
+}
+
+.classification_3_col {
+    color:rgba(29, 181, 207, 1);
+}
+
+.classification_4_col {
+    color:rgba(255,142,61,1);
+}
+
+.classification_5_col {
+    color:rgba(240,73,53,1);
+}
+
+.classification_none_col {
+    color:rgb(164, 164, 164);
+}
+
+
+.classification-gradient {
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.499019676229867) 20%, rgba(255,255,255,0.633473457742472) 40%, rgba(255,255,255,1) 100%);
+    background-color: currentColor;
+}

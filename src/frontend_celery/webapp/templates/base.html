@@ -14,6 +14,10 @@
     
     <!-- local, own css -->
     <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/utils.css">
+    <link rel="stylesheet" href="/static/css/colors.css">
+    <link rel="stylesheet" href="/static/packages/igv/igv.css">
+
 
     <!-- own js utils -->
     <script src="/static/js/utils.js"></script>
@@ -63,7 +67,7 @@
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     {{ session.get('user').get('preferred_username')}}
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" style="min-width: 1rem;">
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" > <!--style="min-width: 1rem;"-->
                                     <li><a class="dropdown-item" href="{{config['HOST']}}:5050/realms/HerediVar/account/#/personal-info">Profile</a></li>
                                     <li><a class="dropdown-item" href="{{ url_for('user.my_lists') }}">My lists</a></li>
                                     <li><a class="dropdown-item" href="https://github.com/GC-HBOC/HerediVar/issues">Feedback</a></li>
@@ -83,7 +87,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="bst alert {{ category }} alert-dismissible fade show" style=" word-break: break-all;">
+                    <div class="bst alert {{ category }} alert-dismissible fade show break_text_all">
                         {{ message }} 
                         <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
@@ -103,7 +107,7 @@
     <footer class="border-top bg-light sst" height="6rem">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container-fluid">
-                <a class="navbar-brand" style="padding:0" href="{{url_for('main.index')}}">HerediVar</a>
+                <a class="navbar-brand nopad" href="{{url_for('main.index')}}">HerediVar</a>
                 <div class="navbar-nav text-muted">© 2022</div>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#footerContent" aria-controls="footerContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -143,7 +147,7 @@
     <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>-->
 
     <!-- igv -->
-    <script src="/static/packages/igv/igv.min.js"></script>
+    <!--<script src="/static/packages/igv/igv.min.js"></script>-->
     <!--<script src="https://cdn.jsdelivr.net/npm/igv@2.13.5/dist/igv.min.js"></script>-->
     
     <!-- activate own js utils -->

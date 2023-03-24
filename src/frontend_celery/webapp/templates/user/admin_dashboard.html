@@ -9,7 +9,7 @@
 <h1 class="bst"> {% block title %} Admin dashboard {% endblock %} </h1>
 
 <!-- import all from heredicare button -->
-<div class="bst" style="display:flex; align-items:center;">
+<div class="bst d-flex items_align_center">
     <form action="/admin_dashboard?type=update_variants" id="import-variants-form" name="import-variants-form" method="post" action="#">
         <div class="form-group">
             <span id="tooltip-import-variants-button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button invokes a mass-import of all variants in HerediCare and collects metadata from HerediCare.">
@@ -20,10 +20,10 @@
     </form>
     {% if most_recent_import_request is not none %}
         {% if most_recent_import_request[3] == 'pending' %}
-            <span class="badge rounded-pill bg-secondary" style="margin-left:10px" data-bs-toggle="tooltip" title="import requested at {{ most_recent_import_request[2] }}">import requested</span>
+            <span class="badge rounded-pill bg-secondary ssl" data-bs-toggle="tooltip" title="import requested at {{ most_recent_import_request[2] }}">import requested</span>
         {% endif %}
         {% if most_recent_import_request[3] == 'finished' %}
-            <span class="badge rounded-pill bg-success" style="margin-left:10px" data-bs-toggle="tooltip" title="most recent import finished at {{ most_recent_import_request[4] }}">last import: {{ most_recent_import_request[4] }}</span>
+            <span class="badge rounded-pill bg-success ssl" data-bs-toggle="tooltip" title="most recent import finished at {{ most_recent_import_request[4] }}">last import: {{ most_recent_import_request[4] }}</span>
         {% endif %}
     {% endif %}
 </div>
@@ -51,7 +51,7 @@
 
 
 <!-- reannotate all button -->
-<div class="bst" style="display:flex; align-items:center;">
+<div class="bst d-flex align_items_center">
     <form action="/admin_dashboard?type=reannotate" id="reannotate-variants-form" name="reannotate-variants-form" method="post" action="#">
         <div class="form-group">
             <span id="tooltip-reannotate-variants-button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button requests an annotation of all variants in HerediVar.">

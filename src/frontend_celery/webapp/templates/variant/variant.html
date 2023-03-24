@@ -15,7 +15,7 @@
         <div class="flex-grow-1">
             <!-- title -->
             <h1>
-                <div id="variant_page_title" style="word-break:break-all; width:95%;" chrom="{{ variant.chrom }}" pos="{{ variant.pos }}" ref="{{ variant.ref }}" alt="{{ variant.alt }}">
+                <div id="variant_page_title" class="break_text_all" chrom="{{ variant.chrom }}" pos="{{ variant.pos }}" ref="{{ variant.ref }}" alt="{{ variant.alt }}">
                     : {% block title %} {{ variant.chrom }}-{{ variant.pos }}-{{ variant.ref }}-{{ variant.alt }} {% endblock %}(GRCh38)
                 </div>
             </h1>
@@ -130,7 +130,7 @@
         {% else %}
             {% set _consensus_class = '-' %}
         {% endif %}
-        <div class="ms-auto" style="margin-right: 1rem;">
+        <div class="ms-auto bsr">
             {{ macros.render_consensus_classification_label(_consensus_class) }}
         </div>
         
@@ -208,9 +208,9 @@
                 <table class="table table-borderless table-slim">
                     <tbody>
                         <tr>
-                            <td style="width:10rem" class="li-label"><abbr title="Variant in VCF style (FORMAT: chromosome -> position in reference genome (GRCh38) -> reference allele -> alternative allele)">VCF</abbr></td>
+                            <td class="li-label width_small"><abbr title="Variant in VCF style (FORMAT: chromosome -> position in reference genome (GRCh38) -> reference allele -> alternative allele)">VCF</abbr></td>
                             <td > 
-                                <div style="word-break:break-all;">
+                                <div class="break_text_all">
                                     {{ variant.chrom }}-{{ variant.pos }}-{{ variant.ref }}-{{ variant.alt }}
                                 </div>
                             </td>
@@ -223,9 +223,8 @@
                         {% endif %}
                         <!-- External Links / Further Information on external websites-->
                         <tr>
-                            <td class="li-label">External&nbsp;resources</td>
-                            <td style="vertical-align:middle;">
-                                
+                            <td class="li-label">External resources</td>
+                            <td class="vertical_align_middle">
                                 <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
                                     <li class="list-group-item noboarder-td" >
                                         {{ macros.external_link("UCSC", "https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=chr2%3A" + variant.pos|string) }}
@@ -301,7 +300,7 @@
             
     <!--available classifications-->
     <div class="w-100 ssb">
-        <div class="card" style="border-top:0; border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="card noboarder_top">
             <div class="card-body">
                     <!-- HEREDIVAR -->
                     <div>
@@ -324,27 +323,27 @@
                                 <table class="table table-hover" id="userClassificationsTable">
                                     <thead>
                                         <tr>
-                                            <th style="width:3rem"><div class="sortable">Final class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th style="width:10rem"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th style="width:10rem"><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th style="width:15rem" id="userClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_very_small"><div class="sortable">Final class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_medium" id="userClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                             <th><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th style="width:15rem"><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th style="width:40rem"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th style="width:5rem"><div class="sortable">Class by scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th style="width:7rem"><div class="sortable">Literature</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_medium"><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_large"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_very_small"><div class="sortable">Class by scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Literature</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for classification in variant.user_classifications %}
                                         <tr user_classification_id="{{ classification.id }}">
-                                            <td style="text-align:center">{{ classification.selected_class }}</td>
+                                            <td class="text_align_center">{{ classification.selected_class }}</td>
                                             <td>{{ classification.submitter.full_name }}</td>
                                             <td>{{ classification.submitter.affiliation }}</td>
-                                            <td style="white-space:nowrap;">{{ classification.date }}</td>
+                                            <td class="nowrap">{{ classification.date }}</td>
                                             <td><abbr title="{{ classification.comment }}"><div class="Nellipsis">{{ classification.comment }}</div> </abbr></td>
-                                            <td style="white-space:nowrap;">{{ classification.scheme.display_name }}</td>
-                                            <td>{{ macros.draw_criteria_display(classification.scheme.criteria, '4em', '2em') }}</td>
+                                            <td class="nowrap">{{ classification.scheme.display_name }}</td>
+                                            <td>{{ macros.draw_criteria_display(classification.scheme.criteria) }}</td>
                                             <td>{{ classification.scheme.selected_class }}</td>
                                             <td>{{ macros.selected_literature_display(classification.literature) }}</td>
                                         </tr>
@@ -365,18 +364,18 @@
                                 <table class="table table-hover" id="heredicareCenterClassificationsTable">
                                     <thead>
                                         <tr>
-                                            <th style="width:2.5rem"><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th><div class="sortable">Center</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th id="heredicareCenterClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th style="min-width:20rem"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_very_small"><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_medium"><div class="sortable">Center</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_medium" id="heredicareCenterClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for classification in variant.heredicare_classifications %}
                                         <tr heredicare_center_classification_id="{{ classification.id }}">
-                                            <td>{{ classification.selected_class }}</td>
+                                            <td class="text_align_center">{{ classification.selected_class }}</td>
                                             <td>{{ classification.center }}</td>
-                                            <td style="white-space:nowrap;">{{ classification.date }}</td>
+                                            <td class="nowrap">{{ classification.date }}</td>
                                             <td>{{ classification.comment }}</td>
                                         </tr>
                                         {% endfor %}
@@ -406,22 +405,22 @@
                         {% if clinvar.submissions is not none %}
                         <div class="ssl ssb">
                             <div class="table-responsive tableFixHead">
-                                <table class="table table-hover" style="width:100%" id="clinvarSubmissionsTable">
+                                <table class="table table-hover" id="clinvarSubmissionsTable">
                                     <thead>
                                         <tr>
-                                            <th><div class="sortable">Interpretation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th id="clinvarSubmissionsTableLastEvaluatedCol"><div class="sortable">Last evaluated</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th style="min-width:9rem"><div class="sortable">Review status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th style="min-width:13rem"><div class="sortable">Submission condition</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th style="min-width:20rem"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th style="min-width:20rem;">Comment<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Interpretation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small" id="clinvarSubmissionsTableLastEvaluatedCol"><div class="sortable">Last evaluated</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_medium"><div class="sortable">Review status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_large"><div class="sortable">Submission condition</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_large"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th>Comment<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for submission in clinvar.submissions %}
                                         <tr clinvar_id="{{submission.id}}">
                                             <td>{{ submission.interpretation }}</td>
-                                            <td style="white-space:nowrap;">{{ submission.last_evaluated }}</td>
+                                            <td class="nowrap">{{ submission.last_evaluated }}</td>
                                             <td>{{ submission.review_status }}</td>
                                             <td>
                                                 {% for clinvar_submission_condition in submission.conditions %}
@@ -474,16 +473,16 @@
             
     <!--variant information-->
     <div class="w-100 ssb">
-        <div class="card" style="border-top:0; border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="card noboarder_top">
             <div class="card-body">
                 <h4 class="card-subcaption">Variant information</h4>
 
                 <div class="table-responsive">
-                    <table class="table table-borderless table-border-between" style="table-layout: fixed; display: inline-block; overflow-x:auto;">
+                    <table class="table table-borderless table-border-between"> <!--style="display: inline-block; overflow-x:auto;"-->
                         <thead>
                             <tr>
-                                <th style="width: 10rem;"></th>
-                                <th style="width:100%"></th>
+                                <th class="width_small"></th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -492,13 +491,13 @@
                             {% for group_identifier in group_identifiers %}
                                 {% set current_annotations = annotations.get_group(group_identifier) %}
                                 {% if current_annotations is not none %}
-                                <tr style="margin-top:100;">
-                                    <td class="li-label" style="white-space: nowrap;">{{ group_identifier }}</td>
+                                <tr>
+                                    <td class="li-label nowrap">{{ group_identifier }}</td>
                                     <td>
                                         {% for annot in current_annotations %}
                                             <!-- standard single value annotations -->
                                             {% if annot.draw %}
-                                            <div style="word-break: break-all;" annotation_id="{{ annot.id }}">
+                                            <div class="break_text_all" annotation_id="{{ annot.id }}">
                                                 <abbr class="ssr" title="{{ annot.description }}"><a class="dashed_underline">{{ annot.display_title }}:</a></abbr>{{ annot.value }}
                                             </div>
                                             {% endif %}
@@ -542,19 +541,19 @@
                                             {% if annot.title == 'cancerhotspots_cancertypes' %} <!-- cancerhotspots cancertypes -->
                                                 {% set cancerhotspots_cancertypes = annot.value.split('|') %}
                                                 <div class="table-responsive tableFixHead" annotation_id="{{ annot.id }}">
-                                                    <table class="table table-hover" style="max-height:15em" id="cancerhotspots_table">
+                                                    <table class="table table-hover" id="cancerhotspots_table">
                                                         <thead>
                                                             <tr>
-                                                                <th style="width: 100%; background:white; padding:0;">
+                                                                <th class="full_page bg_white nopad">
                                                                     <div class="sortable"><a class="dashed_underline">cancertypes</a></div>
-                                                                    <input type="text" class="form-control form-control-sm column-filter sst" style="max-width:10em" placeholder="search..." autocomplete="off">
+                                                                    <input type="text" class="form-control form-control-sm column-filter sst width_small" placeholder="search..." autocomplete="off">
                                                                 </th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             {% for cancer in cancerhotspots_cancertypes %}
                                                                 <tr>
-                                                                    <td style="width:100%">{{ cancer.replace(':', ': ') }}</td>
+                                                                    <td>{{ cancer.replace(':', ': ') }}</td>
                                                                 </tr>
                                                             {% endfor %}
                                                         </tbody>
@@ -593,7 +592,7 @@
     <!-- 0transcript_name,1hgvs_c,2hgvs_p,3consequence,4impact,5exon_nr,6intron_nr,7symbol,8transcript.gene_id,9source,10pfam_accession,11pfam_description,12length,13is_gencode_basic,14is_mane_select,15is_mane_plus_clinical,16is_ensembl_canonical,17total_flag -->
 
     <div class="w-100 ssb">
-        <div class="card" style="border-top:0; border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="card noboarder_top">
             <div class="card-body">
                 <h4 class="card-subcaption">Variant consequences</h4>
 
@@ -603,10 +602,10 @@
 
                     <ul class="nav nav-tabs" id="tabs" role="tablist"> <!-- although this uses the styles from a tablist it is essentially not a tablist as it is not linked to the tabContent div below! Changes appear through javascript-->
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" data-bs-toggle="tab" type="button" role="tab" aria-selected="true" onclick="filter_consequence_table('ensembl')">Ensembl</button>
+                            <button id="consequence_ensembl_tab" class="nav-link active" data-bs-toggle="tab" type="button" role="tab" aria-selected="true">Ensembl</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" data-bs-toggle="tab" type="button" role="tab" aria-selected="false" onclick="filter_consequence_table('refseq')">RefSeq</button>
+                            <button id="consequence_refseq_tab" class="nav-link" data-bs-toggle="tab" type="button" role="tab" aria-selected="false">RefSeq</button>
                         </li>
                     </ul>
                     <div class="tab-content" id="tabContent">
@@ -618,17 +617,17 @@
                                         <th><div class="sortable">Transcript Name</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         <th><div class="sortable">HGVS_C</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         <th><div class="sortable">HGVS_P</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th><div class="sortable">Consequence</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_medium"><div class="sortable">Consequence</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         <th><div class="sortable">Impact</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th><div class="sortable">Exon Nr.</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th><div class="sortable">Intron Nr.</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th id="variant_consequence_gene_symbol_col" asc="false"><div class="sortable">Gene Symbol</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_very_small"><div class="sortable">Exon Nr.</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_very_small"><div class="sortable">Int. Nr.</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_small" id="variant_consequence_gene_symbol_col" asc="false"><div class="sortable">Gene Symbol</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         <th><div class="sortable">Protein Domain</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th><div class="sortable">Flags</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_small"><div class="sortable">Flags</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         
-                                        <th style="display:none;" id="variant_consequence_source_col">Source</th>
-                                        <th id="variant_consequence_length_col" asc="true"><div class="sortable">Length</div></th>
-                                        <th style="display:none;" id="variant_consequence_numflags_col" asc="true">NumFlags</th>
+                                        <th class="visually_hidden" id="variant_consequence_source_col">Source</th>
+                                        <th class="width_small" id="variant_consequence_length_col" asc="true"><div class="sortable">Length</div></th>
+                                        <th class="visually_hidden" id="variant_consequence_numflags_col" asc="true">NumFlags</th>
                                         <th >Links</th>
                                     </tr>
                                 </thead>
@@ -636,9 +635,9 @@
                                     {% if variant.consequences is not none %}
                                     {% for consequence in variant.consequences %}
                                     <tr>
-                                        <td style="white-space:nowrap;">{{ consequence.transcript }}</td>
-                                        <td style="white-space:nowrap;">{{ consequence.hgvs_c }}</td>
-                                        <td style="white-space:nowrap;">{{ consequence.hgvs_p }}</td>
+                                        <td class="nowrap">{{ consequence.transcript }}</td>
+                                        <td class="nowrap">{{ consequence.hgvs_c }}</td>
+                                        <td class="nowrap">{{ consequence.hgvs_p }}</td>
                                         <td>{{ consequence.consequence }}</td>
                                         <td>{{ consequence.impact }}</td>
                                         <td>{{ consequence.exon }}</td>
@@ -672,9 +671,9 @@
                                             {% endif %}
                                         </td>
 
-                                        <td style="display:none;">{{ consequence.source }}</td>
+                                        <td class="visually_hidden">{{ consequence.source }}</td>
                                         <td >{{ consequence.length }}</td>
-                                        <td style="display:none;">{{ consequence.get_num_flags() }}</td>
+                                        <td class="visually_hidden">{{ consequence.get_num_flags() }}</td>
 
                                         <td>
                                             
@@ -714,7 +713,7 @@
         <div class="tab-pane fade" id="assay" role="tabpanel" aria-labelledby="assay-tab">
 
     <div class="w-100 ssb">
-        <div class="card" style="border-top:0; border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="card noboarder_top">
             <div class="card-body">
                 <h4 class="card-subcaption">Assays</h4>
                 
@@ -723,20 +722,20 @@
                         <table class="table table-hover" id="assayTable">
                             <thead>
                                 <tr>
-                                    <th id="assayTableAssayTypeCol" asc="false"><div class="sortable">Assay type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th><div class="sortable">Score</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th id="assayTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th><div class="sortable">Report</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small" id="assayTableAssayTypeCol" asc="false"><div class="sortable">Assay type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small"><div class="sortable">Score</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_medium" id="assayTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small"><div class="sortable">Report</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% if variant.assays is not none %}
                                     {% for assay in variant.assays %}
                                     <tr assay_id="assay.id">
-                                        <td style="min-width:10rem">{{ assay.type }}</td>
-                                        <td style="min-width:6rem">{{ assay.score }}</td>
-                                        <td style="min-width:8rem; white-space: nobreak;">{{ assay.date }}</td>
-                                        <td style="min-width:10rem"><a href="{{ url_for('download.assay_report', assay_id=assay.id) }}">Download report</a></td>
+                                        <td>{{ assay.type }}</td>
+                                        <td>{{ assay.score }}</td>
+                                        <td class="nobreak">{{ assay.date }}</td>
+                                        <td><a href="{{ url_for('download.assay_report', assay_id=assay.id) }}">Download report</a></td>
                                     </tr>
                                     {% endfor %}
                                 {% endif %}
@@ -762,7 +761,7 @@
     <!-- literature table -->
 
     <div class="w-100 ssb">
-        <div class="card" style="border-top:0; border-top-left-radius: 0; border-top-right-radius: 0;">
+        <div class="card noboarder_top">
             <div class="card-body">
                 <h4 class="card-subcaption">Literature</h4>
 
@@ -771,12 +770,12 @@
                         <table class="table table-hover" id="literatureTable">
                             <thead>
                                 <tr>
-                                    <th style="width:2.5rem" id="literatureTableYearCol"><div class="sortable">Year</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th><div class="sortable">Authors</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th ><div class="sortable">Title</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th><div class="sortable">Journal / Publisher</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th><div class="sortable">Link</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th><div class="sortable">Source</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_very_small" id="literatureTableYearCol"><div class="sortable">Year</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_very_large"><div class="sortable">Authors</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_very_large"><div class="sortable">Title</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small"><div class="sortable">Journal / Publisher</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small"><div class="sortable">Link</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small"><div class="sortable">Source</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -784,13 +783,11 @@
                                     {% for paper in variant.literature %}
                                     <tr>
                                         <td>{{ paper.year }}</td>
-                                        <td style="max-width:30rem"><abbr title="{{ paper[4] }}"><div class="Nellipsis">{{ paper.authors }}</div> </abbr></td>
-                                        <td style="min-width:30rem">{{ paper.title }}</td>
-                                        <td style="min-width:10rem">{{ paper.journal }}</td>
-                                        <td style="text-align:center;">
-                                            {{ macros.external_link("PMID:" + paper.pmid|string, "https://pubmed.ncbi.nlm.nih.gov/" + paper.pmid|string) }}
-                                        </td>
-                                        <td style="width:1rem">{{ paper.source }}</td>
+                                        <td><abbr title="{{ paper[4] }}"><div class="Nellipsis">{{ paper.authors }}</div> </abbr></td>
+                                        <td>{{ paper.title }}</td>
+                                        <td>{{ paper.journal }}</td>
+                                        <td>{{ macros.external_link("PMID:" + paper.pmid|string, "https://pubmed.ncbi.nlm.nih.gov/" + paper.pmid|string) }}</td>
+                                        <td>{{ paper.source }}</td>
                                     </tr>
                                     {% endfor %}
                                 {% endif %}
@@ -808,7 +805,7 @@
     </div>
     <div class="tab-pane fade" id="igv" role="tabpanel" aria-labelledby="igv-tab">
         <div class="w-100 ssb">
-            <div class="card" style="border-top:0; border-top-left-radius: 0; border-top-right-radius: 0;">
+            <div class="card noboarder_top">
                 <div class="card-body">
                     <h4 class="card-subcaption">IGV</h4>
     
@@ -822,6 +819,9 @@
 
 </div>
 
+
+<input type='hidden' id='flask_data' data-variant-page-url='{{ url_for("variant.display", variant_id = "-1", _external=True) }}' />
+
 {% endblock %}
 
 
@@ -829,11 +829,7 @@
 
 
 {% block special_scripts %}
-    <script>
-        // set this for the igv custom links to heredivar
-        variant_page_url = '{{ url_for("variant.display", variant_id = "-1", _external=True) }}'
-    </script>
-    <script src="/static/js/variant.js"></script>
+    <script type="module" src="/static/js/variant.js"></script>
 {% endblock%}
 
 <!--

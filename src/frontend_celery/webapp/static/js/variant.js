@@ -1,4 +1,5 @@
-
+import igv from "/static/packages/igv/igv.esm.js"
+//import igv from "https://cdn.jsdelivr.net/npm/igv@2.15.0/dist/igv.esm.min.js"
 
 //////////////////////////////////////////////////////////////
 ////////////////// activating functionality //////////////////
@@ -7,9 +8,8 @@
 $(document).ready(function()
 {
     // presort the tables on page load
-    variant_consequence_table_default_sorting_columns = ['#variant_consequence_numflags_col', '#variant_consequence_length_col', '#variant_consequence_gene_symbol_col']
-    variant_consequence_table_ascending = ['true', 'true', "false"]
-    table = document.getElementById("variantConsequenceTable");
+    var variant_consequence_table_default_sorting_columns = ['#variant_consequence_numflags_col', '#variant_consequence_length_col', '#variant_consequence_gene_symbol_col']
+    var table = document.getElementById("variantConsequenceTable");
     if (table != null) {
         filterTable_one_column("ensembl", 10, table);
         table_sorter(variant_consequence_table_default_sorting_columns, '#variantConsequenceTable') // sort first by num of flags, at tie by length and at tie by gene symbol
@@ -63,9 +63,17 @@ $(document).ready(function()
 
 
     $('#igv-tab').one('show.bs.tab', function() { // gets called only the first time you switch to the igv tab
-        setup_igv(chrom, pos-100, pos+100, variant_id = $('#variant_id_container').data()['variantId'])
+        setup_igv(chrom, pos-100, pos+100, $('#variant_id_container').data()['variantId'])
     })
     
+
+    $('#consequence_ensembl_tab').click(function() {
+        filter_consequence_table('ensembl', variant_consequence_table_default_sorting_columns)
+    });
+
+    $('#consequence_refseq_tab').click(function() {
+        filter_consequence_table('refseq', variant_consequence_table_default_sorting_columns)
+    })
 });
 
 
@@ -155,8 +163,9 @@ function show_annotation_status(color_class, tooltip_text, inner_text) {
 ///////////////////////////////////////////////////////////////
 
 // functionality for the consequence table switch between ensembl & refseq
-function filter_consequence_table(source) {
+function filter_consequence_table(source, variant_consequence_table_default_sorting_columns) {
     const table = document.getElementById('variantConsequenceTable')
+    const variant_consequence_table_ascending = ['true', 'true', "false"]
     filterTable_one_column(source, 10, table)
     const sort_columns = variant_consequence_table_default_sorting_columns
     for (var i = 0; i < sort_columns.length; i++) {
@@ -187,21 +196,41 @@ function get_variant_type(ref, alt) {
 
 function setup_igv(chrom, start, end, variant_id) {
     var igvDiv = document.getElementById("igv-container");
-    loc = chrom.toString() + ":" + start.toString() + '-' + end.toString()
+    const loc = chrom.toString() + ":" + start.toString() + '-' + end.toString()
     var options = {
         locus: loc,
         reference: {
             "id": "GRCh38",
             "name": "Human (GRCh38/hg38)",
-            "fastaURL": "https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg38/hg38.fa",
-            "indexURL": "https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg38/hg38.fa.fai",
+            //"fastaURL": "https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg38/hg38.fa",
+            //"indexURL": "https://s3.amazonaws.com/igv.broadinstitute.org/genomes/seq/hg38/hg38.fa.fai",
+            "fastaURL": "/download/hg38.fa",
+            "indexURL": "/download/hg38.fa.fai",
             "tracks": [
                 {
-                    "name": "Refseq genes",
-                    "url": "https://s3.amazonaws.com/igv.org.genomes/hg38/refGene.txt.gz",
-                    "order": 1000000,
-                    "indexed": false,
-                    "autoHeight": true
+                    name: "Ensembl genes",
+                    type: "annotation",
+                    format: "gff3",
+                    displayMode: "expanded",
+                    order: 100,
+                    indexed: false,
+                    autoHeight: true,
+                    url: "/download/refgene_ngsd.gff3",
+                    color: (feature) => {
+                        if (feature.getAttributeValue("Is_mane_plus_clinical") == 1) {
+                            return "red"
+                        }
+                        if (feature.getAttributeValue("Is_mane_select") == 1) {
+                            return "red"
+                        }
+                        if (feature.getAttributeValue("Is_ensembl_canonical") == 1) {
+                            return "orange"
+                        }
+                        if (feature.getAttributeValue("Is_gencode_basic") == 1) {
+                            return "darkblue"
+                        }
+                        return "gray"
+                    }
                 },
                 {
                     "name": "Variant",
@@ -211,7 +240,7 @@ function setup_igv(chrom, start, end, variant_id) {
                     "indexed": false,
                     "color": "red",
                     "autoHeight": true,
-                    "infoURL": "https://www.ncbi.nlm.nih.gov/gene/?term=$$"
+                    //"infoURL": "https://www.ncbi.nlm.nih.gov/gene/?term=$$"
                 },
                 {
                     "name": "Classified variants",
@@ -223,9 +252,9 @@ function setup_igv(chrom, start, end, variant_id) {
                     "color": function(variant) {
                         if ('classification' in variant.info) {
                             const classification = variant.info['classification']
-                            return get_consensus_classification_color(classification)
+                            return "red" //get_consensus_classification_color(classification)
                         } else {
-                            return get_consensus_classification_color('-')
+                            return "grey";//get_consensus_classification_color('-')
                         }
                     }
                 }
@@ -236,7 +265,7 @@ function setup_igv(chrom, start, end, variant_id) {
 
     igv.createBrowser(igvDiv, options).then(function (browser) {
         browser.on('trackclick', function(track, popoverData) { // override the default popovers
-            var markup = '<div style="overflow-x:auto">'
+            var markup = '<div class="overflow_x_auto">'
             markup += '<table class="styled-table" >';
 
             // Don't show a pop-over when there's no data.
@@ -244,7 +273,7 @@ function setup_igv(chrom, start, end, variant_id) {
                 return false;
             }
 
-            vid = -1
+            var vid = -1
 
             popoverData.forEach(function (nameValue) {
 
@@ -258,7 +287,8 @@ function setup_igv(chrom, start, end, variant_id) {
                 else if (nameValue.toString() == "<hr/>") { // not a name/value pair
                     markup += "<tr><td colspan='2'><hr/></td></tr>" 
                     if (vid != -1) {
-                        variant_url = variant_page_url.replace('-1', vid)
+                        const variant_page_url = document.getElementById('flask_data').dataset.variantPageUrl
+                        const variant_url = variant_page_url.replace('-1', vid)
                         markup += get_row_markup(['<a href="' + variant_url + '">HerediVar</a>', ''])
                         markup += "<tr><td colspan='2'><hr/></td></tr>" 
                     }
@@ -275,7 +305,7 @@ function setup_igv(chrom, start, end, variant_id) {
     });
 
     function get_row_markup(values) {
-        markup = '<tr>';
+        var markup = '<tr>';
         for (var i = 0; i < values.length; i++) {
             markup += "<td>" + values[i] + "</td>";
         }

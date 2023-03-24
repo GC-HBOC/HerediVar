@@ -179,7 +179,7 @@ def submit_clinvar(variant_id):
 
     return render_template('variant_io/submit_clinvar.html', 
                             variant = variant, 
-                            orphanet_codes = json.dumps(orphanet_codes), 
+                                orphanet_codes = {'orphanet_codes': orphanet_codes}, # pack the codes in an object because having the array exposed as the first level renders parsing unsecure
                             genes = genes)
 
 

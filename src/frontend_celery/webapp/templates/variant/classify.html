@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container"  style="min-width:80em">
+<div class="container">
     <h1 class="bst">{% block title %} Create a {{ classification_type }} classification {% endblock %}</h1>
 
 
@@ -28,7 +28,7 @@
         <!-- scheme select -->
          <div class="form-group sst">
             <label for="scheme" class="form-label">Classification scheme</label>
-            <select class="form-select" name="scheme" id="scheme" onchange="scheme_select_action()" required>
+            <select class="form-select" name="scheme" id="scheme" required>
 
             </select>
         </div>
@@ -42,7 +42,7 @@
                 <div class="card">
                     <h4 class="card-header">Pathogenic evidence</h4>
                     <div class="card-body">
-                        <div id="pathogenic_criteria_container" class="d-flex justify-content-center" style="padding-left:10px;"></div>
+                        <div id="pathogenic_criteria_container" class="d-flex justify-content-center ssl"></div>
                     </div>
                 </div>
 
@@ -50,7 +50,7 @@
                 <div class="card">
                     <h4 class="card-header">Uncertain</h4>
                     <div class="card-body">
-                        <div id="uncertain_criteria_container" class="d-flex justify-content-center" style="padding-left:10px;"></div>
+                        <div id="uncertain_criteria_container" class="d-flex justify-content-center ssl"></div>
                     </div>
                 </div>
     
@@ -58,17 +58,17 @@
                 <div class="card">
                     <h4 class="card-header">Benign evidence</h4>
                     <div class="card-body">
-                        <div id="benign_criteria_container" class="d-flex justify-content-center" style="padding-left:10px;"></div>
+                        <div id="benign_criteria_container" class="d-flex justify-content-center ssl"></div>
                     </div>
                 </div>
 
                 <!-- acmg classification preview -->
                 <div class="card">
-                    <div class="card-body d-flex justify-content-center align-items-center" style="padding:1.5em">
+                    <div class="card-body d-flex justify-content-center align-items-center padding_big">
                         <div class="">
                             <hr>
                             <div>Classification based on selected criteria:</div>
-                            <div class="display-3" style="font-weight:bold; text-align:center;" id="classification_preview"></div>
+                            <div class="display-3 text_align_center" id="classification_preview"></div>
                             <hr>
                         </div>
                     </div>
@@ -79,20 +79,20 @@
 
             <!-- criterium display & evidence select -->
             <div class="d-flex justify-content-center sst">
-                <div id="criteria_container" class="card" style="width:100%">
+                <div id="criteria_container" class="card full_page">
                     <div class="card-body">
 
                         <div class="d-flex align-items-center">
-                            <input style="transform:scale(1.5)" class="ssr" id="select_criterium_check" type="checkbox" 
-                                onchange="select_criterium(this)" data-bs-trigger="manual" data-bs-container="body" 
+                            <input class="scale_150 ssr" id="select_criterium_check" type="checkbox"
+                                data-bs-trigger="manual" data-bs-container="body" 
                                 data-bs-toggle="popover" data-bs-placement="left" 
                                 data-bs-content="you must provide evidence in order to select this criterion" hidden>
-                            <label style="font-size:x-large"  id="criteria_title"></label>
+                            <label class="large_text" id="criteria_title"></label>
                         </div>
                         <hr>
                         <div id="button_container" hidden>
                             <h5 class="sst">Description:</h5>
-                            <div id="criteria_description" style="white-space: pre-line;"></div>
+                            <div id="criteria_description" class="wrap-spaces"></div>
                             <div id="additional_content" class="sst"></div>
                             <h5 class="bst">Evidence:</h5>
                             <textarea type="text" id="criteria_evidence" class="form-control sst" placeholder="insert evidence..."></textarea>
@@ -142,7 +142,7 @@
 
             <div> 
                 <!-- creates a new row in the selected literature table -->
-                <button id="blank_row_button" class="btn btn-sm btn-secondary" type="button" onclick="create_literature_select(document.getElementById('selectedLiteratureList'))">Add blank row</button>
+                <button id="blank_row_button" class="btn btn-sm btn-secondary" type="button">Add blank row</button>
                 <!-- opens a modal showing all literature entries for this variant, the user selects some and for each one of them a new row in the selected literature table is created -->
                 <button id="text-mining-button" type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#text-mining-modal">Add from text mining</button>
                 {% if classification_type == 'consensus' %}
@@ -156,9 +156,9 @@
                     <table class="table table-hover" id="selectedLiterature">
                         <thead>
                             <tr>
-                                <th style="width:10rem">PMID</th>
+                                <th class="width_small">PMID</th>
                                 <th>Text passage</th>
-                                <th style="width:2rem;">Remove</th>
+                                <th class="width_very_small">Remove</th>
                             </tr>
                         </thead>
                         <tbody id="selectedLiteratureList"> <!-- names: pmid & text_passage -->
@@ -178,7 +178,7 @@
 
         <!-- submit -->
         <div class="bsb">
-            <button id="submit-acmg-form" class="sst btn btn-primary" type="submit" onclick="submit_classification()">Submit classification</button>
+            <button id="submit-acmg-form" class="sst btn btn-primary" type="submit">Submit classification</button>
             <!--
             <div class="d-flex">
                 <div class="ssr">Last submitted at:</div>
@@ -190,7 +190,7 @@
     </form>
 
 
-    <!-- modal for showing all lists & each list has a customizable link -->
+    <!-- modal for showing all papers -->
     <div class="modal fade" id="text-mining-modal" tabindex="-1" aria-labelledby="text-mining-modal-label" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -204,28 +204,28 @@
                         <table class="table table-hover" id="literatureTable">
                             <thead>
                                 <tr>
-                                    <th>Select</th>
-                                    <th style="width:2.5rem" id="literatureTableYearCol"><div class="sortable">Year</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_minimal">Select</th>
+                                    <th class="width_very_small" id="literatureTableYearCol"><div class="sortable">Year</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                     <th><div class="sortable">Authors</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                     <th ><div class="sortable">Title</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th><div class="sortable">Journal / Publisher</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th><div class="sortable">Link</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th><div class="sortable">Source</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small"><div class="sortable">Journal / Publisher</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small"><div class="sortable">Link</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_very_small"><div class="sortable">Source</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% if variant.literature is not none %}
                                 {% for paper in variant.literature %}
                                 <tr>
-                                    <td style="vertical-align: middle; text-align:center;"><input class="form-check-input selected_literature" type="checkbox"></input></td>
+                                    <td class="vertical_align_middle text_align_center"><input class="form-check-input selected_literature" type="checkbox"></input></td>
                                     <td>{{ paper.year }}</td>
-                                    <td style="max-width:30rem"><abbr title="{{ paper.authors }}"><div class="Nellipsis">{{ paper.authors }}</div> </abbr></td>
-                                    <td style="min-width:30rem" data-title="{{ paper.title }}">{{ paper.title }}</td>
-                                    <td style="min-width:10rem">{{ paper.journal }}</td>
-                                    <td style="text-align:center;" data-pmid="{{ paper.pmid }}">
+                                    <td><abbr title="{{ paper.authors }}"><div class="Nellipsis">{{ paper.authors }}</div> </abbr></td>
+                                    <td data-title="{{ paper.title }}">{{ paper.title }}</td>
+                                    <td>{{ paper.journal }}</td>
+                                    <td class="text_align_center" data-pmid="{{ paper.pmid }}">
                                         {{ macros.external_link("PMID:" + paper.pmid|string, "https://pubmed.ncbi.nlm.nih.gov/" + paper.pmid|string) }}
                                     </td>
-                                    <td style="width:1rem">{{ paper.source }}</td>
+                                    <td>{{ paper.source }}</td>
                                 </tr>
                                 {% endfor %}
                                 {% endif %}
@@ -233,11 +233,11 @@
                         </table>
                     </div>
 
-                    <input class="form-check-input selected_literature" type="checkbox" onclick="select_all_non_hidden_papers(this.checked, 'literatureTable')"></input> select all shown
+                    <input id="select_all_shown_papers_button" class="form-check-input selected_literature" type="checkbox"></input> select all shown
                     
                   </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="add_all_to_selected_literature('literatureTable', add_from_text_mining)">Add selected</button>
+                    <button id="add_selected_literature_button" type="button" class="btn btn-primary">Add selected</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </div>
@@ -259,10 +259,10 @@
                         <table class="table table-hover" id="userSelectedLiterature">
                             <thead>
                                 <tr>
-                                    <th>Select</th>
-                                    <th><div class="sortable">Provided by</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th><div class="sortable">PMID</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_minimal">Select</th>
+                                    <th class="width_small"><div class="sortable">Provided by</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small"><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small"><div class="sortable">PMID</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                     <th><div class="sortable">Text passage</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                 </tr>
                             </thead>
@@ -273,11 +273,11 @@
                         </table>
                     </div>
 
-                    <input class="form-check-input selected_literature" type="checkbox" onclick="select_all_non_hidden_papers(this.checked, 'userSelectedLiterature')"></input> select all shown
+                    <input id="select_all_shown_papers_button_user" class="form-check-input selected_literature" type="checkbox"></input> select all shown
                     
                   </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="add_all_to_selected_literature('userSelectedLiterature', add_from_user_selected)">Add selected</button>
+                    <button id="add_selected_literature_button_user" type="button" class="btn btn-primary">Add selected</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </div>
@@ -289,14 +289,13 @@
       
 </div>
 
-
-
 <!-- this extracts the flask data and makes them available to the scripts -->
+<!--
 <script>
     const logged_in_user_id = '{{ logged_in_user_id }}'
 
     const classification_schemas = JSON.parse('{{ classification_schemas | tojson }}'.slice(1, -1))
-    //console.log(classification_schemas)
+    console.log('{{ classification_schemas | tojson }}'.slice(1, -1))
 
     //console.log(schemes_with_info)
     // example schemes with info: {3: {'none': {'classification_id': 4, 'date': '2022-07-15', 'selected_criteria': [(26, 4, 'pvs1', 'pvs', 'egsa'), (27, 4, 'pp1', 'pm', 'edfsg'), (28, 4, 'bs1', 'bs', 'fdsaf')]}, 'TP53': {'classification_id': 10, 'date': '2022-07-13', 'selected_criteria': [(21, 10, 'bp2', 'bp', 'erwhgerwb'), (22, 10, 'bs1', 'bs', 'ababasc')]}}, 14: {'none': {'classification_id': 23, 'date': '2022-07-18', 'selected_criteria': [(36, 23, 'pm3', 'pm', 'asfdsaf'), (37, 23, 'pp1', 'pvs', 'VERRRRYYY STRONG!')]}, 'TP53': {'classification_id': 24, 'date': '2022-07-18', 'selected_criteria': [(38, 24, 'ps1', 'ps', 'c vxc ysa'), (39, 24, 'ps2', 'ps', 'asdfafafd'), (40, 24, 'pm2', 'pm', 'afdasfasdf'), (41, 24, 'pm5', 'pm', 'daffafd')]}}}
@@ -309,9 +308,20 @@
     
     const selected_pmids = JSON.parse('{{request.form.getlist("pmid") | tojson | tojson }}'.slice(1, -1)) // this may be non empty if there were errors in the submission
     const selected_text_passages = JSON.parse('{{request.form.getlist("text_passage") | tojson | tojson }}'.slice(1, -1)) // this may be non empty if there were errors in the submission
-
-
 </script>
+-->
+
+<input type='hidden' id='flask_data'
+    data-logged-in-user-id='{{ logged_in_user_id }}'
+    data-classification-schemas='{{ classification_schemas | tojson }}'
+    data-previous-classifications='{{ previous_classifications | tojson }}'
+    data-variant-genes='{{ variant.get_genes(how = "string") }}'
+    data-classification-type='{{ classification_type }}'
+    data-request-form='{{ request.form.to_dict(flat=True) | tojson }}'
+    data-selected-pmids='{{ request.form.getlist("pmid") | tojson }}'
+    data-selected-text-passages='{{ request.form.getlist("text_passage") | tojson }}'
+/>
+
 
 
 {% endblock %}

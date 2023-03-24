@@ -1,4 +1,21 @@
 ///////////// field variables /////////////
+const flask_data = document.getElementById('flask_data')
+
+
+
+const logged_in_user_id = flask_data.dataset.loggedInUserId
+
+const classification_schemas = JSON.parse(flask_data.dataset.classificationSchemas)
+
+const previous_classifications = JSON.parse(flask_data.dataset.previousClassifications)
+const variant_genes = flask_data.dataset.variantGenes;
+const classification_type = flask_data.dataset.classificationType;
+const request_form = JSON.parse(flask_data.dataset.requestForm)
+
+const selected_pmids = JSON.parse(flask_data.dataset.selectedPmids) // this may be non empty if there were errors in the submission
+const selected_text_passages = JSON.parse(flask_data.dataset.selectedTextPassages) // this may be non empty if there were errors in the submission
+
+
 
 var previous_obj = null;
 var colors; // this maps a criterium strength to a color which are defined in css
@@ -230,6 +247,32 @@ $(document).ready(function() {
         const new_loc = $(this).find(":selected").attr("option-href");
         window.location = new_loc;
     });
+
+    // set event listeners
+    $('#scheme').change(function () {
+        scheme_select_action();
+    });
+    $('#select_criterium_check').change(function () {
+        select_criterium(this);
+    });
+    $('#blank_row_button').click(function () {
+        create_literature_select(document.getElementById('selectedLiteratureList'));
+    });
+    $('#submit-acmg-form').click(function () {
+        submit_classification();
+    });
+    $('#select_all_shown_papers_button').click(function() {
+        select_all_non_hidden_papers(this.checked, 'literatureTable');
+    });
+    $('#add_selected_literature_button').click(function() {
+        add_all_to_selected_literature('literatureTable', add_from_text_mining);
+    });
+    $('#select_all_shown_papers_button_user').click(function() {
+        select_all_non_hidden_papers(this.checked, 'userSelectedLiterature');
+    });
+    $('#add_selected_literature_button_user').click(function() {
+        add_all_to_selected_literature('userSelectedLiterature', add_from_user_selected);
+    });
 });
 
 
@@ -460,21 +503,21 @@ function create_literature_select(parent, pmid="", placeholder="Text citation", 
     var text_passage_td = document.createElement('td')
     tr.appendChild(text_passage_td)
     var text_passage_textarea = document.createElement('textarea')
-    text_passage_textarea.setAttribute('style', "height:0; width:100%;")
     text_passage_textarea.setAttribute('type', "text")
     text_passage_textarea.setAttribute('name', "text_passage")
     text_passage_textarea.classList.add("form-control")
+    text_passage_textarea.classList.add("height_zero")
     text_passage_textarea.value = text_passage
     text_passage_textarea.setAttribute('placeholder', placeholder)
     text_passage_td.appendChild(text_passage_textarea)
 
     // the remove column
     var remove_td = document.createElement('td')
-    remove_td.setAttribute('style', 'text-align:center')
     tr.appendChild(remove_td)
     var delete_button = document.createElement('button')
     delete_button.classList.add("btn")
     delete_button.classList.add("btn-link")
+    delete_button.classList.add("text_align_center")
     delete_button.setAttribute("type", "button")
     delete_button.addEventListener("click", function() {delete_selected_literature_row(this.closest('tr'))} );
     remove_td.appendChild(delete_button)
@@ -491,11 +534,12 @@ function create_line_consensus_modal(parent, pmid, evidence_text, provided_by, a
 
     //<td style="vertical-align: middle; text-align:center;"><input class="form-check-input selected_literature" type="checkbox"></input></td>
     var select_td = document.createElement('td')
-    select_td.setAttribute('style', "vertical-align: middle; text-align:center;")
     new_row.appendChild(select_td)
     var new_checkbox = document.createElement('input')
     new_checkbox.classList.add('form-check-input')
     new_checkbox.classList.add('selected_user_literature')
+    new_checkbox.classList.add('vertical_align_middle')
+    new_checkbox.classList.add('text_align_center')
     new_checkbox.setAttribute('type', 'checkbox')
     select_td.appendChild(new_checkbox)
 
@@ -759,6 +803,7 @@ function create_criterium_button(criterium_id, strength) {
     label.classList.add('btn-'+strength)
     label.classList.add('light-hover')
     label.classList.add('acmg-button')
+    label.classList.add('acmg-button-large')
     label.textContent = criterium_id
     container.appendChild(label)
 
@@ -839,14 +884,13 @@ function create_user_acmg_details_table() {
 
     var header = document.createElement('thead')
     var header_row = document.createElement('tr')
-    header_row.appendChild(create_sortable_header('User'))
-    header_row.appendChild(create_sortable_header('Affiliation'))
-    header_row.appendChild(create_sortable_header('Strength'))
+    header_row.appendChild(create_sortable_header('User', 'width_small'))
+    header_row.appendChild(create_sortable_header('Affiliation', 'width_small'))
+    header_row.appendChild(create_sortable_header('Strength', 'width_small'))
     var evidence_header = create_sortable_header('Evidence')
-    evidence_header.setAttribute('style', 'width:100%')
     header_row.appendChild(evidence_header)
-    header_row.appendChild(create_sortable_header('Date'))
-    header_row.appendChild(create_non_sortable_header('Copy evidence'))
+    header_row.appendChild(create_sortable_header('Date', 'width_small'))
+    header_row.appendChild(create_non_sortable_header('Copy', 'width_minimal'))
     header.appendChild(header_row)
     table.appendChild(header)
 
@@ -856,14 +900,20 @@ function create_user_acmg_details_table() {
     return table_container
 }
 
-function create_non_sortable_header(text) {
+function create_non_sortable_header(text, width_class="") {
     var new_th = document.createElement('th')
+    if (width_class !== "") {
+        new_th.classList.add(width_class)
+    }
     new_th.innerText = text
     return new_th
 }
 
-function create_sortable_header(text) {
+function create_sortable_header(text, width_class = "") {
     var new_th = document.createElement('th')
+    if (width_class !== "") {
+        new_th.classList.add(width_class)
+    }
     
     var title = document.createElement('div')
     title.classList.add('sortable')
@@ -899,7 +949,7 @@ function create_row_user_acmg_details(user, affiliation, strength, evidence, dat
     new_row.appendChild(create_table_data(date))
     //new_row.appendChild(create_table_data('copy...')) // TODO
     var copy_evidence_td = document.createElement('td')
-    copy_evidence_td.setAttribute('style', 'text-align:center;')
+    copy_evidence_td.classList.add('text_align_center')
     var copy_evidence_text = document.createElement('div')
     // add the bootstrap icon
     copy_evidence_text.innerHTML = `

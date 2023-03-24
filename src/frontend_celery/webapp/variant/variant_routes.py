@@ -236,8 +236,8 @@ def classify(variant_id):
                                 classification_type='user',
                                 variant=variant, 
                                 logged_in_user_id = user_id,
-                                classification_schemas=json.dumps(classification_schemas),
-                                previous_classifications=json.dumps(previous_classifications)
+                                classification_schemas=classification_schemas,
+                                previous_classifications=previous_classifications
                             )
 
 
@@ -319,8 +319,8 @@ def consensus_classify(variant_id):
                                 classification_type='consensus',
                                 variant=variant,
                                 #logged_in_user_id = session['user']['user_id'],
-                                classification_schemas=json.dumps(classification_schemas),
-                                previous_classifications=json.dumps(previous_classifications)
+                                classification_schemas=classification_schemas,
+                                previous_classifications=previous_classifications
                             )
 
 

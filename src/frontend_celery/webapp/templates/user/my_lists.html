@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div style="min-width:90rem">
+<div class="full_page">
 
     <h1 class="bst">{% block title %} Your variant lists {% endblock %}</h1>
 
@@ -9,35 +9,35 @@
     
     
     <div class="d-flex bst">
-        <div class="sst" style="min-width:15%; max-width:15%">
+        <div class="sst width_medium">
 
 
             <div class="table-responsive">
-                <table class="table table-hover" id="variant-list-table" style="table-layout:auto;">
+                <table class="table table-hover" id="variant-list-table" >
                     <thead>
                         <tr>
-                            <th style="padding-right:0; padding-left:0; width:3.5em">
+                            <th class="nopad width_minimal">
                                 <div class="sortable">access</div><input type="text" class="form-control form-control-sm column-filter" placeholder="search..." autocomplete="off">
                             </th>
-                            <th style="padding-right:0; padding-left:0; min-width:10rem">
+                            <th class="nopad">
                                 <div class="sortable">list name</div><input type="text" class="form-control form-control-sm column-filter" placeholder="search..." autocomplete="off">
                             </th>
-                            <th style="padding-left:0; padding-right:0;">
+                            <th class="nopad width_very_minimal">
                                 <button id="create-list-button" type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="create">+</button>
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for list in user_lists %}
-                        {% set additional_classes = "" %}
-                        {% set additional_styles = "" %}
+                        {% set additional_classes_td = "" %}
+                        {% set additional_classes_svg = "" %}
                         {% if list[0]|string == request.args.get('view') %}
-                            {% set additional_classes = "selected" %}
-                            {% set additional_styles = "color:white;"%}
-                            <div id="list-permissions" style="display:none" data-owner="{{list[5]}}" data-editable="{{list[4]}}"></div>
+                            {% set additional_classes_td = "selected" %}
+                            {% set additional_classes_svg = "color_white"%}
+                            <div id="list-permissions visually_hidden" data-owner="{{list[5]}}" data-editable="{{list[4]}}"></div>
                         {% endif %}
                         <tr>
-                            <td data-href="{{ url_for('user.my_lists', view=list[0]) }}" style="cursor: pointer;">
+                            <td data-href="{{ url_for('user.my_lists', view=list[0]) }}" class="cursor_pointer">
                                 <div class="d-flex justify-content-center">
                                     {% if list[3] == 1 %} <!-- is public -->
                                         {{ macros.draw_public_symbol("Public list") }}
@@ -46,10 +46,10 @@
                                     {% endif %}
                                 </div>
                               </td>
-                            <td data-href="{{ url_for('user.my_lists', view=list[0]) }}" class="{{additional_classes}}" style="cursor: pointer;">{{ list[2] }}</td>
-                            <td name="user_list_row" class="{{additional_classes}}">
+                            <td data-href="{{ url_for('user.my_lists', view=list[0]) }}" class="{{additional_classes_td}} cursor_pointer hyphens">{{ list[2] }}</td>
+                            <td name="user_list_row" class="{{additional_classes_td}}">
                                 {% if list[5] == 1 %}
-                                    <svg type="button" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="edit" data-bs-name="{{ list[2] }}" data-bs-id="{{ list[0] }}" data-bs-public-read="{{ list[3] }}" data-bs-public-edit="{{ list[4] }}" class="clickable" style="{{additional_styles}}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                                    <svg type="button" class="{{additional_classes_svg}}" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="edit" data-bs-name="{{ list[2] }}" data-bs-id="{{ list[0] }}" data-bs-public-read="{{ list[3] }}" data-bs-public-edit="{{ list[4] }}" class="clickable" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
                                         <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
                                     </svg>
                                 {% else %}
@@ -66,13 +66,13 @@
 
         </div>
 
-        <div id="current-list-id" style="display:none" >{{ request.args.get('view') }}</div>
+        <div id="current-list-id" class="visually_hidden">{{ request.args.get('view') }}</div>
 
         <div id="list-content" class="sst bsl">
             {% if request.args.get('view') is not none %}
                 {{ macros.draw_paginated_variant_table(pagination, variants, lists=user_lists) }}
             {% else %}
-                <div class="display-5" style="text-align:center;">
+                <div class="display-5 text_align_center">
                     Please select a list to view its content!
                 </div>
             {% endif %}
@@ -107,7 +107,7 @@
                         <input type="text" class="form-control validationreq" id="list_name" name="list_name">
                     </div>
                     <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="public_read" name="public_read" onchange="public_read_toggle_action()">
+                        <input class="form-check-input" type="checkbox" id="public_read" name="public_read">
                         <label class="form-check-label" for="public_read">public read</label>
                     </div>
                     <div class="form-check form-switch">

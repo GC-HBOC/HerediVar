@@ -12,8 +12,8 @@
     <form action="" autocomplete="off" method="post" class="needs-validation bst" novalidate>
         <div class="form-group sst">
             <label for="orpha_name" class="form-label">Select a condition (From {{ macros.external_link("Orphanet", "https://www.orpha.net") }})</label>
-            <div class="autocomplete" style="width:100%">
-                <input id="orpha_code" name="orpha_code" type="text" value="{{ request.form.get('orpha_code', '') }}" style="display:none">
+            <div class="autocomplete full_page">
+                <input id="orpha_code" name="orpha_code" type="text" value="{{ request.form.get('orpha_code', '') }}" class="visually_hidden">
                 <input value="{{ request.form.get('orpha_name', '') }}" id="orpha_name" class="form-control" type="text" name="orpha_name" placeholder="Select an Orphanet disease condition... start search by typing">
             </div>
             <div class="invalid-feedback">
@@ -38,10 +38,15 @@
       
 </div>
 
+
+<input type='hidden' id='flask_data' data-orphanet-codes='{{ orphanet_codes | tojson }}' />
+
 <!-- this extracts the orphanet codes and makes them available to the scripts -->
+<!--
 <script>
     var orphanet_codes = JSON.parse('{{ orphanet_codes | tojson }}'.slice(1, -1));
 </script>
+-->
 
 {% endblock %}
 

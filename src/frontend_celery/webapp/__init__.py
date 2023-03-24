@@ -83,7 +83,18 @@ def create_app():
                 conn.close()
                 app.logger.debug("Closed db connection")
 
+    #@app.after_request
+    #def add_header(response):
+    #    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    #    response.headers['Content-Security-Policy'] = "default-src 'self' 'report-sample'; img-src 'self' data:; " #script-src 'self' 'wasm-unsafe-eval'
+    #    return response
+
     return app
+
+
+
+
+
 
 
 
