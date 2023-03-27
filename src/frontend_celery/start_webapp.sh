@@ -58,6 +58,9 @@ fi
 if [ "${WEBAPP_ENV}" == "prod" ]
 then
    export CURL_CA_BUNDLE=""
-   gunicorn -b heredivar.uni-koeln.de:8000 -w 4 'webapp:create_app()'
+   logsdir=/mnt/storage1/HerediVar/src/frontend_celery/logs
+   mkdir -p $logsdir/gunicorn-access-logs
+   mkdir -p $logsdir/gunicorn-error-logs
+   gunicorn -b heredivar.uni-koeln.de:8000 -w 4 'webapp:create_app()' --access-logfile $logsdir/gunicorn-access-logs/access.log --error-logfile $logsdir/gunicorn-error-logs/error.log
    #gunicorn -b SRV018.img.med.uni-tuebingen.de:8001 -w 1 'webapp:create_app()'
 fi
