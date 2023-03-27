@@ -496,11 +496,3 @@ def read_dotenv():
     
     load_dotenv(os.path.join(basedir, dotenvfile))
 
-def joinpaths(path, *paths):
-    result = path.rstrip('/')
-    for p in paths:
-        p = p.strip().strip('/')
-        if p != '':
-            p = '/' + p
-            result += p
-    return result

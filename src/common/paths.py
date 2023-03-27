@@ -1,6 +1,16 @@
 import os
 from os import path
-import common.functions as functions
+import sys
+
+def joinpaths(path, *paths):
+    result = path.rstrip('/')
+    for p in paths:
+        p = p.strip().strip('/')
+        if p != '':
+            p = '/' + p
+            result += p
+    return result
+
 
 ref_genome_name = "GRCh38"
 
@@ -151,42 +161,42 @@ elif webapp_env == 'githubtest':
 elif webapp_env == 'prod':
     """ configuration for the production environment """
     workdir = "/mnt/storage1/HerediVar"
-    datadir = functions.joinpaths(workdir, "data/dbs")
-    toolsdir = functions.joinpaths(workdir, "src/tools")
+    datadir = joinpaths(workdir, "data/dbs")
+    toolsdir = joinpaths(workdir, "src/tools")
 
     
     #tools
-    vep_path = functions.joinpaths(toolsdir, "ensembl-vep-release-107.0")
-    vep_cache_dir = functions.joinpaths(vep_path, "data/cache")
+    vep_path = joinpaths(toolsdir, "ensembl-vep-release-107.0")
+    vep_cache_dir = joinpaths(vep_path, "data/cache")
     os.environ['PERL5LIB'] = vep_path + "/Bio/:" + vep_path + "/cpan/lib/perl5/:" + os.environ.get('PERL5LIB', '')
     #ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-70-g53bce65c/"
-    ngs_bits_path = functions.joinpaths(toolsdir, "ngs-bits/bin")
-    htslib_path = functions.joinpaths(toolsdir, "htslib-1.16")
+    ngs_bits_path = joinpaths(toolsdir, "ngs-bits/bin")
+    htslib_path = joinpaths(toolsdir, "htslib-1.16")
 
     # data
-    ref_genome_dir = functions.joinpaths(workdir + "data/genomes")
-    ref_genome_path = functions.joinpaths(ref_genome_dir, "GRCh38.fa")
-    ref_genome_path_grch37 = functions.joinpaths(ref_genome_dir, "GRCh37.fa")
-    chainfile_path = functions.joinpaths(ref_genome_dir, "hg19ToHg38.fixed.over.chain.gz")
+    ref_genome_dir = joinpaths(workdir + "data/genomes")
+    ref_genome_path = joinpaths(ref_genome_dir, "GRCh38.fa")
+    ref_genome_path_grch37 = joinpaths(ref_genome_dir, "GRCh37.fa")
+    chainfile_path = joinpaths(ref_genome_dir, "hg19ToHg38.fixed.over.chain.gz")
 
     
     #metadata
-    gnomad_path = functions.joinpaths(datadir, "gnomAD/gnomAD_genome_v3.1.2_GRCh38.vcf.gz")
-    gnomad_m_path  = functions.joinpaths(datadir, "gnomAD/gnomAD_genome_v3.1.mito_GRCh38.vcf.gz")
-    phylop_file_path = functions.joinpaths(datadir, "phyloP/hg38.phyloP100way.bw")
-    dbsnp_path = functions.joinpaths(datadir, "dbSNP/dbSNP_v155.vcf.gz")
-    revel_path = functions.joinpaths(datadir, "REVEL/revel_grch38_all_chromosomes.vcf.gz")
-    spliceai_path = functions.joinpaths(datadir, "SpliceAI/spliceai_scores_2022_02_09_GRCh38.vcf.gz")
-    cadd_snvs_path = functions.joinpaths(datadir, "CADD/CADD_SNVs_1.6_GRCh38.vcf.gz")
-    cadd_indels_path = functions.joinpaths(datadir, "CADD/CADD_InDels_1.6_GRCh38.vcf.gz")
-    clinvar_path = functions.joinpaths(datadir, "ClinVar/clinvar_converted_GRCh38.vcf.gz")
-    submission_summary_path = functions.joinpaths(datadir, "ClinVar/submission_summary_preprocessed.txt.gz")
-    BRCA_exchange_path = functions.joinpaths(datadir, "BRCA_exchange/BRCA_exchange_02-22-22.vcf.gz")
-    FLOSSIES_path = functions.joinpaths(datadir, "FLOSSIES/FLOSSIES_25-03-2022.vcf.gz")
-    cancerhotspots_path = functions.joinpaths(datadir, "cancerhotspots/cancerhotspots.v2.final.vcf.gz")
-    arup_brca_path = functions.joinpaths(datadir, "ARUP/ARUP_BRCA_2022_04_01.vcf.gz")
-    tp53_db = functions.joinpaths(datadir, "TP53_database/GermlineDownload_r20.normalized.vcf.gz")
-    hci_priors = functions.joinpaths(datadir, "HCI_priors/priors.vcf.gz")
+    gnomad_path = joinpaths(datadir, "gnomAD/gnomAD_genome_v3.1.2_GRCh38.vcf.gz")
+    gnomad_m_path  = joinpaths(datadir, "gnomAD/gnomAD_genome_v3.1.mito_GRCh38.vcf.gz")
+    phylop_file_path = joinpaths(datadir, "phyloP/hg38.phyloP100way.bw")
+    dbsnp_path = joinpaths(datadir, "dbSNP/dbSNP_v155.vcf.gz")
+    revel_path = joinpaths(datadir, "REVEL/revel_grch38_all_chromosomes.vcf.gz")
+    spliceai_path = joinpaths(datadir, "SpliceAI/spliceai_scores_2022_02_09_GRCh38.vcf.gz")
+    cadd_snvs_path = joinpaths(datadir, "CADD/CADD_SNVs_1.6_GRCh38.vcf.gz")
+    cadd_indels_path = joinpaths(datadir, "CADD/CADD_InDels_1.6_GRCh38.vcf.gz")
+    clinvar_path = joinpaths(datadir, "ClinVar/clinvar_converted_GRCh38.vcf.gz")
+    submission_summary_path = joinpaths(datadir, "ClinVar/submission_summary_preprocessed.txt.gz")
+    BRCA_exchange_path = joinpaths(datadir, "BRCA_exchange/BRCA_exchange_02-22-22.vcf.gz")
+    FLOSSIES_path = joinpaths(datadir, "FLOSSIES/FLOSSIES_25-03-2022.vcf.gz")
+    cancerhotspots_path = joinpaths(datadir, "cancerhotspots/cancerhotspots.v2.final.vcf.gz")
+    arup_brca_path = joinpaths(datadir, "ARUP/ARUP_BRCA_2022_04_01.vcf.gz")
+    tp53_db = joinpaths(datadir, "TP53_database/GermlineDownload_r20.normalized.vcf.gz")
+    hci_priors = joinpaths(datadir, "HCI_priors/priors.vcf.gz")
 
     # IGV data
-    igv_data_path = functions.joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
+    igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
