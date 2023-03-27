@@ -174,7 +174,7 @@ elif webapp_env == 'prod':
     htslib_path = joinpaths(toolsdir, "htslib-1.16")
 
     # data
-    ref_genome_dir = joinpaths(workdir + "data/genomes")
+    ref_genome_dir = joinpaths(workdir, "data/genomes")
     ref_genome_path = joinpaths(ref_genome_dir, "GRCh38.fa")
     ref_genome_path_grch37 = joinpaths(ref_genome_dir, "GRCh37.fa")
     chainfile_path = joinpaths(ref_genome_dir, "hg19ToHg38.fixed.over.chain.gz")
@@ -200,3 +200,4 @@ elif webapp_env == 'prod':
 
     # IGV data
     igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
+
