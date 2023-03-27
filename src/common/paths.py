@@ -163,7 +163,7 @@ elif webapp_env == 'prod':
     htslib_path = path.join(toolsdir, "htslib-1.16")
 
     # data
-    ref_genome_dir = path.join(workdir + "data/genomes/")
+    ref_genome_dir = path.join(workdir + "data/genomes")
     ref_genome_path = path.join(ref_genome_dir, "GRCh38.fa")
     ref_genome_path_grch37 = path.join(ref_genome_dir, "GRCh37.fa")
     chainfile_path = path.join(ref_genome_dir, "hg19ToHg38.fixed.over.chain.gz")
