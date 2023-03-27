@@ -396,9 +396,10 @@ def refgene_ngsd():
 @download_blueprint.route('/download/hg38.fa')
 def ref_genome():
     filename = "GRCh38.fa"
-    return send_from_directory(directory=paths.ref_genome_dir, path=filename, download_name="GRCh38.fa", as_attachment=True, mimetype="text")
+    print(paths.ref_genome_dir + '/')
+    return send_from_directory(directory=paths.ref_genome_dir + '/', path=filename, download_name="GRCh38.fa", as_attachment=True, mimetype="text")
 
 @download_blueprint.route('/download/hg38.fa.fai')
 def ref_genome_index():
     filename = "GRCh38.fa.fai"
-    return send_from_directory(directory=paths.ref_genome_dir, path=filename, download_name="GRCh38.fa.fai", as_attachment=True, mimetype="text")
+    return send_from_directory(directory=paths.ref_genome_dir + '/', path=filename, download_name="GRCh38.fa.fai", as_attachment=True, mimetype="text")
