@@ -236,7 +236,7 @@ function setup_igv(chrom, start, end, variant_id) {
                     "name": "Variant",
                     "type": "variant",
                     "format": "vcf",
-                    "url": "../download/vcf/one_variant?variant_id=" + variant_id.toString(),
+                    "url": "/download/vcf/one_variant?variant_id=" + variant_id.toString(),
                     "indexed": false,
                     "color": "red",
                     "autoHeight": true,
@@ -246,7 +246,7 @@ function setup_igv(chrom, start, end, variant_id) {
                     "name": "Classified variants",
                     "type": "variant",
                     "format": "vcf",
-                    "url": "../download/vcf/classified",
+                    "url": "/download/vcf/classified",
                     "indexed": false,
                     "autoHeight": true,
                     "color": function(variant) {
