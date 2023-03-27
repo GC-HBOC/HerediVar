@@ -187,3 +187,5 @@ elif webapp_env == 'prod':
     tp53_db = path.join(datadir, "TP53_database/GermlineDownload_r20.normalized.vcf.gz")
     hci_priors = path.join(datadir, "HCI_priors/priors.vcf.gz")
 
+    # IGV data
+    igv_data_path = path.join(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
