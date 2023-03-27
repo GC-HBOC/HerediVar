@@ -19,8 +19,9 @@ $(document).ready(function()
 
     // add delete column to list variant view
     var variant_table = $('#variantTable')
-    variant_table.find('thead').find('tr').append('<td class="text_align_center bold width_minimal">Del</td>')
+    variant_table.find('thead').find('tr').append('<th class="text_align_center bold width_minimal">Del</th>')
     const list_permissions = $('#list-permissions')
+    console.log(list_permissions)
     const can_edit = list_permissions.attr('data-owner') == 1 || list_permissions.attr('data-editable') == 1 
     variant_table.find('tbody').find('tr').each(function(){
         var trow = $(this)

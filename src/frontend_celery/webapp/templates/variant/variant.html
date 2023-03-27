@@ -323,29 +323,29 @@
                                 <table class="table table-hover" id="userClassificationsTable">
                                     <thead>
                                         <tr>
-                                            <th class="width_very_small"><div class="sortable">Final class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_small"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_small"><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_medium" id="userClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_medium"><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_large"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_minimal"><div class="sortable">Final class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_medium"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_medium"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                             <th class="width_very_small"><div class="sortable">Class by scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                             <th class="width_small"><div class="sortable">Literature</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small" id="userClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for classification in variant.user_classifications %}
                                         <tr user_classification_id="{{ classification.id }}">
                                             <td class="text_align_center">{{ classification.selected_class }}</td>
-                                            <td>{{ classification.submitter.full_name }}</td>
-                                            <td>{{ classification.submitter.affiliation }}</td>
-                                            <td class="nowrap">{{ classification.date }}</td>
-                                            <td><abbr title="{{ classification.comment }}"><div class="Nellipsis">{{ classification.comment }}</div> </abbr></td>
-                                            <td class="nowrap">{{ classification.scheme.display_name }}</td>
+                                            <td>{{ classification.scheme.display_name }}</td>
                                             <td>{{ macros.draw_criteria_display(classification.scheme.criteria) }}</td>
+                                            <td><abbr title="{{ classification.comment }}"><div class="Nellipsis">{{ classification.comment }}</div> </abbr></td>
                                             <td>{{ classification.scheme.selected_class }}</td>
                                             <td>{{ macros.selected_literature_display(classification.literature) }}</td>
+                                            <td>{{ classification.submitter.full_name }}</td>
+                                            <td>{{ classification.submitter.affiliation }}</td>
+                                            <td>{{ classification.date }}</td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -364,10 +364,10 @@
                                 <table class="table table-hover" id="heredicareCenterClassificationsTable">
                                     <thead>
                                         <tr>
-                                            <th class="width_very_small"><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_medium"><div class="sortable">Center</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_medium" id="heredicareCenterClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_minimal"><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Center</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small" id="heredicareCenterClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_very_large"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -410,10 +410,10 @@
                                         <tr>
                                             <th class="width_small"><div class="sortable">Interpretation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                             <th class="width_small" id="clinvarSubmissionsTableLastEvaluatedCol"><div class="sortable">Last evaluated</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_medium"><div class="sortable">Review status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_large"><div class="sortable">Submission condition</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_large"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th>Comment<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Review status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Submission condition</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_medium"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_large">Comment<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -614,21 +614,21 @@
                             <table class="table table-hover" id="variantConsequenceTable">
                                 <thead>
                                     <tr>
-                                        <th><div class="sortable">Transcript Name</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th><div class="sortable">HGVS_C</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th><div class="sortable">HGVS_P</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_small"><div class="sortable">Transcript Name</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_small"><div class="sortable">HGVS_C</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_small"><div class="sortable">HGVS_P</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         <th class="width_medium"><div class="sortable">Consequence</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th><div class="sortable">Impact</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_small"><div class="sortable">Impact</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         <th class="width_very_small"><div class="sortable">Exon Nr.</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         <th class="width_very_small"><div class="sortable">Int. Nr.</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         <th class="width_small" id="variant_consequence_gene_symbol_col" asc="false"><div class="sortable">Gene Symbol</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                        <th><div class="sortable">Protein Domain</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_small"><div class="sortable">Protein Domain</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         <th class="width_small"><div class="sortable">Flags</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         
                                         <th class="visually_hidden" id="variant_consequence_source_col">Source</th>
-                                        <th class="width_small" id="variant_consequence_length_col" asc="true"><div class="sortable">Length</div></th>
+                                        <th class="width_very_small" id="variant_consequence_length_col" asc="true"><div class="sortable">Length</div></th>
                                         <th class="visually_hidden" id="variant_consequence_numflags_col" asc="true">NumFlags</th>
-                                        <th >Links</th>
+                                        <th class="width_small">Links</th>
                                     </tr>
                                 </thead>
                                 <tbody>

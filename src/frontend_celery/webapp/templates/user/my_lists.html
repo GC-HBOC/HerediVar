@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="full_page">
+<div>
 
     <h1 class="bst">{% block title %} Your variant lists {% endblock %}</h1>
 
@@ -34,7 +34,7 @@
                         {% if list[0]|string == request.args.get('view') %}
                             {% set additional_classes_td = "selected" %}
                             {% set additional_classes_svg = "color_white"%}
-                            <div id="list-permissions visually_hidden" data-owner="{{list[5]}}" data-editable="{{list[4]}}"></div>
+                            <div id="list-permissions" class="visually_hidden" data-owner="{{list[5]}}" data-editable="{{list[4]}}"></div>
                         {% endif %}
                         <tr>
                             <td data-href="{{ url_for('user.my_lists', view=list[0]) }}" class="cursor_pointer">
@@ -68,7 +68,7 @@
 
         <div id="current-list-id" class="visually_hidden">{{ request.args.get('view') }}</div>
 
-        <div id="list-content" class="sst bsl">
+        <div id="list-content" class="sst bsl overflow_x_auto">
             {% if request.args.get('view') is not none %}
                 {{ macros.draw_paginated_variant_table(pagination, variants, lists=user_lists) }}
             {% else %}

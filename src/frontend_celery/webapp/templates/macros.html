@@ -108,7 +108,7 @@
 {% else %}
     <div class="classification-gradient left-space-padding" name="consensus_class_display" classification="-">
         <div class="li-label padding_big">
-            There is no consensus classification for this variant, yet.
+            <div class="color_black">There is no consensus classification for this variant, yet.</div> 
         </div>
     </div>
 {% endif %}
@@ -127,10 +127,10 @@
 
 
 {% macro draw_paginated_variant_table(pagination, variants, lists=none) %}
-<div id="tabnav-head" class="row align-items-end">
-    <div class="col">{{ pagination.links }}</div>
+<div id="tabnav-head" class="row align-items-end  nsl nsr">
+    <div class="col nopad">{{ pagination.links }}</div>
 
-    <div class="col">
+    <div class="col nopad">
         
         <a class="btn btn-sm btn-primary float_right" data-bs-toggle="collapse" id="searchOptionsToggle" href="#advanced_search" role="button" aria-expanded="false" aria-controls="advanced_search" >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
@@ -279,18 +279,18 @@
 </div>
   
   
-<div class="table-responsive">
+<div class="table-responsive tableFixHead table-100 ">
   <table class="table table-hover ssb" id="variantTable">
     <thead id="variantTableHead">
       <tr>
         <th class="visually_hidden">id</th>
         <th class="text_align_center width_very_small">CHR</th>
         <th class="width_small">POS</th>
-        <th class="width_large">REF</th>
-        <th class="width_large">ALT</th>
+        <th class="width_medium">REF</th>
+        <th class="width_medium">ALT</th>
         <th class="width_small">HGVS c.</th>
         <th class="width_small">HGVS p.</th>
-        <th class="width_small">GENE</th>
+        <th class="width_very_small">GENE</th>
         <th class="text_align_center width_small">Your classification</th>
         <th class="text_align_center width_small">Consensus classification</th>
       </tr>

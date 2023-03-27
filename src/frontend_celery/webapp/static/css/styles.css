@@ -99,15 +99,15 @@ table.scroll th {
 */
 
 .tableFixHead          { overflow: auto; max-height: 30rem; }
-.tableFixHead thead th { position: sticky; top: 0; z-index: 1; }
-
+.tableFixHead thead th { position: sticky; top: 0; z-index: 1; background:#eee;}
 .tableFixHead table  { border-collapse: collapse; width: 100%; table-layout: fixed;}
-.tableFixHead thead th     { background:#eee; }
 
 .tableFixHead.table-lg {
     max-height: 45rem
 }
-
+.tableFixHead.table-100 {
+    max-height: 100%
+}
 
 
 
@@ -430,6 +430,7 @@ footer {
 
 .class_label {
     height:auto;
+    position: relative;
 }
 .class_label .the_c {
     position: absolute; 
