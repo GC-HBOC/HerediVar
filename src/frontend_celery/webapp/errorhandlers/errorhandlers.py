@@ -1,4 +1,5 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, current_app
+import traceback
 
 def not_found(e):
     return render_template('errorhandlers/404.html'), 404
@@ -8,6 +9,8 @@ def forbidden(e):
 
 def internal_server_error(e):
     original = getattr(e, "original_exception", None)
+
+    #current_app.logger.exception(e)
 
     if original is None:
         # triggered if abort(500) is called

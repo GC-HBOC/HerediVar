@@ -159,6 +159,8 @@ def submit_clinvar(variant_id):
             }
             resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
             #print(resp.json())
+            if str(resp.status_code) != '200':
+                abort(500, 'Status code of ClinVar submission API endpoint was: ' + str(resp.status_code))
             
             submission_id = resp.json()['id']
             clinvar_status = check_clinvar_status(submission_id)
@@ -195,6 +197,7 @@ def get_orphanet_codes():
             #orpha_definition = entry['Definition']
             orphanet_codes.append([orpha_code, preferred_term + ': ' + str(orpha_code)])
     return orphanet_codes
+
 
 
 
