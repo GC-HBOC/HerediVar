@@ -93,7 +93,7 @@ function confirm_reannotation_action() {
         success: function(data, status, request) {
             show_annotation_status('bg-secondary', "Annotation requested successfully", "Annotation requested")
 
-            status_url = request.getResponseHeader('annotation_status_url');
+            const status_url = request.getResponseHeader('annotation_status_url');
             update_annotation_status(status_url);
         },
         error: function() {
