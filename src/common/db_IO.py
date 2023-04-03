@@ -618,13 +618,22 @@ class Connection:
             new_constraints = enbrace(new_constraints)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if genes is not None and len(genes) > 0:
-            genes = [self.get_gene(self.convert_to_gene_id(x))[1] for x in genes]
-            placeholders = ["%s"] * len(genes)
-            placeholders = ', '.join(placeholders)
-            placeholders = enbrace(placeholders)
-            new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE hgnc_id IN " + placeholders + ")"
-            actual_information += tuple(genes)
-            postfix = self.add_constraints_to_command(postfix, new_constraints)
+            #genes = [self.get_gene(self.convert_to_gene_id(x))[1] for x in genes]
+            hgnc_ids = set()
+            for gene in genes:
+                current_gene_id = self.convert_to_gene_id(gene)
+                if current_gene_id is not None:
+                    new_hgnc = self.get_gene(current_gene_id)[1]
+                    hgnc_ids.add(new_hgnc)
+            if len(hgnc_ids) > 0:
+                placeholders = ["%s"] * len(hgnc_ids)
+                placeholders = ', '.join(placeholders)
+                placeholders = enbrace(placeholders)
+                new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE hgnc_id IN " + placeholders + ")"
+                actual_information += tuple(hgnc_ids)
+                postfix = self.add_constraints_to_command(postfix, new_constraints)
+            else:
+                return [], 0
         if consensus is not None and len(consensus) > 0:
             new_constraints_inner = ''
             consensus_without_dash = [value for value in consensus if value != '-']
