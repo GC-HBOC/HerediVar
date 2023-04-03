@@ -85,9 +85,10 @@ def extract_user_classifications(request_obj):
 def extract_hgvs(request_obj):
     hgvs = request_obj.args.get('hgvs', '')
     hgvs = preprocess_query(hgvs, pattern = r".*:?c\..+")
+    print(hgvs)
     if hgvs is None:
         flash("You have an error in your hgvs query(s). Please check the syntax! c.HGVS should be prefixed by this pattern: 'transcript:c.' Results are not filtered by hgvs.", "alert-danger")
-    if any(not(x.startswith('ENST') or x.startswith('NM') or x.startswith('NR') or x.startswith('XM') or x.startswith('XR')) for x in hgvs):
+    elif any(not(x.startswith('ENST') or x.startswith('NM') or x.startswith('NR') or x.startswith('XM') or x.startswith('XR')) for x in hgvs):
         flash("You are probably searching for a HGVS c-dot string without knowing its transcript. Be careful with the search results as they might not contain the variant you are looking for!", "alert-warning")
     return hgvs
 
