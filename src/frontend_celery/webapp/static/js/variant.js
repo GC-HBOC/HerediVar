@@ -86,7 +86,7 @@ $(document).ready(function()
 // function triggered on reannotaiton submit button pressed
 function confirm_reannotation_action() {
     // send ajax POST request to start background job
-    variant_id = $('#variant_id_container').data()['variantId'];
+    const variant_id = $('#variant_id_container').data()['variantId'];
     $.ajax({
         type: 'POST',
         url: '/task/run_annotation_service?variant_id=' + variant_id,
