@@ -57,7 +57,7 @@ fi
 
 if [ "${WEBAPP_ENV}" == "prod" ]
 then
-   export CURL_CA_BUNDLE=""
+   #export CURL_CA_BUNDLE=""
    logsdir=/mnt/storage1/HerediVar/src/frontend_celery/logs
    mkdir -p $logsdir/gunicorn-access-logs
    mkdir -p $logsdir/gunicorn-error-logs
