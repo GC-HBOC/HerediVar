@@ -56,8 +56,8 @@ $(document).ready(function()
     if ((annotation_status === 'pending' || annotation_status == 'retry') && celery_task_id !== null){
         $('#reannotate_button').attr('disabled', true)
         //$('#reannotate-list-item').attr('title', "Wait for the current annotation to finish before submitting another one")
-        status_url = "/task/annotation_status/" + celery_task_id;
-        console.log(status_url)
+        const status_url = "/task/annotation_status/" + celery_task_id;
+        //console.log(status_url)
         update_annotation_status(status_url);
     }
 
