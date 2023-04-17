@@ -406,10 +406,11 @@ def ref_genome_index():
 @download_blueprint.route('/download/gnomad.vcf.gz')
 def gnomad():
     filename = "gnomad.vcf.gz"
-    return send_from_directory(directory=paths.datadir + 'gnomAD/', path=filename, download_name="gnomAD_genome_v3.1.2_GRCh38.vcf.gz", as_attachment=True, mimetype="text")
+    return send_from_directory(path=paths.gnomad_path, download_name="gnomAD_genome_v3.1.2_GRCh38.vcf.gz", as_attachment=True, mimetype="text")
 
 
 @download_blueprint.route('/download/gnomad_m.vcf.gz')
 def gnomad_m():
     filename = "gnomad_m.vcf.gz"
-    return send_from_directory(directory=paths.datadir + 'gnomAD/', path=filename, download_name="gnomAD_genome_v3.1.mito_GRCh38.vcf.gz", as_attachment=True, mimetype="text")
+    flash(paths.datadir + 'gnomAD/')
+    return send_from_directory(directory=paths.gnomad_m_path + 'gnomAD/', path=filename, download_name="gnomAD_genome_v3.1.mito_GRCh38.vcf.gz", as_attachment=True, mimetype="text")
