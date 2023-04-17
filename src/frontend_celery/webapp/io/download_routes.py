@@ -406,6 +406,7 @@ def ref_genome_index():
 @download_blueprint.route('/download/gnomad.vcf.gz')
 def gnomad():
     filename = "gnomAD_genome_v3.1.2_GRCh38.vcf.gz"
+    flash(paths.datadir + 'gnomAD/')
     return send_from_directory(directory=paths.datadir + 'gnomAD/', path=filename, download_name="gnomAD_genome_v3.1.2_GRCh38.vcf.gz", as_attachment=True, mimetype="text")
 
 
