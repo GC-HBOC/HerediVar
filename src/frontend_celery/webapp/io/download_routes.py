@@ -410,6 +410,6 @@ def gnomad():
 
 
 @download_blueprint.route('/download/gnomad_m.vcf.gz')
-def gnomad():
+def gnomad_m():
     filename = "gnomad_m.vcf.gz"
     return send_from_directory(directory=paths.datadir + 'gnomAD/', path=filename, download_name="gnomAD_genome_v3.1.mito_GRCh38.vcf.gz", as_attachment=True, mimetype="text")
