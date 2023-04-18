@@ -156,16 +156,15 @@ fabric.properties
 /data/genomes/
 
 /src/tools/ngs-bits/
-/src/tools/samtools/
-/src/tools/htslib-1.16/
+/src/tools/samtools-*/
+/src/tools/htslib-*/
 /src/tools/vcf2maf/
 /src/tools/redis-stable/
-/src/tools/node-v16.15.0-linux-x64/
-/src/tools/keycloak-18.0.0
-/src/tools/ensembl-vep-release-107.0
+/src/tools/keycloak-*
+/src/tools/ensembl-vep-release-*
 /src/frontend/flask_sessions
 /src/frontend_celery/flask_sessions
-/keycloak-18.0.0/
+/keycloak-*/
 /deployment/.vagrant
 /src/tools/litvar_vs_vep
 .env
