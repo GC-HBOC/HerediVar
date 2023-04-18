@@ -9,7 +9,7 @@ set -o verbose
 #  ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/README_human_reference_20110707
 
 root="$(dirname `pwd`)"
-samtools=$root/src/tools/samtools/samtools
+samtools=$root/src/tools/samtools-1.11/samtools
 
 mkdir -p `pwd`/genomes/
 genome=`pwd`/genomes/GRCh38.fa

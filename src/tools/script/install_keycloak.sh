@@ -37,3 +37,6 @@ cd $basedir
 wget -q https://github.com/keycloak/keycloak/releases/download/$version/keycloak-$version.zip
 unzip keycloak-$version.zip
 rm keycloak-$version.zip
+
+# init keycloak
+#keycloak-18.0.0/bin/kc.sh import --file /mnt/storage2/users/ahdoebm1/HerediVar/src/frontend_celery/keycloak_export/Heredivar-realm.json

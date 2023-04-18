@@ -9,7 +9,7 @@ set -o verbose
 #  ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/README_human_reference_20110707
 
 root="$(dirname `pwd`)"
-samtools=$root/src/tools/samtools/samtools
+samtools=$root/src/tools/samtools-1.11/samtools
 
 mkdir -p `pwd`/genomes/
 genome=`pwd`/genomes
@@ -17,7 +17,7 @@ cd $genome
 
 wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz
 (gunzip -c hs37d5.fa.gz | sed -r 's/>/>chr/g' > GRCh37.fa) || true
-#rm hs37d5.fa.gz
+rm hs37d5.fa.gz
 
 # build indexy
 $samtools faidx GRCh37.fa

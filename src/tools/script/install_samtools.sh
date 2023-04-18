@@ -39,9 +39,6 @@ wget -q https://github.com/samtools/samtools/releases/download/$version/samtools
 tar xjf samtools-$version.tar.bz2
 cd samtools-$version
 make
-rm samtools-$version.tar.bz2
-cd ..
-mv samtools-$version samtools
 
 
 
