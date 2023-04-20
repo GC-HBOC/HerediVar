@@ -33,9 +33,9 @@ echo "Installing VEP to $path"
 
 cd $path
 
-vep_install_dir=$path/ensembl-vep-release-107.0
-vep_data_dir=$path/ensembl-vep-release-107.0/data
-cpan_dir=$path/ensembl-vep-release-107.0/cpan
+vep_install_dir=$path/ensembl-vep
+vep_data_dir=$path/ensembl-vep/data
+cpan_dir=$path/ensembl-vep/cpan
 
 # download ensembl-vep
 mkdir -p $vep_install_dir

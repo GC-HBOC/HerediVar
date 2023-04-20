@@ -766,16 +766,16 @@
                 <h4 class="card-subcaption">Literature</h4>
 
                 <p class="card-text">
-                    <div class="table-responsive tableFixHead table-lg">
+                    <div class="table-responsive table-lg">
                         <table class="table table-hover" id="literatureTable">
                             <thead>
                                 <tr>
-                                    <th class="width_very_small" id="literatureTableYearCol"><div class="sortable">Year</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th class="width_very_large"><div class="sortable">Authors</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th class="width_very_large"><div class="sortable">Title</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th class="width_small"><div class="sortable">Journal / Publisher</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th class="width_small"><div class="sortable">Link</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th class="width_small"><div class="sortable">Source</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_very_small" id="literatureTableYearCol"><div>Year</div></th>
+                                    <th class="width_large"><div>Authors</div></th>
+                                    <th class="width_very_large"><div>Title</div></th>
+                                    <th class="width_medium"><div>Journal / Publisher</div></th>
+                                    <th class="width_small"><div>Link</div></th>
+                                    <th class="width_very_small"><div>Source</div></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -783,7 +783,7 @@
                                     {% for paper in variant.literature %}
                                     <tr>
                                         <td>{{ paper.year }}</td>
-                                        <td><abbr title="{{ paper[4] }}"><div class="Nellipsis">{{ paper.authors }}</div> </abbr></td>
+                                        <td><div class="Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ paper.authors }}">{{ paper.authors }}</div></td>
                                         <td>{{ paper.title }}</td>
                                         <td>{{ paper.journal }}</td>
                                         <td>{{ macros.external_link("PMID:" + paper.pmid|string, "https://pubmed.ncbi.nlm.nih.gov/" + paper.pmid|string) }}</td>

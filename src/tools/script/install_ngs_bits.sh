@@ -36,6 +36,5 @@ echo "Installing ngs-bits $version to $basedir..."
 cd $basedir
 git clone --recursive https://github.com/imgag/ngs-bits.git
 #git checkout $version && git submodule update --recursive --init ## select stable version once project is finished!
-mv ngs-bits ngs-bits-$version
-cd ngs-bits-$version
+cd ngs-bits
 make build_3rdparty build_libs_release build_tools_release

@@ -17,12 +17,10 @@ functions.read_dotenv()
 
 class Config(object):
 
-    webapp_env = os.environ.get('WEBAPP_ENV', None)
-
-    if webapp_env is None:
-        raise ValueError("No WEBAPP_ENV environment variable set.")
+    weapp_env = functions.load_webapp_env()
 
     HOST = os.environ.get('HOST')
+    PORT = os.environ.get('PORT')
 
     ##### production config ####
     TESTING = False
@@ -32,7 +30,7 @@ class Config(object):
     SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') # should be at least 32 byte, used for signing the session objects
 
     # keycloak
-    KEYCLOAK_PORT = '5050'
+    KEYCLOAK_PORT = os.environ.get('KEYCLOAK_PORT', 5050)
     KEYCLOAK_HOST = os.environ.get('KEYCLOAK_HOST', 'localhost')
     KEYCLOAK_BASEPATH = "http://"+KEYCLOAK_HOST + ":" + KEYCLOAK_PORT
     ISSUER = os.environ.get('ISSUER', "http://"+KEYCLOAK_HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')

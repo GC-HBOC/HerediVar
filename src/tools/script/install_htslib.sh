@@ -39,3 +39,5 @@ tar -vxjf htslib-$version.tar.bz2
 cd htslib-$version
 make
 rm -f htslib-$version.tar.bz2
+cd ..
+mv htslib-$version htslib

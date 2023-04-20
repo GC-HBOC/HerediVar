@@ -22,15 +22,15 @@ if webapp_env == 'dev':
     """ configuration for the development environment """
     
     # workdir
-    workdir = "/mnt/storage3/users/ahdoebm1/HerediVar/"
+    workdir = "/mnt/storage2/users/ahdoebm1/HerediVar/"
     datadir = workdir + "data/dbs/"
 
     #tools
-    vep_path = "/mnt/storage2/megSAP/tools/ensembl-vep-release-107.0"
-    vep_cache_dir = "/mnt/storage2/megSAP/data/dbs/ensembl-vep-107/cache"
+    vep_path = workdir + "src/tools/ensembl-vep"
+    vep_cache_dir = workdir + "src/tools/ensembl-vep/data/cache"
     #ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_10-1-gcb80a2dd/"
     ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
-    htslib_path = workdir + "src/tools/htslib-1.16/"
+    htslib_path = workdir + "src/tools/htslib/"
 
     # data
     ref_genome_dir = workdir + "data/genomes/"

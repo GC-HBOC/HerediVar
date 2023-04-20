@@ -54,7 +54,7 @@ cd src/frontend_celery/
 
 root="$(dirname `pwd`)"
 tools=$root/tools
-keycloak_path=$tools/keycloak-18.0.0
+keycloak_path=$tools/keycloak
 
 
 if [ "${WEBAPP_ENV}" == "dev" ]

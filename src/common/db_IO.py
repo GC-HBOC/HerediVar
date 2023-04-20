@@ -714,6 +714,7 @@ class Connection:
             variant = self.get_variant(variant_id=variant_raw[0], include_annotations = False, include_heredicare_classifications = False, include_clinvar = False, include_assays = False, include_literature = False)
             variants.append(variant)
 
+
         if page_size == 'unlimited':
             return variants, len(variants)
 
@@ -1556,7 +1557,7 @@ class Connection:
                     
                     new_user_classification = models.Classification(id = classification_id, type = 'user classification', selected_class=selected_class, comment=comment, date=date, submitter=user, scheme=scheme, literature = literatures)
                     user_classifications.append(new_user_classification)
-        
+
         heredicare_classifications = None
         if include_heredicare_classifications:
             heredicare_classifications_raw = self.get_heredicare_center_classifications(variant_id)
@@ -1597,10 +1598,14 @@ class Connection:
             
                 clinvar = models.Clinvar(id = id, variation_id = variation_id, review_status = review_status, interpretation_summary = interpretation, submissions = clinvar_submissions)
         
+        
         # add consequences
         consequences = None
+        import time
         if include_consequences:
+            start_time = time.time()
             consequences_raw = self.get_variant_consequences(variant_id)
+            print("--- consequences: %s seconds ---" % (time.time() - start_time))
             if consequences_raw is not None:
                 consequences = []
                 for consequence in consequences_raw:
@@ -1608,7 +1613,8 @@ class Connection:
                                                          gene = models.Gene(symbol = consequence[7], id = consequence[8]), protein_domain_title = consequence[10], protein_domain_id = consequence[11], is_gencode_basic = consequence[13],
                                                          is_mane_select = consequence[14], is_mane_plus_clinical = consequence[15], is_ensembl_canonical = consequence[16], source = consequence[9], length = consequence[12], biotype = consequence[18])
                     consequences.append(new_consequence)
-        
+       
+
         assays = None
         if include_assays:
             assays_raw = self.get_assays(variant_id, assay_types = 'all')

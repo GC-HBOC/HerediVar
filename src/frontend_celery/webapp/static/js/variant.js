@@ -15,11 +15,45 @@ $(document).ready(function()
         table_sorter(variant_consequence_table_default_sorting_columns, '#variantConsequenceTable') // sort first by num of flags, at tie by length and at tie by gene symbol
     }
     table_sorter(['#userClassificationsTableDateCol'], '#userClassificationsTable')
-    table_sorter(['#literatureTableYearCol'], '#literatureTable')
     table_sorter(['#clinvarSubmissionsTableLastEvaluatedCol'], '#clinvarSubmissionsTable')
     table_sorter(['#heredicareCenterClassificationsTableDateCol'], '#heredicareCenterClassificationsTable')
     table_sorter(['#userSchemeClassificationsTableDateCol'], '#userSchemeClassificationsTable')
     table_sorter(['#assayTableDateCol', '#assayTableAssayTypeCol'], '#assayTable')
+    //table_sorter(['#literatureTableYearCol'], '#literatureTable')
+
+    	
+
+
+    // ACTIVATE DATATABLES
+    // Setup - add a text input to each header cell
+    $('#literatureTable thead th').each(function() {
+        var new_search_input = document.createElement('input')
+        new_search_input.setAttribute('placeholder', 'search...')
+        new_search_input.classList.add(this.classList)
+        $(this).append(new_search_input)
+    });
+ 
+    // DataTable
+    var literature_table = $('#literatureTable').DataTable({
+        order: [[0, 'desc']],
+    });
+ 
+    // Apply the search
+    literature_table.columns().eq(0).each(function(colIdx) {
+        $('input', literature_table.column(colIdx).header()).on('keyup change', function() {
+            literature_table
+                .column(colIdx)
+                .search(this.value)
+                .draw();
+        });
+    
+        $('input', literature_table.column(colIdx).header()).on('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+
+
+
 
     // functionality for the reannotate button
     $('#reannotate-submit').click(function(){

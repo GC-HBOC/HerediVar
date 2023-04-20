@@ -27,21 +27,21 @@ js_packages=$root/src/frontend_celery/webapp/static/packages
 
 # prepare python venv & install packages
 # python must be installed already
-##$tools/script/install_python.sh -p $root/
+$tools/script/install_python.sh -p $root/
 
 
 # prepare htslisb
-##$tools/script/install_htslib.sh -p $tools/ -v 1.16
+$tools/script/install_htslib.sh -p $tools/ -v 1.16
 
 # prepare keycloak
-##$tools/script/install_keycloak.sh -p $tools/ -v 18.0.0
+$tools/script/install_keycloak.sh -p $tools/ -v 18.0.0
 
 # prepare redis
-##$tools/script/install_redis.sh -p $tools/
+$tools/script/install_redis.sh -p $tools/
 
 
 # prepare samtools
-##$tools/script/install_samtools.sh -p $tools/ -v 1.11
+$tools/script/install_samtools.sh -p $tools/ -v 1.11
 
 # prepare vep
 $tools/script/install_vep.sh -p $tools/
@@ -54,11 +54,15 @@ $tools/script/install_ngs_bits.sh -p $tools/ -v 2022_10
 
 
 # install bootstrap
-##$tools/script/install_bootstrap.sh -p $js_packages -v 5.2.3
+$tools/script/install_bootstrap.sh -p $js_packages -v 5.2.3
 
 # install igv
 #$tools/script/install_igv_js.sh -p $js_packages -v 2.13.9
 # download csp conform version from: https://download.imgag.de/ahdoebm1/igv/
 
 # install jquery
-##$tools/script/install_jquery.sh -p $js_packages -v 3.6.3
+$tools/script/install_jquery.sh -p $js_packages -v 3.6.3
+
+
+# install datatables
+$tools/script/install_datatables.sh -p $js_packages -v 1.13.4

@@ -16,6 +16,11 @@ import json
 def basedir():
     return os.getcwd()
 
+def load_webapp_env():
+    webapp_env = os.environ.get('WEBAPP_ENV', None)
+    if webapp_env is None:
+        raise ValueError("No WEBAPP_ENV environment variable set.")
+    return webapp_env
 
 # converts one line from the variant table to a vcf record
 def variant_to_vcf(chr, pos, ref, alt, path):

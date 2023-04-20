@@ -31,7 +31,7 @@ def create_app():
                      e.g. project.config.ProdConfig
     """
 
-    env = os.environ.get('WEBAPP_ENV', 'dev')
+    env = functions.load_webapp_env()
     object_name = 'config.%sConfig' % env.capitalize()
 
     app = Flask(__name__, template_folder="templates", static_folder="static")
