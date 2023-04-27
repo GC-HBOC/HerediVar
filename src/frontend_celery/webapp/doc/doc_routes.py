@@ -31,3 +31,8 @@ def impressum():
 @doc_blueprint.route('/about')
 def about():
     return render_template('doc/about.html')
+
+
+@doc_blueprint.route('/documentation')
+def documentation():
+    return render_template('doc/documentation.html')

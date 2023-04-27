@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1> {% block title %} Welcome to the HerediVar Wiki {% endblock %} </h1>
+
+
+
+
+
+<div class="row">
+    <div class="col-3">
+      <nav id="navbar-example3" class="h-100 flex-column align-items-stretch pe-4 border-end">
+        <nav class="nav nav-pills flex-column">
+          <a class="nav-link" href="#item-1">Item 1</a>
+          <nav class="nav nav-pills flex-column">
+            <a class="nav-link ms-3 my-1" href="#item-1-1">Item 1-1</a>
+            <a class="nav-link ms-3 my-1" href="#item-1-2">Item 1-2</a>
+          </nav>
+          <a class="nav-link" href="#item-2">User privileges</a>
+          <a class="nav-link" href="#item-3">Item 3</a>
+          <nav class="nav nav-pills flex-column">
+            <a class="nav-link ms-3 my-1" href="#item-3-1">Item 3-1</a>
+            <a class="nav-link ms-3 my-1" href="#item-3-2">Item 3-2</a>
+          </nav>
+        </nav>
+      </nav>
+    </div>
+  
+    <div class="col-8">
+      <div data-bs-spy="scroll" data-bs-target="#navbar-example3" data-bs-smooth-scroll="true" class="scrollspy-example-2" tabindex="0">
+        <div id="item-1">
+          <h4>Item 1</h4>
+          <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+        </div>
+        <div id="item-1-1">
+          <h5>Item 1-1</h5>
+          <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+        </div>
+        <div id="item-1-2">
+          <h5>Item 1-2</h5>
+          <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+        </div>
+        <div id="item-2">
+          <h4>User roles</h4>
+          <p>
+            There are four types of users in HerediVar:
+            <ol>
+                <li>Superuser</li>
+                <li>Standard user</li>
+                <li>Read only user</li>
+                <li>Anonymous user</li>
+            </ol>
+            An anonymous user can not view or edit any variant information on HerediVar. Anonymous users must ask a superuser to create an account for them. 
+            As the name implies, the read only user can only view information. He can neither insert variants nor classify them. 
+            The standard user is allwed to view and edit information on HerediVar and the superuser has access to the admin dashboard
+            which allws him to import variants from HerediCare, reannotate all variants at once and create users.
+
+          </p>
+        </div>
+        <div id="item-3">
+          <h4>Create and modify users</h4>
+          <p></p>
+        </div>
+        <div id="item-3-1">
+          <h5>Create a new user</h5>
+          <p>
+            Only users with the "superuser" role are allowed to create new users. There is no possibility to self-register in HerediVar.
+            A superuser can go <a href="{{ url_for('auth.register') }}">here</a> to create a new user account. This link will redirect to "Keycloak" which is the authentication
+            platform of HerediVar. First click the "add user" button:
+            <div>
+                <img src="/static/img/documentation/add_user_01.PNG" alt="missing img"  width="100%">
+            </div>
+            Simply fill out the form which is presented to you. Keep in mind that the username can not be changed later. You should select the "Update Password" and "Verify Email"
+            user actions. It should look like this:
+            <div>
+                <img class="img-center" src="/static/img/documentation/add_user_02.PNG" alt="missing img"  width="80%">
+            </div>
+            Next, you have to add the affiliation of the person. This is very important as the new user can not log into HerediVar if the affiliation is missing.
+            To add the affiliation you can switch to the "Attributes" tab and enter "affiliation" in the key column and the actual affiliation in the value column. 
+            Click "Add" and "Save". It should look like this once you are finished with this step:
+            <div>
+                <img class="img-center" src="/static/img/documentation/add_user_03.PNG" alt="missing img"  width="100%">
+            </div>
+            Now you have to set the password of the new user. For this switch to the "Credentials" tab. Simply insert a new password in "Reset Password" form. And enable the "Temporary" switch:
+            <div>
+                <img class="img-center" src="/static/img/documentation/add_user_04.PNG" alt="missing img"  width="80%">
+            </div>
+            The last thing to do is to add a user role to the new user. Simply go to the "Role Mappings" tab, select either read_only, user or super_user to add privileges for 
+            the read only, standard user or superuser, respectively. It is sufficient to add the most general role to a user as privileges from more restricted roles are inherited by other roles.
+            For example: If you want to create a new superuser only add the "super_user" role. You do not have to add the "user" and "read_only" roles, too.
+          </p>
+        </div>
+        <div id="item-3-2">
+          <h5>Item 3-2</h5>
+          <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+
+
+
+
+{% endblock %}
+
+{% block special_scripts %}
+{% endblock %}
