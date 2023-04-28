@@ -16,16 +16,21 @@
     <div class="col-3">
       <nav id="navbar-example3" class="h-100 flex-column align-items-stretch pe-4 border-end">
         <nav class="nav nav-pills flex-column">
-          <a class="nav-link" href="#item-1">Item 1</a>
+          <a class="nav-link" href="#item-0">General Thoughts</a>
+          <a class="nav-link" href="#item-1">The workflow</a>
           <nav class="nav nav-pills flex-column">
-            <a class="nav-link ms-3 my-1" href="#item-1-1">Item 1-1</a>
-            <a class="nav-link ms-3 my-1" href="#item-1-2">Item 1-2</a>
+            <a class="nav-link ms-3 my-1" href="#item-1-1">Insert variants</a>
+            <a class="nav-link ms-3 my-1" href="#item-1-2">Browse variants</a>
+            <a class="nav-link ms-3 my-1" href="#item-1-3">Variant details page</a>
+            <a class="nav-link ms-3 my-1" href="#item-1-4">Classify a variant</a>
           </nav>
-          <a class="nav-link" href="#item-2">User privileges</a>
-          <a class="nav-link" href="#item-3">Item 3</a>
+          <a class="nav-link" href="#item-2">User variant lists</a>
+          <a class="nav-link" href="#item-3">User management</a>
           <nav class="nav nav-pills flex-column">
-            <a class="nav-link ms-3 my-1" href="#item-3-1">Item 3-1</a>
-            <a class="nav-link ms-3 my-1" href="#item-3-2">Item 3-2</a>
+            <a class="nav-link ms-3 my-1" href="#item-3-1">Create a new user</a>
+            <a class="nav-link ms-3 my-1" href="#item-3-2">Set the affiliation</a>
+            <a class="nav-link ms-3 my-1" href="#item-3-3">Set / reset the password</a>
+            <a class="nav-link ms-3 my-1" href="#item-3-4">Assign roles</a>
           </nav>
         </nav>
       </nav>
@@ -33,20 +38,9 @@
   
     <div class="col-8">
       <div data-bs-spy="scroll" data-bs-target="#navbar-example3" data-bs-smooth-scroll="true" class="scrollspy-example-2" tabindex="0">
-        <div id="item-1">
-          <h4>Item 1</h4>
-          <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-        </div>
-        <div id="item-1-1">
-          <h5>Item 1-1</h5>
-          <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-        </div>
-        <div id="item-1-2">
-          <h5>Item 1-2</h5>
-          <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-        </div>
-        <div id="item-2">
-          <h4>User roles</h4>
+
+        <div id="item-0">
+          <h4>General Thoughts</h4>
           <p>
             There are four types of users in HerediVar:
             <ol>
@@ -58,13 +52,131 @@
             An anonymous user can not view or edit any variant information on HerediVar. Anonymous users must ask a superuser to create an account for them. 
             As the name implies, the read only user can only view information. He can neither insert variants nor classify them. 
             The standard user is allwed to view and edit information on HerediVar and the superuser has access to the admin dashboard
-            which allws him to import variants from HerediCare, reannotate all variants at once and create users.
-
+            which allws him to import variants from HerediCare, reannotate all variants at once and create users. <br>
+            <br>
+            It is very easy to differentiate external links from internal ones: Whenever a link is displayed like {{ macros.external_link('this', '#') }} 
+            it references an external website and if a link is shown like <a href="#">this</a> it references an internal page.
           </p>
         </div>
-        <div id="item-3">
-          <h4>Create and modify users</h4>
+
+
+        <div id="item-1">
+          <h4>The workflow</h4>
           <p></p>
+        </div>
+        <div id="item-1-1">
+          <h5>Insert variants</h5>
+          <p>
+            There are two ways to insert variants. The most common one is to import variants from HerediCare. However, only superusers can do that. Standard users can 
+            insert variants through the <a href="{{ url_for('variant.create')}}">create variant page</a>. New variants are automatically added to the annotation queue
+            and processed once a worker is ready to process it. The status of the annotation can be seen when navigating to the variant details page.
+          </p>
+        </div>
+        <div id="item-1-2">
+          <h5>Browse variants</h5>
+          <p>
+            To find the variant you are looking for navigate to the <a href="{{url_for('variant.search')}}">search variants page</a>. This page shows a paginated 
+            table of all variants. Note that the HGVS c. and HGVS p. columns are dependent on the transcript. Thus, these two columns show the HGVS strings of the 
+            preferred transcript (MANE -> longest coding -> longest non coding). If the variant is contained within more than one gene all of the HGVS strings from 
+            the preferred transcripts of all genes are shown. The "Your classification" shows the most recent user classification of the current user. <br>
+            To filter the table of all variants click the magnifiying glass to the top right. The search is explained in more detail <a href="{{url_for('doc.search_help')}}">here</a> <br>
+            It is also possible to add all variants which satisfy the current filtering criteria to a user defined list by clicking the "Add to list" button located at 
+            the bottom left. To create a new list go <a href="{{url_for('user.my_lists')}}">here</a>. <br>
+            Clicking on any of the rows will get you to its variant details page. To view details about a particular gene just click its name. 
+          </p>
+        </div>
+        <div id="item-1-3">
+          <h5>The variant details page</h5>
+          <p>
+            This page displays all annotations of a variant. The top headline shows the variant and its most recent HediVar consensus classification. There are six types of
+            consensus classifications:
+            <div class="d-flex">
+              {% for classification in ['-', 1, 2, 3, 4, 5] %}
+              <div class="ssr">{{macros.render_consensus_classification_label(classification) }}</div>
+              {% endfor %}
+            </div>
+            These are interpreted as follows:
+            <ul>
+              <li>-: no classification</li>
+              <li>1: benign</li>
+              <li>2: likely benign</li>
+              <li>3: uncertain</li>
+              <li>4: likely pathogenic</li>
+              <li>5: pathogenic</li>
+            </ul>
+            Right below the headline one can find status information about the variant. The first pill shows the status of the annotation. It could be queued, processing, done or erroneous.
+            Next to the annotation status pill there is the clinvar submission status. This shows if the variant was already uploaded to ClinVar from HerediVar. When you click the "gear" button
+            the website presents options on what to do with the variant. <br>
+            The main body of the page displays visualizations, classifications and annotations which are organized in multiple tabs. The tabs contain the following information:
+            <ul>
+              <li>Classification: HerediVar consensus classification, HerediVar user classifications, HerediCare center classifications, ClinVar classifications, BRCA exchange and ARUP BRCA classifications</li>
+              <li>Population & in-silico annotations: phylop-100way, cadd scaled, revel, spliceai, maxentscan, gnomAD, flossies, cancerhotspots, tp53db, hexplorer, maxhbond score</li>
+              <li>Consequence: The variant consequences with associated HGVS strings and protein domains</li>
+              <li>Assays: Functional, splicing, etc. assays. Add a new assay by clicking the gear button at the top.</li>
+              <li>Literature: Papers annotated by VEP, TP53db and litvar2</li>
+              <li>
+                IGV: The IGV genome browser. The first track shows the variant itself. The second track shows all classified variants (click on them to find a link to the variant details page). The third track
+                shows the ensembl transcripts. Red transcripts are MANE select or MANE plus clinical transcripts, orange ones are ensembl canonical and dark blue ones are gencode basic transcripts. Other transcripts
+                which do not satisfy the aforementioned criteria are not shown.
+              </li>
+            </ul>
+            Remember that the annotations are not shown if the variant is not known to the respective database. 
+          </p>
+        </div>
+        <div id="item-1-3">
+          <h5>Classify a variant</h5>
+          <p>
+            To classify a variant click the gear button and select "Classify". On the classify variant page you can first select if you want to insert a user classification or a consensus classification.
+            However, only superusers can insert consensus classifications. Next, select the classification scheme or no scheme if you just want to insert a freetext classification not following a scheme.
+            The webpage automatically chooses the best scheme for the variant if possible. <br>
+            Click a criteria button to see more details about it. Here is an example for PVS1:
+            <div>
+              <img src="/static/img/documentation/classify_01.PNG" alt="missing img"  width="100%">
+            </div>
+            First, insert evidence and then click the checkbox next to the headline of the variant to select the criterium. It is also possible to adjust the strength of some criteria. The classification
+            preview to the right will update automatically based on the selected criteria. <br>
+            Once all criteria have been selected you can insert further evidence by adding literature passages. Simply add a blank row or add one from the text mining results and fill the text passage
+            of interest. <br>
+            Finally, select the final classification and leave a comment possibly referencing literature to complete the classification. <br>
+            Note that each user can only have one user classification per variant and scheme, but they can be edited anytime. <br>
+            Consensus classifications work just alike. The only difference is that the number of users is displayed next to the criterium like so:
+            <div>
+              <img src="/static/img/documentation/classify_02.PNG" alt="missing img"  width="100%">
+            </div>
+            The selected criterium, "PS1" was chosen by two HerediVar users to be important for this variant. The actual user input is shown in the "User selections" table. When you click the copy symbol
+            it is possible to quickly copy the data and strength of that user. Now you only have to select the criterium by clicking the checkbox next to the name of the criterium.
+          </p>
+        </div>
+
+
+        <div id="item-2">
+          <h4>User variant lists</h4>
+          <p>
+            Each registered user can add new variant lists <a href="{{url_for('user.my_lists')}}">here</a>. Click the "+" button:
+            <div>
+              <img src="/static/img/documentation/variant_list_01.PNG" alt="missing img"  width="100%">
+            </div>
+            Enter a name for the list and select if it is readable / editable by all HerediVar users. If a list is only readable everyone can see the list, but they can not add or remove variants from it.
+            This is however possible when the list is also editable. <br>
+            There are two ways to insert variants to the newly created variant list. The first one is to navigate to the <a href="{{url_for('variant.search')}}">browse variants</a> page, 
+            search for variants and click the "Add all to list" button at the bottom left of this page. This will insert all variants satisfying the criteria of the current search. <br>
+            The second possibility to add variants to a list on a one-by-one basis is to navigate to the variant details page, click the gear button and select "Add to list". <br>
+            All variants collected in these ways are displayed when clicked on the name of the variant at the <a href="{{url_for('user.my_lists')}}">user lists page</a>. 
+            The table of variants behaves exactly the same as the one shown on the <a href="{{url_for('variant.search')}}">browse variants</a> page. It can be filtered and when a row is clicked
+            it takes you to the variant details page.<br>
+            It is also possible to export all variants in one of the lists to vcf by clicking the "Export to VCF" button on the bottom of the page. <br>
+            If you want to change the properties or delete a list that was created by you. Just click the little pencil button next to the list name. Beware that private lists can not be seen
+            by other HerediVar users. <br>
+          </p>
+        </div>
+        
+        
+
+
+
+        <div id="item-3">
+          <h4>User management</h4>
+          <p>This section is only relevant for superusers as only those can create and modify users.</p>
         </div>
         <div id="item-3-1">
           <h5>Create a new user</h5>
@@ -80,24 +192,38 @@
             <div>
                 <img class="img-center" src="/static/img/documentation/add_user_02.PNG" alt="missing img"  width="80%">
             </div>
-            Next, you have to add the affiliation of the person. This is very important as the new user can not log into HerediVar if the affiliation is missing.
-            To add the affiliation you can switch to the "Attributes" tab and enter "affiliation" in the key column and the actual affiliation in the value column. 
-            Click "Add" and "Save". It should look like this once you are finished with this step:
-            <div>
-                <img class="img-center" src="/static/img/documentation/add_user_03.PNG" alt="missing img"  width="100%">
-            </div>
-            Now you have to set the password of the new user. For this switch to the "Credentials" tab. Simply insert a new password in "Reset Password" form. And enable the "Temporary" switch:
-            <div>
-                <img class="img-center" src="/static/img/documentation/add_user_04.PNG" alt="missing img"  width="80%">
-            </div>
-            The last thing to do is to add a user role to the new user. Simply go to the "Role Mappings" tab, select either read_only, user or super_user to add privileges for 
-            the read only, standard user or superuser, respectively. It is sufficient to add the most general role to a user as privileges from more restricted roles are inherited by other roles.
-            For example: If you want to create a new superuser only add the "super_user" role. You do not have to add the "user" and "read_only" roles, too.
+            When a new user is created you must also set the affiliation, a temporary password and the role of the user. Please see the following sections on how to do that.
+            Once you have done these steps send the username and temporary password to the user. They will have to verify the e-mail and set a new password upon login.
           </p>
         </div>
         <div id="item-3-2">
-          <h5>Item 3-2</h5>
-          <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+          <h5>Set the affiliation</h5>
+          <p>
+            The affiliation has to be set after the user is created. This is very important as a user can not log into HerediVar if the affiliation is missing.
+            To add the affiliation switch to the "Attributes" tab and enter "affiliation" in the key column and the actual affiliation in the value column. 
+            Click "Add" and "Save". It should look like this once you are finished:
+            <div>
+                <img class="img-center" src="/static/img/documentation/add_user_03.PNG" alt="missing img"  width="100%">
+            </div>
+          </p>
+        </div>
+        <div id="item-3-3">
+          <h5>Set / reset the password</h5>
+          <p>
+            Go to the user details page and switch to the "Credentials" tab. Simply insert a new password in "Reset Password" form and enable the "Temporary" switch to make 
+            the user choose a new password upon login. It should look like this:
+            <div>
+                <img class="img-center" src="/static/img/documentation/add_user_04.PNG" alt="missing img"  width="80%">
+            </div>
+          </p>
+        </div>
+        <div id="item-3-4">
+          <h5>Assign roles</h5>
+          <p>
+            To add or remove a role from a user simply go to the "Role Mappings" tab in the user details page, select either "read_only", "user" or "super_user" to add privileges for 
+            the read only, standard user or superuser, respectively. It is sufficient to add the most general role to a user as privileges from more restricted roles are inherited by other roles.
+            For example: If you want to create a new superuser only add the "super_user" role. You do not have to add the "user" and "read_only" roles, too.
+          </p>
         </div>
       </div>
     </div>

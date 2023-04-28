@@ -129,8 +129,9 @@ table.scroll th {
     font-size: 1.5em;
 }
 
-
-
+.bolder {
+    font-weight: bolder;
+}
 
 
 
