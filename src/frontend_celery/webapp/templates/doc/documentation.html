@@ -48,11 +48,13 @@
                 <li>Standard user</li>
                 <li>Read only user</li>
                 <li>Anonymous user</li>
+                <li>Account manager</li>
             </ol>
             An anonymous user can not view or edit any variant information on HerediVar. Anonymous users must ask a superuser to create an account for them. 
             As the name implies, the read only user can only view information. He can neither insert variants nor classify them. 
             The standard user is allwed to view and edit information on HerediVar and the superuser has access to the admin dashboard
             which allws him to import variants from HerediCare, reannotate all variants at once and create users. <br>
+            The account manager is a special role which allows the user to create and modify user data.
             <br>
             It is very easy to differentiate external links from internal ones: Whenever a link is displayed like {{ macros.external_link('this', '#') }} 
             it references an external website and if a link is shown like <a href="#">this</a> it references an internal page.
@@ -176,7 +178,7 @@
 
         <div id="item-3">
           <h4>User management</h4>
-          <p>This section is only relevant for superusers as only those can create and modify users.</p>
+          <p>This section is only relevant for users with the account_manager role as only those can create and modify users.</p>
         </div>
         <div id="item-3-1">
           <h5>Create a new user</h5>
