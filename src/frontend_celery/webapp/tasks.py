@@ -97,7 +97,7 @@ def send_mail(subject, sender, recipient, text_body):
 def notify_new_user(self, full_name, email, username, password):
     """Background task for sending two consecutive mails"""
     # first mail: username
-    sender = "noreply@heredivar.de"
+    sender = "noreply@heredivar.uni-koeln.de"
     body = render_template("auth/mail_username.html", full_name = full_name, username = username)
     send_mail(
         subject = "[VICC-CP] User account",
