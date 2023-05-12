@@ -29,23 +29,23 @@
         <table class="table table-borderless" id="literatureTable">
             <tbody>
                 <tr>
-                    <td style="width:8em; vertical-align: middle;">First name</td>
+                    <td class="width_small vertical_align_middle">First name</td>
                     <td><input class="form-control" type="text" value="{{ user.get('firstName', '') }}" name="first_name"></td>
                 </tr>
                 <tr>
-                    <td style="width:8em; vertical-align: middle;">Last name</td>
+                    <td class="width_small vertical_align_middle">Last name</td>
                     <td><input class="form-control" type="text" value="{{ user.get('lastName', '') }}" name="last_name"></td>
                 </tr>
                 <tr>
-                    <td style="width:8em; vertical-align: middle;">E-Mail</td>
+                    <td class="width_small vertical_align_middle">E-Mail</td>
                     <td><input class="form-control" type="text" value="{{ user.get('email', '') }}" name="e_mail"></td>
                 </tr>
                 <tr>
-                    <td style="width:8em; vertical-align: middle;">Affiliation</td>
+                    <td class="width_small vertical_align_middle">Affiliation</td>
                     <td><input class="form-control" type="text" value="{{ user.get('attributes', {}).get('affiliation', [''])[0] }}" name="affiliation"></td>
                 </tr>
                 <tr>
-                    <td style="width:8em; vertical-align: middle;">Enabled</td>
+                    <td class="width_small vertical_align_middle">Enabled</td>
                     <td>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" role="switch" name="enabled" {% if user.get('enabled', 'False') | string == 'True' %} checked {% endif %}>
@@ -53,7 +53,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td style="width:8em;">Roles</td>
+                    <td class="width_small">Roles</td>
                     <td>
                         {% for role in avail_roles %}
                         <div class="form-check">
