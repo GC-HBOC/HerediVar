@@ -11,10 +11,9 @@
 
 
 
-
-<div class="row">
-    <div class="col-3">
-      <nav id="navbar-example3" class="h-100 flex-column align-items-stretch pe-4 border-end">
+<div class="row p-relative">
+    <div class="col-3 p-fixed width_medium" id="nav_container">
+      <nav id="navbar-example3" class="h-100 flex-column align-items-stretch pe-4 border-end ">
         <nav class="nav nav-pills flex-column">
           <a class="nav-link" href="#item-0">General Thoughts</a>
           <a class="nav-link" href="#item-1">The workflow</a>
@@ -28,15 +27,14 @@
           <a class="nav-link" href="#item-3">User management</a>
           <nav class="nav nav-pills flex-column">
             <a class="nav-link ms-3 my-1" href="#item-3-1">Create a new user</a>
-            <a class="nav-link ms-3 my-1" href="#item-3-2">Set the affiliation</a>
-            <a class="nav-link ms-3 my-1" href="#item-3-3">Set / reset the password</a>
-            <a class="nav-link ms-3 my-1" href="#item-3-4">Assign roles</a>
+            <a class="nav-link ms-3 my-1" href="#item-3-2">Change roles & disable users</a>
+            <a class="nav-link ms-3 my-1" href="#item-3-3">Change password</a>
           </nav>
         </nav>
       </nav>
     </div>
   
-    <div class="col-8">
+    <div class="col-8 vbsl">
       <div data-bs-spy="scroll" data-bs-target="#navbar-example3" data-bs-smooth-scroll="true" class="scrollspy-example-2" tabindex="0">
 
         <div id="item-0">
@@ -125,7 +123,7 @@
             Remember that the annotations are not shown if the variant is not known to the respective database. 
           </p>
         </div>
-        <div id="item-1-3">
+        <div id="item-1-4">
           <h5>Classify a variant</h5>
           <p>
             To classify a variant click the gear button and select "Classify". On the classify variant page you can first select if you want to insert a user classification or a consensus classification.
@@ -178,55 +176,39 @@
 
         <div id="item-3">
           <h4>User management</h4>
-          <p>This section is only relevant for users with the account_manager role as only those can create and modify users.</p>
+          <p></p>
         </div>
         <div id="item-3-1">
           <h5>Create a new user</h5>
           <p>
-            Only users with the "superuser" role are allowed to create new users. There is no possibility to self-register in HerediVar.
-            A superuser can go <a href="{{ url_for('auth.register') }}">here</a> to create a new user account. This link will redirect to "Keycloak" which is the authentication
-            platform of HerediVar. First click the "add user" button:
-            <div>
-                <img src="/static/img/documentation/add_user_01.PNG" alt="missing img"  width="100%">
-            </div>
-            Simply fill out the form which is presented to you. Keep in mind that the username can not be changed later. You should select the "Update Password" and "Verify Email"
-            user actions. It should look like this:
-            <div>
-                <img class="img-center" src="/static/img/documentation/add_user_02.PNG" alt="missing img"  width="80%">
-            </div>
-            When a new user is created you must also set the affiliation, a temporary password and the role of the user. Please see the following sections on how to do that.
-            Once you have done these steps send the username and temporary password to the user. They will have to verify the e-mail and set a new password upon login.
+            Only users with the "account_manager" role are allowed to create new users. There is no possibility to self-register in HerediVar.
+            An account manager can go <a href="{{ url_for('auth.register') }}">here</a> to create a new user account. Simply fill out the form which is presented 
+            to you. Keep in mind that the username must be unique and can not be changed later. The mail address must be unique as well.<br>
+            Upon submission Heredivar will automatically notify the user that about the newly created account using the provided e-mail. The new user will 
+            recieve two mails: one with the username specified and one with an automatically generated initial password.
           </p>
         </div>
         <div id="item-3-2">
-          <h5>Set the affiliation</h5>
+          <h5>Change roles & disable users</h5>
           <p>
-            The affiliation has to be set after the user is created. This is very important as a user can not log into HerediVar if the affiliation is missing.
-            To add the affiliation switch to the "Attributes" tab and enter "affiliation" in the key column and the actual affiliation in the value column. 
-            Click "Add" and "Save". It should look like this once you are finished:
+            An account manager can edit existing users by visiting <a href="{{url_for('auth.show_users')}}">{{url_for('auth.show_users')}}</a>. Simply select a user from the list
+            to edit its information. It is possible to disable users or change their roles from this page. <br>
+            Keep in mind that changeing the e-mail will require the user to verify the mail upon next login.
+          </p>
+        </div>
+        <div id="item-3-2">
+          <h5>Change password</h5>
+          <p>
+            Every user can change their own password by visiting <a href="{{url_for('auth.change_password')}}">this</a> page. This will redirect to the keycloak account management
+            console. First click the Update-button:
             <div>
-                <img class="img-center" src="/static/img/documentation/add_user_03.PNG" alt="missing img"  width="100%">
+              <img src="/static/img/documentation/change_password.PNG" alt="missing img"  width="100%">
             </div>
+            Then, you are probably asked to re-authenticate using your old password. After that you can insert a new password.
           </p>
         </div>
-        <div id="item-3-3">
-          <h5>Set / reset the password</h5>
-          <p>
-            Go to the user details page and switch to the "Credentials" tab. Simply insert a new password in "Reset Password" form and enable the "Temporary" switch to make 
-            the user choose a new password upon login. It should look like this:
-            <div>
-                <img class="img-center" src="/static/img/documentation/add_user_04.PNG" alt="missing img"  width="80%">
-            </div>
-          </p>
-        </div>
-        <div id="item-3-4">
-          <h5>Assign roles</h5>
-          <p>
-            To add or remove a role from a user simply go to the "Role Mappings" tab in the user details page, select either "read_only", "user" or "super_user" to add privileges for 
-            the read only, standard user or superuser, respectively. It is sufficient to add the most general role to a user as privileges from more restricted roles are inherited by other roles.
-            For example: If you want to create a new superuser only add the "super_user" role. You do not have to add the "user" and "read_only" roles, too.
-          </p>
-        </div>
+
+
       </div>
     </div>
   </div>
@@ -239,4 +221,5 @@
 {% endblock %}
 
 {% block special_scripts %}
+<script src="/static/js/documentation.js"></script>
 {% endblock %}

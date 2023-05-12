@@ -29,6 +29,9 @@
     margin-right: 0;
 }
 
+.vbsl {
+    margin-left: 20em;
+}
 .bsl {
     margin-left: 1em;
 }
@@ -117,7 +120,19 @@
     display: block;
     margin-left: auto;
     margin-right: auto;
-  }
+}
+
+.p-fixed {
+    position: fixed;
+}
+
+.p-absolute {
+    position: absolute;
+}
+
+.p-relative {
+    position: relative;
+}
 
 
 /************** text **************/
@@ -194,4 +209,3 @@
 .visually_hidden {
     display: none;
 }
-
