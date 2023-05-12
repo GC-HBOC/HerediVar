@@ -70,6 +70,20 @@
 
         <div id="list-content" class="sst bsl overflow_x_auto">
             {% if request.args.get('view') is not none %}
+                <div class="d-flex">
+                    <a type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="duplicate" data-bs-id="{{ request.args.get('view') }}" >
+                        {{ macros.draw_duplicate_symbol("Duplicate this list") }}
+                    </a>
+                    <a type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="intersect" data-bs-id="{{ request.args.get('view') }}">
+                        {{ macros.draw_intersect_symbol("Intersect this list with another list") }}
+                    </a>
+                    <a type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="subtract" data-bs-id="{{ request.args.get('view') }}">
+                        {{ macros.draw_subtract_symbol("Subtract variants from another list from this list") }}
+                    </a>
+                    <a type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="add" data-bs-id="{{ request.args.get('view') }}">
+                        {{ macros.draw_add_symbol("Add variants from another list to this list") }}
+                    </a>
+                </div>
                 {{ macros.draw_paginated_variant_table(pagination, variants, lists=user_lists) }}
             {% else %}
                 <div class="display-5 text_align_center">
@@ -79,7 +93,7 @@
             
 
             {% if request.args.get('view') is not none and variants|length > 0 %}
-            <div class="d-flex justify-content-end">
+            <div class="d-flex justify-content-end bsb">
                 <button data-href="{{ url_for('download.variant_list', list_id=request.args.get('view')) }}" class="btn btn-primary">Export list to VCF</button>
             </div>
             {% endif %}
@@ -102,18 +116,30 @@
             </div>
             <div class="modal-body">
                 <form id="list-modal-form" action="/mylists?type=create"  method="post">
-                    <div class="form-group mb-3">
+                    <div class="form-group" id="inplace_obj">
+                        <input class="form-check-input" type="checkbox" id="inplace" name="inplace">
+                        <label class="form-check-label" for="inplace">inplace</label>
+                    </div>
+                    <div class="form-group mb-3" id="list_name_obj">
                         <label for="list_name" class="col-form-label">List name:</label>
                         <input type="text" class="form-control validationreq" id="list_name" name="list_name">
                     </div>
-                    <div class="form-check form-switch">
+                    <div class="form-check form-switch" id="public_read_obj">
                         <input class="form-check-input" type="checkbox" id="public_read" name="public_read">
                         <label class="form-check-label" for="public_read">public read</label>
                     </div>
-                    <div class="form-check form-switch">
+                    <div class="form-check form-switch" id="public_edit_obj">
                         <input class="form-check-input" type="checkbox" id="public_edit" name="public_edit">
                         <label class="form-check-label" for="public_edit">public edit</label>
                     </div>
+                    <div class="form-group sst" id="other_list_obj">
+                        <label for="other_list_select">Other list</label>
+                        <div id="other_list_select" class="form-group autocomplete w-100">
+                            <input id="other_list_id" name="other_list_id" class="visually_hidden" type="text">
+                            <input id="other_list_name" class="form-control" name="other_list_name" type="text" placeholder="Select a list... start search by typing">
+                        </div>
+                    </div>
+
                     <input type='hidden' id="list_id" name="list_id" value="">
                 </form>
             </div>
@@ -132,7 +158,9 @@
     </div>
 </div>
 
-    
+<input type='hidden' id='list_flask_data' 
+    data-lists='{{user_lists | tojson | safe}}'
+/>
 
 
 {% endblock %}

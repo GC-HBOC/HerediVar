@@ -61,7 +61,6 @@ def search():
                     conn.add_variant_to_list(list_id, variant_id)
                 flash(Markup("Successfully inserted all variants from the current search to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
                 return redirect(url_for('variant.search', genes=request.args.get('genes'), ranges=request.args.get('ranges'), consensus=request.args.getlist('consensus'), user = request.args.getlist('user'), hgvs= request.args.get('hgvs')))
-
     return render_template('variant/search.html', variants=variants, page=page, per_page=per_page, pagination=pagination, lists=lists)
 
 

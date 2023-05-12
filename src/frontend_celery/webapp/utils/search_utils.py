@@ -96,14 +96,20 @@ def extract_lookup_list(request_obj, user_id, conn):
     lookup_list_names = request_obj.args.getlist('lookup_list_name')
     lookup_list_ids = request_obj.args.getlist('lookup_list_id')
     variant_ids_oi = []
+    num_valid_lists = 0
     for list_name, list_id in zip(lookup_list_names, lookup_list_ids):
-        if (list_name.strip() != '' and list_id.strip() == ''):
+        list_name = list_name.strip()
+        list_id = list_id.strip()
+        if list_name == '' and list_id == '':
+            continue
+        if (list_name != '' and list_id == ''):
             flash("The list you are trying to access does not exist. Results are not filtered by list.", 'alert-danger')
         else:
             list_ids = preprocess_query(list_id, r'\d*') # either none if there was an error or a list_id
             if list_id is None:
                 flash("You have an error in your list search.", "alert-danger")
             elif len(list_ids) >= 1:
+                num_valid_lists += 1
                 list_id = list_ids[0]
                 list_permissions = conn.check_list_permission(user_id, list_id)
                 if list_permissions is not None:
@@ -113,8 +119,10 @@ def extract_lookup_list(request_obj, user_id, conn):
                         variant_ids_oi.extend(conn.get_variant_ids_from_list(list_id))
                 else:
                     flash("The list which you are trying to access does not exist.", "alert-danger")
-            if len(variant_ids_oi) == 0:
-                variant_ids_oi = [-1]
+    
+    if num_valid_lists > 0 and len(variant_ids_oi) == 0:
+        flash("All lists you are trying to access are empty.", "alert-warning")
+        variant_ids_oi = [-1]
 
     #if (lookup_list_name.strip() != '' and lookup_list_id.strip() == ''):
     #    flash("The list you are trying to access does not exist. Results are not filtered by list.", 'alert-danger')

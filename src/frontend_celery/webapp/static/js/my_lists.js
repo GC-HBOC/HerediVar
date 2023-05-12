@@ -39,6 +39,34 @@ $(document).ready(function()
         public_read_toggle_action()
     })
 
+    
+    const flask_data = document.getElementById("list_flask_data")
+    var user_lists = JSON.parse(flask_data.dataset.lists);
+    for (var i = 0; i < user_lists.length; i++) {
+        current_list = user_lists[i]
+        if (current_list[3] == 1 || current_list[5] == 1) {
+            var list_id = user_lists[i][0]
+            var list_name = user_lists[i][2]
+            user_lists[i] = [list_id, list_name]
+        }
+    }
+    autocomplete(document.getElementById("other_list_name"), document.getElementById("other_list_id"), user_lists);
+
+    $('#inplace').change(function() {
+        const modal = document.getElementById('createModal')
+        list_name_obj = modal.querySelector('#list_name_obj')
+        public_read_obj = modal.querySelector('#public_read_obj')
+        public_edit_obj = modal.querySelector('#public_edit_obj')
+        if (!this.checked) {
+            show_obj(list_name_obj)
+            show_obj(public_read_obj)
+            show_obj(public_edit_obj)
+        } else {
+            hide_obj(list_name_obj)
+            hide_obj(public_read_obj)
+            hide_obj(public_edit_obj)
+        }
+    })
 });
 
 
@@ -102,9 +130,9 @@ create_modal.addEventListener('show.bs.modal', function (event) {
     var modal_title = create_modal.querySelector('.modal-title')
     var submit_button = create_modal.querySelector('#list-modal-submit')
     var list_id_meta = create_modal.querySelector('#list_id')
-    var delete_button = create_modal.querySelector('#list-modal-submit-delete')
     var public_read_toggle = create_modal.querySelector('#public_read')
     var public_edit_toggle = create_modal.querySelector('#public_edit')
+
 
     var preselected_list_name = ''
     var title = ''
@@ -113,28 +141,75 @@ create_modal.addEventListener('show.bs.modal', function (event) {
     var list_id = ''
 
     if (action_type == 'edit') {
+        show_modal_content(show_list_name = true, show_permissions = true, show_other_list = false, show_delete_button = true, show_inplace_toggle = false)
+
         title = 'Edit \"' + button.getAttribute('data-bs-name') + '\"'
         preselected_list_name = button.getAttribute('data-bs-name')
         list_id = button.getAttribute('data-bs-id')
         form_action_type = '/mylists?type=edit'
         submit_button_title = 'Update'
-        delete_button.disabled = false
-        delete_button.style.visibility = 'visible'
+        
         public_read_toggle.checked = ((button.getAttribute('data-bs-public-read') == '1') ? true : false)
         public_edit_toggle.checked = ((button.getAttribute('data-bs-public-edit') == '1') ? true : false)
         public_edit_toggle.disabled = ((button.getAttribute('data-bs-public-read') == '1') ? false : true)
     }
 
     if (action_type == 'create') {
+        show_modal_content(show_list_name = true, show_permissions = true, show_other_list = false, show_delete_button = true, show_inplace_toggle = false)
         title = 'Create a new list'
         form_action_type = '/mylists?type=create'
         submit_button_title = 'Create'
-        delete_button.disabled = true
-        delete_button.style.visibility = 'hidden'
         public_read_toggle.checked = false
         public_edit_toggle.checked = false
         public_edit_toggle.disabled = true
     }
+
+    if (action_type == 'duplicate') {
+        show_modal_content(show_list_name = true, show_permissions = true, show_other_list = false, show_delete_button = false, show_inplace_toggle = false)
+        title = 'Duplicate list'
+        list_id = button.getAttribute('data-bs-id')
+        form_action_type = '/mylists?type=duplicate'
+        submit_button_title = "Duplicate"
+        public_read_toggle.checked = false
+        public_edit_toggle.checked = false
+        public_edit_toggle.disabled = true
+    }
+
+    if (action_type == 'intersect') {
+        show_modal_content(show_list_name = true, show_permissions = true, show_other_list = true, show_delete_button = false, show_inplace_toggle = true)
+        title = 'Intersect list'
+        list_id = button.getAttribute('data-bs-id')
+        form_action_type = '/mylists?type=intersect'
+        submit_button_title = "Intersect"
+        public_read_toggle.checked = false
+        public_edit_toggle.checked = false
+        public_edit_toggle.disabled = true
+    }
+
+
+    if (action_type == 'subtract') {
+        show_modal_content(show_list_name = true, show_permissions = true, show_other_list = true, show_delete_button = false, show_inplace_toggle = true)
+        title = 'Subtract list'
+        list_id = button.getAttribute('data-bs-id')
+        form_action_type = '/mylists?type=subtract'
+        submit_button_title = "Subtract"
+        public_read_toggle.checked = false
+        public_edit_toggle.checked = false
+        public_edit_toggle.disabled = true
+    }
+
+
+    if (action_type == 'add') {
+        show_modal_content(show_list_name = true, show_permissions = true, show_other_list = true, show_delete_button = false, show_inplace_toggle = true)
+        title = 'Add list'
+        list_id = button.getAttribute('data-bs-id')
+        form_action_type = '/mylists?type=add'
+        submit_button_title = "Add"
+        public_read_toggle.checked = false
+        public_edit_toggle.checked = false
+        public_edit_toggle.disabled = true
+    }
+
 
 
     modal_title.textContent = title
@@ -146,6 +221,65 @@ create_modal.addEventListener('show.bs.modal', function (event) {
 });
 
 
+function show_modal_content(show_list_name = true, show_permissions = true, show_other_list = true, show_delete_button = true, show_inplace_toggle = true) {
+    const modal = document.getElementById('createModal')
+    const list_name_obj = modal.querySelector('#list_name_obj')
+    const public_read_obj = modal.querySelector('#public_read_obj')
+    const public_edit_obj = modal.querySelector('#public_edit_obj')
+    const other_list_obj = modal.querySelector('#other_list_obj')
+    const delete_button = modal.querySelector('#list-modal-submit-delete')
+    const inplace_toggle_obj = modal.querySelector('#inplace_obj')
+    const inplace_toggle = modal.querySelector('#inplace')
+
+    if (show_inplace_toggle) {
+        show_obj(inplace_toggle_obj)
+        inplace_toggle.checked = false
+        inplace_toggle.disabled = false
+    } else {
+        hide_obj(inplace_toggle_obj)
+        inplace_toggle.checked = false
+        inplace_toggle.disabled = true
+    }
+    
+
+    if (show_list_name) {
+        show_obj(list_name_obj)
+    } else {
+        hide_obj(list_name_obj)
+    }
+
+    if (show_permissions) {
+        show_obj(public_read_obj)
+        show_obj(public_edit_obj)
+    } else {
+        hide_obj(public_read_obj)
+        hide_obj(public_edit_obj)
+    }
+
+    if (show_other_list) {
+        show_obj(other_list_obj)
+    } else {
+        hide_obj(other_list_obj)
+    }
+
+    console.log(show_delete_button)
+    if (show_delete_button) {
+        show_obj(delete_button)
+        delete_button.disabled = false
+    } else {
+        hide_obj(delete_button)
+        delete_button.disabled = true
+    }
+
+}
+
+function hide_obj(obj) {
+    obj.classList.add('visually-hidden')
+}
+
+function show_obj(obj) {
+    obj.classList.remove('visually-hidden')
+}
 
 function create_xlg(parent) {
     var td = document.createElement("td")

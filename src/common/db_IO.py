@@ -719,6 +719,7 @@ class Connection:
             command = command + " ORDER BY chr, pos, ref, alt LIMIT %s, %s"
             actual_information += (offset, page_size)
         self.cursor.execute(command, actual_information)
+        print(command % actual_information)
         variants_raw = self.cursor.fetchall()
 
         # get variant objects
@@ -1237,6 +1238,7 @@ class Connection:
         command = "INSERT INTO user_variant_lists (user_id, name, public_read, public_edit) VALUES (%s, %s, %s, %s)"
         self.cursor.execute(command, (user_id, list_name, public_read, public_edit))
         self.conn.commit()
+        return self.get_last_insert_id()
 
     # if you set a variant id the result will contain information if this variant is contained in the list or not (list[3] != None ==> variant is conatined in list)
     def get_lists_for_user(self, user_id, variant_id = None, is_editable = False):
@@ -1346,8 +1348,48 @@ class Connection:
         self.cursor.execute(command, (list_id, ))
         self.conn.commit()
 
+    def duplicate_list(self, list_id, user_id, list_name, public_read, public_edit):
+        self.insert_user_variant_list(user_id, list_name, public_read, public_edit)
+        new_list_id = self.get_last_insert_id()
+        variant_ids = self.get_variant_ids_from_list(list_id)
+        for variant_id in variant_ids:
+            self.add_variant_to_list(new_list_id, variant_id)
+        return new_list_id
+
+    def intersect_lists(self, first_list_id, second_list_id, target_list_id):
+        first_list_variant_ids = self.get_variant_ids_from_list(first_list_id)
+        second_list_variant_ids = self.get_variant_ids_from_list(second_list_id)
+        variant_ids_for_target_list = list(set(first_list_variant_ids) & set(second_list_variant_ids))
+
+        self.clear_list(target_list_id)
+        for variant_id in variant_ids_for_target_list:
+            self.add_variant_to_list(target_list_id, variant_id)
+    
+    def subtract_lists(self, first_list_id, second_list_id, target_list_id):
+        first_list_variant_ids = self.get_variant_ids_from_list(first_list_id)
+        second_list_variant_ids = self.get_variant_ids_from_list(second_list_id)
+        variant_ids_for_target_list = list(set(first_list_variant_ids) - set(second_list_variant_ids))
+
+        self.clear_list(target_list_id)
+        for variant_id in variant_ids_for_target_list:
+            self.add_variant_to_list(target_list_id, variant_id)
 
 
+    def add_lists(self, first_list_id, second_list_id, target_list_id):
+        first_list_variant_ids = self.get_variant_ids_from_list(first_list_id)
+        second_list_variant_ids = self.get_variant_ids_from_list(second_list_id)
+        variant_ids_for_target_list = list(set(first_list_variant_ids) | set(second_list_variant_ids))
+        print(variant_ids_for_target_list)
+
+        self.clear_list(target_list_id)
+        for variant_id in variant_ids_for_target_list:
+            self.add_variant_to_list(target_list_id, variant_id)
+
+    def clear_list(self, list_id):
+        #"DELETE FROM " + db_table + " WHERE classification_id = %s AND pmid = %s"
+        command = "DELETE FROM list_variants WHERE list_id = %s"
+        self.cursor.execute(command, (list_id, ))
+        self.conn.commit()
 
     def get_one_variant(self, variant_id):
         command = "SELECT id,chr,pos,ref,alt FROM variant WHERE id = %s"

@@ -116,6 +116,121 @@ def my_lists():
             flash("Successfully removed list", "alert-success")
             current_app.logger.info(session['user']['preferred_username'] + " successfully deleted list " + str(list_id)) 
             return redirect(url_for('user.my_lists'))
+        
+        if request_type == 'duplicate':
+            list_id = request.form['list_id']
+            list_name = request.form['list_name']
+            public_read = True if request.form.get('public_read') else False
+            public_edit = True if request.form.get('public_edit') else False
+
+            if not public_read and public_edit:
+                flash("You can not add a public list which is not publicly readable but publicly editable. List was not created.", 'alert-danger')
+            else:
+                if list_id == "":
+                    return abort(404)
+                if list_id is not None:
+                    list_permissions = conn.check_list_permission(user_id, list_id)
+                    if not list_permissions["read"]:
+                        return abort(403)
+                    new_list_id = conn.duplicate_list(list_id, user_id, list_name, public_read, public_edit)
+                    flash("Successfully duplicated list", 'alert-success')
+                    current_app.logger.info(session['user']['preferred_username'] + " successfully duplicated list " + str(list_id))
+                    return redirect(url_for('user.my_lists', view=list_id))
+        
+        if request_type == 'intersect':
+            list_id = request.form['list_id']
+            target_list_id = list_id
+            inplace = True if request.form.get('inplace') else False
+            other_list_id = request.form['other_list_id']
+            other_list_name = request.form['other_list_name']
+
+            if list_id == "":
+                return abort(404)
+            if (other_list_name.strip() != '' and other_list_id.strip() == ''):
+                flash("The other list which you tried to intersect does not exist", 'alert-danger')
+                return redirect(url_for('user.my_lists', view=list_id))
+            list_permissions = conn.check_list_permission(user_id, list_id)
+            if not list_permissions['read']:
+                return abort(403)
+
+            if not inplace:
+                new_list_name = request.form.get('list_name')
+                new_list_public_read = True if request.form.get('public_read') else False
+                new_list_public_edit = True if request.form.get('public_edit') else False
+                target_list_id = conn.insert_user_variant_list(user_id, new_list_name, new_list_public_read, new_list_public_edit)
+                #list_id = conn.duplicate_list(list_id, user_id, new_list_name, new_list_public_read, new_list_public_edit)
+
+            if list_id is not None:
+                list_permissions = conn.check_list_permission(user_id, target_list_id)
+                if not list_permissions["edit"]:
+                    return abort(403)
+                
+                conn.intersect_lists(first_list_id = list_id, second_list_id = other_list_id, target_list_id = target_list_id)
+                flash("Successfully intersected the two lists", 'alert-success')
+            return redirect(url_for('user.my_lists', view=target_list_id))
+        
+        if request_type == 'subtract':
+            list_id = request.form['list_id']
+            target_list_id = list_id
+            inplace = True if request.form.get('inplace') else False
+            other_list_id = request.form['other_list_id']
+            other_list_name = request.form['other_list_name']
+
+            if list_id == "":
+                return abort(404)
+            if (other_list_name.strip() != '' and other_list_id.strip() == ''):
+                flash("The other list which you tried to subtract does not exist", 'alert-danger')
+                return redirect(url_for('user.my_lists', view=list_id))
+            list_permissions = conn.check_list_permission(user_id, list_id)
+            if not list_permissions['read']:
+                return abort(403)
+
+            if not inplace:
+                new_list_name = request.form.get('list_name')
+                new_list_public_read = True if request.form.get('public_read') else False
+                new_list_public_edit = True if request.form.get('public_edit') else False
+                target_list_id = conn.insert_user_variant_list(user_id, new_list_name, new_list_public_read, new_list_public_edit)
+
+            if list_id is not None:
+                list_permissions = conn.check_list_permission(user_id, target_list_id)
+                if not list_permissions["edit"]:
+                    return abort(403)
+                
+                conn.subtract_lists(first_list_id = list_id, second_list_id = other_list_id, target_list_id = target_list_id)
+                flash("Successfully subtracted the two lists", 'alert-success')
+            return redirect(url_for('user.my_lists', view=target_list_id))
+        
+
+        if request_type == 'add':
+            list_id = request.form['list_id']
+            target_list_id = list_id
+            inplace = True if request.form.get('inplace') else False
+            other_list_id = request.form['other_list_id']
+            other_list_name = request.form['other_list_name']
+
+            if list_id == "":
+                return abort(404)
+            if (other_list_name.strip() != '' and other_list_id.strip() == ''):
+                flash("The other list which you tried to add does not exist", 'alert-danger')
+                return redirect(url_for('user.my_lists', view=list_id))
+            list_permissions = conn.check_list_permission(user_id, list_id)
+            if not list_permissions['read']:
+                return abort(403)
+
+            if not inplace:
+                new_list_name = request.form.get('list_name')
+                new_list_public_read = True if request.form.get('public_read') else False
+                new_list_public_edit = True if request.form.get('public_edit') else False
+                target_list_id = conn.insert_user_variant_list(user_id, new_list_name, new_list_public_read, new_list_public_edit)
+
+            if list_id is not None:
+                list_permissions = conn.check_list_permission(user_id, target_list_id)
+                if not list_permissions["edit"]:
+                    return abort(403)
+                
+                conn.add_lists(first_list_id = list_id, second_list_id = other_list_id, target_list_id = target_list_id)
+                flash("Successfully added the two lists", 'alert-success')
+            return redirect(url_for('user.my_lists', view=target_list_id))
 
         # actions on variant list view
         if request_type == 'search':
