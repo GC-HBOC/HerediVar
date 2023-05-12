@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1> {% block title %} Create a new user {% endblock %} </h1>
+
+
+<form method="post" class="needs-validation" novalidate>
+
+
+    <div class="form-group sst" >
+        <label for="username" class="form-label">Username</label>
+        <input type="text" name="username"
+               placeholder="a unique username" class="form-control validationreq"
+               value="{{ request.form['username'] }}" id="username" required>
+        </input>
+        <div class="invalid-feedback">
+            Please provide a username!
+        </div>
+    </div>
+
+    <div class="form-group sst" >
+        <label for="email" class="form-label">Email</label>
+        <input type="text" name="email"
+               placeholder="max.mustermann@provider.com" class="form-control validationreq"
+               value="{{ request.form['email'] }}" id="email" required>
+        </input>
+        <div class="invalid-feedback">
+            Please provide an email!
+        </div>
+    </div>
+
+    <div class="form-group sst" >
+        <label for="firstname" class="form-label">First name</label>
+        <input type="text" name="firstname"
+               placeholder="Max" class="form-control validationreq"
+               value="{{ request.form['firstname'] }}" id="firstname" required>
+        </input>
+        <div class="invalid-feedback">
+            Please provide the first name of the new user!
+        </div>
+    </div>
+
+    <div class="form-group sst" >
+        <label for="lastname" class="form-label">Last name</label>
+        <input type="text" name="lastname"
+               placeholder="Mustermann" class="form-control validationreq"
+               value="{{ request.form['lastname'] }}" id="lastname" required>
+        </input>
+        <div class="invalid-feedback">
+            Please provide the last name of the new user!
+        </div>
+    </div>
+
+    <div class="form-group sst" >
+        <label for="affiliation" class="form-label">Affiliation</label>
+        <input type="text" name="affiliation"
+               placeholder="University Clinics Tübingen" class="form-control validationreq"
+               value="{{ request.form['affiliation'] }}" id="affiliation" required>
+        </input>
+        <div class="invalid-feedback">
+            Please provide the affiliation of the new user!
+        </div>
+    </div>
+
+    <div class="form-group sst" >
+        <label for="affiliation" class="form-label">Roles</label>
+        {% for role in roles %}
+        <div class="form-check">
+            <input class="form-check-input ssr" type="checkbox" value="{{ role['index'] }}" name="role" id="flexCheckDefault">
+            <label class="form-check-label" for="flexCheckDefault">
+                {{role['name']}}
+            </label>
+        </div>
+        {% endfor %}
+    </div>
+
+
+
+    <div class="form-group sst bsb">
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </div>
+</form>
+
+
+
+</div>
+
+
+{% endblock %}
+
+{% block special_scripts %}
+{% endblock %}

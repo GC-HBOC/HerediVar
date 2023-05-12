@@ -670,6 +670,19 @@ class Connection:
                 actual_information += tuple(user_without_dash)
             new_constraints = "id IN (" + new_constraints_inner + ")"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
+        #if clinvar is not None and len(clinvar) > 0:
+        #    new_constraints_inner = ""
+        #    clinvar_without_dash = [value for value in clinvar if value != '-']
+        #    if '-' in clinvar:
+        #        new_constraints_inner += "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM clinvar_variant_annotation)"
+        #        if len(clinvar_without_dash) > 0:
+        #            new_constraints_inner = new_constraints_inner + " UNION "
+        #    if len(clinvar_without_dash) > 0:
+        #        placeholders = ["%s"] * len(clinvar_without_dash)
+        #        placeholders = ', '.join(placeholders)
+        #        placeholders = enbrace(placeholders)
+        #        clinvar_without_dash
+        #        new_constraints_inner += "SELECT "
         if hgvs is not None and len(hgvs) > 0:
             all_variants = []
             for hgvs_string in hgvs:

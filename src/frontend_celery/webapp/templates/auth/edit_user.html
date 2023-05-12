@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1> {% block title %} Edit user: {{ user['username'] }} {% endblock %} </h1>
+
+<!--
+
+[{'id': '7bcb76a3-e5bb-4a60-8814-47c9d5e90153', 
+'createdTimestamp': 1652186757808, 
+'username': 'norights', 
+'enabled': True, 
+'totp': False, 
+'emailVerified': True, 
+'firstName': 'Mirco', 
+'lastName': 'testtest', 
+'email': 'norights@test.abc', 
+'attributes': {'affiliation': ['sometest']}, 
+
+
+-->
+
+<form method="post">
+    <div class="table-responsive tableFixHead table-lg">
+        <table class="table table-borderless" id="literatureTable">
+            <tbody>
+                <tr>
+                    <td style="width:8em; vertical-align: middle;">First name</td>
+                    <td><input class="form-control" type="text" value="{{ user.get('firstName', '') }}" name="first_name"></td>
+                </tr>
+                <tr>
+                    <td style="width:8em; vertical-align: middle;">Last name</td>
+                    <td><input class="form-control" type="text" value="{{ user.get('lastName', '') }}" name="last_name"></td>
+                </tr>
+                <tr>
+                    <td style="width:8em; vertical-align: middle;">E-Mail</td>
+                    <td><input class="form-control" type="text" value="{{ user.get('email', '') }}" name="e_mail"></td>
+                </tr>
+                <tr>
+                    <td style="width:8em; vertical-align: middle;">Affiliation</td>
+                    <td><input class="form-control" type="text" value="{{ user.get('attributes', {}).get('affiliation', [''])[0] }}" name="affiliation"></td>
+                </tr>
+                <tr>
+                    <td style="width:8em; vertical-align: middle;">Enabled</td>
+                    <td>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" name="enabled" {% if user.get('enabled', 'False') | string == 'True' %} checked {% endif %}>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="width:8em;">Roles</td>
+                    <td>
+                        {% for role in avail_roles %}
+                        <div class="form-check">
+                            <input class="form-check-input ssr" type="checkbox" value="{{ role['index'] }}" name="role" id="flexCheckDefault" {% if role['index'] in set_roles %} checked {% endif %}>
+                            <label class="form-check-label" for="flexCheckDefault">
+                                {{role['name']}}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <button class="btn btn-primary">Submit</button>
+</form>
+
+
+
+</div>
+
+
+{% endblock %}
+
+{% block special_scripts %}
+{% endblock %}

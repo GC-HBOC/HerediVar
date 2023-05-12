@@ -74,3 +74,5 @@ pip install pytest
 
 
 pip install gunicorn
+
+pip install flask-mail

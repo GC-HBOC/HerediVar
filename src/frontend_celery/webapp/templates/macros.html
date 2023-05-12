@@ -252,10 +252,18 @@
                     {% if lists is not none %}
                     <div class="form-group sst">
                         <label for="lookup_list_name" class="form-label">List</label>
-                        <div class="autocomplete full_page">
-                            <input id="lookup_list_id" name="lookup_list_id" class="visually_hidden" type="text" value="{{ request.args.get('lookup_list_id', '') }}">
-                            <input value="{{ request.args.get('lookup_list_name', '') }}" id="lookup_list_name" class="form-control" name="lookup_list_name" type="text" placeholder="Select a list... start search by typing">
+
+                        <div id="select_list_wrapper">
+
+                            <!--
+                            <div class="autocomplete full_page">
+                                <input id="lookup_list_id" name="lookup_list_id" class="visually_hidden" type="text" value="{{ request.args.get('lookup_list_id', '') }}">
+                                <input value="{{ request.args.get('lookup_list_name', '') }}" id="lookup_list_name" class="form-control" name="lookup_list_name" type="text" placeholder="Select a list... start search by typing">
+                            </div>
+                            -->
+
                         </div>
+                        <button class="btn btn-primary" type="button" id="add_list_select">+</button>
                     </div>
                     {% endif %}
 
@@ -368,7 +376,11 @@
 
 <div id="tabnav-bottom" class="ssb">{{ pagination.links }}</div>
 
-<input type='hidden' id='targetid' data-lists='{{lists | tojson | safe}}' />
+<input type='hidden' id='flask_data' 
+    data-lists='{{lists | tojson | safe}}'
+    data-list-names='{{ request.args.getlist("lookup_list_name") | tojson }}'
+    data-list-ids='{{ request.args.getlist("lookup_list_id") | tojson}}'
+/>
 <script src="/static/js/paginated_variants.js"></script>
 
 
@@ -549,7 +561,7 @@
         {% set words = display_text.split(' ') %}
         {% set first_words = ' '.join(words[0:-1]) %}
         {% set last_word = words[-1] %}
-        <a class="external_link" href="{{url}}">{{ first_words }} <nobr>{{ last_word }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+        <a class="external_link" uri="{{url}}">{{ first_words }} <nobr>{{ last_word }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
             <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/>
             <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/>
         </svg></nobr>

@@ -75,6 +75,10 @@ $(document).ready(function()
         }
     });
 
+    $('.external_link').click(function() {
+        window.open($(this).attr("uri"));
+    }); 
+
 
     // coloring of consensus classification
     document.getElementsByName('class-label').forEach(function(obj) {

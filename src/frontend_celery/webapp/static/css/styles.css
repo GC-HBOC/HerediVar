@@ -49,6 +49,7 @@ abbr[title] {
     color:rgb(0, 0, 114);
     text-decoration: none;
     border-bottom: 1px dotted rgb(0, 0, 114);
+    cursor: pointer;
 }
 
 

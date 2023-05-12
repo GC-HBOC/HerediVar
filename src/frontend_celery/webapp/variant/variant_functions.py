@@ -7,24 +7,35 @@ from functools import cmp_to_key
 
 
 
-def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
+def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, allowed_sequence_letters = "ACGT"):
     was_successful = True
     # validate request
+
+    chrom, chrom_is_valid = functions.curate_chromosome(chrom)
+    ref, ref_is_valid = functions.curate_sequence(ref, allowed_sequence_letters)
+    alt, alt_is_valid = functions.curate_sequence(alt, allowed_sequence_letters)
+    pos, pos_is_valid = functions.curate_position(pos)
+
+    if not chrom_is_valid:
+        flash("Chromosome is invalid: " + str(chrom), 'alert-danger')
+    elif not ref_is_valid:
+        flash("Reference base is invalid: " + str(ref), 'alert-danger')
+    elif not alt_is_valid:
+        flash("Alternative base is invalid: " + str(alt), 'alert-danger')
+    elif not pos_is_valid:
+        flash("Position is invalid: " + str(pos), 'alert-danger')
+    if not chrom_is_valid or not ref_is_valid or not alt_is_valid or not pos_is_valid:
+        was_successful = False
+        return was_successful
+
+
+
     tmp_file_path = tempfile.gettempdir() + "/new_variant.vcf"
-    #tmp_vcfcheck_out_path = tempfile.gettempdir() + "/frontend_variant_import_vcf_errors.txt"
-    functions.variant_to_vcf(chr, pos, ref, alt, tmp_file_path)
+    functions.variant_to_vcf(chrom, pos, ref, alt, tmp_file_path)
 
     do_liftover = genome_build == 'GRCh37'
     returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post = functions.preprocess_variant(tmp_file_path, do_liftover = do_liftover)
-    
-    #command = ['/mnt/users/ahdoebm1/HerediVar/src/common/scripts/preprocess_variant.sh', '-i', tmp_file_path, '-o', tmp_vcfcheck_out_path]
 
-    #if genome_build == 'GRCh37':
-    #    command.append('-l') # enable liftover
-        
-    #returncode, err_msg, command_output = functions.execute_command(command, 'preprocess_variant')
-    #print(err_msg)
-    #print(command_output)
     
     if returncode != 0:
         flash(err_msg, 'alert-danger')
@@ -70,7 +81,7 @@ def validate_and_insert_variant(chr, pos, ref, alt, genome_build):
         is_duplicate = conn.check_variant_duplicate(new_chr, new_pos, new_ref, new_alt) # check if variant is already contained
         if not is_duplicate:
             # insert it & capture the annotation_queue_id of the newly inserted variant to start the annotation service in celery
-            annotation_queue_id = conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chr, pos, ref, alt, user_id = session['user']['user_id'])
+            annotation_queue_id = conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chrom, pos, ref, alt, user_id = session['user']['user_id'])
             if not current_app.config['TESTING']:
                 celery_task_id = start_annotation_service(annotation_queue_id = annotation_queue_id) # starts the celery background task
             flash(Markup("Successfully inserted variant: " + new_chr + ' ' + str(new_pos) + ' ' + new_ref + ' ' + new_alt + 

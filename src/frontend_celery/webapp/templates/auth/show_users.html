@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1> {% block title %} All VICC-CP users {% endblock %} </h1>
+
+<!--
+
+[{'id': '7bcb76a3-e5bb-4a60-8814-47c9d5e90153', 
+'createdTimestamp': 1652186757808, 
+'username': 'norights', 
+'enabled': True, 
+'totp': False, 
+'emailVerified': True, 
+'firstName': 'Mirco', 
+'lastName': 'testtest', 
+'email': 'norights@test.abc', 
+'attributes': {'affiliation': ['sometest']}, 
+
+
+-->
+
+<div class="table-responsive tableFixHead table-lg">
+    <table class="table table-hover" id="literatureTable">
+        <thead>
+            <tr>
+                <th><div class="sortable">Username</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                <th><div class="sortable">First Name</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                <th ><div class="sortable">Last Name</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                <th><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                <th><div class="sortable">Email verified</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                <th><div class="sortable">Enabled</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr class="clickable" data-href="{{ url_for('auth.edit_user', username=user.get('username', '-')) }}">
+                <td>{{ user.get('username', 'N/A') }}</td>
+                <td>{{ user.get('firstName', 'N/A') }}</td>
+                <td>{{ user.get('lastName', 'N/A') }}</td>
+                <td>{{ user.get('attributes', {}).get('affiliation', ['N/A'])[0] }}</td>
+                <td>{{ user.get('emailVerified', 'N/A') }}</td>
+                <td>{{ user.get('enabled', 'N/A') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+
+</div>
+
+
+{% endblock %}
+
+{% block special_scripts %}
+{% endblock %}

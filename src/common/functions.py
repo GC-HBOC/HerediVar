@@ -198,6 +198,40 @@ def preprocess_variant(infile, do_liftover=False):
     return final_returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
 
 
+
+def curate_chromosome(chrom):
+    is_valid = True
+    chr_num = validate_chr(chrom)
+
+    if not chr_num:
+        is_valid = False
+        return chrom, is_valid
+    
+    return 'chr' + chr_num, is_valid
+
+
+def curate_position(pos):
+    is_valid = True
+    if pos is None:
+        is_valid = False
+        return None, is_valid
+    pos = str(pos).replace(',', '').replace('.', '').strip()
+    allowed = "0123456789"
+    is_valid = all(c in allowed for c in pos)
+    return int(pos), is_valid
+
+def curate_sequence(seq, allowed = "ACGT-"):
+    seq = seq.strip().upper()
+    is_valid = True
+    if not all(c in allowed for c in seq):
+        is_valid = False
+    if len(seq) == 0:
+        is_valid = False
+    return seq, is_valid
+
+
+
+
 # infile has to be .gz
 def perform_liftover(infile, outfile, from_genome="GRCh37", to_genome="GRCh38"):
     if from_genome == "GRCh37" and to_genome == "GRCh38":

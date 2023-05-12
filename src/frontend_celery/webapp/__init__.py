@@ -14,12 +14,14 @@ import logging
 from flask.logging import default_handler
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from flask_mail import Mail
 
 
 
 oauth = OAuth()
 sess = Session()
 celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)
+mail = Mail()
 
 
 def create_app():
@@ -51,6 +53,8 @@ def create_app():
     )
 
     celery.conf.update(app.config)
+
+    mail.init_app(app=app)
 
 
     from .main import create_module as main_create_module

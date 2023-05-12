@@ -1,5 +1,5 @@
 from urllib.error import HTTPError
-from . import celery
+from . import celery, mail
 #import sys
 #from os import path
 #sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
@@ -7,6 +7,9 @@ from . import celery
 #from common.db_IO import Connection
 from annotation_service.main import process_one_request
 from celery.exceptions import Ignore
+from flask_mail import Message
+from flask import render_template
+import time
 
 """
 @celery.task(bind=True)
@@ -80,3 +83,38 @@ def generate_consensus_only_vcf_task(self):
     """Background task for generating consensus only vcf"""
     from webapp.io.download_routes import generate_consensus_only_vcf
     generate_consensus_only_vcf()
+
+
+def send_mail(subject, sender, recipient, text_body):
+    msg = Message(subject, sender=sender, recipients=[recipient])
+    msg.body = ""
+    msg.html = text_body
+    mail.send(msg)
+
+
+
+@celery.task(bind=True, retry_backoff=5, max_retries=3)
+def notify_new_user(self, full_name, email, username, password):
+    """Background task for sending two consecutive mails"""
+    # first mail: username
+    sender = "noreply@heredivar.de"
+    body = render_template("auth/mail_username.html", full_name = full_name, username = username)
+    send_mail(
+        subject = "[VICC-CP] User account",
+        sender = sender,
+        recipient = email, 
+        text_body = body  
+    )
+
+    # wait a couple of seconds before sending another message
+    time.sleep(10)
+    
+    #second mail: password
+    body = render_template("auth/mail_password.html", full_name = full_name, password = password)
+    send_mail(
+        subject = "[VICC-CP] User account",
+        sender = sender,
+        recipient = email, 
+        text_body = body  
+    )
+    

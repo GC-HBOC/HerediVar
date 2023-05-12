@@ -39,14 +39,12 @@ def search():
     variant_ids_oi = extract_lookup_list(request, user_id, conn)
 
 
-
     page = int(request.args.get('page', 1))
     per_page = 20
     variants, total = conn.get_variants_page_merged(page, per_page, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user_classifications, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
     lists = conn.get_lists_for_user(user_id)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
 
-    
 
     # insert variants to list 
     if request.method == 'POST':

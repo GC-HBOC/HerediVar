@@ -32,6 +32,7 @@ class Config(object):
     # keycloak
     KEYCLOAK_PORT = os.environ.get('KEYCLOAK_PORT', 5050)
     KEYCLOAK_HOST = os.environ.get('KEYCLOAK_HOST', 'localhost')
+    KEYCLOAK_REALM = os.environ.get('KEYCLOAK_REALM', 'HerediVar')
     KEYCLOAK_BASEPATH = "http://"+KEYCLOAK_HOST + ":" + KEYCLOAK_PORT
     ISSUER = os.environ.get('ISSUER', "http://"+KEYCLOAK_HOST+':'+KEYCLOAK_PORT+'/realms/HerediVar')
     CLIENTID = os.environ.get('CLIENT_ID')
@@ -65,6 +66,15 @@ class Config(object):
     # orphanet
     ORPHANET_DISCOVERY_URL = "https://api.orphacode.org/EN/ClinicalEntity"
     ORPHANET_API_KEY = 'HerediVar'
+
+    # mail
+    MAIL_SERVER = os.environ.get('MAIL_SERVER')
+    MAIL_PORT = os.environ.get('MAIL_PORT')
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
+    MAIL_USE_TLS = False
+    MAIL_USE_SSL = False
+    MAIL_DEBUG = False
 
 
 
