@@ -174,3 +174,6 @@ src/frontend_celery/logs
 /src/frontend_celery/webapp/static/files/
 
 /src/frontend_celery/webapp/static/packages/
+/logs
+/classified_variants
+/src/frontend_celery/tests/keycloak*
