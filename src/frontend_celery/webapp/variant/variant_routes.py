@@ -38,7 +38,6 @@ def search():
     hgvs = extract_hgvs(request)
     variant_ids_oi = extract_lookup_list(request, user_id, conn)
 
-
     page = int(request.args.get('page', 1))
     per_page = 20
     variants, total = conn.get_variants_page_merged(page, per_page, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user_classifications, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
@@ -49,17 +48,31 @@ def search():
     # insert variants to list 
     if request.method == 'POST':
         list_id = request.args.get('selected_list_id')
+        
+        selected_variants = request.args.get('selected_variants', "").split(',')
+        select_all_variants = True if request.args.get('select_all_variants', "false") == "true" else False
+
         if list_id:
             list_permission = conn.check_list_permission(user_id, list_id)
             if not list_permission['owner'] and not list_permission['edit']:
                 flash("You attempted to insert variants to a list which you do not have access to.", "alert-danger")
                 current_app.logger.info(session['user']['preferred_username'] + " attempted to insert variants from the browse variants page to list: " + str(list_id) + ", but he did not have access to it.")
             else:
-                variants_for_list, _ = conn.get_variants_page_merged(1, "unlimited", user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user_classifications, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
-                variant_ids = [variant.id for variant in variants_for_list]
-                for variant_id in variant_ids:
-                    conn.add_variant_to_list(list_id, variant_id)
-                flash(Markup("Successfully inserted all variants from the current search to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
+                num_inserted = 0
+                if select_all_variants:
+                    variants_for_list, _ = conn.get_variants_page_merged(1, "unlimited", user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user_classifications, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
+                    variant_ids = [variant.id for variant in variants_for_list]
+                    for variant_id in variant_ids:
+                        if str(variant_id) not in selected_variants:
+                            conn.add_variant_to_list(list_id, variant_id)
+                            num_inserted = num_inserted + 1
+                else:
+                    for variant_id in selected_variants:
+                        variant = conn.get_variant(variant_id)
+                        if variant is not None:
+                            conn.add_variant_to_list(list_id, variant_id)
+                            num_inserted = num_inserted + 1
+                flash(Markup("Successfully inserted " + str(num_inserted) + " variant(s) from the current search to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
                 return redirect(url_for('variant.search', genes=request.args.get('genes'), ranges=request.args.get('ranges'), consensus=request.args.getlist('consensus'), user = request.args.getlist('user'), hgvs= request.args.get('hgvs')))
     return render_template('variant/search.html', variants=variants, page=page, per_page=per_page, pagination=pagination, lists=lists)
 

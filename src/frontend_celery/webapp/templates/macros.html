@@ -292,7 +292,7 @@
     <thead id="variantTableHead">
       <tr>
         <th class="visually_hidden">id</th>
-        <th class="text_align_center width_very_small">CHR</th>
+        <th class="text_align_center width_minimal">CHR</th>
         <th class="width_small">POS</th>
         <th class="width_medium">REF</th>
         <th class="width_medium">ALT</th>
@@ -373,13 +373,14 @@
   </table>
 </div>
 
-
 <div id="tabnav-bottom" class="ssb">{{ pagination.links }}</div>
 
 <input type='hidden' id='flask_data' 
     data-lists='{{lists | tojson | safe}}'
     data-list-names='{{ request.args.getlist("lookup_list_name") | tojson }}'
     data-list-ids='{{ request.args.getlist("lookup_list_id") | tojson}}'
+    data-previous-selected-variants='{{ request.args.get("selected_variants", "") }}'
+    data-select-all-variants='{{ request.args.get("select_all_variants", "true") }}'
 />
 <script src="/static/js/paginated_variants.js"></script>
 
@@ -501,18 +502,18 @@
                         <tr>
                             <td class="nopad">
                                 <form action="{{ url_for(href_loc, selected_list_id=list[0], **arguments) }}" method="post">
-                                    <button class="d-flex justify-content-center dropdown-item {{list[6]}} padding_small" type="submit">
+                                    <button class="d-flex justify-content-center dropdown-item {{list[6]}} padding_small submit_from_list_button" type="submit">
                                         {% if list[3] == 1 %} <!-- is public -->
                                             {{ draw_public_symbol("Public list") }}
                                         {% else %} <!-- is private -->
                                             {{ draw_private_symbol("Private list") }}
                                         {% endif %}
-                                      </button>
+                                    </button>
                                 </form>
                             </td>
                             <td class="nopad hyphens">
                                 <form action="{{ url_for(href_loc, selected_list_id=list[0], **arguments) }}" method="post">
-                                    <button class="dropdown-item {{list[6]}} padding_small" type="submit">
+                                    <button class="dropdown-item {{list[6]}} padding_small submit_from_list_button" type="submit">
                                         <div class="wrap-spaces">{{ list[2] }}</div>
                                     </button>
                                 </form>

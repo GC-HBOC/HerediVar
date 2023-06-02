@@ -5,6 +5,7 @@ sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath
 from common.db_IO import Connection
 from werkzeug.exceptions import abort
 import common.functions as functions
+import common.paths as paths
 import annotation_service.fetch_heredicare_variants as heredicare
 from datetime import datetime
 from ..utils import require_permission, get_clinvar_submission_status, get_connection, check_clinvar_status, check_update_clinvar_status
@@ -136,9 +137,10 @@ def submit_clinvar(variant_id):
             base_url = current_app.config['CLINVAR_API_ENDPOINT']
 
             # prepare json data to be submitted to ClinVar
-            schema_path = path.join(path.dirname(current_app.root_path), current_app.config['RESOURCES_FOLDER'])
-            schema = json.loads(open(schema_path + "clinvar_submission_schema.json").read())
+            schema = json.loads(open(paths.clinvar_submission_schema).read())
             data = get_clinvar_submission_json(variant, selected_gene, selected_orpha_code, clinvar_accession)
+            with open("/mnt/storage2/users/ahdoebm1/HerediVar/testdat.json", "w") as jfile:
+                jfile.write(json.dumps(data, indent=4))
 
             # check that the generated data is valid by checking against json schema
             try:
@@ -157,27 +159,27 @@ def submit_clinvar(variant_id):
                     "data": {"content": data}
                 }]
             }
-            resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
-            #print(resp.json())
-            if str(resp.status_code) != '200':
-                abort(500, 'Status code of ClinVar submission API endpoint was: ' + str(resp.status_code) + ': ' + str(resp.json()))
-            
-            submission_id = resp.json()['id']
-            clinvar_status = check_clinvar_status(submission_id)
-            #print("Clinvar status: " + str(clinvar_status))
-
-            # insert a new heredivar_clinvar_submission if the variant was not submitted previously or update if it was there previously
-            conn.insert_update_heredivar_clinvar_submission(variant_id, submission_id, clinvar_status['accession_id'], clinvar_status['status'], clinvar_status['message'], clinvar_status['last_updated'])
-
-            
-            # some user feedback that the submission was successful or not
-            if resp.status_code == 200 or resp.status_code == 201:
-                flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
-                current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded variant " + str(variant_id) + " to ClinVar.")
-                return redirect(url_for('variant.display', variant_id=variant_id))
-            flash("There was an error during submission to ClinVar. It ended with status code: " + str(resp.status_code), "alert-danger")
-            current_app.logger.error(session['user']['preferred_username'] + " tried to upload a consensus classification for variant " + str(variant_id) + " to ClinVar, but it resulted in an error with status code: " + str(resp.status_code))
-    
+            #resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
+            ##print(resp.json())
+            #if str(resp.status_code) not in ['200', '201']:
+            #    abort(500, 'Status code of ClinVar submission API endpoint was: ' + str(resp.status_code) + ': ' + str(resp.json()))
+            #
+            #submission_id = resp.json()['id']
+            #clinvar_status = check_clinvar_status(submission_id)
+            ##print("Clinvar status: " + str(clinvar_status))
+#
+            ## insert a new heredivar_clinvar_submission if the variant was not submitted previously or update if it was there previously
+            #conn.insert_update_heredivar_clinvar_submission(variant_id, submission_id, clinvar_status['accession_id'], clinvar_status['status'], clinvar_status['message'], clinvar_status['last_updated'])
+#
+            #
+            ## some user feedback that the submission was successful or not
+            #if resp.status_code == 200 or resp.status_code == 201:
+            #    flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
+            #    current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded variant " + str(variant_id) + " to ClinVar.")
+            #    return redirect(url_for('variant.display', variant_id=variant_id))
+            #flash("There was an error during submission to ClinVar. It ended with status code: " + str(resp.status_code), "alert-danger")
+            #current_app.logger.error(session['user']['preferred_username'] + " tried to upload a consensus classification for variant " + str(variant_id) + " to ClinVar, but it resulted in an error with status code: " + str(resp.status_code))
+    #
 
     return render_template('variant_io/submit_clinvar.html', 
                             variant = variant, 
@@ -236,7 +238,7 @@ def get_clinvar_submission_json(variant, selected_gene, selected_condition_orpha
     
     clinical_significance = {}
     clinical_significance['clinicalSignificanceDescription'] = mrcc.class_to_text()
-    clinical_significance['comment'] = mrcc.comment
+    clinical_significance['comment'] = get_extended_comment(mrcc)
     clinical_significance['customAssertionScore'] = 0
     clinical_significance['dateLastEvaluated'] = mrcc.date.split(' ')[0] # only grab the date and trim the time
     clinvar_submission_properties['clinicalSignificance'] =  clinical_significance
@@ -292,6 +294,21 @@ def get_clinvar_submission_json(variant, selected_gene, selected_condition_orpha
     data['clinvarSubmission'] = clinvar_submission
     #print(data)
     return data
+
+
+def get_extended_comment(mrcc):
+    selected_criteria = mrcc.scheme.criteria
+    criterium_strings = []
+    for criterium in selected_criteria:
+        criterium_strings.append(criterium.name + " (" + criterium.strength + ")" + ": " + criterium.evidence)
+
+    result = ""
+    if len(criterium_strings) == 1:
+        result = "According to the " + mrcc.scheme.display_name + " criteria we chose this criterium: " + criterium_strings[0]
+    elif len(criterium_strings) > 1:
+        result = "According to the " + mrcc.scheme.display_name + " criteria we chose these criteria: " + ', '.join(criterium_strings)
+    
+    return mrcc.comment.strip('.') + ". " + result
 
 
 def get_assertion_criteria(scheme_type, assertion_criteria_source):

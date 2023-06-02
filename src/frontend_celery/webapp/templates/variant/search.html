@@ -12,11 +12,20 @@
   {{ macros.draw_paginated_variant_table(pagination, variants, lists=lists) }}
 </div>
 
-
-
-<div class="bsl bsb">
-  <button class="btn btn-primary" id="list_add_button" data-bs-toggle="modal" data-bs-target="#list-add-modal">Add to list</button>
+<div class="d-flex bsb align-items-center">
+  <div class="form-check ssl align-items-center d-flex">
+    <input class="form-check-input" type="checkbox" id="select_all_variants">
+    <label class="form-check-label vssl" for="select_all_variants">
+        Select all variants
+    </label>
+  </div>
+  
+  <div class="bsl">
+    <button class="btn btn-primary" id="list_add_button" data-bs-toggle="modal" data-bs-target="#list-add-modal">Add to list</button>
+  </div>
 </div>
+
+
 
 
 <!-- modal for adding multiple variants to a list -->
@@ -36,3 +45,7 @@
 
 
 {% endblock %}
+
+{% block special_scripts %}
+    <script src="../static/js/search.js"></script>
+{% endblock%}

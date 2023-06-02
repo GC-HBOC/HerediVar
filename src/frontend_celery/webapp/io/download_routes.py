@@ -13,7 +13,7 @@ from shutil import copyfileobj
 import re
 import os
 import uuid
-import pathlib
+from pathlib import Path
 
 
 download_blueprint = Blueprint(
@@ -78,9 +78,11 @@ def log_file(log_file):
 
 # listens on get parameter: raw
 @download_blueprint.route('/download/vcf/classified')
+@require_permission(['read_resources'])
 def classified_variants():
     return_raw = request.args.get('raw')
-    classified_variants_folder = current_app.static_folder + "/files/classified_variants"
+    classified_variants_folder = paths.classified_variants_dir #current_app.static_folder + "/files/classified_variants"
+    Path(classified_variants_folder).mkdir(parents=True, exist_ok=True)
     last_dump_path = classified_variants_folder + "/.last_dump.txt"
     force_url = url_for("download.classified_variants", raw=return_raw, force = True)
     redirect_url = url_for("main.index")
@@ -112,8 +114,7 @@ def classified_variants():
         return send_file(path_to_download, download_name="HerediVar-classified-" + functions.get_today(), as_attachment=True, mimetype="text/vcf")  
 
 def generate_consensus_only_vcf():
-    classified_variants_folder = current_app.static_folder + "/files/classified_variants"
-    mkdir_recursive(classified_variants_folder)
+    classified_variants_folder = paths.classified_variants_dir
     last_dump_path = classified_variants_folder + "/.last_dump.txt"
     last_dump_date = functions.get_today()
     path_to_download = classified_variants_folder + "/" + last_dump_date + ".vcf"
@@ -396,12 +397,12 @@ def refgene_ngsd():
 @download_blueprint.route('/download/hg38.fa')
 def ref_genome():
     filename = "GRCh38.fa"
+    print(paths.ref_genome_dir) # /mnt/storage2/users/ahdoebm1/HerediVar/data/genomes/GRCh38.fa
     return send_from_directory(directory=paths.ref_genome_dir, path=filename, download_name="GRCh38.fa", as_attachment=True, mimetype="text")
 
 @download_blueprint.route('/download/hg38.fa.fai')
 def ref_genome_index():
     filename = "GRCh38.fa.fai"
-    print(paths.ref_genome_dir)
     return send_from_directory(directory=paths.ref_genome_dir, path=filename, download_name="GRCh38.fa.fai", as_attachment=True, mimetype="text")
 
 #@download_blueprint.route('/download/gnomad.vcf.gz')

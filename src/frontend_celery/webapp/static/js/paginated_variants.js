@@ -135,3 +135,5 @@ if (list_names.length == list_ids.length) {
 if (document.getElementsByName("lookup_list_name").length == 0) {
     create_list_select(document.getElementById("select_list_wrapper"))
 }
+
+

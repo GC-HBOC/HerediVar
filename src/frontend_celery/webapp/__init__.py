@@ -106,8 +106,8 @@ def configure_logging(app):
     app.logger.removeHandler(default_handler) # deactivate the default flask logging handler
 
     # set up new handler which writs to a file & add it to the app
-    Path("logs/webapp/").mkdir(parents=True, exist_ok=True)
-    file_handler = RotatingFileHandler('logs/webapp/webapp.log', maxBytes=16384, backupCount=20)
+    Path(paths.webapp_log_dir).mkdir(parents=True, exist_ok=True)
+    file_handler = RotatingFileHandler(paths.webapp_log, maxBytes=16384, backupCount=20)
     file_handler.setLevel(logging.INFO)
     file_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s [in %(module)s>%(filename)s: %(lineno)d]') # format of the logged messages
     file_handler.setFormatter(file_formatter)

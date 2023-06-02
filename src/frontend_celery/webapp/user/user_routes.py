@@ -69,6 +69,8 @@ def my_lists():
 
     if view_list_id is not None: # the user wants to see the list
         list_permissions = conn.check_list_permission(user_id, view_list_id)
+        if list_permissions is None:
+            return abort(404)
         if not list_permissions['read']:
             current_app.logger.error(session['user']['preferred_username'] + " attempted view list with id " + str(view_list_id) + ", but this list was neither created by him nor is it public.")
             return abort(403)
