@@ -52,9 +52,9 @@ class Config(object):
     SESSION_FILE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/flask_sessions"
 
     # other folders
-    RESOURCES_FOLDER = 'resources/'
-    LOGS_FOLDER = 'downloads/logs/'
-    CONSENSUS_CLASSIFICATION_REPORT_FOLDER = 'downloads/consensus_classification_reports/'
+    #RESOURCES_FOLDER = 'resources/'
+    #LOGS_FOLDER = 'downloads/logs/'
+    #CONSENSUS_CLASSIFICATION_REPORT_FOLDER = 'downloads/consensus_classification_reports/'
 
     # Celery configuration
     CELERY_BROKER_URL = 'redis://localhost:6379/0'
@@ -115,4 +115,8 @@ class LocaltestConfig(Config):
     TESTING = True
     DEBUG = True
     TLS = False
+    os.environ['NO_PROXY'] = 'localhost'
+
+
+
 

@@ -19,8 +19,7 @@ import os
 
 @pytest.fixture
 def app():
-    env = os.environ.get('WEBAPP_ENV')
-    app = create_app('config.%sConfig' % env.capitalize())
+    app = create_app()
     return app
 
 @pytest.fixture

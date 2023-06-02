@@ -865,7 +865,10 @@ class Connection:
 	                    ON gene.hgnc_id = y.hgnc_id \
                     ) x \
                     ON transcript.name = x.transcript_name"
+        #import time
+        #start_time = time.time()
         self.cursor.execute(command, (variant_id, ))
+        #print("--- consequences: %s seconds ---" % (time.time() - start_time))
         result = self.cursor.fetchall()
 
         #result = sorted(result, key=lambda x: functions.convert_none_infinite(x[12]), reverse=True) # sort table by transcript length
@@ -1656,11 +1659,8 @@ class Connection:
         
         # add consequences
         consequences = None
-        import time
         if include_consequences:
-            start_time = time.time()
             consequences_raw = self.get_variant_consequences(variant_id)
-            print("--- consequences: %s seconds ---" % (time.time() - start_time))
             if consequences_raw is not None:
                 consequences = []
                 for consequence in consequences_raw:

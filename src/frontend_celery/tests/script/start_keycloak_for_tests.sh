@@ -1,6 +1,13 @@
 
 #!/bin/bash
 
+SCRIPT=$(readlink -f "$0")
+SCRIPTPATH=$(dirname "$SCRIPT")
+cd $SCRIPTPATH
+cd ../
+pwd
+
+
 function waitForServer {
   dist=$1
   echo -n "Starting $dist"
@@ -25,5 +32,5 @@ function waitForServer {
   done
 }
 
-keycloak-18.0.0/bin/kc.sh start-dev --hostname 127.0.0.1 --http-port 5050 --features=admin-fine-grained-authz  > keycloak.log 2>&1 & # --log-level debug
+keycloak-18.0.0/bin/kc.sh start-dev --hostname 127.0.0.1 --http-port 5050 > keycloak.log 2>&1 & # --log-level debug
 waitForServer "Keycloak"
