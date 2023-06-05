@@ -113,7 +113,7 @@ elif webapp_env == 'localtest':
     vep_cache_dir = "/mnt/storage2/GRCh38/share/data/dbs/ensembl-vep-104/cache"
     #ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-70-g53bce65c/"
     ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
-    htslib_path = workdir + "src/tools/htslib-1.16/"
+    htslib_path = workdir + "src/tools/htslib/"
 
 
     # data
@@ -139,6 +139,12 @@ elif webapp_env == 'localtest':
     arup_brca_path = datadir + "ARUP_BRCA.vcf.gz"
     tp53_db = datadir + "TP53_database.vcf.gz"
     hci_priors = datadir + "HCI_priors.vcf.gz"
+
+    # IGV data
+    igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
+
+    # clinvar submission
+    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_02_06_23.json")
 
 elif webapp_env == 'githubtest':   
     """ configuration for the testing environment on github actions """

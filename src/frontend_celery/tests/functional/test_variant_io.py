@@ -19,7 +19,6 @@ def get_all_links(html_data):
     return links
 
 
-
 def test_clinvar_submission(test_client):
     """
     This submitts a variant to the clinvar test api
@@ -40,7 +39,7 @@ def test_clinvar_submission(test_client):
     response = test_client.post(
         url_for("variant_io.submit_clinvar", variant_id=variant_id),
         data={
-            "orpha_code": "1234567890",
+            "orpha_code": "001234567890",
             "orpha_name": "missing_orpha_name",
             "gene": "BARD1"
         },
@@ -48,7 +47,7 @@ def test_clinvar_submission(test_client):
     )
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
-    assert "The selected orphanet id (1234567890) is not valid." in data
+    assert "The selected orphanet id (001234567890) is not valid." in data
     
     ##### successul upload to clinvar #####
     response = test_client.post(
@@ -70,14 +69,18 @@ def test_clinvar_submission(test_client):
     response = test_client.post(
         url_for("variant_io.submit_clinvar", variant_id=variant_id),
         data={
-            "condition": "Hereditary breast and ovarian cancer syndrome: 145",
+            "orpha_code": "145",
+            "orpha_name": "Hereditary breast and ovarian cancer syndrome",
             "gene": "BARD1"
         },
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
-    assert "Please wait for ClinVar to finish processing it before submitting making changes to it. " in data
+
+
+    #print(functions.find_between(data, '<!-- messages -->', '<!-- messages end -->'))
+    assert "Please wait for ClinVar to finish processing it before submitting making changes to it." in data
 
     
     ##### Variant does not have a consensus classification

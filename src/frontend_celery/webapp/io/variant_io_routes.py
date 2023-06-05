@@ -125,11 +125,11 @@ def submit_clinvar(variant_id):
 
         # flash errors if there are problems with the submitted data
         if not selected_orpha_code and not selected_orpha_name:
-            flash("All fields are required!", "alert-danger")
+            flash("ERROR: All fields are required!", "alert-danger")
         elif (selected_orpha_name.strip() != '' and str(selected_orpha_code).strip() == ''):
-            flash("The orphanet condition " + selected_orpha_name + " does not exist. Keep in mind to specify the complete condition as shown in the autocomplete suggestions.", 'alert-danger')
+            flash("ERROR: The orphanet condition " + selected_orpha_name + " does not exist. Keep in mind to specify the complete condition as shown in the autocomplete suggestions.", 'alert-danger')
         elif not is_orphanet_valid :
-            flash("The selected orphanet id (" + str(selected_orpha_code) + ") is not valid.", 'alert-danger')
+            flash("ERROR: The selected orphanet id (" + str(selected_orpha_code) + ") is not valid.", 'alert-danger')
         else:
             # submit to clinvar api
             #base_url = 'https://submit.ncbi.nlm.nih.gov/api/v1/submissions/?dry-run=true'
@@ -159,31 +159,29 @@ def submit_clinvar(variant_id):
                     "data": {"content": data}
                 }]
             }
-            #resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
-            ##print(resp.json())
-            #if str(resp.status_code) not in ['200', '201']:
-            #    abort(500, 'Status code of ClinVar submission API endpoint was: ' + str(resp.status_code) + ': ' + str(resp.json()))
-            #
-            #submission_id = resp.json()['id']
-            #clinvar_status = check_clinvar_status(submission_id)
-            ##print("Clinvar status: " + str(clinvar_status))
-#
-            ## insert a new heredivar_clinvar_submission if the variant was not submitted previously or update if it was there previously
-            #conn.insert_update_heredivar_clinvar_submission(variant_id, submission_id, clinvar_status['accession_id'], clinvar_status['status'], clinvar_status['message'], clinvar_status['last_updated'])
-#
-            #
-            ## some user feedback that the submission was successful or not
-            #if resp.status_code == 200 or resp.status_code == 201:
-            #    flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
-            #    current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded variant " + str(variant_id) + " to ClinVar.")
-            #    return redirect(url_for('variant.display', variant_id=variant_id))
-            #flash("There was an error during submission to ClinVar. It ended with status code: " + str(resp.status_code), "alert-danger")
-            #current_app.logger.error(session['user']['preferred_username'] + " tried to upload a consensus classification for variant " + str(variant_id) + " to ClinVar, but it resulted in an error with status code: " + str(resp.status_code))
-    #
+            resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
+            #print(resp.json())
+            if str(resp.status_code) not in ['200', '201']:
+                abort(500, 'Status code of ClinVar submission API endpoint was: ' + str(resp.status_code) + ': ' + str(resp.json()))
+            
+            submission_id = resp.json()['id']
+            clinvar_status = check_clinvar_status(submission_id)
+            #print("Clinvar status: " + str(clinvar_status))
+
+            # insert a new heredivar_clinvar_submission if the variant was not submitted previously or update if it was there previously
+            conn.insert_update_heredivar_clinvar_submission(variant_id, submission_id, clinvar_status['accession_id'], clinvar_status['status'], clinvar_status['message'], clinvar_status['last_updated'])
+            
+            # some user feedback that the submission was successful or not
+            if resp.status_code == 200 or resp.status_code == 201:
+                flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
+                current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded variant " + str(variant_id) + " to ClinVar.")
+                return redirect(url_for('variant.display', variant_id=variant_id))
+            flash("There was an error during submission to ClinVar. It ended with status code: " + str(resp.status_code), "alert-danger")
+            current_app.logger.error(session['user']['preferred_username'] + " tried to upload a consensus classification for variant " + str(variant_id) + " to ClinVar, but it resulted in an error with status code: " + str(resp.status_code))
 
     return render_template('variant_io/submit_clinvar.html', 
                             variant = variant, 
-                                orphanet_codes = {'orphanet_codes': orphanet_codes}, # pack the codes in an object because having the array exposed as the first level renders parsing unsecure
+                            orphanet_codes = {'orphanet_codes': orphanet_codes}, # pack the codes in an object because having the array exposed as the first level renders parsing unsecure
                             genes = genes)
 
 

@@ -23,7 +23,6 @@ def get_all_links(html_data):
     return links
 
 
-
 def test_browse(test_client):
     """
     This tests if the browse variant table works properly
@@ -126,7 +125,6 @@ def test_browse(test_client):
     response = test_client.get(url_for("variant.search", lookup_list_id=10, lookup_list_name="private inaccessible"))
     data = response.data.decode('utf8')
     assert response.status_code == 403
-
 
         
 

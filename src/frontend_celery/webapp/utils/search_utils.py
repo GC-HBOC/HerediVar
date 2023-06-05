@@ -115,6 +115,7 @@ def extract_lookup_list(request_obj, user_id, conn):
                 if list_permissions is not None:
                     if not list_permissions['owner'] and not list_permissions['read']:
                         flash("You are not allowed to access this list", 'alert-danger')
+                        return abort(403)
                     else:
                         variant_ids_oi.extend(conn.get_variant_ids_from_list(list_id))
                 else:

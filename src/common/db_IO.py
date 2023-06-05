@@ -203,19 +203,7 @@ class Connection:
         self.cursor.execute(command, (variant_id, source))
         self.conn.commit()
 
-    def get_gene_id_by_symbol(self, symbol):
-        command = "SELECT id,symbol FROM gene WHERE symbol=%s"
-        self.cursor.execute(command, (symbol, ))
-        res = self.cursor.fetchone()
-        if res is None:
-            command = "SELECT gene_id,alt_symbol FROM gene_alias WHERE alt_symbol=%s"
-            self.cursor.execute(command, (symbol, ))
-            res = self.cursor.fetchone() # ! each symbol is only contained once and all duplicates were removed
-        if res is not None:
-            gene_id = res[0]
-            return gene_id
-        else:
-            return None
+
 
 
     def insert_gene(self, hgnc_id, symbol, name, type, omim_id, orphanet_id):
@@ -485,7 +473,48 @@ class Connection:
         if gene_id is None:
             gene_id = self.get_gene_id_by_hgnc_id(string)
         return gene_id # can return none
+    
+    def get_gene_id_by_symbol(self, symbol):
+        command = "SELECT id,symbol FROM gene WHERE symbol=%s"
+        self.cursor.execute(command, (symbol, ))
+        res = self.cursor.fetchone()
+        if res is None:
+            command = "SELECT gene_id,alt_symbol FROM gene_alias WHERE alt_symbol=%s"
+            self.cursor.execute(command, (symbol, ))
+            res = self.cursor.fetchone() # ! each symbol is only contained once and all duplicates were removed
+        if res is not None:
+            gene_id = res[0]
+            return gene_id
+        else:
+            return None
 
+    def convert_to_hgnc_id(self, string):
+        if self.is_hgnc(string):
+            return string
+        hgnc_id = self.get_hgnc_id_by_gene(string)
+        return hgnc_id
+    
+    def get_hgnc_id_by_gene(self, string):
+        command = "SELECT hgnc_id FROM gene WHERE symbol = %s"
+        self.cursor.execute(command, (string, ))
+        result = self.cursor.fetchone()
+        if result is None: # search for alternative or outdated symbols
+            command = "SELECT (SELECT hgnc_id FROM gene WHERE gene.id = gene_alias.gene_id) hgnc_id FROM gene_alias WHERE alt_symbol = %s"
+            self.cursor.execute(command, (string, ))
+            result = self.cursor.fetchone()
+        if result is not None: # we found one
+            hgnc_id = result[0]
+            return hgnc_id
+        else: # we found nothing
+            return None
+
+    def is_hgnc(self, string):
+        command = "SELECT hgnc_id FROM gene WHERE hgnc_id = %s"
+        self.cursor.execute(command, (string, ))
+        result = self.cursor.fetchone()
+        if result is None:
+            return False
+        return True
 
     def get_variant_more_info(self, variant_id, user_id = None):
         command = "SELECT * FROM variant WHERE id = %s"
@@ -718,8 +747,8 @@ class Connection:
         if page_size != 'unlimited':
             command = command + " ORDER BY chr, pos, ref, alt LIMIT %s, %s"
             actual_information += (offset, page_size)
-        self.cursor.execute(command, actual_information)
         print(command % actual_information)
+        self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 
         # get variant objects
@@ -752,16 +781,17 @@ class Connection:
 
 
     def get_variant_ids_from_gene_and_hgvs(self, gene, hgvs_c, source = 'ensembl'):
-        gene_id = self.convert_to_gene_id(gene)
+        hgnc_id = self.convert_to_hgnc_id(gene)
 
-        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,z.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype,variant_id  FROM transcript RIGHT JOIN ( \
-                        SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,gene_id,exon_nr,intron_nr,source,pfam_accession,pfam_description,variant_id FROM gene RIGHT JOIN ( \
+        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,z.hgnc_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype,variant_id  FROM transcript RIGHT JOIN ( \
+                        SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,y.hgnc_id,exon_nr,intron_nr,source,pfam_accession,pfam_description,variant_id FROM gene RIGHT JOIN ( \
                             SELECT * FROM variant_consequence INNER JOIN ( \
-	                            SELECT DISTINCT variant_id as variant_id_trash FROM variant_consequence WHERE source = %s AND gene_id = %s AND hgvs_c = %s \
+	                            SELECT DISTINCT variant_id as variant_id_trash FROM variant_consequence WHERE source = %s AND hgnc_id = %s AND hgvs_c = %s \
                             ) x ON x.variant_id_trash = variant_consequence.variant_id  \
-                        ) y ON gene.id = y.gene_id \
-                    ) z ON transcript.name = z.transcript_name WHERE z.gene_id=%s ORDER BY variant_id asc"
-        self.cursor.execute(command, (source, gene_id, hgvs_c, gene_id))
+                        ) y ON gene.hgnc_id = y.hgnc_id \
+                    ) z ON transcript.name = z.transcript_name WHERE z.hgnc_id=%s ORDER BY variant_id asc"
+        print(command % (source, hgnc_id, hgvs_c, hgnc_id))
+        self.cursor.execute(command, (source, hgnc_id, hgvs_c, hgnc_id))
         possible_consequences = self.cursor.fetchall()
         
         # extract all matching variant ids

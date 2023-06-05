@@ -35,6 +35,7 @@ def create_app():
 
     env = functions.load_webapp_env()
     object_name = 'config.%sConfig' % env.capitalize()
+    print(object_name)
 
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config.from_object(object_name)

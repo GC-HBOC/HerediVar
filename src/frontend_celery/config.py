@@ -91,11 +91,8 @@ class ProdConfig(Config):
     
 
 class DevConfig(Config):
-    
     DEBUG = True
     TLS = False
-
-    os.environ['NO_PROXY'] = 'SRV018.img.med.uni-tuebingen.de'
 
     #HOST = "SRV018.img.med.uni-tuebingen.de"
     #SECRET_KEY = os.environ.get('FLASK_SECRET_KEY', '736670cb10a600b695a55839ca3a5aa54a7d7356cdef815d2ad6e19a2031182b') # should be at least 32 byte, used for signing the session objects
@@ -115,7 +112,6 @@ class LocaltestConfig(Config):
     TESTING = True
     DEBUG = True
     TLS = False
-    os.environ['NO_PROXY'] = 'localhost'
 
 
 
