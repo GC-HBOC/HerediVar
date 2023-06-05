@@ -156,17 +156,33 @@
             <div>
               <img src="/static/img/documentation/variant_list_01.PNG" alt="missing img"  width="100%">
             </div>
-            Enter a name for the list and select if it is readable / editable by all HerediVar users. If a list is only readable everyone can see the list, but they can not add or remove variants from it.
+            Enter a name for the list and select if it is readable / editable by all HerediVar users. If a list is readable everyone can see the list, but they can not add or remove variants from it.
             This is however possible when the list is also editable. <br>
-            There are two ways to insert variants to the newly created variant list. The first one is to navigate to the <a href="{{url_for('variant.search')}}">browse variants</a> page, 
-            search for variants and click the "Add all to list" button at the bottom left of this page. This will insert all variants satisfying the criteria of the current search. <br>
-            The second possibility to add variants to a list on a one-by-one basis is to navigate to the variant details page, click the gear button and select "Add to list". <br>
-            All variants collected in these ways are displayed when clicked on the name of the variant at the <a href="{{url_for('user.my_lists')}}">user lists page</a>. 
+            There are two ways to insert variants to the newly created variant list. The first one is to add variants to a list on a one-by-one basis is to navigate to the variant details page, 
+            click the gear button and select "Add to list". <br>
+            The second one is to visit the <a href="{{url_for('variant.search')}}">browse variants</a> page. You can simply select the variants that you wish to save to a list and select "Add selected to list".
+            To simplify things one can also choose to select and unselect all variants. Keep in mind that only variants which satisfy the current search parameters are added when select all variants is active.
+            The page also keeps track of selected variants through pages of the variant table. So it is save to first select all variants and then click the "Add selected to list" button once. Keep in mind though
+            that your selection will reset upon querying a new search. <br>
+            <br>
+            All variants collected in these ways are displayed when clicked on the name of the list at the <a href="{{url_for('user.my_lists')}}">user lists page</a>. 
             The table of variants behaves exactly the same as the one shown on the <a href="{{url_for('variant.search')}}">browse variants</a> page. It can be filtered and when a row is clicked
             it takes you to the variant details page.<br>
             It is also possible to export all variants in one of the lists to vcf by clicking the "Export to VCF" button on the bottom of the page. <br>
             If you want to change the properties or delete a list that was created by you. Just click the little pencil button next to the list name. Beware that private lists can not be seen
             by other HerediVar users. <br>
+            <br>
+            To further simplify handling these lists there are four possible actions to manipulate variant lists. First click the list you wish to edit. Then, you can see four icon-buttons on the top
+            which are explained as follows:
+            <ul>
+              <li>{{ macros.draw_duplicate_symbol() }}: duplicate the list</li>
+              <li>{{ macros.draw_intersect_symbol() }}: intersect this list with another list</li>
+              <li>{{ macros.draw_subtract_symbol() }}: subtract another list from this list</li>
+              <li>{{ macros.draw_add_symbol() }}: combine this list with another list</li>
+            </ul>
+            As you can see, these implement simple set operations. The website will ask some more questions about how to do each of the operations. For example, some operations allow you to do it either inplace or or not in place.
+            When you choose inplace it will take the result of the operation and write it to the currently selected list. When this is not selected it will create a new list (asking you to 
+            choose a new name and access rights).
           </p>
         </div>
         

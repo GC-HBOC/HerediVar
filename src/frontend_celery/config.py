@@ -30,7 +30,7 @@ class Config(object):
     SECRET_KEY = os.environ.get('FLASK_SECRET_KEY') # should be at least 32 byte, used for signing the session objects
 
     # keycloak
-    KEYCLOAK_PORT = os.environ.get('KEYCLOAK_PORT', 5050)
+    KEYCLOAK_PORT = os.environ.get('KEYCLOAK_PORT', "5050")
     KEYCLOAK_HOST = os.environ.get('KEYCLOAK_HOST', 'localhost')
     KEYCLOAK_REALM = os.environ.get('KEYCLOAK_REALM', 'HerediVar')
     KEYCLOAK_BASEPATH = "http://"+KEYCLOAK_HOST + ":" + KEYCLOAK_PORT

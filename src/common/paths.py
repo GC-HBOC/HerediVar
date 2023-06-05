@@ -150,7 +150,11 @@ elif webapp_env == 'githubtest':
     """ configuration for the testing environment on github actions """
 
     workdir = "/home/runner/work/HerediVar/HerediVar/"
-    datadir = workdir + "src/annotation_service/tests/data/testdbs/"
+    datadir =  joinpaths(workdir, "src/annotation_service/tests/data/testdbs/")
+    toolsdir = joinpaths(workdir, "src/tools")
+    resources_dir = joinpaths(workdir, 'resources')
+    logs_dir = joinpaths(workdir, 'logs')
+    classified_variants_dir = joinpaths(workdir, 'classified_variants')
     #datadir = "/data/"
 
     # tools
@@ -183,6 +187,12 @@ elif webapp_env == 'githubtest':
     arup_brca_path = datadir + "ARUP_BRCA.vcf.gz"
     tp53_db = datadir + "TP53_database.vcf.gz"
     hci_priors = datadir + "HCI_priors.vcf.gz"
+
+    # IGV data
+    igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
+
+    # clinvar submission
+    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_02_06_23.json")
 
 
 
