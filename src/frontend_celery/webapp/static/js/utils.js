@@ -436,7 +436,7 @@ function get_amino_acids(three_to_one = true){
 }
 
 
-/*
+
 function get_consensus_classification_color(classification) {
     switch (classification) {
         case '5':
@@ -459,7 +459,7 @@ function get_consensus_classification_color(classification) {
     }
     return base_color
 }
-*/
+
 
 ///////////////////////////////////////////////////////////////
 //////////////////////// create stuff /////////////////////////

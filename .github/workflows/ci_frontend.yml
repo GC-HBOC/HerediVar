@@ -90,7 +90,7 @@ jobs:
         env:
           cache-name: cache-ngs-bits
         with:
-          path: ${{ env.toolspath }}/ngs-bits-${{ env.ngs-bits-version }}
+          path: ${{ env.toolspath }}/ngs-bits
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.ngs-bits-version }}
       - if: ${{ steps.cache-ngs-bits.outputs.cache-hit != 'true' }}
         name: install ngs-bits local
@@ -118,7 +118,7 @@ jobs:
         env:
           cache-name: cache-samtools
         with:
-          path: ${{ env.toolspath }}/samtools-${{ env.samtools-version }}
+          path: ${{ env.toolspath }}/samtools
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.samtools-version }}
       - if: ${{ steps.cache-samtools.outputs.cache-hit != 'true' }}
         name: install samtools
@@ -132,7 +132,7 @@ jobs:
         env:
           cache-name: cache-htslib
         with:
-          path: ${{ env.toolspath }}/htslib-${{ env.htslib-version }}
+          path: ${{ env.toolspath }}/htslib
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.htslib-version }}
       - if: ${{ steps.cache-htslib.outputs.cache-hit != 'true' }}
         name: install htslib
@@ -142,9 +142,9 @@ jobs:
 
       - name: update environment variables
         run: |
-          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/samtools-${{ env.samtools-version }}" >> $GITHUB_PATH
-          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/htslib-${{ env.htslib-version }}" >> $GITHUB_PATH
-          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/ngs-bits-${{ env.ngs-bits-version }}/bin" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/samtools" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/htslib" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/ngs-bits/bin" >> $GITHUB_PATH
 
 
       # build python
@@ -224,25 +224,25 @@ jobs:
           echo "ENTREZ_MAIL=${{ secrets.ENTREZ_MAIL }}" >> .env
 
 
-      ## run tests
-      #- name: test frontend
-      #  run: |
-      #    chmod 755 src/frontend_celery/tests/script/run_tests.sh
-      #    src/frontend_celery/tests/script/run_tests.sh
-      #  ##### !secrets are loaded from github: https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md
-      #  env:
-      #    WEBAPP_ENV: githubtest
-      #  shell: bash
-#
-      ## run tests
-      #- name: test annotation service
-      #  run: |
-      #    echo $PATH
-      #    chmod 755 src/annotation_service/tests/run_tests.sh
-      #    src/annotation_service/tests/run_tests.sh
-      #  env:
-      #    WEBAPP_ENV: githubtest
-      #  shell: bash
+      # run tests
+      - name: test frontend
+        run: |
+          chmod 755 src/frontend_celery/tests/script/run_tests.sh
+          src/frontend_celery/tests/script/run_tests.sh
+        ##### !secrets are loaded from github: https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md
+        env:
+          WEBAPP_ENV: githubtest
+        shell: bash
+
+      # run tests
+      - name: test annotation service
+        run: |
+          echo $PATH
+          chmod 755 src/annotation_service/tests/run_tests.sh
+          src/annotation_service/tests/run_tests.sh
+        env:
+          WEBAPP_ENV: githubtest
+        shell: bash
       
 
       #- name: Lint with flake8

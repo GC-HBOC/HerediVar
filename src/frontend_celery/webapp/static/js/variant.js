@@ -242,15 +242,15 @@ function setup_igv(chrom, start, end, variant_id) {
             "indexURL": "/download/hg38.fa.fai",
             "tracks": [
                 {
-                    name: "Ensembl genes",
-                    type: "annotation",
-                    format: "gff3",
-                    displayMode: "expanded",
-                    order: 100,
-                    indexed: false,
-                    autoHeight: true,
-                    url: "/download/refgene_ngsd.gff3",
-                    color: (feature) => {
+                    "name": "Ensembl genes",
+                    "type": "annotation",
+                    "format": "gff3",
+                    "displayMode": "expanded",
+                    "order": 100,
+                    "indexed": false,
+                    "autoHeight": true,
+                    "url": "/download/refgene_ngsd.gff3",
+                    "color": (feature) => {
                         if (feature.getAttributeValue("Is_mane_plus_clinical") == 1) {
                             return "red"
                         }
@@ -283,12 +283,12 @@ function setup_igv(chrom, start, end, variant_id) {
                     "url": "/download/vcf/classified",
                     "indexed": false,
                     "autoHeight": true,
-                    "color": function(variant) {
+                    "color": (variant) => {
                         if ('classification' in variant.info) {
                             const classification = variant.info['classification']
-                            return "red" //get_consensus_classification_color(classification)
+                            return get_consensus_classification_color(classification)
                         } else {
-                            return "grey";//get_consensus_classification_color('-')
+                            return get_consensus_classification_color('-')
                         }
                     }
                 }
