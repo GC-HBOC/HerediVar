@@ -100,7 +100,8 @@ jobs:
 
       - name: Connect ngs-bits with ngsd
         run: |
-          settingsfile=${{ env.toolspath }}/ngs-bits-${{ env.ngs-bits-version }}/bin/settings.ini
+          echo $(pwd)
+          settingsfile=${{ env.toolspath }}/ngs-bits/bin/settings.ini
           echo $settingsfile
           echo "ngsd_host = \"0.0.0.0\"" > $settingsfile
           echo "ngsd_port = 3306" >> $settingsfile
