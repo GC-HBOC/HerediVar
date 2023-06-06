@@ -38,5 +38,15 @@ mkdir -p $path/igv
 
 cd $path/igv
 
-wget -q https://cdn.jsdelivr.net/npm/igv@$version/dist/igv.min.js
+# official release
+#wget -q https://cdn.jsdelivr.net/npm/igv@$version/dist/igv.min.js
 
+# CSP conform version
+wget -q https://download.imgag.de/ahdoebm1/igv/igv.css
+wget -q https://download.imgag.de/ahdoebm1/igv/igv.esm.js
+mkdir data
+cd data
+wget -q https://download.imgag.de/ahdoebm1/igv/data/cytoBandIdeo.txt
+wget -q https://download.imgag.de/ahdoebm1/igv/data/hg38_alias.tab
+wget -q https://download.imgag.de/ahdoebm1/igv/data/refgene.txt
+wget -q https://download.imgag.de/ahdoebm1/igv/data/refgene_ngsd.gff3

@@ -17,12 +17,12 @@ js_packages=$root/src/frontend_celery/webapp/static/packages
 
 
 # install system requirements
-#sudo apt-get update
-#sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev libncursesw5-dev
-#sudo apt-get install g++ libqt5xmlpatterns5-dev libqt5sql5-mysql libcurl4 libcurl4-openssl-dev
-#sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
-#sudo apt-get install -y mariadb-server
-#sudo apt-get install default-jdk -y
+sudo apt-get update
+sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev libncursesw5-dev
+sudo apt-get install g++ libqt5xmlpatterns5-dev libqt5sql5-mysql libcurl4 libcurl4-openssl-dev
+sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
+sudo apt-get install -y mariadb-server
+sudo apt-get install default-jdk -y
 
 
 # prepare python venv & install packages
@@ -57,7 +57,7 @@ $tools/script/install_ngs_bits.sh -p $tools/ -v 2022_10
 $tools/script/install_bootstrap.sh -p $js_packages -v 5.2.3
 
 # install igv
-#$tools/script/install_igv_js.sh -p $js_packages -v 2.13.9
+$tools/script/install_igv_js.sh -p $js_packages -v 2.13.9
 # download csp conform version from: https://download.imgag.de/ahdoebm1/igv/
 
 # install jquery
