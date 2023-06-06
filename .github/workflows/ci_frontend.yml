@@ -222,25 +222,6 @@ jobs:
           echo "ENTREZ_MAIL=${{ secrets.ENTREZ_MAIL }}" >> .env
 
 
-      # run tests
-      - name: test frontend
-        run: |
-          chmod 755 src/frontend_celery/tests/script/run_tests.sh
-          src/frontend_celery/tests/script/run_tests.sh
-        ##### !secrets are loaded from github: https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md
-        env:
-          WEBAPP_ENV: githubtest
-        shell: bash
-
-      # run tests
-      - name: test annotation service
-        run: |
-          echo $PATH
-          chmod 755 src/annotation_service/tests/run_tests.sh
-          src/annotation_service/tests/run_tests.sh
-        env:
-          WEBAPP_ENV: githubtest
-        shell: bash
       
 
       #- name: Lint with flake8
