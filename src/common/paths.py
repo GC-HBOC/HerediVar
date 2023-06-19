@@ -198,11 +198,23 @@ elif webapp_env == 'githubtest':
 
 elif webapp_env == 'prod':
     """ configuration for the production environment """
+
+
+    # general paths
     workdir = "/mnt/storage1/HerediVar"
     datadir = joinpaths(workdir, "data/dbs")
     toolsdir = joinpaths(workdir, "src/tools")
+    resources_dir = joinpaths(workdir, 'resources')
+    logs_dir = joinpaths(workdir, 'logs')
+    classified_variants_dir = joinpaths(workdir, 'classified_variants')
+    #report_dir = joinpaths(workdir, "") #'downloads/consensus_classification_reports/'
 
-    
+    # webapp logs path
+    webapp_log_dir = joinpaths(logs_dir, "webapp")
+    webapp_log = joinpaths(webapp_log_dir, "webapp.log")
+
+
+
     #tools
     vep_path = joinpaths(toolsdir, "ensembl-vep-release-107.0")
     vep_cache_dir = joinpaths(vep_path, "data/cache")
@@ -210,6 +222,8 @@ elif webapp_env == 'prod':
     #ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-70-g53bce65c/"
     ngs_bits_path = joinpaths(toolsdir, "ngs-bits/bin")
     htslib_path = joinpaths(toolsdir, "htslib-1.16")
+
+
 
     # data
     ref_genome_dir = joinpaths(workdir, "data/genomes")
@@ -239,3 +253,5 @@ elif webapp_env == 'prod':
     # IGV data
     igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
 
+    # clinvar submission
+    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_02_06_23.json")

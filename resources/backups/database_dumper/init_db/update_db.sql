@@ -208,6 +208,6 @@ INSERT INTO `classification_criterium_strength` (`classification_criterium_id`,`
 --
 
 
-ALTER TABLE `HerediVar_ahdoebm1_test`.`classification_criterium` 
+ALTER TABLE `classification_criterium` 
 ADD COLUMN `relevant_info` TEXT NOT NULL AFTER `is_selectable`;
 
