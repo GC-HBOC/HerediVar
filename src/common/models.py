@@ -304,7 +304,7 @@ class SelectedLiterature:
 class Classification:
     id: int
     type: str
-    selected_class: int
+    selected_class: str
     comment: str
     date: str
     submitter: User
@@ -536,6 +536,16 @@ class Variant:
     literature: Any = None # list of papers
 
     annotations: AllAnnotations = AllAnnotations()
+
+    def get_unique_genes(self):
+        result = []
+        gene_ids = []
+        if self.consequences is not None:
+            for consequence in self.consequences:
+                if consequence.gene.id not in gene_ids and consequence.gene.id is not None:
+                    result.append(consequence.gene)
+                    gene_ids.append(consequence.gene.id)
+        return result
 
     def to_vcf(self, simple = False):
         headers = {} # collects all headers 

@@ -170,7 +170,8 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             clinvar_submission = clinvar_submission,
                             has_multiple_vids=has_multiple_vids,
                             lists = lists,
-                            variant = variant
+                            variant = variant,
+                            is_classification_report = False
                         )
 
 
@@ -180,7 +181,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 def classify(variant_id):
     conn = get_connection()
 
-    variant = conn.get_variant(variant_id, include_annotations=False, include_heredicare_classifications=False, include_clinvar=False, include_assays=False)
+    variant = conn.get_variant(variant_id, include_annotations=True, include_heredicare_classifications=True, include_clinvar=True, include_assays=True)
     if variant is None:
         return abort(404)
 
@@ -200,7 +201,7 @@ def classify(variant_id):
         comment = request.form['comment'].strip()
         pmids = request.form.getlist('pmid')
         text_passages = request.form.getlist('text_passage')
-        possible_classifications = ["1","2","3","4","5"]
+        possible_classifications = ["1","2","3-","3","3+","4","5"]
 
         # test if the input is valid
         criteria = extract_criteria_from_request(request.form, scheme_id, conn)
@@ -294,7 +295,7 @@ def consensus_classify(variant_id):
             comment = request.form['comment'].strip()
             pmids = request.form.getlist('pmid')
             text_passages = request.form.getlist('text_passage')
-            possible_classifications = ["1","2","3","4","5"]
+            possible_classifications = ["1","2","3-","3","3+","4","5"]
 
             # test if the input is valid
             criteria = extract_criteria_from_request(request.form, scheme_id, conn)
@@ -325,6 +326,8 @@ def consensus_classify(variant_id):
 
                 # insert scheme criteria
                 handle_scheme_classification(classification_id, criteria, conn, where = "consensus") # always do that because no scheme is not allowed
+                add_classification_report(variant.id, conn)
+                flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant.id) + " class='alert-link'>here</a> to view it!"), "alert-success")
                 do_redirect = True
 
     if do_redirect: # do redirect if the submission was successful

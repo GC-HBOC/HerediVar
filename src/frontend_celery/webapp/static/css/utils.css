@@ -106,6 +106,10 @@
     transform:scale(1.5)
 }
 
+.w-90 {
+    width:90%
+}
+
 
 /************** alignment **************/
 .float_right {

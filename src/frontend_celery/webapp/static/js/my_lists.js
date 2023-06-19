@@ -1,6 +1,13 @@
 
 $(document).ready(function()
 {
+    // parse flask data
+    const flask_data = document.getElementById("special_flask_data")
+    var user_lists = JSON.parse(flask_data.dataset.lists)
+    var variant_base_url = flask_data.dataset.variantBaseUrl
+    const page = flask_data.dataset.page
+    const page_size = flask_data.dataset.pageSize 
+
     // edit / create button functionality
     $('#list-modal-submit').click(function(){
         $('#create-list-button').attr('disabled', true);
@@ -17,22 +24,26 @@ $(document).ready(function()
         form_to_submit.submit();
     });
 
-    // add delete column to list variant view
+    // add delete and numbering column to list variant view
     var variant_table = $('#variantTable')
     variant_table.find('thead').find('tr').append('<th class="text_align_center bold width_minimal">Del</th>')
+    variant_table.find('thead').find('tr').prepend('<th class="text_align_center bold width_minimal">#</th>')
     const list_permissions = $('#list-permissions')
-    console.log(list_permissions)
     const can_edit = list_permissions.attr('data-owner') == 1 || list_permissions.attr('data-editable') == 1 
+    var number = 1 + ((page-1) * page_size)
     variant_table.find('tbody').find('tr').each(function(){
         var trow = $(this)
         var variant_id = trow[0].getAttribute("variant_id")
+        var variant_url = variant_base_url.replace('0', variant_id)
+        prepend_number_td(trow, variant_url, number)
         if (can_edit) {
             create_delete_button(trow, list_id, variant_id)
         } else {
             create_xlg(trow)
         }
-        
+        number = number + 1
     });
+    activate_data_href_links()
 
     // add event listeners
     $('#public_read').change(function() {
@@ -40,8 +51,7 @@ $(document).ready(function()
     })
 
     
-    const flask_data = document.getElementById("list_flask_data")
-    var user_lists = JSON.parse(flask_data.dataset.lists);
+    // parse lists
     for (var i = 0; i < user_lists.length; i++) {
         current_list = user_lists[i]
         if (current_list[3] == 1 || current_list[5] == 1) {
@@ -106,6 +116,14 @@ function create_delete_button(parent, list_id, variant_id) {
 }
 
 
+function prepend_number_td(trow, url, number) {
+    var td = document.createElement("td")
+    td.classList.add('text_align_center')
+    td.classList.add('clickable')
+    td.setAttribute('data-href', url)
+    td.innerText = number
+    trow[0].prepend(td)
+}
 
 
 function public_read_toggle_action() {

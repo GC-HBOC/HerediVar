@@ -80,7 +80,18 @@ function update_info_panel(criterium_id, previous_evidence) {
         add_strength_selection(criterium_id, current_criteria[criterium_id]['possible_strengths'])
     }
 
+    show_relevant_information(criterium_id)
 
+}
+
+function show_relevant_information(criterium_id) {
+    var relevant_information = classification_schemas[scheme]['criteria'][criterium_id]['relevant_information']
+    if (relevant_information != '') {
+        relevant_information = relevant_information.split(';')
+        for (var i = 0; i < relevant_information.length; i++) {
+            document.getElementById(relevant_information[i] + '_info').classList.remove('visually-hidden')
+        }
+    }
 }
 
 function update_criteria_description(div, criterium_id) {
@@ -273,8 +284,23 @@ $(document).ready(function() {
     $('#add_selected_literature_button_user').click(function() {
         add_all_to_selected_literature('userSelectedLiterature', add_from_user_selected);
     });
+
+    add_default_for_important_information()
 });
 
+
+// this function adds a div such that missing or empty data fields
+// dont just show the caption...
+function add_default_for_important_information() {
+    $('.important_information').each(function() {
+        const actual_information_doms =$(this).find(":not(h5)")
+        if (actual_information_doms.length == 0) {
+            const default_empty = document.createElement('div')
+            default_empty.innerText = "No information available"
+            $(this).append(default_empty)
+        }
+    })
+}
 
 // update global scheme field variable
 function update_scheme_field_variable() {
@@ -416,6 +442,13 @@ function revert_criteria_container() {
     document.getElementById('criteria_description').textContent = "";
     document.getElementById('criteria_evidence').value = "";
     document.getElementById('additional_content').innerHTML = "";
+    hide_all_information()
+}
+
+function hide_all_information() {
+    $('.important_information').each(function() {
+        this.classList.add('visually-hidden')
+    })
 }
 
 function revert_strength_selects() {
@@ -799,7 +832,7 @@ function create_criterium_button(criterium_id, strength) {
     var label = document.createElement('label')
     label.setAttribute('for', criterium_id)
     label.id = criterium_id + '_label'
-    label.classList.add('btn')
+    //label.classList.add('btn')
     label.classList.add('btn-'+strength)
     label.classList.add('light-hover')
     label.classList.add('acmg-button')

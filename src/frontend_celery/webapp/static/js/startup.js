@@ -52,6 +52,80 @@ $(document).ready(function()
         filterTable_multiple_columns($(this).val(), table, true)
     });
 
+    // make ALL elements with data-href clickable to open that link
+    activate_data_href_links()
+
+    $('.external_link').click(function() {
+        window.open($(this).attr("uri"));
+    }); 
+
+
+
+
+    // coloring of consensus classification
+    const possible_classes = ["1", "2", "3-", "3", "3+", "4", "5"]
+    document.getElementsByName('class-label').forEach(function(obj) {
+        var consensus_classification = obj.getAttribute('classification').trim();
+        if (!possible_classes.includes(consensus_classification)) {
+            consensus_classification = "none"
+            tooltip_text = "This variant has not been classified by the VUS task-force yet."
+        } else {
+            tooltip_text = "This variant has been classified by the VUS task-force with the class " + consensus_classification
+        }
+
+        $(obj).addClass(get_consensus_classification_css(consensus_classification))
+
+        obj.querySelector("#theC").setAttribute('title', tooltip_text);
+    });
+
+    document.getElementsByName('consensus_class_display').forEach(function(obj) {
+        var consensus_classification = obj.getAttribute('classification').trim()
+        if (!possible_classes.includes(consensus_classification)) {
+            consensus_classification = "none"
+            tooltip_text = "This variant has not been classified by the VUS task-force yet."
+        } else {
+            tooltip_text = "This variant has been classified by the VUS task-force with the class " + consensus_classification
+        }
+
+        $(obj).addClass(get_consensus_classification_css(consensus_classification))
+    });
+
+
+    // presort the tables on page load
+    var variant_consequence_table_default_sorting_columns = ['#variant_consequence_numflags_col', '#variant_consequence_length_col', '#variant_consequence_gene_symbol_col']
+    var table = document.getElementById("variantConsequenceTable");
+    if (table != null) {
+        filterTable_one_column("ensembl", 10, table);
+        table_sorter(variant_consequence_table_default_sorting_columns, '#variantConsequenceTable') // sort first by num of flags, at tie by length and at tie by gene symbol
+    }
+    $('#consequence_ensembl_tab').click(function() {
+        filter_consequence_table('ensembl', variant_consequence_table_default_sorting_columns)
+    });
+
+    $('#consequence_refseq_tab').click(function() {
+        filter_consequence_table('refseq', variant_consequence_table_default_sorting_columns)
+    })
+});
+
+
+// functionality for the consequence table switch between ensembl & refseq
+function filter_consequence_table(source, variant_consequence_table_default_sorting_columns) {
+    const table = document.getElementById('variantConsequenceTable')
+    const variant_consequence_table_ascending = ['true', 'true', "false"]
+    filterTable_one_column(source, 10, table)
+    const sort_columns = variant_consequence_table_default_sorting_columns
+    for (var i = 0; i < sort_columns.length; i++) {
+        $(sort_columns[i]).attr('asc', variant_consequence_table_ascending[i])
+    }
+    table_sorter(sort_columns, '#' + table.id)
+}
+
+
+
+
+
+
+function activate_data_href_links() {
     // activate links on EVERY object
     $("*[data-href]").click(function(event) {
         switch (event.which) {
@@ -74,39 +148,6 @@ $(document).ready(function()
                 break;
         }
     });
-
-    $('.external_link').click(function() {
-        window.open($(this).attr("uri"));
-    }); 
+}
 
 
-    // coloring of consensus classification
-    document.getElementsByName('class-label').forEach(function(obj) {
-        const possible_classes = ["1", "2", "3", "4", "5"]
-        var consensus_classification = obj.getAttribute('classification').trim();
-        if (!possible_classes.includes(consensus_classification)) {
-            consensus_classification = "none"
-            tooltip_text = "This variant has not been classified by the VUS task-force yet."
-        } else {
-            tooltip_text = "This variant has been classified by the VUS task-force with the class " + consensus_classification
-        }
-
-        $(obj).addClass("classification_" + consensus_classification + "_col")
-
-    
-        obj.querySelector("#theC").setAttribute('title', tooltip_text);
-    });
-
-    document.getElementsByName('consensus_class_display').forEach(function(obj) {
-        const possible_classes = ["1", "2", "3", "4", "5"]
-        var consensus_classification = obj.getAttribute('classification').trim()
-        if (!possible_classes.includes(consensus_classification)) {
-            consensus_classification = "none"
-            tooltip_text = "This variant has not been classified by the VUS task-force yet."
-        } else {
-            tooltip_text = "This variant has been classified by the VUS task-force with the class " + consensus_classification
-        }
-
-        $(obj).addClass("classification_" + consensus_classification + "_col")
-    });
-});

@@ -1,0 +1,428 @@
+
+
+{% if is_classification_report %}
+    {% extends 'rig.html' %}
+{% else %}
+    {% extends 'base.html' %}
+{% endif %}
+
+
+{% block content %}
+
+<div class="sst ssb">
+    
+    <div class="d-flex align-items-center">
+        <div class="flex-grow-1">
+
+            {% set best_consequences = variant.get_preferred_transcripts() %}
+
+            {% if best_consequences is not none %}
+                {% set consequence = best_consequences[0].consequence + ': ' %}
+            {% endif %}
+            <!-- title -->
+            <h1>
+                {% block title_ext %} {% endblock %}
+                <div id="variant_page_title" class="break_text_all w-90" chrom="{{ variant.chrom }}" pos="{{ variant.pos }}" ref="{{ variant.ref }}" alt="{{ variant.alt }}">
+                    {{consequence}} {% block title %} {{ variant.chrom }}-{{ variant.pos }}-{{ variant.ref }}-{{ variant.alt }} {% endblock %}(GRCh38)
+                </div>
+            </h1>
+
+            <!-- save some data for js -->
+            <meta id="variant_id_container" data-variant-id="{{ variant.id }}">
+
+            {% block status_bar %} {% endblock %}
+
+        </div>
+
+        <!-- consensus classification label  at the top right -->
+        {% set most_recent_consensus_classification = variant.get_recent_consensus_classification() %}
+        {% if most_recent_consensus_classification is not none %}
+            {% set _consensus_class = most_recent_consensus_classification.selected_class %}
+        {% else %}
+            {% set _consensus_class = '-' %}
+        {% endif %}
+        <div class="ms-auto bsr">
+            {{ macros.render_consensus_classification_label(_consensus_class) }}
+        </div>
+        
+
+
+    </div>
+</div>
+
+
+
+{% block modals %} {% endblock %}
+
+
+<!--data-masonry='{"percentPosition": true }'-->
+<!-- Variant identification -->
+{{ macros.add_variant_banner(variant) }}
+
+
+
+<!-- navigator tabs -->
+<ul class="nav nav-tabs" id="tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="classification-tab" data-bs-toggle="tab" data-bs-target="#classification" type="button" role="tab" aria-controls="classification" aria-selected="true">Classification</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pop_score-tab" data-bs-toggle="tab" data-bs-target="#pop_score" type="button" role="tab" aria-controls="pop_score" aria-selected="false">Population & in-silico annotations</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="consequence-tab" data-bs-toggle="tab" data-bs-target="#consequence" type="button" role="tab" aria-controls="consequence" aria-selected="false">Consequence</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="assay-tab" data-bs-toggle="tab" data-bs-target="#assay" type="button" role="tab" aria-controls="assay" aria-selected="false">Assays</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="literature-tab" data-bs-toggle="tab" data-bs-target="#literature" type="button" role="tab" aria-controls="literature" aria-selected="false">Literature</button>
+    </li>
+    {% block additional_tab_heads %} {% endblock %}
+</ul>
+
+
+<!-- tab content -->
+<div class="tab-content" id="TabContent">
+    <div class="tab-pane fade show active" id="classification" role="tabpanel" aria-labelledby="classification-tab">
+
+    <!--available classifications-->
+    <div class="w-100 ssb">
+        <div class="card noboarder_top">
+            <div class="card-body">
+                    <!-- HEREDIVAR -->
+                    <div>
+                        <div class="d-flex align-items-center">
+                            <h4 class="card-subcaption flex-grow-1">Consensus classification</h4>
+                            <a class="btn btn-outline-primary remove_link" href="{{ url_for('variant.classification_history', variant_id=variant.id) }}">view history</a>
+                        </div>
+                        <!-- most recent consensus classification -->
+                        <div class="ssl ssb">
+                            {{ macros.draw_most_recent_consensus_classification(variant.get_recent_consensus_classification()) }}
+                        </div>
+                    </div>
+
+                    <!-- user classification table -->
+                    {% if variant.user_classifications is not none %}
+                    <div>
+                        <h4 class="card-subcaption">HerediVar user classifications</h4>
+                        <div class="ssl ssb">
+                            <div class="table-responsive tableFixHead">
+                                <table class="table table-hover" id="userClassificationsTable">
+                                    <thead>
+                                        <tr>
+                                            <th class="width_minimal"><div class="sortable">Final class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_medium"><div class="sortable">Selected criteria</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_medium"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_very_small"><div class="sortable">Class by scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Literature</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Affiliation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small" id="userClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for classification in variant.user_classifications %}
+                                        <tr user_classification_id="{{ classification.id }}">
+                                            <td class="text_align_center">{{ classification.selected_class }}</td>
+                                            <td>{{ classification.scheme.display_name }}</td>
+                                            <td>{{ macros.draw_criteria_display(classification.scheme.criteria) }}</td>
+                                            <td><abbr title="{{ classification.comment }}"><div class="Nellipsis">{{ classification.comment }}</div> </abbr></td>
+                                            <td>{{ classification.scheme.selected_class }}</td>
+                                            <td>{{ macros.selected_literature_display(classification.literature) }}</td>
+                                            <td>{{ classification.submitter.full_name }}</td>
+                                            <td>{{ classification.submitter.affiliation }}</td>
+                                            <td>{{ classification.date }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- heredicare center classifications -->
+                    {% if variant.heredicare_classifications is not none %}
+                    <div>
+                        <h4 class="card-subcaption">HerediCare center classifications</h4>
+                        <div class="ssl sst ssb">
+                            <div class="table-responsive tableFixHead">
+                                <table class="table table-hover" id="heredicareCenterClassificationsTable">
+                                    <thead>
+                                        <tr>
+                                            <th class="width_minimal"><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Center</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small" id="heredicareCenterClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_very_large"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for classification in variant.heredicare_classifications %}
+                                        <tr heredicare_center_classification_id="{{ classification.id }}">
+                                            <td class="text_align_center">{{ classification.selected_class }}</td>
+                                            <td>{{ classification.center }}</td>
+                                            <td class="nowrap">{{ classification.date }}</td>
+                                            <td>{{ classification.comment }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- CLINVAR -->
+                    {% if variant.clinvar is not none %}
+                    {% set clinvar = variant.clinvar %}
+                    <div>
+                        <h4 class="card-subcaption">ClinVar classifications</h4>
+
+                        <div class="ssl sst ssb">
+                            <div>
+                                <abbr title="The review status from ClinVar"><a class="dashed_underline">review status:</a></abbr>&nbsp;{{ clinvar.review_status }}
+                            </div>
+    
+                            <div>
+                                <abbr title="A summary of the ClinVar interpretations. The numbers in brackets display the number of ClinVar submissions reporting the specific type of interpretation."><a class="dashed_underline">interpretation summary:</a></abbr>&nbsp;{{ clinvar.interpretation_summary }}
+                            </div>
+                        </div>
+                        <!-- clinvar submission table -->
+                        {% if clinvar.submissions is not none %}
+                        <div class="ssl ssb">
+                            <div class="table-responsive tableFixHead">
+                                <table class="table table-hover" id="clinvarSubmissionsTable">
+                                    <thead>
+                                        <tr>
+                                            <th class="width_small"><div class="sortable">Interpretation</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small" id="clinvarSubmissionsTableLastEvaluatedCol"><div class="sortable">Last evaluated</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Review status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Submission condition</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_medium"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_large">Comment<input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for submission in clinvar.submissions %}
+                                        <tr clinvar_id="{{submission.id}}">
+                                            <td>{{ submission.interpretation }}</td>
+                                            <td class="nowrap">{{ submission.last_evaluated }}</td>
+                                            <td>{{ submission.review_status }}</td>
+                                            <td>
+                                                {% for clinvar_submission_condition in submission.conditions %}
+                                                    <div>
+                                                        {{ macros.external_link(clinvar_submission_condition.title, "https://www.ncbi.nlm.nih.gov/medgen/" + clinvar_submission_condition.condition_id) }}
+                                                    </div>
+                                                {% endfor %}
+                                            </td>
+                                            <td>{{ submission.submitter }}</td>
+                                            <td ><abbr title="{{ submission.comment }}"><div class="Nellipsis" >{{ submission.comment }}</div> </abbr></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- BRCA-EXCHANGE -->
+                    {% if variant.annotations.brca_exchange_clinical_significance is not none %}
+                    <div>
+                        <h4 class="card-subcaption">BRCA exchange classification</h4>
+                        <div class="ssl">
+                            {{variant.annotations.brca_exchange_clinical_significance.value}}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- ARUP -->
+                    {% if variant.annotations.arup_classification is not none %}
+                    <div>
+                        <h4 class="card-subcaption">ARUP BRCA classification</h4>
+                        <div class="ssl">
+                            {{variant.annotations.arup_classification.value}}
+                        </div>
+                    </div>
+                    {% endif %}
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+
+    <div class="tab-pane fade" id="pop_score" role="tabpanel" aria-labelledby="pop_score-tab">
+
+    <!--variant information-->
+    <div class="w-100 ssb">
+        <div class="card noboarder_top">
+            <div class="card-body">
+                <h4 class="card-subcaption">Variant information</h4>
+
+                <div class="table-responsive">
+                    <table class="table table-borderless table-border-between"> <!--style="display: inline-block; overflow-x:auto;"-->
+                        <thead>
+                            <tr>
+                                <th class="width_small"></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set annotations = variant.annotations %}
+                            {% set group_identifiers = annotations.get_group_identifiers() %}
+                            {% for group_identifier in group_identifiers %}
+                                {% set current_annotations = annotations.get_group(group_identifier) %}
+                                {{ macros.draw_annotation_group(annotations, current_annotations, group_identifier) }}
+                            {% endfor %}
+                            
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    </div>
+
+    <div class="tab-pane fade" id="consequence" role="tabpanel" aria-labelledby="consequence-tab">
+            
+            
+   
+    <!-- variant consequence table -->
+    <!-- 0transcript_name,1hgvs_c,2hgvs_p,3consequence,4impact,5exon_nr,6intron_nr,7symbol,8transcript.gene_id,9source,10pfam_accession,11pfam_description,12length,13is_gencode_basic,14is_mane_select,15is_mane_plus_clinical,16is_ensembl_canonical,17total_flag -->
+
+    <div class="w-100 ssb">
+        <div class="card noboarder_top">
+            <div class="card-body">
+                <h4 class="card-subcaption">Variant consequences</h4>
+
+                <p class="card-text">
+                    Preferred transcripts are shown first (longer and more flags) <br>
+                    COSMIC links might be broken, as you can not search for them, so there might be wrong results...
+
+                    {{ macros.draw_consequence_table(variant) }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+
+
+
+        </div>
+        <div class="tab-pane fade" id="assay" role="tabpanel" aria-labelledby="assay-tab">
+
+    <div class="w-100 ssb">
+        <div class="card noboarder_top">
+            <div class="card-body">
+                <h4 class="card-subcaption">Assays</h4>
+                
+                <p class="card-text">
+                    <div class="table-responsive tableFixHead table-lg">
+                        <table class="table table-hover" id="assayTable">
+                            <thead>
+                                <tr>
+                                    <th class="width_small" id="assayTableAssayTypeCol" asc="false"><div class="sortable">Assay type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small"><div class="sortable">Score</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_medium" id="assayTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small"><div class="sortable">Report</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if variant.assays is not none %}
+                                    {% for assay in variant.assays %}
+                                    <tr assay_id="assay.id">
+                                        <td>{{ assay.type }}</td>
+                                        <td>{{ assay.score }}</td>
+                                        <td class="nobreak">{{ assay.date }}</td>
+                                        <td><a href="{{ url_for('download.assay_report', assay_id=assay.id) }}">Download report</a></td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+        </div>
+        <div class="tab-pane fade" id="literature" role="tabpanel" aria-labelledby="literature-tab">
+            
+            
+
+    <!-- literature table -->
+
+    <div class="w-100 ssb">
+        <div class="card noboarder_top">
+            <div class="card-body">
+                <h4 class="card-subcaption">Literature</h4>
+
+                <p class="card-text">
+                    <div class="table-responsive table-lg">
+                        <table class="table table-hover" id="literatureTable">
+                            <thead>
+                                <tr>
+                                    <th class="width_very_small" id="literatureTableYearCol"><div>Year</div></th>
+                                    <th class="width_large"><div>Authors</div></th>
+                                    <th class="width_very_large"><div>Title</div></th>
+                                    <th class="width_medium"><div>Journal / Publisher</div></th>
+                                    <th class="width_small"><div>Link</div></th>
+                                    <th class="width_very_small"><div>Source</div></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if variant.literature is not none %}
+                                    {% for paper in variant.literature %}
+                                    <tr>
+                                        <td>{{ paper.year }}</td>
+                                        <td><div class="Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ paper.authors }}">{{ paper.authors }}</div></td>
+                                        <td>{{ paper.title }}</td>
+                                        <td>{{ paper.journal }}</td>
+                                        <td>{{ macros.external_link("PMID:" + paper.pmid|string, "https://pubmed.ncbi.nlm.nih.gov/" + paper.pmid|string) }}</td>
+                                        <td>{{ paper.source }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </p>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    </div>
+
+    {% block additional_tabs %} {% endblock %}
+
+
+</div>
+
+
+<input type='hidden' id='flask_data' data-variant-page-url='{{ url_for("variant.display", variant_id = "-1", _external=True) }}' />
+
+{% endblock %}
+
+
+
+{% block special_scripts %}
+    <script type="module" src="/static/js/variant.js"></script>
+{% endblock%}
+

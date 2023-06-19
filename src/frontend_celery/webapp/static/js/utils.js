@@ -437,27 +437,51 @@ function get_amino_acids(three_to_one = true){
 
 
 
-function get_consensus_classification_color(classification) {
-    switch (classification) {
-        case '5':
-            base_color = "rgba(240,73,53,1)" // hex: #f04935
-            break;
-        case '4':
-            base_color = "rgba(255,142,61,1)" // hex: #ff8e3d
-            break;
-        case '3':
-            base_color = "rgba(29, 181, 207, 1)" // hex: #1db5cf
-            break;
-        case '2':
-            base_color = "rgba(149,233,0,1)" // hex: #95e900
-            break;
-        case '1':
-            base_color = "rgba(60,210,60,1)" // hex: #3cd23c
-            break;
-        default:
-            base_color = "rgb(164, 164, 164)" // hex: #a4a4a4
+//function get_consensus_classification_color(classification) {
+//    switch (classification) {
+//        case '5':
+//            base_color = "rgba(240,73,53,1)" // hex: #f04935
+//            break;
+//        case '4':
+//            base_color = "rgba(255,142,61,1)" // hex: #ff8e3d
+//            break;
+//        case '3':
+//            base_color = "rgba(29, 181, 207, 1)" // hex: #1db5cf
+//            break;
+//        case '2':
+//            base_color = "rgba(149,233,0,1)" // hex: #95e900
+//            break;
+//        case '1':
+//            base_color = "rgba(60,210,60,1)" // hex: #3cd23c
+//            break;
+//        default:
+//            base_color = "rgb(164, 164, 164)" // hex: #a4a4a4
+//    }
+//    return base_color
+//}
+
+function get_consensus_classification_css(classification) {
+    if (classification == "3-") {
+        classification = "3minus"
+    } else if (classification == "3+") {
+        classification = "3plus"
     }
-    return base_color
+    return "classification_" + classification + "_col"
+}
+
+
+function get_consensus_classification_color(classification) {
+    var dummy = document.createElement('div')
+    var the_class = get_consensus_classification_css(classification.toString())
+    dummy.classList.add(the_class)
+    dummy.classList.add('visually-hidden')
+    
+    var body = document.getElementsByTagName('body')[0]
+    body.appendChild(dummy)
+
+    var the_color = getComputedStyle(dummy).color
+    dummy.remove()
+    return the_color
 }
 
 

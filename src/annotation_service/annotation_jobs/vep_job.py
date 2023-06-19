@@ -4,6 +4,7 @@ import common.paths as paths
 import common.functions as functions
 import re
 import os
+import urllib.parse
 
 from ..pubmed_parser import fetch
 
@@ -62,9 +63,10 @@ class vep_job(Job):
             intron_nr = vep_entry[6]
             intron_nr = intron_nr[:intron_nr.find('/')] # take only number from number/total
             hgvs_c = vep_entry[1]
-            hgvs_c = hgvs_c[hgvs_c.find(':')+1:] # remove transcript name
+            hgvs_c = urllib.parse.unquote(hgvs_c[hgvs_c.find(':')+1:]) # remove transcript name
             hgvs_p = vep_entry[2]
-            hgvs_p = hgvs_p[hgvs_p.find(':')+1:] # remove transcript name
+            hgvs_p = urllib.parse.unquote(hgvs_p[hgvs_p.find(':')+1:]) # remove transcript name
+            print(hgvs_p)
             transcript_name = vep_entry[0]
             if '.' in transcript_name:
                 transcript_name = transcript_name[:transcript_name.find('.')] # remove transcript version if it is present

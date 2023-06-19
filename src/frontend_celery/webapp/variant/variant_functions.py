@@ -4,6 +4,7 @@ import io
 from common.pdf_generator import pdf_gen
 from ..io.download_routes import calculate_class
 from functools import cmp_to_key
+from flask import render_template
 
 
 
@@ -164,12 +165,90 @@ def handle_consensus_classification(variant, classification, comment, scheme_id,
     ## compute pdf containing all annotations
     for criterium_id in criteria:
         criteria[criterium_id]['strength_description'] = conn.get_classification_criterium_strength(criteria[criterium_id]['criterium_strength_id'])[3]
-    evidence_b64 = get_evidence_pdf(variant, classification, comment, current_datetime, pmids, text_passages, scheme_description, criteria)
+    evidence_b64 = functions.buffer_to_base64(io.BytesIO())
+    #evidence_b64 = get_evidence_pdf(variant, classification, comment, current_datetime, pmids, text_passages, scheme_description, criteria)
 
     #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/frontend/downloads/consensus_classification_reports/testreport.pdf')
     conn.insert_consensus_classification(session['user']['user_id'], variant.id, classification, comment, evidence_document=evidence_b64, date = current_datetime, scheme_id = scheme_id, scheme_class = scheme_class)
-    flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant.id) + " class='alert-link'>here</a> to view it!"), "alert-success")
     return conn.get_last_insert_id() # returns the consensus_classification_id
+
+
+def add_classification_report(variant_id, conn):
+
+    variant = conn.get_variant(variant_id)
+    consensus_classification_id = variant.get_recent_consensus_classification().id
+    
+    evidence_document_str = render_template("variant/classification_report.html", variant = variant, is_classification_report = True)
+    
+
+    static_folder = current_app.static_folder
+    # add local scripts
+    script_folder = os.path.join(static_folder, "js")
+    package_folder = os.path.join(static_folder, "packages")
+    insert_scripts = [os.path.join(script_folder, "utils.js"),
+                      os.path.join(script_folder, "startup.js"),
+                      os.path.join(script_folder, "variant.js"),
+                      os.path.join(package_folder, "bootstrap/js/bootstrap.bundle.min.js"),
+                      os.path.join(package_folder, "jquery/jquery.min.js"),
+                      os.path.join(package_folder, "datatables/jquery.dataTables.min.js")
+                      ]
+    
+    for path in insert_scripts:
+        file_content = ""
+        with open(path, 'r') as the_file:
+            print(path)
+            file_content = the_file.read()
+        str_replace = "<script type='text/javascript'>" + file_content + "</script>"
+        
+        filename = os.path.basename(path)
+        matches = re.finditer(r"<script.*src=['\"].*" + filename + r"['\"]>\s*</script>", evidence_document_str)
+        
+        
+        for match in matches:
+            str_match = match.group(0)
+            print(str_match)
+            evidence_document_str = evidence_document_str.replace(str_match, str_replace)
+            str_replace = "" # delete all further occurances...
+    
+
+    # add local css
+    css_folder = os.path.join(static_folder, "css")
+    insert_css = [os.path.join(css_folder, "styles.css"),
+                  os.path.join(css_folder, "colors.css"),
+                  os.path.join(css_folder, "utils.css"),
+                  os.path.join(package_folder, "bootstrap/css/bootstrap.min.css"),
+                  os.path.join(package_folder, "datatables/jquery.dataTables.min.css")
+                ]
+
+    for path in insert_css:
+        file_content = ""
+        with open(path, 'r') as the_file:
+            print(path)
+            file_content = the_file.read()
+        str_replace = "<style>" + file_content + "</style>"
+
+        filename = os.path.basename(path)
+        matches = re.finditer(r"<link rel=['\"]stylesheet['\"] href=['\"].*" + filename + r"['\"]>", evidence_document_str)
+    
+        for match in matches:
+            str_match = match.group(0)
+            print(str_match)
+            evidence_document_str = evidence_document_str.replace(str_match, str_replace)
+            str_replace = "" # delete all further occurances...
+
+    # remove links
+    matches = re.finditer(r"<.*class=['\"].*remove_link.*['\"].*>.*</.*>", evidence_document_str)
+    for match in matches:
+        str_match = match.group(0)
+        evidence_document_str = evidence_document_str.replace(str_match, "")
+
+
+
+    
+    evidence_document_bytes = bytes(evidence_document_str, 'utf-8')
+    print(len(evidence_document_bytes))
+    conn.update_consensus_classification_report(consensus_classification_id, evidence_document_bytes)
+
 
 
 def get_evidence_pdf(variant, classification, comment, current_date, pmids, text_passages, scheme_description, selected_criteria):

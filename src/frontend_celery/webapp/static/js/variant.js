@@ -7,13 +7,8 @@ import igv from "/static/packages/igv/igv.esm.js"
 
 $(document).ready(function()
 {
-    // presort the tables on page load
-    var variant_consequence_table_default_sorting_columns = ['#variant_consequence_numflags_col', '#variant_consequence_length_col', '#variant_consequence_gene_symbol_col']
-    var table = document.getElementById("variantConsequenceTable");
-    if (table != null) {
-        filterTable_one_column("ensembl", 10, table);
-        table_sorter(variant_consequence_table_default_sorting_columns, '#variantConsequenceTable') // sort first by num of flags, at tie by length and at tie by gene symbol
-    }
+    //// presort the tables on page load
+
     table_sorter(['#userClassificationsTableDateCol'], '#userClassificationsTable')
     table_sorter(['#clinvarSubmissionsTableLastEvaluatedCol'], '#clinvarSubmissionsTable')
     table_sorter(['#heredicareCenterClassificationsTableDateCol'], '#heredicareCenterClassificationsTable')
@@ -74,14 +69,14 @@ $(document).ready(function()
     });
 
     // set the title of the page
-    var variant_page_title_obj = document.getElementById('variant_page_title')
-    var title = variant_page_title_obj.innerText
-    const chrom = variant_page_title_obj.getAttribute('chrom')
-    const pos = parseInt(variant_page_title_obj.getAttribute('pos'))
-    const ref = variant_page_title_obj.getAttribute('ref')
-    const alt = variant_page_title_obj.getAttribute('alt')
-    title = get_variant_type(ref, alt) + title
-    variant_page_title_obj.innerText = title
+    //var variant_page_title_obj = document.getElementById('variant_page_title')
+    //var title = variant_page_title_obj.innerText
+    //const chrom = variant_page_title_obj.getAttribute('chrom')
+    //const pos = parseInt(variant_page_title_obj.getAttribute('pos'))
+    //const ref = variant_page_title_obj.getAttribute('ref')
+    //const alt = variant_page_title_obj.getAttribute('alt')
+    //title = get_variant_type(ref, alt) + title
+    //variant_page_title_obj.innerText = title
 
     // functionality for the annotation status
     // this is blocking I think so it should be called last!
@@ -97,17 +92,14 @@ $(document).ready(function()
 
 
     $('#igv-tab').one('show.bs.tab', function() { // gets called only the first time you switch to the igv tab
+        const variant_page_title_obj = document.getElementById('variant_page_title')
+        const chrom = variant_page_title_obj.getAttribute('chrom')
+        const pos = parseInt(variant_page_title_obj.getAttribute('pos'))
         setup_igv(chrom, pos-100, pos+100, $('#variant_id_container').data()['variantId'])
     })
     
 
-    $('#consequence_ensembl_tab').click(function() {
-        filter_consequence_table('ensembl', variant_consequence_table_default_sorting_columns)
-    });
 
-    $('#consequence_refseq_tab').click(function() {
-        filter_consequence_table('refseq', variant_consequence_table_default_sorting_columns)
-    })
 });
 
 
@@ -196,19 +188,10 @@ function show_annotation_status(color_class, tooltip_text, inner_text) {
 ////////////////// further utility functions //////////////////
 ///////////////////////////////////////////////////////////////
 
-// functionality for the consequence table switch between ensembl & refseq
-function filter_consequence_table(source, variant_consequence_table_default_sorting_columns) {
-    const table = document.getElementById('variantConsequenceTable')
-    const variant_consequence_table_ascending = ['true', 'true', "false"]
-    filterTable_one_column(source, 10, table)
-    const sort_columns = variant_consequence_table_default_sorting_columns
-    for (var i = 0; i < sort_columns.length; i++) {
-        $(sort_columns[i]).attr('asc', variant_consequence_table_ascending[i])
-    }
-    table_sorter(sort_columns, '#' + table.id)
-}
 
 
+
+/*
 // Infer the variant type by looking at the number of reference and alternative bases
 // use this in the header of the page
 function get_variant_type(ref, alt) {
@@ -226,6 +209,7 @@ function get_variant_type(ref, alt) {
     }
     return variant_type
 }
+*/
 
 
 function setup_igv(chrom, start, end, variant_id) {
@@ -252,7 +236,7 @@ function setup_igv(chrom, start, end, variant_id) {
                     "url": "/download/refgene_ngsd.gff3",
                     "color": (feature) => {
                         if (feature.getAttributeValue("Is_mane_plus_clinical") == 1) {
-                            return "red"
+                            return "#00CC00"
                         }
                         if (feature.getAttributeValue("Is_mane_select") == 1) {
                             return "red"
@@ -295,6 +279,7 @@ function setup_igv(chrom, start, end, variant_id) {
             ]
         }
     };
+
 
 
     igv.createBrowser(igvDiv, options).then(function (browser) {

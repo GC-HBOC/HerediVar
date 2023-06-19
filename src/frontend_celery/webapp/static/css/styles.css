@@ -141,10 +141,6 @@ table.scroll th {
 
 
 .acmg-button {
-    /*
-    width:6em;
-    height:2.5em;
-    */
     line-height:1.8em;
     font-weight:bold;
     font-size:larger;
@@ -154,6 +150,10 @@ table.scroll th {
     justify-content: center;
     align-content: center;
     flex-direction: column;
+    border-radius: 7px;
+    border: 1px solid rgb(155, 155, 155);
+
+    cursor:pointer;
 }
 .acmg-button-small {
     width: 4em;
@@ -162,14 +162,6 @@ table.scroll th {
 .acmg-button-large {
     width:6em;
     height:2.5em;
-}
-.btn-check:disabled + label.btn {
-    color: rgb(170, 170, 170);
-    background-color: rgb(230, 230, 230);
-}
-.light-hover:hover {
-    filter: brightness(130%);
-    border-color: #979797 !important;
 }
 .count_label {
     position:relative; 
@@ -345,6 +337,14 @@ footer {
 
 .list-nobackground li {
     background-color: transparent;
+}
+.list-nobackground li:first-of-type {
+    padding-left:0;
+    border-left:0;
+}
+.list-nobackground li:last-of-type {
+    padding-right:0;
+    border-right:0;
 }
 
 .table-slim td {

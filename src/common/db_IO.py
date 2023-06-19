@@ -968,6 +968,11 @@ class Connection:
         command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document, classification_scheme_id, scheme_class) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
         self.cursor.execute(command, (user_id, variant_id, consensus_classification, comment, date, evidence_document.decode(), scheme_id, scheme_class))
         self.conn.commit()
+
+    def update_consensus_classification_report(self, consensus_classification_id, report):
+        command = "UPDATE consensus_classification SET evidence_document = %s WHERE id = %s"
+        self.cursor.execute(command, (report, consensus_classification_id))
+        self.conn.commit()
     
     def invalidate_previous_consensus_classifications(self, variant_id):
         command = "UPDATE consensus_classification SET is_recent = '0' WHERE variant_id = %s"
@@ -1546,7 +1551,7 @@ class Connection:
                 for cl_raw in cls_raw:
 
                     # basic information
-                    selected_class = int(cl_raw[3])
+                    selected_class = cl_raw[3]
                     comment = cl_raw[4]
                     date = cl_raw[5].strftime('%Y-%m-%d %H:%M:%S')
                     classification_id = int(cl_raw[0])
@@ -1602,7 +1607,7 @@ class Connection:
                 for cl_raw in user_classifications_raw:
 
                     # basic information
-                    selected_class = int(cl_raw[1])
+                    selected_class = cl_raw[1]
                     comment = cl_raw[4]
                     date = cl_raw[5].strftime('%Y-%m-%d %H:%M:%S')
                     classification_id = int(cl_raw[0])
@@ -1892,12 +1897,14 @@ class Connection:
                 classification_criterium_name = criterium[2]
                 classification_criterium_description = criterium[3]
                 classification_criterium_is_selectable = criterium[4]
+                classification_criterium_relevant_information = criterium[5]
 
                 new_criterium_dict = {}
                 new_criterium_dict["id"] = classification_criterium_id
                 new_criterium_dict["name"] = classification_criterium_name
                 new_criterium_dict["description"] = classification_criterium_description
                 new_criterium_dict["is_selectable"] = classification_criterium_is_selectable
+                new_criterium_dict["relevant_information"] = classification_criterium_relevant_information
 
                 command = "SELECT * FROM classification_criterium_strength WHERE classification_criterium_id = %s"
                 self.cursor.execute(command, (classification_criterium_id, ))

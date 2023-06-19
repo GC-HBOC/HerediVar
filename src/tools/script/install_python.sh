@@ -59,7 +59,7 @@ pip install lxml
 
 pip install celery redis
 
-pip install reportlab
+#pip install reportlab
 
 pip install python-dotenv
 

@@ -29,20 +29,21 @@ def evidence_document(consensus_classification_id):
     consensus_classification = conn.get_evidence_document(consensus_classification_id)
     if consensus_classification is None:
         abort(404)
-    b_64_report = consensus_classification[0]
+    binary_report = consensus_classification[0]
+    #report = binary_report.decode("utf-8")
 
     #report_folder = path.join(path.dirname(current_app.root_path), current_app.config['CONSENSUS_CLASSIFICATION_REPORT_FOLDER'])
-    report_filename = 'consensus_classification_report_' + str(consensus_classification_id) + '.pdf'
+    report_filename = 'consensus_classification_report_' + str(consensus_classification_id) + '.html'
     #report_path = path.join(report_folder, report_filename)
     #functions.base64_to_file(base64_string = b_64_report, path = report_path)
 
     buffer = io.BytesIO()
-    buffer.write(functions.decode_base64(b_64_report))
+    buffer.write(binary_report)
     buffer.seek(0)
 
     current_app.logger.info(session['user']['preferred_username'] + " downloaded consensus classification evidence document for consensus classification " + str(consensus_classification_id))
     
-    return send_file(buffer, as_attachment=True, download_name=report_filename, mimetype='application/pdf')
+    return send_file(buffer, as_attachment=True, download_name=report_filename, mimetype='text/html')
 
 
 
