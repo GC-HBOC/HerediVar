@@ -347,16 +347,16 @@ class Classification:
             return 'Benign'
         if classification == '2':
             return 'Likely benign'
-        if classification == '3':
+        if classification in ['3', '3-', '3+']:
             return 'Uncertain significance'
         if classification == '4':
             return 'Likely pathogenic'
         if classification == '5':
             return 'Pathogenic'
-        if classification == '3-':
-            return 'Uncertain with tendency to benign'
-        if classification == '3+':
-            return 'Uncertain with tendency to pathogenic'
+        #if classification == '3-':
+        #    return 'Uncertain with tendency to benign'
+        #if classification == '3+':
+        #    return 'Uncertain with tendency to pathogenic'
     
     def get_header(self, simple = False):
         if not simple:
