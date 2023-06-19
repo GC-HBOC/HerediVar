@@ -798,45 +798,6 @@
 
 
 
-{% macro add_variant_banner(variant) %}
-<div class="w-100 ssb">
-    <div class="card variant-banner-color left-space-padding">
-        
-        <div class="card-text">
-            <div class="table-responsive">
-                <table class="table table-borderless table-slim">
-                    <tbody>
-                        <tr>
-                            <td class="li-label width_small">Variant</td>
-                            <td > 
-                                <div class="break_text_all">
-                                    {{ variant.chrom }}-{{ variant.pos }}-{{ variant.ref }}-{{ variant.alt }}
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="li-label">Gene(s)</td>
-                            <td>
-                                {% set genes = variant.get_genes() %}
-                                {% for gene in genes %}
-                                    <a href="{{ url_for('extended_information.gene', gene_id=gene.id | int) }}">{{ gene.symbol }}</a>
-                                {% endfor %}
-                            </td>
-                        </tr>
-                        
-                    </tbody>
-                </table>
-            </div>
-           
-        </div>
-    </div>
-</div>
-{% endmacro %}
-
-
-
-
-
 
 {% macro add_variant_banner(variant) %}
 <div class="w-100 ssb">

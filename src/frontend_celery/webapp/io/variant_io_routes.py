@@ -90,7 +90,7 @@ def submit_clinvar(variant_id):
     conn = get_connection()
 
     # get variant information & abort if the variant does not exist
-    variant = conn.get_variant(variant_id, include_annotations = False, include_user_classifications=False, include_heredicare_classifications=False,include_clinvar=False, include_assays=False)
+    variant = conn.get_variant(variant_id, include_annotations = True, include_user_classifications=False, include_heredicare_classifications=False,include_clinvar=True, include_assays=False)
     if variant is None:
         return abort(404)
     genes = variant.get_genes()
