@@ -139,8 +139,8 @@ def submit_clinvar(variant_id):
             # prepare json data to be submitted to ClinVar
             schema = json.loads(open(paths.clinvar_submission_schema).read())
             data = get_clinvar_submission_json(variant, selected_gene, selected_orpha_code, clinvar_accession)
-            with open("/mnt/storage2/users/ahdoebm1/HerediVar/testdat.json", "w") as jfile:
-                jfile.write(json.dumps(data, indent=4))
+            #with open("/mnt/storage2/users/ahdoebm1/HerediVar/testdat.json", "w") as jfile:
+            #    jfile.write(json.dumps(data, indent=4))
 
             # check that the generated data is valid by checking against json schema
             try:
