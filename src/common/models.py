@@ -354,9 +354,9 @@ class Classification:
         if classification == '5':
             return 'Pathogenic'
         if classification == '3-':
-            return 'Uncertain with tendence to benign'
+            return 'Uncertain with tendency to benign'
         if classification == '3+':
-            return 'Uncertain with tendence to pathogenic'
+            return 'Uncertain with tendency to pathogenic'
     
     def get_header(self, simple = False):
         if not simple:
