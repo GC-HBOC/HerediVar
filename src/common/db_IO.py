@@ -747,7 +747,7 @@ class Connection:
         if page_size != 'unlimited':
             command = command + " ORDER BY chr, pos, ref, alt LIMIT %s, %s"
             actual_information += (offset, page_size)
-        print(command % actual_information)
+        #print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 
@@ -790,7 +790,7 @@ class Connection:
                             ) x ON x.variant_id_trash = variant_consequence.variant_id  \
                         ) y ON gene.hgnc_id = y.hgnc_id \
                     ) z ON transcript.name = z.transcript_name WHERE z.hgnc_id=%s ORDER BY variant_id asc"
-        print(command % (source, hgnc_id, hgvs_c, hgnc_id))
+        #print(command % (source, hgnc_id, hgvs_c, hgnc_id))
         self.cursor.execute(command, (source, hgnc_id, hgvs_c, hgnc_id))
         possible_consequences = self.cursor.fetchall()
         
