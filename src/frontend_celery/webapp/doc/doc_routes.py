@@ -36,3 +36,7 @@ def about():
 @doc_blueprint.route('/documentation')
 def documentation():
     return render_template('doc/documentation.html')
+
+@doc_blueprint.route('/changelog')
+def changelog():
+    return render_template('doc/changelog.html')

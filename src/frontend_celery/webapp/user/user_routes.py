@@ -9,6 +9,7 @@ import annotation_service.fetch_heredicare_variants as heredicare
 from datetime import datetime
 from ..utils import *
 from flask_paginate import Pagination
+import annotation_service.main as annotation_service
 
 
 user_blueprint = Blueprint(
@@ -285,6 +286,10 @@ def my_lists():
 @require_permission(['admin_resources'])
 def admin_dashboard():
     conn = get_connection()
+    job_config = annotation_service.get_default_job_config()
+    annotation_stati, errors, warnings, total_num_variants = conn.get_annotation_statistics()
+    do_redirect = False
+
     most_recent_import_request = conn.get_most_recent_import_request()
     if most_recent_import_request is None:
         status = 'finished'
@@ -306,15 +311,28 @@ def admin_dashboard():
                 date = log_file_path.strip('.log').split(':')[1].split('-')
 
                 conn.close_import_request(import_queue_id)
-                current_app.logger.info(session['user']['preferred_username'] + " issued a full HerediCare import.") 
+                current_app.logger.info(session['user']['preferred_username'] + " issued a full HerediCare import.")
                 return redirect(url_for('variant_io.import_summary', year=date[0], month=date[1], day=date[2], hour=date[3], minute=date[4], second=date[5]))
 
         elif request_type == 'reannotate':
+            selected_jobs = request.form.getlist('job')
+            selected_job_config = annotation_service.get_job_config(selected_jobs)
             variant_ids = conn.get_all_valid_variant_ids()
             for variant_id in variant_ids:
-                start_annotation_service(variant_id = variant_id) # inserts a new annotation queue entry before submitting the task to celery
+                start_annotation_service(variant_id = variant_id, job_config = selected_job_config) # inserts a new annotation queue entry before submitting the task to celery
                 #conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
             current_app.logger.info(session['user']['preferred_username'] + " issued a reannotation of all variants") 
             flash('Variant reannotation requested. It will be computed in the background.', 'alert-success')
+            do_redirect = True
         
-    return render_template('user/admin_dashboard.html', most_recent_import_request=most_recent_import_request)
+        if request_type == 'reannotate_erroneous':
+            for variant_id in annotation_stati['error']:
+                start_annotation_service(variant_id = variant_id, job_config = job_config)
+            flash('Variant reannotation issued for ' + str(len(annotation_stati['error'])) + ' variants', 'alert-success')
+            do_redirect = True
+    
+    if do_redirect:
+        return redirect(url_for('user.admin_dashboard'))
+    return render_template('user/admin_dashboard.html', most_recent_import_request=most_recent_import_request, job_config = job_config, annotation_stati = annotation_stati, errors = errors, warnings = warnings, total_num_variants = total_num_variants)
+
+

@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1 class="bst"> {% block title %} Changelog {% endblock %} </h1>
+
+
+<div class="bst bsb">
+    <h4>Changelog</h4>
+    <div class="underline">v 1.3 (19.06.2023)</div>
+    <div>
+        General changes:
+        <ul>
+            <li>Added checkboxes to variant table which allows more fine grained collection of variants in lists</li>
+            <li>Added information about the chosen criteria to the comment of a ClinVar submission from HerediVar</li>
+            <li>Updated documentation</li>
+            <li>The strength of all ACMG criteria can be adjusted now</li>
+            <li>Added continuous numbering of variants in variant lists</li>
+            <li>Added 3+ and 3- classes. They can be selected manually from the dropdown</li>
+            <li>Added important variant information to classify page</li>
+            <li>Mane select transcripts are now shown in green in IGV</li>
+        </ul>
+        Bugfixes:
+        <ul>
+            <li>Fixed ClinVar uploads <div class="classification_5_col">{{macros.draw_exclamation_mark('') }} Classifications are currently submitted to the ClinVar TEST ENDPOINT which is reset periodically! None of your ClinVar submissions will go live at the moment.</div></li>
+            <li>Fixed a bug when the user tried to access a non existing variant list</li>
+            <li>Improved performance of variant table</li>
+            <li>Fixed a bug where the user was unable to search for gene:hgvs strings in the variant table</li>
+            <li>Classified variants in IGV browser are now shown with the color scheme corresponding to the classification</li>
+            <li>Fixed a bug where some characters were replaced by the url encoding in HGVS strings</li>
+            <li>Fixed a couple of CSP errors</li>
+            <li>Fixed the colors of classified variants in IGV</li>
+            <li>Fixed colors of acmg criteria buttons</li>
+        </ul>
+        Known issues:
+        <ul>
+            <li>COSMIC links do not work sometimes</li>
+        </ul>
+    </div>
+    <div class="underline">v 1.2 (12.05.2023)</div>
+    <div>
+        General changes:
+        <ul>
+            <li>Improved user registration form</li>
+            <li>Added profile page which allows each user to edit their name, mail and affiliation by themselves</li>
+            <li>Added possibility to search for multiple lists simultaneously</li>
+            <li>Added duplicate, intersect, subtract and union actions for user variant lists</li>
+            <li>Updated documentation</li>
+        </ul>
+        Bugfixes:
+        <ul>
+            <li>Fixed a bug where the user was able to upload multi allelic variants</li>
+            <li>Fixed a bug where the user was able to insert invalid variant sequences</li>
+            <li>Navigation is now shown independent of scroll position on documentation page</li>
+            <li>Fixed a bug when searching it would not show any variants</li>
+        </ul>
+    </div>
+    <div class="underline">v 1.1 (08.05.2023)</div>
+    <div>
+        General changes:
+        <ul>
+            <li>External links now open a new tab on left click</li>
+            <li>Added documentation</li>
+        </ul>
+        Performance changes:
+        <ul>
+            <li>Added client-side pagination of the literature table</li>
+        </ul>
+    </div>
+    <div class="underline">v 1.0</div>
+    <div>
+        Initial release
+    </div>
+</div>
+
+</div>
+
+{% endblock %}
+

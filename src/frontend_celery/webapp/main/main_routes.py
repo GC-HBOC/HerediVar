@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template
+from ..utils import *
 
 main_blueprint = Blueprint(
     'main',
@@ -11,4 +12,8 @@ main_blueprint = Blueprint(
 
 @main_blueprint.route('/')
 def index():
-    return render_template('index.html')
+    conn = get_connection()
+    annotation_stati, errors, warnings, total_num_variants = conn.get_annotation_statistics()
+    database_info = conn.get_database_info()
+    total_num_classified_variants = conn.get_number_of_classified_variants()
+    return render_template('index.html', total_num_variants = total_num_variants, database_info = database_info, total_num_classified_variants = total_num_classified_variants)

@@ -66,7 +66,6 @@ class vep_job(Job):
             hgvs_c = urllib.parse.unquote(hgvs_c[hgvs_c.find(':')+1:]) # remove transcript name
             hgvs_p = vep_entry[2]
             hgvs_p = urllib.parse.unquote(hgvs_p[hgvs_p.find(':')+1:]) # remove transcript name
-            print(hgvs_p)
             transcript_name = vep_entry[0]
             if '.' in transcript_name:
                 transcript_name = transcript_name[:transcript_name.find('.')] # remove transcript version if it is present

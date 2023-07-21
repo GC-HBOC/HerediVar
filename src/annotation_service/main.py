@@ -45,7 +45,7 @@ def get_default_job_config():
         'do_priors': True,
 
         # additional annotations
-        'do_task_force_protein_domains': True,
+        'do_taskforce_domains': True,
         'do_litvar': True
     }
     return job_config
@@ -100,6 +100,8 @@ def get_annotation_tempfile(annotation_queue_id):
 
 def process_one_request(annotation_queue_id, job_config = get_default_job_config()):
     """ this is the main worker of the annotation job - A 4 step process -"""
+
+    print(job_config)
 
     all_jobs = get_jobs(job_config)
 

@@ -8,58 +8,144 @@
   
 <h1 class="bst"> {% block title %} Admin dashboard {% endblock %} </h1>
 
-<!-- import all from heredicare button -->
-<div class="bst d-flex items_align_center">
-    <form action="/admin_dashboard?type=update_variants" id="import-variants-form" name="import-variants-form" method="post" action="#">
-        <div class="form-group">
-            <span id="tooltip-import-variants-button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button invokes a mass-import of all variants in HerediCare and collects metadata from HerediCare.">
-                <button id="import-variants-button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#import-variants-modal">Import HerediCare</button>
-            </span>
-            <meta id="annotation_status" data-annotation-status="{{ most_recent_import_request[3] }}">
-        </div>
-    </form>
-    {% if most_recent_import_request is not none %}
-        {% if most_recent_import_request[3] == 'pending' %}
-            <span class="badge rounded-pill bg-secondary ssl" data-bs-toggle="tooltip" title="import requested at {{ most_recent_import_request[2] }}">import requested</span>
-        {% endif %}
-        {% if most_recent_import_request[3] == 'finished' %}
-            <span class="badge rounded-pill bg-success ssl" data-bs-toggle="tooltip" title="most recent import finished at {{ most_recent_import_request[4] }}">last import: {{ most_recent_import_request[4] }}</span>
-        {% endif %}
-    {% endif %}
-</div>
 
 
-<!-- modal -->
-<div class="modal fade" id="import-variants-modal" tabindex="-1" aria-labelledby="import-variants-modal-label" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="import-variants-modal-label">Confirm import & update</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Are you sure that you want to import & update all variants in HerediVar from HerediCare?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button id="import-variants-submit" type="submit" class="btn btn-primary">Yes</button>
-            </div>
+
+
+
+<!-- navigator tabs -->
+<ul class="nav nav-tabs" id="tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">Overview</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="reannotate-tab" data-bs-toggle="tab" data-bs-target="#reannotate" type="button" role="tab" aria-controls="reannotate" aria-selected="false">(Re-)Annotate</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="import-tab" data-bs-toggle="tab" data-bs-target="#import" type="button" role="tab" aria-controls="import" aria-selected="false">Import variants</button>
+    </li>
+</ul>
+
+
+<!-- OVERVIEW TAB -->
+<div class="tab-content" id="TabContent">
+    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+
+        <div class="sst bsb">This page does not update automatically. Please refresh it to see any changes.</div>
+        
+        <h4>Number of annotations</h4>
+        <div class="bsb">
+            <table class="table table-borderless table-slim">
+                <tbody>
+                    {% for annotation_status_type in annotation_stati %}
+                    {% set len_vars = annotation_stati[annotation_status_type] | length %}
+                    <tr>
+                        <td class="width_very_small li-label">{{ annotation_status_type }}</td>
+                        <td>{{ len_vars }}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="border-top">
+                        <td class="width_very_small li-label">TOTAL</td>
+                        <td>
+                            {{ total_num_variants }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
+
+
+        <div class="d-flex">
+            <h4 class="flex-grow-1">Erroneous variant annotations</h4>
+            <form action="{{ url_for('user.admin_dashboard', type = 'reannotate_erroneous') }}" method="post">
+                <button class="btn btn-outline-primary btn-sm" type="submit">Try erroneous again</button>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover" id="errortable">
+                <thead>
+                    <tr>
+                        <th class="width_very_minimal"><div>Variant ID</div></th>
+                        <th class="width_large"><div>Error</div></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for variant_id in errors %}
+                    <tr>
+                        <td class="li-label"><a href="{{ url_for('variant.display', variant_id = variant_id) }}">{{variant_id}}</a></td>
+                        <td>{{ errors[variant_id] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>  
+            </table>
+        </div>
+
+
+        <h4>Warnings</h4>
+        <div class="table-responsive bsb">
+            <table class="table table-hover" id="warningstable">
+                <thead>
+                    <tr>
+                        <th class="width_very_minimal"><div>Variant ID</div></th>
+                        <th class="width_large"><div>Warning</div></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for variant_id in warnings %}
+                    <tr>
+                        <td class="li-label"><a href="{{ url_for('variant.display', variant_id = variant_id) }}">{{variant_id}}</a></td>
+                        <td class="break_text_all">{{ warnings[variant_id] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>  
+            </table>
+        </div>
+
+
     </div>
 </div>
 
 
 
-<!-- reannotate all button -->
-<div class="bst d-flex align_items_center">
-    <form action="/admin_dashboard?type=reannotate" id="reannotate-variants-form" name="reannotate-variants-form" method="post" action="#">
-        <div class="form-group">
-            <span id="tooltip-reannotate-variants-button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button requests an annotation of all variants in HerediVar.">
-                <button id="reannotate-variants-button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reannotate-variants-modal">(Re-)Annotate all</button>
-            </span>
+
+
+<!-- REANNOTATE ALL TAB -->
+<div class="tab-content" id="TabContent">
+    <div class="tab-pane fade" id="reannotate" role="tabpanel" aria-labelledby="reannotate-tab">
+
+
+        <!-- reannotate all button -->
+        <div class="bst bsb bsl d-flex items_align_center">
+            <form action="{{ url_for('user.admin_dashboard', type = 'reannotate') }}" id="reannotate-variants-form" name="reannotate-variants-form" method="post">
+                
+                <div class="d-flex flex-wrap">
+                    {% for job in job_config %}
+                    <div class="mb-3 form-check bsr width_very_medium">
+                        <input type="checkbox" class="form-check-input ssr" id="{{ job }}" name="job" value="{{ job }}" {%if job == 'do_heredicare'%} disabled {% endif %}>
+                        <label class="form-check-label" for="{{ job }}">{{ job }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <hr>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input ssr" id="select_all_jobs" >
+                    <label class="form-check-label" for="select_all_jobs">select all</label>
+                </div>
+
+                <div class="form-group">
+                    <span id="tooltip-reannotate-variants-button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button requests an annotation of all variants in HerediVar.">
+                        <button id="reannotate-variants-button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reannotate-variants-modal">Submit</button>
+                    </span>
+                </div>
+            </form>
         </div>
-    </form>
+
+
+    </div>
 </div>
+
 
 
 <!-- modal -->
@@ -85,11 +171,68 @@
 
 
 
+
+<!-- import from heredicare TAB -->
+<div class="tab-content" id="TabContent">
+    <div class="tab-pane fade" id="import" role="tabpanel" aria-labelledby="import-tab">
+
+        
+        <!-- import all from heredicare button -->
+        <div class="bst d-flex items_align_center">
+            <form action="/admin_dashboard?type=update_variants" id="import-variants-form" name="import-variants-form" method="post" action="#">
+                <div class="form-group">
+                    <span id="tooltip-import-variants-button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button invokes a mass-import of all variants in HerediCare and collects metadata from HerediCare.">
+                        <button id="import-variants-button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#import-variants-modal">Import HerediCare</button>
+                    </span>
+                    <meta id="annotation_status" data-annotation-status="{{ most_recent_import_request[3] }}">
+                </div>
+            </form>
+            {% if most_recent_import_request is not none %}
+                {% if most_recent_import_request[3] == 'pending' %}
+                    <span class="badge rounded-pill bg-secondary ssl" data-bs-toggle="tooltip" title="import requested at {{ most_recent_import_request[2] }}">import requested</span>
+                {% endif %}
+                {% if most_recent_import_request[3] == 'finished' %}
+                    <span class="badge rounded-pill bg-success ssl" data-bs-toggle="tooltip" title="most recent import finished at {{ most_recent_import_request[4] }}">last import: {{ most_recent_import_request[4] }}</span>
+                {% endif %}
+            {% endif %}
+        </div>
+
+
+
+    </div>
+</div>
+
+
+
+
+<!-- modal -->
+<div class="modal fade" id="import-variants-modal" tabindex="-1" aria-labelledby="import-variants-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="import-variants-modal-label">Confirm import & update</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure that you want to import & update all variants in HerediVar from HerediCare?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="import-variants-submit" type="submit" class="btn btn-primary">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
 </div>
 
 
 {% endblock %}
 
 {% block special_scripts %}
-    <script src="../static/js/import_variants.js"></script>
+    <script src="../static/js/admin_dashboard.js"></script>
 {% endblock %}

@@ -52,18 +52,6 @@ def get_db_user(roles):
 
 
 
-
-def enquote(string):
-    string = str(string).strip("'") # remove quotes if the input string is already quoted!
-    return "'" + string + "'"
-
-def enbrace(string):
-    #string = str(string).strip("(").strip(")")
-    string = "(" + string + ")"
-    return string
-
-
-
 class Connection:
     def __init__(self, roles = ["read_only"]):
         self.conn = get_db_connection(roles)
@@ -326,7 +314,7 @@ class Connection:
         #            FROM clinvar_variant_annotation a \
         #            INNER JOIN ( \
         #                SELECT variant_id, max(version_date) AS version_date FROM clinvar_variant_annotation GROUP BY variant_id \
-        #            ) b ON a.variant_id = b.variant_id AND a.variant_id = " + enquote(variant_id) + " AND a.version_date = b.version_date"
+        #            ) b ON a.variant_id = b.variant_id AND a.variant_id = " + functions.enquote(variant_id) + " AND a.version_date = b.version_date"
         command = "SELECT id FROM clinvar_variant_annotation WHERE variant_id=%s"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchone()
@@ -354,7 +342,7 @@ class Connection:
         if gene_id is not None:
             command = ''
             if transcript_refseq is not None and transcript_ensembl is not None:
-                #transcript_ensembl_list = ', '.join([enquote(x) for x in transcript_ensembl.split(',')])
+                #transcript_ensembl_list = ', '.join([functions.enquote(x) for x in transcript_ensembl.split(',')])
                 transcript_ensembl_list = transcript_ensembl.split(',')
                 transcript_ensembl_placeholders = ', '.join(['%s'] * len(transcript_ensembl_list))
                 self.cursor.execute("SELECT COUNT(*) FROM transcript WHERE name IN (" + transcript_ensembl_placeholders + ")", tuple(transcript_ensembl_list))
@@ -644,7 +632,7 @@ class Connection:
                 new_constraints.append("(chr=%s AND pos BETWEEN %s AND %s)")
                 actual_information += (chr, start, end)
             new_constraints = ' OR '.join(new_constraints)
-            new_constraints = enbrace(new_constraints)
+            new_constraints = functions.enbrace(new_constraints)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if genes is not None and len(genes) > 0:
             #genes = [self.get_gene(self.convert_to_gene_id(x))[1] for x in genes]
@@ -657,7 +645,7 @@ class Connection:
             if len(hgnc_ids) > 0:
                 placeholders = ["%s"] * len(hgnc_ids)
                 placeholders = ', '.join(placeholders)
-                placeholders = enbrace(placeholders)
+                placeholders = functions.enbrace(placeholders)
                 new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE hgnc_id IN " + placeholders + ")"
                 actual_information += tuple(hgnc_ids)
                 postfix = self.add_constraints_to_command(postfix, new_constraints)
@@ -673,7 +661,7 @@ class Connection:
             if len(consensus_without_dash) > 0: # if we have one or more classes without the -
                 placeholders = ["%s"] * len(consensus_without_dash)
                 placeholders = ', '.join(placeholders)
-                placeholders = enbrace(placeholders)
+                placeholders = functions.enbrace(placeholders)
                 new_constraints_inner = new_constraints_inner + "SELECT variant_id FROM consensus_classification WHERE classification IN " + placeholders + " AND is_recent = 1"
                 actual_information += tuple(consensus_without_dash)
             new_constraints = "id IN (" + new_constraints_inner + ")"
@@ -689,7 +677,7 @@ class Connection:
             if len(user_without_dash) > 0: # if we have one or more classes without the -
                 placeholders = ["%s"] * len(user_without_dash)
                 placeholders = ', '.join(placeholders)
-                placeholders = enbrace(placeholders)
+                placeholders = functions.enbrace(placeholders)
                 # search for the most recent user classifications from the user which is searching for variants and which are in the list of user classifications (variable: user)
                 new_constraints_inner = new_constraints_inner + "SELECT * FROM ( SELECT user_classification.variant_id FROM user_classification \
                                                                 LEFT JOIN user_classification uc ON uc.variant_id = user_classification.variant_id AND uc.date > user_classification.date \
@@ -709,7 +697,7 @@ class Connection:
         #    if len(clinvar_without_dash) > 0:
         #        placeholders = ["%s"] * len(clinvar_without_dash)
         #        placeholders = ', '.join(placeholders)
-        #        placeholders = enbrace(placeholders)
+        #        placeholders = functions.enbrace(placeholders)
         #        clinvar_without_dash
         #        new_constraints_inner += "SELECT "
         if hgvs is not None and len(hgvs) > 0:
@@ -731,14 +719,14 @@ class Connection:
                 all_variants = [''] # empty string can never be found
             placeholders = ["%s"] * len(all_variants)
             placeholders = ', '.join(placeholders)
-            placeholders = enbrace(placeholders)
+            placeholders = functions.enbrace(placeholders)
             new_constraints = "id IN " + placeholders
             actual_information += tuple(all_variants)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if variant_ids_oi is not None and len(variant_ids_oi) > 0:
             placeholders = ["%s"] * len(variant_ids_oi)
             placeholders = ', '.join(placeholders)
-            placeholders = enbrace(placeholders)
+            placeholders = functions.enbrace(placeholders)
             new_constraints = "id IN " + placeholders
             actual_information += tuple(variant_ids_oi)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
@@ -966,7 +954,7 @@ class Connection:
     def insert_consensus_classification(self, user_id, variant_id, consensus_classification, comment, evidence_document, date, scheme_id, scheme_class):
         self.invalidate_previous_consensus_classifications(variant_id)
         command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document, classification_scheme_id, scheme_class) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (user_id, variant_id, consensus_classification, comment, date, evidence_document.decode(), scheme_id, scheme_class))
+        self.cursor.execute(command, (user_id, variant_id, str(consensus_classification), comment, date, evidence_document.decode(), scheme_id, scheme_class))
         self.conn.commit()
 
     def update_consensus_classification_report(self, consensus_classification_id, report):
@@ -1142,12 +1130,12 @@ class Connection:
 
     def insert_user_classification(self, variant_id, classification, user_id, comment, date, scheme_id, scheme_class):
         command = "INSERT INTO user_classification (variant_id, classification, user_id, comment, date, classification_scheme_id, scheme_class) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, classification, user_id, comment, date, scheme_id, str(scheme_class)))
+        self.cursor.execute(command, (variant_id, str(classification), user_id, comment, date, scheme_id, str(scheme_class)))
         self.conn.commit()
 
     def update_user_classification(self, user_classification_id, classification, comment, date, scheme_class):
         command = "UPDATE user_classification SET classification = %s, comment = %s, date = %s, scheme_class = %s WHERE id = %s"
-        self.cursor.execute(command, (classification, comment, date, str(scheme_class), user_classification_id))
+        self.cursor.execute(command, (str(classification), comment, date, str(scheme_class), user_classification_id))
         self.conn.commit()
 
 
@@ -1436,7 +1424,7 @@ class Connection:
         return result
     
     def get_variant_id(self, chr, pos, ref, alt):
-        #command = "SELECT id FROM variant WHERE chr = " + enquote(chr) + " AND pos = " + str(pos) + " AND ref = " + enquote(ref) + " AND alt = " + enquote(alt)
+        #command = "SELECT id FROM variant WHERE chr = " + functions.enquote(chr) + " AND pos = " + str(pos) + " AND ref = " + functions.enquote(ref) + " AND alt = " + functions.enquote(alt)
         command = "SELECT id FROM variant WHERE chr = %s AND pos = %s AND ref = %s AND alt = %s"
         self.cursor.execute(command, (chr, pos, ref, alt))
         variant_id = self.cursor.fetchone()
@@ -1813,7 +1801,7 @@ class Connection:
         if assay_types != 'all':
             placeholders = ["%s"] * len(assay_types)
             placeholders = ', '.join(placeholders)
-            placeholders = enbrace(placeholders)
+            placeholders = functions.enbrace(placeholders)
             new_constraints = " id IN " + placeholders
             command += new_constraints
             actual_information += tuple(assay_types)
@@ -1970,3 +1958,78 @@ class Connection:
     #    command = "UPDATE heredivar_clinvar_submissions SET accession_id = %s"
     #    self.cursor.execute(command, (accession_id, ))
     #    self.conn.commit()
+
+
+    def get_current_annotation_staus_all_variants(self):
+        command = """
+        SELECT a1.variant_id, a1.user_id, a1.requested, a1.status, a1.finished_at, a1.error_message
+            FROM annotation_queue a1 LEFT JOIN annotation_queue a2
+                ON (a1.variant_id = a2.variant_id AND a1.requested < a2.requested)
+        WHERE a2.id IS NULL
+        """
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return result
+
+    def get_annotation_statistics(self):
+        # return the most recent annotation queue entry for the variant 
+        result = self.get_current_annotation_staus_all_variants()
+
+        annotation_stati = {'success': [], 'pending': [], 'error': [], 'retry': []}
+        errors = {}
+        warnings = {}
+        total_num_variants = len(result)
+        for annotation_status in result:
+            variant_id = annotation_status[0]
+            annotation_stati[annotation_status[3]].append(variant_id)
+            if annotation_status[3] == 'error':
+                errors[variant_id] = annotation_status[5]
+            if annotation_status[3] != 'error' and annotation_status[5] != '':
+                warnings[variant_id] = annotation_status[5]
+                
+        return annotation_stati, errors, warnings, total_num_variants
+    
+    def get_database_info(self):
+        annotation_type_ids = self.get_recent_annotation_type_ids()
+        placeholders = self.get_placeholders(len(annotation_type_ids))
+        command = "SELECT display_title,description,version,version_date FROM annotation_type WHERE id IN " + placeholders
+        self.cursor.execute(command, tuple(annotation_type_ids.values()))
+        result = self.cursor.fetchall()
+        return result
+    
+    def get_number_of_classified_variants(self):
+        command = """
+        SELECT a1.variant_id
+            FROM consensus_classification a1 LEFT JOIN consensus_classification a2
+                ON (a1.variant_id = a2.variant_id AND a1.date < a2.date)
+        WHERE a2.variant_id IS NULL
+        """
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return len(result)
+    
+    def get_recent_annotation_type_ids(self, only_transcript_specific = False):
+        addon = ""
+        if only_transcript_specific:
+            addon = "WHERE is_transcript_specific = 1"
+        command = """
+            SELECT n.id, n.title
+                FROM annotation_type n 
+                INNER JOIN (
+                  SELECT title, MAX(version_date) as max_version_date
+                  FROM annotation_type %s GROUP BY title
+                ) AS max ON max.title = n.title and max.max_version_date = n.version_date
+        """ % (addon, )
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        recent_annotation_ids = {}    
+        for entry in result:
+            recent_annotation_ids[entry[1]] = entry[0]
+        
+        return recent_annotation_ids
+
+    def get_placeholders(self, num):
+        placeholders = ["%s"] * num
+        placeholders = ', '.join(placeholders)
+        placeholders = functions.enbrace(placeholders)
+        return placeholders

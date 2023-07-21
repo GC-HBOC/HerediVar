@@ -82,6 +82,10 @@
     min-width:20em;
     width:20em;
 }
+.width_very_medium {
+    min-width:15em;
+    width:15em;
+}
 .width_small {
     min-width:10em;
     width:10em;

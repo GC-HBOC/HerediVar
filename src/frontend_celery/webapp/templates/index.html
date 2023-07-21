@@ -6,75 +6,116 @@
 <div class="container">
 
   
-<h1> {% block title %} Welcome to HerediVar {% endblock %} </h1>
+<h1 class="bst"> {% block title %} Welcome to HerediVar {% endblock %} </h1>
 
-<div class="bst">
+
+
+<div>
+    <strong>Herzlich Willkommen auf der Homepage des HerediVar-Projekts des Deutschen Konsortiums Familiärer Brust- und Eierstockkrebs!</strong>
+</div>
+
+
+<div class="sst">
+    Das Deutsche Konsortium Familiärer Brust- und Eierstockkrebs (DK-FBREK) ist ein deutschlandweiter Verbund von universitären Zentren, mit dem Ziel Ratsuchende bzw. 
+    Patientinnen mit einer familiären Belastung für Brustkrebs und Eierstockkrebs bundesweit optimal zu betreuen.  Weitere Informationen zum Konsortium erhalten sie 
+    auf unserer Homepage unter {{ macros.external_link("DK-FBREK", "https://www.konsortium-familiaerer-brustkrebs.de/") }}.
+</div>
+
+
+<div class="sst">
+    Voraussetzung für die bestmögliche Berechnung des persönlichen Risikos für erblich bedingten Brust- und Eierstockkrebs als Voraussetzung für risikoadaptierte 
+    Präventionsmaßnahmen und gezielte Therapien im Krankheitsfall ist die eindeutige Klassifikation der im Rahmen der Gendiagnostik identifizierten genetischen Varianten. 
+    Eine große Herausforderung stellt dabei die große Zahl der mittels Next-Generation Sequencing (NGS)-basierten Genpanel-Untersuchungen detektierten Keimbahnvarianten 
+    mit unklarer Signifikanz (VUS) dar. Dies sind genetische Veränderungen, deren Bedeutung für die Genfunktion und damit die mögliche Ursache der Erkrankung bisher 
+    nicht geklärt ist. Denn viele Genvarianten sind Normvarianten, sog. Polymorphismen, d.h. sie beeinflussen die Funktion des Gens nicht.
+</div>
+
+<div class="sst">
+    Um dieser Herausforderung zu begegnen hat das DK-FBREK seit mehr als 10 Jahren eine Arbeitsgruppe (VUS-Task-Force) etabliert, welche die Klassifizierung der von den 
+    Zentren des Konsortiums in die zentrale Datenbank gemeldeten Varianten überprüft und sich um die Klassifizierung von VUS bemüht. Des Weiteren wurden eigene 
+    genspezifische Richtlinien für die Variantenklassifizierung auf Grundlage der Richtlinien internationaler Expertengremien entwickelt (IARC, ENIGMA, ClinGen). Diese
+    sind in den Publikationen auf {{ macros.external_link("pubmed", "https://pubmed.ncbi.nlm.nih.gov/32322110/") }} und im 
+    {{ macros.external_link("thieme verlag", "https://www.thieme-connect.com/products/ejournals/abstract/10.1055/a-1342-5231") }} zu finden.
+</div>
+
+
+<div class="sst">
+    Mitglieder des Expertengremiums arbeiten in den internationalen Arbeitsgruppen dieser Konsortien an der Anpassung und Weiterentwicklung der Bewertungsrichtlinien 
+    mit. ({{ macros.external_link("ENIGMA", "https://enigmaconsortium.org/") }}, {{ macros.external_link("ClinGen", "https://clinicalgenome.org/affiliation/50087/")}})
+    Mittlerweile entsenden alle 23 Zentren des Konsortiums Mitglieder in die VUS-Task-Force, dennoch ist die Anzahl der gemeldeten Varianten und insbesondere VUS so 
+    hoch, dass eine händische Bearbeitung von Varianten nicht länger zielführend ist.
+</div>
+
+<div class="sst">
+    Daher hat das DK-FBREK eine Drittmittelförderung eingeworben. Ziel des für 3 Jahre durch die Deutsche Krebshilfe {{ macros.external_link("Deutsche Krebshilfe", "https://www.krebshilfe.de/") }}
+    im Rahmen des Prioritätenprogramms „Translationale Onkologie“ geförderten HerediVar Projektes (Fördernummer: 70114178) ist es, eine Datenbankplattform zu entwickeln, welche 
+    die kollaborative Klassifikation von genetischen Varianten unter Automatisierung vieler Annotations- und Arbeitsschritte ermöglicht und so zukünftig die Bearbeitung 
+    einer großen Zahl von Varianten und die Einspeisung der konsentierten Variantenbewertung des Konsortiums in die frei zugängliche ClinVar-Datenbank ermöglicht. 
+    Weitere Informationen zum HerediVar Projekt und den beteiligten Institutionen finden sie unter der <a href="{{ url_for('doc.about') }}">Projektbeschreibung</a>. Für Anfragen nutzen sie bitte das 
+    <a href="#">Kontaktformular</a>.
+</div>
+
+
+
+
+
+
+
+
+
+<div class="bst bsb">
+    <h4>Overview</h4>
+    Currently, there are {{ total_num_variants }} variants in the HerediVar database of which {{ total_num_classified_variants }} are classified. These are annotated using these databases:
+    <div class="table-responsive tableFixHead sst">
+        <table class="table table-hover" style="width:100%" id="clinvarSubmissionsTable">
+            <thead>
+                <tr>
+                    <th class="width_very_small"><div class="sortable">Title</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th class="width_medium" id="clinvarSubmissionsTableLastEvaluatedCol"><div class="sortable">Description</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th class="width_minimal"><div class="sortable">Version</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th class="width_very_small"><div class="sortable">Version date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for database in database_info %}
+                <tr>
+                    <td>{{ database[0] }}</td>
+                    <td>{{ database[1] }}</td>
+                    <td>{{ database[2] }}</td>
+                    <td>{{ database[3] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<div class="bst bsb">
     <h4>Changelog</h4>
-    <div class="underline">v 1.3 (19.06.2023)</div>
+    <div class="underline">v 1.4 ()</div>
     <div>
         General changes:
         <ul>
-            <li>Added checkboxes to variant table which allows more fine grained collection of variants in lists</li>
-            <li>Added information about the chosen criteria to the comment of a ClinVar submission from HerediVar</li>
-            <li>Updated documentation</li>
-            <li>The strength of all ACMG criteria can be adjusted now</li>
-            <li>Added continuous numbering of variants in variant lists</li>
-            <li>Added 3+ and 3- classes. They can be selected manually from the dropdown</li>
-            <li>Added important variant information to classify page</li>
-            <li>Mane select transcripts are now shown in green in IGV</li>
+            <li>Update landing page</li>
+            <li>Moved previous changelog announcements to a new page</li>
+            <li>The admin dashboard now allows reannotation of a user defined set of databases</li>
+            <li>The admin dashboard now shows an overview of all annotations and annotation errors / warnings</li>
         </ul>
         Bugfixes:
         <ul>
-            <li>Fixed ClinVar uploads <div class="classification_5_col">{{macros.draw_exclamation_mark('') }} Classifications are currently submitted to the ClinVar TEST ENDPOINT which is reset periodically! None of your ClinVar submissions will go live at the moment.</div></li>
-            <li>Fixed a bug when the user tried to access a non existing variant list</li>
-            <li>Improved performance of variant table</li>
-            <li>Fixed a bug where the user was unable to search for gene:hgvs strings in the variant table</li>
-            <li>Classified variants in IGV browser are now shown with the color scheme corresponding to the classification</li>
-            <li>Fixed a bug where some characters were replaced by the url encoding in HGVS strings</li>
-            <li>Fixed a couple of CSP errors</li>
-            <li>Fixed the colors of classified variants in IGV</li>
-            <li>Fixed colors of acmg criteria buttons</li>
+            <li></li>
         </ul>
         Known issues:
         <ul>
             <li>COSMIC links do not work sometimes</li>
         </ul>
     </div>
-    <div class="underline">v 1.2 (12.05.2023)</div>
-    <div>
-        General changes:
-        <ul>
-            <li>Improved user registration form</li>
-            <li>Added profile page which allows each user to edit their name, mail and affiliation by themselves</li>
-            <li>Added possibility to search for multiple lists simultaneously</li>
-            <li>Added duplicate, intersect, subtract and union actions for user variant lists</li>
-            <li>Updated documentation</li>
-        </ul>
-        Bugfixes:
-        <ul>
-            <li>Fixed a bug where the user was able to upload multi allelic variants</li>
-            <li>Fixed a bug where the user was able to insert invalid variant sequences</li>
-            <li>Navigation is now shown independent of scroll position on documentation page</li>
-            <li>Fixed a bug when searching it would not show any variants</li>
-        </ul>
-    </div>
-    <div class="underline">v 1.1 (08.05.2023)</div>
-    <div>
-        General changes:
-        <ul>
-            <li>External links now open a new tab on left click</li>
-            <li>Added documentation</li>
-        </ul>
-        Performance changes:
-        <ul>
-            <li>Added client-side pagination of the literature table</li>
-        </ul>
-    </div>
-    <div class="underline">v 1.0</div>
-    <div>
-        Initial release
-    </div>
+    <a class="btn btn-outline-primary" href="{{url_for('doc.changelog')}}">previous changelog</a>
 </div>
+
+
+
 
 </div>
 

@@ -535,3 +535,15 @@ def read_dotenv():
     
     load_dotenv(os.path.join(basedir, dotenvfile))
 
+def enquote(string):
+    string = str(string).strip("'") # remove quotes if the input string is already quoted!
+    return "'" + string + "'"
+
+def enbrace(string):
+    #string = str(string).strip("(").strip(")")
+    string = "(" + string + ")"
+    return string
+
+def enpercent(string):
+    string = str(string).strip('%')
+    return '%' + string + '%'

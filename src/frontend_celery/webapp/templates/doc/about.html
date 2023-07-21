@@ -8,34 +8,80 @@
   
 <h1 class="bst"> {% block title %} About HerediVar {% endblock %} </h1>
 
-<div class="bst">
-    <h4>Project title</h4>
-    <div>
-        Integrating bioinformatics and functional genomics in the clinical classification of genetic variation: Hereditary breast and ovarian cancer as a paradigm (HerediVar)
-    </div>
-    
-</div>
+
 
 <div class="bst">
-    <h4>Hypothesis & Goal</h4>
-    <div>
-        The major challenge posed by next generation sequencing (NGS) techniques in genomic medicine is the classification of variants of uncertain significance (VUS). 
-        To realize a timely and cost-effective classification of VUS, an interactive integrated variant database (HerediVar) will be developed for high-throughput 
-        classification of genetic variants by the expert panel of the German Consortium for Hereditary Breast and Ovarian Cancer (GC-HBOC) along with experimental analyses. 
-        Thus, HerediVar closes the gap between genetic data analyses and clinical interpretation. <br>
-        To achive this, variants are imported and annotated from the established central family database (HerediCaRe). Among others, the annotation comprises multiple in 
-        silico prediction tools, precalculated scores as well as literature and consequence annotations. This evidence allows for a sophisticated pathogenicity classification 
-        based on a classification scheme like the well-known ACMG guidelines.
+
+    <h4>HerediVar Projektbeschreibung</h4>
+
+    <div class="sst">
+        Obwohl es uns gelungen ist, die VUS-Prävalenz bei den wichtigsten Risikogenen für den erblichen Brust- und Eierstockkrebs-(HBOC-), 
+        BRCA1/2, auf unter 5% zu senken, ist die VUS-Prävalenz durch die Hinzunahme weniger gut untersuchter Risikogene in die Routine-TruRisk® 
+        Genpanelanalyse auf 20% gestiegen. Infolgedessen erhält derzeit jede 5. Ratsuchende einen VUS-Befund, der zur Verunsicherung und zum 
+        Angebot unangemessener Präventionsmaßnahmen und Therapien führen kann. Um diesem Risiko entgegenzuwirken, haben wir ein einzigartiges 
+        "Recall"-System eingerichtet. Für den Fall, dass eine VUS als (wahrscheinlich) benigne oder (wahrscheinlich) pathogen eingestuft wird, 
+        ermöglicht uns dieses System, aktiv mit Personen, die die jeweilige genetische Variante tragen, erneut Kontakt aufzunehmen und über die 
+        klinischen Konsequenzen der neuen Erkenntnisse zu informieren. 
     </div>
+
+    <div class="sst">
+        Eine wichtige Voraussetzung für unsere Arbeit ist die zentrale Familiendatenbank des DK-FBREK am Institut für Medizinische Informatik, 
+        Statistik und Epidemiologie (IMISE) an der Universität Leipzig, die mit Unterstützung der Deutschen Krebshilfe und dem BMBF aufgebaut 
+        und als Spezialregister weiterentwickelt wurde und nun in der von den Krankenkassen geförderten Besonderen Versorgung konsolidiert 
+        wurde (Versorgungsforschung Musterregister, HerediCaRe, 01GY1901).
+    </div>
+
+    <div class="sst">
+        Um die Lücke zwischen genetischer Datenanalyse, Variantenklassifikation und klinischer Interpretation zu schließen, haben wir eine 
+        moderne interaktive Variantendatenbank HerediVar aufgebaut, die es uns ermöglicht, 
+    </div>
+
+    <ol type="I">
+        <li>öffentlich verfügbare Informationen zur Klassifizierung von Varianten automatisch zu integrieren,</li>
+        <li>klinische Daten aus unserer zentralen Datenbank (z.B. Daten zur familiären Co-Segregation, Co-Occurrence, klinische Daten) unter Berücksichtigung der geltenden Datenschutzbestimmungen zu integrieren,</li>
+        <li>Veränderungen in den Richtlinien zur Variantenklassifizierung einheitlich und zeitnah zu übernehmen.</li>
+    </ol>
+
+    <div>
+        Dies wird uns zukünftig in die Lage versetzen, ein automatisiertes Verfahren zur Variantenklassifikation zu implementieren und Varianten für die Funktionsanalyse und/oder Überprüfung 
+        durch die VUS-Task Force zu priorisieren und unsere Daten direkt in die ClinVar Datenbank einzuspeisen. Bisher speisen wir die Daten 
+        als Mitglied der ENIGMA Expertengruppe über diese in ClinVar ein.
+    </div>
+
+    <div class="sst">
+        Vorhandene Daten reichen jedoch häufig nicht aus, um eine VUS zu klassifizieren. Daher umfasst unser Projekt explizit auch experimentelle 
+        Analysen von VUS, für die keine ausreichenden Daten zur Klassifizierung vorliegen. Um dieses Ziel zu erreichen, werden insgesamt 5 Teilprojekte 
+        von renommierten Experten zusammen mit qualifizierten Nachwuchswissenschaftlern auf diesem Gebiet geleitet. Unser Ansatz ist multidisziplinär 
+        angelegt und bezieht Experten aus den Bereichen Krebsgenetik, DNA-Reparatur, Humangenetik, Bioinformatik und Biometrie/Epidemiologie mit ein.
+    </div>
+
+    <div class="sst">
+        <strong>Links zu den beteiligten Projektpartnern:</strong>
+        <ul>
+            <li>{{ macros.external_link("Zentrum Hannover", "https://www.mhh.de/humangenetik") }}</li>
+            <li>{{ macros.external_link("Zentrum Köln", "https://familiaerer-brust-und-eierstockkrebs.uk-koeln.de/") }}</li>
+            <li>{{ macros.external_link("Zentrum Leipzig", "https://www.imise.uni-leipzig.de/Mitarbeiter/Christoph_Engel") }}</li>
+            <li>{{ macros.external_link("Zentrum Ulm", "https://www.uniklinik-ulm.de/frauenheilkunde-und-geburtshilfe/forschung-studien/sektion-gynaekologische-onkologie.html") }}</li>
+            <li>{{ macros.external_link("Zentrum Würzburg", "https://www.biozentrum.uni-wuerzburg.de/humangenetik/forschung/ag-dr-kalb/") }}</li>
+            <li>{{ macros.external_link("BIH", "https://www.bihealth.org/de/forschung/wissenschaftliche-infrastruktur/core-units/interoperabilitaet/home/projekte/highmed-1-3") }}</li>
+        </ul>
+    </div>
+
+
 </div>
 
+
+
+
 <div class="bst">
-    <h4>People (sorted alphabetically by last name)</h4>
+    <h4>Entwicklerteam der Webseite (alphabetisch sortiert nach Nachnamen)</h4>
     <ul>
         <li>Marvin Döbel (developer)</li>
         <li>Marc Sturm (supervisor)</li>
-        <li>....</li>
     </ul>
+    <div>
+        Besonderen Dank an alle Konsortiumsmitglieder die uns Feedback zur Funktionalität gegeben haben!
+    </div>
 </div>
 
 </div>
