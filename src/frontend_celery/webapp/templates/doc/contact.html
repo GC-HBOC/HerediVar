@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1 class="bst"> {% block title %} Kontaktformular {% endblock %} </h1>
+
+
+
+<div class="bst">
+
+    <div class="sst">
+        Sollten sie eine Anfrage zur Klassifizierung einer Variante in den von uns untersuchten Kerngenen für 
+        erblichen Brust- und/oder Eierstockkrebs haben, nutzen sie bitte das folgende Kontaktformular. Gerne 
+        teilen wir Ihnen die Einschätzung der VUS-Task-Force mit, sofern die Variante im DK-FBREK bereits dokumentiert 
+        und bewertet wurde. Sollte die Variante von uns noch nicht gefunden worden sein, werden wir ihnen dies 
+        ebenfalls mitteilen. Sie können sich dann für die Einschleusung Ihrer Ratsuchenden in die DK-FBREK 
+        Betreuung mit Aufnahme der VUS in unser Bewertungskonzept inkl. der Teilnahme Ihrer Ratsuchenden 
+        an unserem Recall-System an eines der DK-FBREK Zentren wenden. Bitte haben sie Verständnis dafür, 
+        dass wir nur vollständige Anfragen beantworten können.
+    </div>
+
+
+    <div class="bst bsb">
+        <form method="POST">
+            <h4>Enquiry</h4>
+
+            <div class="form-group sst">
+                <label for="gene" class="form-label">Gene</label>
+                <select class="form-select" name="gene" id="gene">
+                    <option value="" {% if (request.form['gene'] not in core_gene_transcripts) %} selected="selected" {% endif %} disabled hidden>Choose a gene</option>
+                    {% for gene_symbol in core_gene_transcripts %}
+                        <option class="color_black" value="{{gene_symbol}}">{{ gene_symbol }}</option>
+                    {% endfor %}
+               </select>
+               <div>If the gene you are looking for is not in this dropdown we do not have information about your variant</div>
+            </div>
+
+            <div class="form-group sst">
+                <label for="transcript" class="form-label">Transcript</label>
+                <select class="form-select" name="transcript" id="transcript">
+                    <option value="" {% if (request.form['gene'] not in core_gene_transcripts) %} selected="selected" {% endif %} disabled hidden>Choose a gene before choosing the transcript</option>
+               </select>
+            </div>
+
+
+
+            <div class="form-group sst">
+                <label for="c_hgvs" class="form-label">c.HGVS</label>
+                <input type="text" name="c_hgvs"
+                       placeholder="c_hgvs" class="form-control validationreq"
+                       value="{{ request.form['c_hgvs'] }}" id="c_hgvs" required>
+                </input>
+                <div class="invalid-feedback">
+                    Please provide either c.HGVS or p.HGVS!
+                </div>
+                <div>Provide at least one of c.HGVS and p.HGVS.</div>
+            </div>
+
+            <div class="form-group sst">
+                <label for="p_hgvs" class="form-label">p.HGVS</label>
+                <input type="text" name="p_hgvs"
+                       placeholder="p_hgvs" class="form-control validationreq"
+                       value="{{ request.form['p_hgvs'] }}" id="p_hgvs" required>
+                </input>
+                <div class="invalid-feedback">
+                    Please provide either c.HGVS or p.HGVS!
+                </div>
+            </div>
+
+            <div class="form-group sst">
+                <label for="question" class="form-label">Question</label>
+                <input type="text" name="question"
+                       placeholder="question" class="form-control validationreq"
+                       value="{{ request.form['question'] }}" id="question" required>
+                </input>
+                <div class="invalid-feedback">
+                    Please provide the question you try to answer!
+                </div>
+            </div>
+
+            <div class="form-group sst bsb">
+                <label for="comment" class="form-label">Comment</label>
+                <input type="text" name="comment"
+                       placeholder="comment" class="form-control"
+                       value="{{ request.form['comment'] }}" id="comment">
+                </input>
+            </div>
+
+            <h4>Contact information</h4>
+            <div class="form-group sst">
+                <label for="last_name" class="form-label">Last name</label>
+                <input type="text" name="last_name"
+                       placeholder="last_name" class="form-control validationreq"
+                       value="{{ request.form['last_name'] }}" id="last_name" required>
+                </input>
+                <div class="invalid-feedback">
+                    Please provide your last name!
+                </div>
+            </div>
+
+            <div class="form-group sst">
+                <label for="first_name" class="form-label">First name</label>
+                <input type="text" name="first_name"
+                       placeholder="first_name" class="form-control validationreq"
+                       value="{{ request.form['first_name'] }}" id="first_name" required>
+                </input>
+                <div class="invalid-feedback">
+                    Please provide your first name!
+                </div>
+            </div>
+
+            <div class="form-group sst">
+                <label for="institution" class="form-label">Institution</label>
+                <input type="text" name="institution"
+                       placeholder="institution" class="form-control validationreq"
+                       value="{{ request.form['institution'] }}" id="institution" required>
+                </input>
+                <div class="invalid-feedback">
+                    Please provide your institution!
+                </div>
+            </div>
+
+            <div class="form-group sst">
+                <label for="e_mail" class="form-label">E-mail</label>
+                <input type="text" name="e_mail"
+                       placeholder="e_mail" class="form-control validationreq"
+                       value="{{ request.form['e_mail'] }}" id="e_mail" required>
+                </input>
+                <div class="invalid-feedback">
+                    Please provide your e-mail!
+                </div>
+            </div>
+
+            <button class="btn btn-primary bst" type="submit">Submit</button>
+        </form>
+    </div>
+
+
+
+</div>
+
+
+<input type='hidden' id='flask_data' data-core-gene-transcripts='{{ core_gene_transcripts | tojson }}' />
+
+
+</div>
+
+{% endblock %}
+
+{% block special_scripts %}
+    <script src="/static/js/contact.js"></script>
+{% endblock%}

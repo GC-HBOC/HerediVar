@@ -921,6 +921,12 @@ class Connection:
         result = self.cursor.fetchone()
         return result
 
+    def get_gene_ids_with_variants(self):
+        command = "SELECT gene_id AS symbol FROM transcript WHERE name in (SELECT transcript_name FROM variant_consequence) GROUP BY gene_id"
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
+
     def get_transcripts(self, gene_id):
         command = "SELECT gene_id,name,biotype,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags FROM transcript WHERE gene_id = %s"
         self.cursor.execute(command, (gene_id, ))

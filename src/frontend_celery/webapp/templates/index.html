@@ -52,7 +52,7 @@
     die kollaborative Klassifikation von genetischen Varianten unter Automatisierung vieler Annotations- und Arbeitsschritte ermöglicht und so zukünftig die Bearbeitung 
     einer großen Zahl von Varianten und die Einspeisung der konsentierten Variantenbewertung des Konsortiums in die frei zugängliche ClinVar-Datenbank ermöglicht. 
     Weitere Informationen zum HerediVar Projekt und den beteiligten Institutionen finden sie unter der <a href="{{ url_for('doc.about') }}">Projektbeschreibung</a>. Für Anfragen nutzen sie bitte das 
-    <a href="#">Kontaktformular</a>.
+    <a href="{{url_for('doc.contact')}}">Kontaktformular</a>.
 </div>
 
 
@@ -101,10 +101,13 @@
             <li>Moved previous changelog announcements to a new page</li>
             <li>The admin dashboard now allows reannotation of a user defined set of databases</li>
             <li>The admin dashboard now shows an overview of all annotations and annotation errors / warnings</li>
+            <li>Added a contact form where unregistered people can ask a question about a variant</li>
+            <li>Added suffix to criteria names if the selected strength is not the default strength</li>
         </ul>
         Bugfixes:
         <ul>
-            <li></li>
+            <li>Variants are now not selected by default on the search variants page</li>
+            <li>Abbreviations for criteria are now written with upper case letters</li>
         </ul>
         Known issues:
         <ul>

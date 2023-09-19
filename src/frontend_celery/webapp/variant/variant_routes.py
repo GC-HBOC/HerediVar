@@ -48,7 +48,7 @@ def search():
     # insert variants to list 
     if request.method == 'POST':
         list_id = request.args.get('selected_list_id')
-        print(list_id)
+        #print(list_id)
         
         selected_variants = request.args.get('selected_variants', "").split(',')
         select_all_variants = True if request.args.get('select_all_variants', "false") == "true" else False

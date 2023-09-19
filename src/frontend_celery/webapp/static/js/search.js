@@ -22,7 +22,9 @@ $(document).ready(function(){
     if (do_select_all_variants) { // preselect the select all check from previous request
         document.getElementById("select_all_variants").checked = true
         select_all_variants()
-    } 
+    } else {
+        document.getElementById("select_all_variants").checked = false
+    }
 
     // preselect the single variant checks
     const variant_selects = document.getElementsByClassName("variant_select") 

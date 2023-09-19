@@ -389,7 +389,7 @@ function preselect_criteria_from_database(scheme) {
         //console.log(selected_criteria)
         for(var i = 0; i < selected_criteria.length; i++) {
             var current_data = selected_criteria[i];
-            var current_criterium = current_data['name'].toLowerCase();
+            var current_criterium = current_data['name'].toUpperCase();
             var current_evidence = current_data['evidence'];
             var current_strength = current_data['type'];
 
@@ -697,9 +697,9 @@ function create_criteria_buttons() {
         }
 
         if (last_criterium_type != criterium_type) {
-            if (['b', '1', '2'].includes(last_criterium_type[0])) {
+            if (['B', '1', '2'].includes(last_criterium_type[0])) {
                 benign_criteria_container.appendChild(container)
-            } else if (['p', '4', '5'].includes(last_criterium_type[0])) {
+            } else if (['P', '4', '5'].includes(last_criterium_type[0])) {
                 pathogenic_criteria_container.appendChild(container)
             } else if (container.hasChildNodes()) {
                 uncertain_criteria_container.appendChild(container)
@@ -713,9 +713,9 @@ function create_criteria_buttons() {
     }
 
     // add the last column of buttons
-    if (['b', '1', '2'].includes(last_criterium_type[0])) {
+    if (['B', '1', '2'].includes(last_criterium_type[0])) {
         benign_criteria_container.appendChild(container)
-    } else if (['p', '4', '5'].includes(last_criterium_type[0])) {
+    } else if (['P', '4', '5'].includes(last_criterium_type[0])) {
         pathogenic_criteria_container.appendChild(container)
     } else {
         uncertain_criteria_container.appendChild(container)
@@ -738,7 +738,7 @@ function create_criteria_buttons() {
 function compare_criteria() {
     return function(a, b) {
         if (scheme_type === 'acmg') {
-            const criterium_order = {'pvs': 1, 'ps': 2, 'pm': 3, 'pp': 4, 'bp': 5, 'bs': 6, 'ba': 7}
+            const criterium_order = {'PVS': 1, 'PS': 2, 'PM': 3, 'PP': 4, 'BP': 5, 'BS': 6, 'BA': 7}
             const a_letters = a.slice(0, -1)
             const a_crit_num = parseInt(a.slice(-1))
             const b_letters = b.slice(0, -1)
@@ -775,7 +775,7 @@ function compare_criteria() {
 // sort helper
 function compare_strength() {
     return function(a, b) {
-        const strength_order = {'pvs': 1, 'ps': 2, 'pm': 3, 'pp': 4, 'bp': 5, 'bs': 6, 'ba': 7}
+        const strength_order = {'PVS': 1, 'PS': 2, 'PM': 3, 'PP': 4, 'BP': 5, 'BS': 6, 'BA': 7}
         a_num = strength_order[a]
         b_num = strength_order[b]
         
@@ -1174,6 +1174,17 @@ function update_criterium_button_background(criterium_id) {
     }
 }
 
+function update_criterium_button_label(criterium_id) {
+    var criterium_strength_select = document.getElementById(criterium_id + '_strength');
+    var criterium_button_label = document.getElementById(criterium_id + '_label');
+
+    if (criterium_strength_select.getAttribute('default_strength') != criterium_strength_select.value) {
+        criterium_button_label.innerText = criterium_id + '_' + criterium_strength_select.value
+    } else {
+        criterium_button_label.innerText = criterium_id
+    }
+}
+
 // select and unselect the criterium itself + its associated strength input check which holds information about its user-assigned strenght
 function toggle_criterium(criterium_id) {
     var obj = document.getElementById(criterium_id)
@@ -1188,6 +1199,7 @@ function set_criterium(criterium_id, is_checked) {
     var obj = document.getElementById(criterium_id)
     obj.checked = is_checked
     update_criterium_button_background(criterium_id)
+    update_criterium_button_label(criterium_id)
     document.getElementById(criterium_id + '_strength').checked = obj.checked
     const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
     enable_disable_buttons(current_disable_group, obj.checked)
@@ -1202,6 +1214,7 @@ function update_criterium_strength(obj, criterium_id) {
     strength_obj.value = obj.value
     update_classification_preview()
     update_criterium_button_background(criterium_id)
+    update_criterium_button_label(criterium_id)
 }
 
 

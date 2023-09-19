@@ -132,14 +132,17 @@
 {% endmacro %}
 
 
+
 {% macro draw_criteria_display(criteria, source='user') %}
     {% for criterium in criteria %}
     <span class="d-inline-block ssr tooltip-lg" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" {% if source=="user" %} user_criterium_applied_id="{{ criterium.id }}" {% else %} consensus_criterium_applied_id="{{ criterium.id }}" {% endif %}
         title="Strength: {{ criterium.strength }} <br> Evidence: {{ criterium.evidence }}">
-        <div class="btn-{{ criterium.type }} light-hover acmg-button acmg-button-small">{{ criterium.name }}</div>
+        <div class="btn-{{ criterium.type }} light-hover acmg-button acmg-button-small">{{ criterium.display_name() }}</div>
     </span>
     {% endfor %}
 {% endmacro %}
+
+
 
 {% macro draw_annotation(annot) %}
 {% if annot is not none %}
@@ -528,7 +531,7 @@
     data-list-names='{{ request.args.getlist("lookup_list_name") | tojson }}'
     data-list-ids='{{ request.args.getlist("lookup_list_id") | tojson}}'
     data-previous-selected-variants='{{ request.args.get("selected_variants", "") }}'
-    data-select-all-variants='{{ request.args.get("select_all_variants", "true") }}'
+    data-select-all-variants='{{ request.args.get("select_all_variants", "false") }}'
 />
 <script src="/static/js/paginated_variants.js"></script>
 

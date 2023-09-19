@@ -221,34 +221,63 @@ class Criterium:
     strength: str
     evidence: str
 
+    def display_name(self):
+        the_name = self.name.lower()
+        fancy_name = self.name + '_' + self.type
+        possible_criteria = ['pvs', 'ps', 'pm', 'pp', 'ba', 'bs', 'bp']
+        for criterium in possible_criteria:
+            if criterium in the_name and self.type != criterium:
+                return fancy_name
+        return self.name
+
+
+    #def strength_to_string(self):
+    #    print(self.strength)
+    #    if self.strength == "very strong pathogenic":
+    #        return "vs"
+    #    if self.strength == "strong pathogenic":
+    #        return "s"
+    #    if self.strength == "medium pathogenic":
+    #        return "m"
+    #    if self.strength == "supporting pathogenic":
+    #        return "p"
+    #    if self.strength == "stand-alone benign":
+    #        return "ba"
+    #    if self.strength == "supporting benign":
+    #        return "p"
+    #    if self.strength == "strong benign":
+    #        return "s"
+
+
     def to_vcf(self):
         info = "~2B".join([self.name, self.strength, self.evidence]) # sep: +
         return info
 
     def criterium_to_num(self):
-        if 'pvs' in self.name:
+        the_name = self.name.lower()
+        if 'pvs' in the_name:
             return 1
-        if 'ps' in self.name:
+        if 'ps' in the_name:
             return 2
-        if 'pm' in self.name:
+        if 'pm' in the_name:
             return 3
-        if 'pp' in self.name:
+        if 'pp' in the_name:
             return 4
-        if 'bp' in self.name:
+        if 'bp' in the_name:
             return 5
-        if 'bs' in self.name:
+        if 'bs' in the_name:
             return 6
-        if 'ba' in self.name:
+        if 'ba' in the_name:
             return 7
-        if '1.' in self.name:
+        if '1.' in the_name:
             return 5
-        if '2.' in self.name:
+        if '2.' in the_name:
             return 4
-        if '3.' in self.name:
+        if '3.' in the_name:
             return 3
-        if '4.' in self.name:
+        if '4.' in the_name:
             return 2
-        if '5.' in self.name:
+        if '5.' in the_name:
             return 1
 
 @dataclass
