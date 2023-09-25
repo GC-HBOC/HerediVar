@@ -29,7 +29,8 @@ def search():
     conn = get_connection()
     user_id = session['user']['user_id']
 
-
+    sort_bys = ["genomic position", "recent"]
+    page_sizes = ["5", "20", "50", "100"]
 
     genes = extract_genes(request)
     ranges = extract_ranges(request)
@@ -37,12 +38,23 @@ def search():
     user_classifications = extract_user_classifications(request)
     hgvs = extract_hgvs(request)
     variant_ids_oi = extract_lookup_list(request, user_id, conn)
-
     page = int(request.args.get('page', 1))
-    per_page = 20
-    variants, total = conn.get_variants_page_merged(page, per_page, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user_classifications, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
+    selected_page_size = request.args.get('page_size', page_sizes[1])
+    selected_sort_by = request.args.get('sort_by', sort_bys[0])
+    include_hidden = True if request.args.get('include_hidden', 'off') == 'on' else False
+
+
+    if selected_page_size not in page_sizes:
+        flash("This page size is not supported. Defaulting to 20.")
+        selected_page_size = "20"
+    if selected_sort_by not in sort_bys:
+        flash("The variant table can not be sorted by " + str(selected_sort_by) + ". Defaulting to genomic position sort.")
+        selected_sort_by = "genomic position"
+
+    
+    variants, total = conn.get_variants_page_merged(page=page, page_size=selected_page_size, sort_by=selected_sort_by, include_hidden=include_hidden, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user_classifications, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
     lists = conn.get_lists_for_user(user_id)
-    pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
+    pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
 
 
     # insert variants to list 
@@ -75,7 +87,7 @@ def search():
                             num_inserted = num_inserted + 1
                 flash(Markup("Successfully inserted " + str(num_inserted) + " variant(s) from the current search to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
                 return redirect(url_for('variant.search', genes=request.args.get('genes'), ranges=request.args.get('ranges'), consensus=request.args.getlist('consensus'), user = request.args.getlist('user'), hgvs= request.args.get('hgvs')))
-    return render_template('variant/search.html', variants=variants, page=page, per_page=per_page, pagination=pagination, lists=lists)
+    return render_template('variant/search.html', variants=variants, page=page, per_page=selected_page_size, pagination=pagination, lists=lists, sort_bys=sort_bys, page_sizes=page_sizes)
 
 
 # chr1-17027834-G-A
@@ -179,12 +191,13 @@ def hide_variant(variant_id):
     conn = get_connection()
     variant = conn.get_variant(variant_id, 
                                include_annotations = False, 
+                               include_consensus = False, 
+                               include_user_classifications = False, 
+                               include_heredicare_classifications = False, 
                                include_clinvar = False, 
                                include_consequences = False, 
-                               include_literature = False, 
-                               include_external_ids = False, 
-                               include_user_classifications=False, 
-                               include_consensus=False
+                               include_assays = False, 
+                               include_literature = False
                             )
     is_hidden = variant.is_hidden
     conn.hide_variant(variant_id, is_hidden)

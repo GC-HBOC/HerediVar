@@ -47,7 +47,27 @@ $(document).ready(function()
         });
     });
 
-
+    // functionality for the hide variant button
+    $('#change_hidden_state').click(function() {
+        $.ajax({
+            type: 'POST',
+            url: this.getAttribute('url'),
+            success: function(data, status, request) {
+                if (data === 'True') {
+                    const hidden_pill = create_hidden_pill()
+                    document.getElementById('annotation_status_pills').appendChild(hidden_pill)
+                    document.getElementById('change_hidden_state').innerText = "Unhide variant"
+                } else {
+                    document.getElementById('hidden_pill').remove()
+                    document.getElementById('change_hidden_state').innerText = "Hide variant"
+                }
+                
+            },
+            error: function() {
+                console.log('error')
+            }
+        });
+    })
 
 
     // functionality for the reannotate button
@@ -330,6 +350,19 @@ function setup_igv(chrom, start, end, variant_id) {
         }
         return markup;
     }
+}
+
+function create_hidden_pill() {
+    //<span class="badge rounded-pill bg-danger" id="hidden_pill" data-bs-toggle="tooltip" title="This variant is hidden. To unhide use the gear button.">HIDDEN</span>
+    var hidden_pill = document.createElement('span')
+    hidden_pill.classList.add('badge')
+    hidden_pill.classList.add('rounded-pill')
+    hidden_pill.classList.add('bg-danger')
+    hidden_pill.id = "hidden_pill"
+    hidden_pill.setAttribute('data-bs-toggle', 'tooltip')
+    hidden_pill.setAttribute('title', "This variant is hidden. To unhide use the gear button.")
+    hidden_pill.innerText = "HIDDEN"
+    return hidden_pill
 }
 
 

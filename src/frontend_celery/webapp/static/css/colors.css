@@ -7,6 +7,10 @@
     background:white !important;
 }
 
+.bg_hidden_variant {
+    background-color:  rgb(255, 214, 214) !important;
+}
+
 .variant-banner-color {
     background-color:rgb(238, 238, 238);
     border-color: rgb(206, 206, 206);

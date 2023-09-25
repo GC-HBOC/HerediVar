@@ -618,10 +618,11 @@ class Connection:
                         return 0
 
 
-    def get_variants_page_merged(self, page, page_size, user_id, include_hidden, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None):
+    def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None):
         # get one page of variants determined by offset & pagesize
-
+        page_size = int(page_size)
         offset = (page - 1) * page_size
+        
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
         postfix = ""
         actual_information = ()
@@ -687,19 +688,6 @@ class Connection:
                 actual_information += tuple(user_without_dash)
             new_constraints = "id IN (" + new_constraints_inner + ")"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
-        #if clinvar is not None and len(clinvar) > 0:
-        #    new_constraints_inner = ""
-        #    clinvar_without_dash = [value for value in clinvar if value != '-']
-        #    if '-' in clinvar:
-        #        new_constraints_inner += "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM clinvar_variant_annotation)"
-        #        if len(clinvar_without_dash) > 0:
-        #            new_constraints_inner = new_constraints_inner + " UNION "
-        #    if len(clinvar_without_dash) > 0:
-        #        placeholders = ["%s"] * len(clinvar_without_dash)
-        #        placeholders = ', '.join(placeholders)
-        #        placeholders = functions.enbrace(placeholders)
-        #        clinvar_without_dash
-        #        new_constraints_inner += "SELECT "
         if hgvs is not None and len(hgvs) > 0:
             all_variants = []
             for hgvs_string in hgvs:
@@ -734,11 +722,15 @@ class Connection:
             new_constraints = " variant.is_hidden = 0"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         
-        command = prefix + postfix
+        command = prefix + postfix        
+        if sort_by == 'genomic position':
+            command += " ORDER BY chr, pos, ref, alt"
+        elif sort_by == 'recent':
+            command += " ORDER BY id DESC"
         if page_size != 'unlimited':
-            command = command + " ORDER BY chr, pos, ref, alt LIMIT %s, %s"
+            command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
-        #print(command % actual_information)
+        print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 

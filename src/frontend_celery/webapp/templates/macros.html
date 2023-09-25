@@ -261,7 +261,7 @@
 {% endmacro %}
 
 
-{% macro draw_paginated_variant_table(pagination, variants, lists=none) %}
+{% macro draw_paginated_variant_table(pagination, variants, sort_bys, page_sizes, lists=none) %}
 <div id="tabnav-head" class="row align-items-end  nsl nsr">
     <div class="col nopad">{{ pagination.links }}</div>
 
@@ -418,12 +418,12 @@
 
                     
                     <div class="form-group d-flex sst">
-                        <!--
                         <div class="bsr">
                             <label for="page_size" class="form-label">Page size</label>
                             <select class="form-select" name="page_size" id="page_size" style="width:5em" required>
+                                {% set selected_page_size = request.args.get('page_size', page_sizes[1])%}
                                 {% for option in page_sizes %}
-                                    <option value="{{option}}" {% if (page_size == option) %} selected="selected" {% endif %}> {{option}} </option>
+                                    <option value="{{option}}" {% if selected_page_size == option %} selected="selected" {% endif %}> {{option}} </option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -431,18 +431,18 @@
                         <div class="bsr">
                             <label for="sort_by" class="form-label">Sort by</label>
                             <select class="form-select" name="sort_by" id="sort_by" style="width:11em" required>
+                                {% set selected_sort_by = request.args.get('sort_by', sort_bys[0])%}
                                 {% for option in sort_bys %}
-                                    <option value="{{option}}" {% if (sort_by == option) %} selected="selected" {% endif %}> {{option}} </option>
+                                    <option value="{{option}}" {% if selected_sort_by == option %} selected="selected" {% endif %}> {{option}} </option>
                                 {% endfor %}
                             </select>
                         </div>
-                        -->
 
                         <div class="form-group">
                             <label for="status-select" class="form-label">Status</label>
                             <div id="status-select" class="d-flex">
                                 <div class="form-check d-flex bsr align-items-center">
-                                    <input class="form-check-input"  style="margin-right:0.3rem" type="checkbox" id="include_hidden" name="include_hidden" {% if include_hidden %}checked{% endif %}>
+                                    <input class="form-check-input"  style="margin-right:0.3rem" type="checkbox" id="include_hidden" name="include_hidden" {% if request.args.get('include_hidden') == 'on' %}checked{% endif %}>
                                     <label class="form-check-label" for="include_hidden">Include hidden</label>
                                 </div>
                             </div>
@@ -490,7 +490,7 @@
     <tbody id="variantTableBody">
       {% for variant in variants %}
       {% set preferred_transcripts = variant.get_preferred_transcripts() %}
-      <tr name="variant_row" variant_id="{{ variant.id }}">
+      <tr name="variant_row" {% if variant.is_hidden %}class="bg_hidden_variant"{% endif %} variant_id="{{ variant.id }}">
         <td class="visually_hidden">{{ variant.id }}</td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="text_align_center clickable nowrap">{{ variant.chrom }}</td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable nowrap">{{ variant.pos }}</td>
