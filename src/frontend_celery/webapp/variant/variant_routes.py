@@ -29,9 +29,6 @@ def search():
     conn = get_connection()
     user_id = session['user']['user_id']
 
-    sort_bys = ["genomic position", "recent"]
-    page_sizes = ["5", "20", "50", "100"]
-
     genes = extract_genes(request)
     ranges = extract_ranges(request)
     consensus_classifications = extract_consensus_classifications(request)
@@ -39,18 +36,8 @@ def search():
     hgvs = extract_hgvs(request)
     variant_ids_oi = extract_lookup_list(request, user_id, conn)
     page = int(request.args.get('page', 1))
-    selected_page_size = request.args.get('page_size', page_sizes[1])
-    selected_sort_by = request.args.get('sort_by', sort_bys[0])
-    include_hidden = True if request.args.get('include_hidden', 'off') == 'on' else False
 
-
-    if selected_page_size not in page_sizes:
-        flash("This page size is not supported. Defaulting to 20.")
-        selected_page_size = "20"
-    if selected_sort_by not in sort_bys:
-        flash("The variant table can not be sorted by " + str(selected_sort_by) + ". Defaulting to genomic position sort.")
-        selected_sort_by = "genomic position"
-
+    sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden = extract_search_settings(request)
     
     variants, total = conn.get_variants_page_merged(page=page, page_size=selected_page_size, sort_by=selected_sort_by, include_hidden=include_hidden, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user_classifications, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
     lists = conn.get_lists_for_user(user_id)
