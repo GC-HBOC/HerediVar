@@ -160,7 +160,6 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     else:
         has_multiple_vids = False
     
-    
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
     clinvar_submission = check_update_clinvar_status(variant_id, conn)
@@ -174,6 +173,22 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             is_classification_report = False
                         )
 
+@variant_blueprint.route('/hide_variant/<int:variant_id>', methods=['POST'])
+@require_permission(['admin_resources'])
+def hide_variant(variant_id):
+    conn = get_connection()
+    variant = conn.get_variant(variant_id, 
+                               include_annotations = False, 
+                               include_clinvar = False, 
+                               include_consequences = False, 
+                               include_literature = False, 
+                               include_external_ids = False, 
+                               include_user_classifications=False, 
+                               include_consensus=False
+                            )
+    is_hidden = variant.is_hidden
+    conn.hide_variant(variant_id, is_hidden)
+    return str(not is_hidden)
 
 
 @variant_blueprint.route('/classify/<int:variant_id>', methods=['GET', 'POST'])

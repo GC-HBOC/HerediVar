@@ -22,9 +22,13 @@
                 <span class="badge rounded-pill bg-warning" data-bs-toggle="tooltip" title="Most recent annotation yielded an error: {{ current_annotation_status[6] }}. Retrying soon.">Retrying annotation</span>
             {% endif %}
 
-        {% else %}
-            <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="This variant was not annotated, yet.">No annotation</span>
-        {% endif %}
+            {% else %}
+                <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="This variant was not annotated, yet.">No annotation</span>
+            {% endif %}
+
+            {% if variant.is_hidden %}
+                <span class="badge rounded-pill bg-danger" id="hidden_pill" data-bs-toggle="tooltip" title="This variant is hidden. To unhide use the gear button.">HIDDEN</span>
+            {% endif %}
     </div>
     <div class="ssl">
         {% if clinvar_submission is none %}
@@ -95,6 +99,17 @@
             <li>
                 <button class="dropdown-item" id="list_add_button" data-bs-toggle="modal" data-bs-target="#list-add-modal">Add to list</button>
             </li>
+            {% if 'super_user' in session['user']['roles'] or 'user' in session['user']['roles'] %}
+            <li>
+                <button class="dropdown-item" id="change_hidden_state" url="{{ url_for('variant.hide_variant', variant_id = variant.id ) }}">
+                    {% if variant.is_hidden %}
+                        Unhide variant
+                    {% else %}
+                        Hide variant
+                    {% endif %}
+                </button>
+            </li>
+            {% endif %}
         </ul>
     </div>
 

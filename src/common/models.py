@@ -560,6 +560,8 @@ class Variant:
     ref: str
     alt: str
 
+    is_hidden: bool
+
     consensus_classifications: Any = None # list of classifications
     user_classifications: Any = None # list of classifications
     heredicare_classifications: Any = None # list of heredicare classifications

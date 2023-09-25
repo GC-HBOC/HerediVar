@@ -405,18 +405,51 @@
                         <label for="lookup_list_name" class="form-label">List</label>
 
                         <div id="select_list_wrapper">
-
                             <!--
                             <div class="autocomplete full_page">
                                 <input id="lookup_list_id" name="lookup_list_id" class="visually_hidden" type="text" value="{{ request.args.get('lookup_list_id', '') }}">
                                 <input value="{{ request.args.get('lookup_list_name', '') }}" id="lookup_list_name" class="form-control" name="lookup_list_name" type="text" placeholder="Select a list... start search by typing">
                             </div>
                             -->
-
                         </div>
                         <button class="btn btn-primary" type="button" id="add_list_select">+</button>
                     </div>
                     {% endif %}
+
+                    
+                    <div class="form-group d-flex sst">
+                        <!--
+                        <div class="bsr">
+                            <label for="page_size" class="form-label">Page size</label>
+                            <select class="form-select" name="page_size" id="page_size" style="width:5em" required>
+                                {% for option in page_sizes %}
+                                    <option value="{{option}}" {% if (page_size == option) %} selected="selected" {% endif %}> {{option}} </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="bsr">
+                            <label for="sort_by" class="form-label">Sort by</label>
+                            <select class="form-select" name="sort_by" id="sort_by" style="width:11em" required>
+                                {% for option in sort_bys %}
+                                    <option value="{{option}}" {% if (sort_by == option) %} selected="selected" {% endif %}> {{option}} </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        -->
+
+                        <div class="form-group">
+                            <label for="status-select" class="form-label">Status</label>
+                            <div id="status-select" class="d-flex">
+                                <div class="form-check d-flex bsr align-items-center">
+                                    <input class="form-check-input"  style="margin-right:0.3rem" type="checkbox" id="include_hidden" name="include_hidden" {% if include_hidden %}checked{% endif %}>
+                                    <label class="form-check-label" for="include_hidden">Include hidden</label>
+                                </div>
+                            </div>
+                        </div>
+                    
+                    </div>
+
 
                     {% if request.args.get('view') is not none %}
                         <input type="hidden" name="view" id="view" value="{{request.args.get('view')}}">

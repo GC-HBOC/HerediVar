@@ -618,7 +618,7 @@ class Connection:
                         return 0
 
 
-    def get_variants_page_merged(self, page, page_size, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None):
+    def get_variants_page_merged(self, page, page_size, user_id, include_hidden, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None):
         # get one page of variants determined by offset & pagesize
 
         offset = (page - 1) * page_size
@@ -730,6 +730,9 @@ class Connection:
             new_constraints = "id IN " + placeholders
             actual_information += tuple(variant_ids_oi)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if not include_hidden:
+            new_constraints = " variant.is_hidden = 0"
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
         
         command = prefix + postfix
         if page_size != 'unlimited':
@@ -745,17 +748,8 @@ class Connection:
             variant = self.get_variant(variant_id=variant_raw[0], include_annotations = False, include_heredicare_classifications = False, include_clinvar = False, include_assays = False, include_literature = False)
             variants.append(variant)
 
-
         if page_size == 'unlimited':
             return variants, len(variants)
-
-        # DEPRECATED -> done in models now
-        #variants_and_transcripts = []
-        #for variant in variants:
-        #    annotated_variant = self.annotate_preferred_transcripts(variant)
-        #    variants_and_transcripts.extend(annotated_variant)
-        #variants = variants_and_transcripts
-        #print(variants)
 
         # get number of variants
         prefix = "SELECT COUNT(id) FROM variant"
@@ -1424,7 +1418,7 @@ class Connection:
         self.conn.commit()
 
     def get_one_variant(self, variant_id):
-        command = "SELECT id,chr,pos,ref,alt FROM variant WHERE id = %s"
+        command = "SELECT id,chr,pos,ref,alt,is_hidden FROM variant WHERE id = %s"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchone()
         return result
@@ -1502,7 +1496,16 @@ class Connection:
 
 
 
-    def get_variant(self, variant_id, include_annotations = True, include_consensus = True, include_user_classifications = True, include_heredicare_classifications = True, include_clinvar = True, include_consequences = True, include_assays = True, include_literature = True) -> models.Variant:
+    def get_variant(self, variant_id, 
+                    include_annotations = True, 
+                    include_consensus = True, 
+                    include_user_classifications = True, 
+                    include_heredicare_classifications = True, 
+                    include_clinvar = True, 
+                    include_consequences = True, 
+                    include_assays = True, 
+                    include_literature = True
+                ) -> models.Variant:
         variant_raw = self.get_one_variant(variant_id)
         if variant_raw is None:
             return None
@@ -1512,6 +1515,8 @@ class Connection:
         pos = variant_raw[2]
         ref = variant_raw[3]
         alt = variant_raw[4]
+
+        is_hidden = True if variant_raw[5] == 1 else False
 
         annotations = None
         if include_annotations:
@@ -1718,7 +1723,7 @@ class Connection:
                     new_paper = models.Paper(year = paper[6], authors = paper[4], title = paper[3], journal = paper[5], pmid = paper[2], source = paper[7])
                     literature.append(new_paper)
 
-        variant = models.Variant(id=variant_id, chrom = chrom, pos = pos, ref = ref, alt = alt, 
+        variant = models.Variant(id=variant_id, chrom = chrom, pos = pos, ref = ref, alt = alt, is_hidden = is_hidden,
                                 annotations = annotations, 
                                 consensus_classifications = consensus_classifications, 
                                 user_classifications = user_classifications,
@@ -1731,8 +1736,11 @@ class Connection:
 
 
 
-
-
+    def hide_variant(self, variant_id, is_hidden):
+        command = "UPDATE variant SET is_hidden = %s WHERE id = %s"
+        is_hidden = 0 if is_hidden else 1
+        self.cursor.execute(command, (is_hidden, variant_id))
+        self.conn.commit()
 
 
 

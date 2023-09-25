@@ -31,7 +31,8 @@ fi
 echo "Setting up python venv in $basedir..."
 
 
-
+# do this on windows to allow activation of virtualenvs
+#Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
 
 cd $basedir
 python3 -m venv .venv
