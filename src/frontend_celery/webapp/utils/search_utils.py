@@ -149,3 +149,24 @@ def extract_lookup_list(request_obj, user_id, conn):
     #    variant_ids_oi = [-1]
     variant_ids_oi = list(set(variant_ids_oi)) # make variant ids them unique
     return variant_ids_oi
+
+
+def extract_search_settings(request_obj):
+    sort_bys = ["genomic position", "recent"]
+    page_sizes = ["5", "20", "50", "100"]
+
+    selected_page_size = request_obj.args.get('page_size', page_sizes[1])
+    selected_sort_by = request_obj.args.get('sort_by', sort_bys[0])
+    include_hidden = True if request_obj.args.get('include_hidden', 'off') == 'on' else False
+
+
+    if selected_page_size not in page_sizes:
+        flash("This page size is not supported. Defaulting to 20.", "alert-warning")
+        selected_page_size = "20"
+    if selected_sort_by not in sort_bys:
+        flash("The variant table can not be sorted by " + str(selected_sort_by) + ". Defaulting to genomic position sort.", "alert-warning")
+        selected_sort_by = "genomic position"
+
+    return sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden
+
+    

@@ -64,6 +64,10 @@ def my_lists():
     per_page = 20
     total = 0
 
+    # just some dummy vars they will be dragged from search_utils.py -> extract_search_settings if needed
+    sort_bys = []
+    page_sizes = []
+
 
     if view_list_id == '':
         return abort(404)
@@ -258,11 +262,16 @@ def my_lists():
         hgvs = extract_hgvs(request)
         variant_ids_from_lookup_list = extract_lookup_list(request, user_id, conn)
         variant_ids_oi = conn.get_variant_ids_from_list(view_list_id)
+
+        sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden = extract_search_settings(request)
+
         if variant_ids_from_lookup_list is not None and len(variant_ids_from_lookup_list) != 0:
             variant_ids_oi = list(set(none_to_empty_list(variant_ids_from_lookup_list)) & set(none_to_empty_list(variant_ids_oi))) # take the intersection of the two lists
 
         if len(variant_ids_oi) > 0:
-            variants, total = conn.get_variants_page_merged(page, per_page, 
+            variants, total = conn.get_variants_page_merged(page=page, page_size=selected_page_size,
+                                                            sort_by=selected_sort_by,
+                                                            include_hidden=include_hidden,
                                                             user_id=user_id, 
                                                             ranges=ranges, 
                                                             genes = genes, 
@@ -278,7 +287,8 @@ def my_lists():
                             variants=variants, 
                             page=page, 
                             per_page=per_page, 
-                            pagination=pagination)
+                            pagination=pagination,
+                            sort_bys=sort_bys, page_sizes=page_sizes)
 
 
 #
