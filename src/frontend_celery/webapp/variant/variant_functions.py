@@ -5,6 +5,7 @@ from common.pdf_generator import pdf_gen
 from ..io.download_routes import calculate_class
 from functools import cmp_to_key
 from flask import render_template
+import uuid
 
 
 
@@ -31,7 +32,7 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, allowed_sequ
 
 
 
-    tmp_file_path = tempfile.gettempdir() + "/new_variant.vcf"
+    tmp_file_path = tempfile.gettempdir() + "/" + str(uuid.uuid4()) + ".vcf"
     functions.variant_to_vcf(chrom, pos, ref, alt, tmp_file_path)
 
     do_liftover = genome_build == 'GRCh37'
@@ -41,10 +42,12 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, allowed_sequ
     if returncode != 0:
         flash(err_msg, 'alert-danger')
         was_successful = False
+        functions.rm(tmp_file_path)
         return was_successful
     if 'ERROR:' in vcf_errors_pre:
         flash(vcf_errors_pre.replace('\n', ' '), 'alert-danger')
         was_successful = False
+        functions.rm(tmp_file_path)
         return was_successful
     if genome_build == 'GRCh37':
         unmapped_variants_vcf = open(tmp_file_path + '.lifted.unmap', 'r')
@@ -58,10 +61,14 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, allowed_sequ
         if unmapped_variant is not None:
             flash('ERROR: could not lift variant ' + unmapped_variant, ' alert-danger')
             was_successful = False
+            functions.rm(tmp_file_path)
+            functions.rm(tmp_file_path + ".lifted.unmap")
             return was_successful
     if 'ERROR:' in vcf_errors_post:
         flash(vcf_errors_post.replace('\n', ' '), 'alert-danger')
         was_successful = False
+        functions.rm(tmp_file_path)
+        functions.rm(tmp_file_path + ".lifted.unmap")
         return was_successful
 
     if was_successful:
@@ -91,6 +98,8 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, allowed_sequ
             flash(Markup("Variant not imported: already in database!! View it " + "<a href=" + url_for("variant.display", chr=str(new_chr), pos=str(new_pos), ref=str(new_ref), alt=str(new_alt)) + " class=\"alert-link\">here</a>"), "alert-danger")
             was_successful = False
 
+    functions.rm(tmp_file_path)
+    functions.rm(tmp_file_path + ".lifted.unmap")
     return was_successful
 
 

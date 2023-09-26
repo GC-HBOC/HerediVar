@@ -547,3 +547,8 @@ def enbrace(string):
 def enpercent(string):
     string = str(string).strip('%')
     return '%' + string + '%'
+
+
+def rm(path):
+    if os.path.exists(path): 
+        os.remove(path)
