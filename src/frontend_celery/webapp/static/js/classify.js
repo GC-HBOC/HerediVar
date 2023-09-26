@@ -146,9 +146,30 @@ function submit_classification() {
 
 
 function preselect_literature() {
-    
+    // THIS FUNCTION IS UGLY --> maybe REWORK
     for (var user_id in previous_classifications) {
-        var all_user_classifications = previous_classifications[user_id]
+        if (user_id != -1) { // skip imaginary consensus classification user id
+            var all_user_classifications = previous_classifications[user_id]
+            var selected_classification = all_user_classifications[scheme] ?? {}
+            var previous_selected_literature = selected_classification['literature'] ?? []
+            var submitter = selected_classification['submitter'] ?? {}
+            var provided_by = submitter['full_name']
+            var affiliation = submitter['affiliation']
+            for (var i = 0; i < previous_selected_literature.length; i++) {
+                var current_literature = previous_selected_literature[i]
+                var pmid = current_literature['pmid']
+                var text_passage = current_literature['text_passage']
+                if (classification_type === 'consensus') { // add to modal table for copying
+                    create_line_consensus_modal(document.getElementById('user_text_passages_for_copy'), pmid = pmid, evidence_text = text_passage, provided_by=provided_by, affiliation=affiliation)
+                } else { // add directly to the literature select
+                    create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
+                }
+            }
+        }
+    }
+    // add literature directly for consensus classification
+    if (classification_type === 'consensus') {
+        var all_user_classifications = previous_classifications[-1]
         var selected_classification = all_user_classifications[scheme] ?? {}
         var previous_selected_literature = selected_classification['literature'] ?? []
         var submitter = selected_classification['submitter'] ?? {}
@@ -158,13 +179,8 @@ function preselect_literature() {
             var current_literature = previous_selected_literature[i]
             var pmid = current_literature['pmid']
             var text_passage = current_literature['text_passage']
-            if (classification_type === 'consensus') { // add to modal table for copying
-                create_line_consensus_modal(document.getElementById('user_text_passages_for_copy'), pmid = pmid, evidence_text = text_passage, provided_by=provided_by, affiliation=affiliation)
-            } else { // add directly to the literature select
-                create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
-            }
+            create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
         }
-
     }
 
 }
@@ -175,7 +191,11 @@ function preselect_final_classification() {
     var comment_text_area = document.getElementById('comment')
     var final_class_select = document.getElementById('final_class')
     var warning_display = document.getElementById('warning_alert_previous_classification')
-    var current_previous_classifications = previous_classifications[logged_in_user_id] ?? {}
+    if (classification_type === 'consensus') {
+        var current_previous_classifications = previous_classifications[-1] ?? {}
+    } else {
+        var current_previous_classifications = previous_classifications[logged_in_user_id] ?? {}
+    }
     if (scheme in current_previous_classifications){
         final_class_select.value = current_previous_classifications[scheme]['selected_class']
         comment_text_area.value = current_previous_classifications[scheme]['comment']
@@ -329,7 +349,7 @@ function scheme_select_action(do_revert=true) {
         set_default_strengths()
         set_activatable_property()
         
-        if (classification_type === 'user' && do_revert) {
+        if (do_revert) {
             preselect_criteria_from_database(scheme)
         }
         if (classification_type === 'consensus') {
@@ -353,18 +373,20 @@ function scheme_select_action(do_revert=true) {
 }
 
 function set_user_selection_counts(scheme) {
-    console.log(scheme)
+    //console.log(scheme)
     for (var user_id in previous_classifications) {
-        var current_classifications = previous_classifications[user_id]
-        var scheme_with_info = current_classifications[scheme] ?? {} // get an empty dict if the user does not have a user classification for this scheme
-        var scheme_with_info = scheme_with_info['scheme'] ?? {} 
-        var selected_criteria = scheme_with_info['criteria'] ?? [] // propagate the above
-        for (var i in selected_criteria) {
-            var criterium = selected_criteria[i]
-            var criterium_id = criterium['name']
-            var count_label = document.getElementById('users_selected_' + criterium_id)
-            count_label.innerText = parseInt(count_label.innerText) + 1
-            count_label.hidden = false;
+        if (user_id != -1) { // exclude imaginary consensus classification user id
+            var current_classifications = previous_classifications[user_id]
+            var scheme_with_info = current_classifications[scheme] ?? {} // get an empty dict if the user does not have a user classification for this scheme
+            var scheme_with_info = scheme_with_info['scheme'] ?? {} 
+            var selected_criteria = scheme_with_info['criteria'] ?? [] // propagate the above
+            for (var i in selected_criteria) {
+                var criterium = selected_criteria[i]
+                var criterium_id = criterium['name']
+                var count_label = document.getElementById('users_selected_' + criterium_id)
+                count_label.innerText = parseInt(count_label.innerText) + 1
+                count_label.hidden = false;
+            }
         }
     }
 }
@@ -383,7 +405,11 @@ function set_default_strengths() {
 
 function preselect_criteria_from_database(scheme) {
     //const user_id = Object.keys(previous_classifications)[0]
-    const current_scheme_with_info = previous_classifications[logged_in_user_id][scheme]
+    if (classification_type === 'consensus') {
+        var current_scheme_with_info = previous_classifications[-1][scheme] // use imaginary consensus classification user id
+    } else {
+        var current_scheme_with_info = previous_classifications[logged_in_user_id][scheme]
+    }
     if (typeof current_scheme_with_info !== "undefined") { // only preselect if there is data for it
         selected_criteria = current_scheme_with_info['scheme']['criteria']
         //console.log(selected_criteria)
@@ -1022,23 +1048,26 @@ function add_user_acmg_classification_details(criterium_id) {
     const tab = create_user_acmg_details_table()
     additional_content.appendChild(tab)
     for (var user_id in previous_classifications) {
-        var current_classification = previous_classifications[user_id][scheme]
-        if (typeof current_classification !== 'undefined') {
-            var user = current_classification['submitter']['full_name']
-            var affiliation = current_classification['submitter']['affiliation']
-            var current_date = current_classification['date']
-            var selected_criteria = current_classification['scheme']['criteria']
-            for (var i in selected_criteria) {
-                var criterium = selected_criteria[i]
-                var current_criterium_id = criterium['name']
-                var current_strength = criterium['type']
-                var current_evidence = criterium['evidence']
-                if (current_criterium_id === criterium_id) {
-                    var new_row = create_row_user_acmg_details(user, affiliation, current_strength, current_evidence, current_date)
-                    document.getElementById('user_acmg_details').appendChild(new_row)
+        if (user_id != -1) { // ignore imaginary consensus classification user id
+            var current_classification = previous_classifications[user_id][scheme]
+            if (typeof current_classification !== 'undefined') {
+                var user = current_classification['submitter']['full_name']
+                var affiliation = current_classification['submitter']['affiliation']
+                var current_date = current_classification['date']
+                var selected_criteria = current_classification['scheme']['criteria']
+                for (var i in selected_criteria) {
+                    var criterium = selected_criteria[i]
+                    var current_criterium_id = criterium['name']
+                    var current_strength = criterium['type']
+                    var current_evidence = criterium['evidence']
+                    if (current_criterium_id === criterium_id) {
+                        var new_row = create_row_user_acmg_details(user, affiliation, current_strength, current_evidence, current_date)
+                        document.getElementById('user_acmg_details').appendChild(new_row)
+                    }
                 }
             }
         }
+
 
     }
     add_functionality_to_table()
@@ -1151,9 +1180,14 @@ function update_classification_preview() {
     }).then(function (text) {
         const final_class = text.final_class
         document.getElementById('classification_preview').textContent = final_class
-        pc = previous_classifications[logged_in_user_id] ?? {}
+        if (classification_type === "consensus") {
+            var pc = previous_classifications[-1] ?? {} // use imaginary consensus classification user id
+        } else {
+            var pc = previous_classifications[logged_in_user_id] ?? {}
+        }
         if (!(scheme in pc) && !do_request_form_preselect) {
             document.getElementById('final_class').value = final_class
+            console.log(final_class)
         }
         
     });

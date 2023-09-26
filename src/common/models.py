@@ -653,6 +653,23 @@ class Variant:
                     if classification.date > result.date:
                         result = classification
         return result
+    
+    def get_recent_consensus_classification_all_schemes(self, convert_to_dict = False):
+        result = None
+        if self.consensus_classifications is not None:
+            result = {}
+            for classification in self.consensus_classifications:
+                current_scheme_id = classification.scheme.id
+                if current_scheme_id not in result:
+                    result[current_scheme_id] = classification
+                elif classification.date > result[current_scheme_id].date:
+                    result[current_scheme_id] = classification # update if the current classification is newer
+        if convert_to_dict and result is not None:
+            return {scheme_id:classification.to_dict() for scheme_id, classification in result.items()}
+        return result
+                    
+
+
 
     def get_recent_user_classification(self, user_id = 'all', scheme_id = 'all'):
         result = None

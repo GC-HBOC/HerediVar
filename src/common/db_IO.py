@@ -1006,6 +1006,24 @@ class Connection:
             return None
         return result
 
+    def get_user_classifications(self, variant_id, user_id = 'all', scheme_id = 'all', sql_modifier = None):
+        command = "SELECT id, classification, variant_id, user_id, comment, date, classification_scheme_id, scheme_class FROM user_classification WHERE variant_id=%s"
+        actual_information = (variant_id, )
+        if user_id != 'all':
+            command = command + ' AND user_id=%s'
+            actual_information += (user_id, )
+        if scheme_id != 'all':
+            command += ' AND classification_scheme_id = %s'
+            actual_information += (scheme_id, )
+
+        if sql_modifier is not None:
+            command = sql_modifier(command)
+
+        self.cursor.execute(command, actual_information)
+        user_classifications = self.cursor.fetchall()
+        if len(user_classifications) == 0:
+            return None
+        return user_classifications
 
 
     def add_classification_scheme_info(self, command):
@@ -1129,26 +1147,6 @@ class Connection:
         command = "UPDATE user_classification SET classification = %s, comment = %s, date = %s, scheme_class = %s WHERE id = %s"
         self.cursor.execute(command, (str(classification), comment, date, str(scheme_class), user_classification_id))
         self.conn.commit()
-
-
-    def get_user_classifications(self, variant_id, user_id = 'all', scheme_id = 'all', sql_modifier = None):
-        command = "SELECT id, classification, variant_id, user_id, comment, date, classification_scheme_id, scheme_class FROM user_classification WHERE variant_id=%s"
-        actual_information = (variant_id, )
-        if user_id != 'all':
-            command = command + ' AND user_id=%s'
-            actual_information += (user_id, )
-        if scheme_id != 'all':
-            command += ' AND classification_scheme_id = %s'
-            actual_information += (scheme_id, )
-
-        if sql_modifier is not None:
-            command = sql_modifier(command)
-
-        self.cursor.execute(command, actual_information)
-        user_classifications = self.cursor.fetchall()
-        if len(user_classifications) == 0:
-            return None
-        return user_classifications
 
     def delete_variant(self, variant_id):
         command = "DELETE FROM variant WHERE id = %s"

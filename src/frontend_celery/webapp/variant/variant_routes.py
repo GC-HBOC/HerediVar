@@ -288,7 +288,9 @@ def consensus_classify(variant_id):
     if variant is None:
         return abort(404)
 
-    previous_classifications = {} # this is used to preselect from previous user classify submissions
+    # this is also used to preselect from previous user classify submissions
+    # -1 is the imaginary user id for the consensus classifications
+    previous_classifications = {-1: variant.get_recent_consensus_classification_all_schemes(convert_to_dict = True)} 
 
     # get dict of all previous user classifications
     user_classifications = variant.user_classifications
