@@ -1163,7 +1163,7 @@ class Connection:
         command = "INSERT INTO import_queue (user_id) VALUES (%s)"
         self.cursor.execute(command, (user_id, ))
         self.conn.commit()
-        return self.get_last_insert_id()
+        return self.get_most_recent_import_request()
     
     def close_import_request(self, import_queue_id):
         command = "UPDATE import_queue SET status = 'finished', finished_at = NOW() WHERE id = %s"
@@ -1171,9 +1171,19 @@ class Connection:
         self.conn.commit()
 
     def get_most_recent_import_request(self):
-        self.cursor.execute("SELECT * FROM import_queue ORDER BY requested_at DESC LIMIT 1")
+        self.cursor.execute("SELECT id, user_id, requested_at, status, finished_at FROM import_queue ORDER BY requested_at DESC LIMIT 1")
         result = self.cursor.fetchone()
+        if result is not None:
+            user = self.parse_raw_user(self.get_user(result[1]))
+            requested_at = result[2] # datetime object
+            finished_at = result[4] # datetime object
+            result = models.import_request(id = result[0], user = user, requested_at = requested_at, status = result[3], finished_at = finished_at)
         return result
+    
+    def update_import_queue_status(self, import_queue_id, status, message):
+        command = "UPDATE import_queue SET status = %s, message = %s WHERE id = %s"
+        self.cursor.execute(command, (status, message, import_queue_id))
+        self.conn.commit()
 
     # returns a list of external ids if an id source is given
     # returns a list of tuples with (external_id, source) if no id source is given -> exports all external ids
@@ -1243,6 +1253,11 @@ class Connection:
         self.cursor.execute(command, (user_id,))
         result = self.cursor.fetchone()
         return result
+    
+    def parse_raw_user(self, raw_user):
+        return models.User(id = raw_user[0], 
+                   full_name = raw_user[2] + ' ' + raw_user[3], 
+                   affiliation = raw_user[4])
     
     def get_user_id(self, username):
         command = "SELECT id FROM user WHERE username=%s"
@@ -1554,9 +1569,7 @@ class Connection:
 
 
                     # user information
-                    user = models.User(id = current_userinfo[0], 
-                                       full_name = current_userinfo[2] + ' ' + current_userinfo[3], 
-                                       affiliation = current_userinfo[4])
+                    user = self.parse_raw_user(current_userinfo)
 
                     # scheme information
                     scheme_id = current_scheme[0]

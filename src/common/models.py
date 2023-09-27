@@ -758,3 +758,15 @@ class Variant:
                         return 1
                     else:
                         return 0
+                    
+
+import datetime
+
+@dataclass
+class import_request:
+    id: int
+    user: User
+    requested_at: datetime.datetime
+    status: str
+    finished_at: datetime.datetime
+

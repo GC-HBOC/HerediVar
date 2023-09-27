@@ -1,15 +1,16 @@
 from urllib.error import HTTPError
 from . import celery, mail
-#import sys
-#from os import path
-#sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
+import sys
+from os import path
+sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
 #import common.functions as functions
-#from common.db_IO import Connection
+from common.db_IO import Connection
 from annotation_service.main import process_one_request
 from celery.exceptions import Ignore
 from flask_mail import Message
 from flask import render_template
 import time
+from annotation_service.heredicare_interface import heredicare_interface
 
 """
 @celery.task(bind=True)
@@ -54,7 +55,8 @@ def fetch_consequence_task(self, variant_id):
 def annotate_variant(self, annotation_queue_id, job_config):
     """Background task for running the annotation service"""
     self.update_state(state='PROGRESS', meta={'annotation_queue_id':annotation_queue_id})
-    status, runtime_error = process_one_request(annotation_queue_id, job_config)
+    status, runtime_error = process_one_request(annotation_queue_id, job_config=job_config)
+    status = 'success'
     if status == 'error':
         status = 'FAILURE'
         self.update_state(state=status, meta={'annotation_queue_id':annotation_queue_id, 
@@ -73,7 +75,89 @@ def annotate_variant(self, annotation_queue_id, job_config):
     self.update_state(state=status, meta={'annotation_queue_id':annotation_queue_id})
 
 
-#
+# this uses exponential backoff in case there is a http error
+# this will retry 3 times before giving up
+# first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
+@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
+def import_one_variant_heredicare(self, vid, user_id, user_roles):
+    """Background task for fetching variants from HerediCare"""
+    from frontend_celery.webapp.utils.variant_importer import fetch_heredicare
+    self.update_state(state='PROGRESS')
+    conn = Connection(user_roles)
+    status, message = fetch_heredicare(vid, heredicare_interface, user_id, conn)
+    conn.close()
+    print(status)
+    print(message)
+    if status == 'error':
+        status = 'FAILURE'
+        self.update_state(state=status, meta={ 
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'
+                    })
+        raise Ignore()
+    if status == "retry":
+        status = "RETRY"
+        self.update_state(state=status, meta={
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'})
+        import_one_variant_heredicare.retry()
+    self.update_state(state=status)
+
+
+
+@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
+def heredicare_variant_import(self, user_id, user_roles):
+    """Background task for fetching variants from HerediCare"""
+    self.update_state(state='PROGRESS')
+
+    conn = Connection(user_roles)
+
+    import_status = "progress"
+    import_request = conn.insert_import_request(user_id)
+
+    print(import_request.finished_at)
+
+    vids, status, message = heredicare_interface.get_vid_list(import_request.finished_at)
+    
+    if status != "success":
+        import_status = status
+    
+    conn.update_import_queue_status(import_request.id, import_status, message)
+
+    if status != "success":
+        return None
+
+    # spawn one task for each variant import
+    print(len(vids))
+    vids = vids[:10]
+    for vid in vids:
+        task = import_one_variant_heredicare.apply_async(args=[vid, user_id, user_roles])
+
+    conn.close()
+    
+    #status, message = fetch_heredicare(vid, heredicare_interface)
+    print(status)
+    print(message)
+    if status == 'error':
+        status = 'FAILURE'
+        self.update_state(state=status, meta={ 
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'
+                    })
+        raise Ignore()
+    if status == "retry":
+        status = "RETRY"
+        self.update_state(state=status, meta={
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'})
+        heredicare_variant_import.retry()
+    self.update_state(state=status)
+
+
 
 # this uses exponential backoff in case there is a http error
 # this will retry 3 times before giving up

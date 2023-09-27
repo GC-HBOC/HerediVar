@@ -11,6 +11,7 @@ import urllib.parse as urlparse
 from urllib.parse import urlencode
 from dotenv import load_dotenv
 import json
+import uuid
 
 
 def basedir():
@@ -272,11 +273,12 @@ def left_align_vcf(infile, outfile, ref_genome = 'GRCh38'):
     return returncode, err_msg, command_output
 
 
-def hgvsc_to_vcf(hgvs):
+def hgvsc_to_vcf(hgvs, reference = None):
     tmp_file_path = tempfile.gettempdir() + "/hgvs_to_vcf"
     tmp_file = open(tmp_file_path + ".tsv", "w")
     tmp_file.write("#reference	hgvs_c\n")
-    reference, hgvs = split_hgvs(hgvs)
+    if reference is None:
+        reference, hgvs = split_hgvs(hgvs)
     tmp_file.write(reference + "\t" + hgvs + "\n")
     tmp_file.close()
 
@@ -548,6 +550,9 @@ def enpercent(string):
     string = str(string).strip('%')
     return '%' + string + '%'
 
+
+def get_random_temp_file(fileending):
+    return os.path.join(tempfile.gettempdir(), str(uuid.uuid4()) + "." + str(fileending.strip('.')))
 
 def rm(path):
     if os.path.exists(path): 

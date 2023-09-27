@@ -10,10 +10,10 @@ import common.functions as functions
 from .decorators import *
 from .search_utils import *
 from .clinvar_utils import *
+from .variant_importer import *
 from urllib.parse import urlparse, urljoin
-from ..tasks import annotate_variant
 import pathlib
-import annotation_service.main as annotation_service
+
 #import celery_module
 
 
@@ -25,25 +25,12 @@ import annotation_service.main as annotation_service
 #        abort(404)
 #    return variant
 
+
 def get_variant_id(conn, chr, pos, ref, alt):
     if chr is None or pos is None or ref is None or alt is None:
         abort(404)
     variant_id = conn.get_variant_id(chr, pos, ref, alt)
     return variant_id
-
-
-def start_annotation_service(variant_id = None, annotation_queue_id = None, job_config = annotation_service.get_default_job_config()):
-    conn = get_connection()
-    if variant_id is not None:
-        annotation_queue_id = conn.insert_annotation_request(variant_id, session['user']['user_id']) # only inserts a new row if there is none with this variant_id & pending
-        log_postfix = " for variant " + str(variant_id)
-    else:
-        log_postfix = " for annotation queue entry " + str(annotation_queue_id)
-    task = annotate_variant.apply_async(args=[annotation_queue_id, job_config])
-    print("Issued annotation for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task.id))
-    current_app.logger.info(session['user']['preferred_username'] + " started the annotation service for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task.id))
-    conn.insert_celery_task_id(annotation_queue_id, task.id)
-    return task.id
 
 
 def remove_oldest_file(folder, maxfiles=10):

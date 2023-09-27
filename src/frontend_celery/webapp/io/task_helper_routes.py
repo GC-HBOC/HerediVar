@@ -1,8 +1,8 @@
-from flask import Blueprint, abort, request, url_for, jsonify
+from flask import Blueprint, abort, request, url_for, jsonify, session
 from os import path
 import sys
 
-from ..utils import require_permission, start_annotation_service
+from ..utils import require_permission, start_annotation_service, get_connection
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from common.db_IO import Connection
@@ -25,7 +25,8 @@ def run_annotation_service():
     variant_id = request.args.get('variant_id')
     if (annotation_queue_id is None and variant_id is None) or (annotation_queue_id is not None and variant_id is not None):
         abort(404)
-    celery_task_id = start_annotation_service(variant_id=variant_id, annotation_queue_id=annotation_queue_id)
+    conn = get_connection()
+    celery_task_id = start_annotation_service(variant_id=variant_id, user_id = session['user']['user_id'],  annotation_queue_id=annotation_queue_id, conn = conn)
     return jsonify({}), 202, {'annotation_status_url': url_for('task_helper.annotation_status', task_id=celery_task_id)}
 
 

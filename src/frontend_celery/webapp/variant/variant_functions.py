@@ -5,11 +5,11 @@ from common.pdf_generator import pdf_gen
 from ..io.download_routes import calculate_class
 from functools import cmp_to_key
 from flask import render_template
-import uuid
 
 
 
-def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, allowed_sequence_letters = "ACGT"):
+
+"""def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, allowed_sequence_letters = "ACGT"):
     was_successful = True
     # validate request
 
@@ -32,7 +32,7 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, allowed_sequ
 
 
 
-    tmp_file_path = tempfile.gettempdir() + "/" + str(uuid.uuid4()) + ".vcf"
+    tmp_file_path = functions.get_random_temp_file("vcf")
     functions.variant_to_vcf(chrom, pos, ref, alt, tmp_file_path)
 
     do_liftover = genome_build == 'GRCh37'
@@ -100,7 +100,7 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, allowed_sequ
 
     functions.rm(tmp_file_path)
     functions.rm(tmp_file_path + ".lifted.unmap")
-    return was_successful
+    return was_successful"""
 
 
 

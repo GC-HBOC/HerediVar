@@ -6,7 +6,7 @@ from common.db_IO import Connection
 import common.functions as functions
 from common.pdf_generator import pdf_gen
 import tempfile
-from annotation_service.heredicare_interface import heredicare_interface
+from annotation_service.heredicare_interface import Heredicare
 
 
 log_file_path = ''
@@ -33,7 +33,7 @@ def init(f, u):
 
     user_id = u
 
-    heredicare_api = heredicare_interface()
+    heredicare_api = Heredicare()
 
 
 

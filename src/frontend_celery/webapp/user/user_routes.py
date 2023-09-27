@@ -10,6 +10,8 @@ from datetime import datetime
 from ..utils import *
 from flask_paginate import Pagination
 import annotation_service.main as annotation_service
+from annotation_service.heredicare_interface import heredicare_interface
+from ..tasks import import_one_variant_heredicare, heredicare_variant_import
 
 
 user_blueprint = Blueprint(
@@ -304,7 +306,7 @@ def admin_dashboard():
     if most_recent_import_request is None:
         status = 'finished'
     else:
-        status = most_recent_import_request[3]
+        status = most_recent_import_request.status
 
     if request.method == 'POST':
         request_type = request.args.get("type")
@@ -329,7 +331,7 @@ def admin_dashboard():
             selected_job_config = annotation_service.get_job_config(selected_jobs)
             variant_ids = conn.get_all_valid_variant_ids()
             for variant_id in variant_ids:
-                start_annotation_service(variant_id = variant_id, job_config = selected_job_config) # inserts a new annotation queue entry before submitting the task to celery
+                start_annotation_service(variant_id = variant_id, user_id = session['user']['user_id'], job_config = selected_job_config) # inserts a new annotation queue entry before submitting the task to celery
                 #conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
             current_app.logger.info(session['user']['preferred_username'] + " issued a reannotation of all variants") 
             flash('Variant reannotation requested. It will be computed in the background.', 'alert-success')
@@ -337,12 +339,44 @@ def admin_dashboard():
         
         if request_type == 'reannotate_erroneous':
             for variant_id in annotation_stati['error']:
-                start_annotation_service(variant_id = variant_id, job_config = job_config)
+                start_annotation_service(variant_id = variant_id, user_id = session['user']['user_id'], job_config = job_config)
             flash('Variant reannotation issued for ' + str(len(annotation_stati['error'])) + ' variants', 'alert-success')
             do_redirect = True
+
+        if request_type == 'import_variants': # mass import from heredicare
+            #heredicare_interface = current_app.extensions['heredicare_interface']
+            #start_variant_import(conn)
+            heredicare_variant_import.apply_async(args=[session['user']['user_id'], session['user']['roles']])
+            do_redirect = True
+
     
     if do_redirect:
         return redirect(url_for('user.admin_dashboard'))
     return render_template('user/admin_dashboard.html', most_recent_import_request=most_recent_import_request, job_config = job_config, annotation_stati = annotation_stati, errors = errors, warnings = warnings, total_num_variants = total_num_variants)
+
+
+def start_variant_import(conn):
+    import_status = "progress"
+    import_request = conn.insert_import_request(session['user']['user_id'])
+
+    print(import_request.finished_at)
+
+    vids, status, message = heredicare_interface.get_vid_list(import_request.finished_at)
+    
+    if status != "success":
+        import_status = status
+    
+    conn.update_import_queue_status(import_request.id, import_status, message)
+
+    if status != "success":
+        return None
+
+    # spawn one task for each variant import
+    print(len(vids))
+    vids = vids[:5]
+    for vid in vids:
+        task = import_one_variant_heredicare.apply_async(args=[vid])
+
+    return status, message
 
 

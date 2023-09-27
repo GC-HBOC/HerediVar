@@ -105,10 +105,19 @@ def create():
                     flash('ERROR: Negative genomic position given, but must be positive.', 'alert-danger')
                 else:
                     genome_build = request.form['genome']
-                    was_successful = validate_and_insert_variant(chr, pos, ref, alt, genome_build)
+                    was_successful, message, new_variant = validate_and_insert_variant(chr, pos, ref, alt, genome_build, conn = get_connection(), user_id = session['user']['user_id'])
                     if was_successful:
-                        current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant: " + ' '.join([chr, pos, ref, alt, genome_build]) + ". This information is the unprocessed user input.") 
+                        flash(Markup("Successfully inserted variant: " + str(new_variant['chrom']) + ' ' + str(new_variant['pos']) + ' ' + new_variant['ref'] + ' ' + new_variant['alt'] + 
+                                     ' (view your variant <a href="' + url_for("variant.display", chr=str(new_variant['chrom']), pos=str(new_variant['pos']), ref=str(new_variant['ref']), alt=str(new_variant['alt'])) + 
+                                     '" class="alert-link">here</a>)'), "alert-success")
+                        current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([chr, pos, ref, alt, "GRCh38"]))
                         return redirect(url_for('variant.create'))
+                    elif 'already in database' in message:
+                        flash(Markup("Variant not imported: already in database!! View it " + 
+                                     "<a href=" + url_for("variant.display", chr=str(new_variant['chrom']), pos=str(new_variant['pos']), ref=str(new_variant['ref']), alt=str(new_variant['alt'])) + 
+                                     " class=\"alert-link\">here</a>"), "alert-danger")
+                    else:
+                        flash(message, 'alert-danger')
 
         if create_variant_from == 'hgvsc':
             reference_transcript = request.form.get('transcript')
@@ -120,10 +129,19 @@ def create():
                 if possible_errors != '':
                     flash(possible_errors, "alert-danger")
                 else:
-                    was_successful = validate_and_insert_variant(chr, pos, ref, alt, 'GRCh38')
+                    was_successful, message, new_variant = validate_and_insert_variant(chr, pos, ref, alt, 'GRCh38', conn = get_connection(), user_id = session['user']['user_id'])
                     if was_successful:
+                        flash(Markup("Successfully inserted variant: " + str(new_variant['chrom']) + ' ' + str(new_variant['pos']) + ' ' + new_variant['ref'] + ' ' + new_variant['alt'] + 
+                                     ' (view your variant <a href="' + url_for("variant.display", chr=str(new_variant['chrom']), pos=str(new_variant['pos']), ref=str(new_variant['ref']), alt=str(new_variant['alt'])) + 
+                                     '" class="alert-link">here</a>)'), "alert-success")
                         current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([chr, pos, ref, alt, "GRCh38"]))
                         return redirect(url_for('variant.create'))
+                    elif 'already in database' in message:
+                        flash(Markup("Variant not imported: already in database!! View it " + 
+                                     "<a href=" + url_for("variant.display", chr=str(new_variant['chrom']), pos=str(new_variant['pos']), ref=str(new_variant['ref']), alt=str(new_variant['alt'])) + 
+                                     " class=\"alert-link\">here</a>"), "alert-danger")
+                    else:
+                        flash(message, 'alert-danger')
 
     return render_template('variant/create.html', chrs=chrs)
 
@@ -142,7 +160,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     current_annotation_status = conn.get_current_annotation_status(variant_id)
     if current_annotation_status is not None:
         if current_annotation_status[4] == 'pending' and current_annotation_status[7] is None:
-            celery_task_id = start_annotation_service(variant_id = variant_id)
+            celery_task_id = start_annotation_service(variant_id = variant_id, user_id = session['user']['user_id'])
             current_annotation_status = current_annotation_status[0:7] + (celery_task_id, )
 
     variant = conn.get_variant(variant_id)
