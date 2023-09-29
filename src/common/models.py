@@ -770,3 +770,16 @@ class import_request:
     status: str
     finished_at: datetime.datetime
 
+    import_variant_list_status: str
+    import_variant_list_finished_at: datetime.datetime
+    import_variant_list_message: str
+    variant_summary: dict
+
+@dataclass
+class Import_variant_request:
+    id: int
+    status: str
+    requested_at: datetime.datetime
+    finished_at: datetime.datetime
+    message: str
+    vid: str

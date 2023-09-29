@@ -557,3 +557,9 @@ def get_random_temp_file(fileending):
 def rm(path):
     if os.path.exists(path): 
         os.remove(path)
+
+def str2datetime(datetime_str, fmt):
+    if datetime_str is None:
+        return None
+    else:
+        return datetime.datetime.strptime(datetime_str, fmt)

@@ -17,35 +17,7 @@ $(document).ready(function()
     //table_sorter(['#literatureTableYearCol'], '#literatureTable')
 
     	
-
-
-    // ACTIVATE DATATABLES
-    // Setup - add a text input to each header cell
-    $('#literatureTable thead th').each(function() {
-        var new_search_input = document.createElement('input')
-        new_search_input.setAttribute('placeholder', 'search...')
-        new_search_input.classList.add(this.classList)
-        $(this).append(new_search_input)
-    });
- 
-    // DataTable
-    var literature_table = $('#literatureTable').DataTable({
-        order: [[0, 'desc']],
-    });
- 
-    // Apply the search
-    literature_table.columns().eq(0).each(function(colIdx) {
-        $('input', literature_table.column(colIdx).header()).on('keyup change', function() {
-            literature_table
-                .column(colIdx)
-                .search(this.value)
-                .draw();
-        });
-    
-        $('input', literature_table.column(colIdx).header()).on('click', function(e) {
-            e.stopPropagation();
-        });
-    });
+    activate_datatables("literatureTable");
 
     // functionality for the hide variant button
     $('#change_hidden_state').click(function() {

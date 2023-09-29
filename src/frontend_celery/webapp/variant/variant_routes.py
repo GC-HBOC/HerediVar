@@ -5,7 +5,7 @@ from ..utils import *
 import sys
 from os import path
 from .variant_functions import *
-from ..tasks import generate_consensus_only_vcf_task
+from ..tasks import generate_consensus_only_vcf_task, start_annotation_service, validate_and_insert_variant
 
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
@@ -160,7 +160,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     current_annotation_status = conn.get_current_annotation_status(variant_id)
     if current_annotation_status is not None:
         if current_annotation_status[4] == 'pending' and current_annotation_status[7] is None:
-            celery_task_id = start_annotation_service(variant_id = variant_id, user_id = session['user']['user_id'])
+            celery_task_id = start_annotation_service(variant_id = variant_id, conn = conn, user_id = session['user']['user_id'])
             current_annotation_status = current_annotation_status[0:7] + (celery_task_id, )
 
     variant = conn.get_variant(variant_id)

@@ -3,9 +3,9 @@ from . import celery, mail
 import sys
 from os import path
 sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
-#import common.functions as functions
+import common.functions as functions
 from common.db_IO import Connection
-from annotation_service.main import process_one_request
+from annotation_service.main import process_one_request, get_default_job_config
 from celery.exceptions import Ignore
 from flask_mail import Message
 from flask import render_template
@@ -48,6 +48,336 @@ def fetch_consequence_task(self, variant_id):
 """
 
 
+
+
+
+
+
+
+
+###################################################################################
+############## IMPORT VARIANT LIST THAT GOT UPDATE SINCE LAST IMPORT ##############
+###################################################################################
+
+def start_variant_import(user_id, user_roles, conn: Connection): # starts the celery task
+    import_request = conn.get_most_recent_import_request() # get the most recent import request
+    min_date = None
+    if import_request is not None:
+        min_date = import_request.finished_at
+    #print(import_request.finished_at)
+
+    new_import_request = conn.insert_import_request(user_id)
+    import_queue_id = new_import_request.id
+
+    task = heredicare_variant_import.apply_async(args=[user_id, user_roles, min_date, import_queue_id]) # start task
+    task_id = task.id
+
+    conn.update_import_queue_celery_task_id(import_queue_id, celery_task_id = task_id) # save the task id for status updates
+
+    return import_queue_id
+
+@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
+def heredicare_variant_import(self, user_id, user_roles, min_date, import_queue_id):
+    """Background task for fetching variants from HerediCare"""
+    #from frontend_celery.webapp.utils.variant_importer import import_variants
+    self.update_state(state='PROGRESS')
+
+    conn = Connection(user_roles)
+
+    conn.update_import_queue_status(import_queue_id, status = "progress", message = "")
+
+    
+    status, message = import_variants(conn, user_id, user_roles, functions.str2datetime(min_date, fmt = '%Y-%m-%dT%H:%M:%S'), import_queue_id)
+
+    if status != "retry":
+        conn.close_import_request(import_queue_id, status = status, message = message)
+    else:
+        conn.update_import_queue_status(import_queue_id, status = status, message = message)
+
+    conn.close()
+    
+    #status, message = fetch_heredicare(vid, heredicare_interface)
+    if status == 'error':
+        self.update_state(state="FAILURE", meta={ 
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'
+                    })
+        raise Ignore()
+    elif status == "retry":
+        self.update_state(state="RETRY", meta={
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'})
+        heredicare_variant_import.retry()
+    else:
+        self.update_state(state="SUCCESS")
+
+
+def import_variants(conn: Connection, user_id, user_roles, min_date, import_queue_id): # the task worker
+    status = "success"
+
+    vids, status, message = heredicare_interface.get_vid_list(min_date)
+    
+    if status == "success":
+        # spawn one task for each variant import
+        print(len(vids))
+        vids = vids[:5]
+        for vid in vids:
+            _ = start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn)
+
+    return status, message
+
+
+
+
+
+
+
+
+
+
+################################################
+############## IMPORT THE VARIANT ##############
+################################################
+
+def start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn: Connection): # starts the celery task
+    import_variant_queue_id = conn.insert_variant_import_request(vid, import_queue_id)
+
+    task = import_one_variant_heredicare.apply_async(args=[vid, user_id, user_roles, import_variant_queue_id])
+    task_id = task.id
+
+    conn.update_import_variant_queue_celery_id(import_variant_queue_id, celery_task_id = task_id)
+
+    return task_id
+
+
+# this uses exponential backoff in case there is a http error
+# this will retry 3 times before giving up
+# first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
+@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
+def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant_queue_id):
+    """Background task for fetching variants from HerediCare"""
+    #from frontend_celery.webapp.utils.variant_importer import fetch_heredicare
+    self.update_state(state='PROGRESS')
+    
+    conn = Connection(user_roles)
+    
+    conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
+    status, message = fetch_heredicare(vid, heredicare_interface, user_id, conn)
+    print(status)
+
+    if status != "retry":
+        conn.close_import_variant_request(import_variant_queue_id, status = status, message = message)
+    else:
+        conn.update_import_variant_queue_status(import_variant_queue_id, status = status, message = message)
+    
+    conn.close()
+
+    if status == 'error':
+        self.update_state(state='FAILURE', meta={ 
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'
+                    })
+        raise Ignore()
+    elif status == "retry":
+        self.update_state(state="RETRY", meta={
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'})
+        import_one_variant_heredicare.retry()
+    else:
+        self.update_state(state="SUCCESS")
+
+
+
+def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection): # the task worker
+    
+    variant, status, message = heredicare_interface.get_variant(vid)
+
+    if status != 'success':
+        return status, message
+
+
+    genome_build = "GRCh38"
+
+    
+    # first check if the hg38 information is there
+    chrom = variant.get('CHROM')
+    pos = variant.get('POS_HG38')
+    ref = variant.get('REF_HG38')
+    alt = variant.get('ALT_HG38')
+
+    # if there is missing information check if there is hg19 information
+    if any([x is None for x in [chrom, pos, ref, alt]]):
+        pos = variant.get('POS_HG19')
+        ref = variant.get('REF_HG19')
+        alt = variant.get('ALT_HG19')
+        genome_build = "GRCh37"
+    
+    # if there is still missing data check if the variant has hgvs_c information
+    if any([x is None for x in [chrom, pos, ref, alt]]):
+        transcript = variant.get('REFSEQ')
+        hgvs_c = variant.get('CHGVS')
+
+        #TODO: maybe check if you can get some transcripts from the gene??? gene = variant.get('GEN')
+        if any([x is None for x in [transcript, hgvs_c]]):
+            status = "error"
+            message = "Not enough data to convert variant!"
+            return status, message
+
+        chrom, pos, ref, alt, err_msg = functions.hgvsc_to_vcf(hgvs_c, transcript) # convert to vcf
+
+        if err_msg != "": # catch runtime errors of hgvs to vcf
+            status = "error"
+            message = "HGVS to VCF yieled an error: " + str(err_msg)
+            return status, message
+        
+        # the conversion was not successful
+        if any([x is None for x in [chrom, pos, ref, alt]]): 
+            status = "error"
+            message = "HGVS could not be converted to VCF: " + str(transcript) + ":" + str(hgvs_c)
+            return status, message
+    
+    
+    existing_variant_id = conn.get_variant_id_from_external_id(vid, "heredicare")
+    if existing_variant_id is not None: # vid is already in heredivar
+        #check that new variant and imported variant are equal
+        existing_variant = conn.get_variant(existing_variant_id)
+        #if existing_variant.chrom == 
+
+
+    was_successful, message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = "ACGT")
+    if variant_id is not None:
+        conn.insert_external_variant_id(variant_id, vid, "heredicare")
+
+    if not was_successful:
+        status = "error"
+
+    return status, message
+
+
+
+
+def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connection, user_id, allowed_sequence_letters = "ACGT", perform_annotation = True):
+    message = ""
+    was_successful = True
+    variant_id = None
+    # validate request
+
+    chrom, chrom_is_valid = functions.curate_chromosome(chrom)
+    ref, ref_is_valid = functions.curate_sequence(ref, allowed_sequence_letters)
+    alt, alt_is_valid = functions.curate_sequence(alt, allowed_sequence_letters)
+    pos, pos_is_valid = functions.curate_position(pos)
+
+    if not chrom_is_valid:
+        message = "Chromosome is invalid: " + str(chrom)
+    elif not ref_is_valid:
+        message = "Reference base is invalid: " + str(ref)
+    elif not alt_is_valid:
+        message = "Alternative base is invalid: " + str(alt)
+    elif not pos_is_valid:
+        message = "Position is invalid: " + str(pos)
+    if not chrom_is_valid or not ref_is_valid or not alt_is_valid or not pos_is_valid:
+        was_successful = False
+        return was_successful, message, variant_id
+
+
+
+    tmp_file_path = functions.get_random_temp_file("vcf")
+    functions.variant_to_vcf(chrom, pos, ref, alt, tmp_file_path)
+
+    do_liftover = genome_build == 'GRCh37'
+    returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post = functions.preprocess_variant(tmp_file_path, do_liftover = do_liftover)
+
+    
+    if returncode != 0:
+        message = err_msg
+        was_successful = False
+        functions.rm(tmp_file_path)
+        return was_successful, message, variant_id
+    if 'ERROR:' in vcf_errors_pre:
+        message = vcf_errors_pre.replace('\n', ' ')
+        was_successful = False
+        functions.rm(tmp_file_path)
+        return was_successful, message, variant_id
+    if genome_build == 'GRCh37':
+        unmapped_variants_vcf = open(tmp_file_path + '.lifted.unmap', 'r')
+        unmapped_variant = None
+        for line in unmapped_variants_vcf:
+            if line.startswith('#') or line.strip() == '':
+                continue
+            unmapped_variant = line
+            break
+        unmapped_variants_vcf.close()
+        if unmapped_variant is not None:
+            message = 'ERROR: could not lift variant ' + unmapped_variant
+            was_successful = False
+            functions.rm(tmp_file_path)
+            functions.rm(tmp_file_path + ".lifted.unmap")
+            return was_successful, message, variant_id
+    if 'ERROR:' in vcf_errors_post:
+        message = vcf_errors_post.replace('\n', ' ')
+        was_successful = False
+        functions.rm(tmp_file_path)
+        functions.rm(tmp_file_path + ".lifted.unmap")
+        return was_successful, message, variant_id
+
+    if was_successful:
+        tmp_file = open(tmp_file_path, 'r')
+        for line in tmp_file:
+            line = line.strip()
+            if line.startswith('#') or line == '':
+                continue
+            parts = line.split('\t')
+            new_chr = parts[0]
+            new_pos = parts[1]
+            new_ref = parts[3]
+            new_alt = parts[4]
+            break # there is only one variant in the file
+        tmp_file.close()
+
+        is_duplicate = conn.check_variant_duplicate(new_chr, new_pos, new_ref, new_alt) # check if variant is already contained
+        
+        if not is_duplicate:
+            # insert it & capture the annotation_queue_id of the newly inserted variant to start the annotation service in celery
+            variant_id = conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chrom, pos, ref, alt, user_id)
+            if perform_annotation:
+                celery_task_id = start_annotation_service(conn, user_id) # starts the celery background task
+        else:
+            variant_id = conn.get_variant_id(new_chr, new_pos, new_ref, new_alt)
+            message = "Variant not imported: already in database!!"
+            was_successful = False
+
+    functions.rm(tmp_file_path)
+    functions.rm(tmp_file_path + ".lifted.unmap")
+    return was_successful, message, variant_id
+
+
+
+
+
+
+##########################################################
+############## START THE ANNOTATION SERVICE ##############
+##########################################################
+
+def start_annotation_service(conn: Connection, user_id, variant_id = None, annotation_queue_id = None, job_config = get_default_job_config()): # start the celery task
+    if variant_id is not None:
+        annotation_queue_id = conn.insert_annotation_request(variant_id, user_id) # only inserts a new row if there is none with this variant_id & pending
+        log_postfix = " for variant " + str(variant_id)
+    else:
+        log_postfix = " for annotation queue entry " + str(annotation_queue_id)
+    task = annotate_variant.apply_async(args=[annotation_queue_id, job_config])
+    print("Issued annotation for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task.id) + log_postfix)
+    #current_app.logger.info(session['user']['preferred_username'] + " started the annotation service for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task.id) + log_postfix)
+    conn.insert_celery_task_id(annotation_queue_id, task.id)
+    return task.id
+
+# the worker is the annotation service itself!
+
+
 # this uses exponential backoff in case there is a http error
 # this will retry 3 times before giving up
 # first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
@@ -56,106 +386,29 @@ def annotate_variant(self, annotation_queue_id, job_config):
     """Background task for running the annotation service"""
     self.update_state(state='PROGRESS', meta={'annotation_queue_id':annotation_queue_id})
     status, runtime_error = process_one_request(annotation_queue_id, job_config=job_config)
-    status = 'success'
+    celery_status = 'success'
     if status == 'error':
-        status = 'FAILURE'
-        self.update_state(state=status, meta={'annotation_queue_id':annotation_queue_id, 
+        celery_status = 'FAILURE'
+        self.update_state(state=celery_status, meta={'annotation_queue_id':annotation_queue_id, 
                         'exc_type': "Runtime error",
                         'exc_message': "The annotation service yielded a runtime error: " + runtime_error, 
                         'custom': '...'
                     })
         raise Ignore()
     if status == "retry":
-        status = "RETRY"
-        self.update_state(state=status, meta={'annotation_queue_id':annotation_queue_id,
+        celery_status = "RETRY"
+        self.update_state(state=celery_status, meta={'annotation_queue_id':annotation_queue_id,
                         'exc_type': "Runtime error",
                         'exc_message': "The annotation service yielded " + runtime_error + "! Will attempt retry.", 
                         'custom': '...'})
         annotate_variant.retry()
-    self.update_state(state=status, meta={'annotation_queue_id':annotation_queue_id})
-
-
-# this uses exponential backoff in case there is a http error
-# this will retry 3 times before giving up
-# first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
-@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
-def import_one_variant_heredicare(self, vid, user_id, user_roles):
-    """Background task for fetching variants from HerediCare"""
-    from frontend_celery.webapp.utils.variant_importer import fetch_heredicare
-    self.update_state(state='PROGRESS')
-    conn = Connection(user_roles)
-    status, message = fetch_heredicare(vid, heredicare_interface, user_id, conn)
-    conn.close()
-    print(status)
-    print(message)
-    if status == 'error':
-        status = 'FAILURE'
-        self.update_state(state=status, meta={ 
-                        'exc_type': "Runtime error",
-                        'exc_message': message, 
-                        'custom': '...'
-                    })
-        raise Ignore()
-    if status == "retry":
-        status = "RETRY"
-        self.update_state(state=status, meta={
-                        'exc_type': "Runtime error",
-                        'exc_message': message, 
-                        'custom': '...'})
-        import_one_variant_heredicare.retry()
-    self.update_state(state=status)
+    self.update_state(state=celery_status, meta={'annotation_queue_id':annotation_queue_id})
 
 
 
-@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
-def heredicare_variant_import(self, user_id, user_roles):
-    """Background task for fetching variants from HerediCare"""
-    self.update_state(state='PROGRESS')
 
-    conn = Connection(user_roles)
 
-    import_status = "progress"
-    import_request = conn.insert_import_request(user_id)
 
-    print(import_request.finished_at)
-
-    vids, status, message = heredicare_interface.get_vid_list(import_request.finished_at)
-    
-    if status != "success":
-        import_status = status
-    
-    conn.update_import_queue_status(import_request.id, import_status, message)
-
-    if status != "success":
-        return None
-
-    # spawn one task for each variant import
-    print(len(vids))
-    vids = vids[:10]
-    for vid in vids:
-        task = import_one_variant_heredicare.apply_async(args=[vid, user_id, user_roles])
-
-    conn.close()
-    
-    #status, message = fetch_heredicare(vid, heredicare_interface)
-    print(status)
-    print(message)
-    if status == 'error':
-        status = 'FAILURE'
-        self.update_state(state=status, meta={ 
-                        'exc_type': "Runtime error",
-                        'exc_message': message, 
-                        'custom': '...'
-                    })
-        raise Ignore()
-    if status == "retry":
-        status = "RETRY"
-        self.update_state(state=status, meta={
-                        'exc_type': "Runtime error",
-                        'exc_message': message, 
-                        'custom': '...'})
-        heredicare_variant_import.retry()
-    self.update_state(state=status)
 
 
 

@@ -247,8 +247,7 @@ class Connection:
         self.cursor.execute(command, (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt))
         self.conn.commit()
         variant_id = self.get_variant_id(chr, pos, ref, alt)
-        self.insert_annotation_request(variant_id, user_id)
-        return self.get_last_insert_id() # return the annotation_queue_id of the new variant
+        return variant_id # return the annotation_queue_id of the new variant
     
     def insert_external_variant_id(self, variant_id, external_id, id_source):
         command = "INSERT INTO variant_ids (variant_id, external_id, id_source) \
@@ -1159,31 +1158,150 @@ class Connection:
         res = self.cursor.fetchone()
         return res
 
+
+
+
     def insert_import_request(self, user_id):
         command = "INSERT INTO import_queue (user_id) VALUES (%s)"
         self.cursor.execute(command, (user_id, ))
         self.conn.commit()
         return self.get_most_recent_import_request()
     
-    def close_import_request(self, import_queue_id):
-        command = "UPDATE import_queue SET status = 'finished', finished_at = NOW() WHERE id = %s"
-        self.cursor.execute(command, (import_queue_id, ))
-        self.conn.commit()
-
     def get_most_recent_import_request(self):
-        self.cursor.execute("SELECT id, user_id, requested_at, status, finished_at FROM import_queue ORDER BY requested_at DESC LIMIT 1")
+        self.cursor.execute("SELECT id, user_id, requested_at, status, finished_at, message FROM import_queue ORDER BY requested_at DESC LIMIT 1")
+        import_request_raw = self.cursor.fetchone()
+        import_request = self.convert_raw_import_request(import_request_raw)
+        return import_request
+    
+    def get_import_request(self, import_queue_id):
+        command = "SELECT id, user_id, requested_at, status, finished_at, message FROM import_queue WHERE id = %s"
+        self.cursor.execute(command, (import_queue_id, ))
+        import_request_raw = self.cursor.fetchone()
+        import_request = self.convert_raw_import_request(import_request_raw)
+        return import_request
+    
+    def get_max_finished_at_import_variant(self, import_queue_id):
+        command = "SELECT MAX(finished_at) FROM import_variant_queue WHERE import_queue_id = %s"
+        self.cursor.execute(command, (import_queue_id, ))
         result = self.cursor.fetchone()
-        if result is not None:
-            user = self.parse_raw_user(self.get_user(result[1]))
-            requested_at = result[2] # datetime object
-            finished_at = result[4] # datetime object
-            result = models.import_request(id = result[0], user = user, requested_at = requested_at, status = result[3], finished_at = finished_at)
+        print(result)
+        return result[0]
+
+    def convert_raw_import_request(self, import_request_raw):
+        if import_request_raw is None:
+            return None
+        import_queue_id = import_request_raw[0]
+        user = self.parse_raw_user(self.get_user(import_request_raw[1]))
+        variant_summary = self.get_variant_summary(import_queue_id)
+        requested_at = import_request_raw[2] # datetime object
+        import_variant_list_finished_at = import_request_raw[4] # datetime object
+
+        import_variant_list_status = import_request_raw[3]
+
+        #1. pending: from status of import
+        #2. fetching vids: status of import is processing
+        #3. fetching variants: status of import is success and there are still non finished variants
+        #4. error: import status is error
+        #5. success: all variants are processed and
+        status = "unknown"
+        finished_at = None
+        if import_variant_list_status == "pending":
+            status = "pending"
+        elif import_variant_list_status == "processing":
+            status = "fetching vids"
+        elif import_variant_list_status == "success" and any([key_oi in variant_summary for key_oi in ["pending", "progress"]]):
+            status = "fetching variants"
+        elif import_variant_list_status  == "error":
+            status = "error"
+            finished_at = import_variant_list_finished_at
+        elif import_variant_list_status == "success":
+            status = "finished"
+            finished_at = self.get_max_finished_at_import_variant(import_queue_id)
+
+        result = models.import_request(id = import_queue_id, 
+                                       user = user, 
+                                       requested_at = requested_at, 
+                                       status = status, 
+                                       finished_at = finished_at, 
+                                       import_variant_list_status = import_variant_list_status,
+                                       import_variant_list_finished_at = import_variant_list_finished_at,
+                                       import_variant_list_message = import_request_raw[5],
+                                       variant_summary = variant_summary
+                                    )
+        return result
+    
+    def get_variant_summary(self, import_queue_id):
+        command = "SELECT count(*) as count, status from import_variant_queue WHERE import_queue_id = %s GROUP BY status"
+        self.cursor.execute(command, (import_queue_id, ))
+        result_raw = self.cursor.fetchall()
+        result = {}
+        for elem in result_raw:
+            result[elem[1]] = elem[0]
         return result
     
     def update_import_queue_status(self, import_queue_id, status, message):
         command = "UPDATE import_queue SET status = %s, message = %s WHERE id = %s"
         self.cursor.execute(command, (status, message, import_queue_id))
         self.conn.commit()
+
+    def update_import_queue_celery_task_id(self, import_queue_id, celery_task_id):
+        command = "UPDATE import_queue SET celery_task_id = %s WHERE id = %s"
+        self.cursor.execute(command, (celery_task_id, import_queue_id))
+        self.conn.commit()
+
+    def close_import_request(self, import_queue_id, status, message):
+        self.update_import_queue_status(import_queue_id, status, message)
+        command = "UPDATE import_queue SET finished_at = \"1999-01-01 00:00:00\" WHERE id = %s"
+        self.cursor.execute(command, (import_queue_id, ))
+        self.conn.commit()
+
+
+
+
+
+    def insert_variant_import_request(self, vid, import_queue_id):
+        command = "INSERT INTO import_variant_queue (vid, import_queue_id) VALUES (%s, %s)"
+        self.cursor.execute(command, (vid, import_queue_id))
+        self.conn.commit()
+        return self.get_last_insert_id()
+    
+    def update_import_variant_queue_celery_id(self, variant_import_queue_id, celery_task_id):
+        command = "UPDATE import_variant_queue SET celery_task_id = %s WHERE id = %s"
+        self.cursor.execute(command, (celery_task_id, variant_import_queue_id))
+        self.conn.commit()
+
+    def update_import_variant_queue_status(self, variant_import_queue_id, status, message):
+        command = "UPDATE import_variant_queue SET status = %s, message = %s WHERE id = %s"
+        self.cursor.execute(command, (status, message, variant_import_queue_id))
+        self.conn.commit()
+
+    def close_import_variant_request(self, variant_import_queue_id, status, message):
+        self.update_import_variant_queue_status(variant_import_queue_id, status, message)
+        command = "UPDATE import_variant_queue SET finished_at = NOW() WHERE id = %s"
+        self.cursor.execute(command, (variant_import_queue_id, ))
+        self.conn.commit()
+
+    def get_imported_variants(self, import_queue_id):
+        command = "SELECT id, status, requested_at, finished_at, message, vid FROM import_variant_queue WHERE import_queue_id = %s"
+        self.cursor.execute(command, (import_queue_id, ))
+        raw_results = self.cursor.fetchall()
+        return [self.convert_raw_import_variant_request(raw_result) for raw_result in raw_results]
+        
+
+    def convert_raw_import_variant_request(self, import_variant_request_raw):
+        if import_variant_request_raw is None:
+            return None
+        requested_at = import_variant_request_raw[2] # datetime object
+        finished_at = import_variant_request_raw[3] # datetime object
+        result = models.Import_variant_request(id = import_variant_request_raw[0], 
+                                               status = import_variant_request_raw[1], 
+                                               requested_at = requested_at, 
+                                               finished_at = finished_at, 
+                                               message = import_variant_request_raw[4], 
+                                               vid = import_variant_request_raw[5]
+                                            )
+        return result
+
 
     # returns a list of external ids if an id source is given
     # returns a list of tuples with (external_id, source) if no id source is given -> exports all external ids
@@ -1215,6 +1333,7 @@ class Connection:
         self.cursor.execute(command, (value, variant_id, annotation_type_id))
         self.conn.commit()
 
+    """
     def get_import_request(self, import_queue_id = '', date = ''):
         command = ''
         if import_queue_id != '':
@@ -1230,6 +1349,7 @@ class Connection:
             res = self.cursor.fetchone()
             return res
         return None
+    """
 
     def get_heredicare_center_classifications(self, variant_id):
         command = 'SELECT * FROM heredicare_center_classification WHERE variant_id = %s'

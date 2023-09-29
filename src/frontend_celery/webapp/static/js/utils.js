@@ -109,10 +109,13 @@ function filterTable_multiple_columns(filter, table, filter_visible = false) {
 
 // adding a row if the filters removed all rows ie. the table is empty
 function add_default_caption(table) {
-    const cap = document.createElement("caption");
-    cap.setAttribute('class', 'defaultrow');
-    cap.textContent ='Nothing to show';
-    table.appendChild(cap);
+    var caps = table.getElementsByClassName('defaultrow');
+    if (caps.length == 0) {
+        const cap = document.createElement("caption");
+        cap.setAttribute('class', 'defaultrow');
+        cap.textContent ='Nothing to show';
+        table.appendChild(cap);
+    }
 }
 
 // removing the empty-table-row
@@ -121,6 +124,49 @@ function remove_default_caption(table) {
     while(caps[0]) {
         caps[0].parentNode.removeChild(caps[0]);
     }
+}
+
+
+function update_default_caption(table) {
+    const tbody = table.getElementsByTagName('tbody')[0];
+    const rows = tbody.getElementsByTagName('tr');
+    if (rows.length > 0) {
+        remove_default_caption(table);
+    } else {
+        add_default_caption(table);
+    }
+}
+
+
+
+function activate_datatables(table_id) {
+    // ACTIVATE DATATABLES
+    // Setup - add a text input to each header cell
+    $('#' + table_id + ' thead th').each(function() {
+        var new_search_input = document.createElement('input')
+        new_search_input.setAttribute('placeholder', 'search...')
+        new_search_input.classList.add(this.classList)
+        $(this).append(new_search_input)
+    });
+ 
+    // DataTable
+    var the_table = $('#' + table_id).DataTable({
+        order: [[0, 'desc']],
+    });
+ 
+    // Apply the search
+    the_table.columns().eq(0).each(function(colIdx) {
+        $('input', the_table.column(colIdx).header()).on('keyup change', function() {
+            the_table
+                .column(colIdx)
+                .search(this.value)
+                .draw();
+        });
+    
+        $('input', the_table.column(colIdx).header()).on('click', function(e) {
+            e.stopPropagation();
+        });
+    });
 }
 
 

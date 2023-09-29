@@ -1,4 +1,4 @@
-from flask import render_template, request, url_for, flash, redirect, Blueprint, current_app, session
+from flask import render_template, request, url_for, flash, redirect, Blueprint, current_app, session, jsonify
 from os import path
 import sys
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
@@ -10,8 +10,7 @@ from datetime import datetime
 from ..utils import *
 from flask_paginate import Pagination
 import annotation_service.main as annotation_service
-from annotation_service.heredicare_interface import heredicare_interface
-from ..tasks import import_one_variant_heredicare, heredicare_variant_import
+from ..tasks import start_annotation_service, start_variant_import
 
 
 user_blueprint = Blueprint(
@@ -346,8 +345,11 @@ def admin_dashboard():
         if request_type == 'import_variants': # mass import from heredicare
             #heredicare_interface = current_app.extensions['heredicare_interface']
             #start_variant_import(conn)
-            heredicare_variant_import.apply_async(args=[session['user']['user_id'], session['user']['roles']])
-            do_redirect = True
+            #heredicare_variant_import.apply_async(args=[session['user']['user_id'], session['user']['roles']])
+            import_queue_id = start_variant_import(session['user']['user_id'], session['user']['roles'], conn = conn)
+            #task = import_one_variant_heredicare.apply_async(args=[12, 30, ["super_user"], 169])
+            
+            return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id))
 
     
     if do_redirect:
@@ -355,28 +357,23 @@ def admin_dashboard():
     return render_template('user/admin_dashboard.html', most_recent_import_request=most_recent_import_request, job_config = job_config, annotation_stati = annotation_stati, errors = errors, warnings = warnings, total_num_variants = total_num_variants)
 
 
-def start_variant_import(conn):
-    import_status = "progress"
-    import_request = conn.insert_import_request(session['user']['user_id'])
 
-    print(import_request.finished_at)
-
-    vids, status, message = heredicare_interface.get_vid_list(import_request.finished_at)
-    
-    if status != "success":
-        import_status = status
-    
-    conn.update_import_queue_status(import_request.id, import_status, message)
-
-    if status != "success":
-        return None
-
-    # spawn one task for each variant import
-    print(len(vids))
-    vids = vids[:5]
-    for vid in vids:
-        task = import_one_variant_heredicare.apply_async(args=[vid])
-
-    return status, message
+@user_blueprint.route('/variant_import_summary/<int:import_queue_id>', methods=('GET', 'POST'))
+@require_permission(['admin_resources'])
+def variant_import_summary(import_queue_id):
+    conn = get_connection()
+    import_request = conn.get_import_request(import_queue_id)
+    if import_request is None:
+        abort(404)
+    return render_template('user/variant_import_summary.html', import_queue_id = import_queue_id)
 
 
+@user_blueprint.route('/variant_import_summary_data/<int:import_queue_id>', methods=('GET', 'POST'))
+@require_permission(['admin_resources'])
+def variant_import_summary_data(import_queue_id):
+    conn = get_connection()
+
+    import_request = conn.get_import_request(import_queue_id)
+    imported_variants = conn.get_imported_variants(import_queue_id)
+
+    return jsonify({'import_request': import_request, 'imported_variants': imported_variants})

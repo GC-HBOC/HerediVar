@@ -2,7 +2,7 @@ from flask import Blueprint, abort, request, url_for, jsonify, session
 from os import path
 import sys
 
-from ..utils import require_permission, start_annotation_service, get_connection
+from ..utils import require_permission, get_connection
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from common.db_IO import Connection

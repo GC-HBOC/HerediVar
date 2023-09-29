@@ -10,7 +10,6 @@ import common.functions as functions
 from .decorators import *
 from .search_utils import *
 from .clinvar_utils import *
-from .variant_importer import *
 from urllib.parse import urlparse, urljoin
 import pathlib
 
