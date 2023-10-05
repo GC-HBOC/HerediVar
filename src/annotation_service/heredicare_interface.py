@@ -8,6 +8,35 @@ from common.xml_validator import xml_validator
 from datetime import datetime, timedelta
 
 
+
+
+
+
+class Heredicare_Flask():
+    def __init__(self, app=None):
+        self.app = app
+        if app is not None:
+            self.state = self.init_app(app)
+        else:
+            self.state = None
+
+    def init_app(self, app):
+        state = Heredicare()
+
+        # register extension with app
+        app.extensions = getattr(app, 'extensions', {})
+        app.extensions['heredicare'] = state
+        return state
+
+    def __getattr__(self, name):
+        return getattr(self.state, name, None)
+
+
+
+
+
+
+
 class Heredicare:
     bearer = None
     bearer_timestamp = None

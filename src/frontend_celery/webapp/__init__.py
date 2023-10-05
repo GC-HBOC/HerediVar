@@ -9,7 +9,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from common import paths, functions
-#from annotation_service.heredicare_interface import Heredicare
+from annotation_service.heredicare_interface import Heredicare_Flask
 # for logging
 import logging
 from flask.logging import default_handler
@@ -23,7 +23,7 @@ oauth = OAuth()
 sess = Session()
 celery = Celery(__name__, broker=Config.CELERY_BROKER_URL)
 mail = Mail()
-#heredicare = Heredicare()
+heredicare = Heredicare_Flask()
 
 
 def create_app():
@@ -59,7 +59,7 @@ def create_app():
 
     mail.init_app(app=app)
 
-    #heredicare.init_app(app=app)
+    heredicare.init_app(app=app)
 
 
     from .main import create_module as main_create_module

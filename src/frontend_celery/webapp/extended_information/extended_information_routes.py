@@ -22,7 +22,7 @@ def vid():
     vid = request.args.get('vid')
     if vid is None:
         abort(404)
-    heredicare_variant = current_app.extensions['heredicare_interface'].get_variant(vid)
+    heredicare_variant = current_app.extensions['heredicare'].get_variant(vid)
     return heredicare_variant
 
 
