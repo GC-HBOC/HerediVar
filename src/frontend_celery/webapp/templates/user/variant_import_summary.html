@@ -60,12 +60,14 @@
         <table class="table table-borderless" id="variant_summary_table">
             <tbody>
                 <tr>
-                    <td class="width_small">Pending variants</td>
-                    <td class="width_small">Processing variants</td>
-                    <td class="width_small">Erroneous variants</td>
-                    <td class="width_small">New variants</td>
-                    <td class="width_small">Deleted variants</td>
-                    <td class="width_small">Retrying variants</td>
+                    <td class="width_very_small">Pending</td>
+                    <td class="width_very_small">Processing</td>
+                    <td class="width_very_small">Erroneous</td>
+                    <td class="width_very_small">New</td>
+                    <td class="width_very_small">Deleted</td>
+                    <td class="width_very_small">Skipped</td>
+                    <td class="width_very_small">Updated</td>
+                    <td class="width_very_small">Retrying</td>
                 </tr>
                 <tr>
                     <td id="variant_summary_pending"></td>
@@ -73,6 +75,8 @@
                     <td id="variant_summary_erroneous"></td>
                     <td id="variant_summary_new"></td>
                     <td id="variant_summary_deleted"></td>
+                    <td id="variant_summary_skipped"></td>
+                    <td id="variant_summary_update"></td>
                     <td id="variant_summary_retrying"></td>
                 </tr>
             </tbody>
@@ -88,12 +92,11 @@
 <div class="w-100 bsb">
     <div class="card">
         <div class="card-body">
-            <h4 class="card-subcaption">Erroneous variants</h4>
-            These are variants that are missing information or had some other issues. The message column contains information about the reason why they were not imported.
+            <h4 class="card-subcaption">Status details of finished variants</h4>
 
             <p class="card-text">
                 <div class="table-responsive table-lg">
-                    <table class="table table-hover" id="erroneous_variant_table">
+                    <table class="table table-hover" id="variant_table">
                         <thead>
                             <tr>
                                 <th class="width_very_small"><div>HerediCare VID</div></th>
@@ -103,7 +106,7 @@
                                 <th class="width_large"><div>Message</div></th>
                             </tr>
                         </thead>
-                        <tbody id="erroneous_variant_table_body">
+                        <tbody id="variant_table_body">
 
                         </tbody>
                     </table>
@@ -120,6 +123,7 @@
 
 <input type='hidden' id='flask_data' 
     data-get-data-url='{{ url_for("user.variant_import_summary_data", import_queue_id = import_queue_id) }}'
+    data-vid-details-url='{{ url_for("extended_information.vid") }}'
 />
 
 

@@ -56,7 +56,7 @@ class Heredicare:
         now = datetime.now()
         status = "success"
         message = ""
-        print("TOKEN: " + str(self.bearer))
+        #print("TOKEN: " + str(self.bearer))
         if Heredicare.bearer is None:
             status, message = self.update_token(now)
         elif Heredicare.bearer_timestamp + timedelta(minutes = 50) <= now:

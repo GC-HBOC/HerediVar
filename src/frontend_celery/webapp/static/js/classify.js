@@ -125,6 +125,9 @@ function criterium_strength_to_description(criterium_strength) {
     if (criterium_strength == 'bp') {
         return 'supporting'
     }
+    if (criterium_strength == 'bm') {
+        return "medium"
+    }
     if (criterium_strength == 'bs') {
         return 'strong'
     }
@@ -358,10 +361,7 @@ function scheme_select_action(do_revert=true) {
         
         update_classification_preview()
         update_reference_link(scheme)
-
-        //update_last_submitted_date(scheme)
         
-        //update_schemes_with_info()
     }
     preselect_final_classification()
 
@@ -710,6 +710,7 @@ function create_criteria_buttons() {
     var container = document.createElement('div')
     const current_criteria = classification_schemas[scheme]['criteria']
     criteria_ids = Object.keys(current_criteria)
+    
     criteria_ids = criteria_ids.sort(compare_criteria())
 
     for (const i in criteria_ids) {
@@ -718,7 +719,7 @@ function create_criteria_buttons() {
         var default_strength = current_criterium['default_strength']
 
         var criterium_type = criterium_id[0] // a task force criterium -> the type is determined by the first digit
-        if (scheme_type === 'acmg') {
+        if (scheme_type === 'acmg' || scheme_type === 'acmg-enigma-brca1'|| scheme_type === 'acmg-enigma-brca2') {
             criterium_type = criterium_id.replace(/\d+/g, '') // an acmg criterium. The type is determined by the first two or three letters
         }
 
@@ -763,7 +764,7 @@ function create_criteria_buttons() {
 // sort helper
 function compare_criteria() {
     return function(a, b) {
-        if (scheme_type === 'acmg') {
+        if (scheme_type === 'acmg' || scheme_type === 'acmg-enigma-brca1' || scheme_type === 'acmg-enigma-brca2') {
             const criterium_order = {'PVS': 1, 'PS': 2, 'PM': 3, 'PP': 4, 'BP': 5, 'BS': 6, 'BA': 7}
             const a_letters = a.slice(0, -1)
             const a_crit_num = parseInt(a.slice(-1))
@@ -801,7 +802,7 @@ function compare_criteria() {
 // sort helper
 function compare_strength() {
     return function(a, b) {
-        const strength_order = {'PVS': 1, 'PS': 2, 'PM': 3, 'PP': 4, 'BP': 5, 'BS': 6, 'BA': 7}
+        const strength_order = {'PVS': 1, 'PS': 2, 'PM': 3, 'PP': 4, 'BP': 5, 'BM':6, 'BS': 7, 'BA': 8}
         a_num = strength_order[a]
         b_num = strength_order[b]
         
@@ -865,6 +866,10 @@ function create_criterium_button(criterium_id, strength) {
     label.classList.add('acmg-button-large')
     label.textContent = criterium_id
     container.appendChild(label)
+
+    if (! criterium_id.toLowerCase().indexOf(strength.toLowerCase()) <= 0) {
+        label.textContent += '_' + strength;
+    }
 
     var strength_select = document.createElement('input')
     strength_select.setAttribute('type', 'checkbox')
@@ -1187,25 +1192,35 @@ function update_classification_preview() {
         }
         if (!(scheme in pc) && !do_request_form_preselect) {
             document.getElementById('final_class').value = final_class
-            console.log(final_class)
         }
         
     });
 }
 
 function update_criterium_button_background(criterium_id) {
-    var criterium_button = document.getElementById(criterium_id);
+    //var criterium_button = document.getElementById(criterium_id);
     var criterium_strength_select = document.getElementById(criterium_id + '_strength');
     var criterium_label = document.getElementById(criterium_id + '_label');
 
-    var outer_color = colors[criterium_strength_select.value];
+    //var outer_color = colors[criterium_strength_select.value];
     //var inner_color = colors[criterium_id.replace(/\d+/g,'')]
 
-    if (!criterium_button.checked) {
-        criterium_label.style['background-color'] = null
-    } else {
-        criterium_label.style['background-color'] = outer_color //"radial-gradient(circle, " + inner_color + " 50%, " + outer_color + " 100%)"
+    var new_class = "btn-" + criterium_strength_select.value
+
+    const current_classes = criterium_label.classList
+    for (var i = 0; i < current_classes.length; i++) {
+        var current_class = current_classes[i]
+        if (current_class.indexOf("btn-") >= 0) {
+            criterium_label.classList.remove(current_class)
+        }
     }
+    criterium_label.classList.add(new_class)
+
+    //if (!criterium_button.checked) {
+    //    criterium_label.style['background-color'] = null
+    //} else {
+    //    criterium_label.style['background-color'] = outer_color //"radial-gradient(circle, " + inner_color + " 50%, " + outer_color + " 100%)"
+    //}
 }
 
 function update_criterium_button_label(criterium_id) {

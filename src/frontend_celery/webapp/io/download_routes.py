@@ -284,11 +284,153 @@ def calculate_class(scheme_type, selected_classes = ''):
     if scheme_type == 'task-force':
         final_class = decide_for_class_task_force(selected_classes)
 
+    if scheme_type == 'acmg-enigma-brca1':
+        selected_classes = [re.sub(r'[0-9]+', '', x) for x in selected_classes] # remove numbers from critera if there are any
+        class_counts = get_class_counts(selected_classes) # count how often we have each strength
+        #print(class_counts)
+        possible_classes = get_possible_classes_enigma_brca1(class_counts) # get a set of possible classes depending on selected criteria
+        final_class = decide_for_class_acmg(possible_classes) # decide for class
+
+    if scheme_type == 'acmg-enigma-brca2':
+        selected_classes = [re.sub(r'[0-9]+', '', x) for x in selected_classes] # remove numbers from critera if there are any
+        class_counts = get_class_counts(selected_classes) # count how often we have each strength
+        #print(class_counts)
+        possible_classes = get_possible_classes_enigma_brca2(class_counts) # get a set of possible classes depending on selected criteria
+        final_class = decide_for_class_acmg(possible_classes) # decide for class
+
     if final_class is None:
         raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme? (either "acmg" or VUS "task-force" based)')
 
     result = {'final_class': final_class}
     return jsonify(result)
+
+
+
+
+def get_possible_classes_enigma_brca2(class_counts):
+    
+    possible_classes = set()
+
+    # numbering comments are nubmers from the official ACMG paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4544753/ (TABLE 5)
+    # pathogenic
+    if class_counts['pvs'] == 1: # 1
+        if class_counts['ps'] >= 1 or class_counts['pm'] >= 1 or class_counts['pp'] >= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] >= 3: # 2 
+        possible_classes.add(5)
+    if class_counts['ps'] == 2: # 3
+        if class_counts['pm'] >= 1 or class_counts['pp'] <= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] == 1: # 3
+        if class_counts['pm'] >= 3 or (class_counts['pm'] == 2 and class_counts['pp'] >= 2) or (class_counts['pm'] == 1 and class_counts['pp'] >= 4):
+            possible_classes.add(5)
+    
+    # likely pathogenic
+    if class_counts['ps'] == 1 and class_counts['pp'] >= 2: # 3
+        possible_classes.add(4)
+    if class_counts['pm'] >= 3: # 4
+        possible_classes.add(4)
+    if class_counts['pm'] == 2 and class_counts['pp'] >= 2: # 5
+        possible_classes.add(4)
+    if class_counts['pm'] == 1 and class_counts['pp'] >= 4: # 6
+        possible_classes.add(4)
+
+    # benign
+    if class_counts['ba'] == 1: # 1
+        possible_classes.add(1)
+    if class_counts['bs'] >= 2: # 2
+        possible_classes.add(1)
+    if class_counts['bs'] == 1 and class_counts['bm'] >= 2: # 2
+        possible_classes.add(1)
+    if class_counts['bs'] == 1 and class_counts['bm'] == 1 and class_counts['bp'] >= 1: # 2
+        possible_classes.add(1)
+    if class_counts['bs'] == 1 and class_counts['bp'] >= 3: # 2
+        possible_classes.add(1)
+
+    # likely benign
+    if class_counts['bs'] == 1 and class_counts['bp'] == 1: # 1
+        possible_classes.add(2)
+    if class_counts['bp'] >= 2: # 2
+        possible_classes.add(2)
+    if class_counts['bs'] == 1: # 2
+        possible_classes.add(2)
+    if class_counts['bs'] == 1 and class_counts['bm'] == 1: # 1
+        possible_classes.add(2)
+    if class_counts['bm'] == 1 and class_counts['bp'] >= 1: # 1
+        possible_classes.add(2)
+
+    #print(class_counts)
+    #print(possible_classes)
+
+    return possible_classes
+
+
+
+
+
+def get_possible_classes_enigma_brca1(class_counts):
+    
+    possible_classes = set()
+
+    # numbering comments are nubmers from the official ACMG paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4544753/ (TABLE 5)
+    # pathogenic
+    if class_counts['pvs'] == 1: # 1
+        if class_counts['ps'] >= 1 or class_counts['pm'] >= 1 or class_counts['pp'] >= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] >= 3: # 2 
+        possible_classes.add(5)
+    if class_counts['ps'] == 2: # 3
+        if class_counts['pm'] >= 1 or class_counts['pp'] <= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] == 1: # 3
+        if class_counts['pm'] >= 3 or (class_counts['pm'] == 2 and class_counts['pp'] >= 2) or (class_counts['pm'] == 1 and class_counts['pp'] >= 4):
+            possible_classes.add(5)
+    
+    # likely pathogenic
+    if class_counts['ps'] == 2: # 2
+        possible_classes.add(4)
+    if class_counts['ps'] == 1 and (1 <= class_counts['pm'] <= 2): # 2
+        possible_classes.add(4)
+    if class_counts['ps'] == 1 and class_counts['pp'] >= 2: # 3
+        possible_classes.add(4)
+    if class_counts['pm'] >= 3: # 4
+        possible_classes.add(4)
+    if class_counts['pm'] == 2 and class_counts['pp'] >= 2: # 5
+        possible_classes.add(4)
+    if class_counts['pm'] == 1 and class_counts['pp'] >= 4: # 6
+        possible_classes.add(4)
+
+    # benign
+    if class_counts['ba'] == 1: # 1
+        possible_classes.add(1)
+    if class_counts['bs'] >= 2: # 2
+        possible_classes.add(1)
+    if class_counts['bs'] == 1 and class_counts['bm'] >= 2: # 2
+        possible_classes.add(1)
+    if class_counts['bs'] == 1 and class_counts['bm'] == 1 and class_counts['bp'] >= 1: # 2
+        possible_classes.add(1)
+    if class_counts['bs'] == 1 and class_counts['bp'] >= 3: # 2
+        possible_classes.add(1)
+
+    # likely benign
+    if class_counts['bs'] == 1 and class_counts['bp'] == 1: # 1
+        possible_classes.add(2)
+    if class_counts['bp'] >= 2: # 2
+        possible_classes.add(2)
+    if class_counts['bs'] == 1: # 2
+        possible_classes.add(2)
+    if class_counts['bs'] == 1 and class_counts['bm'] == 1: # 1
+        possible_classes.add(2)
+    if class_counts['bm'] == 1 and class_counts['bp'] >= 1: # 1
+        possible_classes.add(2)
+
+    #print(class_counts)
+    #print(possible_classes)
+
+    return possible_classes
+
+
+
 
 
 def decide_for_class_task_force(selected_classes):
@@ -311,8 +453,10 @@ def decide_for_class_task_force(selected_classes):
 
 
 def get_class_counts(data):
-    result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'ba':0}
+    result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'bm':0, 'ba':0}
+    data = [x.lower() for x in data]
     for key in result:
+        key = key.lower()
         result[key] = sum(key in x for x in data)
     return result
 

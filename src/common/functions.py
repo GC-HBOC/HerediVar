@@ -274,7 +274,8 @@ def left_align_vcf(infile, outfile, ref_genome = 'GRCh38'):
 
 
 def hgvsc_to_vcf(hgvs, reference = None):
-    tmp_file_path = tempfile.gettempdir() + "/hgvs_to_vcf"
+    #tmp_file_path = tempfile.gettempdir() + "/hgvs_to_vcf"
+    tmp_file_path = get_random_temp_file("_hgvs2vcf")
     tmp_file = open(tmp_file_path + ".tsv", "w")
     tmp_file.write("#reference	hgvs_c\n")
     if reference is None:
@@ -299,6 +300,10 @@ def hgvsc_to_vcf(hgvs, reference = None):
         pos = parts[1]
         ref = parts[3]
         alt = parts[4]
+    
+
+    rm(tmp_file_path + ".tsv")
+    rm(tmp_file_path + ".vcf")
     return chr, pos, ref, alt, err_msg
 
 # function for splitting hgvs in refrence transcript and variant

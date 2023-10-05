@@ -1,12 +1,13 @@
 
 const flask_data = document.getElementById("flask_data")
 const data_url = flask_data.dataset.getDataUrl;
+const vid_details_url = flask_data.dataset.vidDetailsUrl;
 
 
 
 $(document).ready(function(){
 
-    activate_datatables("erroneous_variant_table")
+    activate_datatables("variant_table")
 
     update_page(data_url)
 
@@ -34,11 +35,12 @@ function update_page(url) {
         // polling happens here:
         // rerun in 5 seconds if state resembles an unfinished task
         const import_status = data["import_request"]["status"]
-        if (import_status === "pending" || import_status === "fetching vids" || import_status === "fetching variants") {
+        console.log(import_status)
+        if (import_status === "pending" || import_status === "fetching vids" || import_status === "fetching variants" || import_status === "unknown") {
             
             setTimeout(function() {
-                update_annotation_status(url);
-            }, 5000);
+                update_page(url);
+            }, 10000);
         }
     });
 
@@ -101,9 +103,11 @@ function update_variant_summary(summary_data) {
                "error": "variant_summary_erroneous",
                "new": "variant_summary_new",
                "deleted": "variant_summary_deleted",
-               "retry": "variant_summary_retrying"
+               "retry": "variant_summary_retrying",
+               "skipped": "variant_summary_skipped",
+               "update": "variant_summary_update"
             }
-    
+    console.log(summary_data)
     for (var key in all_tds) {
         var current_td = document.getElementById(all_tds[key])
         if (key in summary_data) {
@@ -116,19 +120,19 @@ function update_variant_summary(summary_data) {
 
 
 function update_erroneous_variants(variants) {
-    const table = $('#erroneous_variant_table').DataTable();
+    const table = $('#variant_table').DataTable();
     table.clear().draw(); // remove all rows that are currently there
 
     for (var i = 0; i < variants.length; i++) {
         var current_variant = variants[i];
-        if (current_variant['status'] === "error") {
+        if (current_variant['status'] !== "pending" && current_variant['status'] !== "processing") {
             var new_trow = create_erroneous_variant_row(current_variant);
             table.row.add(new_trow).draw(false)
         }
 
     }
 
-    update_default_caption(document.getElementById("erroneous_variant_table"))
+    update_default_caption(document.getElementById("variant_table"))
     
 
 }
@@ -136,7 +140,7 @@ function update_erroneous_variants(variants) {
 
 function create_erroneous_variant_row(variant) {
     const tds = [
-        create_td(variant["vid"]),
+        create_td_link(variant["vid"], vid_details_url),
         create_td(variant["status"]),
         create_td(variant["requested_at"]),
         create_td(variant["finished_at"]),
@@ -151,6 +155,15 @@ function create_erroneous_variant_row(variant) {
 function create_td(text_content) {
     var td = document.createElement('td');
     td.textContent = text_content;
+    return td;
+}
+
+function create_td_link(text_content, url) {
+    var td = document.createElement('td');
+    var a = document.createElement('a')
+    a.setAttribute('href', url + "?vid=" + text_content)
+    a.textContent = text_content
+    td.appendChild(a)
     return td;
 }
 

@@ -988,6 +988,12 @@ class Connection:
         if result is not None:
             return result[0]
         return result
+    
+    def get_all_external_ids(self, id_source):
+        command = "SELECT external_id FROM variant_ids WHERE id_source = %s"
+        self.cursor.execute(command, (id_source, ))
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
 
     def get_consensus_classification(self, variant_id, most_recent = False, sql_modifier=None): # it is possible to have multiple consensus classifications
         command = "SELECT id,user_id,variant_id,classification,comment,date,is_recent,classification_scheme_id,scheme_class FROM consensus_classification WHERE variant_id = %s"
@@ -1148,15 +1154,28 @@ class Connection:
         self.conn.commit()
 
     def delete_variant(self, variant_id):
+        status = "deleted"
+        message  = "Deleted variant " + str(variant_id)
+        consensus_classification = self.get_consensus_classification(variant_id)
+        if len(consensus_classification) > 0: # do not delete if the variant has a consensus classification
+            status = "skipped"
+            message = "Did not delete variant because it has consensus classifications"
+            return status, message
+        user_classifications = self.get_user_classifications(variant_id)
+        if len(user_classifications) > 0: # do not delete if the variant has a user classification
+            status = "skipped"
+            message = "Did not delete variant because it has user classifications"
+            return status, message
         command = "DELETE FROM variant WHERE id = %s"
         self.cursor.execute(command, (variant_id,))
         self.conn.commit()
+        return status, message
 
-    def get_orig_variant(self, variant_id):
-        command = "SELECT orig_chr, orig_pos, orig_ref, orig_alt FROM variant WHERE id = %s"
-        self.cursor.execute(command, (variant_id, ))
-        res = self.cursor.fetchone()
-        return res
+    #def get_orig_variant(self, variant_id):
+    #    command = "SELECT orig_chr, orig_pos, orig_ref, orig_alt FROM variant WHERE id = %s"
+    #    self.cursor.execute(command, (variant_id, ))
+    #    res = self.cursor.fetchone()
+    #    return res
 
 
 
@@ -1306,9 +1325,13 @@ class Connection:
     # returns a list of external ids if an id source is given
     # returns a list of tuples with (external_id, source) if no id source is given -> exports all external ids
     def get_external_ids_from_variant_id(self, variant_id, id_source=''):
+        allowed_columns = ["external_id", "id_source"]
+
         columns_oi = ["external_id"]
         if id_source == '' or id_source is None:
             columns_oi = columns_oi + ["id_source"]
+        if any([c not in allowed_columns for c in columns_oi]):
+            return []
         command = "SELECT " + ", ".join(columns_oi) + " FROM variant_ids WHERE variant_id = %s"
         information = (variant_id,)
         if id_source != '':
@@ -1323,9 +1346,13 @@ class Connection:
         else:
             return result
 
-    def delete_external_id(self, external_id, id_source):
+    def delete_external_id(self, external_id, id_source, variant_id = None):
         command = "DELETE FROM variant_ids WHERE external_id = %s AND id_source = %s"
-        self.cursor.execute(command, (external_id, id_source))
+        actual_information = (external_id, id_source)
+        if variant_id is not None:
+            command += " AND variant_id = %s"
+            actual_information += (variant_id, )
+        self.cursor.execute(command, actual_information)
         self.conn.commit()
 
     def update_variant_annotation(self, variant_id, annotation_type_id, value): # use with caution!

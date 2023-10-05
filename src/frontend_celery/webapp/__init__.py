@@ -9,7 +9,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from common import paths, functions
-#from annotation_service import Heredicare
+#from annotation_service.heredicare_interface import Heredicare
 # for logging
 import logging
 from flask.logging import default_handler

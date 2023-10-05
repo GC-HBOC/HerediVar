@@ -127,6 +127,19 @@ input.invalid {
     color: rgb(255, 255, 255);
     background-color: #6f15a3;
 }
+.btn-bm {
+    color: #d32d88;
+    background-color: #ffffff;
+}
+/*.btn-bm:hover {
+    color: rgb(255, 255, 255);
+    background-color: #7e0dc0;
+    border-color: #d8d8d8;
+}*/
+.btn-bm:focus, .btn-bm.focus, .btn-bm:active:focus, .open>.dropdown-toggle.btn-bm, input[type=checkbox]:checked + label.btn-bm {
+    color: rgb(255, 255, 255);
+    background-color: #d32d88;
+}
 .btn-ba {
     color: #000d58;
     background-color: #ffffff;
@@ -143,9 +156,11 @@ input.invalid {
 
 
 
-.btn-check:disabled + label.btn {
+.btn-check:disabled + label.acmg-button {
     color: rgb(170, 170, 170);
     background-color: rgb(230, 230, 230);
+    cursor:unset;
+    filter: brightness(100%);
 }
 .light-hover:hover {
     filter: brightness(140%);

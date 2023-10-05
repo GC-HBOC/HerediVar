@@ -117,14 +117,22 @@ def heredicare_variant_import(self, user_id, user_roles, min_date, import_queue_
 def import_variants(conn: Connection, user_id, user_roles, min_date, import_queue_id): # the task worker
     status = "success"
 
-    vids, status, message = heredicare_interface.get_vid_list(min_date)
-    
+    vids_heredicare, status, message = heredicare_interface.get_vid_list(min_date)
+
     if status == "success":
+
+        vids_heredivar = conn.get_all_external_ids("heredicare")
+
+
+        intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = compare_v_id_lists(vids_heredicare, vids_heredivar)
+
+        print("Intersection: " + str(len(intersection)))
+        print("Deleted: " + str(len(heredivar_exclusive_vids)))
+        print("New: " + str(len(heredicare_exclusive_vids)))
+
         # spawn one task for each variant import
-        print(len(vids))
-        vids = vids[:5]
-        for vid in vids:
-            _ = start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn)
+        process_new_vids(heredicare_exclusive_vids + intersection, import_queue_id, user_id, user_roles, conn)
+        process_deleted_vids(heredivar_exclusive_vids, import_queue_id, user_id, user_roles, conn)
 
     return status, message
 
@@ -134,6 +142,95 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
 
 
 
+
+def process_deleted_vids(vids, import_queue_id, user_id, user_roles, conn: Connection):
+    vids = []
+    for vid in vids:
+        _ = start_delete_variant(vid, import_queue_id, user_id, user_roles, conn)
+
+
+
+def process_new_vids(vids, import_queue_id, user_id, user_roles, conn: Connection):
+    # simply insert them
+    vids = vids[:1000]
+    for vid in vids:
+        _ = start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn)
+
+
+
+
+def compare_v_id_lists(vids_heredicare, vids_heredivar):
+    vids_heredicare = set(vids_heredicare)
+    vids_heredivar = set(vids_heredivar)
+
+    intersection = list(vids_heredivar & vids_heredicare)
+    heredivar_exclusive_variants = list(vids_heredivar - vids_heredicare) # this contains only variants which have a vid in heredivar!!!!
+    heredicare_exclusive_variants = list(vids_heredicare - vids_heredivar)
+
+    return intersection, heredivar_exclusive_variants, heredicare_exclusive_variants
+
+
+
+################################################
+############## DELETE THE VARIANT ##############
+################################################
+
+def start_delete_variant(vid, import_queue_id, user_id, user_roles, conn: Connection): # starts the celery task
+    import_variant_queue_id = conn.insert_variant_import_request(vid, import_queue_id)
+
+    task = delete_variant_heredicare.apply_async(args=[vid, user_id, user_roles, import_variant_queue_id])
+    task_id = task.id
+
+    conn.update_import_variant_queue_celery_id(import_variant_queue_id, celery_task_id = task_id)
+
+    return task_id
+
+
+# this uses exponential backoff in case there is a http error
+# this will retry 3 times before giving up
+# first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
+@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
+def delete_variant_heredicare(self, vid, user_id, user_roles, import_variant_queue_id):
+    """Background task for fetching variants from HerediCare"""
+    #from frontend_celery.webapp.utils.variant_importer import fetch_heredicare
+    self.update_state(state='PROGRESS')
+    
+    conn = Connection(user_roles)
+    
+    conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
+    
+    message = "Removed heredicare vid"
+    status = "update"
+    variant_id = conn.get_variant_id_from_external_id(vid, 'heredicare')
+    all_vids_for_variant = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
+    conn.delete_external_id(vid, 'heredicare', variant_id = variant_id)
+    if len(all_vids_for_variant) <= 1:
+        status, message = conn.delete_variant(variant_id) # this only deletes if there are no classifications
+        
+    print(status)
+
+    if status != "retry":
+        conn.close_import_variant_request(import_variant_queue_id, status = status, message = message)
+    else:
+        conn.update_import_variant_queue_status(import_variant_queue_id, status = status, message = message)
+    
+    conn.close()
+
+    if status == 'error':
+        self.update_state(state='FAILURE', meta={ 
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'
+                    })
+        raise Ignore()
+    elif status == "retry":
+        self.update_state(state="RETRY", meta={
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'})
+        import_one_variant_heredicare.retry()
+    else:
+        self.update_state(state="SUCCESS")
 
 
 
@@ -240,22 +337,31 @@ def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection): # the
             message = "HGVS could not be converted to VCF: " + str(transcript) + ":" + str(hgvs_c)
             return status, message
     
-    
-    existing_variant_id = conn.get_variant_id_from_external_id(vid, "heredicare")
-    if existing_variant_id is not None: # vid is already in heredivar
-        #check that new variant and imported variant are equal
-        existing_variant = conn.get_variant(existing_variant_id)
-        #if existing_variant.chrom == 
 
 
     was_successful, message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = "ACGT")
-    if variant_id is not None:
+
+    ## vid was moved from one variant to another -> delete it from the existing variant
+    #if was_successful:
+    #    # check that vid and variant refer to the same thing in heredicare and heredivar
+    #    existing_variant_id = conn.get_variant_id_from_external_id(vid, "heredicare")
+    #    if existing_variant_id is not None:
+    #        if existing_variant_id != variant_id: # sanity check maybe not neccessary
+    #            start_delete_variant(vid, import_queue_id, user_id, user_roles, conn) # deletes the vid and the variant if 
+
+
+    if variant_id is not None: # insert new vid
         conn.insert_external_variant_id(variant_id, vid, "heredicare")
 
-    if not was_successful:
+    if not was_successful and variant_id is not None: # variant is already in database, start a reannotation
+        status = "update"
+        start_annotation_service(conn, user_id, variant_id)
+    elif not was_successful:
         status = "error"
 
     return status, message
+
+
 
 
 
@@ -343,12 +449,12 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
         if not is_duplicate:
             # insert it & capture the annotation_queue_id of the newly inserted variant to start the annotation service in celery
             variant_id = conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chrom, pos, ref, alt, user_id)
-            if perform_annotation:
-                celery_task_id = start_annotation_service(conn, user_id) # starts the celery background task
         else:
             variant_id = conn.get_variant_id(new_chr, new_pos, new_ref, new_alt)
             message = "Variant not imported: already in database!!"
             was_successful = False
+        if perform_annotation:
+            celery_task_id = start_annotation_service(conn, user_id, variant_id) # starts the celery background task
 
     functions.rm(tmp_file_path)
     functions.rm(tmp_file_path + ".lifted.unmap")
