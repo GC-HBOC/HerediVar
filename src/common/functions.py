@@ -201,6 +201,8 @@ def preprocess_variant(infile, do_liftover=False):
 
 
 def curate_chromosome(chrom):
+    if chrom is None:
+        return None, False
     is_valid = True
     chr_num = validate_chr(chrom)
 
@@ -222,6 +224,8 @@ def curate_position(pos):
     return int(pos), is_valid
 
 def curate_sequence(seq, allowed = "ACGT-"):
+    if seq is None:
+        return None, False
     seq = seq.strip().upper()
     is_valid = True
     if not all(c in allowed for c in seq):

@@ -11,6 +11,10 @@ from flask_mail import Message
 from flask import render_template
 import time
 from annotation_service.heredicare_interface import heredicare_interface
+# errors:
+from mysql.connector import Error, InternalError
+from urllib.error import HTTPError
+import traceback
 
 """
 @celery.task(bind=True)
@@ -197,15 +201,29 @@ def delete_variant_heredicare(self, vid, user_id, user_roles, import_variant_que
     
     conn = Connection(user_roles)
     
-    conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
-    
-    message = "Removed heredicare vid"
-    status = "update"
-    variant_id = conn.get_variant_id_from_external_id(vid, 'heredicare')
-    all_vids_for_variant = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
-    conn.delete_external_id(vid, 'heredicare', variant_id = variant_id)
-    if len(all_vids_for_variant) <= 1:
-        status, message = conn.delete_variant(variant_id) # this only deletes if there are no classifications
+    try:
+        conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
+
+        message = "Removed heredicare vid"
+        status = "update"
+        variant_id = conn.get_variant_id_from_external_id(vid, 'heredicare')
+        all_vids_for_variant = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
+        conn.delete_external_id(vid, 'heredicare', variant_id = variant_id)
+        if len(all_vids_for_variant) <= 1:
+            status, message = conn.delete_variant(variant_id) # this only deletes if there are no classifications
+    except InternalError as e:
+        # deadlock: code 1213
+        status = "retry"
+        message = "Attempting retry because of database error: " + str(e)  + ' ' + traceback.format_exc()
+    except Error as e:
+        status = "error"
+        message = "There was a database error: " + str(e)  + ' ' + traceback.format_exc()
+    except HTTPError as e:
+        status = "retry"
+        message = "Attempting retry because of http error: " + str(e)  + ' ' + traceback.format_exc()
+    except Exception as e:
+        status = "error"
+        message = "There was a runtime error: " + str(e) + ' ' + traceback.format_exc()
         
     print(status)
 
@@ -259,9 +277,24 @@ def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant
     self.update_state(state='PROGRESS')
     
     conn = Connection(user_roles)
+
+    try:
+        conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
+        status, message = fetch_heredicare(vid, heredicare_interface, user_id, conn)
+    except InternalError as e:
+        # deadlock: code 1213
+        status = "retry"
+        message = "Attempting retry because of database error: " + str(e)  + ' ' + traceback.format_exc()
+    except Error as e:
+        status = "error"
+        message = "There was a database error: " + str(e)  + ' ' + traceback.format_exc()
+    except HTTPError as e:
+        status = "retry"
+        message = "Attempting retry because of http error: " + str(e)  + ' ' + traceback.format_exc()
+    except Exception as e:
+        status = "error"
+        message = "There was a runtime error: " + str(e) + ' ' + traceback.format_exc()
     
-    conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
-    status, message = fetch_heredicare(vid, heredicare_interface, user_id, conn)
     print(status)
 
     if status != "retry":
@@ -296,30 +329,35 @@ def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection): # the
     if status != 'success':
         return status, message
 
+    allowed_sequence_letters = "ACGT"
+    perform_annotation = False
 
-    genome_build = "GRCh38"
-
-    
     # first check if the hg38 information is there
     chrom = variant.get('CHROM')
     pos = variant.get('POS_HG38')
     ref = variant.get('REF_HG38')
     alt = variant.get('ALT_HG38')
+    genome_build = "GRCh38"
 
-    # if there is missing information check if there is hg19 information
-    if any([x is None for x in [chrom, pos, ref, alt]]):
+    was_successful, message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, perform_annotation=perform_annotation)
+
+    if not was_successful:
+        # check hg19 information
         pos = variant.get('POS_HG19')
         ref = variant.get('REF_HG19')
         alt = variant.get('ALT_HG19')
         genome_build = "GRCh37"
+
+        was_successful, message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, perform_annotation=perform_annotation)
     
-    # if there is still missing data check if the variant has hgvs_c information
-    if any([x is None for x in [chrom, pos, ref, alt]]):
+    if not was_successful:
+        # if there is still missing data check if the variant has hgvs_c information
         transcript = variant.get('REFSEQ')
         hgvs_c = variant.get('CHGVS')
+        genome_build = "GRCh38"
 
         #TODO: maybe check if you can get some transcripts from the gene??? gene = variant.get('GEN')
-        if any([x is None for x in [transcript, hgvs_c]]):
+        if any([x is None for x in [transcript, hgvs_c]]) or transcript == 'unknown':
             status = "error"
             message = "Not enough data to convert variant!"
             return status, message
@@ -336,10 +374,8 @@ def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection): # the
             status = "error"
             message = "HGVS could not be converted to VCF: " + str(transcript) + ":" + str(hgvs_c)
             return status, message
-    
-
-
-    was_successful, message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = "ACGT")
+        
+        was_successful, message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, perform_annotation=perform_annotation)
 
     ## vid was moved from one variant to another -> delete it from the existing variant
     #if was_successful:
@@ -560,4 +596,3 @@ def notify_new_user(self, full_name, email, username, password):
         recipient = email, 
         text_body = body  
     )
-    

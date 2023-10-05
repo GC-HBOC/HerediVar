@@ -24,7 +24,9 @@
                 </tr>
                 <tr>
                     <td class="width_small">Status</td>
-                    <td id="summary_status"></td> 
+                    <td id="summary_status">
+                        <span id="status_badge" class="badge rounded-pill bg-secondary visually_hidden" data-bs-toggle="tooltip" title=""></span>
+                    </td> 
                     <!-- 
                         1. pending: from status of import
                         2. fetching vids: status of import is processing
@@ -63,7 +65,7 @@
                     <td class="width_very_small">Pending</td>
                     <td class="width_very_small">Processing</td>
                     <td class="width_very_small">Erroneous</td>
-                    <td class="width_very_small">New</td>
+                    <td class="width_very_small">Success</td>
                     <td class="width_very_small">Deleted</td>
                     <td class="width_very_small">Skipped</td>
                     <td class="width_very_small">Updated</td>
@@ -73,7 +75,7 @@
                     <td id="variant_summary_pending"></td>
                     <td id="variant_summary_processing"></td>
                     <td id="variant_summary_erroneous"></td>
-                    <td id="variant_summary_new"></td>
+                    <td id="variant_summary_success"></td>
                     <td id="variant_summary_deleted"></td>
                     <td id="variant_summary_skipped"></td>
                     <td id="variant_summary_update"></td>

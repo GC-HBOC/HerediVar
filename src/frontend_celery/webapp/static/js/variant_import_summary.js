@@ -35,7 +35,6 @@ function update_page(url) {
         // polling happens here:
         // rerun in 5 seconds if state resembles an unfinished task
         const import_status = data["import_request"]["status"]
-        console.log(import_status)
         if (import_status === "pending" || import_status === "fetching vids" || import_status === "fetching variants" || import_status === "unknown") {
             
             setTimeout(function() {
@@ -46,34 +45,14 @@ function update_page(url) {
 
 }
 
-
-
-
-
-
-
-//function update_page() {
-//
-//    $.ajax({
-//        type: 'GET',
-//        url: data_url,
-//        success: function(data, status, request) {
-//
-//            console.log(data)
-//            update_general_information(data)
-//            update_erroneous_variants(data['imported_variants'])
-//            update_variant_summary(data["import_request"]["variant_summary"])
-//            
-//            
-//        },
-//        error: function() {
-//            console.log('error during data retrieval!');
-//        }
-//    });
-//
-//}
-
-
+const status2meta = {
+    "unknown": {"color": "bg-secondary", "tooltip": "Please wait while the status is being fetched."},
+    "pending": {"color": "bg-secondary", "tooltip": "The job is queued and waiting for a worker to be picked up."},
+    "fetching vids": {"color": "bg-primary", "tooltip": "The vids are currently fetched from HerediCare."},
+    "fetching variants": {"color": "bg-primary", "tooltip": "The vids were fetched from HerediCare. The variants are currently imported to HerediVar."},
+    "error": {"color": "bg-danger", "tooltip": "There was an error in this request. See the message below."},
+    "finished": {"color": "bg-success", "tooltip": "The variant import is finished."}
+}
 
 function update_general_information(data) {
     // update total number of variants
@@ -86,7 +65,8 @@ function update_general_information(data) {
     document.getElementById("summary_requested_at").textContent = data["import_request"]["requested_at"]
 
     // update general status
-    document.getElementById("summary_status").textContent = data["import_request"]["status"]
+    const the_status = data["import_request"]["status"]
+    update_import_status(status2meta[the_status]["color"], status2meta[the_status]["tooltip"], the_status)
 
     //update finished at date
     document.getElementById("summary_finished_at").textContent = data["import_request"]["finished_at"]
@@ -96,18 +76,37 @@ function update_general_information(data) {
 }
 
 
+// utility for showing the current annotation status
+function update_import_status(color_class, tooltip_text, inner_text) {
+    $('#status_badge').tooltip('hide')
+    var status_pill = document.getElementById('status_badge')
+
+    // remove all previous colors
+    const current_classes = status_pill.classList
+    for (var i = 0; i < current_classes.length; i++) {
+        var current_class = current_classes[i]
+        if (current_class.indexOf("bg-") >= 0) {
+            status_pill.classList.remove(current_class)
+        }
+    }
+    status_pill.classList.remove("visually_hidden")
+    status_pill.classList.add(color_class) // add new color
+    status_pill.setAttribute('title', tooltip_text)
+    status_pill.innerText = inner_text
+}
+
+
 
 function update_variant_summary(summary_data) {
     all_tds = {"pending": "variant_summary_pending", 
-               "processing": "variant_summary_processing",
+               "progress": "variant_summary_processing",
                "error": "variant_summary_erroneous",
-               "new": "variant_summary_new",
+               "success": "variant_summary_success",
                "deleted": "variant_summary_deleted",
                "retry": "variant_summary_retrying",
                "skipped": "variant_summary_skipped",
                "update": "variant_summary_update"
             }
-    console.log(summary_data)
     for (var key in all_tds) {
         var current_td = document.getElementById(all_tds[key])
         if (key in summary_data) {
