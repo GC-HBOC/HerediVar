@@ -124,7 +124,7 @@ function update_erroneous_variants(variants) {
 
     for (var i = 0; i < variants.length; i++) {
         var current_variant = variants[i];
-        if (current_variant['status'] !== "pending" && current_variant['status'] !== "processing") {
+        if (current_variant['status'] !== "pending" && current_variant['status'] !== "processing" && current_variant['status'] !== 'success') {
             var new_trow = create_erroneous_variant_row(current_variant);
             table.row.add(new_trow).draw(false)
         }
