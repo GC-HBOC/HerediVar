@@ -2197,3 +2197,17 @@ class Connection:
         placeholders = ', '.join(placeholders)
         placeholders = functions.enbrace(placeholders)
         return placeholders
+    
+
+
+    def insert_heredicare_annotation(self, variant_id, vid, n_fam, n_pat, consensus_class, comment):
+        command = "INSERT INTO variant_heredicare_annotation (variant_id, vid, n_fam, n_pat, consensus_class, comment) VALUES (%s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, vid, n_fam, n_pat, consensus_class, comment))
+        self.conn.commit()
+
+    def clear_heredicare_annotation(self, variant_id):
+        command = "DELETE FROM variant_heredicare_annotation WHERE variant_id = %s"
+        self.cursor.execute(command, (variant_id, ))
+        self.conn.commit()
+    
+    

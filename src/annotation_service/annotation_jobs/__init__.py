@@ -1,1 +1,1 @@
-__all__ = ['vep_job', 'phylop_job', 'hexplorer_job', 'annotate_from_vcf_job', 'spliceai_job', 'task_force_protein_domain_job']
+__all__ = ['vep_job', 'phylop_job', 'hexplorer_job', 'annotate_from_vcf_job', 'spliceai_job', 'task_force_protein_domain_job', 'heredicare_job']

@@ -18,7 +18,7 @@ import os
 def get_default_job_config():
     job_config = {
         # heredicare annotations
-        'do_heredicare': False,
+        'do_heredicare': True,
 
         # external programs
         'do_phylop': True,
@@ -70,7 +70,8 @@ def get_jobs(job_config):
         annotate_from_vcf_job.annotate_from_vcf_job(job_config),
         spliceai_job.spliceai_job(job_config),
         task_force_protein_domain_job.task_force_protein_domain_job(job_config),
-        litvar2_job.litvar2_job(job_config) # must be called after vep_jobs & annotate from vcf job
+        litvar2_job.litvar2_job(job_config), # must be called after vep_jobs & annotate from vcf job
+        heredicare_job.heredicare_job(job_config)
     ]
     return all_jobs
 

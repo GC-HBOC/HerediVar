@@ -141,7 +141,8 @@ class annotate_from_vcf_job(Job):
 
         ## add spliceai precomputed scores
         if self.job_config['do_spliceai']:
-            config_file.write(paths.spliceai_path + "\t\tSpliceAI\t\n")
+            config_file.write(paths.spliceai_snv_path + "\tsnv\tSpliceAI\t\n")
+            config_file.write(paths.spliceai_indel_path + "\tindel\tSpliceAI\t\n")
 
         ## add cadd precomputed scores
         if functions.is_snv(one_variant) and self.job_config['do_cadd']:

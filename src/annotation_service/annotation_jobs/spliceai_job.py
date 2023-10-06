@@ -31,8 +31,9 @@ class spliceai_job(Job):
 
 
     def save_to_db(self, info, variant_id, conn):
-        self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )
-        self.insert_annotation(variant_id, info, 'SpliceAI=', 8, conn, value_modifier_function= lambda value : ','.join([str(max([float(x) for x in x.split('|')[2:6]])) for x in value.split(',')]) )
+        for prefix in ['snv', 'indel']:
+            self.insert_annotation(variant_id, info, prefix + '_SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.replace(',', '&').split('&')]) )
+            self.insert_annotation(variant_id, info, prefix + '_SpliceAI=', 8, conn, value_modifier_function= lambda value : ','.join([str(max([float(x) for x in x.split('|')[2:6]])) for x in value.replace(',', '&').split('&')]) )
 
 
 
@@ -52,7 +53,7 @@ class spliceai_job(Job):
             for line in input_file:
                 if line.startswith('#'):
                     #temp_file.write(line)
-                    if line.startswith('##INFO=<ID=SpliceAI'):
+                    if line.startswith('##INFO=<ID=snv_SpliceAI') or line.startswith('##INFO=<ID=indel_SpliceAI') :
                         found_spliceai_header = True
                     continue
                 else:
@@ -102,10 +103,8 @@ class spliceai_job(Job):
         command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path, '-A', paths.ref_genome_name.lower()]
         returncode, stderr, stdout = functions.execute_command(command, 'SpliceAI')
 
-        if exists(input_vcf_zipped_path):
-            os.remove(input_vcf_zipped_path)
-        if exists(input_vcf_zipped_path + ".tbi"):
-            os.remove(input_vcf_zipped_path + ".tbi")
+        functions.rm(input_vcf_zipped_path)
+        functions.rm(input_vcf_zipped_path + ".tbi")
 
         return returncode, stderr, stdout
 
