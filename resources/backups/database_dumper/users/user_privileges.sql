@@ -29,6 +29,8 @@ GRANT INSERT, DELETE ON HerediVar_ahdoebm1.variant_ids TO 'HerediVar_annotation'
 GRANT SELECT ON HerediVar_ahdoebm1.pfam_id_mapping TO 'HerediVar_annotation';
 GRANT SELECT ON HerediVar_ahdoebm1.pfam_legacy TO 'HerediVar_annotation';
 GRANT SELECT ON HerediVar_ahdoebm1.gene_alias TO 'HerediVar_annotation';
+GRANT SELECT ON HerediVar_ahdoebm1.variant_ids TO 'HerediVar_annotation';
+GRANT INSERT, DELETE ON HerediVar_ahdoebm1.variant_heredicare_annotation TO 'HerediVar_annotation';
 
 /* grant priviliges to standard user */
 GRANT SELECT, INSERT, UPDATE ON HerediVar_ahdoebm1.user TO 'HerediVar_user';
@@ -42,6 +44,7 @@ GRANT INSERT ON HerediVar_ahdoebm1.variant TO 'HerediVar_user';
 GRANT INSERT, UPDATE ON HerediVar_ahdoebm1.annotation_queue TO 'HerediVar_user';
 GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.user_classification_selected_literature TO 'HerediVar_user';
 GRANT SELECT ON HerediVar_ahdoebm1.gene_alias TO 'HerediVar_user';
+GRANT SELECT ON HerediVar_ahdoebm1.variant_heredicare_annotation TO 'HerediVar_user';
 
 /* grant priviliges to super user */
 GRANT SELECT, INSERT, UPDATE ON HerediVar_ahdoebm1.user TO 'HerediVar_superuser';
@@ -68,6 +71,7 @@ GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.heredivar_clinvar_submissions
 GRANT SELECT ON HerediVar_ahdoebm1.gene_alias TO 'HerediVar_superuser';
 
 GRANT SELECT, INSERT; UPDATE ON HerediVar_ahdoebm1.import_variant_queue TO 'HerediVar_superuser';
+GRANT SELECT ON HerediVar_ahdoebm1.variant_heredicare_annotation TO 'HerediVar_superuser';
 
 /* grant priviliges to read only user */
 GRANT SELECT, SHOW VIEW ON HerediVar_ahdoebm1.* TO 'HerediVar_read_only';
@@ -76,3 +80,4 @@ GRANT INSERT, UPDATE ON HerediVar_ahdoebm1.user TO 'HerediVar_read_only';
 GRANT INSERT, DELETE ON HerediVar_ahdoebm1.list_variants TO 'HerediVar_read_only';
 GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.user_variant_lists TO 'HerediVar_read_only';
 GRANT SELECT ON HerediVar_ahdoebm1.gene_alias TO 'HerediVar_read_only';
+GRANT SELECT ON HerediVar_ahdoebm1.variant_heredicare_annotation TO 'HerediVar_read_only';
