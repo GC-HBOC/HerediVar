@@ -76,9 +76,6 @@ class AllAnnotations:
     tp53db_domain_function: Annotation = None
     tp53db_transactivation_class: Annotation = None
 
-    heredicare_cases_count: Annotation = None
-    heredicare_family_count: Annotation = None
-
     task_force_protein_domain: Annotation = None
     task_force_protein_domain_source: Annotation = None
 
@@ -184,8 +181,6 @@ class AllAnnotations:
                                        self.tp53db_DNE_LOF_class, 
                                        self.tp53db_domain_function, 
                                        self.tp53db_transactivation_class])
-        if group_identifier == 'HerediCare':
-            return self.prepare_group([self.heredicare_cases_count, self.heredicare_family_count])
 
     def prepare_group(self, group):
         prepared_group = [x for x in group if x is not None]
@@ -400,26 +395,6 @@ class Classification:
 
 
 @dataclass
-class HeredicareClassification:
-    id: int
-    selected_class: int
-    comment: str
-    date: str
-    center: str
-
-    def to_vcf(self, prefix = True):
-        info = '~7C'.join([str(self.selected_class), self.center, self.comment, self.date])
-        info = info
-        if prefix:
-            info = 'heredicare~1Y' + info
-        return info
-
-    def get_header(self):
-        header = {'heredicare_center_classifications': '##INFO=<ID=heredicare_center_classifications,Number=.,Type=String,Description="An & separated list of the variant classifications from centers imported from HerediCare. Format:class|center|comment|date">\n'}
-        return header
-
-
-@dataclass
 class ClinvarCondition:
     condition_id: str
     title: str
@@ -552,6 +527,36 @@ class Paper:
         return info
 
 
+
+@dataclass
+class HeredicareClassification:
+    id: int
+    selected_class: int
+    comment: str
+    date: str
+    center: str
+
+    def to_vcf(self, prefix = True):
+        info = '~7C'.join([str(self.selected_class), self.center, self.comment, self.date])
+        info = info
+        if prefix:
+            info = 'heredicare~1Y' + info
+        return info
+
+    def get_header(self):
+        header = {'heredicare_center_classifications': '##INFO=<ID=heredicare_center_classifications,Number=.,Type=String,Description="An & separated list of the variant classifications from centers imported from HerediCare. Format:class|center|comment|date">\n'}
+        return header
+    
+@dataclass
+class HeredicareAnnotation:
+    id: int
+    vid: str
+    n_fam: int
+    n_pat: int
+    vustf_classification: HeredicareClassification
+
+
+
 @dataclass
 class Variant:
     id: int
@@ -564,13 +569,23 @@ class Variant:
 
     consensus_classifications: Any = None # list of classifications
     user_classifications: Any = None # list of classifications
-    heredicare_classifications: Any = None # list of heredicare classifications
+    heredicare_classifications: Any = None # list of heredicare center classifications
+    heredicare_annotations: Any = None # list of heredicare annotatins
     clinvar: Any = None # a clinvar object
     consequences: Any = None # list of consequences
     assays: Any = None # list of assays
     literature: Any = None # list of papers
 
     annotations: AllAnnotations = AllAnnotations()
+
+    def get_total_heredicare_counts(self):
+        total_n_fam = 0
+        total_n_pat = 0
+        if self.heredicare_annotations is not None:
+            for annot in self.heredicare_annotations:
+                total_n_fam += annot.n_fam
+                total_n_pat += annot.n_pat
+        return total_n_fam, total_n_pat
 
     def get_unique_genes(self):
         result = []

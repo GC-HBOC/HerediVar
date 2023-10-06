@@ -278,6 +278,7 @@
                                 {% set current_annotations = annotations.get_group(group_identifier) %}
                                 {{ macros.draw_annotation_group(annotations, current_annotations, group_identifier) }}
                             {% endfor %}
+                            {{ macros.draw_heredicare_annotations(variant) }}
                             
                         </tbody>
                     </table>

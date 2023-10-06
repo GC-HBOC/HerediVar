@@ -1643,7 +1643,11 @@ class Connection:
 
 
 
-
+    def get_heredicare_annotations(self, variant_id):
+        command = "SELECT id, vid, n_fam, n_pat, consensus_class, comment, date FROM variant_heredicare_annotation WHERE variant_id = %s"
+        self.cursor.execute(command, (variant_id, ))
+        res = self.cursor.fetchall()
+        return res
 
 
 
@@ -1671,6 +1675,7 @@ class Connection:
         is_hidden = True if variant_raw[5] == 1 else False
 
         annotations = None
+        all_heredicare_annotations = None
         if include_annotations:
             annotations = models.AllAnnotations()
             annotations_raw = self.get_recent_annotations(variant_id)
@@ -1690,6 +1695,24 @@ class Connection:
                 #annotations.insert_annotation(new_annotation)
             
             annotations.flag_linked_annotations()
+
+            heredicare_annotations_raw = self.get_heredicare_annotations(variant_id)
+
+            all_heredicare_annotations = []
+            for annot in heredicare_annotations_raw:
+                #id, vid, n_fam, n_pat, consensus_class, comment, date
+                heredicare_annotation_id = annot[0]
+                vid = annot[1]
+                n_fam = annot[2]
+                n_pat = annot[3]
+                consensus_class = annot[4]
+                comment = annot[5]
+                date = annot[6]
+
+                classification = models.HeredicareClassification(id = heredicare_annotation_id, selected_class = consensus_class, comment = comment, date = date, center = "VUSTF")
+                new_heredicare_annotation = models.HeredicareAnnotation(id = heredicare_annotation_id, vid = vid, n_fam = n_fam, n_pat = n_pat, vustf_classification = classification)
+                all_heredicare_annotations.append(new_heredicare_annotation)
+
         
         # add all consensus classifications
         consensus_classifications = None
@@ -1878,10 +1901,12 @@ class Connection:
                                 consensus_classifications = consensus_classifications, 
                                 user_classifications = user_classifications,
                                 heredicare_classifications = heredicare_classifications,
+                                heredicare_annotations = all_heredicare_annotations,
                                 clinvar = clinvar,
                                 consequences = consequences,
                                 assays = assays,
-                                literature = literature)
+                                literature = literature
+                            )
         return variant
 
 
@@ -2209,5 +2234,4 @@ class Connection:
         command = "DELETE FROM variant_heredicare_annotation WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id, ))
         self.conn.commit()
-    
     

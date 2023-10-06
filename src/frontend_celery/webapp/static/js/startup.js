@@ -105,7 +105,17 @@ $(document).ready(function()
     $('#consequence_refseq_tab').click(function() {
         filter_consequence_table('refseq', variant_consequence_table_default_sorting_columns)
     })
+
+    $(document).click(function (e) {
+        close_popovers(e)
+    });
 });
+
+function close_popovers(e) {
+    if (($('.popover').has(e.target).length == 0) || $(e.target).is('.close')) {
+        $('[data-bs-toggle="popover"]').popover('hide');
+    }
+}
 
 
 // functionality for the consequence table switch between ensembl & refseq

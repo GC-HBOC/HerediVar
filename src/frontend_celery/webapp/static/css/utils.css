@@ -61,6 +61,15 @@
     padding-left:1rem;
 }
 
+.nomargin {
+    margin: 0em;
+}
+.nomargin_bottom {
+    margin-bottom: 0em;
+}
+.nomargin_top {
+    margin-top: 0em;
+}
 
 /************** sizing **************/
 .full_page {
@@ -216,4 +225,9 @@
 
 .visually_hidden {
     display: none;
+}
+
+.popover_fix{
+    width: fit-content !important;
+    max-width: 25em !important;
 }
