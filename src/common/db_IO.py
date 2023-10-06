@@ -1153,23 +1153,27 @@ class Connection:
         self.cursor.execute(command, (str(classification), comment, date, str(scheme_class), user_classification_id))
         self.conn.commit()
 
-    def delete_variant(self, variant_id):
-        status = "deleted"
-        message  = "Deleted variant " + str(variant_id)
-        consensus_classification = self.get_consensus_classification(variant_id)
-        if len(consensus_classification) > 0: # do not delete if the variant has a consensus classification
-            status = "skipped"
-            message = "Did not delete variant because it has consensus classifications"
-            return status, message
-        user_classifications = self.get_user_classifications(variant_id)
-        if len(user_classifications) > 0: # do not delete if the variant has a user classification
-            status = "skipped"
-            message = "Did not delete variant because it has user classifications"
-            return status, message
-        command = "DELETE FROM variant WHERE id = %s"
-        self.cursor.execute(command, (variant_id,))
-        self.conn.commit()
-        return status, message
+    #def delete_variant(self, variant_id):
+    #    status = "deleted"
+    #    message  = "Deleted variant " + str(variant_id)
+    #    consensus_classification = self.get_consensus_classification(variant_id)
+    #    if consensus_classification is None:
+    #        consensus_classification = []
+    #    if len(consensus_classification) > 0: # do not delete if the variant has a consensus classification
+    #        status = "skipped"
+    #        message = "Did not delete variant because it has consensus classifications"
+    #        return status, message
+    #    user_classifications = self.get_user_classifications(variant_id)
+    #    if user_classifications is None:
+    #        user_classifications = []
+    #    if len(user_classifications) > 0: # do not delete if the variant has a user classification
+    #        status = "skipped"
+    #        message = "Did not delete variant because it has user classifications"
+    #        return status, message
+    #    command = "DELETE FROM variant WHERE id = %s"
+    #    self.cursor.execute(command, (variant_id,))
+    #    self.conn.commit()
+    #    return status, message
 
     #def get_orig_variant(self, variant_id):
     #    command = "SELECT orig_chr, orig_pos, orig_ref, orig_alt FROM variant WHERE id = %s"
@@ -1198,12 +1202,19 @@ class Connection:
         import_request_raw = self.cursor.fetchone()
         import_request = self.convert_raw_import_request(import_request_raw)
         return import_request
+
+    def get_import_request_overview(self):
+        command = "SELECT id, (SELECT first_name FROM user WHERE user_id = user.id) first_name, (SELECT last_name FROM user WHERE user_id = user.id) last_name, requested_at, status, finished_at, message FROM import_queue ORDER BY requested_at DESC"
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        return res
+
+
     
     def get_max_finished_at_import_variant(self, import_queue_id):
         command = "SELECT MAX(finished_at) FROM import_variant_queue WHERE import_queue_id = %s"
         self.cursor.execute(command, (import_queue_id, ))
         result = self.cursor.fetchone()
-        print(result)
         return result[0]
 
     def convert_raw_import_request(self, import_request_raw):
@@ -1224,9 +1235,11 @@ class Connection:
         #5. success: all variants are processed and
         status = "unknown"
         finished_at = None
-        if import_variant_list_status == "pending":
+        if import_variant_list_status == "retry":
+            status = "retry"
+        elif import_variant_list_status == "pending":
             status = "pending"
-        elif import_variant_list_status == "processing":
+        elif import_variant_list_status == "progress":
             status = "fetching vids"
         elif import_variant_list_status == "success" and any([key_oi in variant_summary for key_oi in ["pending", "progress"]]):
             status = "fetching variants"
@@ -1270,7 +1283,7 @@ class Connection:
 
     def close_import_request(self, import_queue_id, status, message):
         self.update_import_queue_status(import_queue_id, status, message)
-        command = "UPDATE import_queue SET finished_at = \"1999-01-01 00:00:00\" WHERE id = %s"
+        command = "UPDATE import_queue SET finished_at = NOW() WHERE id = %s" # \"1999-01-01 00:00:00\"
         self.cursor.execute(command, (import_queue_id, ))
         self.conn.commit()
 

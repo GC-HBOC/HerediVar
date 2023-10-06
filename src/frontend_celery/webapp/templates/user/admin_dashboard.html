@@ -121,7 +121,7 @@
                 <div class="d-flex flex-wrap">
                     {% for job in job_config %}
                     <div class="mb-3 form-check bsr width_very_medium">
-                        <input type="checkbox" class="form-check-input ssr" id="{{ job }}" name="job" value="{{ job }}" {%if job == 'do_heredicare'%} disabled {% endif %}>
+                        <input type="checkbox" class="form-check-input ssr" id="{{ job }}" name="job" value="{{ job }}">
                         <label class="form-check-label" for="{{ job }}">{{ job }}</label>
                     </div>
                     {% endfor %}
@@ -195,7 +195,13 @@
                     <span class="badge rounded-pill bg-success ssl" data-bs-toggle="tooltip" title="most recent import finished at {{ most_recent_import_request.finished_at }}">last import: {{ most_recent_import_request.finished_at }}</span>
                 {% endif %}
             {% endif %}
+            <div class="flex-grow-1"></div> <!-- spacer to move button to the right-->
+            
+            <div class="">
+                <a class="btn btn-primary" href="{{ url_for('user.variant_import_history') }}">All import requests</a>
+            </div>
         </div>
+
 
 
 

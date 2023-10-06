@@ -35,7 +35,7 @@ function update_page(url) {
         // polling happens here:
         // rerun in 5 seconds if state resembles an unfinished task
         const import_status = data["import_request"]["status"]
-        if (import_status === "pending" || import_status === "fetching vids" || import_status === "fetching variants" || import_status === "unknown") {
+        if (import_status === "pending" || import_status === "fetching vids" || import_status === "fetching variants" || import_status === "unknown" || import_status === "retry") {
             
             setTimeout(function() {
                 update_page(url);
@@ -47,6 +47,7 @@ function update_page(url) {
 
 const status2meta = {
     "unknown": {"color": "bg-secondary", "tooltip": "Please wait while the status is being fetched."},
+    "retry": {"color": "bg-secondary", "tooltip": "There was some unexpected error and the job is retrying now."},
     "pending": {"color": "bg-secondary", "tooltip": "The job is queued and waiting for a worker to be picked up."},
     "fetching vids": {"color": "bg-primary", "tooltip": "The vids are currently fetched from HerediCare."},
     "fetching variants": {"color": "bg-primary", "tooltip": "The vids were fetched from HerediCare. The variants are currently imported to HerediVar."},
@@ -104,7 +105,6 @@ function update_variant_summary(summary_data) {
                "success": "variant_summary_success",
                "deleted": "variant_summary_deleted",
                "retry": "variant_summary_retrying",
-               "skipped": "variant_summary_skipped",
                "update": "variant_summary_update"
             }
     for (var key in all_tds) {

@@ -377,3 +377,13 @@ def variant_import_summary_data(import_queue_id):
     imported_variants = conn.get_imported_variants(import_queue_id)
 
     return jsonify({'import_request': import_request, 'imported_variants': imported_variants})
+
+
+@user_blueprint.route('/variant_import_history', methods=('GET', 'POST'))
+@require_permission(['admin_resources'])
+def variant_import_history():
+    conn = get_connection()
+
+    overview = conn.get_import_request_overview()
+
+    return render_template('user/variant_import_history.html', overview = overview)

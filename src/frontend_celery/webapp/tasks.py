@@ -67,7 +67,7 @@ def start_variant_import(user_id, user_roles, conn: Connection): # starts the ce
     import_request = conn.get_most_recent_import_request() # get the most recent import request
     min_date = None
     if import_request is not None:
-        min_date = import_request.finished_at
+        min_date = import_request.import_variant_list_finished_at
     #print(import_request.finished_at)
 
     new_import_request = conn.insert_import_request(user_id)
@@ -86,12 +86,26 @@ def heredicare_variant_import(self, user_id, user_roles, min_date, import_queue_
     #from frontend_celery.webapp.utils.variant_importer import import_variants
     self.update_state(state='PROGRESS')
 
-    conn = Connection(user_roles)
+    try:
+        conn = Connection(user_roles)
 
-    conn.update_import_queue_status(import_queue_id, status = "progress", message = "")
+        conn.update_import_queue_status(import_queue_id, status = "progress", message = "")
 
-    
-    status, message = import_variants(conn, user_id, user_roles, functions.str2datetime(min_date, fmt = '%Y-%m-%dT%H:%M:%S'), import_queue_id)
+        status, message = import_variants(conn, user_id, user_roles, functions.str2datetime(min_date, fmt = '%Y-%m-%dT%H:%M:%S'), import_queue_id)
+    except InternalError as e:
+        # deadlock: code 1213
+        status = "retry"
+        message = "Attempting retry because of database error: " + str(e)  + ' ' + traceback.format_exc()
+    except Error as e:
+        status = "error"
+        message = "There was a database error: " + str(e)  + ' ' + traceback.format_exc()
+    except HTTPError as e:
+        status = "retry"
+        message = "Attempting retry because of http error: " + str(e)  + ' ' + traceback.format_exc()
+    except Exception as e:
+        status = "error"
+        message = "There was a runtime error: " + str(e) + ' ' + traceback.format_exc()
+
 
     if status != "retry":
         conn.close_import_request(import_queue_id, status = status, message = message)
@@ -122,54 +136,63 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
     status = "success"
 
     vids_heredicare, status, message = heredicare_interface.get_vid_list(min_date)
-
     if status == "success":
+        all_vids_heredicare, status, message = heredicare_interface.get_vid_list()
 
-        vids_heredivar = conn.get_all_external_ids("heredicare")
+        if status == "success":
+
+            vids_heredivar = conn.get_all_external_ids("heredicare")
 
 
-        intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = compare_v_id_lists(vids_heredicare, vids_heredivar)
+            intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = compare_v_id_lists(all_vids_heredicare, vids_heredivar, vids_heredicare)
 
-        print("Intersection: " + str(len(intersection)))
-        print("Deleted: " + str(len(heredivar_exclusive_vids)))
-        print("New: " + str(len(heredicare_exclusive_vids)))
+            print("Total HerediCare: " + str(len(vids_heredicare)))
 
-        # spawn one task for each variant import
-        process_new_vids(heredicare_exclusive_vids + intersection, import_queue_id, user_id, user_roles, conn)
-        process_deleted_vids(heredivar_exclusive_vids, import_queue_id, user_id, user_roles, conn)
+            print("Intersection: " + str(len(intersection)))
+            print("Deleted: " + str(len(heredivar_exclusive_vids)))
+            print("New: " + str(len(heredicare_exclusive_vids)))
+
+            #intersection = []
+            #heredicare_exclusive_vids = [15524910]
+            #heredivar_exclusive_vids = []
+
+            # spawn one task for each variant import
+            process_new_vids(heredicare_exclusive_vids, import_queue_id, user_id, user_roles, conn)
+            process_new_vids(intersection, import_queue_id, user_id, user_roles, conn)
+            process_deleted_vids(heredivar_exclusive_vids, import_queue_id, user_id, user_roles, conn)
 
     return status, message
 
 
 
-
-
-
-
-
 def process_deleted_vids(vids, import_queue_id, user_id, user_roles, conn: Connection):
-    vids = []
     for vid in vids:
         _ = start_delete_variant(vid, import_queue_id, user_id, user_roles, conn)
 
 
 
 def process_new_vids(vids, import_queue_id, user_id, user_roles, conn: Connection):
-    # simply insert them
-    vids = vids[:1000]
     for vid in vids:
         _ = start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn)
 
 
 
 
-def compare_v_id_lists(vids_heredicare, vids_heredivar):
-    vids_heredicare = set(vids_heredicare)
+def compare_v_id_lists(all_vids_heredicare, vids_heredivar, vids_oi):
+    vids_oi = set(vids_oi)
     vids_heredivar = set(vids_heredivar)
+    all_vids_heredicare = set(all_vids_heredicare)
 
-    intersection = list(vids_heredivar & vids_heredicare)
-    heredivar_exclusive_variants = list(vids_heredivar - vids_heredicare) # this contains only variants which have a vid in heredivar!!!!
-    heredicare_exclusive_variants = list(vids_heredicare - vids_heredivar)
+    intersection = all_vids_heredicare & vids_heredivar # known vids
+    heredivar_exclusive_variants = vids_heredivar - all_vids_heredicare # this contains variants which only have a vid in heredivar!!!!
+    heredicare_exclusive_variants = all_vids_heredicare - vids_heredivar # new vids
+
+    # filter for vids of interest
+    # do not filter deleted vids because they are not returned by the heredicare api
+    intersection = list(intersection & vids_oi)
+    heredivar_exclusive_variants = list(heredivar_exclusive_variants)
+    heredicare_exclusive_variants = list(heredicare_exclusive_variants & vids_oi)
+
 
     return intersection, heredivar_exclusive_variants, heredicare_exclusive_variants
 
@@ -199,9 +222,11 @@ def delete_variant_heredicare(self, vid, user_id, user_roles, import_variant_que
     #from frontend_celery.webapp.utils.variant_importer import fetch_heredicare
     self.update_state(state='PROGRESS')
     
-    conn = Connection(user_roles)
+    
     
     try:
+        conn = Connection(user_roles)
+
         conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
 
         message = "Removed heredicare vid"
@@ -210,7 +235,9 @@ def delete_variant_heredicare(self, vid, user_id, user_roles, import_variant_que
         all_vids_for_variant = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
         conn.delete_external_id(vid, 'heredicare', variant_id = variant_id)
         if len(all_vids_for_variant) <= 1:
-            status, message = conn.delete_variant(variant_id) # this only deletes if there are no classifications
+            status = "deleted"
+            message = "Variant was hidden because it does not have any vids in heredicare anymore"
+            conn.hide_variant(variant_id, False)
     except InternalError as e:
         # deadlock: code 1213
         status = "retry"
@@ -225,7 +252,7 @@ def delete_variant_heredicare(self, vid, user_id, user_roles, import_variant_que
         status = "error"
         message = "There was a runtime error: " + str(e) + ' ' + traceback.format_exc()
         
-    print(status)
+    #print(status)
 
     if status != "retry":
         conn.close_import_variant_request(import_variant_queue_id, status = status, message = message)
@@ -276,9 +303,8 @@ def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant
     #from frontend_celery.webapp.utils.variant_importer import fetch_heredicare
     self.update_state(state='PROGRESS')
     
-    conn = Connection(user_roles)
-
     try:
+        conn = Connection(user_roles)
         conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
         status, message = fetch_heredicare(vid, heredicare_interface, user_id, conn)
     except InternalError as e:
@@ -295,7 +321,7 @@ def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant
         status = "error"
         message = "There was a runtime error: " + str(e) + ' ' + traceback.format_exc()
     
-    print(status)
+    #print(status)
 
     if status != "retry":
         conn.close_import_variant_request(import_variant_queue_id, status = status, message = message)
@@ -376,14 +402,6 @@ def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection): # the
             return status, message
         
         was_successful, message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, perform_annotation=perform_annotation)
-
-    ## vid was moved from one variant to another -> delete it from the existing variant
-    #if was_successful:
-    #    # check that vid and variant refer to the same thing in heredicare and heredivar
-    #    existing_variant_id = conn.get_variant_id_from_external_id(vid, "heredicare")
-    #    if existing_variant_id is not None:
-    #        if existing_variant_id != variant_id: # sanity check maybe not neccessary
-    #            start_delete_variant(vid, import_queue_id, user_id, user_roles, conn) # deletes the vid and the variant if 
 
 
     if variant_id is not None: # insert new vid
@@ -488,6 +506,7 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
         else:
             variant_id = conn.get_variant_id(new_chr, new_pos, new_ref, new_alt)
             message = "Variant not imported: already in database!!"
+            conn.hide_variant(variant_id, True)
             was_successful = False
         if perform_annotation:
             celery_task_id = start_annotation_service(conn, user_id, variant_id) # starts the celery background task

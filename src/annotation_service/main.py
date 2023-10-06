@@ -80,12 +80,14 @@ def get_jobs(job_config):
 
 
 def collect_error_msgs(msg1, msg2):
-    if len(msg1) > 0 and len(msg2) > 0:
-        res = msg1 + "\n~~\n" + msg2.strip()
-    elif len(msg2) > 0:
-        res = msg2.strip()
-    else:
-        res = msg1
+    res = msg1
+    if msg2 not in msg1:
+        if len(msg1) > 0 and len(msg2) > 0:
+            res = msg1 + "\n~~\n" + msg2.strip()
+        elif len(msg2) > 0:
+            res = msg2.strip()
+        else:
+            res = msg1
     return res
 
 
@@ -164,10 +166,16 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(vcf_path)
         if execution_code_vcfcheck != 0:
             status = "error"
+            err_msgs = collect_error_msgs(err_msgs, "VCFCheck errors: " + vcf_errors)
+        elif vcf_errors != '':
+            if 'MISO' not in vcf_errors: ### REMOVE LATER!!
+                err_msgs = collect_error_msgs(err_msgs, "VCFCheck errors: " + vcf_errors)
+            else:
+                err_msgs = collect_error_msgs(err_msgs, "VCFCheck error: MISO TERMS!")
         else:
             pass
             print("VCF OK")
-        err_msgs = collect_error_msgs(err_msgs, vcf_errors)
+        
 
 
         ############################################################

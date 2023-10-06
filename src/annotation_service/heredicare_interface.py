@@ -114,8 +114,8 @@ class Heredicare:
             message = "ERROR: HerediCare API get vid list endpoint returned an HTTP " + str(resp.status_code) + " error: " + resp.text
             status = "error"
         else: # request to heredicare was successful
-            print("SUCCESS")
             json_content = resp.json()['items']
+
             duplicate_vids = []
             for vid_raw in json_content:
                 current_vid = vid_raw['record_id']
@@ -187,8 +187,6 @@ if __name__ == "__main__":
     bearer, message = interface.get_bearer()
     if bearer is None:
         print(message)
-    print(bearer)
-    #bearer = "wc_dFAW61wZelMz_Ef7TjQ"
 
     print("getting vid list")
     all_vids_heredicare, message = interface.get_vid_list(bearer)
