@@ -150,6 +150,10 @@ function submit_classification() {
 
 function preselect_literature() {
     // THIS FUNCTION IS UGLY --> maybe REWORK
+    if (classification_type === 'consensus') { // remove all rows in add from user literature selection
+        document.getElementById('user_text_passages_for_copy').innerHTML = ""
+        update_default_caption(document.getElementById('userSelectedLiterature'))
+    }
     for (var user_id in previous_classifications) {
         if (user_id != -1) { // skip imaginary consensus classification user id
             var all_user_classifications = previous_classifications[user_id]
@@ -1175,10 +1179,11 @@ function enable_disable_buttons(criterium_ids, is_disable) {
 }
 
 function update_classification_preview() {
-    if (scheme_type == 'acmg') {
-        var selected_criteria = get_checked_criteria_strengths(); // this is an array of criteria strengths
-    } else {
+    if (scheme_type == 'task-force') {
         var selected_criteria = get_currently_checked_criteria(); // this is an array of critera ids
+    } else {
+        var selected_criteria = get_checked_criteria_strengths(); // this is an array of criteria strengths
+        
     }
     selected_criteria = selected_criteria.join('+')
     fetch('/calculate_class/'+scheme_type+'/'+selected_criteria).then(function (response) {
