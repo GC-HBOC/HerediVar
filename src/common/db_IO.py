@@ -1191,7 +1191,7 @@ class Connection:
         return self.get_most_recent_import_request()
     
     def get_most_recent_import_request(self):
-        self.cursor.execute("SELECT id, user_id, requested_at, status, finished_at, message FROM import_queue ORDER BY requested_at DESC LIMIT 1")
+        self.cursor.execute("SELECT id, user_id, requested_at, status, finished_at, message FROM import_queue WHERE status != 'error' ORDER BY requested_at DESC LIMIT 1")
         import_request_raw = self.cursor.fetchone()
         import_request = self.convert_raw_import_request(import_request_raw)
         return import_request
@@ -1204,15 +1204,22 @@ class Connection:
         return import_request
 
     def get_import_request_overview(self):
-        command = "SELECT id, (SELECT first_name FROM user WHERE user_id = user.id) first_name, (SELECT last_name FROM user WHERE user_id = user.id) last_name, requested_at, status, finished_at, message FROM import_queue ORDER BY requested_at DESC"
+        command = "SELECT id FROM import_queue ORDER BY requested_at DESC"
         self.cursor.execute(command)
-        res = self.cursor.fetchall()
-        return res
+        import_queue_ids = self.cursor.fetchall()
+        import_requests = [self.get_import_request(import_queue_id[0]) for import_queue_id in import_queue_ids]
+        return import_requests
 
 
     
     def get_max_finished_at_import_variant(self, import_queue_id):
         command = "SELECT MAX(finished_at) FROM import_variant_queue WHERE import_queue_id = %s"
+        self.cursor.execute(command, (import_queue_id, ))
+        result = self.cursor.fetchone()
+        return result[0]
+    
+    def get_number_of_import_variants(self, import_queue_id):
+        command = "SELECT COUNT(id) FROM import_variant_queue WHERE import_queue_id = %s"
         self.cursor.execute(command, (import_queue_id, ))
         result = self.cursor.fetchone()
         return result[0]
@@ -1223,6 +1230,7 @@ class Connection:
         import_queue_id = import_request_raw[0]
         user = self.parse_raw_user(self.get_user(import_request_raw[1]))
         variant_summary = self.get_variant_summary(import_queue_id)
+        num_var = self.get_number_of_import_variants(import_queue_id)
         requested_at = import_request_raw[2] # datetime object
         import_variant_list_finished_at = import_request_raw[4] # datetime object
 
@@ -1254,7 +1262,8 @@ class Connection:
                                        user = user, 
                                        requested_at = requested_at, 
                                        status = status, 
-                                       finished_at = finished_at, 
+                                       finished_at = finished_at,
+                                       total_variants = num_var,
                                        import_variant_list_status = import_variant_list_status,
                                        import_variant_list_finished_at = import_variant_list_finished_at,
                                        import_variant_list_message = import_request_raw[5],
@@ -1313,9 +1322,20 @@ class Connection:
         self.cursor.execute(command, (variant_import_queue_id, ))
         self.conn.commit()
 
-    def get_imported_variants(self, import_queue_id):
+    def get_imported_variants(self, import_queue_id, status = None):
         command = "SELECT id, status, requested_at, finished_at, message, vid FROM import_variant_queue WHERE import_queue_id = %s"
-        self.cursor.execute(command, (import_queue_id, ))
+        actual_information = (import_queue_id, )
+        if status is not None:
+            command += " AND status IN " + self.get_placeholders(len(status))
+            actual_information += tuple(status)
+        #print(command % actual_information)
+        self.cursor.execute(command, actual_information)
+        raw_results = self.cursor.fetchall()
+        return [self.convert_raw_import_variant_request(raw_result) for raw_result in raw_results]
+
+    def get_single_vid_imports(self):
+        command = "SELECT id, status, requested_at, finished_at, message, vid FROM import_variant_queue WHERE import_queue_id is NULL"
+        self.cursor.execute(command)
         raw_results = self.cursor.fetchall()
         return [self.convert_raw_import_variant_request(raw_result) for raw_result in raw_results]
         
@@ -2200,15 +2220,16 @@ class Connection:
         return result
     
     def get_number_of_classified_variants(self):
-        command = """
-        SELECT a1.variant_id
-            FROM consensus_classification a1 LEFT JOIN consensus_classification a2
-                ON (a1.variant_id = a2.variant_id AND a1.date < a2.date)
-        WHERE a2.variant_id IS NULL
-        """
+        command = "SELECT DISTINCT variant_id FROM consensus_classification"
         self.cursor.execute(command)
         result = self.cursor.fetchall()
         return len(result)
+    
+    def get_number_of_variants(self):
+        command = "SELECT COUNT(id) from variant"
+        self.cursor.execute(command)
+        result = self.cursor.fetchone()
+        return result[0]
     
     def get_recent_annotation_type_ids(self, only_transcript_specific = False):
         addon = ""

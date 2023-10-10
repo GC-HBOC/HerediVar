@@ -39,7 +39,7 @@ class phylop_job(Job):
         #else: # use local installation
         command = [os.path.join(paths.ngs_bits_path, "VcfAnnotateFromBigWig")]
         command.extend(["-in", input_vcf, "-bw", paths.phylop_file_path,
-                   "-name", "PHYLOP", "-desc", "PhyloP 100-way conservation scores (Annotation file used: " + paths.phylop_file_path + ", annotated using ngs-bits/VcfAnnotateFromBigWig - mode max)",
+                   "-name", "PHYLOP", # "-desc", "PhyloP 100-way conservation scores (Annotation file used: " + paths.phylop_file_path + ", annotated using ngs-bits/VcfAnnotateFromBigWig - mode max)"
                    "-mode", "max", 
                    "-out", output_vcf])
 
