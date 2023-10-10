@@ -10,10 +10,23 @@ main_blueprint = Blueprint(
 )
 
 
+
+
 @main_blueprint.route('/')
 def index():
     conn = get_connection()
-    annotation_stati, errors, warnings, total_num_variants = conn.get_annotation_statistics()
+    total_num_variants = conn.get_number_of_variants()
     database_info = conn.get_database_info()
     total_num_classified_variants = conn.get_number_of_classified_variants()
     return render_template('index.html', total_num_variants = total_num_variants, database_info = database_info, total_num_classified_variants = total_num_classified_variants)
+
+
+
+@main_blueprint.route('/downloads')
+@require_permission(['read_resources'])
+def downloads():    
+    return render_template("main/downloads.html")
+
+
+
+

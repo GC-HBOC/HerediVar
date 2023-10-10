@@ -23,13 +23,13 @@
         </thead>
         <tbody>
             {% for entry in overview %}
-            <tr class="clickable" data-href="{{ url_for('user.variant_import_summary', import_queue_id = entry[0]) }}">
+            <tr class="clickable" data-href="{{ url_for('user.variant_import_summary', import_queue_id = entry.id) }}">
 
-                <td>{{ entry[1] }} {{ entry[2] }}</td>
-                <td>{{ entry[3] }}</td>
-                <td>{{ entry[5] }}</td>
-                <td>{{ entry[4] }}</td>
-                <td><div class="Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ entry[6] }}">{{ entry[6] }}</div></td>
+                <td>{{entry.user.full_name}}</td>
+                <td>{{entry.requested_at}}</td>
+                <td>{{entry.finished_at}}</td>
+                <td>{{entry.status}}</td>
+                <td><div class="Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ entry.import_variant_list_message }}">{{ entry.import_variant_list_message }}</div></td>
             </tr>
             {% endfor %}
         </tbody>

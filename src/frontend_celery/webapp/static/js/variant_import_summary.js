@@ -2,7 +2,8 @@
 const flask_data = document.getElementById("flask_data")
 const data_url = flask_data.dataset.getDataUrl;
 const vid_details_url = flask_data.dataset.vidDetailsUrl;
-
+const import_one_variant_url = flask_data.dataset.importOneVariantUrl
+const import_queue_id = flask_data.dataset.importQueueId
 
 
 $(document).ready(function(){
@@ -27,7 +28,7 @@ function update_page(url) {
 
     $.getJSON(url, function(data) {
 
-        console.log(data)
+        //console.log(data)
         update_general_information(data)
         update_erroneous_variants(data['imported_variants'])
         update_variant_summary(data["import_request"]["variant_summary"])
@@ -57,7 +58,7 @@ const status2meta = {
 
 function update_general_information(data) {
     // update total number of variants
-    document.getElementById("summary_total_num_variants").textContent = data["imported_variants"].length
+    document.getElementById("summary_total_num_variants").textContent = data["import_request"]["total_variants"]
     
     // update the user
     document.getElementById("summary_user").textContent = data["import_request"]["user"]["full_name"]
@@ -124,7 +125,7 @@ function update_erroneous_variants(variants) {
 
     for (var i = 0; i < variants.length; i++) {
         var current_variant = variants[i];
-        if (current_variant['status'] !== "pending" && current_variant['status'] !== "processing" && current_variant['status'] !== 'success') {
+        if (current_variant['status'] === "error") {
             var new_trow = create_erroneous_variant_row(current_variant);
             table.row.add(new_trow).draw(false)
         }
@@ -144,12 +145,40 @@ function create_erroneous_variant_row(variant) {
         create_td(variant["requested_at"]),
         create_td(variant["finished_at"]),
         create_td(variant["message"])
+        //create_td_form("retry", import_one_variant_url, {'vid': variant["vid"], 'import_queue_id': import_queue_id})
     ];
     const trow = create_trow(tds);
     return trow;
 }
 
+function create_td_form(text_content, url, params) {
+    var td = document.createElement('td');
 
+    var form = document.createElement('form')
+    form.setAttribute('action', url)
+    form.setAttribute('method', 'post')
+    td.appendChild(form)
+
+    var vid_input = document.createElement('input')
+    vid_input.value = params['vid']
+    vid_input.disabled = true
+    vid_input.classList.add("visually_hidden")
+    form.appendChild(vid_input)
+
+    var import_queue_id_input = document.createElement('input')
+    import_queue_id_input.value = params['import_queue_id']
+    import_queue_id_input.disabled = true
+    import_queue_id_input.classList.add("visually_hidden")
+    form.appendChild(import_queue_id_input)
+
+    var submit_button = document.createElement('button')
+    submit_button.classList.add("btn")
+    submit_button.classList.add("btn-outline-primary")
+    submit_button.textContent = text_content
+    form.appendChild(submit_button)
+
+    return td
+}
 
 function create_td(text_content) {
     var td = document.createElement('td');

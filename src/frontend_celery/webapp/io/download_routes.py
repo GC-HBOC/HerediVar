@@ -14,6 +14,7 @@ import re
 import os
 import uuid
 from pathlib import Path
+from flask import render_template
 
 
 download_blueprint = Blueprint(
@@ -21,7 +22,7 @@ download_blueprint = Blueprint(
     __name__
 )
 
-# downloads
+
 @download_blueprint.route('/download/evidence_document/<int:consensus_classification_id>')
 @require_permission(['read_resources'])
 def evidence_document(consensus_classification_id):

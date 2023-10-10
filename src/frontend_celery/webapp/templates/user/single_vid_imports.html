@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1 class="bst"> {% block title %} Import single variants {% endblock %} </h1>
+
+
+<div class="w-100 bsb bst">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-subcaption">Status details</h4>
+
+            <div>!! This page does not refresh automatically. Refresh manually to see changes</div>
+
+            <p class="card-text">
+                <div class="table-responsive table-lg">
+                    <table class="table table-hover" id="variant_table">
+                        <thead>
+                            <tr>
+                                <th class="width_very_small"><div>HerediCare VID</div></th>
+                                <th class="width_very_small"><div>Status</div></th>
+                                <th class="width_small"><div>Requested at</div></th>
+                                <th class="width_small"><div>Finished at</div></th>
+                                <th class="width_large"><div>Message</div></th>
+                                <!--<th class="width_minimal"><div>Retry</div></th>-->
+                            </tr>
+                        </thead>
+                        <tbody id="variant_table_body">
+                            {% for import in variant_imports %}
+                                <tr>
+                                    <td>{{import.vid}}</td>
+                                    <td>{{import.status}}</td>
+                                    <td>{{import.requested_at}}</td>
+                                    <td>{{import.finished_at}}</td>
+                                    <td>{{import.message}}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </p>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+</div>
+
+
+{% endblock %}
+
+{% block special_scripts %}
+    <script src="../static/js/single_vid_imports.js"></script>
+{% endblock %}

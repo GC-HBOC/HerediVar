@@ -10,7 +10,7 @@ from datetime import datetime
 from ..utils import *
 from flask_paginate import Pagination
 import annotation_service.main as annotation_service
-from ..tasks import start_annotation_service, start_variant_import
+from ..tasks import start_annotation_service, start_variant_import, start_import_one_variant
 
 
 user_blueprint = Blueprint(
@@ -351,11 +351,34 @@ def admin_dashboard():
             
             return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id))
 
+        if request_type == 'import_one_variant':
+            import_queue_id = request.form.get('import_queue_id')
+            vid = request.form.get('vid')
+            
+            if import_queue_id is not None: # if import queue id is None we are inserting one by hand without import request if it is not none we are retrying the import!
+                import_request = conn.get_import_request(import_queue_id)
+                if import_request is None:
+                    abort(404)
+            if vid is None:
+                abort(404)
+            start_import_one_variant(vid, import_queue_id, session['user']['user_id'], session['user']['roles'], conn)
+            flash("Successfully requested variant import of HerediCare VID: " + str(vid), "alert-success")
+            return redirect(url_for('user.single_vid_imports'))
+
+
     
     if do_redirect:
         return redirect(url_for('user.admin_dashboard'))
     return render_template('user/admin_dashboard.html', most_recent_import_request=most_recent_import_request, job_config = job_config, annotation_stati = annotation_stati, errors = errors, warnings = warnings, total_num_variants = total_num_variants)
 
+
+
+@user_blueprint.route('/get_single_vid_imports/')
+@require_permission(['admin_resources'])
+def single_vid_imports():
+    conn = get_connection()
+    variant_imports = conn.get_single_vid_imports()
+    return render_template('user/single_vid_imports.html', variant_imports = variant_imports)
 
 
 @user_blueprint.route('/variant_import_summary/<int:import_queue_id>', methods=('GET', 'POST'))
@@ -374,7 +397,7 @@ def variant_import_summary_data(import_queue_id):
     conn = get_connection()
 
     import_request = conn.get_import_request(import_queue_id)
-    imported_variants = conn.get_imported_variants(import_queue_id)
+    imported_variants = conn.get_imported_variants(import_queue_id, status = ["error"])
 
     return jsonify({'import_request': import_request, 'imported_variants': imported_variants})
 
@@ -387,3 +410,7 @@ def variant_import_history():
     overview = conn.get_import_request_overview()
 
     return render_template('user/variant_import_history.html', overview = overview)
+
+
+
+

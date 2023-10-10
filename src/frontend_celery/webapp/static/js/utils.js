@@ -150,7 +150,9 @@ function activate_datatables(table_id) {
     });
  
     // DataTable
-    var the_table = $('#' + table_id).DataTable({
+    var the_table = $('#' + table_id).on("draw.dt", function () {
+        $(this).find(".dataTables_empty").parents('tbody').empty();
+    }).DataTable({
         order: [[0, 'desc']],
     });
  

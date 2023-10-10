@@ -176,7 +176,9 @@
 <div class="tab-content" id="TabContent">
     <div class="tab-pane fade" id="import" role="tabpanel" aria-labelledby="import-tab">
 
-        
+        <div class="bst"></div>
+
+        <h4>Import all variants</h4>
         <!-- import all from heredicare button -->
         <div class="bst d-flex items_align_center">
             <form action="/admin_dashboard?type=import_variants" id="import-variants-form" name="import-variants-form" method="post">
@@ -201,6 +203,39 @@
                 <a class="btn btn-primary" href="{{ url_for('user.variant_import_history') }}">All import requests</a>
             </div>
         </div>
+
+        <div class="bst"></div>
+
+        <h4>Import one VID</h4>
+        
+        <form action="/admin_dashboard?type=import_one_variant" id="import-one-variants-form" name="import-variants-form" method="post">
+            <div class="form-group">
+                <div class="form-group sst">
+                    <label for="vid" class="form-label">HerediCare VID</label>
+                    <input type="text" name="vid" pattern="[0-9 ]+" id="vid"
+                           placeholder="vid" class="form-control validationreq"
+                           value="{{ request.form['vid'] }}" required>
+                    </input>
+                    <div class="invalid-feedback">
+                        Please provide a HerediCare VID!
+                    </div>
+                </div>
+                <div class="bst d-flex items_align_center">
+                    <button id="import-one-variants-button" type="submit" class="btn btn-outline-primary sst" data-bs-toggle="modal" data-bs-target="#import-one-variants-modal">Import variant</button>
+
+                    <div class="flex-grow-1"></div> <!-- spacer to move button to the right-->
+                
+                    <div class="">
+                        <a class="btn btn-primary" href="{{ url_for('user.single_vid_imports') }}">All single VID imports</a>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+
+
+
+    </div>
 
 
 
