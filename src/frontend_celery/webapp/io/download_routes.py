@@ -425,8 +425,8 @@ def get_possible_classes_enigma_brca1(class_counts):
     if class_counts['bm'] == 1 and class_counts['bp'] >= 1: # 1
         possible_classes.add(2)
 
-    print(class_counts)
-    print(possible_classes)
+    #print(class_counts)
+    #print(possible_classes)
 
     return possible_classes
 
