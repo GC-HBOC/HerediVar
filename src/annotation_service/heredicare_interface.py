@@ -94,7 +94,7 @@ class Heredicare:
 
 
 
-    def get_vid_list(self, min_date = None):
+    def get_vid_list(self):
         status = "success"
         message = ""
         vids = []
@@ -113,26 +113,33 @@ class Heredicare:
         elif resp.status_code != 200: # any other kind of error
             message = "ERROR: HerediCare API get vid list endpoint returned an HTTP " + str(resp.status_code) + " error: " + resp.text
             status = "error"
-        else: # request to heredicare was successful
-            json_content = resp.json()['items']
-
-            duplicate_vids = []
-            for vid_raw in json_content:
-                current_vid = vid_raw['record_id']
-                last_change = vid_raw['last_change']
-                last_change = datetime.strptime(last_change, '%d.%m.%Y %H:%M:%S')
-                if current_vid in vids:
-                    duplicate_vids.append(current_vid)
-                if min_date is not None: # collect all which had an update since the last import
-                    if last_change > min_date:
-                        vids.append(current_vid)
-                else: # just collect all vids
-                    vids.append(current_vid)
-
-            if len(duplicate_vids) > 0:
-                message = "WARNING: There are duplicated VIDs in the response of the variant list output: " + str(duplicate_vids)
+        else: # request was successful
+            vids = resp.json()['items']
 
         return vids, status, message
+    
+    def filter_vid_list(self, vids, min_date):
+        all_vids = []
+        filtered_vids = []
+        duplicate_vids = []
+        status = "success"
+        message = ""
+
+        for vid_raw in vids:
+            current_vid = vid_raw['record_id']
+            last_change = vid_raw['last_change']
+            last_change = datetime.strptime(last_change, '%d.%m.%Y %H:%M:%S')
+            if current_vid in filtered_vids:
+                duplicate_vids.append(current_vid)
+            if min_date is not None: # collect all which had an update since the last import
+                if last_change > min_date:
+                    filtered_vids.append(current_vid)
+            all_vids.append(current_vid)
+
+        if len(duplicate_vids) > 0:
+            message = "WARNING: There are duplicated VIDs in the response of the variant list output: " + str(duplicate_vids)
+        
+        return filtered_vids, all_vids, status, message
     
 
     def get_variant(self, vid):
@@ -330,3 +337,7 @@ TF CONSENSUS KLASSIFIKATION:
         # everything fine!
         return execution_code, chr, pos, ref, alt, reference_genome_build, heredicare_variant
 """
+
+
+
+

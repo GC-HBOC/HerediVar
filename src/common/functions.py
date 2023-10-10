@@ -165,38 +165,36 @@ def preprocess_variant(infile, do_liftover=False):
     final_returncode = 0
     err_msg = ""
     command_output = ""
-    vcf_errors_pre = ""
-    vcf_errors_post = ""
 
     if do_liftover:
         returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh37")
-        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+        if returncode != 0: return returncode, err_msg + " " + vcf_errors_pre, command_output
         returncode, err_msg, command_output = execute_command([os.path.join(paths.htslib_path, 'bgzip'), '-f', '-k', infile], process_name="bgzip")
-        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+        if returncode != 0: return returncode, err_msg, command_output
         returncode, err_msg, command_output = perform_liftover(infile, infile + ".lifted")
-        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+        if returncode != 0: return returncode, err_msg, command_output
         returncode, err_msg, command_output = execute_command(["rm", infile + '.gz'], "rm")
-        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+        if returncode != 0: return returncode, err_msg, command_output
         returncode, err_msg, command_output = execute_command(["rm", infile], "rm")
-        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+        if returncode != 0: return returncode, err_msg, command_output
         returncode, err_msg, command_output = execute_command(["mv", infile + ".lifted", infile], "mv")
-        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+        if returncode != 0: return returncode, err_msg, command_output
     else:
         returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh38")
-        if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+        if returncode != 0: return returncode, err_msg + " " + vcf_errors_pre, command_output
     
     returncode, err_msg, command_output = left_align_vcf(infile, outfile= infile + ".leftnormalized", ref_genome="GRCh38")
-    if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+    if returncode != 0: return returncode, err_msg, command_output
 
     returncode, err_msg, command_output = execute_command(["rm", infile], "rm")
-    if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+    if returncode != 0: return returncode, err_msg, command_output
     returncode, err_msg, command_output = execute_command(["mv", infile + ".leftnormalized", infile], "mv")
-    if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+    if returncode != 0: return returncode, err_msg, command_output
     
     returncode, err_msg, vcf_errors_post = check_vcf(infile, ref_genome="GRCh38")
-    if returncode != 0: return returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+    if returncode != 0: return returncode, err_msg + " " + vcf_errors_post, command_output
 
-    return final_returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post
+    return final_returncode, err_msg, command_output
 
 
 
@@ -226,6 +224,8 @@ def curate_position(pos):
 def curate_sequence(seq, allowed = "ACGT-"):
     if seq is None:
         return None, False
+    if len(seq) > 1000:
+        return seq, False
     seq = seq.strip().upper()
     is_valid = True
     if not all(c in allowed for c in seq):

@@ -452,8 +452,8 @@ class Consequence:
     hgvs_p: str
     consequence: str
     impact: str
-    exon: int
-    intron: int
+    exon: str
+    intron: str
 
     gene: Gene
 
@@ -784,6 +784,7 @@ class import_request:
     requested_at: datetime.datetime
     status: str
     finished_at: datetime.datetime
+    total_variants: int
 
     import_variant_list_status: str
     import_variant_list_finished_at: datetime.datetime

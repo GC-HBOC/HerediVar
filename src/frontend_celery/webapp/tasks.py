@@ -135,9 +135,10 @@ def heredicare_variant_import(self, user_id, user_roles, min_date, import_queue_
 def import_variants(conn: Connection, user_id, user_roles, min_date, import_queue_id): # the task worker
     status = "success"
 
-    vids_heredicare, status, message = heredicare_interface.get_vid_list(min_date)
+    vids_heredicare, status, message = heredicare_interface.get_vid_list()
     if status == "success":
-        all_vids_heredicare, status, message = heredicare_interface.get_vid_list()
+        vids_heredicare, all_vids_heredicare, status, message = heredicare_interface.filter_vid_list(vids_heredicare, min_date)
+        #all_vids_heredicare, status, message = heredicare_interface.get_vid_list()
 
         if status == "success":
 
@@ -152,9 +153,9 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
             print("Deleted: " + str(len(heredivar_exclusive_vids)))
             print("New: " + str(len(heredicare_exclusive_vids)))
 
-            #intersection = []
-            #heredicare_exclusive_vids = [15524910]
-            #heredivar_exclusive_vids = []
+            intersection = []
+            heredicare_exclusive_vids = []
+            heredivar_exclusive_vids = []
 
             # spawn one task for each variant import
             process_new_vids(heredicare_exclusive_vids, import_queue_id, user_id, user_roles, conn)
@@ -324,9 +325,9 @@ def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant
     #print(status)
 
     if status != "retry":
-        conn.close_import_variant_request(import_variant_queue_id, status = status, message = message)
+        conn.close_import_variant_request(import_variant_queue_id, status = status, message = message[:10000])
     else:
-        conn.update_import_variant_queue_status(import_variant_queue_id, status = status, message = message)
+        conn.update_import_variant_queue_status(import_variant_queue_id, status = status, message = message[:10000])
     
     conn.close()
 
@@ -353,6 +354,11 @@ def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection): # the
     variant, status, message = heredicare_interface.get_variant(vid)
 
     if status != 'success':
+        return status, message
+    
+    print(variant)
+    if str(variant.get("VISIBLE", "0")) == "0":
+        message = "Skipped because variant is invisible in HerediCare"
         return status, message
 
     allowed_sequence_letters = "ACGT"
@@ -434,9 +440,13 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
     if not chrom_is_valid:
         message = "Chromosome is invalid: " + str(chrom)
     elif not ref_is_valid:
-        message = "Reference base is invalid: " + str(ref)
+        message = "Reference sequence contains non-ACGT characters: " + str(ref)
+        if len(ref) > 1000:
+            message = "Reference base is too long"
     elif not alt_is_valid:
-        message = "Alternative base is invalid: " + str(alt)
+        message = "Alternative sequence contains non-ACGT characters: " + str(alt)
+        if len(alt) > 1000:
+            message = "Alternative base is too long"
     elif not pos_is_valid:
         message = "Position is invalid: " + str(pos)
     if not chrom_is_valid or not ref_is_valid or not alt_is_valid or not pos_is_valid:
@@ -449,18 +459,20 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
     functions.variant_to_vcf(chrom, pos, ref, alt, tmp_file_path)
 
     do_liftover = genome_build == 'GRCh37'
-    returncode, err_msg, command_output, vcf_errors_pre, vcf_errors_post = functions.preprocess_variant(tmp_file_path, do_liftover = do_liftover)
+    returncode, err_msg, command_output = functions.preprocess_variant(tmp_file_path, do_liftover = do_liftover)
 
-    
+
     if returncode != 0:
         message = err_msg
         was_successful = False
         functions.rm(tmp_file_path)
+        functions.rm(tmp_file_path + ".lifted.unmap")
         return was_successful, message, variant_id
-    if 'ERROR:' in vcf_errors_pre:
-        message = vcf_errors_pre.replace('\n', ' ')
+    if 'ERROR:' in err_msg:
+        message = err_msg.replace('\n', ' ')
         was_successful = False
         functions.rm(tmp_file_path)
+        functions.rm(tmp_file_path + ".lifted.unmap")
         return was_successful, message, variant_id
     if genome_build == 'GRCh37':
         unmapped_variants_vcf = open(tmp_file_path + '.lifted.unmap', 'r')
@@ -477,12 +489,7 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
             functions.rm(tmp_file_path)
             functions.rm(tmp_file_path + ".lifted.unmap")
             return was_successful, message, variant_id
-    if 'ERROR:' in vcf_errors_post:
-        message = vcf_errors_post.replace('\n', ' ')
-        was_successful = False
-        functions.rm(tmp_file_path)
-        functions.rm(tmp_file_path + ".lifted.unmap")
-        return was_successful, message, variant_id
+
 
     if was_successful:
         tmp_file = open(tmp_file_path, 'r')
