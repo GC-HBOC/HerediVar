@@ -330,7 +330,7 @@ def admin_dashboard():
             selected_job_config = annotation_service.get_job_config(selected_jobs)
             variant_ids = conn.get_all_valid_variant_ids()
             for variant_id in variant_ids:
-                start_annotation_service(variant_id = variant_id, user_id = session['user']['user_id'], job_config = selected_job_config) # inserts a new annotation queue entry before submitting the task to celery
+                start_annotation_service(variant_id = variant_id, user_id = session['user']['user_id'], job_config = selected_job_config, conn = conn) # inserts a new annotation queue entry before submitting the task to celery
                 #conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
             current_app.logger.info(session['user']['preferred_username'] + " issued a reannotation of all variants") 
             flash('Variant reannotation requested. It will be computed in the background.', 'alert-success')
@@ -338,7 +338,7 @@ def admin_dashboard():
         
         if request_type == 'reannotate_erroneous':
             for variant_id in annotation_stati['error']:
-                start_annotation_service(variant_id = variant_id, user_id = session['user']['user_id'], job_config = job_config)
+                start_annotation_service(variant_id = variant_id, user_id = session['user']['user_id'], job_config = job_config, conn = conn)
             flash('Variant reannotation issued for ' + str(len(annotation_stati['error'])) + ' variants', 'alert-success')
             do_redirect = True
 
