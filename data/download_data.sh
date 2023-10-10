@@ -163,29 +163,7 @@ mkdir -p $dbs
 #
 #
 #
-### download ClinVar (https://www.ncbi.nlm.nih.gov/clinvar/)
-#cd $dbs
-#mkdir -p ClinVar
-#cd ClinVar
 #
-### submissions table for 'Submitted interpretations and evidence' table from website
-#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
-#ncomment_lines=$(zgrep '^#' submission_summary.txt.gz | wc -l)
-#source $tools/zhead.sh
-#zhead submission_summary.txt.gz $ncomment_lines | tail -1 | cut -c 2- > h # nochmal auf die encoding schauen (SâˆšÂ°nchez-GutiâˆšÂ©rrez_2002_PMID:12417303; Sebastio_1991_PMID:18)
-#zgrep -v '^#' submission_summary.txt.gz | cat h - | bgzip > submission_summary_preprocessed.txt.gz
-#
-## most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # previous version used: clinvar_20220320.vcf.gz 
-#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # newest version: clinvar_20230226.vcf.gz  
-#gunzip -c clinvar.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary_preprocessed.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_converted_GRCh38.vcf.gz
-#tabix -p vcf clinvar_converted_GRCh38.vcf.gz
-#
-#: '
-## CNVs - not used atm
-#wget -O - http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive/variant_summary_2021-12.txt.gz | gunzip > variant_summary_2021-12.txt
-#cat variant_summary_2021-12.txt | php $src/Tools/db_converter_clinvar_cnvs.php 5 "Pathogenic/Likely pathogenic" | sort | uniq > clinvar_cnvs_2021-12.bed
-#$ngsbits/BedSort -with_name -in clinvar_cnvs_2021-12.bed -out clinvar_cnvs_2021-12.bed
-#'
 #
 #
 ## download oncotree (version: oncotree_2021_11_02, downloaded from: http://oncotree.mskcc.org/#/home?tab=api)
@@ -239,40 +217,40 @@ mkdir -p $dbs
 
 
 
-## download ARUP BRCA1 & BRCA2 (https://arup.utah.edu/database/BRCA/Variants/BRCA1.php and https://arup.utah.edu/database/BRCA/Variants/BRCA2.php)
-## Database was accessed at 01.04.2022. As there is no versioning this date was used instead of an actual version number
-cd $dbs
-mkdir -p ARUP
-cd ARUP
-wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA1.php | python3 $tools/db_converter_arup.py --reference NM_007294.3 > ARUP_BRCA_2022_04_01.tsv
-# IMPORTANT NOTE: The ARUP website sais that their variants for BRCA2 are on the transcript "NM_000059.3". 
-# For conversion of hgvs to vcf it is required that this transcript is contained in the NGSD database which is not the case for NM_000059.3. 
-# Thus, I searched for the corresponding ensembl transcript: ENST00000380152 (see: https://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000139618;r=13:32315086-32400268)
-wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA2.php | python3 $tools/db_converter_arup.py --reference ENST00000380152 >> ARUP_BRCA_2022_04_01.tsv
-# working hgvstovcf on server: /mnt/storage1/share/opt/ngs-bits-hg38-2022_04-38-gd5054098/HgvsToVcf
-$ngsbits/HgvsToVcf -in ARUP_BRCA_2022_04_01.tsv -ref $genome -out ARUP_BRCA_2022_04_01.vcf
-$ngsbits/VcfSort -in ARUP_BRCA_2022_04_01.vcf -out ARUP_BRCA_2022_04_01.vcf
-cat ARUP_BRCA_2022_04_01.vcf | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > ARUP_BRCA_2022_04_01.vcf.gz
-tabix -p vcf ARUP_BRCA_2022_04_01.vcf.gz
-
-
-
-
-## download TP53 database (https://tp53.isb-cgc.org/get_tp53data#get_annot)
-cd $dbs
-mkdir -p TP53_database
-cd TP53_database
-# this assumes that the first line is the header line. If this is not the case remove the sed
-tp_db=GermlineDownload_r20
-wget -O - https://storage.googleapis.com/tp53-static-files/data/$tp_db.csv | sed -e "1s/^/#/" | python3 $tools/db_converter_TP53_database.py > $tp_db.vcf
-
-$ngsbits/VcfSort -in $tp_db.vcf -out $tp_db.vcf
-cat $tp_db.vcf | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort > $tp_db.normalized.vcf
-bgzip -f -c $tp_db.normalized.vcf > $tp_db.normalized.vcf.gz
-tabix -p vcf $tp_db.normalized.vcf.gz
-
-$ngsbits/VcfCheck -in $tp_db.normalized.vcf.gz -ref $genome
-rm -f $tp_db.vcf
+### download ARUP BRCA1 & BRCA2 (https://arup.utah.edu/database/BRCA/Variants/BRCA1.php and https://arup.utah.edu/database/BRCA/Variants/BRCA2.php)
+### Database was accessed at 01.04.2022. As there is no versioning this date was used instead of an actual version number
+#cd $dbs
+#mkdir -p ARUP
+#cd ARUP
+#wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA1.php | python3 $tools/db_converter_arup.py --reference NM_007294.3 > ARUP_BRCA_2022_04_01.tsv
+## IMPORTANT NOTE: The ARUP website sais that their variants for BRCA2 are on the transcript "NM_000059.3". 
+## For conversion of hgvs to vcf it is required that this transcript is contained in the NGSD database which is not the case for NM_000059.3. 
+## Thus, I searched for the corresponding ensembl transcript: ENST00000380152 (see: https://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000139618;r=13:32315086-32400268)
+#wget -O - https://arup.utah.edu/database/BRCA/Variants/BRCA2.php | python3 $tools/db_converter_arup.py --reference ENST00000380152 >> ARUP_BRCA_2022_04_01.tsv
+## working hgvstovcf on server: /mnt/storage1/share/opt/ngs-bits-hg38-2022_04-38-gd5054098/HgvsToVcf
+#$ngsbits/HgvsToVcf -in ARUP_BRCA_2022_04_01.tsv -ref $genome -out ARUP_BRCA_2022_04_01.vcf
+#$ngsbits/VcfSort -in ARUP_BRCA_2022_04_01.vcf -out ARUP_BRCA_2022_04_01.vcf
+#cat ARUP_BRCA_2022_04_01.vcf | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > ARUP_BRCA_2022_04_01.vcf.gz
+#tabix -p vcf ARUP_BRCA_2022_04_01.vcf.gz
+#
+#
+#
+#
+### download TP53 database (https://tp53.isb-cgc.org/get_tp53data#get_annot)
+#cd $dbs
+#mkdir -p TP53_database
+#cd TP53_database
+## this assumes that the first line is the header line. If this is not the case remove the sed
+#tp_db=GermlineDownload_r20
+#wget -O - https://storage.googleapis.com/tp53-static-files/data/$tp_db.csv | sed -e "1s/^/#/" | python3 $tools/db_converter_TP53_database.py > $tp_db.vcf
+#
+#$ngsbits/VcfSort -in $tp_db.vcf -out $tp_db.vcf
+#cat $tp_db.vcf | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort > $tp_db.normalized.vcf
+#bgzip -f -c $tp_db.normalized.vcf > $tp_db.normalized.vcf.gz
+#tabix -p vcf $tp_db.normalized.vcf.gz
+#
+#$ngsbits/VcfCheck -in $tp_db.normalized.vcf.gz -ref $genome
+#rm -f $tp_db.vcf
 
 
 
@@ -428,6 +406,27 @@ cd OMIM
 
 wget https://www.omim.org/static/omim/data/mim2gene.txt
 '
+
+
+
+### download ClinVar (https://www.ncbi.nlm.nih.gov/clinvar/)
+cd $dbs
+mkdir -p ClinVar
+cd ClinVar
+
+## submissions table for 'Submitted interpretations and evidence' table from website
+wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
+
+# most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # previous version used: clinvar_20220320.vcf.gz 
+wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # newest version: clinvar_20230226.vcf.gz  
+gunzip -c clinvar.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_converted_GRCh38.vcf.gz
+tabix -p vcf clinvar_converted_GRCh38.vcf.gz
+
+
+## CNVs - not used atm
+#wget -O - http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive/variant_summary_2021-12.txt.gz | gunzip > variant_summary_2021-12.txt
+#cat variant_summary_2021-12.txt | php $src/Tools/db_converter_clinvar_cnvs.php 5 "Pathogenic/Likely pathogenic" | sort | uniq > clinvar_cnvs_2021-12.bed
+#$ngsbits/BedSort -with_name -in clinvar_cnvs_2021-12.bed -out clinvar_cnvs_2021-12.bed
 
 
 

@@ -12,6 +12,7 @@ parser = argparse.ArgumentParser(description="")
 parser.add_argument("-i", "--input",  default="", help="path to input.vcf file")
 parser.add_argument("-o", "--output", default="", help="output file path. If not given will default to stdout")
 parser.add_argument("--submissions", help="Path to submission_summary.txt downloaded from clinvar.")
+parser.add_argument("--submissions_header", default=15, help="The row index of the header row. Will default to 15 (zero-based) if not given. Program will raise error if the index is wrong.")
 
 args = parser.parse_args()
 
@@ -23,8 +24,13 @@ if args.input != "":
 else:
     input_file = sys.stdin
 
+
+submissions_summary_header_row = int(args.submissions_header)
+
+
 submission_summary_path = args.submissions
-submission_summary = pd.read_csv(submission_summary_path, sep = "\t", compression="gzip", comment='#', quoting=csv.QUOTE_NONE)
+submission_summary = pd.read_csv(submission_summary_path, sep = "\t", compression="gzip", quoting=csv.QUOTE_NONE, skiprows=submissions_summary_header_row)
+
 
 
 def convert_row_to_string(variationid, row):
@@ -103,10 +109,13 @@ for line in input_file:
     info = functions.collect_info(info, 'revstat=', rev_stat)
     info = functions.collect_info(info, 'varid=', variation_id)
     
-    current_submissions = submission_summary.loc[submission_summary['VariationID'] == int(variation_id)]
+    current_submissions = submission_summary.loc[submission_summary['#VariationID'] == int(variation_id)]
     current_submissions = current_submissions.reset_index()
-    all_submissions = current_submissions.apply(lambda x: convert_row_to_string(variation_id, x), axis=1)
-    all_submissions = ','.join(all_submissions)
+    
+    all_submissions = ""
+    if len(current_submissions.index) > 0:
+        all_submissions = current_submissions.apply(lambda x: convert_row_to_string(variation_id, x), axis=1)
+        all_submissions = ','.join(all_submissions)
 
     info = functions.collect_info(info, 'submissions=', all_submissions.replace(' ', '_'))
     parts[7] = info
@@ -129,3 +138,8 @@ for line in input_file:
 ## (- inheritance: OriginCounts column)
 ## - submitter: Submitter column
 ## - supporting_information: ExplanationOfInterpretation / description
+
+
+# 
+
+
