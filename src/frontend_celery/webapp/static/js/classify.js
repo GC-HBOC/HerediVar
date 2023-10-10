@@ -172,7 +172,7 @@ function preselect_literature() {
     }
     // add literature directly for consensus classification
     if (classification_type === 'consensus') {
-        var all_user_classifications = previous_classifications[-1]
+        var all_user_classifications = previous_classifications[-1] ?? {}
         var selected_classification = all_user_classifications[scheme] ?? {}
         var previous_selected_literature = selected_classification['literature'] ?? []
         var submitter = selected_classification['submitter'] ?? {}
@@ -406,7 +406,8 @@ function set_default_strengths() {
 function preselect_criteria_from_database(scheme) {
     //const user_id = Object.keys(previous_classifications)[0]
     if (classification_type === 'consensus') {
-        var current_scheme_with_info = previous_classifications[-1][scheme] // use imaginary consensus classification user id
+        var current_scheme_with_info = previous_classifications[-1] ?? {} // use imaginary consensus classification user id
+        current_scheme_with_info = current_scheme_with_info[scheme]
     } else {
         var current_scheme_with_info = previous_classifications[logged_in_user_id][scheme]
     }
