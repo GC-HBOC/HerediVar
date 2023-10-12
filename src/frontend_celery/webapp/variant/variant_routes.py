@@ -29,10 +29,13 @@ def search():
     conn = get_connection()
     user_id = session['user']['user_id']
 
+    allowed_user_classes = conn.get_enumtypes('user_classification', 'classification')
+    allowed_consensus_classes = conn.get_enumtypes('consensus_classification', 'classification')
+
     genes = extract_genes(request)
     ranges = extract_ranges(request)
-    consensus_classifications = extract_consensus_classifications(request)
-    user_classifications = extract_user_classifications(request)
+    consensus_classifications = extract_consensus_classifications(request, allowed_consensus_classes)
+    user_classifications = extract_user_classifications(request, allowed_user_classes)
     hgvs = extract_hgvs(request)
     variant_ids_oi = extract_lookup_list(request, user_id, conn)
     page = int(request.args.get('page', 1))
@@ -42,6 +45,7 @@ def search():
     variants, total = conn.get_variants_page_merged(page=page, page_size=selected_page_size, sort_by=selected_sort_by, include_hidden=include_hidden, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user_classifications, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
     lists = conn.get_lists_for_user(user_id)
     pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
+
 
 
     # insert variants to list 
@@ -74,7 +78,16 @@ def search():
                             num_inserted = num_inserted + 1
                 flash(Markup("Successfully inserted " + str(num_inserted) + " variant(s) from the current search to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
                 return redirect(url_for('variant.search', genes=request.args.get('genes'), ranges=request.args.get('ranges'), consensus=request.args.getlist('consensus'), user = request.args.getlist('user'), hgvs= request.args.get('hgvs')))
-    return render_template('variant/search.html', variants=variants, page=page, per_page=selected_page_size, pagination=pagination, lists=lists, sort_bys=sort_bys, page_sizes=page_sizes)
+    return render_template('variant/search.html',
+                           variants=variants, page=page, 
+                           per_page=selected_page_size, 
+                           pagination=pagination, 
+                           lists=lists, 
+                           sort_bys=sort_bys, 
+                           page_sizes=page_sizes,
+                           allowed_user_classes = allowed_user_classes,
+                           allowed_consensus_classes = allowed_consensus_classes
+                        )
 
 
 # chr1-17027834-G-A
@@ -105,16 +118,18 @@ def create():
                     flash('ERROR: Negative genomic position given, but must be positive.', 'alert-danger')
                 else:
                     genome_build = request.form['genome']
-                    was_successful, message, new_variant = validate_and_insert_variant(chr, pos, ref, alt, genome_build, conn = get_connection(), user_id = session['user']['user_id'])
+                    was_successful, message, variant_id = validate_and_insert_variant(chr, pos, ref, alt, genome_build, conn = get_connection(), user_id = session['user']['user_id'])
+                    conn = get_connection()
+                    new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
                     if was_successful:
-                        flash(Markup("Successfully inserted variant: " + str(new_variant['chrom']) + ' ' + str(new_variant['pos']) + ' ' + new_variant['ref'] + ' ' + new_variant['alt'] + 
-                                     ' (view your variant <a href="' + url_for("variant.display", chr=str(new_variant['chrom']), pos=str(new_variant['pos']), ref=str(new_variant['ref']), alt=str(new_variant['alt'])) + 
+                        flash(Markup("Successfully inserted variant: " + str(new_variant.chrom) + ' ' + str(new_variant.pos) + ' ' + new_variant.ref + ' ' + new_variant.alt + 
+                                     ' (view your variant <a href="' + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
                                      '" class="alert-link">here</a>)'), "alert-success")
                         current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([chr, pos, ref, alt, "GRCh38"]))
                         return redirect(url_for('variant.create'))
                     elif 'already in database' in message:
                         flash(Markup("Variant not imported: already in database!! View it " + 
-                                     "<a href=" + url_for("variant.display", chr=str(new_variant['chrom']), pos=str(new_variant['pos']), ref=str(new_variant['ref']), alt=str(new_variant['alt'])) + 
+                                     "<a href=" + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
                                      " class=\"alert-link\">here</a>"), "alert-danger")
                     else:
                         flash(message, 'alert-danger')
@@ -192,6 +207,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             is_classification_report = False
                         )
 
+
 @variant_blueprint.route('/hide_variant/<int:variant_id>', methods=['POST'])
 @require_permission(['admin_resources'])
 def hide_variant(variant_id):
@@ -220,6 +236,8 @@ def classify(variant_id):
     if variant is None:
         return abort(404)
 
+    allowed_classes = conn.get_enumtypes('user_classification', 'classification')
+
     user_id = session['user']['user_id']
     previous_classifications = {user_id: functions.list_of_objects_to_dict(variant.get_user_classifications(user_id), key_func = lambda a : a.scheme.id, val_func = lambda a : a.to_dict())}
     classification_schemas = conn.get_classification_schemas()
@@ -236,7 +254,6 @@ def classify(variant_id):
         comment = request.form['comment'].strip()
         pmids = request.form.getlist('pmid')
         text_passages = request.form.getlist('text_passage')
-        possible_classifications = ["1","2","3-","3","3+","4","5"]
 
         # test if the input is valid
         criteria = extract_criteria_from_request(request.form, scheme_id, conn)
@@ -245,7 +262,7 @@ def classify(variant_id):
         literature_is_valid, literature_message = is_valid_literature(pmids, text_passages)
         
         without_scheme = scheme_id == 1
-        user_classification_is_valid = (str(classification) in possible_classifications) and comment
+        user_classification_is_valid = (str(classification) in allowed_classes) and comment
 
         scheme_class = '-'
         if not without_scheme:
@@ -290,7 +307,8 @@ def classify(variant_id):
                                 variant=variant, 
                                 logged_in_user_id = user_id,
                                 classification_schemas=classification_schemas,
-                                previous_classifications=previous_classifications
+                                previous_classifications=previous_classifications,
+                                allowed_classes = allowed_classes
                             )
 
 
@@ -300,6 +318,8 @@ def classify(variant_id):
 @require_permission(['admin_resources'])
 def consensus_classify(variant_id):
     conn = get_connection()
+
+    allowed_classes = conn.get_enumtypes('consensus_classification', 'classification')
 
     #literature = conn.get_variant_literature(variant_id)
     classification_schemas = conn.get_classification_schemas()
@@ -332,14 +352,13 @@ def consensus_classify(variant_id):
             comment = request.form['comment'].strip()
             pmids = request.form.getlist('pmid')
             text_passages = request.form.getlist('text_passage')
-            possible_classifications = ["1","2","3-","3","3+","4","5"]
 
             # test if the input is valid
             criteria = extract_criteria_from_request(request.form, scheme_id, conn)
             pmids, text_passages = remove_empty_literature_rows(pmids, text_passages)
             literature_is_valid, literature_message = is_valid_literature(pmids, text_passages)
             scheme_classification_is_valid, scheme_message = is_valid_scheme(criteria, classification_schemas[scheme_id])
-            user_classification_is_valid = (str(classification) in possible_classifications) and comment
+            user_classification_is_valid = (str(classification) in allowed_classes) and comment
 
             scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type']) # always calculate scheme class because no scheme is not allowed here!
             scheme_class = scheme_class.json['final_class']
@@ -377,7 +396,8 @@ def consensus_classify(variant_id):
                                 variant=variant,
                                 #logged_in_user_id = session['user']['user_id'],
                                 classification_schemas=classification_schemas,
-                                previous_classifications=previous_classifications
+                                previous_classifications=previous_classifications,
+                                allowed_classes = allowed_classes
                             )
 
 

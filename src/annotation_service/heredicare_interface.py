@@ -188,34 +188,18 @@ heredicare_interface = Heredicare()
 
 if __name__ == "__main__":
     functions.read_dotenv()
-    interface = Heredicare()
 
-    print("getting BEARER")
-    bearer, message = interface.get_bearer()
-    if bearer is None:
-        print(message)
+    vids, status, message = heredicare_interface.get_vid_list()
 
-    print("getting vid list")
-    all_vids_heredicare, message = interface.get_vid_list(bearer)
-    if message != "":
-        print(message)
-    print(len(all_vids_heredicare))
+    for vid_raw in vids:
+        vid = vid_raw['record_id']
+        variant, status, message = heredicare_interface.get_variant(vid)
 
-    print("filtering vids by date")
-    vids_oi = interface.filter_vids_by_date(all_vids_heredicare, min_date = datetime.strptime("2023-09-15 11:44:34", '%Y-%m-%d %H:%M:%S'))
-    print(vids_oi)
+        if variant["PATH_TF"] != "-1":
+            print(variant)
+            break
 
-
-
-    variant_oi = "15"
-    variant, message = interface.get_variant(variant_oi, bearer)
-    if variant is None:
-        print(message)
-    else:
-        print(variant)
     
-    # total import time: 3 hrs ++
-
 
 
 """
@@ -275,69 +259,3 @@ TF CONSENSUS KLASSIFIKATION:
 }
 
 """
-
-
-
-"""
-    def get_vid_list(self):
-        execution_code = 0 # everything worked well
-        list_validator = xml_validator('/mnt/users/ahdoebm1/HerediVar/doc/api/vid_list.xsd')
-        v_id_list_request = requests.get(self.base_url + 'vid_list.php')
-        #res = validator.validate('/mnt/users/ahdoebm1/HerediVar/src/tools/mock-api/vid_list.xml')
-        v_id_list_xml = v_id_list_request.text
-        is_valid = list_validator.validate(v_id_list_xml)
-
-        if not is_valid:
-            execution_code = 1 # fatal error: returned xml is not valid
-            return execution_code, []
-    
-        vid_obj = list_validator.object_from_string(v_id_list_xml)
-        vids_heredicare = []
-        for vid in vid_obj.VId:
-            vids_heredicare.append(vid.get('id'))
-    
-        return execution_code, vids_heredicare
-    
-
-    def get_variant(self, vid):
-        execution_code = 0
-        chr = ''
-        pos = ''
-        ref = ''
-        alt = ''
-        reference_genome_build = ''
-        heredicare_variant = None
-
-        variant_request = requests.get(self.base_url + 'variant.php?id=' + str(vid))
-        variant_xml = variant_request.text
-
-        # get orig variant
-        heredicare_variant = self.variant_validator.object_from_string(variant_xml)
-        chr = heredicare_variant.get('chr', '')
-        pos = heredicare_variant.get('pos', '')
-        ref = heredicare_variant.get('ref', '')
-        alt = heredicare_variant.get('alt', '')
-        reference_genome_build = heredicare_variant.get('genome_build', '')
-
-        # errors
-        if chr == '' or pos == '' or alt == '' or ref == '' or reference_genome_build == '':
-            execution_code = 3
-            return execution_code, chr, pos, ref, alt, reference_genome_build, heredicare_variant
-        chr_num = functions.validate_chr(chr)
-        if not chr_num:
-            execution_code = 2
-            return execution_code, chr, pos, ref, alt, reference_genome_build, heredicare_variant
-        chr = 'chr' + chr_num
-        is_valid_variant = self.variant_validator.validate(variant_xml)
-        #print(variant_xml)
-        if not is_valid_variant:
-            execution_code = 1
-            return execution_code, chr, pos, ref, alt, reference_genome_build, heredicare_variant
-
-        # everything fine!
-        return execution_code, chr, pos, ref, alt, reference_genome_build, heredicare_variant
-"""
-
-
-
-

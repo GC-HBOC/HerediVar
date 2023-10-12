@@ -84,7 +84,7 @@
                         {{ macros.draw_add_symbol("Add variants from another list to this list") }}
                     </a>
                 </div>
-                {{ macros.draw_paginated_variant_table(pagination, variants, sort_bys, page_sizes, lists=user_lists) }}
+                {{ macros.draw_paginated_variant_table(pagination, variants, sort_bys, page_sizes, allowed_user_classes, allowed_consensus_classes, lists=user_lists) }}
             {% else %}
                 <div class="display-5 text_align_center">
                     Please select a list to view its content!

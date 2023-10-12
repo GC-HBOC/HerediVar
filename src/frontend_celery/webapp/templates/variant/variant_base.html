@@ -143,6 +143,20 @@
                     </div>
                     {% endif %}
 
+                    {% if variant.heredicare_annotations is not none %}
+                        <div>
+                            <h4 class="card-subcaption">HerediCare consensus classifications</h4>
+                            {% for heredicare_annotation in variant.heredcare_annotations %}
+                                {% set current_classification = heredicare_annotation.vustf_classification %}
+                                {% if current_classification.selected_class is not none %}
+                                    <div>{{current_classification.selected_class}}</div>
+                                    <div>{{current_classification.comment}}</div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                    {% endif %}
+
                     <!-- heredicare center classifications -->
                     {% if variant.heredicare_classifications is not none %}
                     <div>

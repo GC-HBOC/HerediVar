@@ -153,8 +153,10 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
             print("Deleted: " + str(len(heredivar_exclusive_vids)))
             print("New: " + str(len(heredicare_exclusive_vids)))
 
+            print("VID 2 in HerediVar: " + str("2" in heredicare_exclusive_vids))
+
             intersection = []
-            heredicare_exclusive_vids = []
+            heredicare_exclusive_vids = [2]
             heredivar_exclusive_vids = []
 
             # spawn one task for each variant import
@@ -409,13 +411,13 @@ def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection): # the
         
         was_successful, message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, perform_annotation=perform_annotation)
 
-
     if variant_id is not None: # insert new vid
         conn.insert_external_variant_id(variant_id, vid, "heredicare")
 
-    if not was_successful and variant_id is not None: # variant is already in database, start a reannotation
+    if (not was_successful and variant_id is not None) or "already in database!" in message: # variant is already in database, start a reannotation
         status = "update"
-        start_annotation_service(conn, user_id, variant_id)
+        if perform_annotation:
+            start_annotation_service(conn, user_id, variant_id)
     elif not was_successful:
         status = "error"
 
@@ -514,7 +516,7 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
             variant_id = conn.get_variant_id(new_chr, new_pos, new_ref, new_alt)
             message = "Variant not imported: already in database!!"
             conn.hide_variant(variant_id, True)
-            was_successful = False
+            was_successful = True
         if perform_annotation:
             celery_task_id = start_annotation_service(conn, user_id, variant_id) # starts the celery background task
 

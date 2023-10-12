@@ -202,6 +202,10 @@ input.invalid {
     color:rgb(164, 164, 164);
 }
 
+.classification_M_col {
+    color:rgb(218, 113, 218);
+}
+
 
 .classification-gradient {
     background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.499019676229867) 20%, rgba(255,255,255,0.633473457742472) 40%, rgba(255,255,255,1) 100%);

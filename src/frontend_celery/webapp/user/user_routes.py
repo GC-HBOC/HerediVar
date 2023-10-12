@@ -57,6 +57,9 @@ def my_lists():
     conn = get_connection()
     user_lists = conn.get_lists_for_user(user_id)
 
+    allowed_user_classes = conn.get_enumtypes('user_classification', 'classification')
+    allowed_consensus_classes = conn.get_enumtypes('consensus_classification', 'classification')
+
 
     # variant view table of lists in pagination
     view_list_id = request.args.get('view', None)
@@ -258,8 +261,8 @@ def my_lists():
     if view_list_id is not None:
         genes = extract_genes(request)
         ranges = extract_ranges(request)
-        consensus_classifications = extract_consensus_classifications(request)
-        user_classifications = extract_user_classifications(request)
+        consensus_classifications = extract_consensus_classifications(request, allowed_consensus_classes)
+        user_classifications = extract_user_classifications(request, allowed_user_classes)
         hgvs = extract_hgvs(request)
         variant_ids_from_lookup_list = extract_lookup_list(request, user_id, conn)
         variant_ids_oi = conn.get_variant_ids_from_list(view_list_id)
@@ -279,7 +282,8 @@ def my_lists():
                                                             consensus=consensus_classifications, 
                                                             user=user_classifications, 
                                                             hgvs=hgvs, 
-                                                            variant_ids_oi=variant_ids_oi)
+                                                            variant_ids_oi=variant_ids_oi
+                                                        )
     #print(variants)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
     
@@ -289,7 +293,9 @@ def my_lists():
                             page=page, 
                             per_page=per_page, 
                             pagination=pagination,
-                            sort_bys=sort_bys, page_sizes=page_sizes)
+                            sort_bys=sort_bys, page_sizes=page_sizes,
+                            allowed_user_classes = allowed_user_classes,
+                            allowed_consensus_classes = allowed_consensus_classes)
 
 
 #

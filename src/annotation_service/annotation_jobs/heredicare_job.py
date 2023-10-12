@@ -37,6 +37,8 @@ class heredicare_job(Job):
         conn.clear_heredicare_annotation(variant_id)
         
         vids = conn.get_external_ids_from_variant_id(variant_id, id_source="heredicare") # the vids are imported from the import variants admin page
+
+        print(vids)
         
         for vid in vids:
             status = "retry"
@@ -44,6 +46,7 @@ class heredicare_job(Job):
             max_tries = 3
             while status == "retry" and tries < max_tries:
                 heredicare_variant, status, message = heredicare_interface.get_variant(vid)
+                print(heredicare_variant)
                 if tries > 0:
                     time.sleep(30 * tries)
             if status == "error":

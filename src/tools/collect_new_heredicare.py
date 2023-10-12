@@ -114,7 +114,7 @@ for line in liftover_failed_file:
         continue
 
     parts = line.split('\t')
-    seqid = functions.find_between(parts[7].strip(), 'seqid=', '(;|$)') 
+    seqid = functions.find_between(parts[7].strip(), 'seqid=', '(;|$)')
     comment = 'liftover error: ' + parts[8].strip()
     if seqid in failed_variants:
         failed_variants[seqid] = functions.collect_info(failed_variants[seqid], '', comment)

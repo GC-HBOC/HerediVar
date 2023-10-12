@@ -2269,3 +2269,16 @@ class Connection:
         self.cursor.execute(command, (variant_id, ))
         self.conn.commit()
     
+    def get_enumtypes(self, tablename, columnname):
+        allowed_tablenames = ["consensus_classification", "user_classification"]
+        if tablename in allowed_tablenames:
+            command = "SHOW COLUMNS FROM " + tablename + " WHERE FIELD = %s"
+        else:
+            return None
+        self.cursor.execute(command, (columnname, ))
+        result = self.cursor.fetchone()
+        column_type = result[1]
+        column_type = column_type.strip('enum()')
+        allowed_enum = column_type.split(',')
+        allowed_enum = [x.strip('\'') for x in allowed_enum]
+        return allowed_enum
