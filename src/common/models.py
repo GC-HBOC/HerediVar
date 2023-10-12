@@ -533,8 +533,51 @@ class HeredicareClassification:
     id: int
     selected_class: int
     comment: str
-    date: str
+    classification_date: str
     center: str
+    vid: str
+
+    def selected_class_to_text(self):
+        if self.selected_class is None:
+            return "not classified"
+        class2text = {
+            "1": "pathogenic",
+            "2": "VUS",
+            "3": "polymorphism/neutral",
+            "11": "class 1",
+            "12": "class 2",
+            "32": "class 3-",
+            "13": "class 3",
+            "34": "class 3+",
+            "14": "class 4",
+            "15": "class 5",
+            "20": "artifact",
+            "21": "not classified",
+            "4": "unknown",
+            "-1": "not classified"
+        }
+        return class2text[str(self.selected_class)]
+    
+    def selected_class_to_num(self):
+        if self.selected_class is None:
+            return "-"
+        class2text = {
+            "1": "5",
+            "2": "3",
+            "3": "1",
+            "11": "1",
+            "12": "2",
+            "32": "3-",
+            "13": "3",
+            "34": "3+",
+            "14": "4",
+            "15": "5",
+            "20": "-", # ARTIFACT???
+            "21": "-",
+            "4": "-",
+            "-1": "-"
+        }
+        return class2text[str(self.selected_class)]
 
     def to_vcf(self, prefix = True):
         info = '~7C'.join([str(self.selected_class), self.center, self.comment, self.date])
@@ -577,6 +620,23 @@ class Variant:
     literature: Any = None # list of papers
 
     annotations: AllAnnotations = AllAnnotations()
+
+    def get_heredicare_consensus_classifications(self):
+        result = []
+        for heredicare_annotation in self.heredicare_annotations:
+            if heredicare_annotation.vustf_classification.selected_class is not None:
+                result.append(heredicare_annotation.vustf_classification)
+        return result
+    
+    def get_heredicare_consensus_classification_severeity(self):
+        result = []
+        for heredicare_annotation in self.heredicare_annotations:
+            current_classification = heredicare_annotation.vustf_classification
+            if current_classification.selected_class is not None:
+                class_num = current_classification.selected_class_to_num()
+                result.append(class_num)
+        return list(set(result))
+
 
     def get_total_heredicare_counts(self):
         total_n_fam = 0

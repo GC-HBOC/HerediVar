@@ -142,19 +142,37 @@
                         </div>
                     </div>
                     {% endif %}
-
-                    {% if variant.heredicare_annotations is not none %}
-                        <div>
+                    
+                    {% set heredicare_consensus_classifications = variant.get_heredicare_consensus_classifications() %}
+                    {% if heredicare_consensus_classifications | length > 0 %}
+                        <div class="ssb">
                             <h4 class="card-subcaption">HerediCare consensus classifications</h4>
-                            {% for heredicare_annotation in variant.heredcare_annotations %}
-                                {% set current_classification = heredicare_annotation.vustf_classification %}
-                                {% if current_classification.selected_class is not none %}
-                                    <div>{{current_classification.selected_class}}</div>
-                                    <div>{{current_classification.comment}}</div>
-                                {% endif %}
-                            {% endfor %}
+                            
+                                <div class="left-space-padding">
+                                    <table class="table table-borderless table-slim">
+                                        <tbody>
+                                            {% for heredicare_consensus_classification in heredicare_consensus_classifications %}
+                                            <tr class="nsl">
+                                                <td class="li-label width_very_small">VID {{heredicare_consensus_classification.vid}}</td>
+                                                <td class="vertical_align_middle">
+                                                    <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground">
+                                                        <li class="list-group-item noboarder-td">
+                                                            Class: {{heredicare_consensus_classification.selected_class_to_text()}} ({{heredicare_consensus_classification.selected_class}})
+                                                        </li>
+                                                        <li class="list-group-item noboarder-td">
+                                                            Date: {{heredicare_consensus_classification.classification_date}}
+                                                        </li>
+                                                        <li class="list-group-item noboarder-td">
+                                                            Comment: {{heredicare_consensus_classification.comment}}
+                                                        </li>
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>        
+                                    </table>
+                                </div>
                         </div>
-
                     {% endif %}
 
                     <!-- heredicare center classifications -->
@@ -245,7 +263,7 @@
                     
                     <!-- BRCA-EXCHANGE -->
                     {% if variant.annotations.brca_exchange_clinical_significance is not none %}
-                    <div>
+                    <div class="ssb">
                         <h4 class="card-subcaption">BRCA exchange classification</h4>
                         <div class="ssl">
                             {{variant.annotations.brca_exchange_clinical_significance.value}}
@@ -255,7 +273,7 @@
 
                     <!-- ARUP -->
                     {% if variant.annotations.arup_classification is not none %}
-                    <div>
+                    <div class="ssb">
                         <h4 class="card-subcaption">ARUP BRCA classification</h4>
                         <div class="ssl">
                             {{variant.annotations.arup_classification.value}}

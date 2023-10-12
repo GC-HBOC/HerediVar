@@ -5,6 +5,7 @@ import common.functions as functions
 import os
 from annotation_service.heredicare_interface import heredicare_interface
 import time
+from datetime import datetime
 
 
 ## annotate variant with hexplorer splicing scores (Hexplorer score + HBond score)
@@ -38,7 +39,7 @@ class heredicare_job(Job):
         
         vids = conn.get_external_ids_from_variant_id(variant_id, id_source="heredicare") # the vids are imported from the import variants admin page
 
-        print(vids)
+        #print(vids)
         
         for vid in vids:
             status = "retry"
@@ -46,7 +47,7 @@ class heredicare_job(Job):
             max_tries = 3
             while status == "retry" and tries < max_tries:
                 heredicare_variant, status, message = heredicare_interface.get_variant(vid)
-                print(heredicare_variant)
+                #print(heredicare_variant)
                 if tries > 0:
                     time.sleep(30 * tries)
             if status == "error":
@@ -55,9 +56,19 @@ class heredicare_job(Job):
             n_fam = heredicare_variant["N_FAM"]
             n_pat = heredicare_variant["N_PAT"]
             consensus_class = heredicare_variant["PATH_TF"] if heredicare_variant["PATH_TF"] != "-1" else None
-            comment = heredicare_variant["BEMERK"] if heredicare_variant["BEMERK"] != '' else None
+            bemerk = heredicare_variant["BEMERK"] if heredicare_variant["BEMERK"] is not None else ''
+            vustf_bemerk = heredicare_variant["VUSTF_BEMERK"] if heredicare_variant["VUSTF_BEMERK"] is not None else ''
+            comment = bemerk + ' ' + vustf_bemerk
+            comment = comment.strip()
+            comment = comment if comment != '' else None
+            classification_date = heredicare_variant["VUSTF_DATUM"] if heredicare_variant["VUSTF_DATUM"] != '' else None
+            if classification_date is not None:
+                try:
+                    classification_date = datetime.strptime(classification_date, "%d.%m.%Y")
+                except:
+                    raise Exception("The date could not be saved in the database. Format should be dd.mm.yyyy, but was: " + str(classification_date))
         
-            conn.insert_heredicare_annotation(variant_id, vid, n_fam, n_pat, consensus_class, comment)
+            conn.insert_heredicare_annotation(variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment)
 
 
 
