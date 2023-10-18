@@ -279,6 +279,7 @@
 
 
 {% macro draw_heredicare_annotations(variant) %}
+{% if variant.heredicare_annotations | length > 0 %}
 <tr>
     <td class="li-label nowrap">HerediCare</td>
     <td>
@@ -331,6 +332,7 @@
 
     </td>
 </tr>
+{% endif %}
 {% endmacro %}
 
 
