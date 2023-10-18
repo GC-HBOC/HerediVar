@@ -580,10 +580,10 @@ class HeredicareClassification:
         return class2text[str(self.selected_class)]
 
     def to_vcf(self, prefix = True):
-        info = '~7C'.join([str(self.selected_class), self.center, self.comment, self.date])
+        info = '~7C'.join([str(self.selected_class), self.center, self.comment, self.classification_date])
         info = info
         if prefix:
-            info = 'heredicare~1Y' + info
+            info = 'heredicare_center_classifications~1Y' + info
         return info
 
     def get_header(self):
@@ -596,7 +596,22 @@ class HeredicareAnnotation:
     vid: str
     n_fam: int
     n_pat: int
-    vustf_classification: HeredicareClassification
+    vustf_classification: HeredicareClassification # kind of ugly to use that here because to_vcf can not be used as this is used for the center classifications...
+
+    def to_vcf(self, prefix = True):
+        vustf_class = str(self.vustf_classification.selected_class) if self.vustf_classification.selected_class is not None else ""
+        vustf_comment = str(self.vustf_classification.comment) if self.vustf_classification.comment is not None else ""
+        vustf_date = str(self.vustf_classification.classification_date) if self.vustf_classification.classification_date is not None else ""
+        info = '~7C'.join([str(self.vid), str(self.n_fam), str(self.n_pat), vustf_class, vustf_comment, vustf_date])
+        info = info
+        if prefix:
+            info = 'heredicare_annotation~1Y' + info
+        return info
+    
+    # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
+    def get_header(self):
+        header = {'heredicare_annotation': '##INFO=<ID=heredicare_annotation,Number=.,Type=String,Description="An & separated list of the variant annotations from heredicare. Format:vid|n_fam|n_pat|vustf_selected_class|vustf_comment|vustf_classification_date. n_fam is the number of families having the variant and n_pat is the number of individuals having the variant.">\n'}
+        return header
 
 
 
@@ -660,18 +675,21 @@ class Variant:
 
             # complex annotations
             annotations_oi = [self.user_classifications, 
-                              self.heredicare_classifications, 
+                              self.heredicare_classifications,
+                              self.heredicare_annotations,
                               self.consequences, 
                               self.assays, 
                               self.literature,
                               [self.get_recent_consensus_classification()],
                               [self.clinvar]]
             for annot in annotations_oi:
-                if annot is not None and annot[0] is not None:
-                    new_info = functions.process_multiple(annot)
-                    info.append(new_info)
-                    new_header = annot[0].get_header()
-                    headers.update(new_header)
+                if annot is not None:
+                    if len(annot) > 0:
+                        if annot[0] is not None:
+                            new_info = functions.process_multiple(annot)
+                            info.append(new_info)
+                            new_header = annot[0].get_header()
+                            headers.update(new_header)
 
         elif simple:
             # only collect consensus classification
