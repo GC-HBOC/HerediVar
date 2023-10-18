@@ -26,6 +26,16 @@
                         <a class="nav-link" href="{{url_for('user.admin_dashboard')}}">Admin dashboard</a>
                     </li>
                     {% endif %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Public
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="navbarDropdown" > <!--style="min-width: 1rem;"-->
+                            <li><a class="dropdown-item" href="{{url_for('variant.check')}}">Check variants</a></li>
+                            <li class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{url_for('main.downloads')}}">Downloads</a></li>
+                        </ul>
+                    </li>
                 </ul>
                 <ul class="navbar-nav ">
                     <div class="d-flex align-items-center">
@@ -100,12 +110,8 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{url_for('doc.impressum')}}">Impressum</a>
                         </li>
-
                         <li class="nav-item">
                             <a class="nav-link" href="{{url_for('doc.documentation')}}">Documentation</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{url_for('main.downloads')}}">Downloads</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{url_for('doc.changelog')}}">Changelog</a>

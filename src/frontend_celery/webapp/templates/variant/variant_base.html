@@ -35,14 +35,9 @@
         </div>
 
         <!-- consensus classification label  at the top right -->
-        {% set most_recent_consensus_classification = variant.get_recent_consensus_classification() %}
-        {% if most_recent_consensus_classification is not none %}
-            {% set _consensus_class = most_recent_consensus_classification.selected_class %}
-        {% else %}
-            {% set _consensus_class = '-' %}
-        {% endif %}
         <div class="ms-auto bsr">
-            {{ macros.render_consensus_classification_label(_consensus_class) }}
+            {% set _consensus_class, _source = variant.get_consensus_class() %}
+            {{ macros.render_consensus_classification_label(_consensus_class, _source) }}
         </div>
         
 
@@ -153,11 +148,11 @@
                                         <tbody>
                                             {% for heredicare_consensus_classification in heredicare_consensus_classifications %}
                                             <tr class="nsl">
-                                                <td class="li-label width_very_small">VID {{heredicare_consensus_classification.vid}}</td>
+                                                <td class="li-label width_small">VID {{heredicare_consensus_classification.vid}}</td>
                                                 <td class="vertical_align_middle">
                                                     <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground">
                                                         <li class="list-group-item noboarder-td">
-                                                            Class: {{heredicare_consensus_classification.selected_class_to_text()}} ({{heredicare_consensus_classification.selected_class}})
+                                                            Class: {{heredicare_consensus_classification.selected_class_to_text()}}
                                                         </li>
                                                         <li class="list-group-item noboarder-td">
                                                             Date: {{heredicare_consensus_classification.classification_date}}

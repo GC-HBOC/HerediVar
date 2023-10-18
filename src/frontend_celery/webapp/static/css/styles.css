@@ -438,3 +438,7 @@ footer {
     position: absolute; 
     z-index:1;
 }
+.classM_text {
+    white-space: pre;
+    font-size: 7px;
+}

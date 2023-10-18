@@ -729,14 +729,14 @@ class Connection:
         if page_size != 'unlimited':
             command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
-        print(command % actual_information)
+        #print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 
         # get variant objects
         variants = []
         for variant_raw in variants_raw:
-            variant = self.get_variant(variant_id=variant_raw[0], include_annotations = False, include_heredicare_classifications = False, include_clinvar = False, include_assays = False, include_literature = False)
+            variant = self.get_variant(variant_id=variant_raw[0], include_annotations = False, include_heredicare_classifications = True, include_clinvar = False, include_assays = False, include_literature = False)
             variants.append(variant)
 
         if page_size == 'unlimited':
@@ -1708,7 +1708,6 @@ class Connection:
         is_hidden = True if variant_raw[5] == 1 else False
 
         annotations = None
-        all_heredicare_annotations = None
         if include_annotations:
             annotations = models.AllAnnotations()
             annotations_raw = self.get_recent_annotations(variant_id)
@@ -1728,23 +1727,6 @@ class Connection:
                 #annotations.insert_annotation(new_annotation)
             
             annotations.flag_linked_annotations()
-
-            heredicare_annotations_raw = self.get_heredicare_annotations(variant_id)
-
-            all_heredicare_annotations = []
-            for annot in heredicare_annotations_raw:
-                #id, vid, n_fam, n_pat, consensus_class, comment, date
-                heredicare_annotation_id = annot[0]
-                vid = annot[1]
-                n_fam = annot[2]
-                n_pat = annot[3]
-                consensus_class = annot[4]
-                comment = annot[5]
-                classification_date = annot[6]
-
-                classification = models.HeredicareClassification(id = heredicare_annotation_id, selected_class = consensus_class, comment = comment, classification_date = classification_date, center = "VUSTF", vid = vid)
-                new_heredicare_annotation = models.HeredicareAnnotation(id = heredicare_annotation_id, vid = vid, n_fam = n_fam, n_pat = n_pat, vustf_classification = classification)
-                all_heredicare_annotations.append(new_heredicare_annotation)
 
         
         # add all consensus classifications
@@ -1857,6 +1839,7 @@ class Connection:
                     user_classifications.append(new_user_classification)
 
         heredicare_classifications = None
+        all_heredicare_annotations = None
         if include_heredicare_classifications:
             heredicare_classifications_raw = self.get_heredicare_center_classifications(variant_id)
             if heredicare_classifications_raw is not None:
@@ -1869,6 +1852,23 @@ class Connection:
                     date = cl_raw[5].strftime('%Y-%m-%d')
                     new_heredicare_classification = models.HeredicareClassification(id = id, selected_class = selected_class, comment = comment, center = center, classification_date = date, vid="")
                     heredicare_classifications.append(new_heredicare_classification)
+
+
+            heredicare_annotations_raw = self.get_heredicare_annotations(variant_id)
+            all_heredicare_annotations = []
+            for annot in heredicare_annotations_raw:
+                #id, vid, n_fam, n_pat, consensus_class, comment, date
+                heredicare_annotation_id = annot[0]
+                vid = annot[1]
+                n_fam = annot[2]
+                n_pat = annot[3]
+                consensus_class = annot[4]
+                comment = annot[5]
+                classification_date = annot[6]
+
+                classification = models.HeredicareClassification(id = heredicare_annotation_id, selected_class = consensus_class, comment = comment, classification_date = classification_date, center = "VUSTF", vid = vid)
+                new_heredicare_annotation = models.HeredicareAnnotation(id = heredicare_annotation_id, vid = vid, n_fam = n_fam, n_pat = n_pat, vustf_classification = classification)
+                all_heredicare_annotations.append(new_heredicare_annotation)
         
         # add clinvar annotation
         clinvar = None
@@ -2270,7 +2270,7 @@ class Connection:
         self.conn.commit()
     
     def get_enumtypes(self, tablename, columnname):
-        allowed_tablenames = ["consensus_classification", "user_classification"]
+        allowed_tablenames = ["consensus_classification", "user_classification", "variant"]
         if tablename in allowed_tablenames:
             command = "SHOW COLUMNS FROM " + tablename + " WHERE FIELD = %s"
         else:
@@ -2282,3 +2282,92 @@ class Connection:
         allowed_enum = column_type.split(',')
         allowed_enum = [x.strip('\'') for x in allowed_enum]
         return allowed_enum
+    
+
+
+    def get_gencode_basic_transcripts(self, gene_id):
+        if gene_id is None:
+            return None
+        command = "SELECT name FROM transcript WHERE gene_id = %s AND (is_gencode_basic=1 or is_mane_select=1 or is_mane_plus_clinical=1)"
+        self.cursor.execute(command, (gene_id, ))
+        result = self.cursor.fetchall()
+        return [x[0] for x in result if x[0].startswith("ENST")]
+
+    
+    
+    # this function returns a list of consequence objects of the preferred transcripts 
+    # (can be multiple if there are eg. 2 mane select transcripts for this variant)
+    def get_preferred_transcripts(self, gene_id, return_all=False):
+        result = []
+        command = "SELECT name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical FROM transcript WHERE gene_id = %s"
+        self.cursor.execute(command, (gene_id, ))
+        result_raw = self.cursor.fetchall()
+        transcripts = []
+        for elem in result_raw:
+            if elem[0].startswith("ENST"):
+                source = "ensembl" if elem[0].startswith("ENST") else "refseq"
+                new_elem = {"name": elem[0],
+                            "biotype": elem[1],
+                            "length": elem[2],
+                            "is_gencode_basic": elem[3],
+                            "is_mane_select": elem[4],
+                            "is_mane_plus_clinical": elem[5],
+                            "is_ensembl_canonical": elem[6],
+                            "source": source
+                        }
+                transcripts.append(new_elem)
+
+        if len(transcripts) > 0:
+            transcripts = self.order_transcripts(transcripts)
+
+            if not return_all:
+                result.append(transcripts.pop(0)) # always append the first one
+
+                for transcript in transcripts: # scan for all mane select transcripts
+                    if transcript["is_mane_select"]:
+                        result.append(transcript)
+                    else:
+                        break # we can do this because the list is sorted
+            else:
+                result = transcripts
+        else: # the variant does not have any consequences
+            return None
+        return result
+
+    def order_transcripts(self, consequences):
+        keyfunc = cmp_to_key(mycmp = self.sort_transcripts)
+        consequences.sort(key = keyfunc) # sort by preferred transcript
+        return consequences
+     
+    def sort_transcripts(self, a, b):
+        # sort by ensembl/refseq
+        if a["source"] == 'ensembl' and b["source"] == 'refseq':
+            return -1
+        elif a["source"] == 'refseq' and b["source"] == 'ensembl':
+            return 1
+        elif a["source"] == b["source"]:
+
+            # sort by mane select
+            if a["is_mane_select"] is None or b["is_mane_select"] is None:
+                return 1
+            elif a["is_mane_select"] and not b["is_mane_select"]:
+                return -1
+            elif not a["is_mane_select"] and b["is_mane_select"]:
+                return 1
+            elif a["is_mane_select"] == b["is_mane_select"]:
+
+                # sort by biotype
+                if a["biotype"] == 'protein coding' and b["biotype"] != 'protein coding':
+                    return -1
+                elif a["biotype"] != 'protein coding' and b["biotype"] == 'protein coding':
+                    return 1
+                elif (a["biotype"] != 'protein coding' and b["biotype"] != 'protein coding') or (a["biotype"] == 'protein coding' and b["biotype"] == 'protein coding'):
+
+                    # sort by length
+                    if a["length"] > b["length"]:
+                        return -1
+                    elif a["length"] < b["length"]:
+                        return 1
+                    else:
+                        return 0
+                    

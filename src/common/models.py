@@ -627,15 +627,6 @@ class Variant:
             if heredicare_annotation.vustf_classification.selected_class is not None:
                 result.append(heredicare_annotation.vustf_classification)
         return result
-    
-    def get_heredicare_consensus_classification_severeity(self):
-        result = []
-        for heredicare_annotation in self.heredicare_annotations:
-            current_classification = heredicare_annotation.vustf_classification
-            if current_classification.selected_class is not None:
-                class_num = current_classification.selected_class_to_num()
-                result.append(class_num)
-        return list(set(result))
 
 
     def get_total_heredicare_counts(self):
@@ -718,6 +709,38 @@ class Variant:
     def to_json(self):
         return json.dumps(asdict(self))
 
+
+    def get_most_recent_heredicare_consensus_classification(self):
+        result = None
+        if self.heredicare_annotations is None:
+            return None
+        for heredicare_annotation in self.heredicare_annotations:
+            current_classification = heredicare_annotation.vustf_classification
+            if current_classification.selected_class is not None:
+                if result is None:
+                    result = current_classification
+                elif current_classification.classification_date > result.classification_date:
+                    result = current_classification
+        return result
+    
+    # the most recent consensus class or if that does not exist the most recent heredicare consensus classification
+    def get_consensus_class(self):
+        the_class = "-"
+        source = "heredivar"
+        most_recent_consensus_classification  = self.get_recent_consensus_classification()
+        if most_recent_consensus_classification is None:
+            heredicare_classification = self.get_most_recent_heredicare_consensus_classification()
+            if heredicare_classification is not None:
+                the_class = heredicare_classification.selected_class_to_num()
+                source = "heredicare"
+        else:
+            the_class = most_recent_consensus_classification.selected_class
+            source = "heredivar"
+
+        return the_class, source
+
+
+    # the most recent conensus classification independent of schemes
     def get_recent_consensus_classification(self):
         result = None
         if self.consensus_classifications is not None:
@@ -729,6 +752,7 @@ class Variant:
                         result = classification
         return result
     
+    # the most recent consensus classification for each scheme
     def get_recent_consensus_classification_all_schemes(self, convert_to_dict = False):
         result = None
         if self.consensus_classifications is not None:

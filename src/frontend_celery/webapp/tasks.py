@@ -309,7 +309,7 @@ def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant
     try:
         conn = Connection(user_roles)
         conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
-        status, message = fetch_heredicare(vid, heredicare_interface, user_id, conn)
+        status, message = fetch_heredicare(vid, heredicare_interface, user_id, conn, insert_variant = True, perform_annotation = False)
     except InternalError as e:
         # deadlock: code 1213
         status = "retry"
@@ -351,20 +351,37 @@ def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant
 
 
 
-def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection): # the task worker
-    
+def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection, insert_variant = True, perform_annotation = True):
     variant, status, message = heredicare_interface.get_variant(vid)
-
+    
     if status != 'success':
         return status, message
     
-    print(variant)
     if str(variant.get("VISIBLE", "0")) == "0":
-        message = "Skipped because variant is invisible in HerediCare"
+        variant_id = conn.get_variant_id_from_external_id(vid, "heredicare")
+        if variant_id is not None:
+            conn.delete_external_id(vid, "heredicare", variant_id)
+            variant_vids = conn.get_external_ids_from_variant_id(variant_id)
+            if len(variant_vids) == 0:
+                conn.hide_variant(variant_id, is_hidden = False)
+                message = "Variant is already in database, but is hidden in HerediCare. It is now also hidden in HerediVar. If another VID points to this variant which is processed later this variant might get visible again."
+            else:
+                message = "Deleted VID because this vid is now hidden in HerediCare"
+        else:
+            message = "Skipped because variant is invisible in HerediCare"
         return status, message
+    
+    status, message = map_hg38(variant, user_id, conn, insert_variant = insert_variant, perform_annotation = perform_annotation, external_ids = [vid])
+
+    return status, message
+
+
+def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_annotation = True, external_ids = None): # the task worker
+    message = ""
+    status = "success"
+    variant_id = None
 
     allowed_sequence_letters = "ACGT"
-    perform_annotation = False
 
     # first check if the hg38 information is there
     chrom = variant.get('CHROM')
@@ -373,7 +390,10 @@ def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection): # the
     alt = variant.get('ALT_HG38')
     genome_build = "GRCh38"
 
-    was_successful, message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, perform_annotation=perform_annotation)
+    was_successful = False
+    if all([x is not None for x in [chrom, pos, ref, alt]]):
+        was_successful, new_message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, insert_variant = insert_variant, perform_annotation=perform_annotation)
+        message = functions.collect_info(message, "hg38_msg=", new_message, sep = " ~~ ")
 
     if not was_successful:
         # check hg19 information
@@ -381,38 +401,83 @@ def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection): # the
         ref = variant.get('REF_HG19')
         alt = variant.get('ALT_HG19')
         genome_build = "GRCh37"
-
-        was_successful, message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, perform_annotation=perform_annotation)
+        
+        was_successful = False
+        if all([x is not None for x in [chrom, pos, ref, alt]]):
+            was_successful, new_message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, insert_variant = insert_variant, perform_annotation=perform_annotation)
+            message = functions.collect_info(message, "hg37_msg=", new_message, sep = " ~~ ")
     
     if not was_successful:
         # if there is still missing data check if the variant has hgvs_c information
         transcript = variant.get('REFSEQ')
         hgvs_c = variant.get('CHGVS')
+        gene_symbol = variant.get("GEN")
         genome_build = "GRCh38"
 
+        transcript_valid = transcript is not None and transcript != "" and transcript != "unknown" and transcript != "unbekannt"
+        hgvs_c_valid = hgvs_c is not None and hgvs_c != ""
+        gene_valid = gene_symbol is not None and gene_symbol != ""
+
         #TODO: maybe check if you can get some transcripts from the gene??? gene = variant.get('GEN')
-        if any([x is None for x in [transcript, hgvs_c]]) or transcript == 'unknown':
-            status = "error"
-            message = "Not enough data to convert variant!"
-            return status, message
+        if transcript_valid and hgvs_c_valid:
+            chrom, pos, ref, alt, err_msg = functions.hgvsc_to_vcf([hgvs_c], [transcript]) # convert to vcf
 
-        chrom, pos, ref, alt, err_msg = functions.hgvsc_to_vcf(hgvs_c, transcript) # convert to vcf
-
-        if err_msg != "": # catch runtime errors of hgvs to vcf
-            status = "error"
-            message = "HGVS to VCF yieled an error: " + str(err_msg)
-            return status, message
+            if err_msg != "": # catch runtime errors of hgvs to vcf
+                new_message = "HGVS to VCF yieled an error: " + str(err_msg)
+                message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
+            elif any([x is None for x in [chrom, pos, ref, alt]]): # the conversion was not successful
+                new_message = "HGVS could not be converted to VCF: " + str(transcript) + ":" + str(hgvs_c)
+                message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
+            else:
+                was_successful = True
         
-        # the conversion was not successful
-        if any([x is None for x in [chrom, pos, ref, alt]]): 
-            status = "error"
-            message = "HGVS could not be converted to VCF: " + str(transcript) + ":" + str(hgvs_c)
-            return status, message
-        
-        was_successful, message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, perform_annotation=perform_annotation)
+        if not was_successful and hgvs_c_valid and gene_valid:
+            gene_id = conn.get_gene_id_by_symbol(gene_symbol)
+            transcripts = conn.get_gencode_basic_transcripts(gene_id)
 
-    if variant_id is not None: # insert new vid
-        conn.insert_external_variant_id(variant_id, vid, "heredicare")
+            if transcripts is not None:
+                #print(transcripts)
+                #print(variant["CHGVS"])
+
+                chrom, pos, ref, alt, err_msg = functions.hgvsc_to_vcf([variant["CHGVS"]]*len(transcripts), transcripts) # convert to vcf
+
+                #print(err_msg)
+
+                if 'unequal' in err_msg:
+                    message = functions.collect_info(message, "hgvs_msg=", err_msg, sep = " ~~ ")
+                elif err_msg != '':
+                    preferred_transcripts = conn.get_preferred_transcripts(gene_id, return_all = True)
+                    err_msgs = err_msg.split('\n')
+                    break_outer = False
+                    for current_transcript in preferred_transcripts:
+                        for e in err_msgs:
+                            if current_transcript["name"] in e:
+                                new_message = "HGVS to VCf yielded an error with transcript: " + e
+                                message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
+                                break_outer = True
+                                break
+                        if break_outer:
+                            break
+                elif any([x is None for x in [chrom, pos, ref, alt]]): # the conversion was not successful
+                    new_message = "HGVS could not be converted to VCF: " + str(hgvs_c)
+                    message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
+                else:
+                    was_successful = True
+
+                if not was_successful and all([x is not None for x in [chrom, pos, ref, alt]]):
+                    message += " possible candidate variant: " + '-'.join([chrom, pos, ref, alt]) + " (from transcript(s): " + current_transcript['name']
+
+        if was_successful:
+            was_successful, new_message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, insert_variant = insert_variant, perform_annotation=perform_annotation)
+            message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
+
+    if variant_id is not None and external_ids is not None: # insert new vid
+        for external_id in external_ids:
+            conn.insert_external_variant_id(variant_id, external_id, "heredicare")
+
+    if not was_successful and message == '':
+        new_message = "Not enough data to convert variant!"
+        message = functions.collect_info(message, "", new_message, sep = " ~~ ")
 
     if (not was_successful and variant_id is not None) or "already in database!" in message: # variant is already in database, start a reannotation
         status = "update"
@@ -428,7 +493,7 @@ def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection): # the
 
 
 
-def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connection, user_id, allowed_sequence_letters = "ACGT", perform_annotation = True):
+def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connection, user_id, allowed_sequence_letters = "ACGT", insert_variant = True, perform_annotation = True):
     message = ""
     was_successful = True
     variant_id = None
@@ -442,13 +507,17 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
     if not chrom_is_valid:
         message = "Chromosome is invalid: " + str(chrom)
     elif not ref_is_valid:
-        message = "Reference sequence contains non-ACGT characters: " + str(ref)
-        if len(ref) > 1000:
-            message = "Reference base is too long"
+        message = "Invalid reference sequence! The sequence must contain only ACGT and must have 0 < length < 1000: "
+        if ref is not None:
+            if len(ref) > 1000:
+                ref = ref[0:100] + "..."
+        message = message + "\"" + str(ref) + "\""
     elif not alt_is_valid:
-        message = "Alternative sequence contains non-ACGT characters: " + str(alt)
-        if len(alt) > 1000:
-            message = "Alternative base is too long"
+        message = "Invalid alternative sequence! The sequence must contain only ACGT and must have 0 < length < 1000: "
+        if alt is not None:
+            if len(alt) > 1000:
+                alt = alt[0:100] + "..."
+        message = message + "\"" + str(alt) + "\""
     elif not pos_is_valid:
         message = "Position is invalid: " + str(pos)
     if not chrom_is_valid or not ref_is_valid or not alt_is_valid or not pos_is_valid:
@@ -508,14 +577,19 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
         tmp_file.close()
 
         is_duplicate = conn.check_variant_duplicate(new_chr, new_pos, new_ref, new_alt) # check if variant is already contained
-        
         if not is_duplicate:
             # insert it & capture the annotation_queue_id of the newly inserted variant to start the annotation service in celery
-            variant_id = conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chrom, pos, ref, alt, user_id)
+            if insert_variant:
+                variant_id = conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chrom, pos, ref, alt, user_id)
+            else:
+                message += "HG38 variant would be: " + '-'.join([str(new_chr), str(new_pos), str(new_ref), str(new_alt)])
         else:
-            variant_id = conn.get_variant_id(new_chr, new_pos, new_ref, new_alt)
-            message = "Variant not imported: already in database!!"
-            conn.hide_variant(variant_id, True)
+            if insert_variant:
+                variant_id = conn.get_variant_id(new_chr, new_pos, new_ref, new_alt)
+                message = "Variant not imported: already in database!!"
+                conn.hide_variant(variant_id, True)
+            else:
+                message += "HG38 variant would be: " + '-'.join([str(new_chr), str(new_pos), str(new_ref), str(new_alt)])
             was_successful = True
         if perform_annotation:
             celery_task_id = start_annotation_service(conn, user_id, variant_id) # starts the celery background task

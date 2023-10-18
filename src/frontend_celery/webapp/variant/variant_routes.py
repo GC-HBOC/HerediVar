@@ -5,7 +5,7 @@ from ..utils import *
 import sys
 from os import path
 from .variant_functions import *
-from ..tasks import generate_consensus_only_vcf_task, start_annotation_service, validate_and_insert_variant
+from ..tasks import generate_consensus_only_vcf_task, start_annotation_service, validate_and_insert_variant, map_hg38
 
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
@@ -413,3 +413,54 @@ def classification_history(variant_id):
     return render_template('variant/classification_history.html', 
                             variant = variant
                             )
+
+
+
+@variant_blueprint.route('/check', methods=["GET","POST"])
+def check():
+    status=""
+    message = ""
+    conn = get_connection()
+    chroms = conn.get_enumtypes("variant", "chr")
+
+    if request.method == "POST":
+        variant = {
+            'VID': None,
+            'CHROM': None,
+            'POS_HG19': None,
+            'REF_HG19': None,
+            'ALT_HG19': None,
+            'POS_HG38': None,
+            'REF_HG38': None,
+            'ALT_HG38': None,
+            'REFSEQ': request.form.get('transcript'),
+            'CHGVS': request.form.get('hgvsc'),
+            'CGCHBOC': None,
+            'VISIBLE': 1,
+            'GEN': request.form.get("gene"),
+            'canon_chrom': '',
+            'canon_pos': '',
+            'canon_ref': '',
+            'canon_alt': '',
+            'comment': ''
+        }
+        genome_build = request.form.get('genome')
+        if genome_build == "GRCh38":
+            variant["CHROM"] = request.form.get('chrom')
+            variant["POS_HG38"] = request.form.get('pos')
+            variant["REF_HG38"] = request.form.get('ref')
+            variant["ALT_HG38"] = request.form.get('alt')
+        elif genome_build == "GRCh37":
+            variant["CHROM"] = request.form.get('chrom')
+            variant["POS_HG19"] = request.form.get('pos')
+            variant["REF_HG19"] = request.form.get('ref')
+            variant["ALT_HG19"] = request.form.get('alt')
+
+        status, message = map_hg38(variant, -1, conn, insert_variant = False, perform_annotation = False, external_ids = None)
+
+    return render_template('variant/check.html',
+                            chroms = chroms,
+                            status = status,
+                            message = message
+                            )
+

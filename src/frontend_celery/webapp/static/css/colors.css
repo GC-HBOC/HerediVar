@@ -211,3 +211,12 @@ input.invalid {
     background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.499019676229867) 20%, rgba(255,255,255,0.633473457742472) 40%, rgba(255,255,255,1) 100%);
     background-color: currentColor;
 }
+
+
+
+
+.white_border {
+    stroke: #d4d4d4;
+    stroke-width: 0.5px;
+    stroke-linejoin: round;
+}

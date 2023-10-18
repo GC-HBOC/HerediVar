@@ -276,15 +276,55 @@ def left_align_vcf(infile, outfile, ref_genome = 'GRCh38'):
 
     return returncode, err_msg, command_output
 
+## DEPRECATED
+#def hgvsc_to_vcf(hgvs, reference = None):
+#    #tmp_file_path = tempfile.gettempdir() + "/hgvs_to_vcf"
+#    tmp_file_path = get_random_temp_file("_hgvs2vcf")
+#    tmp_file = open(tmp_file_path + ".tsv", "w")
+#    tmp_file.write("#reference	hgvs_c\n")
+#    if reference is None:
+#        reference, hgvs = split_hgvs(hgvs)
+#    tmp_file.write(reference + "\t" + hgvs + "\n")
+#    tmp_file.close()
+#
+#    command = [os.path.join(paths.ngs_bits_path, "HgvsToVcf")]
+#    command.extend(['-in', tmp_file_path + '.tsv', '-ref', paths.ref_genome_path, '-out', tmp_file_path + '.vcf'])
+#    returncode, err_msg, command_output = execute_command(command, "HgvsToVcf", use_prefix_error_log=False)
+#    
+#    chr = None
+#    pos = None
+#    ref = None
+#    alt = None
+#    tmp_file = open(tmp_file_path + '.vcf', "r")
+#    for line in tmp_file: # this assumes a single-entry vcf
+#        if line.strip() == '' or line.startswith('#'):
+#            continue
+#        parts = line.split('\t')
+#        chr = parts[0]
+#        pos = parts[1]
+#        ref = parts[3]
+#        alt = parts[4]
+#    
+#
+#    rm(tmp_file_path + ".tsv")
+#    rm(tmp_file_path + ".vcf")
+#    return chr, pos, ref, alt, err_msg
 
-def hgvsc_to_vcf(hgvs, reference = None):
+
+def hgvsc_to_vcf(hgvs_strings, references = None):
     #tmp_file_path = tempfile.gettempdir() + "/hgvs_to_vcf"
     tmp_file_path = get_random_temp_file("_hgvs2vcf")
     tmp_file = open(tmp_file_path + ".tsv", "w")
     tmp_file.write("#reference	hgvs_c\n")
-    if reference is None:
-        reference, hgvs = split_hgvs(hgvs)
-    tmp_file.write(reference + "\t" + hgvs + "\n")
+    if references is None:
+        references = []
+        for hgvs in hgvs_strings:
+            reference, hgvs = split_hgvs(hgvs)
+            references.append(reference)
+            tmp_file.write(reference + "\t" + hgvs + "\n")
+    else:
+        for hgvs, reference in zip(hgvs_strings, references):
+            tmp_file.write(reference + "\t" + hgvs + "\n")
     tmp_file.close()
 
     command = [os.path.join(paths.ngs_bits_path, "HgvsToVcf")]
@@ -295,20 +335,30 @@ def hgvsc_to_vcf(hgvs, reference = None):
     pos = None
     ref = None
     alt = None
+    first_iter = True
     tmp_file = open(tmp_file_path + '.vcf', "r")
     for line in tmp_file: # this assumes a single-entry vcf
         if line.strip() == '' or line.startswith('#'):
             continue
         parts = line.split('\t')
-        chr = parts[0]
-        pos = parts[1]
-        ref = parts[3]
-        alt = parts[4]
+
+        #print(parts)
+
+        if first_iter:
+            chr = parts[0]
+            pos = parts[1]
+            ref = parts[3]
+            alt = parts[4]
+            first_iter = False
+        else:
+            if chr != parts[0] or pos != parts[1] or ref != parts[3] or alt != parts[4]: # check that all are equal
+                return None, None, None, None, "HGVSc recovered vcf-style variant among transcripts is unequal: " + str(references)
     
 
     rm(tmp_file_path + ".tsv")
     rm(tmp_file_path + ".vcf")
     return chr, pos, ref, alt, err_msg
+
 
 # function for splitting hgvs in refrence transcript and variant
 def split_hgvs(hgvs):
