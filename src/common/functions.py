@@ -352,9 +352,12 @@ def hgvsc_to_vcf(hgvs_strings, references = None):
             first_iter = False
         else:
             if chr != parts[0] or pos != parts[1] or ref != parts[3] or alt != parts[4]: # check that all are equal
+                tmp_file.close()
+                rm(tmp_file_path + ".tsv")
+                rm(tmp_file_path + ".vcf")
                 return None, None, None, None, "HGVSc recovered vcf-style variant among transcripts is unequal: " + str(references)
     
-
+    tmp_file.close()
     rm(tmp_file_path + ".tsv")
     rm(tmp_file_path + ".vcf")
     return chr, pos, ref, alt, err_msg
