@@ -409,24 +409,34 @@ wget https://www.omim.org/static/omim/data/mim2gene.txt
 
 
 
-### download ClinVar (https://www.ncbi.nlm.nih.gov/clinvar/)
-cd $dbs
-mkdir -p ClinVar
-cd ClinVar
+#### download ClinVar (https://www.ncbi.nlm.nih.gov/clinvar/)
+#cd $dbs
+#mkdir -p ClinVar
+#cd ClinVar
+#
+### submissions table for 'Submitted interpretations and evidence' table from website
+#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
+#
+## most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # previous version used: clinvar_20220320.vcf.gz 
+#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # newest version: clinvar_20230226.vcf.gz  
+#gunzip -c clinvar.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_converted_GRCh38.vcf.gz
+#tabix -p vcf clinvar_converted_GRCh38.vcf.gz
+#
+#
+### CNVs - not used atm
+##wget -O - http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive/variant_summary_2021-12.txt.gz | gunzip > variant_summary_2021-12.txt
+##cat variant_summary_2021-12.txt | php $src/Tools/db_converter_clinvar_cnvs.php 5 "Pathogenic/Likely pathogenic" | sort | uniq > clinvar_cnvs_2021-12.bed
+##$ngsbits/BedSort -with_name -in clinvar_cnvs_2021-12.bed -out clinvar_cnvs_2021-12.bed
 
-## submissions table for 'Submitted interpretations and evidence' table from website
-wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
-
-# most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # previous version used: clinvar_20220320.vcf.gz 
-wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # newest version: clinvar_20230226.vcf.gz  
-gunzip -c clinvar.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_converted_GRCh38.vcf.gz
-tabix -p vcf clinvar_converted_GRCh38.vcf.gz
 
 
-## CNVs - not used atm
-#wget -O - http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive/variant_summary_2021-12.txt.gz | gunzip > variant_summary_2021-12.txt
-#cat variant_summary_2021-12.txt | php $src/Tools/db_converter_clinvar_cnvs.php 5 "Pathogenic/Likely pathogenic" | sort | uniq > clinvar_cnvs_2021-12.bed
-#$ngsbits/BedSort -with_name -in clinvar_cnvs_2021-12.bed -out clinvar_cnvs_2021-12.bed
+
+
+# download bayesDEL
+#wget -O bayesdel.tgz https://drive.google.com/file/d/0Byvs2ppGNyXlN0xvSzA4LUgybzg/view?usp=share_link&resourcekey=0-ULPKwYu4hPGuMZ-eY1Z2Tw
+
+
+
 
 
 
