@@ -139,6 +139,7 @@ def submit_clinvar(variant_id):
             # prepare json data to be submitted to ClinVar
             schema = json.loads(open(paths.clinvar_submission_schema).read())
             data = get_clinvar_submission_json(variant, selected_gene, selected_orpha_code, clinvar_accession)
+            #print(data)
             #with open("/mnt/storage2/users/ahdoebm1/HerediVar/testdat.json", "w") as jfile:
             #    jfile.write(json.dumps(data, indent=4))
 
@@ -159,6 +160,7 @@ def submit_clinvar(variant_id):
                     "data": {"content": data}
                 }]
             }
+            #print(json.dumps(postable_data))
             resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
             #print(resp.json())
             if str(resp.status_code) not in ['200', '201']:
@@ -311,10 +313,12 @@ def get_extended_comment(mrcc):
 
 def get_assertion_criteria(scheme_type, assertion_criteria_source):
     assertion_criteria = {}
-    if scheme_type in ['acmg']:
+    if scheme_type in ['acmg', 'enigma-brca1', 'enigma-brca2']:
         assertion_criteria_source = assertion_criteria_source.replace('https://pubmed.ncbi.nlm.nih.gov/', '').strip('/')
         assertion_criteria['db'] = "PubMed"
         assertion_criteria['id'] = assertion_criteria_source
+    elif scheme_type in ['enigma-brca1', 'enigma-brca2']:
+        assertion_criteria['url'] = assertion_criteria_source
     else:
         assertion_criteria['url'] = assertion_criteria_source
     return assertion_criteria

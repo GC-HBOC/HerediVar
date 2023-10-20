@@ -1,0 +1,64 @@
+{
+    "classification_scheme_id": "12",
+    "name": "enigma-brca1_v2",
+    "display_name": "ClinGen ENIGMA BRCA1",
+    "type": "acmg-enigma-brca1",
+    "reference": "https://cspec.genome.network/cspec/ui/svi/doc/GN092",
+    "criteria": [
+        {
+            "name": "PVS1",
+            "description": [
+                "ACMG summary:",
+                "Null variant (nonsense, frameshift, canonical +/-1 or 2 splice sites, initiation codon, single or multi-exon deletion) in a gene where loss of function (LOF) is a known mechanism of disease.",
+                "Caveats:",
+                " - Beware of genes where LOF is not a known disease mechanism (e.g. GFAP, MYH7).",
+                " - Use caution interpreting LOF variants at the extreme 3' end of a gene.",
+                " - Use caution with splice variants that are predicted to lead to exon skipping but leave the remainder of the protein intact.",
+                " - Use caution in the presence of multiple transcripts.",
+                "",
+                "Gene-specific modifications:",
+                "Null variant (nonsense, frameshift, splice site (donor/acceptor +/-1,2), initiation codon, single or multi-exon deletion) in a gene where loss of function (LOF) is a known mechanism of disease. Apply at appropriate strength according to PVS1 flowchart, which considers knowledge of clinically important functional domains. See Specifications Table 4 and Appendix D for details.",
+                "",
+                "Well-established in vitro or in vivo functional studies supportive of a damaging effect as measured by effect on mRNA transcript profile (mRNA assay only). Apply as PVS1 (RNA) at appropriate strength. See Specifications Figure1B and Appendix E for details.",
+                "In alignment with SVI recommendations for PVS1 code application, evidence strength and description has been separated for different variant types. Apply according to PVS1 flowchart, which considers knowledge of clinically important functional domains. For predicted protein termination codon (PTC) variants, apply with exon-specific weights derived for the PM5_PTC code (See Appendix D for details).",
+                "Instructions:",
+                "See Specifications Table 4, provided as a separate searchable excel file, for a comprehensive summary of codes applicable for all variants considered against the BRCA1 and BRCA2 PVS1 decision trees (initiation, nonsense/frameshift, deletion, duplication, splice site (donor/acceptor +/- 1,2)) - organized by exon. See Appendix Figure 3,4 and Table 5 for further justification.",
+                "See Specifications Figure 1B for process to apply codes for splicing data, in content of location and predicted bioinformatic impact of the variant, and adaptive weighting according to assay methodology and proportion of functional transcript retained."
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "description": "pathogenic very strong",
+                    "is_default": "0"
+                },
+                {
+                    "name": "ps",
+                    "description": "pathogenic strong",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS1",
+            "description": ["ps1 test yoo"],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "description": "pathogenic strong",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        }
+    ]
+}

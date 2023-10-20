@@ -153,11 +153,9 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
             print("Deleted: " + str(len(heredivar_exclusive_vids)))
             print("New: " + str(len(heredicare_exclusive_vids)))
 
-            print("VID 2 in HerediVar: " + str("2" in heredicare_exclusive_vids))
-
-            intersection = []
-            heredicare_exclusive_vids = [2]
-            heredivar_exclusive_vids = []
+            #intersection = []
+            #heredicare_exclusive_vids = ['917']
+            #heredivar_exclusive_vids = [] #917, 12453169, 18794502
 
             # spawn one task for each variant import
             process_new_vids(heredicare_exclusive_vids, import_queue_id, user_id, user_roles, conn)
@@ -170,7 +168,7 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
 
 def process_deleted_vids(vids, import_queue_id, user_id, user_roles, conn: Connection):
     for vid in vids:
-        _ = start_delete_variant(vid, import_queue_id, user_id, user_roles, conn)
+        _ = start_delete_variant(vid, vids, import_queue_id, user_id, user_roles, conn)
 
 
 
@@ -205,10 +203,10 @@ def compare_v_id_lists(all_vids_heredicare, vids_heredivar, vids_oi):
 ############## DELETE THE VARIANT ##############
 ################################################
 
-def start_delete_variant(vid, import_queue_id, user_id, user_roles, conn: Connection): # starts the celery task
+def start_delete_variant(vid, vids, import_queue_id, user_id, user_roles, conn: Connection): # starts the celery task
     import_variant_queue_id = conn.insert_variant_import_request(vid, import_queue_id)
 
-    task = delete_variant_heredicare.apply_async(args=[vid, user_id, user_roles, import_variant_queue_id])
+    task = delete_variant_heredicare.apply_async(args=[vid, vids, user_id, user_roles, import_variant_queue_id])
     task_id = task.id
 
     conn.update_import_variant_queue_celery_id(import_variant_queue_id, celery_task_id = task_id)
@@ -220,12 +218,10 @@ def start_delete_variant(vid, import_queue_id, user_id, user_roles, conn: Connec
 # this will retry 3 times before giving up
 # first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
 @celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
-def delete_variant_heredicare(self, vid, user_id, user_roles, import_variant_queue_id):
+def delete_variant_heredicare(self, vid, vids, user_id, user_roles, import_variant_queue_id):
     """Background task for fetching variants from HerediCare"""
     #from frontend_celery.webapp.utils.variant_importer import fetch_heredicare
     self.update_state(state='PROGRESS')
-    
-    
     
     try:
         conn = Connection(user_roles)
@@ -235,12 +231,16 @@ def delete_variant_heredicare(self, vid, user_id, user_roles, import_variant_que
         message = "Removed heredicare vid"
         status = "update"
         variant_id = conn.get_variant_id_from_external_id(vid, 'heredicare')
-        all_vids_for_variant = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
-        conn.delete_external_id(vid, 'heredicare', variant_id = variant_id)
-        if len(all_vids_for_variant) <= 1:
-            status = "deleted"
-            message = "Variant was hidden because it does not have any vids in heredicare anymore"
-            conn.hide_variant(variant_id, False)
+        if variant_id is not None:
+            all_vids_for_variant = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
+            conn.delete_external_id(vid, 'heredicare', variant_id = variant_id)
+            if all([v in vids for v in all_vids_for_variant]):
+                status = "deleted"
+                message = "Variant was hidden because it does not have any vids in heredicare anymore"
+                conn.hide_variant(variant_id, False)
+        else:
+            status = "error"
+            message = "VID " + str(vid) + " is not known by HerediVar, but was reported to be known by HerediVar and deleted by HerediCare."
     except InternalError as e:
         # deadlock: code 1213
         status = "retry"
@@ -255,8 +255,6 @@ def delete_variant_heredicare(self, vid, user_id, user_roles, import_variant_que
         status = "error"
         message = "There was a runtime error: " + str(e) + ' ' + traceback.format_exc()
         
-    #print(status)
-
     if status != "retry":
         conn.close_import_variant_request(import_variant_queue_id, status = status, message = message)
     else:
@@ -364,8 +362,10 @@ def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection, insert
             variant_vids = conn.get_external_ids_from_variant_id(variant_id)
             if len(variant_vids) == 0:
                 conn.hide_variant(variant_id, is_hidden = False)
-                message = "Variant is already in database, but is hidden in HerediCare. It is now also hidden in HerediVar. If another VID points to this variant which is processed later this variant might get visible again."
+                status = "deleted"
+                message = "Variant is already in database, but is hidden in HerediCare. It is now also hidden in HerediVar. If another VID points to this variant which is processed later this variant will get visible again."
             else:
+                status = "deleted"
                 message = "Deleted VID because this vid is now hidden in HerediCare"
         else:
             message = "Skipped because variant is invisible in HerediCare"
@@ -393,7 +393,8 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
     was_successful = False
     if all([x is not None for x in [chrom, pos, ref, alt]]):
         was_successful, new_message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, insert_variant = insert_variant, perform_annotation=perform_annotation)
-        message = functions.collect_info(message, "hg38_msg=", new_message, sep = " ~~ ")
+        if new_message not in message:
+            message = functions.collect_info(message, "hg38_msg=", new_message, sep = " ~~ ")
 
     if not was_successful:
         # check hg19 information
@@ -405,7 +406,8 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
         was_successful = False
         if all([x is not None for x in [chrom, pos, ref, alt]]):
             was_successful, new_message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, insert_variant = insert_variant, perform_annotation=perform_annotation)
-            message = functions.collect_info(message, "hg37_msg=", new_message, sep = " ~~ ")
+            if new_message not in message:
+                message = functions.collect_info(message, "hg37_msg=", new_message, sep = " ~~ ")
     
     if not was_successful:
         # if there is still missing data check if the variant has hgvs_c information
@@ -424,10 +426,12 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
 
             if err_msg != "": # catch runtime errors of hgvs to vcf
                 new_message = "HGVS to VCF yieled an error: " + str(err_msg)
-                message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
+                if new_message not in message:
+                    message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
             elif any([x is None for x in [chrom, pos, ref, alt]]): # the conversion was not successful
                 new_message = "HGVS could not be converted to VCF: " + str(transcript) + ":" + str(hgvs_c)
-                message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
+                if new_message not in message:
+                    message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
             else:
                 was_successful = True
         
@@ -444,7 +448,8 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
                 #print(err_msg)
 
                 if 'unequal' in err_msg:
-                    message = functions.collect_info(message, "hgvs_msg=", err_msg, sep = " ~~ ")
+                    if new_message not in message:
+                        message = functions.collect_info(message, "hgvs_msg=", err_msg, sep = " ~~ ")
                 elif err_msg != '':
                     preferred_transcripts = conn.get_preferred_transcripts(gene_id, return_all = True)
                     err_msgs = err_msg.split('\n')
@@ -453,14 +458,16 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
                         for e in err_msgs:
                             if current_transcript["name"] in e:
                                 new_message = "HGVS to VCf yielded an error with transcript: " + e
-                                message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
+                                if new_message not in message:
+                                    message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
                                 break_outer = True
                                 break
                         if break_outer:
                             break
                 elif any([x is None for x in [chrom, pos, ref, alt]]): # the conversion was not successful
                     new_message = "HGVS could not be converted to VCF: " + str(hgvs_c)
-                    message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
+                    if new_message not in message:
+                        message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
                 else:
                     was_successful = True
 
@@ -469,7 +476,8 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
 
         if was_successful:
             was_successful, new_message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, insert_variant = insert_variant, perform_annotation=perform_annotation)
-            message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
+            if new_message not in message:
+                message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
 
     if variant_id is not None and external_ids is not None: # insert new vid
         for external_id in external_ids:
@@ -698,3 +706,5 @@ def notify_new_user(self, full_name, email, username, password):
         recipient = email, 
         text_body = body  
     )
+
+

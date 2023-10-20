@@ -1,0 +1,47 @@
+{
+    "classification_scheme_id": "leave blank if new or provide id if update",
+    "name": "",
+    "display_name": "",
+    "type": "",
+    "reference": "#",
+    "criteria": [
+        {
+            "name": "PSVS1",
+            "description": "THIS IS A TEST",
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "description": "pathogenic very strong",
+                    "is_default": "1"
+                },
+                {
+                    "name": "ps",
+                    "description": "pathogenic strong",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                "PS1"
+            ]
+        },
+
+        {
+            "name": "PS1",
+            "description": "ps1 test yoo",
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "description": "pathogenic strong",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        }
+    ]
+}

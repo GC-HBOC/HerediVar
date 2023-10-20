@@ -2371,3 +2371,57 @@ class Connection:
                     else:
                         return 0
                     
+
+
+
+
+    def insert_criterium_scheme(self, classification_scheme_id, name, display_name, scheme_type, reference):
+        if classification_scheme_id != "":
+            command = "UPDATE classification_scheme SET name = %s, display_name = %s, type = %s, reference = %s WHERE id = %s"
+            actual_information = (name, display_name, scheme_type, reference, classification_scheme_id)
+        else:
+            command = "INSERT INTO classification_scheme (name, display_name, type, reference) VALUES (%s,%s,%s,%s)"
+            actual_information = (name, display_name, scheme_type, reference)
+        self.cursor.execute(command, actual_information)
+        self.conn.commit()
+        if classification_scheme_id != "":
+            return classification_scheme_id
+        else:
+            return self.get_last_insert_id()
+            
+        
+    def insert_criterium(self, classification_scheme_id, name, description, is_selectable, relevant_info):
+        command = "INSERT INTO classification_criterium (classification_scheme_id, name, description, is_selectable, relevant_info) VALUES (%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE description = %s, is_selectable = %s, relevant_info=%s"
+        actual_information = (classification_scheme_id, name, description, is_selectable, relevant_info, description, is_selectable, relevant_info)
+        self.cursor.execute(command, actual_information)
+        self.conn.commit()
+        command = "SELECT id FROM classification_criterium WHERE classification_scheme_id = %s AND name = %s"
+        self.cursor.execute(command, (classification_scheme_id, name))
+        res = self.cursor.fetchone()
+        return res[0]
+
+    def delete_criterium(self, classification_scheme_id, name):
+        command = "DELETE FROM classification_criterium WHERE classification_scheme_id = %s AND name = %s"
+        self.cursor.execute(command, (classification_scheme_id, name))
+        self.conn.commit()
+        
+
+    def insert_criterium_strength(self, criterium_id, name, description, is_default):
+        command = "INSERT INTO classification_criterium_strength (classification_criterium_id, name, description, is_default) VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE description = %s, is_default=%s"
+        self.cursor.execute(command, (criterium_id, name, description, is_default, description, is_default))
+        self.conn.commit()
+    
+    def delete_criterium_strength(self, criterium_id, strength):
+        command = "DELETE FROM classification_criterium_strength WHERE classification_criterium_id = %s AND name = %s"
+        self.cursor.execute(command, (criterium_id, strength))
+        self.conn.commit()
+
+    def insert_mutually_exclusive_criterium(self, source, target):
+        command = "INSERT INTO mutually_exclusive_criteria (source, target) VALUES (%s,%s) ON DUPLICATE KEY UPDATE source = %s, target=%s"
+        self.cursor.execute(command, (source, target, source, target))
+        self.conn.commit()
+    
+    def delete_mutually_exclusive_criteria(self, source):
+        command = "DELETE FROM mutually_exclusive_criteria WHERE source = %s"
+        self.cursor.execute(command, (source, ))
+        self.conn.commit()

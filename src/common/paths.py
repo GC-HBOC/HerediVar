@@ -90,7 +90,7 @@ if webapp_env == 'dev':
     igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
 
     # clinvar submission
-    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_02_06_23.json")
+    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_18_10_23.json")
 
 
 elif webapp_env == 'localtest':
@@ -146,7 +146,7 @@ elif webapp_env == 'localtest':
     igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
 
     # clinvar submission
-    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_02_06_23.json")
+    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_18_10_23.json")
 
 elif webapp_env == 'githubtest':   
     """ configuration for the testing environment on github actions """
@@ -194,7 +194,7 @@ elif webapp_env == 'githubtest':
     igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
 
     # clinvar submission
-    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_02_06_23.json")
+    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_18_10_23.json")
 
 
 
@@ -256,4 +256,4 @@ elif webapp_env == 'prod':
     igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
 
     # clinvar submission
-    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_02_06_23.json")
+    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_18_10_23.json")
