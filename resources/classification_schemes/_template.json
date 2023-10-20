@@ -7,7 +7,10 @@
     "criteria": [
         {
             "name": "PSVS1",
-            "description": "THIS IS A TEST",
+            "description": [
+                "TEST",
+                "TEST2"
+            ],
             "is_selectable": "1",
             "relevant_info": "",
             "strengths": [
@@ -29,7 +32,9 @@
 
         {
             "name": "PS1",
-            "description": "ps1 test yoo",
+            "description": [
+                "ps1 test yoo"
+            ],
             "is_selectable": "1",
             "relevant_info": "",
             "strengths": [
