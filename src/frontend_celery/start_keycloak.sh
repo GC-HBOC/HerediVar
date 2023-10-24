@@ -59,8 +59,8 @@ keycloak_path=$tools/keycloak
 
 if [ "${WEBAPP_ENV}" == "dev" ]
 then
-    export NO_PROXY=srv018.img.med.uni-tuebingen.de
-    $keycloak_path/bin/kc.sh start-dev --hostname srv018.img.med.uni-tuebingen.de --http-port 5050 #--features=admin-fine-grained-authz # --log-level debug
+    export NO_PROXY=srv020.img.med.uni-tuebingen.de
+    $keycloak_path/bin/kc.sh start-dev --hostname srv020.img.med.uni-tuebingen.de --http-port 5050 #--features=admin-fine-grained-authz # --log-level debug
 fi
 
 if [ "${WEBAPP_ENV}" == "prod" ]

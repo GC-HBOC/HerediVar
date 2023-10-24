@@ -4,7 +4,7 @@ sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath
 from common.db_IO import Connection
 import common.functions as functions
 import json
-
+import argparse
 
 
 def insert_criterium_scheme(conn: Connection, data):
@@ -82,61 +82,9 @@ def get_criterium(all_criteria, criterium_name):
             return criterium
     return None
 
-if __name__ == "__main__":
 
-    conn = Connection(roles = ['super_user'])
-
-    data = json.loads(open("/mnt/storage2/users/ahdoebm1/HerediVar/resources/classification_schemes/ClinGen_BRCA1_v1.0.0.json").read())
-    
-    """
-    data = {
-        'classification_scheme_id': "10", # leave blank to specify new scheme or provide id to specify an update
-        'name': "testscheme",
-        'display_name': "yoyotest",
-        'type': "acmg",
-        'reference': "#",
-        'criteria': [ # compute classification_scheme_id
-            {
-                "name": "PSVS1", # has to be unique because of the mutually exclusive criteria list
-                "description": "THIS IS A TEST",
-                "is_selectable": "1",
-                "relevant_info": "",
-                "strengths": [ # compute classification_criterium_id
-                    {
-                        'name': "pvs",
-                        'description': "pathogenic very strong",
-                        'is_default': "1"
-                    },
-                    {
-                        'name': "ps",
-                        'description': "pathogenic strong",
-                        'is_default': "0"
-                    }
-                ],
-                "mutually_exclusive_criteria": [ # list of criterium names
-                    "PS1"
-                ]
-            },
-
-            {
-                "name": "PS1", # has to be unique because of the mutually exclusive criteria list
-                "description": "ps1 test yoo",
-                "is_selectable": "1",
-                "relevant_info": "",
-                "strengths": [ # compute classification_criterium_id
-                    {
-                        'name': "ps",
-                        'description': "pathogenic strong",
-                        'is_default': "1"
-                    }
-                ],
-                "mutually_exclusive_criteria": [ # list of criterium names
-                    
-                ]
-            },
-        ]
-    }
-    """
+def insert_scheme(conn, data_path):
+    data = json.loads(open(data_path).read())
 
     classification_scheme_id = insert_criterium_scheme(conn, data)
     insert_criteria(conn, data, classification_scheme_id)
@@ -145,18 +93,35 @@ if __name__ == "__main__":
 
 
 
+parser = argparse.ArgumentParser(description="")
+parser.add_argument("-p", "--paths",  nargs="+", help="one or more paths to scheme .json files to be saved to the database")
+
+
+args = parser.parse_args()
+
+conn = Connection(roles = ['super_user'])
+data_paths = args.paths
+
+print(data_paths)
+
+for data_path in data_paths:
+    if not path.exists(data_path):
+        print("SKIPPING: path does not exist: " + data_path)
+        continue
+    insert_scheme(conn, data_path)
+
+
+#/mnt/storage2/users/ahdoebm1/HerediVar/resources/classification_schemes/ClinGen_BRCA1_v1.0.0.json
+#/mnt/storage2/users/ahdoebm1/HerediVar/resources/classification_schemes/ClinGen_BRCA2_v1.0.0.json
 
 
 
-
-
-
-
-
-
-
-
-
-
+#if __name__ == "__main__":
+#
+#    conn = Connection(roles = ['super_user'])
+#
+#    data_path = "/mnt/storage2/users/ahdoebm1/HerediVar/resources/classification_schemes/ClinGen_BRCA1_v1.0.0.json"
+#
+#    insert_scheme(conn, data_path)
 
 

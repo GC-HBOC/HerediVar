@@ -724,7 +724,7 @@ function create_criteria_buttons() {
         var default_strength = current_criterium['default_strength']
 
         var criterium_type = criterium_id[0] // a task force criterium -> the type is determined by the first digit
-        if (scheme_type === 'acmg' || scheme_type === 'acmg-enigma-brca1'|| scheme_type === 'acmg-enigma-brca2') {
+        if (scheme_type.includes('acmg')) {
             criterium_type = criterium_id.replace(/\d+/g, '') // an acmg criterium. The type is determined by the first two or three letters
         }
 
@@ -769,7 +769,7 @@ function create_criteria_buttons() {
 // sort helper
 function compare_criteria() {
     return function(a, b) {
-        if (scheme_type === 'acmg' || scheme_type === 'acmg-enigma-brca1' || scheme_type === 'acmg-enigma-brca2') {
+        if (scheme_type.includes('acmg')) {
             const criterium_order = {'PVS': 1, 'PS': 2, 'PM': 3, 'PP': 4, 'BP': 5, 'BS': 6, 'BA': 7}
             const a_letters = a.slice(0, -1)
             const a_crit_num = parseInt(a.slice(-1))
