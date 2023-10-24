@@ -6,7 +6,7 @@
     "reference": "#",
     "criteria": [
         {
-            "name": "PSVS1",
+            "name": "PVS1",
             "description": [
                 "TEST",
                 "TEST2"
