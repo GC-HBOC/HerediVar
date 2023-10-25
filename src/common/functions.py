@@ -12,6 +12,7 @@ from urllib.parse import urlencode
 from dotenv import load_dotenv
 import json
 import uuid
+from functools import cmp_to_key
 
 
 def basedir():
@@ -625,3 +626,24 @@ def str2datetime(datetime_str, fmt):
         return None
     else:
         return datetime.datetime.strptime(datetime_str, fmt)
+
+
+
+def order_classes( classes):
+    keyfunc = cmp_to_key(mycmp = sort_classes)
+    classes = [str(x) for x in classes]
+    classes.sort(key = keyfunc) # sort by preferred transcript
+    return classes
+ 
+def sort_classes(a, b):
+    # sort by ensembl/refseq
+    class_sequence = ['1', '2', '3-', '3', '3+', '4', '5', 'M']
+
+    a_importance = class_sequence.index(a)
+    b_importance = class_sequence.index(b)
+
+    if a_importance > b_importance:
+        return 1
+    elif a_importance < b_importance:
+        return -1
+    return 0

@@ -619,8 +619,6 @@ class Connection:
 
     def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None):
         # get one page of variants determined by offset & pagesize
-        page_size = int(page_size)
-        offset = (page - 1) * page_size
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
         postfix = ""
@@ -727,6 +725,8 @@ class Connection:
         elif sort_by == 'recent':
             command += " ORDER BY id DESC"
         if page_size != 'unlimited':
+            page_size = int(page_size)
+            offset = (page - 1) * page_size
             command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
         #print(command % actual_information)

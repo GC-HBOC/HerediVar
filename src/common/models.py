@@ -3,6 +3,7 @@ import json
 from typing import Any
 import common.functions as functions
 from functools import cmp_to_key
+import datetime
 
 @dataclass
 class Annotation:
@@ -875,9 +876,7 @@ class Variant:
                         return 1
                     else:
                         return 0
-                    
 
-import datetime
 
 @dataclass
 class import_request:

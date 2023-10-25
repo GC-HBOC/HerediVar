@@ -29,8 +29,8 @@ def search():
     conn = get_connection()
     user_id = session['user']['user_id']
 
-    allowed_user_classes = conn.get_enumtypes('user_classification', 'classification')
-    allowed_consensus_classes = conn.get_enumtypes('consensus_classification', 'classification')
+    allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
+    allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
 
     genes = extract_genes(request)
     ranges = extract_ranges(request)
@@ -64,7 +64,7 @@ def search():
             else:
                 num_inserted = 0
                 if select_all_variants:
-                    variants_for_list, _ = conn.get_variants_page_merged(1, "unlimited", user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user_classifications, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
+                    variants_for_list, _ = conn.get_variants_page_merged(1, "unlimited", sort_by=selected_sort_by, include_hidden=include_hidden, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user_classifications, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
                     variant_ids = [variant.id for variant in variants_for_list]
                     for variant_id in variant_ids:
                         if str(variant_id) not in selected_variants:
