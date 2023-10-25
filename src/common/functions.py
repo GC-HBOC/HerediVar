@@ -647,3 +647,7 @@ def sort_classes(a, b):
     elif a_importance < b_importance:
         return -1
     return 0
+
+def reverse_seq(seq):
+    seq = seq.upper().replace('A', 't').replace('T', 'a').replace('G', 'c').replace('C', 'c')
+    return seq.upper()

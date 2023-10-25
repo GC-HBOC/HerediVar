@@ -65,12 +65,22 @@ class Heredicare:
         else:
             resp = requests.post(url, auth=auth, data=data)
             if resp.status_code != 200: # bearer is None
-                message = "ERROR: HerediCare API client credentials endpoint returned an HTTP " + str(resp.status_code) + " error: " + resp.text
+                message = "ERROR: HerediCare API client credentials endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
                 status = "error"
             else:
                 bearer = resp.json()["access_token"]
         return bearer, status, message
 
+    def extract_error_message(self, error_text):
+        result = error_text
+        cropped_text = functions.find_between(error_text, prefix="<div id=\"reasons\"", postfix="(</div>|$)")
+        if cropped_text is not None:
+            result = cropped_text
+        else:
+            cropped_text = functions.find_between(error_text, prefix="<title>", postfix="</title>")
+            if cropped_text is not None:
+                result = cropped_text
+        return result
 
 
     def update_token(self, timestamp):
@@ -111,7 +121,7 @@ class Heredicare:
             message = "ERROR: HerediCare API get vid list endpoint returned an HTTP 401, unauthorized error. Attempting retry."
             status = "retry"
         elif resp.status_code != 200: # any other kind of error
-            message = "ERROR: HerediCare API get vid list endpoint returned an HTTP " + str(resp.status_code) + " error: " + resp.text
+            message = "ERROR: HerediCare API get vid list endpoint returned an HTTP " + str(resp.status_code) + " error: " + + self.extract_error_message(resp.text)
             status = "error"
         else: # request was successful
             vids = resp.json()['items']
@@ -159,7 +169,7 @@ class Heredicare:
             message = "ERROR: HerediCare API get vid list endpoint returned an HTTP 401, unauthorized error. Attempting retry."
             status = "retry"
         elif resp.status_code != 200:
-            message = "ERROR: HerediCare API get variant details endpoint returned an HTTP " + str(resp.status_code) + " error: " + resp.text
+            message = "ERROR: HerediCare API get variant details endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
             status = "error"
         else: # success
             raw_variant = resp.json()
@@ -186,18 +196,18 @@ heredicare_interface = Heredicare()
 
 
 
-if __name__ == "__main__":
-    functions.read_dotenv()
-
-    vids, status, message = heredicare_interface.get_vid_list()
-
-    for vid_raw in vids:
-        vid = vid_raw['record_id']
-        variant, status, message = heredicare_interface.get_variant(vid)
-
-        if variant["PATH_TF"] != "-1":
-            print(variant)
-            break
+#if __name__ == "__main__":
+#    functions.read_dotenv()
+#
+#    vids, status, message = heredicare_interface.get_vid_list()
+#
+#    for vid_raw in vids:
+#        vid = vid_raw['record_id']
+#        variant, status, message = heredicare_interface.get_variant(vid)
+#
+#        if variant["PATH_TF"] != "-1":
+#            print(variant)
+#            break
 
     
 

@@ -1,6 +1,6 @@
 {
-    "classification_scheme_id": "13",
-    "name": "enigma-brca1_v4",
+    "classification_scheme_id": "",
+    "name": "enigma-brca1",
     "display_name": "ClinGen ENIGMA BRCA1 v1.0.0",
     "type": "acmg-enigma-brca1",
     "reference": "https://cspec.genome.network/cspec/ui/svi/doc/GN092",

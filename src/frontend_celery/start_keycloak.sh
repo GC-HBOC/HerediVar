@@ -59,16 +59,17 @@ keycloak_path=$tools/keycloak
 
 if [ "${WEBAPP_ENV}" == "dev" ]
 then
-    export NO_PROXY=srv020.img.med.uni-tuebingen.de
-    $keycloak_path/bin/kc.sh start-dev --hostname srv020.img.med.uni-tuebingen.de --http-port 5050 #--features=admin-fine-grained-authz # --log-level debug
+    set -o allexport
+    extension=env_
+    source $root/common/.$extension$WEBAPP_ENV
+    set +o allexport
+    export NO_PROXY=$KEYCLOAK_HOST
+    $keycloak_path/bin/kc.sh start-dev --hostname $KEYCLOAK_HOST --http-port $KEYCLOAK_PORT #--features=admin-fine-grained-authz # --log-level debug
 fi
 
 if [ "${WEBAPP_ENV}" == "prod" ]
 then
     $keycloak_path/bin/kc.sh start --proxy=edge --hostname-strict=false --log-level INFO --hostname=heredivar.uni-koeln.de
 fi
-
-
-
 
 

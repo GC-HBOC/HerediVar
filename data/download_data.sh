@@ -338,8 +338,10 @@ rm priors_hg19.vcf.gz.tbi
 cd $dbs
 mkdir -p SpliceAI
 cd SpliceAI
-wget https://download.imgag.de/ahsturm1/spliceai_scores_2022_02_09_GRCh38.vcf.gz
-tabix -p vcf spliceai_scores_2022_02_09_GRCh38.vcf.gz
+wget https://download.imgag.de/public/splicing/spliceai_scores_2023_10_24_GRCh38.vcf.gz -O spliceai_scores_2023_10_24_GRCh38.vcf.gz --no-check-certificate
+tabix -C -m 9 -p vcf spliceai_scores_2023_10_24_GRCh38.vcf.gz
+#wget https://download.imgag.de/ahsturm1/spliceai_scores_2022_02_09_GRCh38.vcf.gz
+#tabix -p vcf spliceai_scores_2022_02_09_GRCh38.vcf.gz
 '
 
 
@@ -434,6 +436,35 @@ wget https://www.omim.org/static/omim/data/mim2gene.txt
 
 # download bayesDEL
 #wget -O bayesdel.tgz https://drive.google.com/file/d/0Byvs2ppGNyXlN0xvSzA4LUgybzg/view?usp=share_link&resourcekey=0-ULPKwYu4hPGuMZ-eY1Z2Tw
+#curl -L 'https://drive.google.com/file/d/0Byvs2ppGNyXlN0xvSzA4LUgybzg/view?usp=drive_link&resourcekey=0-ULPKwYu4hPGuMZ-eY1Z2Tw&confirm=t' > bayesdel.tgz
+
+#https://drive.google.com/file/d/0Byvs2ppGNyXlN0xvSzA4LUgybzg/view?usp=drive_link&resourcekey=0-ULPKwYu4hPGuMZ-eY1Z2Tw
+
+#https://drive.google.com/uc?id=0Byvs2ppGNyXlN0xvSzA4LUgybzg&export=download
+
+cd $dbs
+mkdir -p BayesDEL
+cd BayesDEL
+
+bayesdel_file=bayesdel_240817_noaf
+curl -L 'https://drive.google.com/file/d/0Byvs2ppGNyXlN0xvSzA4LUgybzg/view?usp=drive_link&resourcekey=0-ULPKwYu4hPGuMZ-eY1Z2Tw&confirm=t' > $bayesdel_file.tgz
+
+mkdir -p $bayesdel_file && tar -xvzf $bayesdel_file.tgz -C $bayesdel_file --strip-components 1
+rm $bayesdel_file.tgz
+
+rm $bayesdel_file/*.tbi
+
+python3 $tools/db_converter_bayesdel.py -i $bayesdel_file -o $bayesdel_file.vcf
+
+#$ngsbits/VcfCheck -lines 0 -in $bayesdel_file.vcf -ref $data/genomes/GRCh37.fa
+
+$ngsbits/VcfSort -in $bayesdel_file.vcf -out $bayesdel_file.vcf
+#$ngsbits/VcfLeftNormalize -in $bayesdel_file.vcf -stream -ref $data/genomes/GRCh37.fa -out $bayesdel_file.vcf.2
+#$ngsbits/VcfStreamSort -in $bayesdel_file.vcf.2 -out $bayesdel_file.vcf
+#awk -v OFS="\t" '!/##/ {$9=$10=""}1' $bayesdel_file.vcf |sed 's/^\s\+//g' > $bayesdel_file.vcf.2 # remove SAMPLE and FORMAT columns from vcf as they are added by vcfsort
+#mv -f $bayesdel_file.vcf.2 $bayesdel_file.vcf
+#bgzip $bayesdel_file.vcf
+#$ngsbits/VcfCheck -in $bayesdel_file.vcf.gz -ref $data/genomes/GRCh37.fa
 
 
 

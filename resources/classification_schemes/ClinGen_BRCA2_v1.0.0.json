@@ -1,5 +1,5 @@
 {
-    "classification_scheme_id": "14",
+    "classification_scheme_id": "",
     "name": "enigma-brca2",
     "display_name": "ClinGen ENIGMA BRCA2 v1.0.0",
     "type": "acmg-enigma-brca2",

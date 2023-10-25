@@ -75,7 +75,8 @@ class spliceai_job(Job):
             #returncode, stderr, stdout = functions.execute_command(["ls", "-l", "/tmp"], "ls")
             #print(stdout)
             spliceai_code, spliceai_stderr, spliceai_stdout = self.annotate_spliceai_algorithm(input_vcf_path, output_vcf_path)
-            errors.append(spliceai_stderr)
+            if 'ERROR' in spliceai_stderr:
+                errors.append(spliceai_stderr)
 
         # need to insert some code here to merge the newly annotated variants and previously 
         # annotated ones from the db if there are files which contain more than one variant! 
