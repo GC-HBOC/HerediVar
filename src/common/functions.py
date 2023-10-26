@@ -653,5 +653,5 @@ def sort_classes(a, b):
     return 0
 
 def reverse_seq(seq):
-    seq = seq.upper().replace('A', 't').replace('T', 'a').replace('G', 'c').replace('C', 'c')
+    seq = seq.upper().replace('A', 't').replace('T', 'a').replace('G', 'c').replace('C', 'g')
     return seq.upper()

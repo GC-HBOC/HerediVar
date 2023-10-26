@@ -188,8 +188,8 @@ jobs:
           rm hg19ToHg38.over.chain.gz
 
       # download other dependencies
-      - name: download phylop
-        run: wget -q http://hgdownload.soe.ucsc.edu/goldenPath/hg38/phyloP100way/hg38.phyloP100way.bw
+      #- name: download phylop
+      #  run: wget -q http://hgdownload.soe.ucsc.edu/goldenPath/hg38/phyloP100way/hg38.phyloP100way.bw
 
 
       # write .env file

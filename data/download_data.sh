@@ -334,12 +334,15 @@ rm priors_hg19.vcf.gz.tbi
 
 #### SPECIAL DATA
 : '
-# download annotation file for SpliceAI
+# download annotation file for SpliceAI. Download from: https://basespace.illumina.com/s/otSPW8hnhaZR
 cd $dbs
 mkdir -p SpliceAI
 cd SpliceAI
-wget https://download.imgag.de/public/splicing/spliceai_scores_2023_10_24_GRCh38.vcf.gz -O spliceai_scores_2023_10_24_GRCh38.vcf.gz --no-check-certificate
-tabix -C -m 9 -p vcf spliceai_scores_2023_10_24_GRCh38.vcf.gz
+wget https://download.molgeniscloud.org/downloads/vip/resources/GRCh38/spliceai_scores.masked.indel.hg38.vcf.gz
+wget https://download.molgeniscloud.org/downloads/vip/resources/GRCh38/spliceai_scores.masked.snv.hg38.vcf.gz
+
+#wget https://download.imgag.de/public/splicing/spliceai_scores_2023_10_24_GRCh38.vcf.gz -O spliceai_scores_2023_10_24_GRCh38.vcf.gz --no-check-certificate
+#tabix -C -m 9 -p vcf spliceai_scores_2023_10_24_GRCh38.vcf.gz
 #wget https://download.imgag.de/ahsturm1/spliceai_scores_2022_02_09_GRCh38.vcf.gz
 #tabix -p vcf spliceai_scores_2022_02_09_GRCh38.vcf.gz
 '
@@ -461,7 +464,11 @@ grep "^#" $bayesdel_file.vcf > vcfcheck_errors.vcf
 grep -v "^ERROR:" vcfcheck_errors.txt >> vcfcheck_errors.vcf
 
 python3 $tools/fix_bayesdel.py -i vcfcheck_errors.vcf -o vcfcheck_fixed.vcf -t $dbs/ensembl/Homo_sapiens.GRCh38.110.gff3
-$ngsbits/VcfCheck -lines 0 -in vcfcheck_fixed.vcf -ref $data/genomes/GRCh37.fa
+$ngsbits/VcfCheck -lines 0 -in vcfcheck_fixed.vcf -ref $data/genomes/GRCh37.fa >> vcfcheck_fixed_errors.txt
+grep "^#" $bayesdel_file.vcf > vcfcheck_fixed_errors.vcf
+grep -v "^ERROR:" vcfcheck_fixed_errors.txt >> vcfcheck_fixed_errors.vcf
+
+$ngsbits/VcfSubstract -in vcfcheck_fixed.vcf -in2 vcfcheck_fixed_errors.vcf -out recovered_variants.vcf
 
 $ngsbits/VcfSort -in $bayesdel_file.vcf -out $bayesdel_file.vcf
 #$ngsbits/VcfLeftNormalize -in $bayesdel_file.vcf -stream -ref $data/genomes/GRCh37.fa -out $bayesdel_file.vcf.2
