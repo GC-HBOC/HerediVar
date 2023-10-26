@@ -319,6 +319,8 @@ def hgvsc_to_vcf(hgvs_strings, references = None):
     tmp_file.write("#reference	hgvs_c\n")
     if references is None:
         references = []
+        if isinstance(hgvs_strings, str):
+            hgvs_strings = [hgvs_strings]
         for hgvs in hgvs_strings:
             reference, hgvs = split_hgvs(hgvs)
             references.append(reference)
