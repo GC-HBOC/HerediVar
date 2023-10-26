@@ -182,7 +182,8 @@ def preprocess_variant(infile, do_liftover=False):
         if returncode != 0: return returncode, err_msg, command_output
     else:
         returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh38")
-        if returncode != 0: return returncode, err_msg + " " + vcf_errors_pre, command_output
+        if vcf_errors_pre != '': return 1, err_msg + " " + vcf_errors_pre, command_output
+        if returncode != 0: return returncode, err_msg, command_output
     
     returncode, err_msg, command_output = left_align_vcf(infile, outfile= infile + ".leftnormalized", ref_genome="GRCh38")
     if returncode != 0: return returncode, err_msg, command_output
@@ -193,7 +194,8 @@ def preprocess_variant(infile, do_liftover=False):
     if returncode != 0: return returncode, err_msg, command_output
     
     returncode, err_msg, vcf_errors_post = check_vcf(infile, ref_genome="GRCh38")
-    if returncode != 0: return returncode, err_msg + " " + vcf_errors_post, command_output
+    if vcf_errors_post != '': return 1, err_msg + " " + vcf_errors_post, command_output
+    if returncode != 0: return returncode, err_msg, command_output
 
     return final_returncode, err_msg, command_output
 

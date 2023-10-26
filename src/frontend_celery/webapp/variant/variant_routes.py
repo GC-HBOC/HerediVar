@@ -118,19 +118,20 @@ def create():
                     flash('ERROR: Negative genomic position given, but must be positive.', 'alert-danger')
                 else:
                     genome_build = request.form['genome']
-                    was_successful, message, variant_id = validate_and_insert_variant(chr, pos, ref, alt, genome_build, conn = get_connection(), user_id = session['user']['user_id'])
                     conn = get_connection()
+                    was_successful, message, variant_id = validate_and_insert_variant(chr, pos, ref, alt, genome_build, conn = conn, user_id = session['user']['user_id'])
                     new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
-                    if was_successful:
+                    if 'already in database' in message:
+                        flash(Markup("Variant not imported: already in database!! View it " + 
+                                     "<a href=" + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
+                                     " class=\"alert-link\">here</a>"), "alert-danger")
+                    elif was_successful:
                         flash(Markup("Successfully inserted variant: " + str(new_variant.chrom) + ' ' + str(new_variant.pos) + ' ' + new_variant.ref + ' ' + new_variant.alt + 
                                      ' (view your variant <a href="' + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
                                      '" class="alert-link">here</a>)'), "alert-success")
                         current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from vcf which resulted in this vcf-style variant: " + ' '.join([str(new_variant.chrom), str(new_variant.pos), new_variant.ref, new_variant.alt, "GRCh38"]))
                         return redirect(url_for('variant.create'))
-                    elif 'already in database' in message:
-                        flash(Markup("Variant not imported: already in database!! View it " + 
-                                     "<a href=" + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
-                                     " class=\"alert-link\">here</a>"), "alert-danger")
+
                     else:
                         flash(message, 'alert-danger')
 
@@ -144,19 +145,20 @@ def create():
                 if possible_errors != '':
                     flash(possible_errors, "alert-danger")
                 else:
-                    was_successful, message, variant_id = validate_and_insert_variant(chr, pos, ref, alt, 'GRCh38', conn = get_connection(), user_id = session['user']['user_id'])
                     conn = get_connection()
+                    was_successful, message, variant_id = validate_and_insert_variant(chr, pos, ref, alt, 'GRCh38', conn = conn, user_id = session['user']['user_id'])
                     new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
-                    if was_successful:
+                    if 'already in database' in message:
+                        flash(Markup("Variant not imported: already in database!! View it " + 
+                                     "<a href=" + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
+                                     " class=\"alert-link\">here</a>"), "alert-danger")
+                    elif was_successful:
                         flash(Markup("Successfully inserted variant: " + str(new_variant.chrom) + ' ' + str(new_variant.pos) + ' ' + new_variant.ref + ' ' + new_variant.alt + 
                                      ' (view your variant <a href="' + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
                                      '" class="alert-link">here</a>)'), "alert-success")
                         current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([str(new_variant.chrom), str(new_variant.pos), new_variant.ref, new_variant.alt, "GRCh38"]))
                         return redirect(url_for('variant.create'))
-                    elif 'already in database' in message:
-                        flash(Markup("Variant not imported: already in database!! View it " + 
-                                     "<a href=" + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
-                                     " class=\"alert-link\">here</a>"), "alert-danger")
+
                     else:
                         flash(message, 'alert-danger')
 
