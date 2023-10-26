@@ -347,11 +347,11 @@ def extract_criteria_from_request(request_obj, scheme_id, conn: Connection):
         if criterium_name not in non_criterium_form_fields and '_strength' not in criterium_name:
             evidence = request_obj[criterium_name]
             strength = request_obj[criterium_name + '_strength']
-            criterium_id = conn.get_classification_criterium_id(scheme_id, criterium_name)
+            criterium_id = conn.get_classification_criterium_id(scheme_id, criterium_name.upper())
             if criterium_id is None:
                 abort(500, "A criterium was selected that does not exist for this scheme.")
             criterium_strength_id = conn.get_classification_criterium_strength_id(criterium_id, strength)
-            criteria[criterium_id] = {'evidence':evidence, 'strength':strength, 'criterium_name': criterium_name, 'criterium_strength_id': criterium_strength_id}
+            criteria[criterium_id] = {'evidence':evidence, 'strength':strength, 'criterium_name': criterium_name.upper(), 'criterium_strength_id': criterium_strength_id}
     return criteria
 
 # criteria dict from the extract criteria request function is the input

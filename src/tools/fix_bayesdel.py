@@ -57,45 +57,36 @@ def read_transcripts(path):
     result = pd.DataFrame(transcripts, columns=['transcript', 'orientation', 'chrom', 'start', 'end'])
     return result
 
-if transcript_path != "":
-    functions.eprint("trying to fix errors...")
-    transcripts = read_transcripts(transcript_path)
-    functions.eprint(transcripts)
+transcripts = read_transcripts(transcript_path)
 
 
-bayesdel_files = [abspath(join(input_path, f)) for f in listdir(input_path) if isfile(join(input_path, f))]
+file=open(input_path, 'r')
+for line in file:
+    line = line.strip()
+    
+    if line.startswith('#') or line == '':
+        continue
+    ##CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
+    parts = line.split('\t')
+    chrom = parts[0]
+    pos = parts[1]
+    ref = parts[3]
+    alt = parts[4]
+    if transcript_path != "":
+        possible_transcripts = transcripts[(transcripts['chrom'] == chrom) & (transcripts['start'] <= int(pos)) & (transcripts['end'] >= int(pos))]
+        if len(possible_transcripts) == 1 :
+            orientation = possible_transcripts.iloc[0]['orientation']
+            if orientation == '-':
+                ref = functions.reverse_seq(ref)
+                alt = functions.reverse_seq(alt)
+                #functions.eprint("reversed: " + str(pos))
+    
+    vcf_parts = [chrom, pos, '.', ref, alt, '.', '.', str(parts[7])]
+    vcf_line = '\t'.join(vcf_parts)
+    print(vcf_line)
 
 
-for bayesdel_file in bayesdel_files:
-    functions.eprint(bayesdel_file)
-    file=gzip.open(bayesdel_file, 'rb')
-    for line in file:
-        line = line.decode('utf-8')
-        line = line.strip()
-        
-        if line.startswith('#') or line == '':
-            continue
-        ##CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
-        parts = line.split('\t')
-        chrom = parts[0]
-        pos = parts[1]
-        ref = parts[2]
-        alt = parts[3]
-        if transcript_path != "":
-            possible_transcripts = transcripts[(transcripts['chrom'] == chrom) & (transcripts['start'] <= int(pos)) & (transcripts['end'] >= int(pos))]
-            if len(possible_transcripts) == 1 :
-                orientation = possible_transcripts.iloc[0]['orientation']
-                if orientation == '-':
-                    ref = functions.reverse_seq(ref)
-                    alt = functions.reverse_seq(alt)
-                    #functions.eprint("reversed: " + str(pos))
-        
-        vcf_parts = [chrom, pos, '.', ref, alt, '.', '.', "BayesDEL_noAF=" + str(parts[4])]
-        vcf_line = '\t'.join(vcf_parts)
-        print(vcf_line)
-
-
-    file.close()
+file.close()
 
 
 

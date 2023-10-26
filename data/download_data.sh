@@ -456,7 +456,12 @@ rm $bayesdel_file/*.tbi
 
 python3 $tools/db_converter_bayesdel.py -i $bayesdel_file -o $bayesdel_file.vcf
 
-#$ngsbits/VcfCheck -lines 0 -in $bayesdel_file.vcf -ref $data/genomes/GRCh37.fa
+$ngsbits/VcfCheck -lines 0 -in $bayesdel_file.vcf -ref $data/genomes/GRCh37.fa > vcfcheck_errors.txt
+grep "^#" $bayesdel_file.vcf > vcfcheck_errors.vcf
+grep -v "^ERROR:" vcfcheck_errors.txt >> vcfcheck_errors.vcf
+
+python3 $tools/fix_bayesdel.py -i vcfcheck_errors.vcf -o vcfcheck_fixed.vcf -t $dbs/ensembl/Homo_sapiens.GRCh38.110.gff3
+$ngsbits/VcfCheck -lines 0 -in vcfcheck_fixed.vcf -ref $data/genomes/GRCh37.fa
 
 $ngsbits/VcfSort -in $bayesdel_file.vcf -out $bayesdel_file.vcf
 #$ngsbits/VcfLeftNormalize -in $bayesdel_file.vcf -stream -ref $data/genomes/GRCh37.fa -out $bayesdel_file.vcf.2

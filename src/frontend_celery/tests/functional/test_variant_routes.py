@@ -276,7 +276,8 @@ def test_classify(test_client):
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
-    #print(data)
+    #with open("/mnt/storage2/users/ahdoebm1/HerediVar/src/frontend_celery/tests/functional/test.html", 'w') as file:
+    #    file.write(data)
     assert response.status_code == 200
     assert "Successfully inserted new user classification" in data
 
@@ -298,7 +299,7 @@ def test_classify(test_client):
     )
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
-    assert "A mutually exclusive criterium to pp1 was selected." in data
+    assert "A mutually exclusive criterium to PP1 was selected." in data
 
     ##### test posting none as classification scheme #####
     response = test_client.post(
@@ -457,7 +458,7 @@ def test_create_variant(test_client):
     )
     data = html.unescape(response.data.decode('utf8'))
 
-    print(data)
+    #print(data)
 
     assert response.status_code == 200
     assert "Successfully inserted variant" in data
@@ -484,6 +485,7 @@ def test_create_variant(test_client):
         content_type='multipart/form-data'
     )
     data = html.unescape(response.data.decode('utf8'))
+    print(data)
     assert response.status_code == 200
     assert "Variant not imported: already in database!" in data
 
@@ -529,6 +531,8 @@ def test_create_variant(test_client):
 
     assert response.status_code == 200
     assert "All fields are required!" in data
+
+
 
 
 

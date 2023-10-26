@@ -1002,7 +1002,7 @@
                                         {{ external_link("VarSome", "https://varsome.com/security-validation/?next=/variant/hg38/" + variant.chrom[3:]|string + ":" + variant.pos|string + ":" + variant.ref|string + ":" + variant.alt|string) }}
                                     </li>
                                     {% if variant.annotations.rsid is not none %}
-                                    <li class="list-group-item noboarder-td">
+                                    <li class="list-group-item noboarder-td" annotation_id="{{variant.annotations.rsid.id}}">
                                         {{ external_link("dbSNP", "https://www.ncbi.nlm.nih.gov/snp/rs" + variant.annotations.rsid.value|string) }}
                                     </li>
                                     {% endif %}

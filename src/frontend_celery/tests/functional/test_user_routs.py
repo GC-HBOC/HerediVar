@@ -282,51 +282,6 @@ def test_user_lists(test_client):
     assert list_oi[4] == 1
     conn.close()
 
-def test_list_actions(test_client):
-    ##### create two new list #####
-    response = test_client.post(
-        url_for("user.my_lists", type='create'), 
-        data={
-            "list_name": "list one"
-        },
-        follow_redirects=True
-    )
-    data = html.unescape(response.data.decode('utf8'))
-
-    assert response.status_code == 200
-    assert 'Successfully created new list' in data
-
-    conn = Connection(['super_user'])
-    list_id_one = str(conn.get_latest_list_id())
-    conn.close()
-
-    response = test_client.post(
-        url_for("user.my_lists", type='create'), 
-        data={
-            "list_name": "list two"
-        },
-        follow_redirects=True
-    )
-    data = html.unescape(response.data.decode('utf8'))
-
-    assert response.status_code == 200
-    assert 'Successfully created new list' in data
-
-    conn = Connection(['super_user'])
-    list_id_two = str(conn.get_latest_list_id())
-    conn.close()
-
-    ##### add some variants to it using bulk insert #####
-    response = test_client.post(
-        url_for("varaint.search", type='create'), 
-        data={
-            "selected_list_id": list_id_one,
-            "genes": "BARD1"
-        },
-        follow_redirects=True
-    )
-    data = html.unescape(response.data.decode('utf8'))
-
 
 def test_list_actions(test_client):
     """
@@ -338,7 +293,7 @@ def test_list_actions(test_client):
     data = html.unescape(response.data.decode('utf8'))
 
     assert response.status_code == 200
-    assert data.count('name="user_list_row"') == 2
+    assert data.count('name="user_list_row"') == 3
     assert 'Please select a list to view its content!' in data
 
 
@@ -358,7 +313,7 @@ def test_list_actions(test_client):
 
     conn = Connection(['super_user'])
     user_lists = conn.get_lists_for_user(session['user']['user_id'])
-    assert len(user_lists) == 3
+    assert len(user_lists) == 4
     list_one_id = str(conn.get_latest_list_id())
     conn.close()
 
@@ -377,7 +332,7 @@ def test_list_actions(test_client):
 
     conn = Connection(['super_user'])
     user_lists = conn.get_lists_for_user(session['user']['user_id'])
-    assert len(user_lists) == 4
+    assert len(user_lists) == 5
     list_two_id = str(conn.get_latest_list_id())
     conn.close()
 

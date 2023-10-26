@@ -585,7 +585,6 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
         tmp_file.close()
 
         is_duplicate = conn.check_variant_duplicate(new_chr, new_pos, new_ref, new_alt) # check if variant is already contained
-        print(is_duplicate)
         if not is_duplicate:
             # insert it & capture the annotation_queue_id of the newly inserted variant to start the annotation service in celery
             if insert_variant:
@@ -595,7 +594,6 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
         else:
             if insert_variant:
                 variant_id = conn.get_variant_id(new_chr, new_pos, new_ref, new_alt)
-                print(variant_id)
                 message = "Variant not imported: already in database!!"
                 conn.hide_variant(variant_id, True) # unhide variant
             else:

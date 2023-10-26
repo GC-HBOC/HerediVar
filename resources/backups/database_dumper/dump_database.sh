@@ -15,11 +15,11 @@ DATE=$(date '+%F');
 path_to_structure=./structure/structure-$DATE.sql
 path_to_data=./data/data-$DATE.sql
 
-mysqldump --quick --column-statistics=0 HerediVar_ahdoebm1 -P 3306 -h SRV011.img.med.uni-tuebingen.de -u ahdoebm1 --no-tablespaces --no-data -r $path_to_structure -p
+mysqldump --quick --column-statistics=0 HerediVar_ahdoebm1 -P 3306 -h sql.img.med.uni-tuebingen.de -u ahdoebm1 --no-tablespaces --no-data -r $path_to_structure -p
 gzip $path_to_structure
 
 
-mysqldump --quick --column-statistics=0 HerediVar_ahdoebm1 -P 3306 -h SRV011.img.med.uni-tuebingen.de -u ahdoebm1 --no-tablespaces --no-create-info -r $path_to_data -p
+mysqldump --quick --column-statistics=0 HerediVar_ahdoebm1 -P 3306 -h sql.img.med.uni-tuebingen.de -u ahdoebm1 --no-tablespaces --no-create-info -r $path_to_data -p
 gzip $path_to_data
 
 
