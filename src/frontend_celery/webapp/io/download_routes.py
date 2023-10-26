@@ -282,10 +282,10 @@ def calculate_class(scheme_type, selected_classes = ''):
         possible_classes = get_possible_classes_acmg(class_counts) # get a set of possible classes depending on selected criteria following PMC4544753
         final_class = decide_for_class_acmg(possible_classes) # decide for class follwing the original publicatoin of ACMG (PMC4544753)
     
-    if scheme_type == 'task-force':
+    elif scheme_type == 'task-force':
         final_class = decide_for_class_task_force(selected_classes)
 
-    if 'acmg' in scheme_type:
+    elif 'acmg' in scheme_type:
         selected_classes = [re.sub(r'[0-9]+', '', x) for x in selected_classes] # remove numbers from critera if there are any
         class_counts = get_class_counts(selected_classes) # count how often we have each strength
 
