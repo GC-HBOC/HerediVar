@@ -1257,6 +1257,8 @@ class Connection:
         elif import_variant_list_status == "success":
             status = "finished"
             finished_at = self.get_max_finished_at_import_variant(import_queue_id)
+            if finished_at is None: # there are no variants 
+                finished_at = import_variant_list_finished_at
 
         result = models.import_request(id = import_queue_id, 
                                        user = user, 

@@ -60,6 +60,8 @@ def contact():
 
     do_redirect = False
 
+    flash("The contact form is currently under maintenance. Enquiries will not be sent", 'alert-danger')
+
     if request.method == "POST":
         first_name = request.form.get('first_name')
         last_name = request.form.get('last_name')
@@ -91,8 +93,8 @@ def contact():
                                         hgvs_p = hgvs_p,
                                         question = question,
                                         comment = comment)
-            send_mail(subject = "HerediVar: enquiry for variant " + hgvs_for_subject, sender = sender, recipient = "marvin.doebel@med.uni-tuebingen.de", text_body = text_body)
-            flash("Success! Thanks for reaching out to us! You will hear from us soon.", "alert-success")
+            #send_mail(subject = "HerediVar: enquiry for variant " + hgvs_for_subject, sender = sender, recipient = "marvin.doebel@med.uni-tuebingen.de", text_body = text_body)
+            #flash("Success! Thanks for reaching out to us! You will hear from us soon.", "alert-success")
             do_redirect = True
     
     if do_redirect:

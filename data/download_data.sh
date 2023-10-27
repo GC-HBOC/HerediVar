@@ -339,7 +339,9 @@ cd $dbs
 mkdir -p SpliceAI
 cd SpliceAI
 wget https://download.molgeniscloud.org/downloads/vip/resources/GRCh38/spliceai_scores.masked.indel.hg38.vcf.gz
+wget https://download.molgeniscloud.org/downloads/vip/resources/GRCh38/spliceai_scores.masked.indel.hg38.vcf.gz.tbi
 wget https://download.molgeniscloud.org/downloads/vip/resources/GRCh38/spliceai_scores.masked.snv.hg38.vcf.gz
+wget https://download.molgeniscloud.org/downloads/vip/resources/GRCh38/spliceai_scores.masked.snv.hg38.vcf.gz.tbi
 
 #wget https://download.imgag.de/public/splicing/spliceai_scores_2023_10_24_GRCh38.vcf.gz -O spliceai_scores_2023_10_24_GRCh38.vcf.gz --no-check-certificate
 #tabix -C -m 9 -p vcf spliceai_scores_2023_10_24_GRCh38.vcf.gz
@@ -443,7 +445,12 @@ wget https://www.omim.org/static/omim/data/mim2gene.txt
 
 #https://drive.google.com/file/d/0Byvs2ppGNyXlN0xvSzA4LUgybzg/view?usp=drive_link&resourcekey=0-ULPKwYu4hPGuMZ-eY1Z2Tw
 
-#https://drive.google.com/uc?id=0Byvs2ppGNyXlN0xvSzA4LUgybzg&export=download
+#https://drive.usercontent.google.com/download?id=0Byvs2ppGNyXlN0xvSzA4LUgybzg&export=download&resourcekey=0-ULPKwYu4hPGuMZ-eY1Z2Tw&confirm=t
+
+# wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=0Byvs2ppGNyXlN0xvSzA4LUgybzg' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=0Byvs2ppGNyXlN0xvSzA4LUgybzg" -O test.tgz && rm -rf /tmp/cookies.txt
+# wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=0Byvs2ppGNyXlN0xvSzA4LUgybzg' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=0Byvs2ppGNyXlN0xvSzA4LUgybzg" -O test.tgz && rm -rf /tmp/cookies.txt
+
+
 
 cd $dbs
 mkdir -p BayesDEL
@@ -458,24 +465,31 @@ rm $bayesdel_file.tgz
 rm $bayesdel_file/*.tbi
 
 python3 $tools/db_converter_bayesdel.py -i $bayesdel_file -o $bayesdel_file.vcf
+$ngsbits/VcfSort -in $bayesdel_file.vcf -out $bayesdel_file.vcf
 
 $ngsbits/VcfCheck -lines 0 -in $bayesdel_file.vcf -ref $data/genomes/GRCh37.fa > vcfcheck_errors.txt
 grep "^#" $bayesdel_file.vcf > vcfcheck_errors.vcf
 grep -v "^ERROR:" vcfcheck_errors.txt >> vcfcheck_errors.vcf
 
-python3 $tools/fix_bayesdel.py -i vcfcheck_errors.vcf -o vcfcheck_fixed.vcf -t $dbs/ensembl/Homo_sapiens.GRCh38.110.gff3
-$ngsbits/VcfCheck -lines 0 -in vcfcheck_fixed.vcf -ref $data/genomes/GRCh37.fa >> vcfcheck_fixed_errors.txt
-grep "^#" $bayesdel_file.vcf > vcfcheck_fixed_errors.vcf
-grep -v "^ERROR:" vcfcheck_fixed_errors.txt >> vcfcheck_fixed_errors.vcf
+$ngsbits/VcfSubstract -in $bayesdel_file.vcf -in2 vcfcheck_errors.vcf -out $bayesdel_file.2.vcf
+rm $bayesdel_file.vcf
+mv $bayesdel_file.2.vcf $bayesdel_file.vcf
 
-$ngsbits/VcfSubstract -in vcfcheck_fixed.vcf -in2 vcfcheck_fixed_errors.vcf -out recovered_variants.vcf
+#python3 $tools/fix_bayesdel.py -i vcfcheck_errors.vcf -o vcfcheck_fixed.vcf -t $dbs/ensembl/Homo_sapiens.GRCh38.110.gff3
+#$ngsbits/VcfCheck -lines 0 -in vcfcheck_fixed.vcf -ref $data/genomes/GRCh37.fa >> vcfcheck_fixed_errors.txt
+#grep "^#" $bayesdel_file.vcf > vcfcheck_fixed_errors.vcf
+#grep -v "^ERROR:" vcfcheck_fixed_errors.txt >> vcfcheck_fixed_errors.vcf
+#
+#$ngsbits/VcfSubstract -in vcfcheck_fixed.vcf -in2 vcfcheck_fixed_errors.vcf -out recovered_variants.vcf
 
-$ngsbits/VcfSort -in $bayesdel_file.vcf -out $bayesdel_file.vcf
-#$ngsbits/VcfLeftNormalize -in $bayesdel_file.vcf -stream -ref $data/genomes/GRCh37.fa -out $bayesdel_file.vcf.2
-#$ngsbits/VcfStreamSort -in $bayesdel_file.vcf.2 -out $bayesdel_file.vcf
-#awk -v OFS="\t" '!/##/ {$9=$10=""}1' $bayesdel_file.vcf |sed 's/^\s\+//g' > $bayesdel_file.vcf.2 # remove SAMPLE and FORMAT columns from vcf as they are added by vcfsort
-#mv -f $bayesdel_file.vcf.2 $bayesdel_file.vcf
-#bgzip $bayesdel_file.vcf
+
+
+
+$ngsbits/VcfLeftNormalize -in $bayesdel_file.vcf -stream -ref $data/genomes/GRCh37.fa -out $bayesdel_file.vcf.2
+$ngsbits/VcfStreamSort -in $bayesdel_file.vcf.2 -out $bayesdel_file.vcf
+awk -v OFS="\t" '!/##/ {$9=$10=""}1' $bayesdel_file.vcf |sed 's/^\s\+//g' > $bayesdel_file.vcf.2 # remove SAMPLE and FORMAT columns from vcf as they are added by vcfsort
+mv -f $bayesdel_file.vcf.2 $bayesdel_file.vcf
+bgzip $bayesdel_file.vcf
 #$ngsbits/VcfCheck -in $bayesdel_file.vcf.gz -ref $data/genomes/GRCh37.fa
 
 

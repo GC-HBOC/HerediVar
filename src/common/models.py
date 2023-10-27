@@ -812,7 +812,7 @@ class Variant:
                     if current_gene.id not in gene_ids and current_gene.id is not None:
                         result.append(current_gene)
                         gene_ids.append(current_gene.id)
-        if how == "string":
+        if how == "string" and result is not None:
             result = '~3B'.join([g.symbol for g in result])
         return result
 
