@@ -23,8 +23,8 @@
 
 
 
-ALTER TABLE `HerediVar`.`variant` 
-ADD COLUMN `is_hidden` TINYINT(1) NOT NULL DEFAULT 0 AFTER `orig_alt`;
+-- ALTER TABLE `HerediVar`.`variant` 
+-- ADD COLUMN `is_hidden` TINYINT(1) NOT NULL DEFAULT 0 AFTER `orig_alt`;
 
 
 
@@ -33,26 +33,26 @@ ADD COLUMN `is_hidden` TINYINT(1) NOT NULL DEFAULT 0 AFTER `orig_alt`;
 
 
 
-CREATE TABLE `HerediVar`.`variant_heredicare_annotation` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `variant_id` INT UNSIGNED NOT NULL,
-  `vid` VARCHAR(45) NOT NULL,
-  `n_fam` INT NOT NULL DEFAULT 0 COMMENT 'consensus class: 1:pathogen, 2: vus, 3: polymorphismus/neutral, 11: class1, 12: class2, 32: class3-, 13: class3, 34: class3+, 14: class4, 15: class5, 20: artefakt, 21: nicht klassifiziert, 4: unbekannt',
-  `n_pat` INT NOT NULL DEFAULT 0,
-  `consensus_class` ENUM('1', '2', '3', '11', '12', '32', '13', '34', '14', '15', '20', '21', '4') NOT NULL,
-  `comment` TEXT NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `id_UNIQUE` (`id` ASC));
+-- CREATE TABLE `HerediVar`.`variant_heredicare_annotation` (
+--   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+--   `variant_id` INT UNSIGNED NOT NULL,
+--   `vid` VARCHAR(45) NOT NULL,
+--   `n_fam` INT NOT NULL DEFAULT 0 COMMENT 'consensus class: 1:pathogen, 2: vus, 3: polymorphismus/neutral, 11: class1, 12: class2, 32: class3-, 13: class3, 34: class3+, 14: class4, 15: class5, 20: artefakt, 21: nicht klassifiziert, 4: unbekannt',
+--   `n_pat` INT NOT NULL DEFAULT 0,
+--   `consensus_class` ENUM('1', '2', '3', '11', '12', '32', '13', '34', '14', '15', '20', '21', '4') NOT NULL,
+--   `comment` TEXT NOT NULL,
+--   PRIMARY KEY (`id`),
+--   UNIQUE INDEX `id_UNIQUE` (`id` ASC));
+-- 
+-- ALTER TABLE `HerediVar`.`variant_heredicare_annotation` 
+-- ADD COLUMN `date` DATE NULL AFTER `comment`;
 
-ALTER TABLE `HerediVar`.`variant_heredicare_annotation` 
-ADD COLUMN `date` DATE NULL AFTER `comment`;
 
-
-GRANT INSERT, DELETE ON HerediVar.variant_heredicare_annotation TO 'annotation';
-GRANT SELECT ON HerediVar.variant_heredicare_annotation TO 'annotation';
-GRANT SELECT ON HerediVar.variant_heredicare_annotation TO 'superuser';
-GRANT SELECT ON HerediVar.variant_heredicare_annotation TO 'read_only';
-GRANT SELECT ON HerediVar.variant_ids TO 'annotation';
+GRANT INSERT, DELETE ON HerediVar.variant_heredicare_annotation TO 'HerediVar_annotation';
+GRANT SELECT ON HerediVar.variant_heredicare_annotation TO 'HerediVar_annotation';
+GRANT SELECT ON HerediVar.variant_heredicare_annotation TO 'HerediVar_superuser';
+GRANT SELECT ON HerediVar.variant_heredicare_annotation TO 'HerediVar_read_only';
+GRANT SELECT ON HerediVar.variant_ids TO 'HerediVar_annotation';
 
 
 
@@ -65,7 +65,7 @@ CHANGE COLUMN `status` `status` ENUM('pending', 'progress', 'success', 'error', 
 
 
 
-GRANT DELETE ON HerediVar.variant_ids TO 'superuser';
+GRANT DELETE ON HerediVar.variant_ids TO 'HerediVar_superuser';
 
 
 ALTER TABLE `HerediVar`.`variant_consequence` 
@@ -81,10 +81,10 @@ ALTER TABLE `HerediVar`.`user_classification`
 CHANGE COLUMN `classification` `classification` ENUM('1', '2', '3', '4', '5', '3-', '3+', 'M') NOT NULL ;
 
 
-GRANT INSERT,UPDATE ON HerediVar.classification_scheme TO 'superuser';
-GRANT INSERT,UPDATE,DELETE ON HerediVar.classification_criterium TO 'superuser';
-GRANT INSERT,UPDATE,DELETE ON HerediVar.classification_criterium_strength TO 'superuser';
-GRANT INSERT,UPDATE,DELETE ON HerediVar.mutually_exclusive_criteria TO 'superuser';
+GRANT INSERT,UPDATE ON HerediVar.classification_scheme TO 'HerediVar_superuser';
+GRANT INSERT,UPDATE,DELETE ON HerediVar.classification_criterium TO 'HerediVar_superuser';
+GRANT INSERT,UPDATE,DELETE ON HerediVar.classification_criterium_strength TO 'HerediVar_superuser';
+GRANT INSERT,UPDATE,DELETE ON HerediVar.mutually_exclusive_criteria TO 'HerediVar_superuser';
 
 
 ALTER TABLE `HerediVar`.`classification_criterium_strength` 
