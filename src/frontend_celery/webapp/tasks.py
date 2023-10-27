@@ -528,6 +528,9 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
         message = message + "\"" + str(alt) + "\""
     elif not pos_is_valid:
         message = "Position is invalid: " + str(pos)
+    if ref == alt:
+        message = "Equal reference and alternative base are not allowed."
+        alt_is_valid = False
     if not chrom_is_valid or not ref_is_valid or not alt_is_valid or not pos_is_valid:
         was_successful = False
         return was_successful, message, variant_id
