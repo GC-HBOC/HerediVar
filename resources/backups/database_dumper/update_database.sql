@@ -91,15 +91,15 @@
 -- CHANGE COLUMN `name` `name` VARCHAR(32) NOT NULL;
 -- ALTER TABLE `HerediVar`.`classification_criterium_strength` 
 -- ADD UNIQUE INDEX `UNIQUE_strength_key` (`classification_criterium_id` ASC, `name` ASC);
-ALTER TABLE `HerediVar`.`mutually_exclusive_criteria` 
-ADD UNIQUE INDEX `UNIQUE_mutually_exclusive` (`source` ASC, `target` ASC);
+-- ALTER TABLE `HerediVar`.`mutually_exclusive_criteria` 
+-- ADD UNIQUE INDEX `UNIQUE_mutually_exclusive` (`source` ASC, `target` ASC);
 
 
-ALTER TABLE `HerediVar`.`classification_criterium` 
-DROP INDEX `UNIQUE_scheme_id_name` ;
+-- ALTER TABLE `HerediVar`.`classification_criterium` 
+-- DROP INDEX `UNIQUE_scheme_id_name` ;
 
-ALTER TABLE `HerediVar`.`classification_criterium` 
-ADD UNIQUE INDEX `UNIQUE_classification_criterium` (`classification_scheme_id` ASC, `name` ASC);
+-- ALTER TABLE `HerediVar`.`classification_criterium` 
+-- ADD UNIQUE INDEX `UNIQUE_classification_criterium` (`classification_scheme_id` ASC, `name` ASC);
 
 
 ALTER TABLE `HerediVar`.`classification_criterium_strength` 
