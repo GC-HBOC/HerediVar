@@ -1,23 +1,30 @@
-ALTER TABLE `HerediVar`.`classification_criterium` 
-CHANGE COLUMN `relevant_info` `relevant_info` TEXT NOT NULL DEFAULT '' ;
+-- ALTER TABLE `HerediVar`.`classification_criterium` 
+-- CHANGE COLUMN `relevant_info` `relevant_info` TEXT NOT NULL DEFAULT '' ;
 
 
 
 
+DROP TABLE IF EXISTS `import_variant_queue`;
+CREATE TABLE `import_variant_queue` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `import_queue_id` int(10) unsigned DEFAULT NULL,
+  `status` enum('pending','success','error','progress','deleted','update','retry') NOT NULL DEFAULT 'pending',
+  `requested_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `finished_at` datetime DEFAULT NULL,
+  `message` text DEFAULT '',
+  `celery_task_id` varchar(45) DEFAULT NULL,
+  `vid` text NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`),
+  KEY `fk_import_variant_queue_import_queue_idx` (`import_queue_id`),
+  CONSTRAINT `fk_import_variant_queue_import_queue` FOREIGN KEY (`import_queue_id`) REFERENCES `import_queue` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=42036 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 
-ALTER TABLE `HerediVar`.`import_variant_queue` 
-ADD INDEX `fk_import_variant_queue_import_queue_idx` (`import_queue_id` ASC);
-;
-ALTER TABLE `HerediVar`.`import_variant_queue` 
-ADD CONSTRAINT `fk_import_variant_queue_import_queue`
-  FOREIGN KEY (`import_queue_id`)
-  REFERENCES `HerediVar`.`import_queue` (`id`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION;
 
 
-
+ALTER TABLE `HerediVar`.`variant` 
+ADD COLUMN `is_hidden` TINYINT(1) NOT NULL DEFAULT 0 AFTER `is_hidden`;
 
 
 
@@ -65,17 +72,6 @@ ALTER TABLE `HerediVar`.`variant_consequence`
 CHANGE COLUMN `exon_nr` `exon_nr` VARCHAR(45) NULL DEFAULT NULL ,
 CHANGE COLUMN `intron_nr` `intron_nr` VARCHAR(45) NULL DEFAULT NULL ;
 
-
-ALTER TABLE `HerediVar`.`import_variant_queue` 
-DROP FOREIGN KEY `fk_import_variant_queue_import_queue`;
-ALTER TABLE `HerediVar`.`import_variant_queue` 
-CHANGE COLUMN `import_queue_id` `import_queue_id` INT(10) UNSIGNED NULL DEFAULT NULL ;
-ALTER TABLE `HerediVar`.`import_variant_queue` 
-ADD CONSTRAINT `fk_import_variant_queue_import_queue`
-  FOREIGN KEY (`import_queue_id`)
-  REFERENCES `HerediVar`.`import_queue` (`id`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION;
 
 
 ALTER TABLE `HerediVar`.`consensus_classification` 
