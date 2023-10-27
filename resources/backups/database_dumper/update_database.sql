@@ -48,47 +48,48 @@
 -- ADD COLUMN `date` DATE NULL AFTER `comment`;
 
 
-GRANT INSERT, DELETE ON HerediVar.variant_heredicare_annotation TO 'HerediVar_annotation';
-GRANT SELECT ON HerediVar.variant_heredicare_annotation TO 'HerediVar_annotation';
-GRANT SELECT ON HerediVar.variant_heredicare_annotation TO 'HerediVar_superuser';
-GRANT SELECT ON HerediVar.variant_heredicare_annotation TO 'HerediVar_read_only';
-GRANT SELECT ON HerediVar.variant_ids TO 'HerediVar_annotation';
-
-
-
-
-DELETE FROM `HerediVar`.`annotation_type` WHERE (`id` = '34');
-DELETE FROM `HerediVar`.`annotation_type` WHERE (`id` = '35');
-
-ALTER TABLE `HerediVar`.`import_queue` 
-CHANGE COLUMN `status` `status` ENUM('pending', 'progress', 'success', 'error', 'retry') NOT NULL DEFAULT 'pending' ;
-
-
-
-GRANT DELETE ON HerediVar.variant_ids TO 'HerediVar_superuser';
-
-
-ALTER TABLE `HerediVar`.`variant_consequence` 
-CHANGE COLUMN `exon_nr` `exon_nr` VARCHAR(45) NULL DEFAULT NULL ,
-CHANGE COLUMN `intron_nr` `intron_nr` VARCHAR(45) NULL DEFAULT NULL ;
-
-
-
-ALTER TABLE `HerediVar`.`consensus_classification` 
-CHANGE COLUMN `classification` `classification` ENUM('1', '2', '3', '4', '5', '3+', '3-', 'M') NOT NULL ;
-
-ALTER TABLE `HerediVar`.`user_classification` 
-CHANGE COLUMN `classification` `classification` ENUM('1', '2', '3', '4', '5', '3-', '3+', 'M') NOT NULL ;
-
-
-GRANT INSERT,UPDATE ON HerediVar.classification_scheme TO 'HerediVar_superuser';
-GRANT INSERT,UPDATE,DELETE ON HerediVar.classification_criterium TO 'HerediVar_superuser';
-GRANT INSERT,UPDATE,DELETE ON HerediVar.classification_criterium_strength TO 'HerediVar_superuser';
-GRANT INSERT,UPDATE,DELETE ON HerediVar.mutually_exclusive_criteria TO 'HerediVar_superuser';
+-- GRANT INSERT, DELETE ON HerediVar.variant_heredicare_annotation TO 'HerediVar_annotation';
+-- GRANT SELECT ON HerediVar.variant_heredicare_annotation TO 'HerediVar_annotation';
+-- GRANT SELECT ON HerediVar.variant_heredicare_annotation TO 'HerediVar_superuser';
+-- GRANT SELECT ON HerediVar.variant_heredicare_annotation TO 'HerediVar_read_only';
+-- GRANT SELECT ON HerediVar.variant_ids TO 'HerediVar_annotation';
+-- 
+-- 
+-- 
+-- 
+-- DELETE FROM `HerediVar`.`annotation_type` WHERE (`id` = '34');
+-- DELETE FROM `HerediVar`.`annotation_type` WHERE (`id` = '35');
+-- 
+-- ALTER TABLE `HerediVar`.`import_queue` 
+-- CHANGE COLUMN `status` `status` ENUM('pending', 'progress', 'success', 'error', 'retry') NOT NULL DEFAULT 'pending' ;
+-- 
+-- 
+-- 
+-- GRANT DELETE ON HerediVar.variant_ids TO 'HerediVar_superuser';
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`variant_consequence` 
+-- CHANGE COLUMN `exon_nr` `exon_nr` VARCHAR(45) NULL DEFAULT NULL ,
+-- CHANGE COLUMN `intron_nr` `intron_nr` VARCHAR(45) NULL DEFAULT NULL ;
+-- 
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`consensus_classification` 
+-- CHANGE COLUMN `classification` `classification` ENUM('1', '2', '3', '4', '5', '3+', '3-', 'M') NOT NULL ;
+-- 
+-- ALTER TABLE `HerediVar`.`user_classification` 
+-- CHANGE COLUMN `classification` `classification` ENUM('1', '2', '3', '4', '5', '3-', '3+', 'M') NOT NULL ;
+-- 
+-- 
+-- GRANT INSERT,UPDATE ON HerediVar.classification_scheme TO 'HerediVar_superuser';
+-- GRANT INSERT,UPDATE,DELETE ON HerediVar.classification_criterium TO 'HerediVar_superuser';
+-- GRANT INSERT,UPDATE,DELETE ON HerediVar.classification_criterium_strength TO 'HerediVar_superuser';
+-- GRANT INSERT,UPDATE,DELETE ON HerediVar.mutually_exclusive_criteria TO 'HerediVar_superuser';
 
 
 ALTER TABLE `HerediVar`.`classification_criterium_strength` 
-CHANGE COLUMN `name` `name` VARCHAR(32) NOT NULL ,
+CHANGE COLUMN `name` `name` VARCHAR(32) NOT NULL;
+ALTER TABLE `HerediVar`.`classification_criterium_strength` 
 ADD UNIQUE INDEX `UNIQUE_strength_key` (`classification_criterium_id` ASC, `name` ASC);
 ALTER TABLE `HerediVar`.`mutually_exclusive_criteria` 
 ADD UNIQUE INDEX `UNIQUE_mutually_exclusive` (`source` ASC, `target` ASC);
