@@ -1,24 +1,41 @@
+DROP TABLE IF EXISTS `HerediVar`.`import_variant_queue`;
+
+DROP TABLE IF EXISTS `HerediVar`.`import_queue`;
+CREATE TABLE `import_queue` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `requested_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `status` enum('pending','progress','success','error','retry') NOT NULL DEFAULT 'pending',
+  `finished_at` datetime DEFAULT NULL,
+  `message` text DEFAULT '',
+  `celery_task_id` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_import_queue_user_id_idx` (`user_id`),
+  CONSTRAINT `FK_import_queue_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=281 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+
+
+
+DROP TABLE IF EXISTS `HerediVar`.`import_variant_queue`;
+CREATE TABLE `HerediVar`.`import_variant_queue` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `import_queue_id` int(10) unsigned DEFAULT NULL,
+  `status` enum('pending','success','error','progress','deleted','update','retry') NOT NULL DEFAULT 'pending',
+  `requested_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `finished_at` datetime DEFAULT NULL,
+  `message` text DEFAULT '',
+  `celery_task_id` varchar(45) DEFAULT NULL,
+  `vid` text NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`),
+  KEY `fk_import_variant_queue_import_queue_idx` (`import_queue_id`),
+  CONSTRAINT `fk_import_variant_queue_import_queue` FOREIGN KEY (`import_queue_id`) REFERENCES `import_queue` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=42036 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+-- 
 -- ALTER TABLE `HerediVar`.`classification_criterium` 
 -- CHANGE COLUMN `relevant_info` `relevant_info` TEXT NOT NULL DEFAULT '' ;
 -- 
--- 
--- 
--- 
--- DROP TABLE IF EXISTS `HerediVar`.`import_variant_queue`;
--- CREATE TABLE `HerediVar`.`import_variant_queue` (
---   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
---   `import_queue_id` int(10) unsigned DEFAULT NULL,
---   `status` enum('pending','success','error','progress','deleted','update','retry') NOT NULL DEFAULT 'pending',
---   `requested_at` datetime NOT NULL DEFAULT current_timestamp(),
---   `finished_at` datetime DEFAULT NULL,
---   `message` text DEFAULT '',
---   `celery_task_id` varchar(45) DEFAULT NULL,
---   `vid` text NOT NULL,
---   PRIMARY KEY (`id`),
---   UNIQUE KEY `id_UNIQUE` (`id`),
---   KEY `fk_import_variant_queue_import_queue_idx` (`import_queue_id`),
---   CONSTRAINT `fk_import_variant_queue_import_queue` FOREIGN KEY (`import_queue_id`) REFERENCES `import_queue` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
--- ) ENGINE=InnoDB AUTO_INCREMENT=42036 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 -- 
 -- 
 -- 
@@ -132,16 +149,4 @@
 
 
 
-DROP TABLE IF EXISTS `HerediVar`.`import_queue`;
-CREATE TABLE `import_queue` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int(10) unsigned NOT NULL,
-  `requested_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `status` enum('pending','progress','success','error','retry') NOT NULL DEFAULT 'pending',
-  `finished_at` datetime DEFAULT NULL,
-  `message` text DEFAULT '',
-  `celery_task_id` text DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `FK_import_queue_user_id_idx` (`user_id`),
-  CONSTRAINT `FK_import_queue_user_id` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
-) ENGINE=InnoDB AUTO_INCREMENT=281 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
