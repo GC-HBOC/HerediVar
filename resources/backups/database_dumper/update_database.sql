@@ -4,8 +4,8 @@
 
 
 
-DROP TABLE IF EXISTS `import_variant_queue`;
-CREATE TABLE `import_variant_queue` (
+DROP TABLE IF EXISTS `HerediVar`.`import_variant_queue`;
+CREATE TABLE `HerediVar`.`import_variant_queue` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `import_queue_id` int(10) unsigned DEFAULT NULL,
   `status` enum('pending','success','error','progress','deleted','update','retry') NOT NULL DEFAULT 'pending',
