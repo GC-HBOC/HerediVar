@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS `HerediVar`.`import_variant_queue`;
 
 DROP TABLE IF EXISTS `HerediVar`.`import_queue`;
-CREATE TABLE `import_queue` (
+CREATE TABLE `HerediVar`.`import_queue` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(10) unsigned NOT NULL,
   `requested_at` datetime NOT NULL DEFAULT current_timestamp(),
