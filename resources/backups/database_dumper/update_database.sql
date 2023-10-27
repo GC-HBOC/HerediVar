@@ -87,10 +87,10 @@
 -- GRANT INSERT,UPDATE,DELETE ON HerediVar.mutually_exclusive_criteria TO 'HerediVar_superuser';
 
 
-ALTER TABLE `HerediVar`.`classification_criterium_strength` 
-CHANGE COLUMN `name` `name` VARCHAR(32) NOT NULL;
-ALTER TABLE `HerediVar`.`classification_criterium_strength` 
-ADD UNIQUE INDEX `UNIQUE_strength_key` (`classification_criterium_id` ASC, `name` ASC);
+-- ALTER TABLE `HerediVar`.`classification_criterium_strength` 
+-- CHANGE COLUMN `name` `name` VARCHAR(32) NOT NULL;
+-- ALTER TABLE `HerediVar`.`classification_criterium_strength` 
+-- ADD UNIQUE INDEX `UNIQUE_strength_key` (`classification_criterium_id` ASC, `name` ASC);
 ALTER TABLE `HerediVar`.`mutually_exclusive_criteria` 
 ADD UNIQUE INDEX `UNIQUE_mutually_exclusive` (`source` ASC, `target` ASC);
 
