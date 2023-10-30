@@ -15,7 +15,7 @@ helpFunction()
    exit 1 # Exit script after printing help
 }
 
-while getopts "w:" opt
+while getopts "w:h:" opt
 do
    case "$opt" in
       w ) we="$OPTARG" ;;
@@ -32,11 +32,15 @@ then
 fi
 
 # set home for production environment. In systemd $HOME is not available but required for VEP
-if [ -n "$localhome"]
-then
-   echo set home to $localhome
-   export HOME=$localhome
+if [ -n "$localhome" ]; then
+  echo set home to $localhome;
+  export HOME=$localhome
+else
+  echo "Home was not supplied. Keeping default."
 fi
+
+
+echo HOME: $HOME
 
 echo "preparing celery startup"
 
