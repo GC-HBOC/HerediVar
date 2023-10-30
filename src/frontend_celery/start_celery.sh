@@ -31,6 +31,8 @@ then
    helpFunction
 fi
 
+echo "preparing celery startup"
+
 # set home for production environment. In systemd $HOME is not available but required for VEP
 if [ -n "$localhome" ]; then
   echo set home to $localhome;
@@ -41,9 +43,6 @@ fi
 
 
 echo HOME: $HOME
-
-echo "preparing celery startup"
-
 
 
 SCRIPT=$(readlink -f "$0")

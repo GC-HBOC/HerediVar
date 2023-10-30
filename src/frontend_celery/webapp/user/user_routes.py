@@ -10,7 +10,7 @@ from datetime import datetime
 from ..utils import *
 from flask_paginate import Pagination
 import annotation_service.main as annotation_service
-from ..tasks import start_annotation_service, start_variant_import, start_import_one_variant
+from ..tasks import start_annotation_service, start_variant_import, start_import_one_variant, annotate_all_variants
 
 
 user_blueprint = Blueprint(
@@ -334,10 +334,11 @@ def admin_dashboard():
         elif request_type == 'reannotate':
             selected_jobs = request.form.getlist('job')
             selected_job_config = annotation_service.get_job_config(selected_jobs)
-            variant_ids = conn.get_all_valid_variant_ids()
-            for variant_id in variant_ids:
-                start_annotation_service(variant_id = variant_id, user_id = session['user']['user_id'], job_config = selected_job_config, conn = conn) # inserts a new annotation queue entry before submitting the task to celery
-                #conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
+            annotate_all_variants.apply_async(args=[selected_job_config, session['user']['user_id'], session['user']['roles']])
+            #variant_ids = conn.get_all_valid_variant_ids()
+            #for variant_id in variant_ids:
+            #    start_annotation_service(variant_id = variant_id, user_id = session['user']['user_id'], job_config = selected_job_config, conn = conn) # inserts a new annotation queue entry before submitting the task to celery
+            #    #conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
             current_app.logger.info(session['user']['preferred_username'] + " issued a reannotation of all variants") 
             flash('Variant reannotation requested. It will be computed in the background.', 'alert-success')
             do_redirect = True

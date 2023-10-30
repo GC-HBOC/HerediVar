@@ -77,7 +77,7 @@ class spliceai_job(Job):
             spliceai_code, spliceai_stderr, spliceai_stdout = self.annotate_spliceai_algorithm(input_vcf_path, output_vcf_path)
             if 'SpliceAI runtime ERROR:' in spliceai_stderr:
                 errors.append(spliceai_stderr)
-            if 'Skipping record' in spliceai_stderr:
+            elif 'Skipping record' in spliceai_stderr:
                 errors.append("SpliceAI WARNING skipping: " + functions.find_between(spliceai_stderr, 'WARNING:', ': chr'))
 
         # need to insert some code here to merge the newly annotated variants and previously 

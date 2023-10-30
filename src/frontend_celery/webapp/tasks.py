@@ -618,6 +618,21 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
 ############## START THE ANNOTATION SERVICE ##############
 ##########################################################
 
+# this uses exponential backoff in case there is a http error
+# this will retry 3 times before giving up
+# first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
+@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
+def annotate_all_variants(self, selected_job_config, user_id, roles):
+    """Background task for running the annotation service"""
+    conn = Connection(roles)
+    variant_ids = conn.get_all_valid_variant_ids()
+    for variant_id in variant_ids[0:10]:
+        _ = start_annotation_service(variant_id = variant_id, user_id = user_id, job_config = selected_job_config, conn = conn) # inserts a new annotation queue entry before submitting the task to celery
+        #conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
+    conn.close()
+    self.update_state(state="SUCCESS", meta={})
+
+
 def start_annotation_service(conn: Connection, user_id, variant_id = None, annotation_queue_id = None, job_config = get_default_job_config()): # start the celery task
     if variant_id is not None:
         annotation_queue_id = conn.insert_annotation_request(variant_id, user_id) # only inserts a new row if there is none with this variant_id & pending
