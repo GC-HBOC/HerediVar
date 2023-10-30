@@ -34,6 +34,7 @@ fi
 # set home for production environment. In systemd $HOME is not available but required for VEP
 if [ -n "$localhome"]
 then
+   echo set home to $localhome
    export HOME=$localhome
 fi
 
