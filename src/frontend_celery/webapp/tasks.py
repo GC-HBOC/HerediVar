@@ -448,7 +448,7 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
                 #print(err_msg)
 
                 if 'unequal' in err_msg:
-                    if new_message not in message:
+                    if err_msg not in message:
                         message = functions.collect_info(message, "hgvs_msg=", err_msg, sep = " ~~ ")
                 elif err_msg != '':
                     preferred_transcripts = conn.get_preferred_transcripts(gene_id, return_all = True)

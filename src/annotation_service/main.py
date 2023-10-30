@@ -10,6 +10,7 @@ from os.path import exists
 from .annotation_jobs import *
 from .annotation_jobs import litvar2_job
 import random
+from mysql.connector import Error, InternalError
 
 import os
 
@@ -217,6 +218,16 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         conn.close()
         #raise e #HTTPError(url = e.url, code = e.code, msg = "A HTTP error occured", hdrs = e.hdrs, fp = e.fp)
         return status, runtime_error
+    except InternalError as e:
+        # deadlock: code 1213
+        status = "retry"
+        conn.update_annotation_queue(row_id=annotation_queue_id, status=status, error_msg=str(e))
+        message = "Attempting retry because of database error: " + str(e)  + ' ' + traceback.format_exc()
+
+        if exists(vcf_path): 
+            os.remove(vcf_path)
+        conn.close()
+        return status, message
     except Exception as e:
         print("An exception occured: " + str(e))
         print(traceback.format_exc())

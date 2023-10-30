@@ -8,9 +8,10 @@ set -o pipefail
 helpFunction()
 {
    echo ""
-   echo "Usage: $0 -w env"
+   echo "Usage: $0 -w env -h path"
    echo "This script starts the heredivar frontend gunicorn or development server"
    echo -e "\t-w Provide 'dev' for development server and 'prod' for production gunicorn server."
+   echo -e "\t-h The path to the users home directory."
    exit 1 # Exit script after printing help
 }
 
@@ -18,6 +19,7 @@ while getopts "w:" opt
 do
    case "$opt" in
       w ) we="$OPTARG" ;;
+      h ) localhome="$OPTARG" ;;
       ? ) helpFunction ;; # Print helpFunction in case parameter is non-existent
    esac
 done
@@ -27,6 +29,12 @@ if [ -z "$we" ]
 then
    echo "Some or all of the parameters are empty";
    helpFunction
+fi
+
+# set home for production environment. In systemd $HOME is not available but required for VEP
+if [ -n "$localhome"]
+then
+   export HOME=$localhome
 fi
 
 echo "preparing celery startup"

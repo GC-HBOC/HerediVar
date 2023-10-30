@@ -75,8 +75,10 @@ class spliceai_job(Job):
             #returncode, stderr, stdout = functions.execute_command(["ls", "-l", "/tmp"], "ls")
             #print(stdout)
             spliceai_code, spliceai_stderr, spliceai_stdout = self.annotate_spliceai_algorithm(input_vcf_path, output_vcf_path)
-            if 'ERROR' in spliceai_stderr:
+            if 'SpliceAI runtime ERROR:' in spliceai_stderr:
                 errors.append(spliceai_stderr)
+            if 'Skipping record' in spliceai_stderr:
+                errors.append("SpliceAI WARNING skipping: " + functions.find_between(spliceai_stderr, 'WARNING:', ': chr'))
 
         # need to insert some code here to merge the newly annotated variants and previously 
         # annotated ones from the db if there are files which contain more than one variant! 
@@ -93,11 +95,12 @@ class spliceai_job(Job):
         input_vcf_zipped_path = input_vcf_path + ".gz"
 
         # gbzip and index the input file as this is required for spliceai...
-        returncode, stderr, stdout = functions.execute_command([os.path.join(paths.htslib_path, 'bgzip'), '-f', input_vcf_path], 'bgzip')
+        returncode, stderr, stdout = functions.execute_command([os.path.join(paths.htslib_path, 'bgzip'), '-f', '-k', input_vcf_path], 'bgzip')
         if returncode != 0:
             return returncode, stderr, stdout
         returncode, stderr, stdout = functions.execute_command([os.path.join(paths.htslib_path, 'tabix'), "-f", "-p", "vcf", input_vcf_zipped_path], 'tabix')
         if returncode != 0:
+            functions.rm(input_vcf_zipped_path)
             return returncode, stderr, stdout
 
         # execute spliceai
