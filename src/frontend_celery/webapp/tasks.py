@@ -626,7 +626,7 @@ def annotate_all_variants(self, selected_job_config, user_id, roles):
     """Background task for running the annotation service"""
     conn = Connection(roles)
     variant_ids = conn.get_all_valid_variant_ids()
-    for variant_id in variant_ids[0:10]:
+    for variant_id in variant_ids:
         _ = start_annotation_service(variant_id = variant_id, user_id = user_id, job_config = selected_job_config, conn = conn) # inserts a new annotation queue entry before submitting the task to celery
         #conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
     conn.close()
