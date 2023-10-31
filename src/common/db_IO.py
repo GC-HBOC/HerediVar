@@ -861,7 +861,7 @@ class Connection:
         return submission_condition
     
     def get_variant_consequences(self, variant_id):
-        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,x.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype FROM transcript RIGHT JOIN ( \
+        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,x.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype,transcript.id FROM transcript RIGHT JOIN ( \
 	                    SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,gene.id gene_id,exon_nr,intron_nr,source,pfam_accession,pfam_description FROM gene RIGHT JOIN ( \
 		                    SELECT * FROM variant_consequence WHERE variant_id=%s \
 	                    ) y \
@@ -1592,7 +1592,7 @@ class Connection:
         first_list_variant_ids = self.get_variant_ids_from_list(first_list_id)
         second_list_variant_ids = self.get_variant_ids_from_list(second_list_id)
         variant_ids_for_target_list = list(set(first_list_variant_ids) | set(second_list_variant_ids))
-        print(variant_ids_for_target_list)
+        #print(variant_ids_for_target_list)
 
         self.clear_list(target_list_id)
         for variant_id in variant_ids_for_target_list:
@@ -1727,6 +1727,11 @@ class Connection:
                 new_annotation = models.Annotation(id = annotation_id, value = value, title = title, display_title = display_title, description = description, version = version, version_date = version_date, value_type = value_type)
                 setattr(annotations, annot[1], new_annotation)
                 #annotations.insert_annotation(new_annotation)
+            
+            transcript_annotations = self.get_recent_transcript_annotations(variant_id)
+
+            for annot in transcript_annotations:
+                setattr(annotations, annot.title, annot)
             
             annotations.flag_linked_annotations()
 
@@ -1906,9 +1911,27 @@ class Connection:
             if consequences_raw is not None:
                 consequences = []
                 for consequence in consequences_raw:
-                    new_consequence = models.Consequence(transcript = consequence[0], hgvs_c = consequence[1], hgvs_p = consequence[2], consequence = consequence[3], impact = consequence[4], exon = consequence[5], intron = consequence[6],
-                                                         gene = models.Gene(symbol = consequence[7], id = consequence[8]), protein_domain_title = consequence[10], protein_domain_id = consequence[11], is_gencode_basic = consequence[13],
-                                                         is_mane_select = consequence[14], is_mane_plus_clinical = consequence[15], is_ensembl_canonical = consequence[16], source = consequence[9], length = consequence[12], biotype = consequence[18])
+                    new_consequence = models.Consequence(transcript = models.Transcript(
+                                                            id = consequence[19],
+                                                            gene = models.Gene(symbol = consequence[7], id = consequence[8]),
+                                                            name = consequence[0],
+                                                            biotype = consequence[18],
+                                                            length = consequence[12],
+                                                            source = consequence[9],
+                                                            is_gencode_basic = True if consequence[13] == 1 else False,
+                                                            is_mane_select = True if consequence[14] == 1 else False,
+                                                            is_mane_plus_clinical = True if consequence[15] == 1 else False,
+                                                            is_ensembl_canonical = True if consequence[16] == 1 else False
+                                                         ), 
+                                                         hgvs_c = consequence[1], 
+                                                         hgvs_p = consequence[2], 
+                                                         consequence = consequence[3], 
+                                                         impact = consequence[4], 
+                                                         exon = consequence[5], 
+                                                         intron = consequence[6],
+                                                         protein_domain_title = consequence[10], 
+                                                         protein_domain_id = consequence[11],
+                                                    )
                     consequences.append(new_consequence)
        
 
@@ -2427,3 +2450,66 @@ class Connection:
         command = "DELETE FROM mutually_exclusive_criteria WHERE source = %s"
         self.cursor.execute(command, (source, ))
         self.conn.commit()
+
+
+    def insert_variant_transcript_annotation(self, variant_id, transcript, annotation_type_id, value):
+        transcript = transcript.split('.')[0]
+        command = "INSERT INTO variant_transcript_annotation (variant_id, transcript, annotation_type_id, value) VALUES (%s, %s, %s, %s) ON DUPLICATE KEY UPDATE `value`=%s"
+        self.cursor.execute(command, (variant_id, transcript, annotation_type_id, value, value))
+        self.conn.commit()
+
+    def get_recent_transcript_annotations(self, variant_id):
+        recent_annotation_type_ids = self.get_recent_annotation_type_ids(only_transcript_specific=True)
+        final_result = []
+        for annotation_type_title in recent_annotation_type_ids:
+            command = """SELECT id,
+                                (SELECT title FROM annotation_type WHERE annotation_type.id = variant_transcript_annotation.annotation_type_id) title,
+                                (SELECT description FROM annotation_type WHERE annotation_type.id = variant_transcript_annotation.annotation_type_id) description,
+                                (SELECT version FROM annotation_type WHERE annotation_type.id = variant_transcript_annotation.annotation_type_id) version,
+                                (SELECT version_date FROM annotation_type WHERE annotation_type.id = variant_transcript_annotation.annotation_type_id) version_date,
+                                (SELECT title FROM annotation_type WHERE annotation_type.id = variant_transcript_annotation.annotation_type_id) title,
+                                variant_id, value, transcript,
+                                (SELECT group_name FROM annotation_type WHERE annotation_type.id = variant_transcript_annotation.annotation_type_id) title,
+                                (SELECT display_title FROM annotation_type WHERE annotation_type.id = variant_transcript_annotation.annotation_type_id) display_title,
+                                (SELECT value_type FROM annotation_type WHERE annotation_type.id = variant_transcript_annotation.annotation_type_id) value_type
+                         FROM variant_transcript_annotation WHERE variant_id = %s and annotation_type_id = %s
+            """
+            self.cursor.execute(command, (variant_id, recent_annotation_type_ids[annotation_type_title]))
+            result = self.cursor.fetchall()
+            if len(result) == 0:
+                continue
+            
+            all_annotations = {}
+            for elem in result:
+                all_annotations[elem[8]] = elem[7]
+            new_annotation = models.TranscriptAnnotation(id = elem[0], value = all_annotations, title = elem[1], display_title = elem[10], description = elem[2], version = elem[3],
+                                                             version_date = elem[4], value_type = elem[11], draw = False, is_transcript_specific = True)
+            final_result.append(new_annotation)
+        return final_result
+    
+
+    def get_transcripts_from_names(self, transcript_names):
+        command = "SELECT id, gene_id, (SELECT symbol FROM gene WHERE transcript.gene_id = gene.id), name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical FROM transcript WHERE name IN "
+        placeholders = self.get_placeholders(len(transcript_names))
+        command += placeholders
+        self.cursor.execute(command, tuple(transcript_names))
+        transcripts_raw = self.cursor.fetchall()
+
+        transcripts = [models.Transcript(
+            id = int(transcript_raw[0]),
+            gene = models.Gene(id = transcript_raw[1], symbol = transcript_raw[2]),
+            name = transcript_raw[3],
+            biotype = transcript_raw[4],
+            length = int(transcript_raw[5]),
+            source = "ensembl" if transcript_raw[3].startswith('ENST') else "refseq",
+            is_gencode_basic = True if transcript_raw[6] == 1 else False,
+            is_mane_select = True if transcript_raw[7] == 1 else False,
+            is_mane_plus_clinical = True if transcript_raw[8] == 1 else False,
+            is_ensembl_canonical = True if transcript_raw[9] == 1 else False
+        ) for transcript_raw in transcripts_raw]
+
+        transcripts_not_in_db = list(set(transcript_names) - set([x[2] for x in transcripts_raw]))
+        transcripts_not_in_db = [models.Transcript(id=None, gene=None, name=transcript_name, biotype=None, length=None, source="ensembl" if transcript_name.startswith('ENST') else "refseq", is_gencode_basic=None,is_mane_select=None,is_mane_plus_clinical=None,is_ensembl_canonical=None) for transcript_name in transcripts_not_in_db]
+        transcripts.extend(transcripts_not_in_db)
+
+        return transcripts

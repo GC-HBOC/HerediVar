@@ -90,14 +90,14 @@ class vep_job(Job):
                                                 pfam_acc)
             num_vep_basic_entries = 10
             if not transcript_independent_saved and len(vep_entry) > num_vep_basic_entries:
-                transcript_independent_saved = True
-                maxentscan_ref = vep_entry[num_vep_basic_entries]
-                if maxentscan_ref != '' and self.job_config['insert_maxent']:
-                    conn.insert_variant_annotation(variant_id, 9, maxentscan_ref)
-                maxentscan_alt = vep_entry[num_vep_basic_entries+1]
-                if maxentscan_alt != '' and self.job_config['insert_maxent']:
-                    conn.insert_variant_annotation(variant_id, 10, maxentscan_alt)
-                pmids = functions.collect_info(pmids, '', vep_entry[num_vep_basic_entries+2], sep = '&')
+                #transcript_independent_saved = True
+                #maxentscan_ref = vep_entry[num_vep_basic_entries]
+                #if maxentscan_ref != '' and self.job_config['insert_maxent']:
+                #    conn.insert_variant_annotation(variant_id, 9, maxentscan_ref)
+                #maxentscan_alt = vep_entry[num_vep_basic_entries+1]
+                #if maxentscan_alt != '' and self.job_config['insert_maxent']:
+                #    conn.insert_variant_annotation(variant_id, 10, maxentscan_alt)
+                pmids = functions.collect_info(pmids, '', vep_entry[num_vep_basic_entries], sep = '&')
                 #self.update_saved_data('pmids', vep_entry[num_vep_basic_entries+2], operation = lambda x, y : functions.collect_info(x, '', y, sep = '&'))
 
         # insert literature
@@ -133,8 +133,8 @@ class vep_job(Job):
         if not self.refseq: #use ensembl
             #gnomAD_AF,gnomAD_AFR_AF,gnomAD_AMR_AF,gnomAD_EAS_AF,gnomAD_NFE_AF,gnomAD_SAS_AF, "--af_gnomad",
             #DOMAINS,SIFT,PolyPhen,PUBMED,AF
-            fields_oi = fields_oi_base + ",MaxEntScan_ref,MaxEntScan_alt,PUBMED"
-            command = command + ["--plugin", "MaxEntScan," + os.path.join(paths.vep_path, "MaxEntScan"),
+            fields_oi = fields_oi_base + ",PUBMED" # ,MaxEntScan_ref,MaxEntScan_alt
+            command = command + [#"--plugin", "MaxEntScan," + os.path.join(paths.vep_path, "MaxEntScan"),
                                  "--regulatory",
                                  "--pubmed",
                                  "--fields", fields_oi]

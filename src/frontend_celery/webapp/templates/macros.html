@@ -198,6 +198,72 @@
                 {{ draw_annotation(annot) }}
             {% endif %}
 
+            {% if annot.is_transcript_specific %}
+            {% set transcripts_sorted, values_sorted = annot.sort() %}
+            {% if transcripts_sorted | length > 0 %}
+            {% if annot.title == 'maxentscan' %}
+            <div annotation_id="{{ annot.id }}">
+                    {% set transcript = transcripts_sorted[0] %}
+                    {% set maxent_parts = values_sorted[0].split('|') %}
+                    <abbr class="ssr" title="{{annot.description}}"><a class="dashed_underline">{{annot.display_title}}:</a></abbr>{{ maxent_parts[0] }} -> {{ maxent_parts[1] }} ({{transcript}})
+                    <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix_large" data-bs-html="true" 
+                    data-bs-content="
+                        <div>Format of the overview values: ref -> alt.</div>
+                        <div class='row gx-2 border-bottom bg-light width_medium'>
+                            <div class='col-6'>Transcript</div>
+                            <div class='col-3 text-center border-start'>ref</div>
+                            <div class='col-3 text-center border-start'>alt</div>
+                        </div>
+                        {% for transcript in annot.value %}
+                        {% set data = annot.value[transcript].split('|') %}
+                        <div class='row gx-2 width_medium'>
+                            <div class='col-6'>{{transcript}}</div>
+                            <div class='col-3 text-center border-start'>{{data[0]}}</div>
+                            <div class='col-3 text-center border-start'>{{data[1]}}</div>
+                        </div>
+                        {% endfor %}
+                    ">
+                        details
+                    </a>
+            </div>
+            {% endif %}
+            {% if annot.title == 'maxentscan_swa' %}
+            <div annotation_id="{{ annot.id }}">
+                    {% set transcript = transcripts_sorted[0] %}
+                    {% set maxent_parts = values_sorted[0].split('|') %}
+                    <abbr class="ssr" title="{{annot.description}}"><a class="dashed_underline">{{annot.display_title}}:</a></abbr>donor: {{ maxent_parts[0] }} -> {{ maxent_parts[1] }} | acceptor: {{ maxent_parts[3] }} -> {{ maxent_parts[4] }} ({{transcript}})
+                    <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix_large" data-bs-html="true" 
+                    data-bs-content="
+                        <div>Format of the overview values: ref -> alt.</div>
+                        <div class='row gx-2 border-bottom bg-light width_large'>
+                            <div class='col-4'>Transcript</div>
+                            <div class='col-4 text-center border-start'>donor</div>
+                            <div class='col-4 text-center border-start'>acceptor</div>
+                        </div>
+                        {% for transcript in annot.value %}
+                        {% set data = annot.value[transcript].split('|') %}
+                        <div class='row gx-2 width_large'>
+                            <div class='col-4'>{{transcript}}</div>
+                            <div class='col-4 text-center border-start'>
+                                <div>ref: {{data[0]}}</div>
+                                <div>alt: {{data[1]}}</div>
+                                <div>comp: {{data[2]}}</div>
+                            </div>
+                            <div class='col-4 text-center border-start'>
+                                <div>ref: {{data[3]}}</div>
+                                <div>alt: {{data[4]}}</div>
+                                <div>comp: {{data[5]}}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    ">
+                        details
+                    </a>
+            </div>
+            {% endif %}
+            {% endif %}
+            {% endif %}
+
             <!-- special draw annotations -->
             {% if annot.title == 'spliceai_details' %}
                 {% set spliceai_details, max_delta_spliceai = annotations.get_spliceai() %}
@@ -641,9 +707,9 @@
             {% if preferred_transcripts is not none %}
                 {% for consequence in preferred_transcripts %}
                     <div>
-                        {% if consequence.gene is not none %} 
-                            {% if consequence.gene.symbol is not none %} {% set gene_symbol = consequence.gene.symbol %} {% else %} {% set gene_symbol = '-' %} {% endif %}
-                            <a href="{{ url_for('extended_information.gene', gene_id=consequence.gene.id | int) }}">{{ gene_symbol }}</a>
+                        {% if consequence.transcript.gene is not none %} 
+                            {% if consequence.transcript.gene.symbol is not none %} {% set gene_symbol = consequence.transcript.gene.symbol %} {% else %} {% set gene_symbol = '-' %} {% endif %}
+                            <a href="{{ url_for('extended_information.gene', gene_id=consequence.transcript.gene.id | int) }}">{{ gene_symbol }}</a>
                         {% else %}
                             <div>-</div>
                         {% endif %}
@@ -725,7 +791,7 @@
                 {% if variant.consequences is not none %}
                 {% for consequence in variant.consequences %}
                 <tr>
-                    <td class="nowrap">{{ consequence.transcript }}</td>
+                    <td class="nowrap">{{ consequence.transcript.name }}</td>
                     <td class="nowrap">{{ consequence.hgvs_c }}</td>
                     <td class="nowrap">{{ consequence.hgvs_p }}</td>
                     <td>{{ consequence.consequence }}</td>
@@ -733,10 +799,10 @@
                     <td>{{ consequence.exon }}</td>
                     <td>{{ consequence.intron }}</td>
                     <td>
-                        {% if consequence.gene.id is not none %}
-                            <a href="{{ url_for('extended_information.gene', gene_id=consequence.gene.id | int) }}">{{ consequence.gene.symbol }}</a>
+                        {% if consequence.transcript.gene.id is not none %}
+                            <a href="{{ url_for('extended_information.gene', gene_id=consequence.transcript.gene.id | int) }}">{{ consequence.transcript.gene.symbol }}</a>
                         {% else %}
-                            {{ consequence.gene.symbol }}
+                            {{ consequence.transcript.gene.symbol }}
                         {% endif %}
                     </td>
                     {% if consequence.protein_domain_id is not none %}
@@ -747,22 +813,22 @@
                     <td>{{ consequence.protein_domain_title }}</td>
                     {% endif %}
                     <td>
-                        {% if consequence.is_gencode_basic %}
+                        {% if consequence.transcript.is_gencode_basic %}
                             <span class="badge bg-secondary"><abbr title="This flag describes a subset of representative transcripts of the GENCODE set of genes.">GENCODE basic</abbr></span>
                         {% endif %}
-                        {% if consequence.is_mane_select %}
+                        {% if consequence.transcript.is_mane_select %}
                             <span class="badge bg-secondary"><abbr title="Each MANE (Matched Annotation from the NCBI and EMBL-EBI) transcript represents an exact match in exonic regions between a Refseq transcript and its counterpart in the Ensembl/GENCODE. The MANE Select set consists of one transcript at each protein-coding locus across the genome that is representative of biology at that locus. This set is useful as a universal standard for clinical reporting. MANE Select transcripts are identified using computational methods complemented by manual review and discussion.">MANE select</abbr></span>
                         {% endif %}
-                        {% if consequence.is_mane_plus_clinical %}
+                        {% if consequence.transcript.is_mane_plus_clinical %}
                             <span class="badge bg-secondary"><abbr title="Each MANE (Matched Annotation from the NCBI and EMBL-EBI) transcript represents an exact match in exonic regions between a Refseq transcript and its counterpart in the Ensembl/GENCODE. The MANE Plus Clinical set includes additional transcripts for genes where MANE Select alone is not sufficient to report all pathogenic or likely pathogenic clinical variants available in public resources.">MANE clin</abbr></span>
                         {% endif %}
-                        {% if consequence.is_ensembl_canonical %}
+                        {% if consequence.transcript.is_ensembl_canonical %}
                             <span class="badge bg-secondary"><abbr title="The Ensembl Canonical transcript is a single, representative transcript identified at every locus using different transcript-traits like the highest coverage of conserved exons, highest expression, longest coding sequence and is represented in other key resources, such as NCBI and UniProt.">ensembl canonical</abbr></span>
                         {% endif %}
                     </td>
 
-                    <td class="visually_hidden">{{ consequence.source }}</td>
-                    <td >{{ consequence.length }}</td>
+                    <td class="visually_hidden">{{ consequence.transcript.source }}</td>
+                    <td >{{ consequence.transcript.length }}</td>
                     <td class="visually_hidden">{{ consequence.get_num_flags() }}</td>
 
                     <td>
@@ -771,14 +837,14 @@
                             {% set rsid = variant.annotations.rsid.value %}
                         {% endif %}
                     
-                        {{ google_link("google", rsid = rsid, hgvs_c = consequence.hgvs_c, hgvs_p = consequence.hgvs_p, gene_symbol = consequence.gene.symbol, is_scholar = False) }}
-                        {{ google_link("scholar", rsid = rsid, hgvs_c = consequence.hgvs_c, hgvs_p = consequence.hgvs_p, gene_symbol = consequence.gene.symbol, is_scholar = True) }}
+                        {{ google_link("google", rsid = rsid, hgvs_c = consequence.hgvs_c, hgvs_p = consequence.hgvs_p, gene_symbol = consequence.transcript.gene.symbol, is_scholar = False) }}
+                        {{ google_link("scholar", rsid = rsid, hgvs_c = consequence.hgvs_c, hgvs_p = consequence.hgvs_p, gene_symbol = consequence.transcript.gene.symbol, is_scholar = True) }}
 
-                        {% if consequence.gene.symbol is not none and consequence.hgvs_c is not none %}
-                            {{ external_link("COSMIC", "https://cancer.sanger.ac.uk/cosmic/search?q=" + consequence.gene.symbol + "+" + consequence.hgvs_c | replace('>','%3E')) }}
+                        {% if consequence.transcript.gene.symbol is not none and consequence.hgvs_c is not none %}
+                            {{ external_link("COSMIC", "https://cancer.sanger.ac.uk/cosmic/search?q=" + consequence.transcript.gene.symbol + "+" + consequence.hgvs_c | replace('>','%3E')) }}
                         {% endif %}
-                        {% if consequence.gene.symbol in ['MLH1', 'MSH2', 'MSH6', 'PMS2'] %}
-                            {{ external_link("InSiGHT", "http://www.insight-database.org/classifications/index.html?gene=" + consequence.gene.symbol + "&variant=" + consequence.hgvs_c | replace('>', '%3E')) }}
+                        {% if consequence.transcript.gene.symbol in ['MLH1', 'MSH2', 'MSH6', 'PMS2'] %}
+                            {{ external_link("InSiGHT", "http://www.insight-database.org/classifications/index.html?gene=" + consequence.transcript.gene.symbol + "&variant=" + consequence.hgvs_c | replace('>', '%3E')) }}
                         {% endif %}
                     </td>
                 </tr>
@@ -973,8 +1039,8 @@
                                         {% for consequence in best_consequences %}
                                         <li class="list-group-item noboarder-td">
                                             <div class="d-flex">
-                                                <div class="bsr"><a href="{{ url_for('extended_information.gene', gene_id=consequence.gene.id | int) }}">{{ consequence.gene.symbol }}</a></div>
-                                                <div class="bsr">{{consequence.transcript}}</div>
+                                                <div class="bsr"><a href="{{ url_for('extended_information.gene', gene_id=consequence.transcript.gene.id | int) }}">{{ consequence.transcript.gene.symbol }}</a></div>
+                                                <div class="bsr">{{consequence.transcript.name}}</div>
                                                 <div class="bsr">{{consequence.hgvs_c}}</div>
                                                 <div>{{consequence.hgvs_p}}</div>
                                             </div>
@@ -1013,7 +1079,7 @@
                                     {% endif %}
                                     {% if variant.consequences is not none %}
                                         {% for consequence in variant.consequences %}
-                                            {% if consequence.transcript == ENST00000269305 %} <!-- This transcript is the recommended one for TP53 (see https://www.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000141510;r=17:7661779-7687538) and encodes the alpha isoform for this gene -->
+                                            {% if consequence.transcript.name == ENST00000269305 %} <!-- This transcript is the recommended one for TP53 (see https://www.ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=ENSG00000141510;r=17:7661779-7687538) and encodes the alpha isoform for this gene -->
                                             <li class="list-group-item noboarder-td">
                                                 {{ external_link("PHANTM", "https://mutantp53.broadinstitute.org/mutantp53grade/?query=" + consequence.hgvs_p|string) }}
                                             </li>

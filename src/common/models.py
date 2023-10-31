@@ -37,6 +37,50 @@ class Annotation:
         return header
 
 
+@dataclass
+class TranscriptAnnotation:
+    id: int
+    value: dict # a transcript -> value dict
+
+    title: str
+    display_title: str
+    description: str
+    version: str
+    version_date: str
+    value_type: str
+
+    draw: bool = True
+
+    is_transcript_specific: bool = True
+
+    def get_value(self, transcript):
+        the_value = self.value[transcript]
+        if self.value_type == 'text':
+            return str(the_value)
+        if self.value_type == 'int':
+            return int(the_value)
+        if self.value_type == 'float':
+            return float(the_value)
+        return self.value
+
+    def to_vcf(self):
+        value_strings = []
+        for transcript in self.value:
+            new_value_string = transcript + "~24" + self.value[transcript] # sep: $
+            if new_value_string.strip() != "~24":
+                value_strings.append(new_value_string)
+        data = self.title + '~1Y' + "~7C".join(value_strings)
+        return data
+    
+    def get_header(self):
+        header = '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + '. A | separated list of transcript$value pairs. (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'
+        return header
+    
+
+    def sort(self):
+        transcripts_sorted, values_sorted = functions.sort_transcript_dict(self.value)
+        return transcripts_sorted, values_sorted
+
 
 @dataclass
 class AllAnnotations:
@@ -93,7 +137,11 @@ class AllAnnotations:
     max_hbond_rev_mut: Annotation = None
     max_hbond_rev_wt: Annotation = None
 
+    maxentscan: TranscriptAnnotation = None
+    maxentscan_swa: TranscriptAnnotation = None
+
     hci_prior: Annotation = None
+
 
     def get_all_annotation_names(self):
         return self.__annotations__
@@ -146,8 +194,10 @@ class AllAnnotations:
         if group_identifier == 'Pathogenicity':
             return self.prepare_group([self.phylop_100way, self.cadd_scaled, self.revel])
         if group_identifier == 'Splicing':
-            return self.prepare_group([self.maxentscan_ref, 
-                                       self.maxentscan_alt, 
+            return self.prepare_group([#self.maxentscan_ref, 
+                                       #self.maxentscan_alt, 
+                                       self.maxentscan,
+                                       self.maxentscan_swa,
                                        self.spliceai_details, 
                                        self.spliceai_max_delta, 
                                        self.hexplorer, 
@@ -447,8 +497,22 @@ class Clinvar:
 
 
 @dataclass
+class Transcript:
+    id: int
+    gene: Gene
+    name: str
+    biotype: str
+    length: int
+    source: str
+
+    is_gencode_basic: bool
+    is_mane_select: bool
+    is_mane_plus_clinical: bool
+    is_ensembl_canonical: bool
+
+@dataclass
 class Consequence:
-    transcript: str
+    transcript: Transcript
     hgvs_c: str
     hgvs_p: str
     consequence: str
@@ -456,28 +520,16 @@ class Consequence:
     exon: str
     intron: str
 
-    gene: Gene
-
     protein_domain_title: str
     protein_domain_id: str
 
-    is_gencode_basic: bool
-    is_mane_select: bool
-    is_mane_plus_clinical: bool
-    is_ensembl_canonical: bool
-
-    source: str
-    length: int
-
-    biotype: str
-
     def get_header(self):
-        header = {'variant_consequences': '##INFO=<ID=consequences,Number=.,Type=String,Description="An & separated list of variant consequences from vep. Format:Transcript|hgvsc|hgvsp,consequence|impact|exonnr|intronnr|genesymbol|proteindomain|isgencodebasic|ismaneselect|ismaneplusclinical|isensemblcanonical">\n'}
+        header = {'variant_consequences': '##INFO=<ID=consequences,Number=.,Type=String,Description="An & separated list of variant consequences from vep. Format:Transcript|hgvsc|hgvsp,consequence|impact|exonnr|intronnr|genesymbol|proteindomain|isgencodebasic|ismaneselect|ismaneplusclinical|isensemblcanonical|transcript_biotype|transcript_length">\n'}
         return header
 
     def to_vcf(self, prefix = True):
         #Transcript|hgvsc|hgvsp,consequence|impact|exonnr|intronnr|genesymbol|proteindomain|isgencodebasic|ismaneselect|ismaneplusclinical|isensemblcanonical
-        items = [self.transcript, self.hgvs_c, self.hgvs_p, self.consequence, self.impact, self.exon, self.intron, self.gene.symbol, self.protein_domain_title, self.is_gencode_basic, self.is_mane_select, self.is_mane_plus_clinical, self.is_ensembl_canonical]
+        items = [self.transcript.name, self.hgvs_c, self.hgvs_p, self.consequence, self.impact, self.exon, self.intron, self.transcript.gene.symbol, self.protein_domain_title, self.transcript.is_gencode_basic, self.transcript.is_mane_select, self.transcript.is_mane_plus_clinical, self.transcript.is_ensembl_canonical, self.transcript.biotype, self.transcript.length]
         items = [str(x) for x in items]
         info = '~7C'.join(items)
         if prefix:
@@ -485,7 +537,7 @@ class Consequence:
         return info
 
     def get_num_flags(self):
-        all_flags = [self.is_gencode_basic, self.is_ensembl_canonical, self.is_mane_select, self.is_mane_plus_clinical]
+        all_flags = [self.transcript.is_gencode_basic, self.transcript.is_ensembl_canonical, self.transcript.is_mane_select, self.transcript.is_mane_plus_clinical]
         prepared_group = [x for x in all_flags if x is not None]
         return sum(prepared_group)
     
@@ -825,57 +877,22 @@ class Variant:
 
         if consequences is None:
             return None
-
-        consequences = [c for c in consequences if c.source == 'ensembl'] # filter for ensembl transcripts
-        if len(consequences) > 0:
-            consequences = self.order_consequences(consequences)
-            result.append(consequences.pop(0)) # always append the first one
-
-            for consequence in consequences: # scan for all mane select transcripts
-                if consequence.is_mane_select:
-                    result.append(consequence)
-                else:
-                    break # we can do this because the list is sorted
-        else: # the variant does not have any consequences
+        if len(consequences) == 0:
             return None
+        
+        sortable_dict = {}
+        for consequence in consequences:
+            if consequence.transcript.source == 'ensembl':
+                sortable_dict[consequence.transcript.name] = consequence
+        transcripts_sorted, consequences_sorted = functions.sort_transcript_dict(sortable_dict)
+        result.append(consequences_sorted.pop(0)) # always append the first one
+        for consequence in consequences_sorted: # scan for all mane select transcripts
+            if consequence.transcript.is_mane_select:
+                result.append(consequence)
+            else:
+                break # we can do this because the list is sorted
+
         return result
-
-    def order_consequences(self, consequences):
-        keyfunc = cmp_to_key(mycmp = self.sort_consequences)
-        consequences.sort(key = keyfunc) # sort by preferred transcript
-        return consequences
-     
-    def sort_consequences(self, a:Consequence, b:Consequence):
-        # sort by ensembl/refseq
-        if a.source == 'ensembl' and b.source == 'refseq':
-            return -1
-        elif a.source == 'refseq' and b.source == 'ensembl':
-            return 1
-        elif a.source == b.source:
-
-            # sort by mane select
-            if a.is_mane_select is None or b.is_mane_select is None:
-                return 1
-            elif a.is_mane_select and not b.is_mane_select:
-                return -1
-            elif not a.is_mane_select and b.is_mane_select:
-                return 1
-            elif a.is_mane_select == b.is_mane_select:
-
-                # sort by biotype
-                if a.biotype == 'protein coding' and b.biotype != 'protein coding':
-                    return -1
-                elif a.biotype != 'protein coding' and b.biotype == 'protein coding':
-                    return 1
-                elif (a.biotype != 'protein coding' and b.biotype != 'protein coding') or (a.biotype == 'protein coding' and b.biotype == 'protein coding'):
-
-                    # sort by length
-                    if a.length > b.length:
-                        return -1
-                    elif a.length < b.length:
-                        return 1
-                    else:
-                        return 0
 
 
 @dataclass

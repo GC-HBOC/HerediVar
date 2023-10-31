@@ -19,35 +19,35 @@ import os
 def get_default_job_config():
     job_config = {
         # heredicare annotations
-        'do_heredicare': True,
+        'do_heredicare': False,
 
         # external programs
-        'do_phylop': True,
-        'do_spliceai': True,
-        'do_hexplorer': True,
+        'do_phylop': False,
+        'do_spliceai': False,
+        'do_hexplorer': False,
+        'do_maxentscan': True,
 
         # vep dependent
         'do_vep': True,
         'insert_consequence': True,
-        'insert_maxent': True,
         'insert_literature': True,
 
         #vcf annotate from vcf
-        'do_dbsnp': True,
-        'do_revel': True,
-        'do_cadd': True,
-        'do_clinvar': True,
-        'do_gnomad': True,
-        'do_brca_exchange': True,
-        'do_flossies': True,
-        'do_cancerhotspots': True,
-        'do_arup': True,
-        'do_tp53_database': True,
-        'do_priors': True,
+        'do_dbsnp': False,
+        'do_revel': False,
+        'do_cadd': False,
+        'do_clinvar': False,
+        'do_gnomad': False,
+        'do_brca_exchange': False,
+        'do_flossies': False,
+        'do_cancerhotspots': False,
+        'do_arup': False,
+        'do_tp53_database': False,
+        'do_priors': False,
 
         # additional annotations
-        'do_taskforce_domains': True,
-        'do_litvar': True
+        'do_taskforce_domains': False,
+        'do_litvar': False
     }
     return job_config
 
@@ -72,7 +72,8 @@ def get_jobs(job_config):
         spliceai_job.spliceai_job(job_config),
         task_force_protein_domain_job.task_force_protein_domain_job(job_config),
         litvar2_job.litvar2_job(job_config), # must be called after vep_jobs & annotate from vcf job
-        heredicare_job.heredicare_job(job_config)
+        heredicare_job.heredicare_job(job_config),
+        maxentscan_job.maxentscan_job(job_config)
     ]
     return all_jobs
 

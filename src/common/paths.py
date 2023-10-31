@@ -68,10 +68,11 @@ if webapp_env == 'dev':
     arup_brca_path = joinpaths(datadir, "ARUP/ARUP_BRCA_2022_04_01.vcf.gz")
     tp53_db = joinpaths(datadir, "TP53_database/GermlineDownload_r20.normalized.vcf.gz")
     hci_priors = joinpaths(datadir, "HCI_priors/priors.vcf.gz")
+    bayesdel = joinpaths(datadir, "BayesDEL/bayesdel_240817_noaf.lifted.vcf.gz")
 
     # data for init_db
     hgnc_path = joinpaths(datadir, "HGNC/hgnc_complete_set.tsv")
-    ensembl_transcript_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.105.gff3")
+    ensembl_transcript_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.110.gff3")
     MANE_path = joinpaths(datadir, "MANE/MANE.GRCh38.v1.0.ensembl_genomic.gff")
     ensembl_canonical_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.105.canonical.tsv")
     pfam_id_mapping_path = joinpaths(datadir, "PFAM/pfam_id_mapping.tsv")
@@ -233,6 +234,8 @@ elif webapp_env == 'prod':
     ref_genome_path_grch37 = joinpaths(ref_genome_dir, "GRCh37.fa")
     chainfile_path = joinpaths(ref_genome_dir, "hg19ToHg38.fixed.over.chain.gz")
 
+    ensembl_transcript_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.110.gff3")
+
     
     #metadata
     gnomad_path = joinpaths(datadir, "gnomAD/gnomAD_genome_v3.1.2_GRCh38.vcf.gz")
@@ -253,6 +256,7 @@ elif webapp_env == 'prod':
     arup_brca_path = joinpaths(datadir, "ARUP/ARUP_BRCA_2022_04_01.vcf.gz")
     tp53_db = joinpaths(datadir, "TP53_database/GermlineDownload_r20.normalized.vcf.gz")
     hci_priors = joinpaths(datadir, "HCI_priors/priors.vcf.gz")
+    bayesdel = joinpaths(datadir, "BayesDEL/bayesdel_240817_noaf.lifted.vcf.gz")
 
     # IGV data
     igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")

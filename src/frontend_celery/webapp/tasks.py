@@ -639,11 +639,13 @@ def start_annotation_service(conn: Connection, user_id, variant_id = None, annot
         log_postfix = " for variant " + str(variant_id)
     else:
         log_postfix = " for annotation queue entry " + str(annotation_queue_id)
-    task = annotate_variant.apply_async(args=[annotation_queue_id, job_config])
-    print("Issued annotation for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task.id) + log_postfix)
-    #current_app.logger.info(session['user']['preferred_username'] + " started the annotation service for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task.id) + log_postfix)
-    conn.insert_celery_task_id(annotation_queue_id, task.id)
-    return task.id
+    if annotation_queue_id is not None:
+        task = annotate_variant.apply_async(args=[annotation_queue_id, job_config])
+        print("Issued annotation for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task.id) + log_postfix)
+        #current_app.logger.info(session['user']['preferred_username'] + " started the annotation service for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task.id) + log_postfix)
+        conn.insert_celery_task_id(annotation_queue_id, task.id)
+        return task.id
+    return None
 
 # the worker is the annotation service itself!
 

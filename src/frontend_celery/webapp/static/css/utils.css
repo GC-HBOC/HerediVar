@@ -231,3 +231,7 @@
     width: fit-content !important;
     max-width: 25em !important;
 }
+.popover_fix_large{
+    width: fit-content !important;
+    max-width: 50em !important;
+}

@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 import json
 import uuid
 from functools import cmp_to_key
+from common.db_IO import Connection
 
 
 def basedir():
@@ -655,3 +656,66 @@ def sort_classes(a, b):
 def reverse_seq(seq):
     seq = seq.upper().replace('A', 't').replace('T', 'a').replace('G', 'c').replace('C', 'g')
     return seq.upper()
+
+
+# keys: transcript names, values: something to be sorted by transcript
+# returns sorted list of values by transcript
+def sort_transcript_dict(input_dict):
+    transcript_names = input_dict.keys()
+    transcript_names_sorted = sort_transcripts(transcript_names)
+
+    result = []
+    for transcript_name in transcript_names_sorted:
+        result.append(input_dict[transcript_name])
+    return transcript_names_sorted, result
+
+
+# this function sorts a list of transcript names (ENSTxxx strings)
+def sort_transcripts(transcript_names):
+    conn = Connection()
+    transcripts = conn.get_transcripts_from_names(transcript_names)
+    #print(transcripts)
+    conn.close()
+    transcripts_sorted = order_transcripts(transcripts)
+    #print(transcripts_sorted)
+    return [transcript.name for transcript in transcripts_sorted]
+
+
+def order_transcripts(transcripts):
+    keyfunc = cmp_to_key(mycmp = sort_transcripts_worker)
+    transcripts.sort(key = keyfunc) # sort by preferred transcript
+    return transcripts
+
+
+def sort_transcripts_worker(a, b):
+    # sort by ensembl/refseq
+    if a.source == 'ensembl' and b.source == 'refseq':
+        return -1
+    elif a.source == 'refseq' and b.source == 'ensembl':
+        return 1
+    elif a.source == b.source:
+        # sort by mane select
+        if a.is_mane_select is None or b.is_mane_select is None:
+            return 1
+        elif a.is_mane_select and not b.is_mane_select:
+            return -1
+        elif not a.is_mane_select and b.is_mane_select:
+            return 1
+        elif a.is_mane_select == b.is_mane_select:
+            # sort by biotype
+            if a.biotype == 'protein coding' and b.biotype != 'protein coding':
+                return -1
+            elif a.biotype != 'protein coding' and b.biotype == 'protein coding':
+                return 1
+            elif (a.biotype != 'protein coding' and b.biotype != 'protein coding') or (a.biotype == 'protein coding' and b.biotype == 'protein coding'):
+                # sort by length
+                if a.length is None and b.length is not None:
+                    return 1
+                elif a.length is not None and b.length is None:
+                    return -1
+                if a.length > b.length:
+                    return -1
+                elif a.length < b.length:
+                    return 1
+                else:
+                    return 0
