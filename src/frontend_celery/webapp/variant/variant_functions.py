@@ -357,10 +357,9 @@ def extract_criteria_from_request(request_obj, scheme_id, conn: Connection):
 # criteria dict from the extract criteria request function is the input
 def get_scheme_class(criteria_dict, scheme_type):
     all_criteria_strengths = []
+    keyval = 'strength'
     if scheme_type == 'task-force':
         keyval = 'criterium_name'
-    elif scheme_type == 'acmg':
-        keyval = 'strength'
     for key in criteria_dict:
         all_criteria_strengths.append(criteria_dict[key][keyval])
     all_criteria_string = '+'.join(all_criteria_strengths)
