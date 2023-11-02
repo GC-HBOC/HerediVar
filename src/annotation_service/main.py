@@ -19,12 +19,12 @@ import os
 def get_default_job_config():
     job_config = {
         # heredicare annotations
-        'do_heredicare': False,
+        'do_heredicare': True,
 
         # external programs
-        'do_phylop': False,
-        'do_spliceai': False,
-        'do_hexplorer': False,
+        'do_phylop': True,
+        'do_spliceai': True,
+        'do_hexplorer': True,
         'do_maxentscan': True,
 
         # vep dependent
@@ -33,21 +33,22 @@ def get_default_job_config():
         'insert_literature': True,
 
         #vcf annotate from vcf
-        'do_dbsnp': False,
-        'do_revel': False,
-        'do_cadd': False,
-        'do_clinvar': False,
-        'do_gnomad': False,
-        'do_brca_exchange': False,
-        'do_flossies': False,
-        'do_cancerhotspots': False,
-        'do_arup': False,
-        'do_tp53_database': False,
-        'do_priors': False,
+        'do_dbsnp': True,
+        'do_revel': True,
+        'do_cadd': True,
+        'do_clinvar': True,
+        'do_gnomad': True,
+        'do_brca_exchange': True,
+        'do_flossies': True,
+        'do_cancerhotspots': True,
+        'do_arup': True,
+        'do_tp53_database': True,
+        'do_priors': True,
+        'do_bayesdel': True,
 
         # additional annotations
-        'do_taskforce_domains': False,
-        'do_litvar': False
+        'do_taskforce_domains': True,
+        'do_litvar': True
     }
     return job_config
 

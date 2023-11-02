@@ -1621,7 +1621,7 @@ class Connection:
 
 
     def get_recent_annotations(self, variant_id): # ! the ordering of the columns in the outer select statement is important and should not be changed
-        command = "SELECT variant_annotation.id, title, description, version, version_date, variant_id, value, supplementary_document, group_name, display_title, value_type FROM variant_annotation INNER JOIN ( \
+        command = "SELECT variant_annotation.id, title, description, version, version_date, variant_id, value, supplementary_document, group_name, display_title, value_type, group_name FROM variant_annotation INNER JOIN ( \
                         SELECT * \
 	                        FROM annotation_type WHERE (title, version_date) IN ( \
 		                        select title, MAX(version_date) version_date from annotation_type INNER JOIN ( \
@@ -1723,8 +1723,9 @@ class Connection:
                 version_date = annot[4].strftime('%Y-%m-%d')
                 value = annot[6]
                 value_type = annot[10]
+                group_name = annot[11]
 
-                new_annotation = models.Annotation(id = annotation_id, value = value, title = title, display_title = display_title, description = description, version = version, version_date = version_date, value_type = value_type)
+                new_annotation = models.Annotation(id = annotation_id, value = value, title = title, display_title = display_title, description = description, version = version, version_date = version_date, value_type = value_type, group_name = group_name)
                 setattr(annotations, annot[1], new_annotation)
                 #annotations.insert_annotation(new_annotation)
             
@@ -2471,7 +2472,8 @@ class Connection:
                                 variant_id, value, transcript,
                                 (SELECT group_name FROM annotation_type WHERE annotation_type.id = variant_transcript_annotation.annotation_type_id) title,
                                 (SELECT display_title FROM annotation_type WHERE annotation_type.id = variant_transcript_annotation.annotation_type_id) display_title,
-                                (SELECT value_type FROM annotation_type WHERE annotation_type.id = variant_transcript_annotation.annotation_type_id) value_type
+                                (SELECT value_type FROM annotation_type WHERE annotation_type.id = variant_transcript_annotation.annotation_type_id) value_type,
+                                (SELECT group_name FROM annotation_type WHERE annotation_type.id = variant_transcript_annotation.annotation_type_id) group_name
                          FROM variant_transcript_annotation WHERE variant_id = %s and annotation_type_id = %s
             """
             self.cursor.execute(command, (variant_id, recent_annotation_type_ids[annotation_type_title]))
@@ -2483,7 +2485,7 @@ class Connection:
             for elem in result:
                 all_annotations[elem[8]] = elem[7]
             new_annotation = models.TranscriptAnnotation(id = elem[0], value = all_annotations, title = elem[1], display_title = elem[10], description = elem[2], version = elem[3],
-                                                             version_date = elem[4], value_type = elem[11], draw = False, is_transcript_specific = True)
+                                                             version_date = elem[4], value_type = elem[11], draw = False, is_transcript_specific = True, group_name = elem[12])
             final_result.append(new_annotation)
         return final_result
     

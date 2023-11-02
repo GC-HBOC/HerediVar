@@ -22,7 +22,7 @@ class annotate_from_vcf_job(Job):
                                                 'do_brca_exchange', 
                                                 'do_flossies', 
                                                 'do_cancerhotspots', 
-                                                'do_arup', 'do_tp53_database', 'do_priors']):
+                                                'do_arup', 'do_tp53_database', 'do_priors', 'do_bayesdel']):
             return 0, '', ''
 
         self.print_executing()
@@ -72,6 +72,8 @@ class annotate_from_vcf_job(Job):
         self.insert_annotation(variant_id, info, "ARUP_classification=", 21, conn)
 
         self.insert_annotation(variant_id, info, "HCI_prior=", 52, conn)
+
+        self.insert_annotation(variant_id, info, "BayesDEL_noAF=", 55, conn)
 
         # spliceai is saved to the database in the dedicated spliceai job (which must be called after this job anyway)
         #self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )
@@ -182,6 +184,10 @@ class annotate_from_vcf_job(Job):
         ## add priors
         if self.job_config['do_priors']:
             config_file.write(paths.hci_priors + "\t\tHCI_prior\t\n")
+
+        ## add bayesdel
+        if self.job_config['do_bayesdel']:
+            config_file.write(paths.bayesdel + "\t\tBayesDEL_noAF\t\n")
 
         config_file.close()
         return config_file_path

@@ -17,6 +17,8 @@ class Annotation:
     version_date: str
     value_type: str
 
+    group_name: str
+
     draw: bool = True
 
     def get_value(self):
@@ -48,6 +50,8 @@ class TranscriptAnnotation:
     version: str
     version_date: str
     value_type: str
+
+    group_name: str
 
     draw: bool = True
 
@@ -94,6 +98,8 @@ class AllAnnotations:
     spliceai_max_delta: Annotation = None
     maxentscan_ref: Annotation = None
     maxentscan_alt: Annotation = None
+    maxentscan: TranscriptAnnotation = None
+    maxentscan_swa: TranscriptAnnotation = None
 
     gnomad_ac: Annotation = None
     gnomad_af: Annotation = None
@@ -137,10 +143,9 @@ class AllAnnotations:
     max_hbond_rev_mut: Annotation = None
     max_hbond_rev_wt: Annotation = None
 
-    maxentscan: TranscriptAnnotation = None
-    maxentscan_swa: TranscriptAnnotation = None
-
     hci_prior: Annotation = None
+
+    bayesdel: Annotation = None
 
 
     def get_all_annotation_names(self):
@@ -184,54 +189,26 @@ class AllAnnotations:
 
 
     def get_group_identifiers(self):
-        return ['Pathogenicity', 'Splicing', 'gnomAD', 'FLOSSIES', 'Cancerhotspots', 'TP53database', 'HerediCare', 'Protein Domain']
+        result = set()
+        for current_field in fields(self):
+            current_annotation = getattr(self, current_field.name)
+            if current_annotation is not None:
+                current_group_name = current_annotation.group_name
+                if current_group_name is not None:
+                    if current_group_name != 'None':
+                        result.add(current_group_name)
+        return list(result) # ['Pathogenicity', 'Splicing', 'gnomAD', 'FLOSSIES', 'Cancerhotspots', 'TP53database', 'HerediCare', 'Protein Domain']
 
     def get_group(self, group_identifier):
-        if group_identifier not in self.get_group_identifiers():
-            return None
-        if group_identifier == 'Protein Domain':
-            return self.prepare_group([self.task_force_protein_domain, self.task_force_protein_domain_source])
-        if group_identifier == 'Pathogenicity':
-            return self.prepare_group([self.phylop_100way, self.cadd_scaled, self.revel])
-        if group_identifier == 'Splicing':
-            return self.prepare_group([#self.maxentscan_ref, 
-                                       #self.maxentscan_alt, 
-                                       self.maxentscan,
-                                       self.maxentscan_swa,
-                                       self.spliceai_details, 
-                                       self.spliceai_max_delta, 
-                                       self.hexplorer, 
-                                       self.hexplorer_wt, 
-                                       self.hexplorer_mut, 
-                                       self.hexplorer_rev, 
-                                       self.hexplorer_rev_wt, 
-                                       self.hexplorer_rev_mut, 
-                                       self.max_hbond, 
-                                       self.max_hbond_wt, 
-                                       self.max_hbond_mut, 
-                                       self.max_hbond_rev, 
-                                       self.max_hbond_rev_wt, 
-                                       self.max_hbond_rev_mut])
-        if group_identifier == 'gnomAD':
-            return self.prepare_group([self.gnomad_ac, 
-                                       self.gnomad_af, 
-                                       self.gnomad_hom, 
-                                       self.gnomad_hemi, 
-                                       self.gnomad_het, 
-                                       self.gnomad_popmax, 
-                                       self.gnomadm_ac_hom, 
-                                       self.gnomad_popmax_AF])
-        if group_identifier == 'FLOSSIES':
-            return self.prepare_group([self.flossies_num_afr, self.flossies_num_eur])
-        if group_identifier == 'Cancerhotspots':
-            return self.prepare_group([self.cancerhotspots_cancertypes, self.cancerhotspots_af, self.cancerhotspots_ac])
-        if group_identifier == 'TP53database':
-            return self.prepare_group([self.tp53db_bayes_del, 
-                                       self.tp53db_class, 
-                                       self.tp53db_DNE_class, 
-                                       self.tp53db_DNE_LOF_class, 
-                                       self.tp53db_domain_function, 
-                                       self.tp53db_transactivation_class])
+        result = []
+        for current_field in fields(self):
+            current_annotation = getattr(self, current_field.name)
+            if current_annotation is not None:
+                current_group_name = current_annotation.group_name
+                if current_group_name is not None:
+                    if current_group_name == group_identifier:
+                        result.append(current_annotation)
+        return self.prepare_group(result)
 
     def prepare_group(self, group):
         prepared_group = [x for x in group if x is not None]
