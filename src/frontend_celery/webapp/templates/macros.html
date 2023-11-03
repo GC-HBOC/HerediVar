@@ -489,45 +489,19 @@
                         {% set selected_consensus = request.args.getlist('consensus') %}
                         <label for="consensus-select" class="form-label">Consensus classification</label>
                         <div id="consensus-select" class="d-flex">
-                            {%for c in allowed_consensus_classes %}
+                            {% for c in allowed_consensus_classes %}
                                 <div class="form-check d-flex bsr align-items-center">
                                     <input class="form-check-input ssr" type="checkbox" value="{{c}}" id="cl{{c}}" name="consensus" {% if c in selected_consensus %}checked{% endif %}>
                                     <label class="form-check-label" for="cl{{c}}">{{c}}</label>
                                 </div>
                             {% endfor %}
-                            <!--
                             <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="1" id="cl1" name="consensus" {% if '1' in selected_consensus %}checked{% endif %}>
-                                <label class="form-check-label" for="cl1">1</label>
-                            </div>
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="2" id="cl2" name="consensus" {% if '2' in selected_consensus %}checked{% endif %}>
-                                <label class="form-check-label" for="cl2">2</label>
-                            </div>
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="3-" id="cl3-" name="consensus" {% if '3-' in selected_consensus %}checked{% endif %}>
-                                <label class="form-check-label" for="cl3-">3-</label>
-                            </div>
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="3" id="cl3" name="consensus" {% if '3' in selected_consensus %}checked{% endif %}>
-                                <label class="form-check-label" for="cl3">3</label>
-                            </div>
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="3+" id="cl3+" name="consensus" {% if '3+' in selected_consensus %}checked{% endif %}>
-                                <label class="form-check-label" for="cl3+">3+</label>
-                            </div>
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="4" id="cl4" name="consensus" {% if '4' in selected_consensus %}checked{% endif %}>
-                                <label class="form-check-label" for="cl4">4</label>
-                            </div>
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="5" id="cl5" name="consensus" {% if '5' in selected_consensus %}checked{% endif %}>
-                                <label class="form-check-label" for="cl5">5</label>
-                            </div>
-                            -->
-                            <div class="form-check d-flex align-items-center">
                                 <input class="form-check-input ssr" type="checkbox" value="-" id="cl-" name="consensus" {% if '-' in selected_consensus %}checked{% endif %}>
                                 <label class="form-check-label" for="cl-">none</label>
+                            </div>
+                            <div class="form-check d-flex align-items-center">
+                                <input class="form-check-input ssr" type="checkbox" value="on" id="include_heredicare_consensus" name="include_heredicare_consensus" {% if request.args.get('include_heredicare_consensus') == 'on' %}checked{% endif %}>
+                                <label class="form-check-label" for="include_heredicare_consensus">include_heredicare</label>
                             </div>
                         </div>
                     </div>
@@ -542,36 +516,6 @@
                                     <label class="form-check-label" for="ucl{{c}}">{{c}}</label>
                                 </div>
                             {% endfor %}
-                            <!--
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="1" id="ucl1" name="user" {% if '1' in selected_user %}checked{% endif %}>
-                                <label class="form-check-label" for="ucl1">1</label>
-                            </div>
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="2" id="ucl2" name="user" {% if '2' in selected_user %}checked{% endif %}>
-                                <label class="form-check-label" for="ucl2">2</label>
-                            </div>
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="3-" id="ucl3-" name="user" {% if '3-' in selected_user %}checked{% endif %}>
-                                <label class="form-check-label" for="ucl3-">3-</label>
-                            </div>
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="3" id="ucl3" name="user" {% if '3' in selected_user %}checked{% endif %}>
-                                <label class="form-check-label" for="ucl3">3</label>
-                            </div>
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="3+" id="ucl3+" name="user" {% if '3+' in selected_user %}checked{% endif %}>
-                                <label class="form-check-label" for="ucl3+">3+</label>
-                            </div>
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="4" id="ucl4" name="user" {% if '4' in selected_user %}checked{% endif %}>
-                                <label class="form-check-label" for="ucl4">4</label>
-                            </div>
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="5" id="ucl5" name="user" {% if '5' in selected_user %}checked{% endif %}>
-                                <label class="form-check-label" for="ucl5">5</label>
-                            </div>
-                            -->
                             <div class="form-check d-flex align-items-center">
                                 <input class="form-check-input ssr" type="checkbox" value="-" id="ucl-" name="user" {% if '-' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl-">none</label>
@@ -703,7 +647,7 @@
                 </div>
             {% endif %}
         </td>
-        <td>
+        <td class="clickable" data-href="{{ url_for('variant.display', variant_id=variant.id) }}">
             {% if preferred_transcripts is not none %}
                 {% for consequence in preferred_transcripts %}
                     <div>
@@ -721,12 +665,12 @@
                 </div>
             {% endif %}
         </td>
-        <td class="text_align_center">
+        <td class="text_align_center clickable" data-href="{{ url_for('variant.display', variant_id=variant.id) }}">
             {% set your_classification = variant.get_recent_user_classification(session['user']['user_id']) %}
             {% if your_classification is not none %} {{ your_classification.selected_class }} {% else %}-{%endif%}
         </td>
         <!--<td style="text-align:center;">{% if variant[7] is not none %} {{ variant[7] }} {% else %}-{%endif%}</td>-->
-        <td class="text_align_center">
+        <td class="text_align_center clickable" data-href="{{ url_for('variant.display', variant_id=variant.id) }}">
             {% set _consensus_class, _source = variant.get_consensus_class() %}
             {{ render_consensus_classification_label(_consensus_class, _source, '2em') }}
         </td>

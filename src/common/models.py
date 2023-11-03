@@ -767,8 +767,9 @@ class Variant:
             if current_classification.selected_class is not None:
                 if result is None:
                     result = current_classification
-                elif current_classification.classification_date > result.classification_date:
-                    result = current_classification
+                if current_classification.classification_date is not None:
+                    if current_classification.classification_date > result.classification_date:
+                        result = current_classification
         return result
     
     # the most recent consensus class or if that does not exist the most recent heredicare consensus classification
@@ -836,7 +837,7 @@ class Variant:
             result = []
             gene_ids = []
             for consequence in self.consequences:
-                current_gene = consequence.gene
+                current_gene = consequence.transcript.gene
                 if current_gene is not None:
                     if current_gene.id not in gene_ids and current_gene.id is not None:
                         result.append(current_gene)

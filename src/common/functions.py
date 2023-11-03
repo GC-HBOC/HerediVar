@@ -719,3 +719,21 @@ def sort_transcripts_worker(a, b):
                     return 1
                 else:
                     return 0
+
+
+# one to many mapping
+def num2heredicare(classification):
+    if classification is None:
+        return "-"
+    mapping = {
+        "5": ["1", "15"],
+        "3": ["2", "13"],
+        "1": ["3", "11"],
+        "2": ["12"],
+        "3-": ["32"],
+        "3+": ["34"],
+        "4": ["34"],
+        "-": ["20", "21", "4", "-1"],
+        "M": ["M"]
+    }
+    return mapping[str(classification)]

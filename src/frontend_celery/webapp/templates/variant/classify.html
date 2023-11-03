@@ -328,26 +328,6 @@
 </div>
 
 <!-- this extracts the flask data and makes them available to the scripts -->
-<!--
-<script>
-    const logged_in_user_id = '{{ logged_in_user_id }}'
-
-    const classification_schemas = JSON.parse('{{ classification_schemas | tojson }}'.slice(1, -1))
-    console.log('{{ classification_schemas | tojson }}'.slice(1, -1))
-
-    //console.log(schemes_with_info)
-    // example schemes with info: {3: {'none': {'classification_id': 4, 'date': '2022-07-15', 'selected_criteria': [(26, 4, 'pvs1', 'pvs', 'egsa'), (27, 4, 'pp1', 'pm', 'edfsg'), (28, 4, 'bs1', 'bs', 'fdsaf')]}, 'TP53': {'classification_id': 10, 'date': '2022-07-13', 'selected_criteria': [(21, 10, 'bp2', 'bp', 'erwhgerwb'), (22, 10, 'bs1', 'bs', 'ababasc')]}}, 14: {'none': {'classification_id': 23, 'date': '2022-07-18', 'selected_criteria': [(36, 23, 'pm3', 'pm', 'asfdsaf'), (37, 23, 'pp1', 'pvs', 'VERRRRYYY STRONG!')]}, 'TP53': {'classification_id': 24, 'date': '2022-07-18', 'selected_criteria': [(38, 24, 'ps1', 'ps', 'c vxc ysa'), (39, 24, 'ps2', 'ps', 'asdfafafd'), (40, 24, 'pm2', 'pm', 'afdasfasdf'), (41, 24, 'pm5', 'pm', 'daffafd')]}}}
-
-    const previous_classifications = JSON.parse('{{ previous_classifications | tojson }}'.slice(1, -1))
-    const variant_genes = '{{ variant.get_genes(how = "string") }}';
-    const classification_type = '{{ classification_type }}';
-    const request_form = JSON.parse('{{request.form.to_dict(flat=True) | tojson | tojson }}'.slice(1, -1))
-    
-    
-    const selected_pmids = JSON.parse('{{request.form.getlist("pmid") | tojson | tojson }}'.slice(1, -1)) // this may be non empty if there were errors in the submission
-    const selected_text_passages = JSON.parse('{{request.form.getlist("text_passage") | tojson | tojson }}'.slice(1, -1)) // this may be non empty if there were errors in the submission
-</script>
--->
 
 <input type='hidden' id='flask_data'
     data-logged-in-user-id='{{ logged_in_user_id }}'

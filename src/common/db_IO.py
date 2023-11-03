@@ -617,7 +617,7 @@ class Connection:
                         return 0
 
 
-    def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None):
+    def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None, include_heredicare_consensus = False):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -654,16 +654,28 @@ class Connection:
             consensus_without_dash = [value for value in consensus if value != '-']
             if '-' in consensus:
                 new_constraints_inner = "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM consensus_classification WHERE is_recent=1)"
+                if include_heredicare_consensus:
+                    new_constraints_inner += " AND id NOT IN (SELECT variant_id FROM variant_heredicare_annotation WHERE consensus_class IS NOT NULL)"
                 if len(consensus_without_dash) > 0: # if we have - AND some other class(es) we need to add an or between them
                     new_constraints_inner = new_constraints_inner + " UNION "
             if len(consensus_without_dash) > 0: # if we have one or more classes without the -
-                placeholders = ["%s"] * len(consensus_without_dash)
-                placeholders = ', '.join(placeholders)
-                placeholders = functions.enbrace(placeholders)
+                placeholders = self.get_placeholders(len(consensus_without_dash))
                 new_constraints_inner = new_constraints_inner + "SELECT variant_id FROM consensus_classification WHERE classification IN " + placeholders + " AND is_recent = 1"
                 actual_information += tuple(consensus_without_dash)
-            new_constraints = "id IN (" + new_constraints_inner + ")"
+            new_constraints = "variant.id IN (" + new_constraints_inner + ")"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
+
+            if include_heredicare_consensus and len(consensus_without_dash) > 0:
+                heredicare_consensus = []
+                for c in consensus_without_dash:
+                    heredicare_consensus.extend(functions.num2heredicare(c))
+                placeholders1 = self.get_placeholders(len(heredicare_consensus))
+                placeholders2 = self.get_placeholders(len(consensus_without_dash))
+                new_constraints = "variant.id IN (SELECT variant_id FROM variant_heredicare_annotation WHERE consensus_class IN " + placeholders1 +  " AND variant_id NOT IN (SELECT variant_id FROM consensus_classification WHERE classification NOT IN " + placeholders2 + " AND is_recent = 1))"
+                actual_information += tuple(heredicare_consensus)
+                actual_information += tuple(consensus_without_dash)
+                postfix = self.add_constraints_to_command(postfix, new_constraints, 'OR')
+
         if user is not None and len(user) > 0:
             new_constraints_inner = ''
             user_without_dash = [value for value in user if value != '-']
@@ -729,7 +741,7 @@ class Connection:
             offset = (page - 1) * page_size
             command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
-        #print(command % actual_information)
+        print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 

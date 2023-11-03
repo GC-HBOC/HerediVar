@@ -6,6 +6,8 @@ import common.functions as functions
 import pandas as pd
 import datetime
 import csv
+import gzip
+
 
 
 parser = argparse.ArgumentParser(description="")
@@ -29,35 +31,68 @@ submissions_summary_header_row = int(args.submissions_header)
 
 
 submission_summary_path = args.submissions
-submission_summary = pd.read_csv(submission_summary_path, sep = "\t", compression="gzip", quoting=csv.QUOTE_NONE, skiprows=submissions_summary_header_row)
+#submission_summary = pd.read_csv(submission_summary_path, sep = "\t", compression="gzip", quoting=csv.QUOTE_NONE, skiprows=submissions_summary_header_row)
+
+def read_submission_summary(path):
+    file=gzip.open(path, 'rb')
+
+    result = {}
+
+    for line in file:
+        line = line.decode('utf-8')
+        if line.startswith('#') or line.strip() == '':
+            continue
+        
+        parts = line.split('\t')
+        if len(parts) != 13:
+            raise IOError("Line does not have the correct number of columns (13): " + line)
+        
+        variation_id = parts[0]
+        new_submission = [parts[0], parts[1], parts[2], parts[6], parts[5], parts[9], parts[3], parts[12]] # variation_id, clinicalsignificance, lastevaluated, review status, reportedphenotypeinfo, submitter, description, expalanationofinterpretation
+        new_submission = [x.strip() for x in new_submission]
+
+        if variation_id not in result:
+            result[variation_id] = [new_submission]
+        else:
+            result[variation_id].append(new_submission)
+
+    file.close()
+
+    return result
 
 
-
-def convert_row_to_string(variationid, row):
-    last_evaluated = str(row['DateLastEvaluated'])
+def submission2str(info):
+    #variation_id, clinicalsignificance, lastevaluated, reviewstatus, reportedphenotypeinfo, submitter, description, expalanationofinterpretation
+    last_evaluated = info[2]
     if last_evaluated != '-' and last_evaluated != '':
         last_evaluated = datetime.datetime.strptime(last_evaluated, "%b %d, %Y").strftime("%Y-%m-%d")
     else:
         last_evaluated = ''
     
-    description = str(row['Description']).strip('\"')
-    explanation_of_interpretation = str(row['ExplanationOfInterpretation']).strip('\"')
-    if description == '-':
+    description = info[6].strip('\"')
+    explanation_of_interpretation = info[7].strip('\"')
+    if description == '-' or description.strip() == '':
         description = ''
     else:
         description = "description: " + description
-    if explanation_of_interpretation == '-':
+    if explanation_of_interpretation == '-' or explanation_of_interpretation.strip() == '':
         explanation_of_interpretation = ''
     else:
         explanation_of_interpretation = "ExplanationOfInterpretation: " + explanation_of_interpretation
 
-    result = str(variationid).replace('|', ' ') + '|' + str(row['ClinicalSignificance']).replace('|', ' ') + '|' \
-     + last_evaluated + '|' + str(row['ReviewStatus']).replace('|', ' ') + '|' \
-      + str(row['ReportedPhenotypeInfo']).replace('|', ' ') + '|' \
-       + str(row['Submitter']).replace('|', ' ') + '|' + functions.collect_info(description, '', explanation_of_interpretation, sep = ' - ').replace('|', ' ')
+    data = [
+        info[0], # variation_id
+        info[1], # clinical_significance
+        last_evaluated,
+        info[3], # review_status
+        info[4], # reportedphenotypeinfo
+        info[5], # submitter
+        functions.collect_info(description, '', explanation_of_interpretation, sep = ' - ')
+    ]
+    data = [functions.encode_vcf(str(x)) for x in data]
+    data = '|'.join(data)
 
-    result = result.replace(' ', '_').replace('\\', '/').replace(';', '&').replace(',', '\\')
-    return result
+    return data
 
 
 # write vcf header
@@ -67,6 +102,11 @@ info_headers = ["##INFO=<ID=inpret,Number=.,Type=String,Description=\"Interpreta
                 "##INFO=<ID=submissions,Number=.,Type=String,Description=\"All submissions listed in ClinVar delimited by ','. All ',' in the original sequence were replaced with '\\' and spaces were replaced by '_' Format: VariationID|ClinicalSignificance|LastEvaluated|ReviewStatus|SubmittedPhenotypeInfo|Submitter|ExplanationOfInterpretation\">"]
 functions.write_vcf_header(info_headers)
 
+
+functions.eprint("reading submission summary...")
+submission_summary = read_submission_summary(submission_summary_path)
+
+functions.eprint("converting clinvar...")
 for line in input_file:
     line = line.strip()
     if line.startswith('#'):
@@ -98,26 +138,29 @@ for line in input_file:
             rev_stat = info[11:]
     
     # skip variants which lack an interpretation
-    if interpretation == '' or rev_stat == '':
-        continue
+    # if interpretation == '' or rev_stat == '':
+        # continue
 
     parts[5] = '.'
     parts[6] = '.'
     parts[0] = 'chr' + chr_num
     info = ''
-    info = functions.collect_info(info, 'inpret=', interpretation)
-    info = functions.collect_info(info, 'revstat=', rev_stat)
-    info = functions.collect_info(info, 'varid=', variation_id)
+    info = functions.collect_info(info, 'inpret=', functions.encode_vcf(interpretation))
+    info = functions.collect_info(info, 'revstat=', functions.encode_vcf(rev_stat))
+    info = functions.collect_info(info, 'varid=', functions.encode_vcf(variation_id))
     
-    current_submissions = submission_summary.loc[submission_summary['#VariationID'] == int(variation_id)]
-    current_submissions = current_submissions.reset_index()
+    current_submissions = submission_summary.get(variation_id, []) #.loc[submission_summary['#VariationID'] == int(variation_id)]
+    #current_submissions = current_submissions.reset_index()
     
-    all_submissions = ""
-    if len(current_submissions.index) > 0:
-        all_submissions = current_submissions.apply(lambda x: convert_row_to_string(variation_id, x), axis=1)
-        all_submissions = ','.join(all_submissions)
-
-    info = functions.collect_info(info, 'submissions=', all_submissions.replace(' ', '_'))
+    all_submissions = []
+    for submission in current_submissions:
+        submission_str = submission2str(submission)
+        all_submissions.append(submission_str)
+    #all_submissions = current_submissions.apply(lambda x: convert_row_to_string(variation_id, x), axis=1)
+    
+    
+    all_submissions = '&'.join(all_submissions)
+    info = functions.collect_info(info, 'submissions=', all_submissions)
     parts[7] = info
 
     print('\t'.join(parts))

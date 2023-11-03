@@ -98,14 +98,14 @@ class annotate_from_vcf_job(Job):
         if clinvar_submissions == '' or clinvar_submissions is None:
             clinvar_submissions = []
         else:
-            clinvar_submissions = clinvar_submissions.split(',')
+            clinvar_submissions = clinvar_submissions.split('&')
         clv_revstat = functions.find_between(info, 'ClinVar_revstat=', '(;|$)')
         clv_varid = functions.find_between(info, 'ClinVar_varid=', '(;|$)')
         clv_inpret = functions.find_between(info, 'ClinVar_inpret=', '(;|$)')
 
         if clv_revstat is not None and clv_inpret is not None and clv_varid is not None:
-            clv_revstat.replace('\\', ',').replace('_', ' ')
-            clv_inpret.replace('\\', ',').replace('_', ' ')
+            clv_revstat = functions.decode_vcf(clv_revstat)#.replace('\\', ',').replace('_', ' ')
+            clv_inpret = functions.decode_vcf(clv_inpret)#.replace('\\', ',').replace('_', ' ')
 
             conn.clean_clinvar(variant_id) # remove all clinvar information of this variant from database and insert it again -> only the most recent clinvar annotaion is saved in database!
             conn.insert_clinvar_variant_annotation(variant_id, clv_varid, clv_inpret, clv_revstat)
@@ -113,7 +113,9 @@ class annotate_from_vcf_job(Job):
 
             for submission in clinvar_submissions:
                 #Format of one submission: 0VariationID|1ClinicalSignificance|2LastEvaluated|3ReviewStatus|5SubmittedPhenotypeInfo|7Submitter|8comment
-                submissions = submission.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').replace('&', ';').split('|')
+                submissions = submission.split('|')
+                submissions = [functions.decode_vcf(s) for s in submissions]
+                #submissions = functions.decode_vcf(submission)#.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').replace('&', ';').split('|')
                 conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
 
 

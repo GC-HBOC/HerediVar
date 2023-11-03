@@ -75,7 +75,9 @@ def extract_consensus_classifications(request_obj, allowed_classes):
     consensus_classifications = preprocess_query(consensus_classifications, r'(' + regex_inner + r')?')
     if consensus_classifications is None:
         flash("You have an error in your consensus class query(s). It must consist of a number between 1-5, 3+, 3- or M. Results are not filtered by consensus classification.", "alert-danger")
-    return consensus_classifications
+    
+    include_heredicare = True if request_obj.args.get('include_heredicare_consensus', 'off') == 'on' else False
+    return consensus_classifications, include_heredicare
 
 def extract_user_classifications(request_obj, allowed_classes):
     classes = allowed_classes + ['-']
