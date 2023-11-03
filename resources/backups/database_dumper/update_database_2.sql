@@ -49,3 +49,20 @@ UPDATE `HerediVar_ahdoebm1`.`annotation_type` SET `group_name` = 'Protein Domain
 UPDATE `HerediVar_ahdoebm1`.`annotation_type` SET `group_name` = 'Protein Domain' WHERE (`id` = '37');
 UPDATE `HerediVar_ahdoebm1`.`annotation_type` SET `group_name` = 'None' WHERE (`id` = '9');
 UPDATE `HerediVar_ahdoebm1`.`annotation_type` SET `group_name` = 'None' WHERE (`id` = '10');
+
+
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`variant_heredicare_annotation` 
+ADD INDEX `FK_variant_heredicare_annotation_variant_idx` (`variant_id` ASC);
+;
+ALTER TABLE `HerediVar_ahdoebm1`.`variant_heredicare_annotation` 
+ADD CONSTRAINT `FK_variant_heredicare_annotation_variant`
+  FOREIGN KEY (`variant_id`)
+  REFERENCES `HerediVar_ahdoebm1`.`variant` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`annotation_queue` 
+CHANGE COLUMN `error_message` `error_message` TEXT NULL DEFAULT '' ;
