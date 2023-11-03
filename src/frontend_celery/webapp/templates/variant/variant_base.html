@@ -208,12 +208,23 @@
                         <h4 class="card-subcaption">ClinVar classifications</h4>
 
                         <div class="ssl sst ssb">
-                            <div>
-                                <abbr title="The review status from ClinVar"><a class="dashed_underline">review status:</a></abbr>&nbsp;{{ clinvar.review_status }}
+                            <div class="d-flex">
+                                <abbr class="ssr width_small" title="The review status from ClinVar"><a class="dashed_underline">review status:</a></abbr>
+                                <div>{{ clinvar.review_status }}</div>
                             </div>
     
-                            <div>
-                                <abbr title="A summary of the ClinVar interpretations. The numbers in brackets display the number of ClinVar submissions reporting the specific type of interpretation."><a class="dashed_underline">interpretation summary:</a></abbr>&nbsp;{{ clinvar.interpretation_summary }}
+                            <div class="d-flex">
+                                <abbr class="ssr width_small" title="A summary of the ClinVar interpretations. The numbers in brackets display the number of ClinVar submissions reporting the specific type of interpretation.">
+                                    <a class="dashed_underline">summary:</a>
+                                </abbr>
+                                <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
+                                    {% for item in clinvar.interpretation_summary.split('|') %}
+                                    <li class="list-group-item noboarder-td" >
+                                        {{ item.replace('(', ' (') }}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+
                             </div>
                         </div>
                         <!-- clinvar submission table -->

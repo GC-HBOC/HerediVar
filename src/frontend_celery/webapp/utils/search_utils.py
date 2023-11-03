@@ -23,39 +23,67 @@ def preprocess_query(query, pattern = '.*'):
 def get_search_query_separators():
     return '[;,\n]'
 
-def bed_ranges_to_heredivar_ranges(ranges):
-    ranges = re.split('[\n]', ranges)
-    result = []
-    for range_entry in ranges:
-        range_entry = range_entry.strip()
-        if '\t' in range_entry: # it is a bed style range
-            new_heredivar_range = convert_bed_line_to_heredivar_range(range_entry)
-            if new_heredivar_range is not None:
-                result.append(new_heredivar_range)
-        else: # it is already a heredivar style range
-            result.append(range_entry)
-    return ';'.join(result)
+#def bed_ranges_to_heredivar_ranges(ranges):
+#    ranges = re.split('[\n]', ranges)
+#    result = []
+#    for range_entry in ranges:
+#        range_entry = range_entry.strip()
+#        if '\t' in range_entry: # it is a bed style range
+#            new_heredivar_range = convert_bed_line_to_heredivar_range(range_entry)
+#            if new_heredivar_range is not None:
+#                result.append(new_heredivar_range)
+#        else: # it is already a heredivar style range
+#            result.append(range_entry)
+#    return ';'.join(result)
+#
+#
+#def convert_bed_line_to_heredivar_range(bed_line):
+#    parts = bed_line.split('\t')
+#    chrom = parts[0]
+#    chr_num = functions.validate_chr(chrom)
+#    if chr_num is None:
+#        return None
+#    chrom = 'chr' + str(chr_num)
+#    start = parts[1] # bed ranges are zero based at the start position
+#    end = int(parts[2]) - 1 # bed ranges are one based at the end position -> need to substract one because mysql has start and end zero based when using BETWEEN operator
+#    return chrom + ':' + str(start) + '-' + str(end)
 
+def preprocess_ranges(ranges):
+    if ranges is None:
+        return None
+    seps = get_search_query_separators()
+    ranges_split = re.split(seps, ranges)
+    ranges_split = [proprocess_range_worker(r) for r in ranges_split]
+    ranges_split_filtered = [r for r in ranges_split if r is not None] # filter out erroneous
+    if len(ranges_split) != len(ranges_split_filtered):
+        flash("At least one of your range query(s) has an error. Please check the syntax. The erroneous range query(s) were removed. You still have " + str(len(ranges_split_filtered)) + " ranges after removing the erroneous ones.", 'alert-danger')
+    ranges_split = ';'.join(ranges_split_filtered)
+    return ranges_split
 
-def convert_bed_line_to_heredivar_range(bed_line):
-    parts = bed_line.split('\t')
+def proprocess_range_worker(r):
+    r = r.strip()
+    r = r.replace(':', '-').replace('\t', '-').replace(' ', '-')
+    parts = r.split('-')
     chrom = parts[0]
     chr_num = functions.validate_chr(chrom)
     if chr_num is None:
         return None
-    chrom = 'chr' + str(chr_num)
-    start = parts[1] # bed ranges are zero based at the start position
-    end = int(parts[2]) - 1 # bed ranges are one based at the end position -> need to substract one because mysql has start and end zero based when using BETWEEN operator
-    return chrom + ':' + str(start) + '-' + str(end)
+    parts[0] = 'chr' + str(chr_num)
+    r = '-'.join(parts)
+    return r
+
 
 def extract_ranges(request_obj):
     ranges = request_obj.args.get('ranges', '')
-    if '\t' in ranges:
-        ranges = bed_ranges_to_heredivar_ranges(ranges)
-    ranges = preprocess_query(ranges, pattern= r"chr.+:\d+-\d+")
-    if ranges is None:
-        flash("You have an error in your range query(s). Please check the syntax! Results are not filtered by ranges.", "alert-danger")
+    if ranges != '':
+        ranges = preprocess_ranges(ranges)
+        ranges = preprocess_query(ranges, pattern= r"(chr)?.+-\d+-\d+")
+        if ranges is None:
+            flash("You have an error in your range query(s). Please check the syntax! Results are not filtered by ranges.", "alert-danger")
+    else:
+        return []
     return ranges
+
 
 def extract_genes(request_obj):
     genes = request_obj.args.get('genes', '')

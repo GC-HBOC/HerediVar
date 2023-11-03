@@ -486,6 +486,13 @@
                     </div>
 
                     <div class="form-group sst">
+                        <label for="external_ids" class="form-label">External IDs</label>
+                        <textarea type="text" name="external_ids" id="external_ids"
+                               placeholder="..." class="form-control"
+                               >{{ request.args.get('external_ids', '') }}</textarea>
+                    </div>
+
+                    <div class="form-group sst">
                         {% set selected_consensus = request.args.getlist('consensus') %}
                         <label for="consensus-select" class="form-label">Consensus classification</label>
                         <div id="consensus-select" class="d-flex">

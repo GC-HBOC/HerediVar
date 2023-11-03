@@ -444,15 +444,12 @@ class Connection:
         return command
     
     def preprocess_range(self, range_constraint):
-        parts = range_constraint.split(':')
-        if len(parts) != 2:
+        parts = range_constraint.split('-')
+        if len(parts) != 3:
             return None, None, None
         chr = parts[0]
-        positions = parts[1].split('-')
-        if len(positions) != 2:
-            return None, None, None
-        start = int(positions[0])
-        end = int(positions[1])
+        start = int(parts[1])
+        end = int(parts[2])
         return chr, start, end
 
     def convert_to_gene_id(self, string):
@@ -663,7 +660,8 @@ class Connection:
                 new_constraints_inner = new_constraints_inner + "SELECT variant_id FROM consensus_classification WHERE classification IN " + placeholders + " AND is_recent = 1"
                 actual_information += tuple(consensus_without_dash)
             new_constraints = "variant.id IN (" + new_constraints_inner + ")"
-            postfix = self.add_constraints_to_command(postfix, new_constraints)
+            #postfix = self.add_constraints_to_command(postfix, new_constraints)
+            constraints_complete = new_constraints
 
             if include_heredicare_consensus and len(consensus_without_dash) > 0:
                 heredicare_consensus = []
@@ -674,7 +672,9 @@ class Connection:
                 new_constraints = "variant.id IN (SELECT variant_id FROM variant_heredicare_annotation WHERE consensus_class IN " + placeholders1 +  " AND variant_id NOT IN (SELECT variant_id FROM consensus_classification WHERE classification NOT IN " + placeholders2 + " AND is_recent = 1))"
                 actual_information += tuple(heredicare_consensus)
                 actual_information += tuple(consensus_without_dash)
-                postfix = self.add_constraints_to_command(postfix, new_constraints, 'OR')
+                constraints_complete = functions.enbrace(constraints_complete + " OR " + new_constraints)
+            
+            postfix = self.add_constraints_to_command(postfix, constraints_complete)
 
         if user is not None and len(user) > 0:
             new_constraints_inner = ''
