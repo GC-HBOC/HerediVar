@@ -37,7 +37,8 @@ class heredicare_job(Job):
 
         conn.clear_heredicare_annotation(variant_id)
         
-        vids = conn.get_external_ids_from_variant_id(variant_id, id_source="heredicare") # the vids are imported from the import variants admin page
+        heredicare_vid_annotation_type_id = conn.get_most_recent_annotation_type_id('heredicare_vid')
+        vids = conn.get_external_ids_from_variant_id(variant_id, annotation_type_id=heredicare_vid_annotation_type_id) # the vids are imported from the import variants admin page
 
         #print(vids)
         

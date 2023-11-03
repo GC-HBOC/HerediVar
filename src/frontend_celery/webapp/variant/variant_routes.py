@@ -38,6 +38,7 @@ def search():
     user_classifications = extract_user_classifications(request, allowed_user_classes)
     hgvs = extract_hgvs(request)
     variant_ids_oi = extract_lookup_list(request, user_id, conn)
+    external_ids = extract_external_ids(request)
     page = int(request.args.get('page', 1))
 
     sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden = extract_search_settings(request)
@@ -54,7 +55,8 @@ def search():
         user=user_classifications, 
         hgvs=hgvs, 
         variant_ids_oi=variant_ids_oi,
-        include_heredicare_consensus = include_heredicare_consensus
+        include_heredicare_consensus = include_heredicare_consensus,
+        external_ids = external_ids
     )
     lists = conn.get_lists_for_user(user_id)
     pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
@@ -213,7 +215,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
     clinvar_submission = check_update_clinvar_status(variant_id, conn)
 
-    #print(variant.annotations)
+    print(variant.external_ids)
 
     return render_template('variant/variant.html',
                             current_annotation_status=current_annotation_status,

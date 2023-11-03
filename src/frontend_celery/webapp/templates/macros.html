@@ -459,14 +459,14 @@
                     <div class="form-group">
                         <label for="genes" class="form-label">Genes</label>
                         <textarea type="text" name="genes" id="genes"
-                               placeholder="BRCA1; BARD1; ..." class="form-control"
+                               placeholder="BRCA1; BARD1; ..." class="form-control height_zero"
                                >{{ request.args.get('genes', '') }}</textarea>
                     </div>
         
                     <div class="form-group sst">
                         <label for="ranges" class="form-label">Ranges</label>
                         <textarea type="text" name="ranges" id="ranges"
-                               placeholder="chr1:10295758-17027834; chr11:108229378-108229378; ..." class="form-control"
+                               placeholder="chr1:10295758-17027834; chr11:108229378-108229378; ..." class="form-control height_zero"
                                >{{ request.args.get('ranges', '') }}</textarea>
                         
                         <div class="d-flex"> <!-- custom file upload -->
@@ -481,14 +481,14 @@
                     <div class="form-group sst">
                         <label for="hgvs" class="form-label">HGVS c.</label>
                         <textarea type="text" name="hgvs" id="hgvs"
-                               placeholder="ENST00000260947:c.1972C>T; ..." class="form-control"
+                               placeholder="ENST00000260947:c.1972C>T; ..." class="form-control height_zero"
                                >{{ request.args.get('hgvs', '') }}</textarea>
                     </div>
 
                     <div class="form-group sst">
                         <label for="external_ids" class="form-label">External IDs</label>
                         <textarea type="text" name="external_ids" id="external_ids"
-                               placeholder="..." class="form-control"
+                               placeholder="..." class="form-control height_zero"
                                >{{ request.args.get('external_ids', '') }}</textarea>
                     </div>
 
@@ -783,9 +783,10 @@
                     <td class="visually_hidden">{{ consequence.get_num_flags() }}</td>
 
                     <td>
+                        {% set rsids = variant.get_external_ids('rsid') %}
                         {% set rsid = none %}
-                        {% if variant.annotations.rsid is not none %}
-                            {% set rsid = variant.annotations.rsid.value %}
+                        {% if rsids | length > 0 %}
+                            {% set rsid = rsids[0].value %}
                         {% endif %}
                     
                         {{ google_link("google", rsid = rsid, hgvs_c = consequence.hgvs_c, hgvs_p = consequence.hgvs_p, gene_symbol = consequence.transcript.gene.symbol, is_scholar = False) }}
@@ -1018,10 +1019,13 @@
                                     <li class="list-group-item noboarder-td">
                                         {{ external_link("VarSome", "https://varsome.com/security-validation/?next=/variant/hg38/" + variant.chrom[3:]|string + ":" + variant.pos|string + ":" + variant.ref|string + ":" + variant.alt|string) }}
                                     </li>
-                                    {% if variant.annotations.rsid is not none %}
-                                    <li class="list-group-item noboarder-td" annotation_id="{{variant.annotations.rsid.id}}">
-                                        {{ external_link("dbSNP", "https://www.ncbi.nlm.nih.gov/snp/rs" + variant.annotations.rsid.value|string) }}
+                                    {% set rsids = variant.get_external_ids('rsid') %}
+                                    {% if rsids | length > 0 %}
+                                    {% for rsid in rsids %}
+                                    <li class="list-group-item noboarder-td" annotation_id="{{rsid.value}}">
+                                        {{ external_link("dbSNP", "https://www.ncbi.nlm.nih.gov/snp/rs" + rsid.value|string) }}
                                     </li>
+                                    {% endfor %}
                                     {% endif %}
                                     {% if variant.clinvar is not none %}
                                     <li class="list-group-item noboarder-td">

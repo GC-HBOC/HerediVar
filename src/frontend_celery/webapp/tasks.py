@@ -141,8 +141,8 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
         #all_vids_heredicare, status, message = heredicare_interface.get_vid_list()
 
         if status == "success":
-
-            vids_heredivar = conn.get_all_external_ids("heredicare")
+            annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
+            vids_heredivar = conn.get_all_external_ids_from_annotation_type(annotation_type_id)
 
 
             intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = compare_v_id_lists(all_vids_heredicare, vids_heredivar, vids_heredicare)
@@ -230,10 +230,11 @@ def delete_variant_heredicare(self, vid, vids, user_id, user_roles, import_varia
 
         message = "Removed heredicare vid"
         status = "update"
-        variant_id = conn.get_variant_id_from_external_id(vid, 'heredicare')
+        annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
+        variant_id = conn.get_variant_id_from_external_id(vid, annotation_type_id)
         if variant_id is not None:
-            all_vids_for_variant = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
-            conn.delete_external_id(vid, 'heredicare', variant_id = variant_id)
+            all_vids_for_variant = conn.get_external_ids_from_variant_id(variant_id, annotation_type_id)
+            conn.delete_external_id(vid, annotation_type_id = annotation_type_id, variant_id = variant_id)
             if all([v in vids for v in all_vids_for_variant]):
                 status = "deleted"
                 message = "Variant was hidden because it does not have any vids in heredicare anymore"
@@ -356,9 +357,10 @@ def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection, insert
         return status, message
     
     if str(variant.get("VISIBLE", "0")) == "0":
-        variant_id = conn.get_variant_id_from_external_id(vid, "heredicare")
+        annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
+        variant_id = conn.get_variant_id_from_external_id(vid, annotation_type_id)
         if variant_id is not None:
-            conn.delete_external_id(vid, "heredicare", variant_id)
+            conn.delete_external_id(vid, annotation_type_id, variant_id)
             variant_vids = conn.get_external_ids_from_variant_id(variant_id)
             if len(variant_vids) == 0:
                 conn.hide_variant(variant_id, is_hidden = False)
@@ -481,7 +483,8 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
 
     if variant_id is not None and external_ids is not None: # insert new vid
         for external_id in external_ids:
-            conn.insert_external_variant_id(variant_id, external_id, "heredicare")
+            annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
+            conn.insert_external_variant_id(variant_id, external_id, annotation_type_id)
 
     if not was_successful and message == '':
         new_message = "Not enough data to convert variant!"

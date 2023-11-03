@@ -92,7 +92,12 @@ def extract_genes(request_obj):
         flash("You have an error in your genes query(s). Results are not filtered by genes.", "alert-danger")
     return genes
 
-
+def extract_external_ids(request_obj):
+    external_ids = request_obj.args.get('external_ids', '')
+    external_ids = preprocess_query(external_ids)
+    if external_ids is None:
+        flash("You have an error in your external ID query(s). Results are not filtered by external IDs.", "alert-danger")
+    return external_ids
 
 def extract_consensus_classifications(request_obj, allowed_classes):
     classes = allowed_classes + ['-']
@@ -103,7 +108,6 @@ def extract_consensus_classifications(request_obj, allowed_classes):
     consensus_classifications = preprocess_query(consensus_classifications, r'(' + regex_inner + r')?')
     if consensus_classifications is None:
         flash("You have an error in your consensus class query(s). It must consist of a number between 1-5, 3+, 3- or M. Results are not filtered by consensus classification.", "alert-danger")
-    
     include_heredicare = True if request_obj.args.get('include_heredicare_consensus', 'off') == 'on' else False
     return consensus_classifications, include_heredicare
 

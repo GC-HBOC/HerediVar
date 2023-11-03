@@ -59,3 +59,14 @@ class Job(metaclass=abc.ABCMeta):
             value = value_modifier_function(value)
 
         conn.insert_variant_annotation(variant_id, annotation_type_id, value)
+
+    def insert_external_id(self, variant_id, info, info_name, annotation_type_id, conn, value_modifier_function = None):
+        value = functions.find_between(info, info_name, '(;|$)')
+
+        if value == '' or value is None:
+            return
+
+        if value_modifier_function is not None:
+            value = value_modifier_function(value)
+
+        conn.insert_external_variant_id(variant_id = variant_id, annotation_type_id = annotation_type_id, external_id = value)

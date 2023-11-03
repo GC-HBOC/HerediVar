@@ -737,3 +737,11 @@ def num2heredicare(classification):
         "M": ["M"]
     }
     return mapping[str(classification)]
+
+
+def extend_dict(dictionary, key, new_value):
+    if key in dictionary:
+        dictionary[key].append(new_value)
+    else:
+        dictionary[key] = [new_value]
+    return dictionary

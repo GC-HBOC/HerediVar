@@ -249,25 +249,25 @@ class Connection:
         variant_id = self.get_variant_id(chr, pos, ref, alt)
         return variant_id # return the annotation_queue_id of the new variant
     
-    def insert_external_variant_id(self, variant_id, external_id, id_source):
-        command = "INSERT INTO variant_ids (variant_id, external_id, id_source) \
+    def insert_external_variant_id(self, variant_id, external_id, annotation_type_id):
+        command = "INSERT INTO variant_ids (variant_id, external_id, annotation_type_id) \
                     SELECT %s, %s, %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM variant_ids \
-	                    WHERE `variant_id`=%s AND `external_id`=%s AND `id_source`=%s LIMIT 1)"
-        self.cursor.execute(command, (variant_id, external_id, id_source, variant_id, external_id, id_source))
+	                    WHERE `variant_id`=%s AND `external_id`=%s AND `annotation_type_id`=%s LIMIT 1)"
+        self.cursor.execute(command, (variant_id, external_id, annotation_type_id, variant_id, external_id, annotation_type_id))
         self.conn.commit()
     
-    def update_external_variant_id(self, variant_id, external_id, id_source):
-        command = "UPDATE variant_ids SET external_id = %s WHERE variant_id = %s AND id_source = %s"
-        self.cursor.execute(command, (external_id, variant_id, id_source))
-        self.conn.commit()
-
-    def insert_update_external_variant_id(self, variant_id, external_id, id_source):
-        previous_external_variant_id = self.get_external_ids_from_variant_id(variant_id, id_source=id_source)
-        #print(previous_external_variant_id)
-        if (len(previous_external_variant_id) == 1): # do update
-            self.update_external_variant_id(variant_id, external_id, id_source)
-        else: # save new
-            self.insert_external_variant_id(variant_id, external_id, id_source)
+    #def update_external_variant_id(self, variant_id, external_id, annotation_type_id):
+    #    command = "UPDATE variant_ids SET external_id = %s WHERE variant_id = %s AND annotation_type_id = %s"
+    #    self.cursor.execute(command, (external_id, variant_id, annotation_type_id))
+    #    self.conn.commit()
+#
+    #def insert_update_external_variant_id(self, variant_id, external_id, annotation_type_id):
+    #    previous_external_variant_id = self.get_external_ids_from_variant_id(variant_id, annotation_type_id=annotation_type_id)
+    #    #print(previous_external_variant_id)
+    #    if (len(previous_external_variant_id) == 1): # do update
+    #        self.update_external_variant_id(variant_id, external_id, annotation_type_id)
+    #    else: # save new
+    #        self.insert_external_variant_id(variant_id, external_id, annotation_type_id)
 
     def insert_annotation_request(self, variant_id, user_id): # this inserts only if there is not an annotation request for this variant which is still pending
         #command = "INSERT INTO annotation_queue (variant_id, status, user_id) VALUES (%s, %s, %s)"
@@ -614,7 +614,7 @@ class Connection:
                         return 0
 
 
-    def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None, include_heredicare_consensus = False):
+    def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None, external_ids = None, include_heredicare_consensus = False):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -662,7 +662,6 @@ class Connection:
             new_constraints = "variant.id IN (" + new_constraints_inner + ")"
             #postfix = self.add_constraints_to_command(postfix, new_constraints)
             constraints_complete = new_constraints
-
             if include_heredicare_consensus and len(consensus_without_dash) > 0:
                 heredicare_consensus = []
                 for c in consensus_without_dash:
@@ -673,9 +672,7 @@ class Connection:
                 actual_information += tuple(heredicare_consensus)
                 actual_information += tuple(consensus_without_dash)
                 constraints_complete = functions.enbrace(constraints_complete + " OR " + new_constraints)
-            
             postfix = self.add_constraints_to_command(postfix, constraints_complete)
-
         if user is not None and len(user) > 0:
             new_constraints_inner = ''
             user_without_dash = [value for value in user if value != '-']
@@ -720,6 +717,46 @@ class Connection:
             new_constraints = "id IN " + placeholders
             actual_information += tuple(all_variants)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if external_ids is not None and len(external_ids) > 0:
+            ids_unknown_source = []
+            ids_known_source = {}
+            for external_id in external_ids:
+                # handle rsids
+                if external_id.startswith('rs') or external_id[-5:].lower() == ':rsid':
+                    external_id = external_id.strip('rs').strip(':rsid')
+                    functions.extend_dict(ids_known_source, 'rsid', external_id)
+                    continue
+                if external_id.startswith('COSV') or external_id[-7:].lower() == ':cosmic':
+                    external_id = external_id.strip(':cosmic')
+                    functions.extend_dict(ids_known_source, 'cosmic', external_id)
+                    continue
+                if external_id[-8:].lower() == ':clinvar':
+                    external_id = external_id.strip(':clinvar')
+                    functions.extend_dict(ids_known_source, 'clinvar', external_id)
+                    continue
+                if external_id[-11:] == ':heredicare':
+                    external_id = external_id.strip(':heredicare')
+                    functions.extend_dict(ids_known_source, 'heredicare_vid', external_id)
+                    continue
+                ids_unknown_source.append(external_id)
+            new_constraints = []
+
+            for id_source in ids_known_source:
+                annotation_type_id = self.get_most_recent_annotation_type_id(id_source)
+                current_external_ids = ids_known_source[id_source]
+                placeholders = self.get_placeholders(len(current_external_ids))
+                new_constraints.append("id IN (SELECT variant_id FROM variant_ids WHERE external_id IN " + placeholders + " AND annotation_type_id = %s )")
+                actual_information += tuple(current_external_ids)
+                actual_information += (annotation_type_id, )
+
+            if len(ids_unknown_source) > 0:
+                placeholders = self.get_placeholders(len(ids_unknown_source))
+                new_constraints.append("id IN (SELECT variant_id FROM variant_ids WHERE external_id IN " + placeholders + ")")
+                actual_information += tuple(ids_unknown_source)
+            new_constraints = ' OR '.join(new_constraints)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+
+
         if variant_ids_oi is not None and len(variant_ids_oi) > 0:
             placeholders = ["%s"] * len(variant_ids_oi)
             placeholders = ', '.join(placeholders)
@@ -993,19 +1030,15 @@ class Connection:
         else:
             return True
     
-    def get_variant_id_from_external_id(self, id, id_source): #!! assumed that the external_id column contains unique entries for id, id_source pairs!
-        command = "SELECT variant_id FROM variant_ids WHERE external_id = %s AND id_source = %s"
-        self.cursor.execute(command, (id, id_source))
+    def get_variant_id_from_external_id(self, external_id, annotation_type_id): #!! assumed that the external_id column contains unique entries for id, id_source pairs!
+        command = "SELECT variant_id FROM variant_ids WHERE external_id = %s AND annotation_type_id = %s"
+        self.cursor.execute(command, (external_id, annotation_type_id))
         result = self.cursor.fetchone()
         if result is not None:
             return result[0]
         return result
     
-    def get_all_external_ids(self, id_source):
-        command = "SELECT external_id FROM variant_ids WHERE id_source = %s"
-        self.cursor.execute(command, (id_source, ))
-        result = self.cursor.fetchall()
-        return [x[0] for x in result]
+
 
     def get_consensus_classification(self, variant_id, most_recent = False, sql_modifier=None): # it is possible to have multiple consensus classifications
         command = "SELECT id,user_id,variant_id,classification,comment,date,is_recent,classification_scheme_id,scheme_class FROM consensus_classification WHERE variant_id = %s"
@@ -1369,33 +1402,43 @@ class Connection:
         return result
 
 
-    # returns a list of external ids if an id source is given
-    # returns a list of tuples with (external_id, source) if no id source is given -> exports all external ids
-    def get_external_ids_from_variant_id(self, variant_id, id_source=''):
-        allowed_columns = ["external_id", "id_source"]
+    #returns a list of tuples with all information for each external id
+    def get_all_external_ids(self, variant_id):
+        command = """
+            SELECT variant_ids.id, title, description, version, version_date, variant_id, external_id, group_name, display_title, value_type FROM variant_ids INNER JOIN ( 
+                SELECT * 
+	                FROM annotation_type WHERE (title, version_date) IN ( 
+		                select title, MAX(version_date) version_date from annotation_type INNER JOIN ( 
+			                select variant_id, annotation_type_id, external_id from variant_ids where variant_id=%s
+			        ) x 
+			        ON annotation_type.id = x.annotation_type_id 
+		            GROUP BY title 
+	            )  
+            ) y  
+            ON y.id = variant_ids.annotation_type_id 
+            WHERE variant_id=%s AND group_name = 'ID'
+        """
+        self.cursor.execute(command, (variant_id, variant_id))
+        result = self.cursor.fetchall()
+        return result
 
-        columns_oi = ["external_id"]
-        if id_source == '' or id_source is None:
-            columns_oi = columns_oi + ["id_source"]
-        if any([c not in allowed_columns for c in columns_oi]):
-            return []
-        command = "SELECT " + ", ".join(columns_oi) + " FROM variant_ids WHERE variant_id = %s"
-        information = (variant_id,)
-        if id_source != '':
-            command = command + " AND id_source = %s"
-            information = information + (id_source, )
+    def get_all_external_ids_from_annotation_type(self, annotation_type_id):
+        command = "SELECT external_id FROM variant_ids WHERE annotation_type_id = %s"
+        self.cursor.execute(command, (annotation_type_id, ))
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
+    
+    # returns a list of external ids of a specific type
+    def get_external_ids_from_variant_id(self, variant_id, annotation_type_id):
+        command = "SELECT external_id FROM variant_ids WHERE variant_id = %s AND annotation_type_id = %s"
+        information = (variant_id, annotation_type_id)
         self.cursor.execute(command, information)
         result = self.cursor.fetchall()
-        if result is None:
-            return []
-        if id_source != '':
-            return [x[0] for x in result]
-        else:
-            return result
+        return [x[0] for x in result]
 
-    def delete_external_id(self, external_id, id_source, variant_id = None):
-        command = "DELETE FROM variant_ids WHERE external_id = %s AND id_source = %s"
-        actual_information = (external_id, id_source)
+    def delete_external_id(self, external_id, annotation_type_id, variant_id = None):
+        command = "DELETE FROM variant_ids WHERE external_id = %s AND annotation_type_id = %s"
+        actual_information = (external_id, annotation_type_id)
         if variant_id is not None:
             command += " AND variant_id = %s"
             actual_information += (variant_id, )
@@ -1644,7 +1687,7 @@ class Connection:
 	                    )  \
                     ) y  \
                     ON y.id = variant_annotation.annotation_type_id \
-                    WHERE variant_id=%s"
+                    WHERE variant_id=%s AND group_name != 'ID'"
         self.cursor.execute(command, (variant_id, variant_id))
         result = self.cursor.fetchall()
         return result
@@ -1707,7 +1750,8 @@ class Connection:
                     include_clinvar = True, 
                     include_consequences = True, 
                     include_assays = True, 
-                    include_literature = True
+                    include_literature = True,
+                    include_external_ids = True
                 ) -> models.Variant:
         variant_raw = self.get_one_variant(variant_id)
         if variant_raw is None:
@@ -1747,6 +1791,26 @@ class Connection:
                 setattr(annotations, annot.title, annot)
             
             annotations.flag_linked_annotations()
+
+        
+        # add external ids
+        external_ids = None
+        if include_external_ids:
+            external_ids = []
+            external_ids_raw = self.get_all_external_ids(variant_id)
+            #variant_ids.id, title, description, version, version_date, variant_id, external_id, group_name, display_title, value_type
+            for external_id_raw in external_ids_raw:
+                new_external_id = models.Annotation(id = external_id_raw[0], 
+                                                    value = external_id_raw[6], 
+                                                    title = external_id_raw[1], 
+                                                    display_title = external_id_raw[8], 
+                                                    description = external_id_raw[2], 
+                                                    version = external_id_raw[3], 
+                                                    version_date = external_id_raw[4], 
+                                                    value_type = external_id_raw[9], 
+                                                    group_name = external_id_raw[7]
+                                                )
+                external_ids.append(new_external_id)
 
         
         # add all consensus classifications
@@ -1976,7 +2040,8 @@ class Connection:
                                 clinvar = clinvar,
                                 consequences = consequences,
                                 assays = assays,
-                                literature = literature
+                                literature = literature,
+                                external_ids = external_ids
                             )
         return variant
 

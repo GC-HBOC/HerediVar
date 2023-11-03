@@ -45,46 +45,47 @@ class annotate_from_vcf_job(Job):
 
 
     def save_to_db(self, info, variant_id, conn):
-        self.insert_annotation(variant_id, info, "dbSNP_RS=", 3, conn)
+        recent_annotation_ids = conn.get_recent_annotation_type_ids()
+        self.insert_external_id(variant_id, info, "dbSNP_RS=", recent_annotation_ids['rsid'], conn)
 
-        self.insert_annotation(variant_id, info, "REVEL=", 6, conn)
+        self.insert_annotation(variant_id, info, "REVEL=", recent_annotation_ids['revel'], conn)
 
-        self.insert_annotation(variant_id, info, "CADD=", 5, conn)
+        self.insert_annotation(variant_id, info, "CADD=", recent_annotation_ids['cadd_scaled'], conn)
 
-        self.insert_annotation(variant_id, info, "GnomAD_AC=", 11, conn)
-        self.insert_annotation(variant_id, info, "GnomAD_AF=", 12, conn)
-        self.insert_annotation(variant_id, info, "GnomAD_hom=", 13, conn)
-        self.insert_annotation(variant_id, info, "GnomAD_hemi=", 14, conn)
-        self.insert_annotation(variant_id, info, "GnomAD_het=", 15, conn)
-        self.insert_annotation(variant_id, info, "GnomAD_popmax=", 16, conn, value_modifier_function = lambda value : value.upper())
-        self.insert_annotation(variant_id, info, "GnomAD_AF_popmax=", 51, conn)
-        self.insert_annotation(variant_id, info, "GnomADm_AC_hom=", 17, conn)
+        self.insert_annotation(variant_id, info, "GnomAD_AC=", recent_annotation_ids['gnomad_ac'], conn)
+        self.insert_annotation(variant_id, info, "GnomAD_AF=", recent_annotation_ids['gnomad_af'], conn)
+        self.insert_annotation(variant_id, info, "GnomAD_hom=", recent_annotation_ids['gnomad_hom'], conn)
+        self.insert_annotation(variant_id, info, "GnomAD_hemi=", recent_annotation_ids['gnomad_hemi'], conn)
+        self.insert_annotation(variant_id, info, "GnomAD_het=", recent_annotation_ids['gnomad_het'], conn)
+        self.insert_annotation(variant_id, info, "GnomAD_popmax=", recent_annotation_ids['gnomad_popmax'], conn, value_modifier_function = lambda value : value.upper())
+        self.insert_annotation(variant_id, info, "GnomAD_AF_popmax=", recent_annotation_ids['gnomad_popmax_AF'], conn)
+        self.insert_annotation(variant_id, info, "GnomADm_AC_hom=", recent_annotation_ids['gnomadm_ac_hom'], conn)
 
-        self.insert_annotation(variant_id, info, "BRCA_exchange_clin_sig_short=", 18, conn, value_modifier_function = lambda value : value.replace('_', ' ').replace(',', ';'))
+        self.insert_annotation(variant_id, info, "BRCA_exchange_clin_sig_short=", recent_annotation_ids['brca_exchange_clinical_significance'], conn, value_modifier_function = lambda value : value.replace('_', ' ').replace(',', ';'))
 
-        self.insert_annotation(variant_id, info, "FLOSSIES_num_afr=", 19, conn)
-        self.insert_annotation(variant_id, info, "FLOSSIES_num_eur=", 20, conn)
+        self.insert_annotation(variant_id, info, "FLOSSIES_num_afr=", recent_annotation_ids['flossies_num_afr'], conn)
+        self.insert_annotation(variant_id, info, "FLOSSIES_num_eur=", recent_annotation_ids['flossies_num_eur'], conn)
 
-        self.insert_annotation(variant_id, info, "cancerhotspots_cancertypes=", 22, conn)
-        self.insert_annotation(variant_id, info, "cancerhotspots_AC=", 23, conn)
-        self.insert_annotation(variant_id, info, "cancerhotspots_AF=", 24, conn)
+        self.insert_annotation(variant_id, info, "cancerhotspots_cancertypes=", recent_annotation_ids['cancerhotspots_cancertypes'], conn)
+        self.insert_annotation(variant_id, info, "cancerhotspots_AC=", recent_annotation_ids['cancerhotspots_ac'], conn)
+        self.insert_annotation(variant_id, info, "cancerhotspots_AF=", recent_annotation_ids['cancerhotspots_af'], conn)
 
-        self.insert_annotation(variant_id, info, "ARUP_classification=", 21, conn)
+        self.insert_annotation(variant_id, info, "ARUP_classification=", recent_annotation_ids['arup_classification'], conn)
 
-        self.insert_annotation(variant_id, info, "HCI_prior=", 52, conn)
+        self.insert_annotation(variant_id, info, "HCI_prior=", recent_annotation_ids['hci_prior'], conn)
 
-        self.insert_annotation(variant_id, info, "BayesDEL_noAF=", 55, conn)
+        self.insert_annotation(variant_id, info, "BayesDEL_noAF=", recent_annotation_ids['bayesdel'], conn)
 
         # spliceai is saved to the database in the dedicated spliceai job (which must be called after this job anyway)
         #self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )
         #self.insert_annotation(variant_id, info, 'SpliceAI=', 8, conn, value_modifier_function= lambda value : ','.join([str(max([float(x) for x in x.split('|')[2:6]])) for x in value.split(',')]) )
 
-        self.insert_annotation(variant_id, info, "tp53db_class=", 27, conn)
-        self.insert_annotation(variant_id, info, "tp53db_bayes_del=", 30, conn)
-        self.insert_annotation(variant_id, info, "tp53db_DNE_LOF_class=", 29, conn)
-        self.insert_annotation(variant_id, info, "tp53db_DNE_class=", 31, conn)
-        self.insert_annotation(variant_id, info, "tp53db_domain_function=", 32, conn)
-        self.insert_annotation(variant_id, info, "tp53db_transactivation_class=", 33, conn)
+        self.insert_annotation(variant_id, info, "tp53db_class=", recent_annotation_ids['tp53db_class'], conn)
+        self.insert_annotation(variant_id, info, "tp53db_bayes_del=", recent_annotation_ids['tp53db_bayes_del'], conn)
+        self.insert_annotation(variant_id, info, "tp53db_DNE_LOF_class=", recent_annotation_ids['tp53db_DNE_LOF_class'], conn)
+        self.insert_annotation(variant_id, info, "tp53db_DNE_class=", recent_annotation_ids['tp53db_DNE_class'], conn)
+        self.insert_annotation(variant_id, info, "tp53db_domain_function=", recent_annotation_ids['tp53db_domain_function'], conn)
+        self.insert_annotation(variant_id, info, "tp53db_transactivation_class=", recent_annotation_ids['tp53db_transactivation_class'], conn)
         pmids = functions.find_between(info, 'tp53db_pubmed=', '(;|$)')
         if pmids is not None and pmids != '':
             if self.job_config['insert_literature']:
@@ -101,6 +102,7 @@ class annotate_from_vcf_job(Job):
             clinvar_submissions = clinvar_submissions.split('&')
         clv_revstat = functions.find_between(info, 'ClinVar_revstat=', '(;|$)')
         clv_varid = functions.find_between(info, 'ClinVar_varid=', '(;|$)')
+        self.insert_external_id(variant_id, info, "ClinVar_varid=", recent_annotation_ids['clinvar'], conn)
         clv_inpret = functions.find_between(info, 'ClinVar_inpret=', '(;|$)')
 
         if clv_revstat is not None and clv_inpret is not None and clv_varid is not None:

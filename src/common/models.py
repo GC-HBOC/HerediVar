@@ -666,6 +666,16 @@ class Variant:
 
     annotations: AllAnnotations = AllAnnotations()
 
+    external_ids: Any = None # list of Annotations
+
+    def get_external_ids(self, title):
+        result = []
+        if self.external_ids is not None:
+            for external_id in self.external_ids:
+                if external_id.title == title:
+                    result.append(external_id)
+        return result
+
     def get_heredicare_consensus_classifications(self):
         result = []
         for heredicare_annotation in self.heredicare_annotations:

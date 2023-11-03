@@ -66,3 +66,41 @@ ADD CONSTRAINT `FK_variant_heredicare_annotation_variant`
 
 ALTER TABLE `HerediVar_ahdoebm1`.`annotation_queue` 
 CHANGE COLUMN `error_message` `error_message` TEXT NULL DEFAULT '' ;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`variant_ids` 
+ADD COLUMN `annotation_type_id` INT UNSIGNED NOT NULL AFTER `id_source`;
+
+
+INSERT INTO `HerediVar_ahdoebm1`.`annotation_type` (`title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`) VALUES ('heredicare_vid', 'HerediCare VID', 'The VID from HerediCare.The version_date is inaccurate. They are always up to date when reimporting from heredicare.', 'int', '-', '2023-01-01', 'ID', '0');
+
+UPDATE variant_ids SET annotation_type_id = (SELECT id FROM annotation_type WHERE title = 'heredicare_vid') WHERE id_source = 'heredicare'
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`variant_ids` 
+ADD INDEX `FK_variant_ids_annotation_type_idx` (`annotation_type_id` ASC);
+;
+ALTER TABLE `HerediVar_ahdoebm1`.`variant_ids` 
+ADD CONSTRAINT `FK_variant_ids_annotation_type`
+  FOREIGN KEY (`annotation_type_id`)
+  REFERENCES `HerediVar_ahdoebm1`.`annotation_type` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`variant_ids` 
+DROP COLUMN `id_source`,
+DROP INDEX `variant_id_external_id_id_source_key` ,
+ADD UNIQUE INDEX `variant_id_external_id_id_source_key` (`variant_id` ASC, `external_id` ASC);
+;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`variant_ids` 
+DROP INDEX `variant_id_external_id_id_source_key`;
+ALTER TABLE `HerediVar_ahdoebm1`.`variant_ids` 
+ADD UNIQUE INDEX `unique_variant_ids` (`variant_id` ASC, `external_id` ASC, `annotation_type_id` ASC);
+;
+UPDATE annotation_type SET group_name = "ID" WHERE title = 'rsid'
+
+
+
+INSERT INTO `HerediVar_ahdoebm1`.`annotation_type` (`title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`) VALUES ('clinvar', 'ClinVar variation ID', 'The Variation ID from ClinVar', 'int', '-', '2023-02-26', 'None', '0');
