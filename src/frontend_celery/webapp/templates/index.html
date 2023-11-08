@@ -100,11 +100,19 @@
             <li>Added BayesDEL annotation</li>
             <li>Improved ClinVar review status & summary display</li>
             <li>Improved range search. Each range search entry must now be of the format: chrom&lt;sep&gt;start&lt;sep&gt;end. With &lt;sep&gt;  being either :, -, space or tabulator. The chromosome number can start with 'chr', but you can also choose to omit it.</li>
+            <li>Added external id search. Which allows to search for external ids like heredicare VIDs, COSMIC COSV ids or dbSNP RSIDs.</li>
+            <li>Added COSMIC COSV ids & moved COSMIC links from consequence table to the variant banner.</li>
         </ul>
         Bugfixes:
         <ul>
             <li>Fixed a bug where the "gene", "your classification" and "consensus classification" columns were not clickable</li>
             <li>Fixed a bug where in some cases some ClinVar submissions were not annotated</li>
+            <li>Fixed a bug which caused some annotations to be erroneous, when importing variants from HerediCare</li>
+            <li>Fixed status of deleted VIDs upon variant import</li>
+        </ul>
+        Known issues:
+        <ul>
+            <li>HerediCare Center specific classifications are not available</li>
         </ul>
     </div>
     <div class="underline">v 1.4.1 (02.11.2023)</div>
@@ -153,7 +161,6 @@
         Known issues:
         <ul>
             <li>COSMIC links do not work sometimes</li>
-            <li>HerediCare Center specific classifications are not available</li>
         </ul>
     </div>
     <a class="btn btn-outline-primary" href="{{url_for('doc.changelog')}}">previous changelog</a>

@@ -13,7 +13,6 @@ from dotenv import load_dotenv
 import json
 import uuid
 from functools import cmp_to_key
-from common.db_IO import Connection
 
 
 def basedir():
@@ -81,6 +80,15 @@ def variant_to_vcf(chr, pos, ref, alt, path):
 #    #new_ref = variant.REF
 #    #new_alt = variant.ALT
 
+
+def get_refseq_chom_to_chrnum():
+    # taken from: https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.39_GRCh38.p13/GCF_000001405.39_GRCh38.p13_assembly_report.txt
+    refseq_dict = {"NC_000001.11": "chr1", "NC_000002.12": "chr2", "NC_000003.12": "chr3", "NC_000004.12": "chr4", "NC_000005.10": "chr5",
+               "NC_000006.12": "chr6", "NC_000007.14": "chr7", "NC_000008.11": "chr8", "NC_000009.12": "chr9", "NC_000010.11": "chr10",
+               "NC_000011.10": "chr11", "NC_000012.12": "chr12", "NC_000013.11": "chr13", "NC_000014.9": "chr14", "NC_000015.10": "chr15",
+               "NC_000016.10": "chr16", "NC_000017.11": "chr17", "NC_000018.10": "chr18", "NC_000019.10": "chr19", "NC_000020.11": "chr20",
+               "NC_000021.9": "chr21", "NC_000022.11": "chr22", "NC_000023.11": "chrX", "NC_000024.10": "chrY", "NC_012920.1": "chrMT"}
+    return refseq_dict
 
 def write_vcf_header(info_columns, output_func = print, tail = "", reference_genome="GRCh38"):
     output_func("##fileformat=VCFv4.2" + tail)
@@ -619,8 +627,9 @@ def enpercent(string):
     return '%' + string + '%'
 
 
-def get_random_temp_file(fileending):
-    return os.path.join(tempfile.gettempdir(), str(uuid.uuid4()) + "." + str(fileending.strip('.')))
+def get_random_temp_file(fileending, filename_ext = ""):
+    filename = collect_info(str(uuid.uuid4()), "", filename_ext, sep = '_')
+    return os.path.join(tempfile.gettempdir(), filename + "." + str(fileending.strip('.'))).strip('.')
 
 def rm(path):
     if os.path.exists(path): 
@@ -672,6 +681,7 @@ def sort_transcript_dict(input_dict):
 
 # this function sorts a list of transcript names (ENSTxxx strings)
 def sort_transcripts(transcript_names):
+    from common.db_IO import Connection
     conn = Connection()
     transcripts = conn.get_transcripts_from_names(transcript_names)
     #print(transcripts)

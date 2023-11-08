@@ -22,7 +22,7 @@ class annotate_from_vcf_job(Job):
                                                 'do_brca_exchange', 
                                                 'do_flossies', 
                                                 'do_cancerhotspots', 
-                                                'do_arup', 'do_tp53_database', 'do_priors', 'do_bayesdel']):
+                                                'do_arup', 'do_tp53_database', 'do_priors', 'do_bayesdel', 'do_cosmic']):
             return 0, '', ''
 
         self.print_executing()
@@ -75,6 +75,8 @@ class annotate_from_vcf_job(Job):
         self.insert_annotation(variant_id, info, "HCI_prior=", recent_annotation_ids['hci_prior'], conn)
 
         self.insert_annotation(variant_id, info, "BayesDEL_noAF=", recent_annotation_ids['bayesdel'], conn)
+
+        self.insert_multiple_ids(variant_id, info, "COSMIC_COSV=", recent_annotation_ids['cosmic'], conn, sep = '&')
 
         # spliceai is saved to the database in the dedicated spliceai job (which must be called after this job anyway)
         #self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )
@@ -192,6 +194,10 @@ class annotate_from_vcf_job(Job):
         ## add bayesdel
         if self.job_config['do_bayesdel']:
             config_file.write(paths.bayesdel + "\t\tBayesDEL_noAF\t\n")
+
+        ## add COSMIC database CMC significance tier
+        if self.job_config['do_cosmic']:
+            config_file.write(paths.cosmic + "\t\tCOSMIC_CMC,COSMIC_COSV\t\n")
 
         config_file.close()
         return config_file_path

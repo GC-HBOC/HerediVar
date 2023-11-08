@@ -99,6 +99,33 @@ def extract_external_ids(request_obj):
         flash("You have an error in your external ID query(s). Results are not filtered by external IDs.", "alert-danger")
     return external_ids
 
+def extract_cdna_ranges(request_obj):
+    data = request_obj.args.get('cdna_ranges', '')
+
+    data = preprocess_cdna_ranges(data)
+    data = preprocess_query(data, pattern = r"[^:]*:[\*-]?\d+([-+]?\d+)?:[\*-]?\d+([-+]?\d+)?")
+    if data is None:
+        flash("You have an error in your cDNA range query(s). Results are not filtered by cDNA ranges.", "alert-danger")
+    return data
+
+def preprocess_cdna_ranges(ranges):
+    if ranges is None:
+        return None
+    seps = get_search_query_separators()
+    ranges_split = re.split(seps, ranges)
+    ranges_split = [preprocess_cdna_range_worker(r) for r in ranges_split]
+    ranges_split_filtered = [r for r in ranges_split if r is not None] # filter out erroneous
+    if len(ranges_split) != len(ranges_split_filtered):
+        flash("At least one of your range query(s) has an error. Please check the syntax. The erroneous range query(s) were removed. You still have " + str(len(ranges_split_filtered)) + " ranges after removing the erroneous ones.", 'alert-danger')
+    ranges_split = ';'.join(ranges_split_filtered)
+    return ranges_split
+
+def preprocess_cdna_range_worker(r):
+    r = r.strip()
+    r = re.sub(pattern = r"\s+", repl = ':', string = r)
+    return r
+
+
 def extract_consensus_classifications(request_obj, allowed_classes):
     classes = allowed_classes + ['-']
     consensus_classifications = request_obj.args.getlist('consensus')

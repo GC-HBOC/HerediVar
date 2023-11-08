@@ -96,31 +96,25 @@
                             <tbody>
                                 {% for transcript in transcripts %}
                                 <tr>
-                                    <td style="white-space:nowrap;">{{ transcript[1] }}</td>
-                                    <td>{{ transcript[2] }}</td>
-                                    <td>{{ transcript[3] }}</td>
+                                    <td style="white-space:nowrap;">{{ transcript.name }}</td>
+                                    <td>{{ transcript.biotype }}</td>
+                                    <td>{{ transcript.length }}</td>
                                     <td>
-                                        {% if transcript[4] %}
+                                        {% if transcript.is_gencode_basic %}
                                             <span class="badge bg-secondary"><abbr title="gencodetest">GENCODE basic</abbr></span>
                                         {% endif %}
-                                        {% if transcript[5] %}
+                                        {% if transcript.is_mane_select %}
                                             <span class="badge bg-secondary"><abbr title="MANE">MANE select</abbr></span>
                                         {% endif %}
-                                        {% if transcript[6] %}
+                                        {% if transcript.is_mane_plus_clinical %}
                                             <span class="badge bg-secondary"><abbr title="">MANE clin</abbr></span>
                                         {% endif %}
-                                        {% if transcript[7] %}
+                                        {% if transcript.is_ensembl_canonical %}
                                             <span class="badge bg-secondary"><abbr title="">ensembl canonical</abbr></span>
                                         {% endif %}
                                     </td>
-                                    <td style="display:none;">
-                                        {% if transcript[1].startswith('ENST') %}
-                                            ensembl
-                                        {% else %}
-                                            refseq
-                                        {% endif %}
-                                    </td>
-                                    <td style="display:none;">{{ transcript[8] }}</td>
+                                    <td style="display:none;">{{ transcript.source }}</td>
+                                    <td style="display:none;">{{ transcript.get_total_flags() }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

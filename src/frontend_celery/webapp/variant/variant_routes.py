@@ -39,6 +39,8 @@ def search():
     hgvs = extract_hgvs(request)
     variant_ids_oi = extract_lookup_list(request, user_id, conn)
     external_ids = extract_external_ids(request)
+    cdna_ranges = extract_cdna_ranges(request)
+    print(cdna_ranges)
     page = int(request.args.get('page', 1))
 
     sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden = extract_search_settings(request)
@@ -56,7 +58,8 @@ def search():
         hgvs=hgvs, 
         variant_ids_oi=variant_ids_oi,
         include_heredicare_consensus = include_heredicare_consensus,
-        external_ids = external_ids
+        external_ids = external_ids,
+        cdna_ranges = cdna_ranges
     )
     lists = conn.get_lists_for_user(user_id)
     pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
@@ -214,8 +217,6 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
     clinvar_submission = check_update_clinvar_status(variant_id, conn)
-
-    print(variant.external_ids)
 
     return render_template('variant/variant.html',
                             current_annotation_status=current_annotation_status,

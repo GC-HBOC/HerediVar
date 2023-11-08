@@ -1,5 +1,5 @@
 const core_gene_transcripts = JSON.parse(flask_data.dataset.coreGeneTranscripts)
-
+console.log(core_gene_transcripts)
 
 function create_option(value, text) {
     var option = document.createElement('option')
@@ -43,7 +43,7 @@ function switch_gene() {
 
     for (var i = 0; i < transcripts_oi.length; i++) {
         var current_transcript = transcripts_oi[i]
-        var current_transcript_name = current_transcript[1]
+        var current_transcript_name = current_transcript['name']
         var new_option = create_option(current_transcript_name, current_transcript_name)
         transcript_select.appendChild(new_option)
     }

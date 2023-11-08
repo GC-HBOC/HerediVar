@@ -45,6 +45,7 @@ def get_default_job_config():
         'do_tp53_database': True,
         'do_priors': True,
         'do_bayesdel': True,
+        'do_cosmic': True,
 
         # additional annotations
         'do_taskforce_domains': True,
@@ -95,13 +96,10 @@ def collect_error_msgs(msg1, msg2):
 
 
 def get_temp_vcf_path(annotation_queue_id):
-    temp_file_path = tempfile.gettempdir()
-    vcf_path = temp_file_path + "/" + str(annotation_queue_id) + ".vcf"
-    return vcf_path
-
-def get_annotation_tempfile(annotation_queue_id):
-    res = tempfile.gettempdir() + "/" + str(annotation_queue_id) + "_annotated.vcf"
-    return res
+    vcf_path = functions.get_random_temp_file(fileending = '', filename_ext = str(annotation_queue_id))
+    vcf_path_annotated = vcf_path + "_annotated"
+    #vcf_path = temp_file_path + "/" + str(annotation_queue_id) + ".vcf"
+    return vcf_path + '.vcf', vcf_path_annotated + '.vcf'
 
 
 def process_one_request(annotation_queue_id, job_config = get_default_job_config()):
@@ -112,7 +110,7 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
     all_jobs = get_jobs(job_config)
 
     conn = Connection(roles=["annotation"])
-    vcf_path = get_temp_vcf_path(annotation_queue_id)
+    vcf_path, vcf_path_annotated = get_temp_vcf_path(annotation_queue_id)
     runtime_error = ""
 
     try:
@@ -132,31 +130,13 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         one_variant = conn.get_one_variant(variant_id) # 0id,1chr,2pos,3ref,4alt
         print("processing request " + str(annotation_queue_id)  + " annotating variant: " + " ".join([str(x) for x in one_variant[1:5]]) + " with id: " + str(one_variant[0]) )
 
-        '''
-        if do_heredicare:
-            vids = conn.get_external_ids_from_variant_id(variant_id, id_source='heredicare')
-            #log_file_date = datetime.datetime.today().strftime('%Y-%m-%d-%H-%M-%S')
-            log_file_path = path.join(path.dirname(path.abspath(__file__)),  'logs/heredicare_update.log')
-            heredicare.update_specific_vids(log_file_path, vids, conn.get_user(user_id)[1])
-            #look for error code: s1 (deleted variant)
-            log_file = open(log_file_path, 'r')
-            deleted_variant = False
-            for line in log_file:
-                if '~~s1~~' in line:
-                    deleted_variant = True
-            log_file.close()
-            if deleted_variant:
-                continue # stop annotation if it was deleted!
-        '''
-
         functions.variant_to_vcf(one_variant[1], one_variant[2], one_variant[3], one_variant[4], vcf_path)
-        vcf_annotated_tmp_path = get_annotation_tempfile(annotation_queue_id)
 
         ############################################################
         ############ 1: execute jobs (ie. annotate vcf) ############
         ############################################################
         for job in all_jobs:
-            current_code, current_stderr, current_stdout = job.execute(vcf_path, vcf_annotated_tmp_path, one_variant=one_variant) # this one_variant thing is kinda ugly as it is only used in annotate_from_vcf_job..
+            current_code, current_stderr, current_stdout = job.execute(vcf_path, vcf_path_annotated, one_variant=one_variant) # this one_variant thing is kinda ugly as it is only used in annotate_from_vcf_job..
             if current_code > 0:
                 status = "error"
             err_msgs = collect_error_msgs(err_msgs, current_stderr)
@@ -215,21 +195,13 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         
         runtime_error = str(e)
 
-        if exists(vcf_path): 
-            os.remove(vcf_path)
-        conn.close()
         #raise e #HTTPError(url = e.url, code = e.code, msg = "A HTTP error occured", hdrs = e.hdrs, fp = e.fp)
-        return status, runtime_error
     except InternalError as e:
         # deadlock: code 1213
         status = "retry"
         conn.update_annotation_queue(row_id=annotation_queue_id, status=status, error_msg=str(e))
-        message = "Attempting retry because of database error: " + str(e)  + ' ' + traceback.format_exc()
+        runtime_error = "Attempting retry because of database error: " + str(e)  + ' ' + traceback.format_exc()
 
-        if exists(vcf_path): 
-            os.remove(vcf_path)
-        conn.close()
-        return status, message
     except Exception as e:
         print("An exception occured: " + str(e))
         print(traceback.format_exc())
@@ -240,6 +212,8 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
 
     if exists(vcf_path): 
         os.remove(vcf_path)
+    if exists(vcf_path_annotated):
+        os.remove(vcf_path_annotated)
 
 
     conn.close()

@@ -479,6 +479,13 @@
                     </div>
 
                     <div class="form-group sst">
+                        <label for="cdna_ranges" class="form-label">cDNA ranges</label>
+                        <textarea type="text" name="cdna_ranges" id="cdna_ranges"
+                               placeholder="ENSG00000141510:1234-12:4567; ENSG00000141510 1234+3 4567+3" class="form-control height_zero"
+                               >{{ request.args.get('cdna_ranges', '') }}</textarea>
+                    </div>
+
+                    <div class="form-group sst">
                         <label for="hgvs" class="form-label">HGVS c.</label>
                         <textarea type="text" name="hgvs" id="hgvs"
                                placeholder="ENST00000260947:c.1972C>T; ..." class="form-control height_zero"
@@ -788,16 +795,20 @@
                         {% if rsids | length > 0 %}
                             {% set rsid = rsids[0].value %}
                         {% endif %}
-                    
-                        {{ google_link("google", rsid = rsid, hgvs_c = consequence.hgvs_c, hgvs_p = consequence.hgvs_p, gene_symbol = consequence.transcript.gene.symbol, is_scholar = False) }}
-                        {{ google_link("scholar", rsid = rsid, hgvs_c = consequence.hgvs_c, hgvs_p = consequence.hgvs_p, gene_symbol = consequence.transcript.gene.symbol, is_scholar = True) }}
-
-                        {% if consequence.transcript.gene.symbol is not none and consequence.hgvs_c is not none %}
-                            {{ external_link("COSMIC", "https://cancer.sanger.ac.uk/cosmic/search?q=" + consequence.transcript.gene.symbol + "+" + consequence.hgvs_c | replace('>','%3E')) }}
-                        {% endif %}
-                        {% if consequence.transcript.gene.symbol in ['MLH1', 'MSH2', 'MSH6', 'PMS2'] %}
-                            {{ external_link("InSiGHT", "http://www.insight-database.org/classifications/index.html?gene=" + consequence.transcript.gene.symbol + "&variant=" + consequence.hgvs_c | replace('>', '%3E')) }}
-                        {% endif %}
+                        
+                        <div class="d-flex">
+                            <div class="ssr">
+                                {{ google_link("google", rsid = rsid, hgvs_c = consequence.hgvs_c, hgvs_p = consequence.hgvs_p, gene_symbol = consequence.transcript.gene.symbol, is_scholar = False) }}
+                            </div>
+                            <div class="ssr">
+                                {{ google_link("scholar", rsid = rsid, hgvs_c = consequence.hgvs_c, hgvs_p = consequence.hgvs_p, gene_symbol = consequence.transcript.gene.symbol, is_scholar = True) }}
+                            </div>
+                            {% if consequence.transcript.gene.symbol in ['MLH1', 'MSH2', 'MSH6', 'PMS2'] %}
+                            <div>
+                                {{ external_link("InSiGHT", "http://www.insight-database.org/classifications/index.html?gene=" + consequence.transcript.gene.symbol + "&variant=" + consequence.hgvs_c | replace('>', '%3E')) }}
+                            </div>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -1041,6 +1052,12 @@
                                             {% endif %}
                                         {% endfor %}
                                     {% endif %}
+                                    {% set cosmic_ids = variant.get_external_ids('cosmic') %}
+                                    {% for cosmic_id in cosmic_ids %}
+                                        <li class="list-group-item noboarder-td">
+                                            {{ external_link("COSMIC", "https://cancer.sanger.ac.uk/cosmic/search?q=" + cosmic_id.value|string) }}
+                                        </li>
+                                    {% endfor %}
                                 </ul>
                             </td>
                         </tr>

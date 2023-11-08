@@ -480,12 +480,19 @@ class Transcript:
     name: str
     biotype: str
     length: int
+    chrom: str
+    start: int
+    end: int
+    orientation: str
     source: str
 
     is_gencode_basic: bool
     is_mane_select: bool
     is_mane_plus_clinical: bool
     is_ensembl_canonical: bool
+
+    def get_total_flags(self):
+        return self.is_gencode_basic + self.is_mane_select + self.is_mane_plus_clinical + self.is_ensembl_canonical
 
 @dataclass
 class Consequence:
@@ -775,7 +782,7 @@ class Variant:
         for heredicare_annotation in self.heredicare_annotations:
             current_classification = heredicare_annotation.vustf_classification
             if current_classification.selected_class is not None:
-                if result is None:
+                if result is None and current_classification.classification_date is not None:
                     result = current_classification
                 if current_classification.classification_date is not None:
                     if current_classification.classification_date > result.classification_date:

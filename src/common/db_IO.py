@@ -27,7 +27,7 @@ def get_db_connection(roles):
         conn = mysql.connector.connect(user=user, password=pw,
                                host=host,
                                database=os.environ.get("DB_NAME"), 
-                               charset = 'utf8')
+                               charset = 'utf8') # , buffered = True
     except Error as e:
         raise RuntimeError("Error while connecting to HerediVar database " + str(e))
     finally:
@@ -48,6 +48,8 @@ def get_db_user(roles):
         return os.environ.get("DB_ANNOTATION_USER"), os.environ.get("DB_ANNOTATION_USER_PW")
     if 'read_only' in roles:
         return os.environ.get("DB_READ_ONLY"), os.environ.get("DB_READ_ONLY_PW")
+    if 'db_admin' in roles:
+        return os.environ.get("DB_ADMIN"), os.environ.get("DB_ADMIN_PW")
     raise ValueError(str(roles) + " doesn't contain a valid db user role!")
 
 
@@ -67,9 +69,9 @@ class Connection:
 
     # This function removes ALL occurances of duplicated items
     def remove_duplicates(self, table, unique_column):
-        #command = "DELETE FROM " + table + " WHERE " + unique_column + " IN (SELECT * FROM (SELECT " + unique_column + " FROM " + table + " GROUP BY " + unique_column + " HAVING (COUNT(*) > 1)) AS A)"
-        command = "DELETE FROM %s WHERE %s IN (SELECT * FROM (SELECT %s FROM %s GROUP BY %s HAVING (COUNT(*) > 1)) AS A)"
-        self.cursor.execute(command, (table, unique_column, unique_column, table, unique_column))
+        command = "DELETE FROM " + table + " WHERE " + unique_column + " IN (SELECT * FROM (SELECT " + unique_column + " FROM " + table + " GROUP BY " + unique_column + " HAVING (COUNT(*) > 1)) AS A)"
+        #command = "DELETE FROM " + table + " WHERE " + unique_column + " IN (SELECT * FROM (SELECT %s FROM %s GROUP BY %s HAVING (COUNT(*) > 1)) AS A)"
+        self.cursor.execute(command)
         self.conn.commit()
 
     
@@ -322,7 +324,7 @@ class Connection:
         return None
     
 
-    def insert_transcript(self, symbol, hgnc_id, transcript_ensembl, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical, transcript_refseq = None):
+    def insert_transcript(self, symbol, hgnc_id, transcript_ensembl, transcript_biotype, total_length, chrom, start, end, orientation, exons, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical, transcript_refseq = None):
         if transcript_ensembl is None and transcript_refseq is None: # abort if the transcript name is missing!
             return
         
@@ -330,11 +332,11 @@ class Connection:
         gene_id = None
         transcript_biotype = transcript_biotype.replace('_', ' ')
         if symbol is None and hgnc_id is None:
-            print("WARNING: transcript: " + str(transcript_ensembl) + ", transcript_biotype: " + transcript_biotype + " was not imported as gene symbol and hgnc id were missing")
+            #print("WARNING: transcript: " + str(transcript_ensembl) + ", transcript_biotype: " + transcript_biotype + " was not imported as gene symbol and hgnc id were missing")
             return
         if hgnc_id is not None:
             gene_id = self.get_gene_id_by_hgnc_id(hgnc_id)
-        elif symbol is not None:
+        if symbol is not None and gene_id is None:
             gene_id = self.get_gene_id_by_symbol(symbol)
         
         # insert transcript
@@ -343,26 +345,65 @@ class Connection:
             if transcript_refseq is not None and transcript_ensembl is not None:
                 #transcript_ensembl_list = ', '.join([functions.enquote(x) for x in transcript_ensembl.split(',')])
                 transcript_ensembl_list = transcript_ensembl.split(',')
-                transcript_ensembl_placeholders = ', '.join(['%s'] * len(transcript_ensembl_list))
-                self.cursor.execute("SELECT COUNT(*) FROM transcript WHERE name IN (" + transcript_ensembl_placeholders + ")", tuple(transcript_ensembl_list))
+                placeholders = self.get_placeholders(len(transcript_ensembl_list))
+                self.cursor.execute("SELECT COUNT(*) FROM transcript WHERE name IN " + placeholders, tuple(transcript_ensembl_list))
                 has_ensembl = self.cursor.fetchone()[0]
                 if has_ensembl:
                     # The command inserts a new refseq transcript while it searches for a matching ensembl transcripts (which should already be contained in the transcripts table) and copies their gencode, mane and canonical flags
-                    infos = (gene_id, transcript_refseq, transcript_biotype, total_length) + tuple(transcript_ensembl_list)
-                    command = "INSERT INTO transcript (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) \
-	                                    (SELECT %s, %s, %s, %s, SUM(is_gencode_basic) > 0, SUM(is_mane_select) > 0, SUM(is_mane_plus_clinical)  > 0, SUM(is_ensembl_canonical)  > 0 FROM transcript WHERE name IN (" + transcript_ensembl_placeholders + "));"
+                    infos = (gene_id, transcript_refseq, transcript_biotype, total_length, chrom, start, end, orientation,) + tuple(transcript_ensembl_list)
+                    command = "INSERT INTO transcript (gene_id, name, biotype, length, chrom, start, end, orientation, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) \
+	                                    (SELECT %s, %s, %s, %s, %s, %s, %s, %s, SUM(is_gencode_basic) > 0, SUM(is_mane_select) > 0, SUM(is_mane_plus_clinical)  > 0, SUM(is_ensembl_canonical)  > 0 FROM transcript WHERE name IN " + placeholders + ");"
             if command == '':
                 if transcript_refseq is not None:
                     transcript_name = transcript_refseq
                 else:
                     transcript_name = transcript_ensembl
-                infos = (gene_id, transcript_name, transcript_biotype, total_length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical)
-                command = "INSERT INTO transcript (gene_id, name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+                infos = (gene_id, transcript_name, transcript_biotype, total_length, chrom, start, end, orientation, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical)
+                command = "INSERT INTO transcript (gene_id, name, biotype, length, chrom, start, end, orientation, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
             
+            #print(command % infos)
             self.cursor.execute(command, infos)
             self.conn.commit()
+
+            transcript_id = self.get_last_insert_id()
+
+            #insert exons
+            last_cdna_end = 0
+            exons = self.order_exons(exons, orientation)
+            for exon in exons:
+                start = exon[0]
+                end = exon[1]
+                is_cds = exon[2]
+                cdna_start = None
+                cdna_end = None
+                if is_cds:
+                    cdna_start = last_cdna_end + 1
+                    cdna_end = cdna_start + end - start
+                    last_cdna_end = cdna_end
+                command = "INSERT INTO exon (transcript_id, start, end, cdna_start, cdna_end, is_cds) VALUES (%s, %s, %s, %s, %s, %s)"
+                self.cursor.execute(command, (transcript_id, start, end, cdna_start, cdna_end, is_cds))
         else:
             print("WARNING: transcript: " + str(transcript_ensembl) + "/" + str(transcript_refseq) + ", transcript_biotype: " + transcript_biotype + " was not imported as the corresponding gene is not in the database (gene-table) " + "hgncid: " + str(hgnc_id) + ", gene symbol: " + str(symbol))
+
+    def order_exons(self, exons, orientation):
+        keyfunc = cmp_to_key(mycmp = self.sort_exons)
+        if orientation == '-':
+            exons.sort(key = keyfunc, reverse = True) # reverse
+        else:
+            exons.sort(key = keyfunc)
+        return exons
+    
+    def sort_exons(self, a, b):
+        # sort by ensembl/refseq
+        a_start = a[0]
+        b_start = b[0]
+        if int(a_start) > int(b_start):
+            return 1
+        elif int(a_start) < int(b_start):
+            return -1
+        return 0
+
+
 
     def insert_pfam_id_mapping(self, accession_id, description):
         # remove version numbers first
@@ -451,6 +492,33 @@ class Connection:
         start = int(parts[1])
         end = int(parts[2])
         return chr, start, end
+    
+    def preprocess_cdna_range(self, cdna_range):
+        parts = cdna_range.split(':')
+        if len(parts) != 3:
+            return None, None, None
+        source = parts[0] # transcript
+        start, start_modifier, beyond_cds_operation_start = self.preprocess_cdna_position(parts[1], operation_suffix = "start")
+        end, end_modifier, beyond_cds_operation_end = self.preprocess_cdna_position(parts[2], operation_suffix = "end")
+        return source, start, start_modifier, beyond_cds_operation_start, end, end_modifier, beyond_cds_operation_end
+    
+    def preprocess_cdna_position(self, position, operation_suffix):
+        beyond_cds_operation = None
+        modifier = 0
+
+        if position.startswith('*') or position.startswith('-'): # cds position is beyond the cds boundary
+            position = position.strip('-').strip('*')
+            beyond_cds_operation = "extend_" + operation_suffix 
+        elif '-' in position:
+            parts = position.split('-')
+            position = parts[0]
+            modifier = int(parts[1]) * -1
+        elif '+' in position:
+            parts = position.split('+')
+            position = parts[0]
+            modifier = int(parts[1])
+        return int(position), int(modifier), beyond_cds_operation
+        
 
     def convert_to_gene_id(self, string):
         gene_id = self.get_gene_id_by_symbol(string)
@@ -614,7 +682,8 @@ class Connection:
                         return 0
 
 
-    def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None, external_ids = None, include_heredicare_consensus = False):
+    def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, 
+                                 ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, include_heredicare_consensus = False):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -623,11 +692,40 @@ class Connection:
         if ranges is not None and len(ranges) > 0: # if it is None this means it was not specified or there was an error. If it has len == 0 it means that there was no error but the user did not specify any 
             new_constraints = []
             for range_constraint in ranges:
-                chr, start, end = self.preprocess_range(range_constraint)
+                chrom, start, end = self.preprocess_range(range_constraint)
                 new_constraints.append("(chr=%s AND pos BETWEEN %s AND %s)")
-                actual_information += (chr, start, end)
+                actual_information += (chrom, start, end)
             new_constraints = ' OR '.join(new_constraints)
             new_constraints = functions.enbrace(new_constraints)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if cdna_ranges is not None and len(cdna_ranges) > 0:
+            new_constraints = []
+            for cdna_range in cdna_ranges:
+                # preprocess range
+                source, start, start_modifier, beyond_cds_operation_start, end, end_modifier, beyond_cds_operation_end = self.preprocess_cdna_range(cdna_range)
+                transcripts = self.get_transcripts_from_names([source], remove_unknown=True)
+                if len(transcripts) == 0:
+                    gene_id = self.get_gene_id_by_symbol(source)
+                    transcripts = self.get_preferred_transcripts(gene_id, return_all = False)
+                #print("Transcripts: " + str(transcripts))
+                for transcript in transcripts:
+                    chrom = transcript.chrom
+                    start_pos = self.cdna_pos_to_genomic_pos(transcript.id, start, transcript.orientation, start_modifier, beyond_cds_operation_start)
+                    end_pos = self.cdna_pos_to_genomic_pos(transcript.id, end, transcript.orientation, end_modifier, beyond_cds_operation_end)
+                    if transcript.orientation == '-':
+                        tmp = start_pos
+                        start_pos = end_pos
+                        end_pos = tmp
+                    if start_pos is None or end_pos is None:
+                        start_pos = -1
+                        end_pos = -1
+                    new_constraints.append("(chr=%s AND pos BETWEEN %s AND %s)")
+                    actual_information += (chrom, start_pos, end_pos)
+            if len(new_constraints) > 0:
+                new_constraints = ' OR '.join(new_constraints)
+                new_constraints = functions.enbrace(new_constraints)
+            else:
+                new_constraints = "(chr='chr1' AND pos BETWEEN 0 AND 0)"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if genes is not None and len(genes) > 0:
             #genes = [self.get_gene(self.convert_to_gene_id(x))[1] for x in genes]
@@ -801,6 +899,49 @@ class Connection:
         return variants, num_variants[0]
 
 
+    def cdna_pos_to_genomic_pos(self, transcript_id, cdna_pos, orientation, modifier = 0, beyond_cds_operation = None):
+        command = "SELECT start, end, cdna_start, cdna_end  FROM exon WHERE transcript_id = %s"
+        actual_information = (transcript_id, )
+        if beyond_cds_operation is not None:
+            if beyond_cds_operation == 'extend_end':
+                sort_by = "DESC"
+            if beyond_cds_operation == 'extend_start':
+                sort_by = "ASC"
+            command = self.add_constraints_to_command(command, "is_cds = 1 ORDER BY cdna_start " + sort_by + " LIMIT 1")
+        else:
+            command = self.add_constraints_to_command(command, "cdna_start <= %s AND cdna_end >= %s")
+            actual_information += (cdna_pos, cdna_pos)
+            #command = "SELECT start, cdna_start FROM exon WHERE transcript_id = %s AND cdna_start <= %s AND cdna_end >= %s"
+        self.cursor.execute(command, actual_information)
+        result = self.cursor.fetchone()
+        if result is None:
+            return None
+        genomic_start = int(result[0])
+        genomic_end = int(result[1])
+        cdna_start = int(result[2])
+        cdna_end = int(result[3])
+        cdna_pos = int(cdna_pos)
+
+        if orientation == '-':
+            if beyond_cds_operation is not None:
+                if beyond_cds_operation == 'extend_end': # modifier is always 0
+                    genomic_pos = genomic_start - cdna_pos
+                if beyond_cds_operation == 'extend_start': # cdna_start is always 1 in this case, modifier is always 0
+                    genomic_pos = genomic_end + cdna_pos
+            else:
+                genomic_pos = genomic_start + (cdna_end - cdna_pos) + (modifier * -1)
+        elif orientation == '+':
+            if beyond_cds_operation is not None:
+                if beyond_cds_operation == 'extend_end': # modifier is always 0
+                    genomic_pos = genomic_end + cdna_pos
+                if beyond_cds_operation == 'extend_start': # cdna_start is always 1 in this case, modifier is always 0
+                    genomic_pos = genomic_start - cdna_pos
+            else:
+                genomic_pos = cdna_pos - cdna_start + genomic_start + modifier
+        return genomic_pos
+
+
+
 
     def get_variant_ids_from_gene_and_hgvs(self, gene, hgvs_c, source = 'ensembl'):
         hgnc_id = self.convert_to_hgnc_id(gene)
@@ -910,7 +1051,7 @@ class Connection:
         return submission_condition
     
     def get_variant_consequences(self, variant_id):
-        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,x.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype,transcript.id FROM transcript RIGHT JOIN ( \
+        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,x.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype,transcript.id,start,end,transcript.chrom,orientation FROM transcript RIGHT JOIN ( \
 	                    SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,gene.id gene_id,exon_nr,intron_nr,source,pfam_accession,pfam_description FROM gene RIGHT JOIN ( \
 		                    SELECT * FROM variant_consequence WHERE variant_id=%s \
 	                    ) y \
@@ -962,10 +1103,29 @@ class Connection:
         return [x[0] for x in result]
 
     def get_transcripts(self, gene_id):
-        command = "SELECT gene_id,name,biotype,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags FROM transcript WHERE gene_id = %s"
+        command = "SELECT id, gene_id, (SELECT symbol FROM gene WHERE transcript.gene_id = gene.id), name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical, start, end, chrom, orientation FROM transcript WHERE gene_id = %s"
         self.cursor.execute(command, (gene_id, ))
-        result = self.cursor.fetchall()
-        return result
+        raw_transcripts = self.cursor.fetchall()
+        transcripts = [self.convert_raw_transcript(raw_transcript) for raw_transcript in raw_transcripts]
+        return transcripts
+    
+    def convert_raw_transcript(self, raw_transcript):
+        return models.Transcript(
+            id = int(raw_transcript[0]),
+            gene = models.Gene(id = raw_transcript[1], symbol = raw_transcript[2]),
+            name = raw_transcript[3],
+            biotype = raw_transcript[4],
+            length = int(raw_transcript[5]),
+            chrom = raw_transcript[12],
+            start = int(raw_transcript[10]),
+            end = int(raw_transcript[11]),
+            orientation = raw_transcript[13],
+            source = "ensembl" if raw_transcript[3].startswith('ENST') else "refseq",
+            is_gencode_basic = True if raw_transcript[6] == 1 else False,
+            is_mane_select = True if raw_transcript[7] == 1 else False,
+            is_mane_plus_clinical = True if raw_transcript[8] == 1 else False,
+            is_ensembl_canonical = True if raw_transcript[9] == 1 else False
+        )
 
     def get_variant_id_by_hgvs(self, reference_transcript, hgvs):
         command = "SELECT variant_id FROM variant_consequence WHERE transcript_name=%s"
@@ -1995,6 +2155,10 @@ class Connection:
                                                             biotype = consequence[18],
                                                             length = consequence[12],
                                                             source = consequence[9],
+                                                            chrom = consequence[21],
+                                                            start = consequence[19],
+                                                            end = consequence[20],
+                                                            orientation = consequence[22],
                                                             is_gencode_basic = True if consequence[13] == 1 else False,
                                                             is_mane_select = True if consequence[14] == 1 else False,
                                                             is_mane_plus_clinical = True if consequence[15] == 1 else False,
@@ -2401,78 +2565,94 @@ class Connection:
     # this function returns a list of consequence objects of the preferred transcripts 
     # (can be multiple if there are eg. 2 mane select transcripts for this variant)
     def get_preferred_transcripts(self, gene_id, return_all=False):
+        transcripts = self.get_transcripts(gene_id)
+        transcripts = functions.order_transcripts(transcripts)
+
         result = []
-        command = "SELECT name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical FROM transcript WHERE gene_id = %s"
-        self.cursor.execute(command, (gene_id, ))
-        result_raw = self.cursor.fetchall()
-        transcripts = []
-        for elem in result_raw:
-            if elem[0].startswith("ENST"):
-                source = "ensembl" if elem[0].startswith("ENST") else "refseq"
-                new_elem = {"name": elem[0],
-                            "biotype": elem[1],
-                            "length": elem[2],
-                            "is_gencode_basic": elem[3],
-                            "is_mane_select": elem[4],
-                            "is_mane_plus_clinical": elem[5],
-                            "is_ensembl_canonical": elem[6],
-                            "source": source
-                        }
-                transcripts.append(new_elem)
-
-        if len(transcripts) > 0:
-            transcripts = self.order_transcripts(transcripts)
-
-            if not return_all:
-                result.append(transcripts.pop(0)) # always append the first one
-
-                for transcript in transcripts: # scan for all mane select transcripts
-                    if transcript["is_mane_select"]:
-                        result.append(transcript)
-                    else:
-                        break # we can do this because the list is sorted
-            else:
-                result = transcripts
-        else: # the variant does not have any consequences
-            return None
+        if not return_all and len(transcripts) > 0:
+            result.append(transcripts.pop(0))
+            for transcript in transcripts: # scan for all mane select transcripts
+                if transcript.is_mane_select:
+                    result.append(transcript)
+                else:
+                    break # we can do this because the list is sorted
+        else:
+            result = transcripts
+        
         return result
 
-    def order_transcripts(self, consequences):
-        keyfunc = cmp_to_key(mycmp = self.sort_transcripts)
-        consequences.sort(key = keyfunc) # sort by preferred transcript
-        return consequences
-     
-    def sort_transcripts(self, a, b):
-        # sort by ensembl/refseq
-        if a["source"] == 'ensembl' and b["source"] == 'refseq':
-            return -1
-        elif a["source"] == 'refseq' and b["source"] == 'ensembl':
-            return 1
-        elif a["source"] == b["source"]:
+        #result = []
+        #command = "SELECT name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical FROM transcript WHERE gene_id = %s"
+        #self.cursor.execute(command, (gene_id, ))
+        #result_raw = self.cursor.fetchall()
+        #transcripts = []
+        #for elem in result_raw:
+        #    if elem[0].startswith("ENST"):
+        #        source = "ensembl" if elem[0].startswith("ENST") else "refseq"
+        #        new_elem = {"name": elem[0],
+        #                    "biotype": elem[1],
+        #                    "length": elem[2],
+        #                    "is_gencode_basic": elem[3],
+        #                    "is_mane_select": elem[4],
+        #                    "is_mane_plus_clinical": elem[5],
+        #                    "is_ensembl_canonical": elem[6],
+        #                    "source": source
+        #                }
+        #        transcripts.append(new_elem)
+        #
+        #if len(transcripts) > 0:
+        #    transcripts = self.order_transcripts(transcripts)
+        #
+        #    if not return_all:
+        #        result.append(transcripts.pop(0)) # always append the first one
+        #
+        #        for transcript in transcripts: # scan for all mane select transcripts
+        #            if transcript["is_mane_select"]:
+        #                result.append(transcript)
+        #            else:
+        #                break # we can do this because the list is sorted
+        #    else:
+        #        result = transcripts
+        #else: # the variant does not have any consequences
+        #    return None
+        #return result
 
-            # sort by mane select
-            if a["is_mane_select"] is None or b["is_mane_select"] is None:
-                return 1
-            elif a["is_mane_select"] and not b["is_mane_select"]:
-                return -1
-            elif not a["is_mane_select"] and b["is_mane_select"]:
-                return 1
-            elif a["is_mane_select"] == b["is_mane_select"]:
-
-                # sort by biotype
-                if a["biotype"] == 'protein coding' and b["biotype"] != 'protein coding':
-                    return -1
-                elif a["biotype"] != 'protein coding' and b["biotype"] == 'protein coding':
-                    return 1
-                elif (a["biotype"] != 'protein coding' and b["biotype"] != 'protein coding') or (a["biotype"] == 'protein coding' and b["biotype"] == 'protein coding'):
-
-                    # sort by length
-                    if a["length"] > b["length"]:
-                        return -1
-                    elif a["length"] < b["length"]:
-                        return 1
-                    else:
-                        return 0
+    #def order_transcripts(self, consequences):
+    #    keyfunc = cmp_to_key(mycmp = self.sort_transcripts)
+    #    consequences.sort(key = keyfunc) # sort by preferred transcript
+    #    return consequences
+    # 
+    #def sort_transcripts(self, a, b):
+    #    # sort by ensembl/refseq
+    #    if a["source"] == 'ensembl' and b["source"] == 'refseq':
+    #        return -1
+    #    elif a["source"] == 'refseq' and b["source"] == 'ensembl':
+    #        return 1
+    #    elif a["source"] == b["source"]:
+#
+    #        # sort by mane select
+    #        if a["is_mane_select"] is None or b["is_mane_select"] is None:
+    #            return 1
+    #        elif a["is_mane_select"] and not b["is_mane_select"]:
+    #            return -1
+    #        elif not a["is_mane_select"] and b["is_mane_select"]:
+    #            return 1
+    #        elif a["is_mane_select"] == b["is_mane_select"]:
+#
+    #            # sort by biotype
+    #            if a["biotype"] == 'protein coding' and b["biotype"] != 'protein coding':
+    #                return -1
+    #            elif a["biotype"] != 'protein coding' and b["biotype"] == 'protein coding':
+    #                return 1
+    #            elif (a["biotype"] != 'protein coding' and b["biotype"] != 'protein coding') or (a["biotype"] == 'protein coding' and b["biotype"] == 'protein coding'):
+#
+    #                # sort by length
+    #                if a["length"] > b["length"]:
+    #                    return -1
+    #                elif a["length"] < b["length"]:
+    #                    return 1
+    #                else:
+    #                    return 0
                     
 
 
@@ -2567,28 +2747,17 @@ class Connection:
         return final_result
     
 
-    def get_transcripts_from_names(self, transcript_names):
-        command = "SELECT id, gene_id, (SELECT symbol FROM gene WHERE transcript.gene_id = gene.id), name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical FROM transcript WHERE name IN "
+    def get_transcripts_from_names(self, transcript_names, remove_unknown = False):
+        command = "SELECT id, gene_id, (SELECT symbol FROM gene WHERE transcript.gene_id = gene.id), name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical, start, end, chrom, orientation FROM transcript WHERE name IN "
         placeholders = self.get_placeholders(len(transcript_names))
         command += placeholders
         self.cursor.execute(command, tuple(transcript_names))
         transcripts_raw = self.cursor.fetchall()
+        transcripts = [self.convert_raw_transcript(transcript_raw) for transcript_raw in transcripts_raw]
 
-        transcripts = [models.Transcript(
-            id = int(transcript_raw[0]),
-            gene = models.Gene(id = transcript_raw[1], symbol = transcript_raw[2]),
-            name = transcript_raw[3],
-            biotype = transcript_raw[4],
-            length = int(transcript_raw[5]),
-            source = "ensembl" if transcript_raw[3].startswith('ENST') else "refseq",
-            is_gencode_basic = True if transcript_raw[6] == 1 else False,
-            is_mane_select = True if transcript_raw[7] == 1 else False,
-            is_mane_plus_clinical = True if transcript_raw[8] == 1 else False,
-            is_ensembl_canonical = True if transcript_raw[9] == 1 else False
-        ) for transcript_raw in transcripts_raw]
-
-        transcripts_not_in_db = list(set(transcript_names) - set([x[2] for x in transcripts_raw]))
-        transcripts_not_in_db = [models.Transcript(id=None, gene=None, name=transcript_name, biotype=None, length=None, source="ensembl" if transcript_name.startswith('ENST') else "refseq", is_gencode_basic=None,is_mane_select=None,is_mane_plus_clinical=None,is_ensembl_canonical=None) for transcript_name in transcripts_not_in_db]
-        transcripts.extend(transcripts_not_in_db)
+        if not remove_unknown:
+            transcripts_not_in_db = list(set(transcript_names) - set([x[2] for x in transcripts_raw]))
+            transcripts_not_in_db = [models.Transcript(id=None, gene=None, name=transcript_name, biotype=None, length=None, chrom="", start=0, end=0, orientation="", source="ensembl" if transcript_name.startswith('ENST') else "refseq", is_gencode_basic=None,is_mane_select=None,is_mane_plus_clinical=None,is_ensembl_canonical=None) for transcript_name in transcripts_not_in_db]
+            transcripts.extend(transcripts_not_in_db)
 
         return transcripts

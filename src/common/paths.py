@@ -69,11 +69,12 @@ if webapp_env == 'dev':
     tp53_db = joinpaths(datadir, "TP53_database/GermlineDownload_r20.normalized.vcf.gz")
     hci_priors = joinpaths(datadir, "HCI_priors/priors.vcf.gz")
     bayesdel = joinpaths(datadir, "BayesDEL/bayesdel_240817_noaf.lifted.vcf.gz")
+    cosmic = joinpaths(datadir, "COSMIC/cosmic_cmc.vcf.gz")
 
     # data for init_db
     hgnc_path = joinpaths(datadir, "HGNC/hgnc_complete_set.tsv")
     ensembl_transcript_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.110.gff3")
-    MANE_path = joinpaths(datadir, "MANE/MANE.GRCh38.v1.0.ensembl_genomic.gff")
+    MANE_path = joinpaths(datadir, "MANE/MANE.GRCh38.v1.3.ensembl_genomic.gff")
     ensembl_canonical_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.105.canonical.tsv")
     pfam_id_mapping_path = joinpaths(datadir, "PFAM/pfam_id_mapping.tsv")
     pfam_legacy_path = joinpaths(datadir, "PFAM/pfam_legacy.tsv")
@@ -257,6 +258,7 @@ elif webapp_env == 'prod':
     tp53_db = joinpaths(datadir, "TP53_database/GermlineDownload_r20.normalized.vcf.gz")
     hci_priors = joinpaths(datadir, "HCI_priors/priors.vcf.gz")
     bayesdel = joinpaths(datadir, "BayesDEL/bayesdel_240817_noaf.lifted.vcf.gz")
+    cosmic = joinpaths(datadir, "COSMIC/cosmic_cmc.vcf.gz")
 
     # IGV data
     igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")

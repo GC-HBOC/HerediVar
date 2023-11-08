@@ -153,9 +153,9 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
             print("Deleted: " + str(len(heredivar_exclusive_vids)))
             print("New: " + str(len(heredicare_exclusive_vids)))
 
-            #intersection = []
-            #heredicare_exclusive_vids = ['917']
-            #heredivar_exclusive_vids = [] #917, 12453169, 18794502
+            intersection = []
+            heredicare_exclusive_vids = []
+            heredivar_exclusive_vids = ['13793167'] #917, 12453169, 18794502
 
             # spawn one task for each variant import
             process_new_vids(heredicare_exclusive_vids, import_queue_id, user_id, user_roles, conn)
@@ -235,8 +235,8 @@ def delete_variant_heredicare(self, vid, vids, user_id, user_roles, import_varia
         if variant_id is not None:
             all_vids_for_variant = conn.get_external_ids_from_variant_id(variant_id, annotation_type_id)
             conn.delete_external_id(vid, annotation_type_id = annotation_type_id, variant_id = variant_id)
+            status = "deleted"
             if all([v in vids for v in all_vids_for_variant]):
-                status = "deleted"
                 message = "Variant was hidden because it does not have any vids in heredicare anymore"
                 conn.hide_variant(variant_id, False)
         else:
@@ -458,7 +458,7 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
                     break_outer = False
                     for current_transcript in preferred_transcripts:
                         for e in err_msgs:
-                            if current_transcript["name"] in e:
+                            if current_transcript.name in e:
                                 new_message = "HGVS to VCf yielded an error with transcript: " + e
                                 if new_message not in message:
                                     message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
@@ -492,8 +492,6 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
 
     if (not was_successful and variant_id is not None) or "already in database!" in message: # variant is already in database, start a reannotation
         status = "update"
-        if perform_annotation:
-            start_annotation_service(conn, user_id, variant_id)
     elif not was_successful:
         status = "error"
 
@@ -591,22 +589,38 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
         tmp_file.close()
 
         is_duplicate = conn.check_variant_duplicate(new_chr, new_pos, new_ref, new_alt) # check if variant is already contained
-        if not is_duplicate:
+
+        if not is_duplicate and insert_variant:
             # insert it & capture the annotation_queue_id of the newly inserted variant to start the annotation service in celery
-            if insert_variant:
-                variant_id = conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chrom, pos, ref, alt, user_id)
-            else:
-                message += "HG38 variant would be: " + '-'.join([str(new_chr), str(new_pos), str(new_ref), str(new_alt)])
-        else:
-            if insert_variant:
-                variant_id = conn.get_variant_id(new_chr, new_pos, new_ref, new_alt)
-                message = "Variant not imported: already in database!!"
-                conn.hide_variant(variant_id, True) # unhide variant
-            else:
-                message += "HG38 variant would be: " + '-'.join([str(new_chr), str(new_pos), str(new_ref), str(new_alt)])
-            was_successful = True
-        if perform_annotation:
+            variant_id = conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chrom, pos, ref, alt, user_id)
+        elif is_duplicate and insert_variant:
+            variant_id = conn.get_variant_id(new_chr, new_pos, new_ref, new_alt)
+            message = "Variant not imported: already in database!!"
+            conn.hide_variant(variant_id, True) # unhide variant
+        if insert_variant and perform_annotation:
             celery_task_id = start_annotation_service(conn, user_id, variant_id) # starts the celery background task
+
+        if not insert_variant:
+            message += "HG38 variant would be: " + '-'.join([str(new_chr), str(new_pos), str(new_ref), str(new_alt)])
+
+        #if not is_duplicate:
+        #    # insert it & capture the annotation_queue_id of the newly inserted variant to start the annotation service in celery
+        #    if insert_variant:
+        #        variant_id = conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chrom, pos, ref, alt, user_id)
+        #        if perform_annotation:
+        #            celery_task_id = start_annotation_service(conn, user_id, variant_id) # starts the celery background task
+        #    else:
+        #        message += "HG38 variant would be: " + '-'.join([str(new_chr), str(new_pos), str(new_ref), str(new_alt)])
+        #else:
+        #    if insert_variant:
+        #        variant_id = conn.get_variant_id(new_chr, new_pos, new_ref, new_alt)
+        #        message = "Variant not imported: already in database!!"
+        #        conn.hide_variant(variant_id, True) # unhide variant
+        #        if perform_annotation:
+        #            celery_task_id = start_annotation_service(conn, user_id, variant_id) # starts the celery background task
+        #    else:
+        #        message += "HG38 variant would be: " + '-'.join([str(new_chr), str(new_pos), str(new_ref), str(new_alt)])
+
 
     functions.rm(tmp_file_path)
     functions.rm(tmp_file_path + ".lifted.unmap")

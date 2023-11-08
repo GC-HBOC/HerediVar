@@ -70,3 +70,17 @@ class Job(metaclass=abc.ABCMeta):
             value = value_modifier_function(value)
 
         conn.insert_external_variant_id(variant_id = variant_id, annotation_type_id = annotation_type_id, external_id = value)
+
+    def insert_multiple_ids(self, variant_id, info, info_name, annotation_type_id, conn, sep, value_modifier_function = None):
+        value = functions.find_between(info, info_name, '(;|$)')
+
+        if value == '' or value is None:
+            return
+        
+        if value_modifier_function is not None:
+            value = value_modifier_function(value)
+
+        id_list = value.split(sep)
+
+        for external_id in id_list:
+            conn.insert_external_variant_id(variant_id, external_id, annotation_type_id)
