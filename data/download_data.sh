@@ -362,10 +362,10 @@ wget https://download.molgeniscloud.org/downloads/vip/resources/GRCh38/spliceai_
 cd $dbs
 mkdir -p ensembl
 cd ensembl
-wget http://ftp.ensembl.org/pub/current_gff3/homo_sapiens/Homo_sapiens.GRCh38.105.gff3.gz
-gunzip Homo_sapiens.GRCh38.105.gff3.gz
+wget http://ftp.ensembl.org/pub/current_gff3/homo_sapiens/Homo_sapiens.GRCh38.110.gff3.gz # previous version: 105
+gunzip Homo_sapiens.GRCh38.110.gff3.gz
 ## download ensembl canonical transcripts (http://ftp.ensembl.org/pub/current_tsv/homo_sapiens)
-wget -O - http://ftp.ensembl.org/pub/release-105/tsv/homo_sapiens/Homo_sapiens.GRCh38.105.canonical.tsv.gz | gunzip > Homo_sapiens.GRCh38.105.canonical.tsv
+##wget -O - http://ftp.ensembl.org/pub/release-110/tsv/homo_sapiens/Homo_sapiens.GRCh38.110.canonical.tsv.gz | gunzip > Homo_sapiens.GRCh38.110.canonical.tsv
 '
 
 : '
@@ -373,7 +373,7 @@ wget -O - http://ftp.ensembl.org/pub/release-105/tsv/homo_sapiens/Homo_sapiens.G
 cd $dbs
 mkdir -p MANE
 cd MANE
-wget -O - https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/release_1.0/MANE.GRCh38.v1.0.ensembl_genomic.gff.gz | gunzip > MANE.GRCh38.v1.0.ensembl_genomic.gff
+wget -O - https://ftp.ncbi.nlm.nih.gov/refseq/MANE/MANE_human/release_1.3/MANE.GRCh38.v1.3.ensembl_genomic.gff.gz | gunzip > MANE.GRCh38.v1.3.ensembl_genomic.gff
 '
 
 
@@ -503,6 +503,29 @@ tabix -p vcf $bayesdel_file.lifted.vcf.gz
 ##grep -v "^ERROR:" vcfcheck_fixed_errors.txt >> vcfcheck_fixed_errors.vcf
 ##
 ##$ngsbits/VcfSubstract -in vcfcheck_fixed.vcf -in2 vcfcheck_fixed_errors.vcf -out recovered_variants.vcf
+
+
+
+
+
+
+###Install COSMIC Cancer Mutation Census CMC  (you need a license, CMC tsv.gz file has to be downloaded manually from https://cancer.sanger.ac.uk/cmc/download)
+#cd $dbs
+#mkdir -p COSMIC
+#cd COSMIC
+## HERE: we take a precalculated one using scripts from megSAP with correction script from alexander ott
+## /mnt/storage2/users/ahott1a1/projects/+analysis/230427_cosmic_converter/converted_corrected.vcf
+#cp /mnt/storage2/users/ahott1a1/projects/+analysis/230427_cosmic_converter/converted_corrected.vcf .
+#cat converted_corrected.vcf | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $data/script/db_converter_cosmic.py > converted_corrected_collapsed.vcf
+#rm converted_corrected.vcf
+#mv converted_corrected_collapsed.vcf cosmic_cmc.vcf
+#bgzip cosmic_cmc.vcf
+#tabix -p vcf cosmic_cmc.vcf.gz
+
+
+
+
+
 
 
 
