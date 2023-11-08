@@ -2756,7 +2756,7 @@ class Connection:
         transcripts = [self.convert_raw_transcript(transcript_raw) for transcript_raw in transcripts_raw]
 
         if not remove_unknown:
-            transcripts_not_in_db = list(set(transcript_names) - set([x[2] for x in transcripts_raw]))
+            transcripts_not_in_db = list(set(transcript_names) - set([x[3] for x in transcripts_raw]))
             transcripts_not_in_db = [models.Transcript(id=None, gene=None, name=transcript_name, biotype=None, length=None, chrom="", start=0, end=0, orientation="", source="ensembl" if transcript_name.startswith('ENST') else "refseq", is_gencode_basic=None,is_mane_select=None,is_mane_plus_clinical=None,is_ensembl_canonical=None) for transcript_name in transcripts_not_in_db]
             transcripts.extend(transcripts_not_in_db)
 

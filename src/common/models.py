@@ -872,14 +872,22 @@ class Variant:
 
         if consequences is None:
             return None
-        if len(consequences) == 0:
-            return None
         
         sortable_dict = {}
         for consequence in consequences:
             if consequence.transcript.source == 'ensembl':
                 sortable_dict[consequence.transcript.name] = consequence
+
+        if len(sortable_dict) == 0:
+            return None
+        
+        #print("sortable dict:")
+        #print(sortable_dict)
         transcripts_sorted, consequences_sorted = functions.sort_transcript_dict(sortable_dict)
+        #print("transcripts_sorted:")
+        #print(transcripts_sorted)
+        #print("consequences_sorted:")
+        #print(consequences_sorted)
         result.append(consequences_sorted.pop(0)) # always append the first one
         for consequence in consequences_sorted: # scan for all mane select transcripts
             if consequence.transcript.is_mane_select:
