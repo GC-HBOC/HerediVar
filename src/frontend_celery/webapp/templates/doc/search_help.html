@@ -34,11 +34,24 @@
             2. A chromosomal range in .bed style: chr   start    end    followed by optional columns. Hereby, chr, start and end must be separated with tabulators. Also note that the start coordinate is zero based (ie. inclusive) while the end coordinate is one based (ie. exclusive). If you want to, you can also upload a bed file which will automatically insert all relevant data-lines in the text area. (e. g. chr11	108229378	108229379	Neg4	0	-	127480532	127481699	0,0,255) <br>
             WARNING: Due to the fact that .bed files can contain any character each bed style range must reside in its own line (ie. they must be separated with newline characters)!
         </li>
+        <li>cDNA ranges <br>
+            This option allows you to filter the variants by ranges of cDNA positions. There are three required values for each query. <br>
+            1. The transcript or a gene symbol. When specifiying a gene symbol the algorithm will choose the best transcript for this gene. <br>
+            2. The cDNA start position relative to 1 <br>
+            3. The cDNA end position relative to 1 <br>
+            These values must be spearated either with a space or tabulator. <br>
+            You can also scan intronic regions by adding or subtracting to the start or end cDNA position. (eg. ENST00000380152 1 68+10). Keep in mind that cDNA positions are counted from the larger genomic position to the smaller one if the gene is defined on the reverse or minus strand. Still, the smaller cDNA position must be inserted as start and the bigger cDNA position as end. <br>
+            If you want to scan regions outside the coding region of a gene add a asterisk (*) or a minus (-) character before the start or end position (eg. ENST00000380152 -100 1).
+        </li>
         <li>A HGVS c. string. <br>
             This search option is most useful when you know the reference transcript. In this case please specify the search string like this: Transcript:c.PositionReference>Alternative (e. g. ENST00000260947:c.1972C>T). <br>
-            If you do not know the transcript you can also specify the gene-symbol (or alias or HGVS-ID) instead of the transcript (e. g. BARD1:c.1972C>T)<br>
-            In case you do neither know the transcript nor the gene it is also possible to omit the reference sequence. But, be careful with this type of search as it will provide you with ALL possible nucleotide changes that COULD be the one you were looking for. Thus, you should inspect the results carefully before continueing. (e. g. c.1972C>T)<br>
-            WARNING: If you do not specify the reference transcript the algorithm will choose the ensembl mane select transcript as reference. If there is no mane select transcript it will omit this HGVS.
+            If you do not know the transcript you can also specify the gene-symbol (or alias or HGNC-ID) instead of the transcript (e. g. BARD1:c.1972C>T)<br>
+            In case you neither know the transcript nor the gene it is also possible to omit the reference sequence. But be careful with this type of search as it will provide you with ALL possible nucleotide changes that COULD be the one you were looking for. Thus, you should inspect the results carefully before continueing. (e. g. c.1972C>T)<br>
+            WARNING: If you do not specify the reference transcript the algorithm will choose the ensembl mane select transcript as reference. If there is no mane select transcript it will omit this HGNC.
+        </li>
+        <li>external ids <br>
+            You may search for dbSNP rsids, clinvar variation ids, COSMIC ids (COSV) or heredicare vids. You can insert the ids directly or choose to append a ":" followed by the database name. For example: You can search for rs1057519871, 1057519871:rsid or 1057519871. All of which should return the same variant.
+            Nevertheless, it is recommended to specify the database of the identifier to make results more accurate.
         </li>
         <li>A consensus classification</li>
         <li>Your classification</li>
