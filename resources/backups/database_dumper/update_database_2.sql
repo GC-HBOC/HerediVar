@@ -103,4 +103,69 @@ UPDATE annotation_type SET group_name = "ID" WHERE title = 'rsid'
 
 
 
-INSERT INTO `HerediVar_ahdoebm1`.`annotation_type` (`title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`) VALUES ('clinvar', 'ClinVar variation ID', 'The Variation ID from ClinVar', 'int', '-', '2023-02-26', 'None', '0');
+INSERT INTO `HerediVar_ahdoebm1`.`annotation_type` (`title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`) VALUES ('clinvar', 'ClinVar variation ID', 'The Variation ID from ClinVar', 'int', '-', '2023-02-26', 'ID', '0');
+
+
+
+
+
+SET FOREIGN_KEY_CHECKS = 0; 
+TRUNCATE table gene_alias; 
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0; 
+TRUNCATE table gene; 
+SET FOREIGN_KEY_CHECKS = 1;
+
+SET FOREIGN_KEY_CHECKS = 0; 
+TRUNCATE table transcript; 
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`transcript` 
+ADD COLUMN `start` INT NOT NULL AFTER `length`,
+ADD COLUMN `end` INT NOT NULL AFTER `start`;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`transcript` 
+ADD COLUMN `chrom` ENUM('chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13', 'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY', 'chrMT') NOT NULL AFTER `length`;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`transcript` 
+ADD COLUMN `orientation` ENUM('+', '-') NOT NULL AFTER `end`;
+
+
+CREATE TABLE `HerediVar_ahdoebm1`.`new_table` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `transcript_id` INT UNSIGNED NOT NULL,
+  `start` INT NOT NULL,
+  `end` INT NOT NULL,
+  `cdna_start` INT NULL,
+  `cdna_end` INT NULL,
+  `is_cds` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`));
+
+ALTER TABLE `HerediVar_ahdoebm1`.`new_table` 
+RENAME TO  `HerediVar_ahdoebm1`.`exon` ;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`exon` 
+ADD INDEX `FK_exon_transcript_idx` (`transcript_id` ASC);
+;
+ALTER TABLE `HerediVar_ahdoebm1`.`exon` 
+ADD CONSTRAINT `FK_exon_transcript`
+  FOREIGN KEY (`transcript_id`)
+  REFERENCES `HerediVar_ahdoebm1`.`transcript` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`exon` 
+DROP FOREIGN KEY `FK_exon_transcript`;
+ALTER TABLE `HerediVar_ahdoebm1`.`exon` 
+ADD CONSTRAINT `FK_exon_transcript`
+  FOREIGN KEY (`transcript_id`)
+  REFERENCES `HerediVar_ahdoebm1`.`transcript` (`id`)
+  ON DELETE CASCADE
+  ON UPDATE NO ACTION;
+
+
+INSERT INTO `HerediVar_ahdoebm1`.`annotation_type` (`title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`) VALUES ('gnomad_popmax_AC', 'popmax AC', 'The allele count from the popmax population from GnomAD', 'int', 'v3.1.2', '2021-10-22', 'gnomAD', '0');
