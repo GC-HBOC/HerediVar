@@ -60,6 +60,7 @@ class annotate_from_vcf_job(Job):
         self.insert_annotation(variant_id, info, "GnomAD_popmax=", recent_annotation_ids['gnomad_popmax'], conn, value_modifier_function = lambda value : value.upper())
         self.insert_annotation(variant_id, info, "GnomAD_AF_popmax=", recent_annotation_ids['gnomad_popmax_AF'], conn)
         self.insert_annotation(variant_id, info, "GnomADm_AC_hom=", recent_annotation_ids['gnomadm_ac_hom'], conn)
+        self.insert_annotation(variant_id, info, "GnomAD_AC_popmax=", recent_annotation_ids['gnomad_popmax_AC'], conn)
 
         self.insert_annotation(variant_id, info, "BRCA_exchange_clin_sig_short=", recent_annotation_ids['brca_exchange_clinical_significance'], conn, value_modifier_function = lambda value : value.replace('_', ' ').replace(',', ';'))
 
@@ -164,7 +165,7 @@ class annotate_from_vcf_job(Job):
 
         ## add gnomAD annotation
         if self.job_config['do_gnomad']:
-            config_file.write(paths.gnomad_path + "\tGnomAD\tAF,AC,hom,hemi,het,popmax,AF_popmax\t\n")
+            config_file.write(paths.gnomad_path + "\tGnomAD\tAF,AC,hom,hemi,het,popmax,AF_popmax,AC_popmax\t\n")
             config_file.write(paths.gnomad_m_path + "\tGnomADm\tAC_hom\t\n")
 
         ## add BRCA_exchange clinical significance
