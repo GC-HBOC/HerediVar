@@ -4,6 +4,9 @@ import sys
 from os import path
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
+from common.db_IO import Connection
+import common.models as models
+from functools import cmp_to_key
 
 def preprocess_query(query, pattern = '.*'):
     seps = get_search_query_separators()
@@ -157,6 +160,179 @@ def extract_hgvs(request_obj):
     elif any(not(x.startswith('ENST') or x.startswith('NM') or x.startswith('NR') or x.startswith('XM') or x.startswith('XR')) for x in hgvs):
         flash("You are probably searching for a HGVS c-dot string without knowing its transcript. Be careful with the search results as they might not contain the variant you are looking for!", "alert-warning")
     return hgvs
+
+def extract_annotations(request_obj, conn: Connection):
+    annotation_type_ids = request_obj.args.getlist('annotation_type_id')
+    annotation_operations = request_obj.args.getlist('annotation_operation')
+    annotation_values = request_obj.args.getlist('annotation_value')
+
+    annotation_restrictions = []
+
+    did_flash = False
+
+    for annotation_type_id, operation, value in zip(annotation_type_ids, annotation_operations, annotation_values):
+        annotation_type_id = int(annotation_type_id.strip())
+        value = value.strip()
+        operation = operation.strip()
+
+        # check that all information is there
+        if value == "" and operation == "":
+            continue
+        if value == "" or operation == "":
+            if not did_flash:
+                flash("Missing some information for annotation search. Skipped some annotation searches.", "alert-danger")
+            did_flash = True
+            continue
+        
+        if annotation_type_id > 0: # standard cases
+            annotation_type = conn.get_annotation_type(annotation_type_id)
+
+            # set allowed_annotations
+            if annotation_type.value_type in ['float', 'int']:
+                allowed_operations = ["=", ">", "<", "<=", ">=", "!="]
+            else:
+                allowed_operations = ["=", "!="]
+
+            if annotation_type is None: # check that annotation type id is valid
+                if not did_flash:
+                    flash("Unknown annotation type(s) given! Skipping unknown ones.", "alert-danger")
+                    did_flash = True
+                continue
+
+            if annotation_type.is_transcript_specific:
+                if operation not in allowed_operations:
+                    flash("The operation " + operation + " is not allowed for " + annotation_type.display_title + ". It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
+                    continue
+
+                new_annotation_restriction = ["variant_transcript_annotation", annotation_type_id, operation, value, annotation_type.title]
+
+            elif annotation_type.value_type in ['float', 'int']:
+                if operation not in allowed_operations:
+                    flash("The operation " + operation + " is not allowed for " + annotation_type.display_title + ". It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
+                    continue
+
+                try:
+                    value = float(value)
+                except:
+                    flash("The value " + str(value) + " is not numeric, but must be numeric for " + annotation_type.display_title, "alert-danger")
+                    continue
+                
+                new_annotation_restriction = ["variant_annotation", annotation_type_id, operation, value, annotation_type.title]
+
+            elif annotation_type.value_type in ["text"]:
+                if operation not in allowed_operations:
+                    flash("The operation " + operation + " is not allowed for " + annotation_type.display_title + ". It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
+                    continue
+
+                new_annotation_restriction = ["variant_annotation", annotation_type_id, operation, value, annotation_type.title]
+
+        else: # exceptions
+            if annotation_type_id == -1:
+                allowed_operations = ["=", ">", "<", "<=", ">=", "!="]
+
+                if operation not in allowed_operations:
+                    flash("The operation " + operation + " is not allowed for maxentscan_ref. It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
+                    continue
+
+                try:
+                    value = float(value)
+                except:
+                    flash("The value " + str(value) + " is not numeric, but must be numeric for MaxEntScan ref", "alert-danger")
+                    continue
+                
+                annotation_type_id = conn.get_most_recent_annotation_type_id("maxentscan")
+                new_annotation_restriction = ["variant_transcript_annotation", annotation_type_id, operation, value, "maxentscan_ref"]
+
+            if annotation_type_id == -2:
+                allowed_operations = ["=", ">", "<", "<=", ">=", "!="]
+
+                if operation not in allowed_operations:
+                    flash("The operation " + operation + " is not allowed for maxentscan_ref. It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
+                    continue
+
+                try:
+                    value = float(value)
+                except:
+                    flash("The value " + str(value) + " is not numeric, but must be numeric for MaxEntScan alt", "alert-danger")
+                    continue
+                
+                annotation_type_id = conn.get_most_recent_annotation_type_id("maxentscan")
+                new_annotation_restriction = ["variant_transcript_annotation", annotation_type_id, operation, value, "maxentscan_alt"]
+
+
+        annotation_restrictions.append(new_annotation_restriction)
+
+
+        # cancerhotspots cancertypes
+        # maxentscan
+        # maxentscan_swa
+    
+    return annotation_restrictions
+
+
+def preprocess_annotation_types_for_search(annotation_types):
+    result = []
+    for annotation_type in annotation_types:
+        if "gnomad" in annotation_type.title:
+            annotation_type.display_title = "GnomAD " + annotation_type.display_title
+        if "cancerhotspots" in annotation_type.title:
+            annotation_type.display_title = "Cancerhotspots " + annotation_type.display_title
+        if "flossies" in annotation_type.title:
+            annotation_type.display_title = "FLOSSIES " + annotation_type.display_title
+        if "tp53db" in annotation_type.title:
+            annotation_type.display_title = "TP53db " + annotation_type.display_title
+        if "task_force_protein_domain" in annotation_type.title:
+            annotation_type.display_title = "task force protein " + annotation_type.display_title
+        
+        annotation_type.display_title = annotation_type.display_title[0].upper() + annotation_type.display_title[1:]
+
+        if annotation_type.title not in ["spliceai_details", "task_force_protein_domain_source", "maxentscan_ref", "maxentscan_alt", "maxentscan"]:
+            result.append(annotation_type)
+
+    result.append(models.Annotation_type(
+        id = -1,
+        title = "maxentscan_ref",
+        display_title = "MaxEntScan ref",
+        description = "",
+        value_type = "float",
+        version = "",
+        version_date = "",
+        group_name = "",
+        is_transcript_specific = False
+        )
+    )
+    result.append(models.Annotation_type(
+        id = -2,
+        title = "maxentscan_alt",
+        display_title = "MaxEntScan alt",
+        description = "",
+        value_type = "float",
+        version = "",
+        version_date = "",
+        group_name = "",
+        is_transcript_specific = False
+        )
+    )
+
+    result = order_annotation_types(result)
+    return result
+
+
+
+def order_annotation_types(annotation_types):
+    keyfunc = cmp_to_key(mycmp = sort_annotation_types)
+    annotation_types.sort(key = keyfunc) # sort by preferred transcript
+    return annotation_types
+ 
+def sort_annotation_types(a, b):
+    a_title = a.display_title
+    b_title = b.display_title
+
+    if a_title > b_title:
+        return 1
+    elif a_title < b_title:
+        return -1
+    return 0
 
 
 def extract_lookup_list(request_obj, user_id, conn):

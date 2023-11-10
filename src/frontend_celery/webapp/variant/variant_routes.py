@@ -31,6 +31,8 @@ def search():
 
     allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
     allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
+    annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
+    annotation_types = preprocess_annotation_types_for_search(annotation_types)
 
     genes = extract_genes(request)
     ranges = extract_ranges(request)
@@ -40,7 +42,8 @@ def search():
     variant_ids_oi = extract_lookup_list(request, user_id, conn)
     external_ids = extract_external_ids(request)
     cdna_ranges = extract_cdna_ranges(request)
-    print(cdna_ranges)
+    annotation_restrictions = extract_annotations(request, conn)
+    print(annotation_restrictions)
     page = int(request.args.get('page', 1))
 
     sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden = extract_search_settings(request)
@@ -59,7 +62,8 @@ def search():
         variant_ids_oi=variant_ids_oi,
         include_heredicare_consensus = include_heredicare_consensus,
         external_ids = external_ids,
-        cdna_ranges = cdna_ranges
+        cdna_ranges = cdna_ranges,
+        annotation_restrictions = annotation_restrictions
     )
     lists = conn.get_lists_for_user(user_id)
     pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
@@ -104,7 +108,8 @@ def search():
                            sort_bys=sort_bys, 
                            page_sizes=page_sizes,
                            allowed_user_classes = allowed_user_classes,
-                           allowed_consensus_classes = allowed_consensus_classes
+                           allowed_consensus_classes = allowed_consensus_classes,
+                           annotation_types = annotation_types
                         )
 
 

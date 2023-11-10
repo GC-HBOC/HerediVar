@@ -16,9 +16,9 @@ main_blueprint = Blueprint(
 def index():
     conn = get_connection()
     total_num_variants = conn.get_number_of_variants()
-    database_info = conn.get_database_info()
+    annotation_types = conn.get_annotation_types()
     total_num_classified_variants = conn.get_number_of_classified_variants()
-    return render_template('index.html', total_num_variants = total_num_variants, database_info = database_info, total_num_classified_variants = total_num_classified_variants)
+    return render_template('index.html', total_num_variants = total_num_variants, annotation_types = annotation_types, total_num_classified_variants = total_num_classified_variants)
 
 
 

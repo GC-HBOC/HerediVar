@@ -91,8 +91,8 @@
             This page displays all annotations of a variant. The top headline shows the variant and its most recent HediVar consensus classification. There are six types of
             consensus classifications:
             <div class="d-flex">
-              {% for classification in ['-', 1, 2, 3, 4, 5] %}
-              <div class="ssr">{{macros.render_consensus_classification_label(classification) }}</div>
+              {% for classification in ['-', '1', '2', '3-', '3', '3+', '4', '5', 'M'] %}
+              <div class="ssr">{{macros.render_consensus_classification_label(classification, 'heredivar') }}</div>
               {% endfor %}
             </div>
             These are interpreted as follows:
@@ -100,10 +100,19 @@
               <li>-: no classification</li>
               <li>1: benign</li>
               <li>2: likely benign</li>
+              <li>3-: uncertain with tendency to benign</li>
               <li>3: uncertain</li>
+              <li>3+: uncertain with tendency to pathogenic</li>
               <li>4: likely pathogenic</li>
               <li>5: pathogenic</li>
+              <li>M: modifier</li>
             </ul>
+            If the consensus classification symbol shows a red download icon like so:
+            <div class="d-flex">
+              <div class="ssr">{{macros.render_consensus_classification_label('2', 'heredicare') }}</div>
+            </div>
+            It means that the consensus classification was imported from heredicare and there is no consensus classification available for this variant which was made on HerediVar. <br>
+            <div class="bsb"></div>
             Right below the headline one can find status information about the variant. The first pill shows the status of the annotation. It could be queued, processing, done or erroneous.
             Next to the annotation status pill there is the clinvar submission status. This shows if the variant was already uploaded to ClinVar from HerediVar. When you click the "gear" button
             the website presents options on what to do with the variant. <br>

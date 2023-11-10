@@ -424,7 +424,7 @@
 {% endmacro %}
 
 
-{% macro draw_paginated_variant_table(pagination, variants, sort_bys, page_sizes, allowed_user_classes, allowed_consensus_classes, lists=none) %}
+{% macro draw_paginated_variant_table(pagination, variants, sort_bys, page_sizes, allowed_user_classes, allowed_consensus_classes, annotation_types, lists=none) %}
 <div id="tabnav-head" class="row align-items-end  nsl nsr">
     <div class="col nopad">{{ pagination.links }}</div>
 
@@ -500,6 +500,14 @@
                     </div>
 
                     <div class="form-group sst">
+                        <label class="form-label">Annotations</label>
+                        <div id="annotation_wrapper">
+
+                        </div>
+                        <button class="btn btn-primary" type="button" id="add_annotation_select">+</button>
+                    </div>
+
+                    <div class="form-group sst">
                         {% set selected_consensus = request.args.getlist('consensus') %}
                         <label for="consensus-select" class="form-label">Consensus classification</label>
                         <div id="consensus-select" class="d-flex">
@@ -540,15 +548,7 @@
                     {% if lists is not none %}
                     <div class="form-group sst">
                         <label for="lookup_list_name" class="form-label">List</label>
-
-                        <div id="select_list_wrapper">
-                            <!--
-                            <div class="autocomplete full_page">
-                                <input id="lookup_list_id" name="lookup_list_id" class="visually_hidden" type="text" value="{{ request.args.get('lookup_list_id', '') }}">
-                                <input value="{{ request.args.get('lookup_list_name', '') }}" id="lookup_list_name" class="form-control" name="lookup_list_name" type="text" placeholder="Select a list... start search by typing">
-                            </div>
-                            -->
-                        </div>
+                        <div id="select_list_wrapper"></div>
                         <button class="btn btn-primary" type="button" id="add_list_select">+</button>
                     </div>
                     {% endif %}
@@ -702,6 +702,10 @@
     data-list-ids='{{ request.args.getlist("lookup_list_id") | tojson}}'
     data-previous-selected-variants='{{ request.args.get("selected_variants", "") }}'
     data-select-all-variants='{{ request.args.get("select_all_variants", "false") }}'
+    data-annotation-types='{{ annotation_types | tojson | safe }}'
+    data-selected-annotation-type-ids='{{ request.args.getlist("annotation_type_id") | tojson }}'
+    data-selected-annotation-operations='{{ request.args.getlist("annotation_operation") | tojson }}'
+    data-selected-annotation-values='{{ request.args.getlist("annotation_value") | tojson }}'
 />
 <script src="/static/js/paginated_variants.js"></script>
 

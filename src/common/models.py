@@ -915,3 +915,15 @@ class Import_variant_request:
     finished_at: datetime.datetime
     message: str
     vid: str
+
+@dataclass
+class Annotation_type:
+    id: int
+    title: str
+    display_title: str
+    description: str
+    value_type: str
+    version: str
+    version_date: str
+    group_name: str
+    is_transcript_specific: bool

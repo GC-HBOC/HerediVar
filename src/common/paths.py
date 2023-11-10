@@ -68,7 +68,7 @@ if webapp_env == 'dev':
     arup_brca_path = joinpaths(datadir, "ARUP/ARUP_BRCA_2022_04_01.vcf.gz")
     tp53_db = joinpaths(datadir, "TP53_database/GermlineDownload_r20.normalized.vcf.gz")
     hci_priors = joinpaths(datadir, "HCI_priors/priors.vcf.gz")
-    bayesdel = joinpaths(datadir, "BayesDEL/bayesdel_240817_noaf.lifted.vcf.gz")
+    bayesdel = joinpaths(datadir, "BayesDEL/bayesdel_4.4.vcf.gz")
     cosmic = joinpaths(datadir, "COSMIC/cosmic_cmc.vcf.gz")
 
     # data for init_db
@@ -257,7 +257,7 @@ elif webapp_env == 'prod':
     arup_brca_path = joinpaths(datadir, "ARUP/ARUP_BRCA_2022_04_01.vcf.gz")
     tp53_db = joinpaths(datadir, "TP53_database/GermlineDownload_r20.normalized.vcf.gz")
     hci_priors = joinpaths(datadir, "HCI_priors/priors.vcf.gz")
-    bayesdel = joinpaths(datadir, "BayesDEL/bayesdel_240817_noaf.lifted.vcf.gz")
+    bayesdel = joinpaths(datadir, "BayesDEL/bayesdel_4.4.vcf.gz")
     cosmic = joinpaths(datadir, "COSMIC/cosmic_cmc.vcf.gz")
 
     # IGV data

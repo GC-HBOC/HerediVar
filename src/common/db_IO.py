@@ -683,7 +683,7 @@ class Connection:
 
 
     def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, 
-                                 ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, include_heredicare_consensus = False):
+                                 ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, include_heredicare_consensus = False):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -727,6 +727,33 @@ class Connection:
             else:
                 new_constraints = "(chr='chr1' AND pos BETWEEN 0 AND 0)"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if annotation_restrictions is not None and len(annotation_restrictions) > 0:
+            for annotation_restriction in annotation_restrictions:
+                table = annotation_restriction[0]
+                annotation_type_id = annotation_restriction[1]
+                operation = annotation_restriction[2]
+                value = annotation_restriction[3]
+                annotation_type_title = annotation_restriction[4]
+                if annotation_type_title == 'maxentscan_ref':
+                    new_constraints = """id IN (SELECT variant_id FROM (
+                                            SELECT DISTINCT variant_id,
+                                            substring_index((substring_index(`value`,'|',1)),'|',-1) AS ref
+                                            FROM variant_transcript_annotation WHERE annotation_type_id = %s)split_maxent WHERE ref """ + operation + """ %s)
+                                      """
+                    actual_information += (annotation_type_id, value)
+                elif annotation_type_title == 'maxentscan_alt':
+                    new_constraints = """id IN (SELECT variant_id FROM (
+                                            SELECT DISTINCT variant_id,
+                                            substring_index((substring_index(`value`,'|',2)),'|',-1) AS alt
+                                            FROM variant_transcript_annotation WHERE annotation_type_id = %s)split_maxent WHERE alt """ + operation + """ %s)
+                                      """
+                    actual_information += (annotation_type_id, value)
+                else:
+                    new_constraints = "id IN (SELECT DISTINCT variant_id FROM " + table + " WHERE annotation_type_id = %s AND value " + operation + " %s)"
+                    actual_information += (annotation_type_id, value)
+                postfix = self.add_constraints_to_command(postfix, new_constraints)
+                
+
         if genes is not None and len(genes) > 0:
             #genes = [self.get_gene(self.convert_to_gene_id(x))[1] for x in genes]
             hgnc_ids = set()
@@ -2478,13 +2505,38 @@ class Connection:
                 
         return annotation_stati, errors, warnings, total_num_variants
     
-    def get_database_info(self):
+
+    def get_annotation_types(self, exclude_groups = []):
         annotation_type_ids = self.get_recent_annotation_type_ids()
+        annotation_type_ids = annotation_type_ids.values()
         placeholders = self.get_placeholders(len(annotation_type_ids))
-        command = "SELECT display_title,description,version,version_date FROM annotation_type WHERE id IN " + placeholders
-        self.cursor.execute(command, tuple(annotation_type_ids.values()))
+        command = "SELECT id, title, display_title, description, value_type, version, version_date, group_name, is_transcript_specific FROM annotation_type WHERE id IN " + placeholders
+        self.cursor.execute(command, tuple(annotation_type_ids))
         result = self.cursor.fetchall()
-        return result
+        annotation_types = [self.convert_annotation_type_raw(annotation_type_raw) for annotation_type_raw in result if annotation_type_raw]
+        annotation_types = [annotation_type for annotation_type in annotation_types if annotation_type.group_name not in exclude_groups]
+        return annotation_types
+
+    def get_annotation_type(self, annotation_type_id):
+        command = "SELECT id, title, display_title, description, value_type, version, version_date, group_name, is_transcript_specific FROM annotation_type WHERE id = %s"
+        self.cursor.execute(command, (annotation_type_id, ))
+        result = self.cursor.fetchone()
+        if result is None:
+            return None
+        return self.convert_annotation_type_raw(result)
+
+
+    def convert_annotation_type_raw(self, annotation_type_raw):
+        return models.Annotation_type(id = int(annotation_type_raw[0]),
+                                      title = annotation_type_raw[1], 
+                                      display_title = annotation_type_raw[2], 
+                                      description = annotation_type_raw[3], 
+                                      value_type = annotation_type_raw[4], 
+                                      version = annotation_type_raw[5], 
+                                      version_date = annotation_type_raw[6], 
+                                      group_name = annotation_type_raw[7], 
+                                      is_transcript_specific = annotation_type_raw[8]
+                                    )
     
     def get_number_of_classified_variants(self):
         command = "SELECT DISTINCT variant_id FROM consensus_classification"
@@ -2517,6 +2569,7 @@ class Connection:
             recent_annotation_ids[entry[1]] = entry[0]
         
         return recent_annotation_ids
+
 
     def get_placeholders(self, num):
         placeholders = ["%s"] * num

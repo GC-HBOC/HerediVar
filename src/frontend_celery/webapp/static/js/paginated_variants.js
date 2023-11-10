@@ -3,6 +3,12 @@ const flask_data = document.getElementById("flask_data")
 const lists = JSON.parse(flask_data.dataset.lists);
 const list_names = JSON.parse(flask_data.dataset.listNames);
 const list_ids = JSON.parse(flask_data.dataset.listIds);
+const annotation_types = JSON.parse(flask_data.dataset.annotationTypes)
+const selected_annotation_type_ids = JSON.parse(flask_data.dataset.selectedAnnotationTypeIds)
+const selected_annotation_operations = JSON.parse(flask_data.dataset.selectedAnnotationOperations)
+const selected_annotation_values = JSON.parse(flask_data.dataset.selectedAnnotationValues)
+
+console.log(annotation_types)
 
 for (var i = 0; i < lists.length; i++) {
     current_list = lists[i]
@@ -128,12 +134,101 @@ if (list_names.length == list_ids.length) {
         current_list_id = list_ids[i]
         current_list_name = list_names[i]
         if (current_list_id != "" && current_list_name != "") {
-            create_list_select(document.getElementById("select_list_wrapper"), list_id= current_list_id, list_name = current_list_name)
+            create_list_select(document.getElementById("select_list_wrapper"), list_id = current_list_id, list_name = current_list_name)
         }
     }
 }
 if (document.getElementsByName("lookup_list_name").length == 0) {
     create_list_select(document.getElementById("select_list_wrapper"))
 }
+
+
+
+
+
+const annotation_wrapper = document.getElementById("annotation_wrapper")
+document.getElementById("add_annotation_select").addEventListener("click", function(e) {
+    create_annotation_select(annotation_wrapper)
+})
+
+function create_annotation_select(parent, annotation_type_id = "", annotation_operation = "", annotation_value = "") {
+    //<div class="d-flex">
+    //<select class="form-select width_small" name="annotation" id="">
+    //    <option value="">PhyloP-100way</option> <!-- value = index in annotation_types array -->
+    //    <option value="">CADD</option>
+    //    <option value="">...</option>
+    //</select>
+    //<input class="form-control" type="text">
+    //</div>
+
+    const wrapper = document.createElement('div')
+    wrapper.classList.add("d-flex")
+    parent.appendChild(wrapper)
+
+    const select = document.createElement('select')
+    select.classList.add("form-select")
+    select.classList.add("width_small")
+    select.setAttribute("name", "annotation_type_id")
+    wrapper.appendChild(select)
+
+    for (var i = 0; i < annotation_types.length; i++) {
+        var current_annotation_type = annotation_types[i]
+        var option = document.createElement('option')
+        option.value = current_annotation_type['id']
+        option.innerText = current_annotation_type['display_title']
+        if (annotation_type_id == current_annotation_type['id']) { // preselect
+            option.selected = 'selected'
+        }
+        select.appendChild(option)
+    }
+
+    const operation = document.createElement("input")
+    operation.classList.add("form-control")
+    operation.classList.add("width_minimal")
+    operation.setAttribute("placeholder", ">=")
+    operation.setAttribute("name", "annotation_operation")
+    operation.value = annotation_operation
+    wrapper.appendChild(operation)
+
+    const value = document.createElement("input")
+    value.classList.add("form-control")
+    value.setAttribute("placeholder", "5")
+    value.setAttribute("name", "annotation_value")
+    value.value = annotation_value
+    wrapper.appendChild(value)
+
+    const delete_button = document.createElement("button")
+    delete_button.setAttribute("type", "button")
+    delete_button.addEventListener("click", function(e) {
+        wrapper.remove()
+    })
+    delete_button.classList.add("btn")
+    delete_button.classList.add("btn-light")
+    delete_button.appendChild(create_trashcan())
+    wrapper.appendChild(delete_button)
+}
+
+if ((selected_annotation_type_ids.length == selected_annotation_operations.length) && (selected_annotation_type_ids.length == selected_annotation_values.length)) {
+    
+    for (var i = 0; i < selected_annotation_type_ids.length; i++) {
+        annotation_type_id = selected_annotation_type_ids[i]
+        annotation_operation = selected_annotation_operations[i]
+        annotation_value = selected_annotation_values[i]
+        if (!((annotation_type_id == annotation_types[0]["id"]) && (annotation_operation == "") && (annotation_value == ""))) {
+            create_annotation_select(annotation_wrapper, annotation_type_id = annotation_type_id, annotation_operation = annotation_operation, annotation_value = annotation_value)
+        }
+    }
+}
+
+if (document.getElementsByName("annotation_type_id").length == 0) {
+    create_annotation_select(annotation_wrapper)
+}
+
+
+
+
+
+
+
 
 
