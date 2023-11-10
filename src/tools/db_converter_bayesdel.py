@@ -8,12 +8,10 @@ import common.functions as functions
 from os import listdir
 from os.path import isfile, join, abspath
 import gzip
-import pandas as pd
 
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("-i", "--input",  default="", help="path to input folder")
 parser.add_argument("-o", "--output", default="", help="output file path. If not given will default to stdout")
-parser.add_argument("-t", "--transcripts", default="", help="The path to the ensembl gff3 file (eg. http://ftp.ensembl.org/pub/current_gff3/homo_sapiens/Homo_sapiens.GRCh38.110.gff3.gz)")
 
 args = parser.parse_args()
 
@@ -25,42 +23,10 @@ if args.input != "":
 else:
     input_path = sys.stdin
 
-transcript_path = args.transcripts
 
-info_headers = ["##INFO=<ID=BayesDEL_noAF,Number=1,Type=Float,Description=\"Missense variant functional predictions by BayesDel tool (Feng 2017) used without allele frequency. Score bigger or equal to 0.16: damaging; Score smaller than 0.16: tolerated.\">"]
+info_headers = ["##INFO=<ID=BayesDEL_noAF,Number=1,Type=Float,Description=\"Missense variant functional predictions by BayesDel tool (Feng 2017) used without allele frequency. Score bigger or equal to 0.16: damaging; Score smaller than 0.16: tolerated.\">",
+                "##INFO=<ID=BayesDEL_addAF,Number=1,Type=Float,Description=\"Missense variant functional predictions by BayesDel tool (Feng 2017) used with allele frequency.\">"]
 functions.write_vcf_header(info_headers)
-
-
-def read_transcripts(path):
-    transcripts = []
-    with open(path, 'r') as file:
-        for line in file:
-            line = line.strip() 
-            if line.startswith('#') or line == '':
-                continue
-            
-            parts = line.split('\t')
-            biotype = parts[2]
-            chrom = parts[0]
-            start = int(parts[3])
-            end = int(parts[4])
-            orientation = parts[6]
-            info = parts[8]
-            
-            if biotype in ['gene', 'ncRNA_gene', 'pseudogene']:
-                transcript_id = functions.find_between(info, prefix="ID=gene:", postfix="(;|$)")
-                if transcript_id is None:
-                    continue
-
-                transcripts.append([transcript_id, orientation, chrom, start, end])
-    
-    result = pd.DataFrame(transcripts, columns=['transcript', 'orientation', 'chrom', 'start', 'end'])
-    return result
-
-if transcript_path != "":
-    functions.eprint("trying to fix errors...")
-    transcripts = read_transcripts(transcript_path)
-    functions.eprint(transcripts)
 
 
 bayesdel_files = [abspath(join(input_path, f)) for f in listdir(input_path) if isfile(join(input_path, f))]
@@ -81,18 +47,23 @@ for bayesdel_file in bayesdel_files:
         pos = parts[1]
         ref = parts[2]
         alt = parts[3]
-        if transcript_path != "":
-            possible_transcripts = transcripts[(transcripts['chrom'] == chrom) & (transcripts['start'] <= int(pos)) & (transcripts['end'] >= int(pos))]
-            if len(possible_transcripts) == 1 :
-                orientation = possible_transcripts.iloc[0]['orientation']
-                if orientation == '-':
-                    ref = functions.reverse_seq(ref)
-                    alt = functions.reverse_seq(alt)
-                    #functions.eprint("reversed: " + str(pos))
-        
-        vcf_parts = [chrom, pos, '.', ref, alt, '.', '.', "BayesDEL_noAF=" + str(parts[4])]
-        vcf_line = '\t'.join(vcf_parts)
-        print(vcf_line)
+        info = ""
+        bayesdel_noaf = parts[104]
+        if bayesdel_noaf != '.':
+            info = functions.collect_info(info, "BayesDEL_noAF=", parts[104])
+
+        bayesdel_addaf = parts[101]
+        if bayesdel_addaf != '.':
+            info = functions.collect_info(info, "BayesDEL_addAF=", parts[101])
+
+        if info != "": # keep only variants which have at least one annotation
+            chrom = functions.validate_chr(chrom)
+            if not chrom:
+                continue
+            chrom = 'chr' + chrom
+            vcf_parts = [chrom, pos, '.', ref, alt, '.', '.', info]
+            vcf_line = '\t'.join(vcf_parts)
+            print(vcf_line)
 
 
     file.close()
