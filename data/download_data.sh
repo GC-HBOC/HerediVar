@@ -480,61 +480,6 @@ tabix -p vcf $bayesdel_file.vcf.gz
 
 
 
-
-
-bayesdel_file=bayesdel_240817_noaf
-#curl -L 'https://drive.google.com/file/d/0Byvs2ppGNyXlN0xvSzA4LUgybzg/view?usp=drive_link&resourcekey=0-ULPKwYu4hPGuMZ-eY1Z2Tw&confirm=t' > $bayesdel_file.tgz
-
-#mkdir -p $bayesdel_file && tar -xvzf $bayesdel_file.tgz -C $bayesdel_file --strip-components 1
-#rm $bayesdel_file.tgz
-
-#rm $bayesdel_file/*.tbi
-
-# grch37 preprocessing
-python3 $tools/db_converter_bayesdel.py -i $bayesdel_file -o $bayesdel_file.vcf
-$ngsbits/VcfSort -in $bayesdel_file.vcf -out $bayesdel_file.vcf
-
-# remove erroneous variants
-$ngsbits/VcfCheck -lines 0 -in $bayesdel_file.vcf -ref $data/genomes/GRCh37.fa > vcfcheck_errors.txt
-grep "^#" $bayesdel_file.vcf > vcfcheck_errors.vcf
-grep -v "^ERROR:" vcfcheck_errors.txt >> vcfcheck_errors.vcf
-$ngsbits/VcfSubstract -in $bayesdel_file.vcf -in2 vcfcheck_errors.vcf -out $bayesdel_file.2.vcf
-rm $bayesdel_file.vcf
-mv $bayesdel_file.2.vcf $bayesdel_file.vcf
-
-#$ngsbits/VcfLeftNormalize -in $bayesdel_file.vcf -stream -ref $data/genomes/GRCh37.fa -out $bayesdel_file.vcf.2
-$ngsbits/VcfStreamSort -in $bayesdel_file.vcf -out $bayesdel_file.vcf.2
-mv $bayesdel_file.vcf.2 $bayesdel_file.vcf
-awk -v OFS="\t" '!/##/ {$9=$10=""}1' $bayesdel_file.vcf |sed 's/^\s\+//g' > $bayesdel_file.vcf.2 # remove SAMPLE and FORMAT columns from vcf as they are added by vcfsort
-mv -f $bayesdel_file.vcf.2 $bayesdel_file.vcf
-bgzip $bayesdel_file.vcf
-#$ngsbits/VcfCheck -lines 0 -in $bayesdel_file.vcf.gz -ref $data/genomes/GRCh37.fa
-
-# crossmap to lift from GRCh37 to GRCh37
-CrossMap.py vcf $data/genomes/hg19ToHg38.fixed.over.chain.gz $bayesdel_file.vcf.gz $genome $bayesdel_file.lifted.vcf
-$ngsbits/VcfSort -in $bayesdel_file.lifted.vcf -out $bayesdel_file.lifted.vcf.2
-#$ngsbits/VcfLeftNormalize -stream -ref $genome -in $bayesdel_file.lifted.vcf.2 -out $bayesdel_file.lifted.vcf
-mv $bayesdel_file.lifted.vcf.2 $bayesdel_file.lifted.vcf
-bgzip $bayesdel_file.lifted.vcf
-rm -f $bayesdel_file.vcf.gz
-
-#$ngsbits/VcfCheck -lines 0 -in $bayesdel_file.lifted.vcf.gz -ref $genome
-
-tabix -p vcf $bayesdel_file.lifted.vcf.gz
-
-
-##python3 $tools/fix_bayesdel.py -i vcfcheck_errors.vcf -o vcfcheck_fixed.vcf -t $dbs/ensembl/Homo_sapiens.GRCh38.110.gff3
-##$ngsbits/VcfCheck -lines 0 -in vcfcheck_fixed.vcf -ref $data/genomes/GRCh37.fa >> vcfcheck_fixed_errors.txt
-##grep "^#" $bayesdel_file.vcf > vcfcheck_fixed_errors.vcf
-##grep -v "^ERROR:" vcfcheck_fixed_errors.txt >> vcfcheck_fixed_errors.vcf
-##
-##$ngsbits/VcfSubstract -in vcfcheck_fixed.vcf -in2 vcfcheck_fixed_errors.vcf -out recovered_variants.vcf
-
-
-
-
-
-
 ###Install COSMIC Cancer Mutation Census CMC  (you need a license, CMC tsv.gz file has to be downloaded manually from https://cancer.sanger.ac.uk/cmc/download)
 #cd $dbs
 #mkdir -p COSMIC
