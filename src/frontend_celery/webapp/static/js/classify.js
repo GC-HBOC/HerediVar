@@ -149,34 +149,12 @@ function submit_classification() {
 
 
 function preselect_literature() {
-    // THIS FUNCTION IS UGLY --> maybe REWORK
     if (classification_type === 'consensus') { // remove all rows in add from user literature selection
         document.getElementById('user_text_passages_for_copy').innerHTML = ""
         update_default_caption(document.getElementById('userSelectedLiterature'))
     }
     for (var user_id in previous_classifications) {
-        if (user_id != -1) { // skip imaginary consensus classification user id
-            var all_user_classifications = previous_classifications[user_id]
-            var selected_classification = all_user_classifications[scheme] ?? {}
-            var previous_selected_literature = selected_classification['literature'] ?? []
-            var submitter = selected_classification['submitter'] ?? {}
-            var provided_by = submitter['full_name']
-            var affiliation = submitter['affiliation']
-            for (var i = 0; i < previous_selected_literature.length; i++) {
-                var current_literature = previous_selected_literature[i]
-                var pmid = current_literature['pmid']
-                var text_passage = current_literature['text_passage']
-                if (classification_type === 'consensus') { // add to modal table for copying
-                    create_line_consensus_modal(document.getElementById('user_text_passages_for_copy'), pmid = pmid, evidence_text = text_passage, provided_by=provided_by, affiliation=affiliation)
-                } else { // add directly to the literature select
-                    create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
-                }
-            }
-        }
-    }
-    // add literature directly for consensus classification
-    if (classification_type === 'consensus') {
-        var all_user_classifications = previous_classifications[-1] ?? {}
+        var all_user_classifications = previous_classifications[user_id]
         var selected_classification = all_user_classifications[scheme] ?? {}
         var previous_selected_literature = selected_classification['literature'] ?? []
         var submitter = selected_classification['submitter'] ?? {}
@@ -186,10 +164,13 @@ function preselect_literature() {
             var current_literature = previous_selected_literature[i]
             var pmid = current_literature['pmid']
             var text_passage = current_literature['text_passage']
-            create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
+            if ((classification_type !== 'consensus') || (user_id == -1)) { // add directly to the literature select 
+                create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
+            } else { // add to modal table for copying
+                create_line_consensus_modal(document.getElementById('user_text_passages_for_copy'), pmid = pmid, evidence_text = text_passage, provided_by=provided_by, affiliation=affiliation)
+            }
         }
     }
-
 }
 
 
