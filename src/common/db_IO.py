@@ -734,26 +734,37 @@ class Connection:
                 operation = annotation_restriction[2]
                 value = annotation_restriction[3]
                 annotation_type_title = annotation_restriction[4]
-                if annotation_type_title == 'maxentscan_ref':
+                if annotation_type_title in ['maxentscan_ref', 'maxentscan_alt']:
+                    maxentpart = annotation_type_title[11:]
                     new_constraints = """id IN (SELECT variant_id FROM (
                                             SELECT DISTINCT variant_id,
-                                            substring_index((substring_index(`value`,'|',1)),'|',-1) AS ref
-                                            FROM variant_transcript_annotation WHERE annotation_type_id = %s)split_maxent WHERE ref """ + operation + """ %s)
-                                      """
-                    actual_information += (annotation_type_id, value)
-                elif annotation_type_title == 'maxentscan_alt':
-                    new_constraints = """id IN (SELECT variant_id FROM (
-                                            SELECT DISTINCT variant_id,
+                                            substring_index((substring_index(`value`,'|',1)),'|',-1) AS ref,
                                             substring_index((substring_index(`value`,'|',2)),'|',-1) AS alt
-                                            FROM variant_transcript_annotation WHERE annotation_type_id = %s)split_maxent WHERE alt """ + operation + """ %s)
+                                            FROM variant_transcript_annotation WHERE annotation_type_id = %s)split_maxent WHERE """ + maxentpart + " " + operation + """ %s)
                                       """
                     actual_information += (annotation_type_id, value)
+                elif annotation_type_title in ['maxentscan_swa_donor_ref', 'maxentscan_swa_donor_alt', 'maxentscan_swa_acceptor_ref', 'maxentscan_swa_acceptor_alt']:
+                    maxentpart = annotation_type_title[15:]
+                    new_constraints = """id IN (SELECT variant_id FROM (
+                                            SELECT DISTINCT variant_id,
+                                            substring_index((substring_index(`value`,'|',1)),'|',-1) AS donor_ref,
+                                            substring_index((substring_index(`value`,'|',2)),'|',-1) AS donor_alt,
+                                            substring_index((substring_index(`value`,'|',4)),'|',-1) AS acceptor_ref,
+                                            substring_index((substring_index(`value`,'|',5)),'|',-1) AS acceptor_alt
+                                            FROM variant_transcript_annotation WHERE annotation_type_id = %s)split_maxent_swa WHERE """ + maxentpart + " " + operation + """ %s)
+                                      """
+                    actual_information += (annotation_type_id, value)
+                elif annotation_type_title in ["clinvar_interpretation"]:
+                    new_constraints = "id IN (SELECT DISTINCT variant_id FROM " + table + " WHERE interpretation " + operation + " %s)"
+                    actual_information += (value, )
+                elif annotation_type_title in ["heredicare_n_fam", "heredicare_n_pat"]:
+                    column_oi = annotation_type_title[11:]
+                    new_constraints = "id IN (SELECT DISTINCT variant_id FROM " + table + " WHERE " + column_oi + " " + operation + " %s)"
+                    actual_information += (value, )
                 else:
                     new_constraints = "id IN (SELECT DISTINCT variant_id FROM " + table + " WHERE annotation_type_id = %s AND value " + operation + " %s)"
                     actual_information += (annotation_type_id, value)
                 postfix = self.add_constraints_to_command(postfix, new_constraints)
-                
-
         if genes is not None and len(genes) > 0:
             #genes = [self.get_gene(self.convert_to_gene_id(x))[1] for x in genes]
             hgnc_ids = set()

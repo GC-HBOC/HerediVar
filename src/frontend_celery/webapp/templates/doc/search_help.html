@@ -43,7 +43,7 @@
             You can also scan intronic regions by adding or subtracting to the start or end cDNA position. (eg. ENST00000380152 1 68+10). Keep in mind that cDNA positions are counted from the larger genomic position to the smaller one if the gene is defined on the reverse or minus strand. Still, the smaller cDNA position must be inserted as start and the bigger cDNA position as end. <br>
             If you want to scan regions outside the coding region of a gene add a asterisk (*) or a minus (-) character before the start or end position (eg. ENST00000380152 -100 1).
         </li>
-        <li>A HGVS c. string. <br>
+        <li>A HGVS c. string <br>
             This search option is most useful when you know the reference transcript. In this case please specify the search string like this: Transcript:c.PositionReference>Alternative (e. g. ENST00000260947:c.1972C>T). <br>
             If you do not know the transcript you can also specify the gene-symbol (or alias or HGNC-ID) instead of the transcript (e. g. BARD1:c.1972C>T)<br>
             In case you neither know the transcript nor the gene it is also possible to omit the reference sequence. But be careful with this type of search as it will provide you with ALL possible nucleotide changes that COULD be the one you were looking for. Thus, you should inspect the results carefully before continueing. (e. g. c.1972C>T)<br>
@@ -53,11 +53,15 @@
             You may search for dbSNP rsids, clinvar variation ids, COSMIC ids (COSV) or heredicare vids. You can insert the ids directly or choose to append a ":" followed by the database name. For example: You can search for rs1057519871, 1057519871:rsid or 1057519871. All of which should return the same variant.
             Nevertheless, it is recommended to specify the database of the identifier to make results more accurate.
         </li>
+        <li>annotations <br>
+            First select the annotation from the dropdown menu, then type the operator. For numerical values you may choose from &lt;, &lt;=, &gt;, &gt;=, = and !=. For text-like values you may choose from =, != and ~. Hereby, ~ is a case insensitive substring match. Finally, provide the value in the next textbox. <br>
+            It is always possible to add more annotation searches. But be aware that resulting variants must always satisfy all of the criteria at the same time to appear in the variant list.
+        </li>
         <li>A consensus classification</li>
         <li>Your classification</li>
         <li>A list of variants</li>
     </ul>
-    <div >If multiple constraints are selected they are joined with 'AND'. This means that if you choose to search for BARD1 in the genes and select consensus classification 1 you will get all variants from BARD1 which are classified with 1.</div>
+    <div>If multiple constraints are selected they are joined with 'AND'. This means that if you choose to search for BARD1 in the genes and select consensus classification 1 you will get all variants from BARD1 which are classified with 1.</div>
     <div class="sst">You can separate multiple genes, HGVS or chromosomal ranges in their respective fields either with semicolons (';'), commas (',') or newlines. It is also possible to have a combination of them.</div>
 </div>
 

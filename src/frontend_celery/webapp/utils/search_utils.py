@@ -168,6 +168,8 @@ def extract_annotations(request_obj, conn: Connection):
 
     annotation_restrictions = []
 
+    exceptions_dict = get_exception_dict()
+
     did_flash = False
 
     for annotation_type_id, operation, value in zip(annotation_type_ids, annotation_operations, annotation_values):
@@ -186,79 +188,46 @@ def extract_annotations(request_obj, conn: Connection):
         
         if annotation_type_id > 0: # standard cases
             annotation_type = conn.get_annotation_type(annotation_type_id)
+        else:
+            annotation_type = exceptions_dict[annotation_type_id]
+            annotation_type_id = get_exception_annotation_type_id(annotation_type, conn)
 
-            # set allowed_annotations
-            if annotation_type.value_type in ['float', 'int']:
-                allowed_operations = ["=", ">", "<", "<=", ">=", "!="]
-            else:
-                allowed_operations = ["=", "!="]
+        # set allowed_annotations
+        if annotation_type.value_type in ['float', 'int']:
+            allowed_operations = ["=", ">", "<", "<=", ">=", "!="]
+        else:
+            allowed_operations = ["=", "!=", "~"]
 
-            if annotation_type is None: # check that annotation type id is valid
-                if not did_flash:
-                    flash("Unknown annotation type(s) given! Skipping unknown ones.", "alert-danger")
-                    did_flash = True
+        if annotation_type is None: # check that annotation type id is valid
+            if not did_flash:
+                flash("Unknown annotation type(s) given! Skipping unknown ones.", "alert-danger")
+                did_flash = True
+            continue
+        
+        if annotation_type.value_type in ['float', 'int']:
+            try:
+                value = float(value)
+            except:
+                flash("The value " + str(value) + " is not numeric, but must be numeric for " + annotation_type.display_title, "alert-danger")
                 continue
 
-            if annotation_type.is_transcript_specific:
-                if operation not in allowed_operations:
-                    flash("The operation " + operation + " is not allowed for " + annotation_type.display_title + ". It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
-                    continue
+        table = "variant_annotation"
+        if annotation_type.is_transcript_specific:
+            table = "variant_transcript_annotation"
+        elif annotation_type.title == 'clinvar_interpretation':
+            table = "clinvar_variant_annotation"
+        elif 'heredicare' in annotation_type.title:
+            table = "variant_heredicare_annotation"
 
-                new_annotation_restriction = ["variant_transcript_annotation", annotation_type_id, operation, value, annotation_type.title]
+        if operation not in allowed_operations:
+            flash("The operation " + operation + " is not allowed for " + annotation_type.display_title + ". It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
+            continue
 
-            elif annotation_type.value_type in ['float', 'int']:
-                if operation not in allowed_operations:
-                    flash("The operation " + operation + " is not allowed for " + annotation_type.display_title + ". It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
-                    continue
+        if operation == '~':
+            operation = 'LIKE'
+            value = functions.enpercent(value)
 
-                try:
-                    value = float(value)
-                except:
-                    flash("The value " + str(value) + " is not numeric, but must be numeric for " + annotation_type.display_title, "alert-danger")
-                    continue
-                
-                new_annotation_restriction = ["variant_annotation", annotation_type_id, operation, value, annotation_type.title]
-
-            elif annotation_type.value_type in ["text"]:
-                if operation not in allowed_operations:
-                    flash("The operation " + operation + " is not allowed for " + annotation_type.display_title + ". It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
-                    continue
-
-                new_annotation_restriction = ["variant_annotation", annotation_type_id, operation, value, annotation_type.title]
-
-        else: # exceptions
-            if annotation_type_id == -1:
-                allowed_operations = ["=", ">", "<", "<=", ">=", "!="]
-
-                if operation not in allowed_operations:
-                    flash("The operation " + operation + " is not allowed for maxentscan_ref. It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
-                    continue
-
-                try:
-                    value = float(value)
-                except:
-                    flash("The value " + str(value) + " is not numeric, but must be numeric for MaxEntScan ref", "alert-danger")
-                    continue
-                
-                annotation_type_id = conn.get_most_recent_annotation_type_id("maxentscan")
-                new_annotation_restriction = ["variant_transcript_annotation", annotation_type_id, operation, value, "maxentscan_ref"]
-
-            if annotation_type_id == -2:
-                allowed_operations = ["=", ">", "<", "<=", ">=", "!="]
-
-                if operation not in allowed_operations:
-                    flash("The operation " + operation + " is not allowed for maxentscan_ref. It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
-                    continue
-
-                try:
-                    value = float(value)
-                except:
-                    flash("The value " + str(value) + " is not numeric, but must be numeric for MaxEntScan alt", "alert-danger")
-                    continue
-                
-                annotation_type_id = conn.get_most_recent_annotation_type_id("maxentscan")
-                new_annotation_restriction = ["variant_transcript_annotation", annotation_type_id, operation, value, "maxentscan_alt"]
-
+        new_annotation_restriction = [table, annotation_type_id, operation, value, annotation_type.title]
 
         annotation_restrictions.append(new_annotation_restriction)
 
@@ -269,6 +238,114 @@ def extract_annotations(request_obj, conn: Connection):
     
     return annotation_restrictions
 
+def get_exception_annotation_type_id(annotation_type, conn: Connection):
+    if annotation_type.id in [-1, -2]:
+        return conn.get_most_recent_annotation_type_id("maxentscan")
+    if annotation_type.id in [-3, -4, -5, -6]:
+        return conn.get_most_recent_annotation_type_id("maxentscan_swa")
+
+def get_exception_dict():
+    result = {}
+    result[-1] = models.Annotation_type(
+        id = -1,
+        title = "maxentscan_ref",
+        display_title = "MaxEntScan ref",
+        description = "",
+        value_type = "float",
+        version = "",
+        version_date = "",
+        group_name = "",
+        is_transcript_specific = True
+        )
+    result[-2] = models.Annotation_type(
+        id = -2,
+        title = "maxentscan_alt",
+        display_title = "MaxEntScan alt",
+        description = "",
+        value_type = "float",
+        version = "",
+        version_date = "",
+        group_name = "",
+        is_transcript_specific = True
+        )
+    result[-3] = models.Annotation_type(
+        id = -3,
+        title = "maxentscan_swa_donor_ref",
+        display_title = "MaxEntScan SWA donor ref",
+        description = "",
+        value_type = "float",
+        version = "",
+        version_date = "",
+        group_name = "",
+        is_transcript_specific = True
+        )
+    result[-4] = models.Annotation_type(
+        id = -4,
+        title = "maxentscan_swa_donor_alt",
+        display_title = "MaxEntScan SWA donor alt",
+        description = "",
+        value_type = "float",
+        version = "",
+        version_date = "",
+        group_name = "",
+        is_transcript_specific = True
+        )
+    result[-5] = models.Annotation_type(
+        id = -5,
+        title = "maxentscan_swa_acceptor_ref",
+        display_title = "MaxEntScan SWA acceptor ref",
+        description = "",
+        value_type = "float",
+        version = "",
+        version_date = "",
+        group_name = "",
+        is_transcript_specific = True
+        )
+    result[-6] = models.Annotation_type(
+        id = -6,
+        title = "maxentscan_swa_acceptor_alt",
+        display_title = "MaxEntScan SWA acceptor alt",
+        description = "",
+        value_type = "float",
+        version = "",
+        version_date = "",
+        group_name = "",
+        is_transcript_specific = True
+        )
+    result[-7] = models.Annotation_type(
+        id = -7,
+        title = "clinvar_interpretation",
+        display_title = "ClinVar interpretation",
+        description = "",
+        value_type = "text",
+        version = "",
+        version_date = "",
+        group_name = "",
+        is_transcript_specific = False
+        )
+    result[-8] = models.Annotation_type(
+        id = -8,
+        title = "heredicare_n_fam",
+        display_title = "HerediCare nfam",
+        description = "",
+        value_type = "int",
+        version = "",
+        version_date = "",
+        group_name = "",
+        is_transcript_specific = False
+        )
+    result[-9] = models.Annotation_type(
+        id = -9,
+        title = "heredicare_n_pat",
+        display_title = "HerediCare npat",
+        description = "",
+        value_type = "int",
+        version = "",
+        version_date = "",
+        group_name = "",
+        is_transcript_specific = False
+        )
+    return result
 
 def preprocess_annotation_types_for_search(annotation_types):
     result = []
@@ -286,33 +363,12 @@ def preprocess_annotation_types_for_search(annotation_types):
         
         annotation_type.display_title = annotation_type.display_title[0].upper() + annotation_type.display_title[1:]
 
-        if annotation_type.title not in ["spliceai_details", "task_force_protein_domain_source", "maxentscan_ref", "maxentscan_alt", "maxentscan"]:
+        if annotation_type.title not in ["spliceai_details", "task_force_protein_domain_source", "maxentscan_ref", "maxentscan_alt", "maxentscan", "maxentscan_swa"]:
             result.append(annotation_type)
 
-    result.append(models.Annotation_type(
-        id = -1,
-        title = "maxentscan_ref",
-        display_title = "MaxEntScan ref",
-        description = "",
-        value_type = "float",
-        version = "",
-        version_date = "",
-        group_name = "",
-        is_transcript_specific = False
-        )
-    )
-    result.append(models.Annotation_type(
-        id = -2,
-        title = "maxentscan_alt",
-        display_title = "MaxEntScan alt",
-        description = "",
-        value_type = "float",
-        version = "",
-        version_date = "",
-        group_name = "",
-        is_transcript_specific = False
-        )
-    )
+    exception_dict = get_exception_dict()
+    for exception_id in exception_dict:
+        result.append(exception_dict[exception_id])
 
     result = order_annotation_types(result)
     return result

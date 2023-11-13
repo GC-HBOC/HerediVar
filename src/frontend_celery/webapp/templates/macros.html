@@ -481,7 +481,7 @@
                     <div class="form-group sst">
                         <label for="cdna_ranges" class="form-label">cDNA ranges</label>
                         <textarea type="text" name="cdna_ranges" id="cdna_ranges"
-                               placeholder="ENSG00000141510:1234-12:4567; ENSG00000141510 1234+3 4567+3" class="form-control height_zero"
+                               placeholder="ENSG00000141510 1234-12 4567; TP53 1234+3 4567+3" class="form-control height_zero"
                                >{{ request.args.get('cdna_ranges', '') }}</textarea>
                     </div>
 
@@ -495,7 +495,7 @@
                     <div class="form-group sst">
                         <label for="external_ids" class="form-label">External IDs</label>
                         <textarea type="text" name="external_ids" id="external_ids"
-                               placeholder="..." class="form-control height_zero"
+                               placeholder="COSV99639284; rs9217747" class="form-control height_zero"
                                >{{ request.args.get('external_ids', '') }}</textarea>
                     </div>
 
