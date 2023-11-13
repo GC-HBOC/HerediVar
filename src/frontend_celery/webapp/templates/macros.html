@@ -89,7 +89,7 @@
 
                 <tr>
                     <td class="li-label">Comment</td>
-                    <td><div class="wrap-spaces">{{ most_recent_consensus_classification.comment }}</div></td>
+                    <td><div class="wrap-spaces">{{ most_recent_consensus_classification.get_comment_display() }}</div></td>
                 </tr>
 
                 {% set selected_scheme = most_recent_consensus_classification.scheme %}

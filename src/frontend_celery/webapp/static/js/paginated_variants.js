@@ -167,7 +167,7 @@ function create_annotation_select(parent, annotation_type_id = "", annotation_op
 
     const select = document.createElement('select')
     select.classList.add("form-select")
-    select.classList.add("width_small")
+    select.classList.add("width_very_medium")
     select.setAttribute("name", "annotation_type_id")
     wrapper.appendChild(select)
 

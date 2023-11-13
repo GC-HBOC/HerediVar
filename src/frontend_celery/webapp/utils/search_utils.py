@@ -271,7 +271,7 @@ def get_exception_dict():
     result[-3] = models.Annotation_type(
         id = -3,
         title = "maxentscan_swa_donor_ref",
-        display_title = "MaxEntScan SWA donor ref",
+        display_title = "MaxEnt SWA donor ref",
         description = "",
         value_type = "float",
         version = "",
@@ -282,7 +282,7 @@ def get_exception_dict():
     result[-4] = models.Annotation_type(
         id = -4,
         title = "maxentscan_swa_donor_alt",
-        display_title = "MaxEntScan SWA donor alt",
+        display_title = "MaxEnt SWA donor alt",
         description = "",
         value_type = "float",
         version = "",
@@ -293,7 +293,7 @@ def get_exception_dict():
     result[-5] = models.Annotation_type(
         id = -5,
         title = "maxentscan_swa_acceptor_ref",
-        display_title = "MaxEntScan SWA acceptor ref",
+        display_title = "MaxEnt SWA acceptor ref",
         description = "",
         value_type = "float",
         version = "",
@@ -304,7 +304,7 @@ def get_exception_dict():
     result[-6] = models.Annotation_type(
         id = -6,
         title = "maxentscan_swa_acceptor_alt",
-        display_title = "MaxEntScan SWA acceptor alt",
+        display_title = "MaxEnt SWA acceptor alt",
         description = "",
         value_type = "float",
         version = "",

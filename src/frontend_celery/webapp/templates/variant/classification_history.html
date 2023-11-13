@@ -73,7 +73,7 @@
                     <td>{{classification.submitter.affiliation}}</td>
                     <td>{{classification.selected_class}}</td>
                     <td class="nowrap">{{classification.date}}</td>
-                    <td>{{classification.comment}}</td>
+                    <td>{{classification.get_comment_display()}}</td>
                     <td>{{classification.scheme.display_name}}</td>
                     <td>{{ macros.draw_criteria_display(classification.scheme.criteria) }}</td>
                     <td>{{classification.scheme.selected_class}}</td>

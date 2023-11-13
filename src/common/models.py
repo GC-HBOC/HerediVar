@@ -369,6 +369,11 @@ class Classification:
         return json.dumps(asdict(self))
     def to_dict(self):
         return asdict(self)
+    
+    def get_comment_display(self):
+        if self.comment == '':
+            return "None"
+        return self.comment
 
     def to_vcf(self, prefix = True, simple = False):
         if not simple:

@@ -43,7 +43,6 @@ def search():
     external_ids = extract_external_ids(request)
     cdna_ranges = extract_cdna_ranges(request)
     annotation_restrictions = extract_annotations(request, conn)
-    print(annotation_restrictions)
     page = int(request.args.get('page', 1))
 
     sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden = extract_search_settings(request)
@@ -276,7 +275,7 @@ def classify(variant_id):
         scheme_id = int(request.form['scheme'])
 
         classification = request.form['final_class']
-        comment = request.form['comment'].strip()
+        comment = request.form.get('comment', '').strip()
         pmids = request.form.getlist('pmid')
         text_passages = request.form.getlist('text_passage')
 
@@ -287,7 +286,7 @@ def classify(variant_id):
         literature_is_valid, literature_message = is_valid_literature(pmids, text_passages)
         
         without_scheme = scheme_id == 1
-        user_classification_is_valid = (str(classification) in allowed_classes) and comment
+        classification_is_valid = str(classification) in allowed_classes
 
         scheme_class = '-'
         if not without_scheme:
@@ -297,13 +296,13 @@ def classify(variant_id):
         # flash error messages
         if (not scheme_classification_is_valid) and (not without_scheme): # error in scheme
             flash(scheme_message, "alert-danger")
-        if not user_classification_is_valid: # error in user classification
-            flash("Please provide comment & class to submit a user classification!", "alert-danger")
+        if not classification_is_valid: # error in user classification
+            flash("Please provide a class to submit a user classification!", "alert-danger")
         if not literature_is_valid:
             flash(literature_message, "alert-danger")
 
         # actually submit the data to the database
-        if user_classification_is_valid and scheme_classification_is_valid and literature_is_valid:
+        if classification_is_valid and scheme_classification_is_valid and literature_is_valid:
             # always handle the user classification & literature
             user_classification_id, classification_received_update, is_new_classification = handle_user_classification(variant, user_id, classification, comment, scheme_id, scheme_class, conn)
             previous_selected_literature = [] # a new classification -> no previous sleected literature
@@ -374,7 +373,7 @@ def consensus_classify(variant_id):
             flash("No consensus classifications without scheme allowed!")
         else:
             classification = request.form['final_class']
-            comment = request.form['comment'].strip()
+            comment = request.form.get('comment', '').strip()
             pmids = request.form.getlist('pmid')
             text_passages = request.form.getlist('text_passage')
 
@@ -383,7 +382,7 @@ def consensus_classify(variant_id):
             pmids, text_passages = remove_empty_literature_rows(pmids, text_passages)
             literature_is_valid, literature_message = is_valid_literature(pmids, text_passages)
             scheme_classification_is_valid, scheme_message = is_valid_scheme(criteria, classification_schemas[scheme_id])
-            user_classification_is_valid = (str(classification) in allowed_classes) and comment
+            classification_is_valid = str(classification) in allowed_classes
 
             scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type']) # always calculate scheme class because no scheme is not allowed here!
             scheme_class = scheme_class.json['final_class']
@@ -391,12 +390,12 @@ def consensus_classify(variant_id):
             # actually submit the data to the database
             if not scheme_classification_is_valid: # error in scheme
                 flash(scheme_message, "alert-danger")
-            if not user_classification_is_valid: # error in user classification
+            if not classification_is_valid: # error in user classification
                 flash("Please provide a final classification and a comment to submit the consensus classification. The classification was not submitted.", "alert-danger")
             if not literature_is_valid:
                 flash(literature_message, "alert-danger")
 
-            if user_classification_is_valid and scheme_classification_is_valid and literature_is_valid:
+            if classification_is_valid and scheme_classification_is_valid and literature_is_valid:
                 # insert consensus classification
                 classification_id = handle_consensus_classification(variant, classification, comment, scheme_id, pmids, text_passages, criteria, classification_schemas[scheme_id]['description'], scheme_class, conn)
 

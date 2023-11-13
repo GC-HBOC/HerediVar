@@ -123,7 +123,7 @@
                                             <td class="text_align_center">{{ classification.selected_class }}</td>
                                             <td>{{ classification.scheme.display_name }}</td>
                                             <td>{{ macros.draw_criteria_display(classification.scheme.criteria) }}</td>
-                                            <td><abbr title="{{ classification.comment }}"><div class="Nellipsis">{{ classification.comment }}</div> </abbr></td>
+                                            <td><abbr title="{{ classification.get_comment_display() }}"><div class="Nellipsis">{{ classification.get_comment_display() }}</div> </abbr></td>
                                             <td>{{ classification.scheme.selected_class }}</td>
                                             <td>{{ macros.selected_literature_display(classification.literature) }}</td>
                                             <td>{{ classification.submitter.full_name }}</td>

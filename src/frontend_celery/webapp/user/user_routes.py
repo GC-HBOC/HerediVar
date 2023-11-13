@@ -57,9 +57,10 @@ def my_lists():
     conn = get_connection()
     user_lists = conn.get_lists_for_user(user_id)
 
-    allowed_user_classes = conn.get_enumtypes('user_classification', 'classification')
-    allowed_consensus_classes = conn.get_enumtypes('consensus_classification', 'classification')
-
+    allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
+    allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
+    annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
+    annotation_types = preprocess_annotation_types_for_search(annotation_types)
 
     # variant view table of lists in pagination
     view_list_id = request.args.get('view', None)
@@ -261,11 +262,14 @@ def my_lists():
     if view_list_id is not None:
         genes = extract_genes(request)
         ranges = extract_ranges(request)
-        consensus_classifications = extract_consensus_classifications(request, allowed_consensus_classes)
+        consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request, allowed_consensus_classes)
         user_classifications = extract_user_classifications(request, allowed_user_classes)
         hgvs = extract_hgvs(request)
         variant_ids_from_lookup_list = extract_lookup_list(request, user_id, conn)
         variant_ids_oi = conn.get_variant_ids_from_list(view_list_id)
+        external_ids = extract_external_ids(request)
+        cdna_ranges = extract_cdna_ranges(request)
+        annotation_restrictions = extract_annotations(request, conn)
 
         sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden = extract_search_settings(request)
 
@@ -273,17 +277,22 @@ def my_lists():
             variant_ids_oi = list(set(none_to_empty_list(variant_ids_from_lookup_list)) & set(none_to_empty_list(variant_ids_oi))) # take the intersection of the two lists
 
         if len(variant_ids_oi) > 0:
-            variants, total = conn.get_variants_page_merged(page=page, page_size=selected_page_size,
-                                                            sort_by=selected_sort_by,
-                                                            include_hidden=include_hidden,
-                                                            user_id=user_id, 
-                                                            ranges=ranges, 
-                                                            genes = genes, 
-                                                            consensus=consensus_classifications, 
-                                                            user=user_classifications, 
-                                                            hgvs=hgvs, 
-                                                            variant_ids_oi=variant_ids_oi
-                                                        )
+            variants, total = conn.get_variants_page_merged(
+                page=page, page_size=selected_page_size,
+                sort_by=selected_sort_by,
+                include_hidden=include_hidden,
+                user_id=user_id, 
+                ranges=ranges, 
+                genes = genes, 
+                consensus=consensus_classifications, 
+                user=user_classifications, 
+                hgvs=hgvs, 
+                variant_ids_oi=variant_ids_oi,
+                include_heredicare_consensus = include_heredicare_consensus,
+                external_ids = external_ids,
+                cdna_ranges = cdna_ranges,
+                annotation_restrictions = annotation_restrictions
+            )
     #print(variants)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
     
@@ -295,7 +304,9 @@ def my_lists():
                             pagination=pagination,
                             sort_bys=sort_bys, page_sizes=page_sizes,
                             allowed_user_classes = allowed_user_classes,
-                            allowed_consensus_classes = allowed_consensus_classes)
+                            allowed_consensus_classes = allowed_consensus_classes,
+                            annotation_types = annotation_types
+                        )
 
 
 #
