@@ -85,6 +85,19 @@ class TranscriptAnnotation:
         transcripts_sorted, values_sorted = functions.sort_transcript_dict(self.value)
         return transcripts_sorted, values_sorted
 
+    def max(self):
+        max_val = None
+        max_transcript = None
+        for current_transcript in self.value:
+            current_value = self.get_value(current_transcript)
+            if max_val is None:
+                max_val = current_value
+                max_transcript = current_transcript
+            elif max_val < current_value:
+                max_val = current_value
+                max_transcript = current_transcript
+        return max_transcript, max_val
+
 
 @dataclass
 class AllAnnotations:
@@ -92,7 +105,7 @@ class AllAnnotations:
 
     phylop_100way: Annotation = None
     cadd_scaled: Annotation = None
-    revel: Annotation = None
+    revel: TranscriptAnnotation = None
     
     spliceai_details: Annotation = None
     spliceai_max_delta: Annotation = None

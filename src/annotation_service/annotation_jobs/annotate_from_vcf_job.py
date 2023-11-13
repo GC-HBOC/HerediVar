@@ -48,7 +48,7 @@ class annotate_from_vcf_job(Job):
         recent_annotation_ids = conn.get_recent_annotation_type_ids()
         self.insert_external_id(variant_id, info, "dbSNP_RS=", recent_annotation_ids['rsid'], conn)
 
-        self.insert_annotation(variant_id, info, "REVEL=", recent_annotation_ids['revel'], conn)
+        #self.insert_annotation(variant_id, info, "REVEL=", recent_annotation_ids['revel'], conn)
 
         self.insert_annotation(variant_id, info, "CADD=", recent_annotation_ids['cadd_scaled'], conn)
 
@@ -82,6 +82,18 @@ class annotate_from_vcf_job(Job):
         # spliceai is saved to the database in the dedicated spliceai job (which must be called after this job anyway)
         #self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )
         #self.insert_annotation(variant_id, info, 'SpliceAI=', 8, conn, value_modifier_function= lambda value : ','.join([str(max([float(x) for x in x.split('|')[2:6]])) for x in value.split(',')]) )
+
+        # REVEL
+        revel_scores = functions.find_between(info, "REVEL=", '(;|$)')
+        if revel_scores is not None and revel_scores != '':
+            revel_scores = revel_scores.split('|')
+            for revel_score in revel_scores:
+                revel_parts = revel_score.split('&')
+                transcripts = revel_parts[1].split('+')
+                revel_score = revel_parts[0]
+                for transcript in transcripts:
+                    conn.insert_variant_transcript_annotation(variant_id, transcript, recent_annotation_ids['revel'], revel_score)
+
 
         self.insert_annotation(variant_id, info, "tp53db_class=", recent_annotation_ids['tp53db_class'], conn)
         self.insert_annotation(variant_id, info, "tp53db_bayes_del=", recent_annotation_ids['tp53db_bayes_del'], conn)

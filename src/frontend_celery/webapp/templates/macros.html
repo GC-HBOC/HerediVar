@@ -201,6 +201,31 @@
             {% if annot.is_transcript_specific %}
             {% set transcripts_sorted, values_sorted = annot.sort() %}
             {% if transcripts_sorted | length > 0 %}
+            {% if annot.title == 'revel' %}
+            {% set max_transcript, max_value = annot.max() %}
+            <div annotation_id="{{ annot.id }}">
+                    {% set transcript = transcripts_sorted[0] %}
+                    <abbr class="ssr" title="{{annot.description}}"><a class="dashed_underline">{{annot.display_title}}:</a></abbr> {{max_value}} ({{max_transcript}})
+                    <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" 
+                    data-bs-content="
+                        <div>Overview number shown is the max value from the following table:</div>
+                        <div class='row gx-2 border-bottom bg-light width_medium_large'>
+                            <div class='col-5'>Transcript</div>
+                            <div class='col-7 text-center border-start'>Value</div>
+                        </div>
+                        {% for i in range(transcripts_sorted | length ) %}
+                        {% set current_transcript = transcripts_sorted[i] %}
+                        {% set current_value = values_sorted[i] %}
+                        <div class='row gx-2 width_medium_large'>
+                            <div class='col-5'>{{current_transcript}}</div>
+                            <div class='col-7 text-center border-start'>{{current_value}}</div>
+                        </div>
+                        {% endfor %}
+                    ">
+                        details
+                    </a>
+            </div>
+            {% endif %}
             {% if annot.title == 'maxentscan' %}
             <div annotation_id="{{ annot.id }}">
                     {% set transcript = transcripts_sorted[0] %}

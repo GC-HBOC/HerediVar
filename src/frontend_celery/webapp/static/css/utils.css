@@ -87,6 +87,10 @@
     min-width:30em;
     width:30em;
 }
+.width_medium_large {
+    min-width:25em;
+    width:25em;
+}
 .width_medium {
     min-width:20em;
     width:20em;
@@ -229,7 +233,7 @@
 
 .popover_fix{
     width: fit-content !important;
-    max-width: 25em !important;
+    max-width: 27em !important;
 }
 .popover_fix_large{
     width: fit-content !important;
