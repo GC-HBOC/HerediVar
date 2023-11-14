@@ -222,8 +222,6 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
     clinvar_submission = check_update_clinvar_status(variant_id, conn)
 
-    print(variant.annotations.revel)
-
     return render_template('variant/variant.html',
                             current_annotation_status=current_annotation_status,
                             clinvar_submission = clinvar_submission,
@@ -338,6 +336,40 @@ def classify(variant_id):
                             )
 
 
+@variant_blueprint.route('/delete_classification', methods=['GET'])
+@require_permission(['edit_resources'])
+def delete_classification():
+    conn = get_connection()
+
+    user_classification_id = request.args.get('user_classification_id')
+    variant_id = request.args.get('variant_id')
+
+    if user_classification_id is None or variant_id is None:
+        abort(404)
+
+    variant = conn.get_variant(variant_id, include_annotations=False, include_consensus=False, include_heredicare_classifications=False, include_clinvar=False, include_consequences=False, include_assays=False, include_literature=False, include_external_ids=False)
+
+    if variant is None:
+        abort(404)
+
+    user_classification = None
+    for cl in variant.user_classifications:
+        if str(cl.id) == user_classification_id:
+            user_classification = cl
+    
+    if user_classification is None:
+        abort(404)
+
+    if user_classification.submitter.id != session['user']['user_id']:
+        abort(405, "You are not allowed to delete this classification!")
+
+    conn.delete_user_classification(user_classification_id)
+
+    return "success"
+
+    
+
+    
 
 
 @variant_blueprint.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])

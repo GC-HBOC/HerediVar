@@ -27,6 +27,8 @@ class maxentscan_job(Job):
 
 
     def save_to_db(self, info, variant_id, conn):
+        status_code = 0
+        err_msg = ""
 
         mes_annotation_id = 53
         mes_swa_annotation_id = 54
@@ -70,6 +72,7 @@ class maxentscan_job(Job):
 
                 conn.insert_variant_transcript_annotation(variant_id, transcript, mes_swa_annotation_id, '|'.join(data))
 
+        return status_code, err_msg
 
 
     

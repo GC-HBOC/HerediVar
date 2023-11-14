@@ -65,6 +65,7 @@ def fetch_consequence_task(self, variant_id):
 
 def start_variant_import(user_id, user_roles, conn: Connection): # starts the celery task
     import_request = conn.get_most_recent_import_request() # get the most recent import request
+    import_request = None
     min_date = None
     if import_request is not None:
         min_date = import_request.import_variant_list_finished_at
@@ -153,9 +154,9 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
             print("Deleted: " + str(len(heredivar_exclusive_vids)))
             print("New: " + str(len(heredicare_exclusive_vids)))
 
-            intersection = []
-            heredicare_exclusive_vids = []
-            heredivar_exclusive_vids = ['13793167'] #917, 12453169, 18794502
+            #intersection = []
+            #heredicare_exclusive_vids = []
+            #heredivar_exclusive_vids = [] #917, 12453169, 18794502
 
             # spawn one task for each variant import
             process_new_vids(heredicare_exclusive_vids, import_queue_id, user_id, user_roles, conn)
@@ -474,7 +475,7 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
                     was_successful = True
 
                 if not was_successful and all([x is not None for x in [chrom, pos, ref, alt]]):
-                    message += " possible candidate variant: " + '-'.join([chrom, pos, ref, alt]) + " (from transcript(s): " + current_transcript['name']
+                    message += " possible candidate variant: " + '-'.join([chrom, pos, ref, alt]) + " (from transcript(s): " + current_transcript.name + ")"
 
         if was_successful:
             was_successful, new_message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, insert_variant = insert_variant, perform_annotation=perform_annotation)

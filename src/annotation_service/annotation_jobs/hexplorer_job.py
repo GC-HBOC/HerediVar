@@ -27,6 +27,8 @@ class hexplorer_job(Job):
 
 
     def save_to_db(self, info, variant_id, conn):
+        status_code = 0
+        err_msg = ""
         self.insert_annotation(variant_id, info, "hexplorer_delta=", 39, conn)
         self.insert_annotation(variant_id, info, "hexplorer_wt=", 41, conn)
         self.insert_annotation(variant_id, info, "hexplorer_mut=", 40, conn)
@@ -40,6 +42,8 @@ class hexplorer_job(Job):
         self.insert_annotation(variant_id, info, "max_hbond_delta_rev=", 48, conn)
         self.insert_annotation(variant_id, info, "max_hbond_wt_rev=", 50, conn)
         self.insert_annotation(variant_id, info, "max_hbond_mut_rev=", 49, conn)
+
+        return status_code, err_msg
 
 
     

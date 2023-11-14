@@ -34,6 +34,8 @@ class spliceai_job(Job):
         for prefix in ['snv', 'indel']:
             self.insert_annotation(variant_id, info, prefix + '_SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.replace(',', '&').split('&')]) )
             self.insert_annotation(variant_id, info, prefix + '_SpliceAI=', 8, conn, value_modifier_function= lambda value : ','.join([str(max([float(x) for x in x.split('|')[2:6]])) for x in value.replace(',', '&').split('&')]) )
+        
+        return 0, ""
 
 
 

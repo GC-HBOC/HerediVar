@@ -45,6 +45,8 @@ class annotate_from_vcf_job(Job):
 
 
     def save_to_db(self, info, variant_id, conn):
+        err_msg = ""
+        status_code = 0
         recent_annotation_ids = conn.get_recent_annotation_type_ids()
         self.insert_external_id(variant_id, info, "dbSNP_RS=", recent_annotation_ids['rsid'], conn)
 
@@ -134,6 +136,8 @@ class annotate_from_vcf_job(Job):
                 submissions = [functions.decode_vcf(s) for s in submissions]
                 #submissions = functions.decode_vcf(submission)#.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').replace('&', ';').split('|')
                 conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
+        
+        return status_code, err_msg
 
 
 

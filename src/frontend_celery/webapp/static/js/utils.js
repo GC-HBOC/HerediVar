@@ -556,3 +556,24 @@ function create_trashcan() {
 
     return image
 }
+
+function create_xlg(parent, tooltip = "") {
+    var td = document.createElement("td")
+    td.classList.add('text_align_center')
+    parent[0].appendChild(td)
+
+    var image = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+    image.setAttribute('data-bs-toggle', 'tooltip')
+    image.setAttribute('title', tooltip)
+    image.setAttribute("width", 17)
+    image.setAttribute("height", 17)
+    image.setAttribute("fill", "red")
+    image.classList.add("bi")
+    image.classList.add("bi-x-lg")
+    image.setAttribute("viewBox", "0 0 16 16")
+    td.appendChild(image)
+
+    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z")
+    image.appendChild(path)
+}

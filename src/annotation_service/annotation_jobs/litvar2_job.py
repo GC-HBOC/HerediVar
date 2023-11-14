@@ -32,6 +32,8 @@ class litvar2_job(Job):
 
 
     def save_to_db(self, info, variant_id, conn):
+        status_code = 0
+        err_msg = ""
         if not self.job_config['do_litvar']:
             return
         
@@ -65,6 +67,8 @@ class litvar2_job(Job):
             literature_entries = fetch(litvar_pmids) # defined in pubmed_parser.py
             for paper in literature_entries: #[pmid, article_title, authors, journal, year]
                 conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4], "litvar")
+
+        return status_code, err_msg
     
     def query_litvar(self, query):
         # get litvar id from data

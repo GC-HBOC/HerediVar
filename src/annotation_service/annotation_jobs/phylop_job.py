@@ -28,6 +28,7 @@ class phylop_job(Job):
 
     def save_to_db(self, info, variant_id, conn):
         self.insert_annotation(variant_id, info, 'PHYLOP=', 4, conn)
+        return 0, ""
         
 
     

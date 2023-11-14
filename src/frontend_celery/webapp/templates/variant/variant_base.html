@@ -99,7 +99,7 @@
 
                     <!-- user classification table -->
                     {% if variant.user_classifications is not none %}
-                    <div>
+                    <div id="heredivar_user_classifications_section">
                         <h4 class="card-subcaption">HerediVar user classifications</h4>
                         <div class="ssl ssb">
                             <div class="table-responsive tableFixHead">
@@ -119,7 +119,7 @@
                                     </thead>
                                     <tbody>
                                         {% for classification in variant.user_classifications %}
-                                        <tr user_classification_id="{{ classification.id }}">
+                                        <tr user_classification_id="{{ classification.id }}" variant_id="{{ variant.id }}" can_delete="{{ classification.submitter.id == session.get('user', {}).get('user_id', -1) }}">
                                             <td class="text_align_center">{{ classification.selected_class }}</td>
                                             <td>{{ classification.scheme.display_name }}</td>
                                             <td>{{ macros.draw_criteria_display(classification.scheme.criteria) }}</td>
@@ -138,6 +138,7 @@
                     </div>
                     {% endif %}
                     
+                    <!-- heredicare consensus classifications -->
                     {% set heredicare_consensus_classifications = variant.get_heredicare_consensus_classifications() %}
                     {% if heredicare_consensus_classifications | length > 0 %}
                         <div class="ssb">
@@ -455,7 +456,10 @@
 </div>
 
 
-<input type='hidden' id='flask_data' data-variant-page-url='{{ url_for("variant.display", variant_id = "-1", _external=True) }}' />
+<input type='hidden' id='flask_data' 
+    data-variant-page-url='{{ url_for("variant.display", variant_id = "-1", _external=True) }}'
+    data-delete-classification-url='{{ url_for("variant.delete_classification") }}''
+/>
 
 {% endblock %}
 
@@ -463,5 +467,9 @@
 
 {% block special_scripts %}
     <script type="module" src="/static/js/variant.js"></script>
+    {% block additional_scripts %} {% endblock %}
 {% endblock%}
+
+
+
 

@@ -36,6 +36,8 @@ class vep_job(Job):
 
 
     def save_to_db(self, info, variant_id, conn):
+        status_code = 0
+        err_msg = ""
         
         # save variant consequences from ensembl and refseq
         # !!!! format of refseq and ensembl annotations from vep need to be equal: 0Feature,1HGVSc,2HGVSp,3Consequence,4IMPACT,5EXON,6INTRON,7HGNC_ID,8SYMBOL,9DOMAIN,...additional info
@@ -74,7 +76,8 @@ class vep_job(Job):
             if domains.count("Pfam:") >= 1:
                 pfam_acc = re.search(r'Pfam:(PF\d+)(?:\s+|$|\&|\|)', domains).group(1) # grab only pfam accession id from all protein domains which were returned
                 if domains.count("Pfam:") > 1:
-                    print("WARNING: there were multiple PFAM domain ids in: " + str(domains) + ". defaulting to the first one.")
+                    err_msg += "WARNING: there were multiple PFAM domain ids in: " + str(domains) + ". defaulting to the first one."
+                    #print("WARNING: there were multiple PFAM domain ids in: " + str(domains) + ". defaulting to the first one.")
             if self.job_config['insert_consequence']:
                 conn.insert_variant_consequence(variant_id, 
                                                 transcript_name, 
@@ -106,6 +109,8 @@ class vep_job(Job):
             for paper in literature_entries: #[pmid, article_title, authors, journal, year]
                 #print(paper[0])
                 conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4], "vep")
+
+        return status_code, err_msg
 
 
     def _fake_vep(self, variant_id, output_vcf):

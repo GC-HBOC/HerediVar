@@ -141,9 +141,8 @@ class Heredicare:
             last_change = datetime.strptime(last_change, '%d.%m.%Y %H:%M:%S')
             if current_vid in filtered_vids:
                 duplicate_vids.append(current_vid)
-            if min_date is not None: # collect all which had an update since the last import
-                if last_change > min_date:
-                    filtered_vids.append(current_vid)
+            if min_date is None or (last_change > min_date): # collect all which had an update since the last import
+                filtered_vids.append(current_vid)
             all_vids.append(current_vid)
 
         if len(duplicate_vids) > 0:

@@ -151,7 +151,6 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
             status = "error"
             err_msgs = collect_error_msgs(err_msgs, "VCFCheck errors: " + vcf_errors)
         else:
-            pass
             print("VCF OK")
         
 
@@ -169,7 +168,10 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
             
             info = line.split('\t')[7]
             for job in all_jobs:
-                job.save_to_db(info, variant_id, conn=conn)
+                status_code, err_msg = job.save_to_db(info, variant_id, conn=conn)
+                if status_code > 0:
+                    status = "error"
+                err_msgs = collect_error_msgs(err_msgs, err_msg)
         file.close()
 
 

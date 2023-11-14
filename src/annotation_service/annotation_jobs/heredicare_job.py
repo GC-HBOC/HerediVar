@@ -34,6 +34,8 @@ class heredicare_job(Job):
 
 
     def save_to_db(self, info, variant_id, conn):
+        status_code = 0
+        err_msg = ""
 
         conn.clear_heredicare_annotation(variant_id)
         
@@ -69,5 +71,6 @@ class heredicare_job(Job):
         
             conn.insert_heredicare_annotation(variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment)
 
+            return status_code, err_msg
 
 

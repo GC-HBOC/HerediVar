@@ -813,7 +813,7 @@ class Connection:
             new_constraints_inner = ''
             user_without_dash = [value for value in user if value != '-']
             if '-' in user:
-                new_constraints_inner = "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM user_classification WHERE user_id=%s)"
+                new_constraints_inner = "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM user_classification WHERE user_id=%s AND deleted_date IS NULL)"
                 actual_information += (user_id, )
                 if len(user_without_dash) > 0: # if we have - AND some other class(es) we need to add an or between them
                     new_constraints_inner = new_constraints_inner + " UNION "
@@ -824,7 +824,7 @@ class Connection:
                 # search for the most recent user classifications from the user which is searching for variants and which are in the list of user classifications (variable: user)
                 new_constraints_inner = new_constraints_inner + "SELECT * FROM ( SELECT user_classification.variant_id FROM user_classification \
                                                                 LEFT JOIN user_classification uc ON uc.variant_id = user_classification.variant_id AND uc.date > user_classification.date \
-                                                                    WHERE uc.variant_id IS NULL AND user_classification.user_id=%s AND user_classification.classification IN " + placeholders + " \
+                                                                    WHERE uc.variant_id IS NULL AND user_classification.user_id=%s AND deleted_date IS NULL AND user_classification.classification IN " + placeholders + " \
                                                                 ORDER BY user_classification.variant_id )ub"
                 actual_information += (user_id, )
                 actual_information += tuple(user_without_dash)
@@ -1255,7 +1255,7 @@ class Connection:
         return result
 
     def get_user_classifications(self, variant_id, user_id = 'all', scheme_id = 'all', sql_modifier = None):
-        command = "SELECT id, classification, variant_id, user_id, comment, date, classification_scheme_id, scheme_class FROM user_classification WHERE variant_id=%s"
+        command = "SELECT id, classification, variant_id, user_id, comment, date, classification_scheme_id, scheme_class FROM user_classification WHERE variant_id=%s AND deleted_date IS NULL"
         actual_information = (variant_id, )
         if user_id != 'all':
             command = command + ' AND user_id=%s'
@@ -1272,6 +1272,11 @@ class Connection:
         if len(user_classifications) == 0:
             return None
         return user_classifications
+
+    def delete_user_classification(self, user_classification_id):
+        command = "UPDATE user_classification SET deleted_date = %s WHERE id = %s"
+        self.cursor.execute(command, (functions.get_now(), user_classification_id))
+        self.conn.commit()
 
 
     def add_classification_scheme_info(self, command):
