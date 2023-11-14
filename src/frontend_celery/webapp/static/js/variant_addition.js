@@ -32,12 +32,21 @@ function create_delete_button(parent, base_url, variant_id, user_classification_
     button.classList.add("btn-link")
     button.classList.add("nopad")
     button.addEventListener("click", function() {
-        delete_user_classification_action(base_url, variant_id, user_classification_id)
+        show_delete_modal(base_url, variant_id, user_classification_id)
     })
     td.appendChild(button)
 
     image = create_trashcan()
     button.appendChild(image)
+}
+
+function show_delete_modal(base_url, variant_id, user_classification_id) {
+    const delete_user_classification_button = document.getElementById("delete_user_classification-submit")
+    delete_user_classification_button.onclick = function() {
+        delete_user_classification_action(base_url, variant_id, user_classification_id)
+        $('#delete_user_classification-modal').modal('hide');
+    }
+    $('#delete_user_classification-modal').modal('toggle');
 }
 
 
