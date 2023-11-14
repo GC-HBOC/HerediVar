@@ -118,10 +118,12 @@ def submit_clinvar(variant_id):
 
     if request.method == 'POST':
         # extract submitted information
-        selected_orpha_code = request.form['orpha_code']
-        selected_orpha_name = request.form['orpha_name']
-        selected_gene = request.form.get('gene', None)
-        is_orphanet_valid = any([int(x[0]) == int(selected_orpha_code) for x in orphanet_codes])
+        selected_orpha_code = request.form.get('orpha_code', "")
+        selected_orpha_name = request.form.get('orpha_name', "")
+        selected_gene = request.form.get('gene', "")
+        if selected_gene.strip() == "":
+            selected_gene = None
+        is_orphanet_valid = any([str(x[0]) == str(selected_orpha_code) for x in orphanet_codes])
 
         # flash errors if there are problems with the submitted data
         if not selected_orpha_code and not selected_orpha_name:
