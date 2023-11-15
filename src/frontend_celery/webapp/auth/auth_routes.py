@@ -449,7 +449,6 @@ def login():
     # auth itself redirects to next ie. the page which required a login
     redirect_uri = url_for('auth.auth', _external=True, next_login=request.args.get('next_login', url_for('main.index')))
 
-
     return oauth.keycloak.authorize_redirect(redirect_uri)
 
 
