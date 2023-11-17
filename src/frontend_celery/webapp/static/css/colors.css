@@ -190,6 +190,10 @@ input.invalid {
     color:rgba(29, 181, 207, 1);
 }
 
+.classification_4M_col {
+    color:rgba(255,142,61,1);
+}
+
 .classification_4_col {
     color:rgba(255,142,61,1);
 }
@@ -202,9 +206,7 @@ input.invalid {
     color:rgb(164, 164, 164);
 }
 
-.classification_M_col {
-    color:rgb(218, 113, 218);
-}
+
 
 
 .classification-gradient {

@@ -424,10 +424,12 @@ class Classification:
             return 'Likely pathogenic'
         if classification == '5':
             return 'Pathogenic'
-        #if classification == '3-':
-        #    return 'Uncertain with tendency to benign'
-        #if classification == '3+':
-        #    return 'Uncertain with tendency to pathogenic'
+        if classification == '3-':
+            return 'Uncertain significance'
+        if classification == '3+':
+            return 'Uncertain significance'
+        if classification == 'M':
+            return 'Likely pathogenic, low penetrance'
     
     def get_header(self, simple = False):
         if not simple:

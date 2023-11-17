@@ -651,7 +651,7 @@ def order_classes( classes):
  
 def sort_classes(a, b):
     # sort by ensembl/refseq
-    class_sequence = ['1', '2', '3-', '3', '3+', '4', '5', 'M']
+    class_sequence = ['1', '2', '3-', '3', '3+', '4M', '4', '5']
 
     a_importance = class_sequence.index(a)
     b_importance = class_sequence.index(b)

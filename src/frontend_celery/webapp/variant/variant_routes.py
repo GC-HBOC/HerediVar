@@ -261,6 +261,7 @@ def classify(variant_id):
         return abort(404)
 
     allowed_classes = conn.get_enumtypes('user_classification', 'classification')
+    allowed_classes = functions.order_classes(allowed_classes)
 
     user_id = session['user']['user_id']
     previous_classifications = {user_id: functions.list_of_objects_to_dict(variant.get_user_classifications(user_id), key_func = lambda a : a.scheme.id, val_func = lambda a : a.to_dict())}

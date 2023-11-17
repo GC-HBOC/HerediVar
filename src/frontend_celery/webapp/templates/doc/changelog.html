@@ -11,6 +11,56 @@
 
 <div class="bst bsb">
     <h4>Changelog</h4>
+
+    <div class="underline">v 1.4.1 (02.11.2023)</div>
+    <div>
+        Bugfixes:
+        <ul>
+            <li>Fixed a bug where the user was unable to insert classifications by the new ClinGen criteria</li>
+        </ul>
+    </div>
+    <div class="underline">v 1.4 (27.10.2023)</div>
+    <div>
+        General changes:
+        <ul>
+            <li>Update landing page</li>
+            <li>Moved previous changelog announcements to a new page</li>
+            <li>The admin dashboard now allows reannotation of a user defined set of databases</li>
+            <li>The admin dashboard now shows an overview of all annotations and annotation errors / warnings</li>
+            <li>Added a contact form where unregistered people can ask a question about a variant</li>
+            <li>Added suffix to criteria names if the selected strength is not the default strength</li>
+            <li>Variants can now be hidden</li>
+            <li>The variant list can now be sorted by chromosomal position and insertion date</li>
+            <li>The page size in the variant list can now be adjusted</li>
+            <li>Consensus classifications are now preselected from the most recent consensus classification for each scheme</li>
+            <li>Added four new ClinGen ENIGMA schemes for specific genes: BRCA1 (v.1.0.0), BRCA2(v.1.0.0), TP53 (v.1.4.0), PALB2 (v.1.0.0)</li>
+            <li>Changed SpliceAI annotations to masked ones</li>
+            <li>Added variant import from HerediCare</li>
+            <li>Added HerediCare number of families and heredicare number of cases annotations</li>
+            <li>Improved criteria popover</li>
+            <li>Added variant import history page</li>
+            <li>Enabled HerediCare annotations in admin dashboard</li>
+            <li>Added downloads page</li>
+            <li>Added variant check page</li>
+        </ul>
+        Bugfixes:
+        <ul>
+            <li>Variants are now not selected by default on the search variants page</li>
+            <li>Abbreviations for criteria are now written with upper case letters</li>
+            <li>Disabled criteria were not shown correctly</li>
+            <li>Popovers now stay open when clicked and close when the user does not click inside the popover</li>
+            <li>Fixed a bug where the ClinVar annotation was erroneous which happened when there were missing submissions</li>
+            <li>Fixed a bug where the consequence annotation was erroneous which happened when the variant was large and spanned multiple exons / introns</li>
+            <li>Fixed a bug where the user was unable to download variants which are not annotated</li>
+            <li>Fixed a bug where the user could not search for class 3+</li>
+            <li>The date is now inserted correctly when classifying variants. Preexisting classifications did not change (this is fixed starting from 24.10.23).</li>
+        </ul>
+        Known issues:
+        <ul>
+            <li>COSMIC links do not work sometimes</li>
+        </ul>
+    </div>
+
     <div class="underline">v 1.3 (19.06.2023)</div>
     <div>
         General changes:

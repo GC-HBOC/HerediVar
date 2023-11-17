@@ -65,7 +65,6 @@ def fetch_consequence_task(self, variant_id):
 
 def start_variant_import(user_id, user_roles, conn: Connection): # starts the celery task
     import_request = conn.get_most_recent_import_request() # get the most recent import request
-    import_request = None
     min_date = None
     if import_request is not None:
         min_date = import_request.import_variant_list_finished_at

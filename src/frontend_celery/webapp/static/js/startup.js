@@ -63,7 +63,7 @@ $(document).ready(function()
 
 
     // coloring of consensus classification
-    const possible_classes = ["1", "2", "3-", "3", "3+", "4", "5", "M"]
+    const possible_classes = ["1", "2", "3-", "3", "3+", "4", "5", "4M"]
     document.getElementsByName('class-label').forEach(function(obj) {
         var consensus_classification = obj.getAttribute('classification').trim();
         if (!possible_classes.includes(consensus_classification)) {

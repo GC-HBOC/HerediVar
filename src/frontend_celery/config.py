@@ -88,6 +88,9 @@ class ProdConfig(Config):
     CLIENTSECRET = os.environ.get('CLIENT_SECRET')
     DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
 
+    # clinvar
+    CLINVAR_API_ENDPOINT = "https://submit.ncbi.nlm.nih.gov/api/v1/submissions" # production endpoint
+
     
 
 class DevConfig(Config):
