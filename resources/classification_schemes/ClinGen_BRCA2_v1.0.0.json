@@ -1,9 +1,9 @@
 {
-    "classification_scheme_id": "",
+    "classification_scheme_id": "8",
     "name": "enigma-brca2",
     "display_name": "ClinGen ENIGMA BRCA2 v1.0.0",
     "type": "acmg-enigma-brca2",
-    "reference": "https://cspec.genome.network/cspec/ui/svi/doc/GN097",
+    "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/pbpwnhly/clingen_brca2_v1.0.0.pdf/?format=attachment",
     "criteria": [
         {
             "name": "PVS1",
