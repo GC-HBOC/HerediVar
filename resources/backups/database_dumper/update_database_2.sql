@@ -27,8 +27,8 @@ ADD UNIQUE INDEX `UNIQUE_variant_transcript_annotation` (`variant_id` ASC, `anno
 DROP INDEX `id_UNIQUE` ;
 
 
-INSERT INTO `HerediVar_ahdoebm1`.`annotation_type` (`id`, `title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`) VALUES (53, 'maxentscan', 'MaxEntScan', 'The transcript specific MaxEntScan scores calculated from ngs-bits. Each value is of the form: ref|alt', 'text', 'v1.0.0', '2023-09-27', 'Splicing', 1);
-INSERT INTO `HerediVar_ahdoebm1`.`annotation_type` (`id`, `title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`) VALUES (54, 'maxentscan_swa', 'MaxEntScan SWA', 'The transcript specific MaxEntScan SWA scores calculated from ngs-bits. A special application of the MaxEntScan algorithm to discover de-novo spliceing variants. Each value is of the form maxentscan_ref_donor|maxentscan_alt_donor|maxentscan_donor_comp|maxentscan_ref_acceptor|maxentscan_alt_acceptor|maxentscan_acceptor_comp', 'text', 'v1.0.0', '2023-09-27', 'Splicing', 1);
+INSERT INTO `HerediVar_ahdoebm1`.`annotation_type` (`title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`) VALUES ('maxentscan', 'MaxEntScan', 'The transcript specific MaxEntScan scores calculated from ngs-bits. Each value is of the form: ref|alt', 'text', 'v1.0.0', '2023-09-27', 'Splicing', 1);
+INSERT INTO `HerediVar_ahdoebm1`.`annotation_type` (`title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`) VALUES ('maxentscan_swa', 'MaxEntScan SWA', 'The transcript specific MaxEntScan SWA scores calculated from ngs-bits. A special application of the MaxEntScan algorithm to discover de-novo spliceing variants. Each value is of the form maxentscan_ref_donor|maxentscan_alt_donor|maxentscan_donor_comp|maxentscan_ref_acceptor|maxentscan_alt_acceptor|maxentscan_acceptor_comp', 'text', 'v1.0.0', '2023-09-27', 'Splicing', 1);
 
 
 ALTER TABLE `HerediVar_ahdoebm1`.`annotation_type` 
@@ -169,3 +169,35 @@ ADD CONSTRAINT `FK_exon_transcript`
 
 
 INSERT INTO `HerediVar_ahdoebm1`.`annotation_type` (`title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`) VALUES ('gnomad_popmax_AC', 'popmax AC', 'The allele count from the popmax population from GnomAD', 'int', 'v3.1.2', '2021-10-22', 'gnomAD', '0');
+
+
+
+INSERT INTO `HerediVar_ahdoebm1`.`annotation_type` (`title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`) VALUES ('bayesdel', 'BayesDEL', 'Missense variant functional predictions by BayesDel tool (Feng 2017) used without allele frequency. Score bigger or equal to 0.16: damaging; Score smaller than 0.16: tolerated. Scores were imported from dbNSFP.', 'float', '4.4', '2023-05-06', 'Pathogenicity', 0);
+
+
+
+UPDATE annotation_type SET is_transcript_specific = 1 WHERE title = 'revel'
+DELETE FROM variant_annotation WHERE annotation_type_id = 6
+
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`user_classification` 
+ADD COLUMN `deleted_date` DATETIME NULL AFTER `scheme_class`;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`user_classification` 
+CHANGE COLUMN `classification` `classification` ENUM('1', '2', '3', '4', '5', '3-', '3+', 'M', '4M') NOT NULL ;
+UPDATE user_classification SET classification = '4M' WHERE classification = 'M';
+ALTER TABLE `HerediVar_ahdoebm1`.`user_classification` 
+CHANGE COLUMN `classification` `classification` ENUM('1', '2', '3', '4', '5', '3-', '3+', '4M') NOT NULL ;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`consensus_classification` 
+CHANGE COLUMN `classification` `classification` ENUM('1', '2', '3', '4', '5', '3+', '3-', 'M', '4M') NOT NULL ;
+UPDATE consensus_classification SET classification = '4M' WHERE classification = 'M';
+ALTER TABLE `HerediVar_ahdoebm1`.`consensus_classification` 
+CHANGE COLUMN `classification` `classification` ENUM('1', '2', '3', '4', '5', '3+', '3-', '4M') NOT NULL ;
+
+
+
+
