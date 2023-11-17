@@ -143,19 +143,19 @@ mkdir -p $dbs
 #
 #
 #
-## download REVEL (https://sites.google.com/site/revelgenomics/downloads)
-#cd $dbs
-#mkdir -p REVEL
-#cd REVEL
-#source $tools/zhead.sh
-##old url: wget https://rothsj06.u.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
-#wget https://rothsj06.dmz.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
-#unzip -p revel-v1.3_all_chromosomes.zip | tr ',' '\t' | sed '1s/.*/#&/' | bgzip > revel_tmp.tsv.gz
-#zhead revel_tmp.tsv.gz 1 > h
-#zgrep -h -v '^#chr' revel_tmp.tsv.gz | $ngsbits/TsvFilter -numeric -v -filter '3 is .' | egrep -v '^#\s' | sort -k1,1 -k3,3n - | cat h - > revel_grch38_all_chromosomes.tsv
-#python3 $tools/db_converter_revel.py -i revel_grch38_all_chromosomes.tsv | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip -c > revel_grch38_all_chromosomes.vcf.gz
-#tabix -f -p vcf revel_grch38_all_chromosomes.vcf.gz
-#rm -f revel_tmp.tsv.gz h revel_grch38_all_chromosomes.tsv
+# download REVEL (https://sites.google.com/site/revelgenomics/downloads)
+cd $dbs
+mkdir -p REVEL
+cd REVEL
+source $tools/zhead.sh
+#old url: wget https://rothsj06.u.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
+wget https://rothsj06.dmz.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
+unzip -p revel-v1.3_all_chromosomes.zip | tr ',' '\t' | sed '1s/.*/#&/' | bgzip > revel_tmp.tsv.gz
+zhead revel_tmp.tsv.gz 1 > h
+zgrep -h -v '^#chr' revel_tmp.tsv.gz | $ngsbits/TsvFilter -numeric -v -filter '3 is .' | egrep -v '^#\s' | sort -k1,1 -k3,3n - | cat h - > revel_grch38_all_chromosomes.tsv
+python3 $tools/db_converter_revel.py -i revel_grch38_all_chromosomes.tsv | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip -c > revel_grch38_all_chromosomes.vcf.gz
+tabix -f -p vcf revel_grch38_all_chromosomes.vcf.gz
+rm -f revel_tmp.tsv.gz h revel_grch38_all_chromosomes.tsv
 #$ngsbits/VcfCheck -in revel_grch38_all_chromosomes.vcf.gz -ref $genome -lines 0
 #
 #
@@ -356,7 +356,7 @@ wget https://download.molgeniscloud.org/downloads/vip/resources/GRCh38/spliceai_
 
 
 #### DATA FOR INIT DB
-: '
+
 # download ensembl transcripts (http://ftp.ensembl.org/pub/current_gff3/homo_sapiens/)
 cd $dbs
 mkdir -p ensembl
@@ -365,7 +365,7 @@ wget http://ftp.ensembl.org/pub/current_gff3/homo_sapiens/Homo_sapiens.GRCh38.11
 gunzip Homo_sapiens.GRCh38.110.gff3.gz
 ## download ensembl canonical transcripts (http://ftp.ensembl.org/pub/current_tsv/homo_sapiens)
 ##wget -O - http://ftp.ensembl.org/pub/release-110/tsv/homo_sapiens/Homo_sapiens.GRCh38.110.canonical.tsv.gz | gunzip > Homo_sapiens.GRCh38.110.canonical.tsv
-'
+
 
 : '
 # download mane select (https://ftp.ncbi.nlm.nih.gov/refseq/MANE/)
@@ -415,20 +415,20 @@ wget https://www.omim.org/static/omim/data/mim2gene.txt
 
 
 
-##### download ClinVar (https://www.ncbi.nlm.nih.gov/clinvar/)
-#cd $dbs
-#mkdir -p ClinVar
-#cd ClinVar
-#
-### submissions table for 'Submitted interpretations and evidence' table from website
-#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
-#
-## most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # previous version used: clinvar_20220320.vcf.gz 
-#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # newest version: clinvar_20230226.vcf.gz  
-#gunzip -c clinvar.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_converted_GRCh38.vcf.gz
-#tabix -p vcf clinvar_converted_GRCh38.vcf.gz
-#
-#
+#### download ClinVar (https://www.ncbi.nlm.nih.gov/clinvar/)
+cd $dbs
+mkdir -p ClinVar
+cd ClinVar
+
+## submissions table for 'Submitted interpretations and evidence' table from website
+wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
+
+# most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # previous version used: clinvar_20220320.vcf.gz 
+wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # newest version: clinvar_20230226.vcf.gz  
+gunzip -c clinvar.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_converted_GRCh38.vcf.gz
+tabix -p vcf clinvar_converted_GRCh38.vcf.gz
+
+
 ### CNVs - not used atm
 ##wget -O - http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive/variant_summary_2021-12.txt.gz | gunzip > variant_summary_2021-12.txt
 ##cat variant_summary_2021-12.txt | php $src/Tools/db_converter_clinvar_cnvs.php 5 "Pathogenic/Likely pathogenic" | sort | uniq > clinvar_cnvs_2021-12.bed
@@ -438,21 +438,8 @@ wget https://www.omim.org/static/omim/data/mim2gene.txt
 
 
 
-# download bayesDEL
-#wget -O bayesdel.tgz https://drive.google.com/file/d/0Byvs2ppGNyXlN0xvSzA4LUgybzg/view?usp=share_link&resourcekey=0-ULPKwYu4hPGuMZ-eY1Z2Tw
-#curl -L 'https://drive.google.com/file/d/0Byvs2ppGNyXlN0xvSzA4LUgybzg/view?usp=drive_link&resourcekey=0-ULPKwYu4hPGuMZ-eY1Z2Tw&confirm=t' > bayesdel.tgz
-
-#https://drive.google.com/file/d/0Byvs2ppGNyXlN0xvSzA4LUgybzg/view?usp=drive_link&resourcekey=0-ULPKwYu4hPGuMZ-eY1Z2Tw
-
-#https://drive.usercontent.google.com/download?id=0Byvs2ppGNyXlN0xvSzA4LUgybzg&export=download&resourcekey=0-ULPKwYu4hPGuMZ-eY1Z2Tw&confirm=t
-
-# wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=0Byvs2ppGNyXlN0xvSzA4LUgybzg' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=0Byvs2ppGNyXlN0xvSzA4LUgybzg" -O test.tgz && rm -rf /tmp/cookies.txt
-# wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=0Byvs2ppGNyXlN0xvSzA4LUgybzg' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=0Byvs2ppGNyXlN0xvSzA4LUgybzg" -O test.tgz && rm -rf /tmp/cookies.txt
-
-
-
-# http://database.liulab.science/dbNSFP#database
 # install bayesDEL from dbNSFP
+# http://database.liulab.science/dbNSFP#database
 cd $dbs
 mkdir -p BayesDEL
 cd BayesDEL
