@@ -168,6 +168,7 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
             
             info = line.split('\t')[7]
             for job in all_jobs:
+                print(job.job_name)
                 status_code, err_msg = job.save_to_db(info, variant_id, conn=conn)
                 if status_code > 0:
                     status = "error"

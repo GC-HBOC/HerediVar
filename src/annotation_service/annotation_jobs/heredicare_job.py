@@ -54,23 +54,26 @@ class heredicare_job(Job):
                 if tries > 0:
                     time.sleep(30 * tries)
             if status == "error":
-                raise Exception("There was an error during variant retrieval from heredicare: " + str(message))
-            
-            n_fam = heredicare_variant["N_FAM"]
-            n_pat = heredicare_variant["N_PAT"]
-            consensus_class = heredicare_variant["PATH_TF"] if heredicare_variant["PATH_TF"] != "-1" else None
-            comment = heredicare_variant["VUSTF_15"] if heredicare_variant["VUSTF_15"] is not None else ''
-            comment = comment.strip()
-            comment = comment if comment != '' else None
-            classification_date = heredicare_variant["VUSTF_DATUM"] if heredicare_variant["VUSTF_DATUM"] != '' else None
-            if classification_date is not None:
-                try:
-                    classification_date = datetime.strptime(classification_date, "%d.%m.%Y")
-                except:
-                    raise Exception("The date could not be saved in the database. Format should be dd.mm.yyyy, but was: " + str(classification_date))
-        
-            conn.insert_heredicare_annotation(variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment)
+                err_msg += "There was an error during variant retrieval from heredicare: " + str(message)
+                status_code = 1
+            else:
+                n_fam = heredicare_variant["N_FAM"]
+                n_pat = heredicare_variant["N_PAT"]
+                consensus_class = heredicare_variant["PATH_TF"] if heredicare_variant["PATH_TF"] != "-1" else None
+                comment = heredicare_variant["VUSTF_15"] if heredicare_variant["VUSTF_15"] is not None else ''
+                comment = comment.strip()
+                comment = comment if comment != '' else None
+                classification_date = heredicare_variant["VUSTF_DATUM"] if heredicare_variant["VUSTF_DATUM"] != '' else None
+                if classification_date is not None:
+                    try:
+                        classification_date = datetime.strptime(classification_date, "%d.%m.%Y")
+                    except:
+                        err_msg += "The date could not be saved in the database. Format should be dd.mm.yyyy, but was: " + str(classification_date)
+                        status_code = 1
 
-            return status_code, err_msg
+                if status_code == 0:
+                    conn.insert_heredicare_annotation(variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment)
+
+        return status_code, err_msg
 
 
