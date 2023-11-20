@@ -143,19 +143,19 @@ mkdir -p $dbs
 #
 #
 #
-# download REVEL (https://sites.google.com/site/revelgenomics/downloads)
-cd $dbs
-mkdir -p REVEL
-cd REVEL
-source $tools/zhead.sh
-#old url: wget https://rothsj06.u.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
-wget https://rothsj06.dmz.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
-unzip -p revel-v1.3_all_chromosomes.zip | tr ',' '\t' | sed '1s/.*/#&/' | bgzip > revel_tmp.tsv.gz
-zhead revel_tmp.tsv.gz 1 > h
-zgrep -h -v '^#chr' revel_tmp.tsv.gz | $ngsbits/TsvFilter -numeric -v -filter '3 is .' | egrep -v '^#\s' | sort -k1,1 -k3,3n - | cat h - > revel_grch38_all_chromosomes.tsv
-python3 $tools/db_converter_revel.py -i revel_grch38_all_chromosomes.tsv | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip -c > revel_grch38_all_chromosomes.vcf.gz
-tabix -f -p vcf revel_grch38_all_chromosomes.vcf.gz
-rm -f revel_tmp.tsv.gz h revel_grch38_all_chromosomes.tsv
+# download REVEL (https://sites.google.com/site/revelgenomics/downloads) https://download.imgag.de/ahdoebm1/revel_grch38_all_chromosomes.vcf.gz
+#cd $dbs
+#mkdir -p REVEL
+#cd REVEL
+#source $tools/zhead.sh
+##old url: wget https://rothsj06.u.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
+#wget https://rothsj06.dmz.hpc.mssm.edu/revel-v1.3_all_chromosomes.zip 
+#unzip -p revel-v1.3_all_chromosomes.zip | tr ',' '\t' | sed '1s/.*/#&/' | bgzip > revel_tmp.tsv.gz
+#zhead revel_tmp.tsv.gz 1 > h
+#zgrep -h -v '^#chr' revel_tmp.tsv.gz | $ngsbits/TsvFilter -numeric -v -filter '3 is .' | egrep -v '^#\s' | sort -k1,1 -k3,3n - | cat h - > revel_grch38_all_chromosomes.tsv
+#python3 $tools/db_converter_revel.py -i revel_grch38_all_chromosomes.tsv | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip -c > revel_grch38_all_chromosomes.vcf.gz
+#tabix -f -p vcf revel_grch38_all_chromosomes.vcf.gz
+#rm -f revel_tmp.tsv.gz h revel_grch38_all_chromosomes.tsv
 #$ngsbits/VcfCheck -in revel_grch38_all_chromosomes.vcf.gz -ref $genome -lines 0
 #
 #
