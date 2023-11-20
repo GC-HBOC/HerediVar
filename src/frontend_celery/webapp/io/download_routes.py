@@ -645,6 +645,11 @@ def refgene_ngsd():
     filename = "refgene_ngsd.gff3.gz"
     return send_from_directory(directory=paths.igv_data_path, path=filename, download_name="refgene_ngsd.gff3.gz", as_attachment=True, mimetype="text")
 
+@download_blueprint.route('/download/refgene_ngsd.gff3')
+def refgene_ngsd_unzip():
+    filename = "refgene_ngsd.gff3"
+    return send_from_directory(directory=paths.igv_data_path, path=filename, download_name="refgene_ngsd.gff3", as_attachment=True, mimetype="text")
+
 @download_blueprint.route('/download/refgene_ngsd.gff3.gz.tbi')
 def refgene_ngsd_tabix():
     filename = "refgene_ngsd.gff3.gz.tbi"

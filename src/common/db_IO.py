@@ -824,7 +824,7 @@ class Connection:
                 # search for the most recent user classifications from the user which is searching for variants and which are in the list of user classifications (variable: user)
                 new_constraints_inner = new_constraints_inner + "SELECT * FROM ( SELECT user_classification.variant_id FROM user_classification \
                                                                 LEFT JOIN user_classification uc ON uc.variant_id = user_classification.variant_id AND uc.date > user_classification.date \
-                                                                    WHERE uc.variant_id IS NULL AND user_classification.user_id=%s AND deleted_date IS NULL AND user_classification.classification IN " + placeholders + " \
+                                                                    WHERE uc.variant_id IS NULL AND user_classification.user_id=%s AND uc.deleted_date IS NULL AND user_classification.classification IN " + placeholders + " \
                                                                 ORDER BY user_classification.variant_id )ub"
                 actual_information += (user_id, )
                 actual_information += tuple(user_without_dash)
@@ -914,7 +914,7 @@ class Connection:
             offset = (page - 1) * page_size
             command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
-        print(command % actual_information)
+        #print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 
