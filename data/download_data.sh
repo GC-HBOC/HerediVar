@@ -443,14 +443,14 @@ wget https://www.omim.org/static/omim/data/mim2gene.txt
 cd $dbs
 mkdir -p BayesDEL
 cd BayesDEL
-
-
-wget https://dbnsfp.s3.amazonaws.com/dbNSFP4.4a.zip
-unzip dbNSFP4.4a.zip -d dbNSFP4.4a
-mv dbNSFP4.4a dbNSFP4.4a_full
-mkdir -p dbNSFP4.4a
-mv dbNSFP4.4a_full/*variant* dbNSFP4.4a
-rm -r dbNSFP4.4a_full
+#
+#
+#wget https://dbnsfp.s3.amazonaws.com/dbNSFP4.4a.zip
+#unzip dbNSFP4.4a.zip -d dbNSFP4.4a
+#mv dbNSFP4.4a dbNSFP4.4a_full
+#mkdir -p dbNSFP4.4a
+#mv dbNSFP4.4a_full/*variant* dbNSFP4.4a
+#rm -r dbNSFP4.4a_full
 
 bayesdel_file=bayesdel_4.4
 python3 $tools/db_converter_bayesdel.py -i dbNSFP4.4a -o $bayesdel_file.vcf
