@@ -29,6 +29,9 @@ echo $DATE > most_recent_dump.txt
 
 
 # information after init_db.py
+##mysqldump --quick -h sql.img.med.uni-tuebingen.de -P 3306 -u ahdoebm1 -p --column-statistics=0 --no-tablespaces --no-create-info -r /mnt/storage2/users/ahdoebm1/HerediVar/resources/backups/database_dumper/init_db/init_transcripts.sql HerediVar_ahdoebm1  gene gene_alias transcript exon
+
+
 #mysqldump --quick -h SRV011.img.med.uni-tuebingen.de -P 3306 -u ahdoebm1 -p --column-statistics=0 --no-tablespaces --no-create-info -r /mnt/storage2/users/ahdoebm1/HerediVar/resources/backups/database_dumper/init_db/init.sql HerediVar_ahdoebm1 annotation_type classification_criterium classification_criterium_strength classification_scheme mutually_exclusive_criteria gene gene_alias pfam_id_mapping pfam_legacy task_force_protein_domains transcript 
 
 
