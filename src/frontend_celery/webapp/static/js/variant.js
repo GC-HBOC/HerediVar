@@ -225,18 +225,20 @@ function setup_igv(chrom, start, end, variant_id) {
                     "order": 100,
                     "indexed": false,
                     "autoHeight": true,
-                    "url": "/download/refgene_ngsd.gff3",
+                    //"url": "/download/refgene_ngsd.gff3",
+                    "url": "/download/refgene_ngsd.gff3.gz",
+                    "indexURL": "/download/refgene_ngsd.gff3.gz.tbi",
                     "color": (feature) => {
-                        if (feature.getAttributeValue("Is_mane_plus_clinical") == 1) {
+                        if (feature.getAttributeValue("is_mane_plus_clinical") == 1) {
                             return "#00CC00"
                         }
-                        if (feature.getAttributeValue("Is_mane_select") == 1) {
+                        if (feature.getAttributeValue("is_mane_select") == 1) {
                             return "red"
                         }
-                        if (feature.getAttributeValue("Is_ensembl_canonical") == 1) {
+                        if (feature.getAttributeValue("is_ensembl_canonical") == 1) {
                             return "orange"
                         }
-                        if (feature.getAttributeValue("Is_gencode_basic") == 1) {
+                        if (feature.getAttributeValue("is_gencode_basic") == 1) {
                             return "darkblue"
                         }
                         return "gray"

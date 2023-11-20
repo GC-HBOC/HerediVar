@@ -53,4 +53,4 @@ wget -q https://download.imgag.de/ahdoebm1/igv/data/refgene_ngsd.gff3
 gt gff3 -sortlines refgene_ngsd.gff3 > refgene_ngsd_sorted.gff3
 mv refgene_ngsd_sorted.gff3 refgene_ngsd.gff3
 bgzip refgene_ngsd.gff3
-tabix -p gff refgene_ngsd.gff3
+tabix -p gff refgene_ngsd.gff3.gz

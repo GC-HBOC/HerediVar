@@ -640,10 +640,15 @@ def decide_for_class_acmg(possible_classes):
     return final_class
 
 
-@download_blueprint.route('/download/refgene_ngsd.gff3')
+@download_blueprint.route('/download/refgene_ngsd.gff3.gz')
 def refgene_ngsd():
     filename = "refgene_ngsd.gff3.gz"
     return send_from_directory(directory=paths.igv_data_path, path=filename, download_name="refgene_ngsd.gff3.gz", as_attachment=True, mimetype="text")
+
+@download_blueprint.route('/download/refgene_ngsd.gff3.gz.tbi')
+def refgene_ngsd_tabix():
+    filename = "refgene_ngsd.gff3.gz.tbi"
+    return send_from_directory(directory=paths.igv_data_path, path=filename, download_name="refgene_ngsd.gff3.gz.tbi", as_attachment=True, mimetype="text")
 
 @download_blueprint.route('/download/hg38.fa')
 def ref_genome():
