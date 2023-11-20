@@ -91,7 +91,7 @@
             This page displays all annotations of a variant. The top headline shows the variant and its most recent HediVar consensus classification. There are six types of
             consensus classifications:
             <div class="d-flex">
-              {% for classification in ['-', '1', '2', '3-', '3', '3+', '4', '5', 'M'] %}
+              {% for classification in ['-', '1', '2', '3-', '3', '3+', '4M', '4', '5'] %}
               <div class="ssr">{{macros.render_consensus_classification_label(classification, 'heredivar') }}</div>
               {% endfor %}
             </div>
