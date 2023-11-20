@@ -50,3 +50,7 @@ wget -q https://download.imgag.de/ahdoebm1/igv/data/cytoBandIdeo.txt
 wget -q https://download.imgag.de/ahdoebm1/igv/data/hg38_alias.tab
 wget -q https://download.imgag.de/ahdoebm1/igv/data/refgene.txt
 wget -q https://download.imgag.de/ahdoebm1/igv/data/refgene_ngsd.gff3
+gt gff3 -sortlines refgene_ngsd.gff3 > refgene_ngsd_sorted.gff3
+mv refgene_ngsd_sorted.gff3 refgene_ngsd.gff3
+bgzip refgene_ngsd.gff3
+tabix -p gff refgene_ngsd.gff3

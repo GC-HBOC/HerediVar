@@ -440,9 +440,9 @@ wget https://www.omim.org/static/omim/data/mim2gene.txt
 
 # install bayesDEL from dbNSFP
 # http://database.liulab.science/dbNSFP#database
-cd $dbs
-mkdir -p BayesDEL
-cd BayesDEL
+#cd $dbs
+#mkdir -p BayesDEL
+#cd BayesDEL
 #
 #
 #wget https://dbnsfp.s3.amazonaws.com/dbNSFP4.4a.zip
@@ -451,18 +451,18 @@ cd BayesDEL
 #mkdir -p dbNSFP4.4a
 #mv dbNSFP4.4a_full/*variant* dbNSFP4.4a
 #rm -r dbNSFP4.4a_full
-
-bayesdel_file=bayesdel_4.4
-python3 $tools/db_converter_bayesdel.py -i dbNSFP4.4a -o $bayesdel_file.vcf
-$ngsbits/VcfSort -in $bayesdel_file.vcf -out $bayesdel_file.vcf
-$ngsbits/VcfLeftNormalize -stream -ref $genome -in $bayesdel_file.vcf -out $bayesdel_file.vcf.2
-mv $bayesdel_file.vcf.2 $bayesdel_file.vcf
-bgzip $bayesdel_file.vcf
-#$ngsbits/VcfCheck -lines 0 -in $bayesdel_file.vcf.gz -ref $genome
-
-tabix -p vcf $bayesdel_file.vcf.gz
-
-rm dbNSFP4.4a.zip
+#
+#bayesdel_file=bayesdel_4.4
+#python3 $tools/db_converter_bayesdel.py -i dbNSFP4.4a -o $bayesdel_file.vcf
+#$ngsbits/VcfSort -in $bayesdel_file.vcf -out $bayesdel_file.vcf
+#$ngsbits/VcfLeftNormalize -stream -ref $genome -in $bayesdel_file.vcf -out $bayesdel_file.vcf.2
+#mv $bayesdel_file.vcf.2 $bayesdel_file.vcf
+#bgzip $bayesdel_file.vcf
+##$ngsbits/VcfCheck -lines 0 -in $bayesdel_file.vcf.gz -ref $genome
+#
+#tabix -p vcf $bayesdel_file.vcf.gz
+#
+#rm dbNSFP4.4a.zip
 
 
 

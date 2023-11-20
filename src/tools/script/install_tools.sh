@@ -23,6 +23,7 @@ sudo apt-get install g++ libqt5xmlpatterns5-dev libqt5sql5-mysql libcurl4 libcur
 sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
 sudo apt-get install -y mariadb-server
 sudo apt-get install default-jdk -y
+sudo apt install genometools
 
 
 # prepare python venv & install packages
