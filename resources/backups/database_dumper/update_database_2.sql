@@ -72,32 +72,32 @@
 -- 
 -- INSERT INTO `HerediVar`.`annotation_type` (`title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`) VALUES ('heredicare_vid', 'HerediCare VID', 'The VID from HerediCare.The version_date is inaccurate. They are always up to date when reimporting from heredicare.', 'int', '-', '2023-01-01', 'ID', '0');
 
-UPDATE variant_ids SET annotation_type_id = (SELECT id FROM annotation_type WHERE title = 'heredicare_vid') WHERE id_source = 'heredicare';
-
-
-ALTER TABLE `HerediVar`.`variant_ids` 
-ADD INDEX `FK_variant_ids_annotation_type_idx` (`annotation_type_id` ASC);
-;
-ALTER TABLE `HerediVar`.`variant_ids` 
-ADD CONSTRAINT `FK_variant_ids_annotation_type`
-  FOREIGN KEY (`annotation_type_id`)
-  REFERENCES `HerediVar`.`annotation_type` (`id`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-
-ALTER TABLE `HerediVar`.`variant_ids` 
-DROP COLUMN `id_source`,
-DROP INDEX `variant_id_external_id_id_source_key` ,
-ADD UNIQUE INDEX `variant_id_external_id_id_source_key` (`variant_id` ASC, `external_id` ASC);
-;
-
-ALTER TABLE `HerediVar`.`variant_ids` 
-DROP INDEX `variant_id_external_id_id_source_key`;
-ALTER TABLE `HerediVar`.`variant_ids` 
-ADD UNIQUE INDEX `unique_variant_ids` (`variant_id` ASC, `external_id` ASC, `annotation_type_id` ASC);
-;
-UPDATE annotation_type SET group_name = "ID" WHERE title = 'rsid'
+-- UPDATE variant_ids SET annotation_type_id = (SELECT id FROM annotation_type WHERE title = 'heredicare_vid') WHERE id_source = 'heredicare';
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`variant_ids` 
+-- ADD INDEX `FK_variant_ids_annotation_type_idx` (`annotation_type_id` ASC);
+-- ;
+-- ALTER TABLE `HerediVar`.`variant_ids` 
+-- ADD CONSTRAINT `FK_variant_ids_annotation_type`
+--   FOREIGN KEY (`annotation_type_id`)
+--   REFERENCES `HerediVar`.`annotation_type` (`id`)
+--   ON DELETE NO ACTION
+--   ON UPDATE NO ACTION;
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`variant_ids` 
+-- DROP COLUMN `id_source`,
+-- DROP INDEX `variant_id_external_id_id_source_key` ,
+-- ADD UNIQUE INDEX `variant_id_external_id_id_source_key` (`variant_id` ASC, `external_id` ASC);
+-- ;
+-- 
+-- ALTER TABLE `HerediVar`.`variant_ids` 
+-- DROP INDEX `variant_id_external_id_id_source_key`;
+-- ALTER TABLE `HerediVar`.`variant_ids` 
+-- ADD UNIQUE INDEX `unique_variant_ids` (`variant_id` ASC, `external_id` ASC, `annotation_type_id` ASC);
+-- ;
+UPDATE annotation_type SET group_name = "ID" WHERE title = 'rsid';
 
 
 
@@ -174,8 +174,8 @@ INSERT INTO `HerediVar`.`annotation_type` (`title`, `display_title`, `descriptio
 
 
 
-UPDATE annotation_type SET is_transcript_specific = 1 WHERE title = 'revel'
-DELETE FROM variant_annotation WHERE annotation_type_id = 6
+UPDATE annotation_type SET is_transcript_specific = 1 WHERE title = 'revel';
+DELETE FROM variant_annotation WHERE annotation_type_id = 6;
 
 
 
