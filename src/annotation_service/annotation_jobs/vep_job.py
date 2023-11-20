@@ -49,7 +49,7 @@ class vep_job(Job):
             consequence_source = "ensembl"
         
         if csq_info == '' or csq_info is None:
-            return
+            return status_code, err_msg
 
         if self.job_config['insert_consequence']:
             conn.delete_variant_consequences(variant_id, is_refseq = self.refseq)

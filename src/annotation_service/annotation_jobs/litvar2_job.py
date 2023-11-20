@@ -35,7 +35,7 @@ class litvar2_job(Job):
         status_code = 0
         err_msg = ""
         if not self.job_config['do_litvar']:
-            return
+            return status_code, err_msg
         
         rsid_annotation_type_id = conn.get_most_recent_annotation_type_id("rsid")
         litvar_pmids = None

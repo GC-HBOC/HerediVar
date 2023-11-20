@@ -470,17 +470,17 @@ wget https://www.omim.org/static/omim/data/mim2gene.txt
 
 
 ##Install COSMIC Cancer Mutation Census CMC  (you need a license, CMC tsv.gz file has to be downloaded manually from https://cancer.sanger.ac.uk/cmc/download)
-cd $dbs
-mkdir -p COSMIC
-cd COSMIC
-# HERE: we take a precalculated one using scripts from megSAP with correction script from alexander ott
-# /mnt/storage2/users/ahott1a1/projects/+analysis/230427_cosmic_converter/converted_corrected.vcf
-cp /mnt/storage2/users/ahott1a1/projects/+analysis/230427_cosmic_converter/converted_corrected.vcf .
-cat converted_corrected.vcf | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $data/script/db_converter_cosmic.py > converted_corrected_collapsed.vcf
-rm converted_corrected.vcf
-mv converted_corrected_collapsed.vcf cosmic_cmc.vcf
-bgzip cosmic_cmc.vcf
-tabix -p vcf cosmic_cmc.vcf.gz
+#cd $dbs
+#mkdir -p COSMIC
+#cd COSMIC
+## HERE: we take a precalculated one using scripts from megSAP with correction script from alexander ott
+## /mnt/storage2/users/ahott1a1/projects/+analysis/230427_cosmic_converter/converted_corrected.vcf
+#cp /mnt/storage2/users/ahott1a1/projects/+analysis/230427_cosmic_converter/converted_corrected.vcf .
+#cat converted_corrected.vcf | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $data/script/db_converter_cosmic.py > converted_corrected_collapsed.vcf
+#rm converted_corrected.vcf
+#mv converted_corrected_collapsed.vcf cosmic_cmc.vcf
+#bgzip cosmic_cmc.vcf
+#tabix -p vcf cosmic_cmc.vcf.gz
 
 
 
