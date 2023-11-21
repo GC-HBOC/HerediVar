@@ -201,15 +201,40 @@ function preselect_final_classification() {
 function preselect_scheme() {
     var scheme_select = document.getElementById('scheme')
     const lower_case_variant_genes = variant_genes.toLowerCase().split(';') // convert all genes to lower case
-    if (lower_case_variant_genes.includes('tp53')) {
-        scheme_select.value = 3 //'acmg_TP53'
-    } else if (lower_case_variant_genes.includes('cdh1')) {
-        scheme_select.value = 4 //'acmg_CDH1'
-    } else if (lower_case_variant_genes.includes('brca1') || lower_case_variant_genes.includes('brca2')) {
-        scheme_select.value = 6 //'task-force-brca'
-    } else {
-        scheme_select.value = 2 //'acmg_standard'
+
+    console.log(classification_schemas)
+
+    var found_one = false;
+    var default_scheme_id = undefined;
+    for (var classification_scheme_id in classification_schemas) {
+        var current_classification_scheme = classification_schemas[classification_scheme_id]
+        var scheme_type = current_classification_scheme["scheme_type"]
+        for (var i = 0; i < lower_case_variant_genes.length; i++) {
+            var current_gene = lower_case_variant_genes[i]
+            if (scheme_type.includes(current_gene)){
+                scheme_select.value = classification_scheme_id;
+                found_one = true;
+                break;
+            }
+        }
+        if (current_classification_scheme['is_default']) {
+            default_scheme_id = classification_scheme_id;
+        }
     }
+
+    if (! found_one) {
+        scheme_select.value = default_scheme_id;
+    }
+
+    //if (lower_case_variant_genes.includes('tp53')) {
+    //    scheme_select.value = 3 //'acmg_TP53'
+    //} else if (lower_case_variant_genes.includes('cdh1')) {
+    //    scheme_select.value = 4 //'acmg_CDH1'
+    //} else if (lower_case_variant_genes.includes('brca1') || lower_case_variant_genes.includes('brca2')) {
+    //    scheme_select.value = 6 //'task-force-brca'
+    //} else {
+    //    scheme_select.value = 2 //'acmg_standard'
+    //}
 }
 
 //Object.keys(request_form).length
@@ -224,7 +249,6 @@ function preselect_criteria_from_request_form() {
             set_criterium_strength(key, current_strength)
 
             update_criterium_button_background(key)
-
         }
     }
     update_classification_preview()
@@ -1110,8 +1134,6 @@ function select_criterium(obj) {
 function get_checked_criteria_strengths() {
     var result = []
     var all_buttons = document.querySelectorAll('.btn-check')
-    console.log(scheme)
-    console.log(scheme_type)
     for (var i = 0; i < all_buttons.length; i++) {
         var current_button = all_buttons[i];
         if (current_button.checked) {

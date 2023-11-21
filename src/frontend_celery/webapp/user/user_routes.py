@@ -316,6 +316,7 @@ def admin_dashboard():
     conn = get_connection()
     job_config = annotation_service.get_default_job_config()
     annotation_stati, errors, warnings, total_num_variants = conn.get_annotation_statistics()
+    schemes = conn.get_all_classification_schemes()
     do_redirect = False
 
     most_recent_import_request = conn.get_most_recent_import_request()
@@ -387,7 +388,15 @@ def admin_dashboard():
     
     if do_redirect:
         return redirect(url_for('user.admin_dashboard'))
-    return render_template('user/admin_dashboard.html', most_recent_import_request=most_recent_import_request, job_config = job_config, annotation_stati = annotation_stati, errors = errors, warnings = warnings, total_num_variants = total_num_variants)
+    return render_template('user/admin_dashboard.html', 
+                           most_recent_import_request=most_recent_import_request, 
+                           job_config = job_config, 
+                           annotation_stati = annotation_stati, 
+                           errors = errors, 
+                           warnings = warnings, 
+                           total_num_variants = total_num_variants,
+                           schemes = schemes
+                        )
 
 
 

@@ -326,6 +326,9 @@ class Scheme:
     reference: str
     selected_class: str # can be '-' if the type is 'no scheme'
 
+    is_active: bool
+    is_default: bool
+
     def get_criteria_sorted(self):
         sorted_criteria = sorted(self.criteria, key=cmp_to_key(self.compare))
         return sorted_criteria

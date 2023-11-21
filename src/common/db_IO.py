@@ -1386,10 +1386,42 @@ class Connection:
         self.conn.commit()
 
     def get_classification_scheme(self, scheme_id):
-        command = "SELECT id,name,display_name,type,reference from classification_scheme WHERE id = %s"
+        command = "SELECT id,name,display_name,type,reference,is_active,is_default from classification_scheme WHERE id = %s"
         self.cursor.execute(command, (scheme_id, ))
-        scheme_id = self.cursor.fetchone()
-        return scheme_id
+        scheme = self.cursor.fetchone()
+        return scheme
+
+    def get_all_classification_schemes(self):
+        command = "SELECT id,name, display_name,type,reference,is_active,is_default FROM classification_scheme"
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        result = [self.convert_raw_scheme(raw_scheme) for raw_scheme in result]
+        return result
+    
+    def convert_raw_scheme(self, raw_scheme):
+        return models.Scheme(id = raw_scheme[0],
+                             display_name = raw_scheme[2],
+                             type = raw_scheme[3],
+                             criteria = [],
+                             reference = raw_scheme[4],
+                             selected_class = '-',
+                             is_active = True if raw_scheme[5] == 1 else False,
+                             is_default = True if raw_scheme[6] == 1 else False
+                             )
+    
+    def update_active_state_classification_scheme(self, scheme_id, is_active):
+        command = "UPDATE classification_scheme SET is_active = %s WHERE id = %s"
+        self.cursor.execute(command, (is_active, scheme_id))
+        self.conn.commit()
+
+    def set_default_scheme(self, scheme_id):
+        command = "UPDATE classification_scheme SET is_default = 0 WHERE is_default = 1"
+        self.cursor.execute(command)
+        self.conn.commit()
+
+        command = "UPDATE classification_scheme SET is_default = 1 WHERE id = %s"
+        self.cursor.execute(command, (scheme_id, ))
+        self.conn.commit()
 
     def insert_user_classification(self, variant_id, classification, user_id, comment, date, scheme_id, scheme_class):
         command = "INSERT INTO user_classification (variant_id, classification, user_id, comment, date, classification_scheme_id, scheme_class) VALUES (%s, %s, %s, %s, %s, %s, %s)"
@@ -2048,6 +2080,8 @@ class Connection:
                     scheme_type = current_scheme[3]
                     scheme_display_name = current_scheme[2]
                     reference = current_scheme[4]
+                    is_active = True if current_scheme[5] == 1 else False
+                    is_default = True if current_scheme[6] == 1 else False
                     criteria = []
                     for criterium_raw in current_scheme_criteria_applied:
                         criterium_id = criterium_raw[0] # criterium applied id
@@ -2057,7 +2091,7 @@ class Connection:
                         criterium_strength = criterium_raw[7]
                         criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength)
                         criteria.append(criterium)
-                    scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class)
+                    scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class, is_active = is_active, is_default = is_default)
 
                     # selected literature information
                     literatures = None
@@ -2103,6 +2137,8 @@ class Connection:
                     scheme_type = current_scheme[3]
                     scheme_display_name = current_scheme[2]
                     reference = current_scheme[4]
+                    is_active = True if current_scheme[5] == 1 else False
+                    is_default = True if current_scheme[6] == 1 else False
                     criteria = []
                     for criterium_raw in current_scheme_criteria_applied:
                         criterium_id = criterium_raw[0] # criterium applied id
@@ -2112,7 +2148,7 @@ class Connection:
                         criterium_strength = criterium_raw[7]
                         criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength)
                         criteria.append(criterium)
-                    scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class)
+                    scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class, is_active = is_active, is_default = is_default)
 
                     # selected literature information
                     literatures = None
@@ -2384,7 +2420,7 @@ class Connection:
         # it should look like this:
         # {schema_id -> display_name(description), scheme_type, reference, criteria}
         #                                         -> {name,description,default_strength,possible_strengths,selectable,disable_group,mutually_exclusive_buttons}
-        command = "SELECT * FROM classification_scheme"
+        command = "SELECT * FROM classification_scheme WHERE is_active = 1"
         self.cursor.execute(command)
         classification_schemas = self.cursor.fetchall()
 
@@ -2407,6 +2443,7 @@ class Connection:
             description = classification_schema[2]
             scheme_type = classification_schema[3]
             online_reference = classification_schema[4]
+            is_default = classification_schema[6]
 
             command = "SELECT * FROM classification_criterium WHERE classification_scheme_id = %s"
             self.cursor.execute(command, (classification_schema_id, ))
@@ -2442,7 +2479,7 @@ class Connection:
 
                 classification_criteria_dict[classification_criterium_name] = new_criterium_dict
 
-            result[classification_schema_id] = {"description": description, "scheme_type": scheme_type, "reference": online_reference, 'criteria': classification_criteria_dict}
+            result[classification_schema_id] = {"description": description, "scheme_type": scheme_type, "reference": online_reference, 'is_default': is_default, 'criteria': classification_criteria_dict}
 
         return result
 

@@ -523,3 +523,39 @@ def check():
                             message = message
                             )
 
+
+
+@variant_blueprint.route('/hide_scheme', methods=['POST'])
+@require_permission(['admin_resources'])
+def hide_scheme():
+    conn = get_connection()
+
+    scheme_id = request.form.get('scheme_id')
+    is_active = request.form.get('is_active')
+    is_active = 1 if is_active == 'true' else 0
+
+    classification_scheme = conn.get_classification_scheme(scheme_id)
+
+    if classification_scheme is None:
+        return abort(404)
+
+    conn.update_active_state_classification_scheme(scheme_id, is_active)
+
+    return "success"
+
+
+@variant_blueprint.route('/set_default_scheme', methods=['POST'])
+@require_permission(['admin_resources'])
+def set_default_scheme():
+    conn = get_connection()
+
+    scheme_id = request.form.get('scheme_id')
+
+    classification_scheme = conn.get_classification_scheme(scheme_id)
+
+    if classification_scheme is None:
+        return abort(404)
+
+    conn.set_default_scheme(scheme_id)
+
+    return "success"

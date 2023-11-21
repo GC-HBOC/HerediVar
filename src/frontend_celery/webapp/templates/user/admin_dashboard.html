@@ -9,10 +9,6 @@
 <h1 class="bst"> {% block title %} Admin dashboard {% endblock %} </h1>
 
 
-
-
-
-
 <!-- navigator tabs -->
 <ul class="nav nav-tabs" id="tabs" role="tablist">
     <li class="nav-item" role="presentation">
@@ -24,7 +20,12 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="import-tab" data-bs-toggle="tab" data-bs-target="#import" type="button" role="tab" aria-controls="import" aria-selected="false">Import variants</button>
     </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="hide_schemes-tab" data-bs-toggle="tab" data-bs-target="#hide_schemes" type="button" role="tab" aria-controls="hide_schemes" aria-selected="false">Hide Schemes</button>
+    </li>
 </ul>
+
+
 
 
 <!-- OVERVIEW TAB -->
@@ -106,9 +107,6 @@
 </div>
 
 
-
-
-
 <!-- REANNOTATE ALL TAB -->
 <div class="tab-content" id="TabContent">
     <div class="tab-pane fade" id="reannotate" role="tabpanel" aria-labelledby="reannotate-tab">
@@ -148,31 +146,7 @@
 
 
 
-<!-- modal -->
-<div class="modal fade" id="reannotate-variants-modal" tabindex="-1" aria-labelledby="reannotate-variants-modal-label" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="reannotate-variants-modal-label">Confirm reannotation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Are you sure that you want to issue an annotation for ALL variants in HerediVar?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button id="reannotate-variants-submit" type="submit" class="btn btn-primary">Yes</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-
-
-
-<!-- import from heredicare TAB -->
+<!-- IMPORT FROM HEREDICARE TAB -->
 <div class="tab-content" id="TabContent">
     <div class="tab-pane fade" id="import" role="tabpanel" aria-labelledby="import-tab">
 
@@ -236,14 +210,79 @@
 
 
     </div>
+</div>
 
 
+<!-- HIDE SCHEMES TAB -->
+<div class="tab-content" id="TabContent">
+    <div class="tab-pane fade" id="hide_schemes" role="tabpanel" aria-labelledby="hide_schemes-tab">
 
+        <div class="table-responsive tableFixHead table-lg">
+            <table class="table table-hover" id="scheme_table">
+                <thead>
+                    <tr>
+                        <th class="width_very_minimal text_align_center" id="scheme_id_column"><div class="sortable">ID</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_small"><div class="sortable">Name</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_small"><div class="sortable">Type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_medium"><div class="sortable">Reference</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_minimal text_align_center"><div class="sortable">Is active</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_minimal text_align_center"><div class="sortable">Default</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scheme in schemes %}
+                    <tr>
+                        <td class="text_align_center">{{ scheme.id }}</td>
+                        <td>{{ scheme.display_name }}</td>
+                        <td>{{ scheme.type }}</td>
+                        <td class="break_text_all"><a href="{{scheme.reference}}">{{scheme.reference}}</a></td>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input hide_scheme_switch" type="checkbox" role="switch" scheme_id="{{scheme.id}}" autocomplete="off" {% if scheme.is_active %}checked{% endif %}>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="form-check">
+                                <input class="form-check-input set_default_scheme_radio" type="radio" name="default_select_radio" value="{{scheme.id}}" autocomplete="off" {% if scheme.is_default %}checked{% endif %}>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
     </div>
 </div>
 
 
+
+
+
+</div>
+
+
+
+
+
+<!-- modal -->
+<div class="modal fade" id="reannotate-variants-modal" tabindex="-1" aria-labelledby="reannotate-variants-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reannotate-variants-modal-label">Confirm reannotation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure that you want to issue an annotation for ALL variants in HerediVar?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="reannotate-variants-submit" type="submit" class="btn btn-primary">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <!-- modal -->
@@ -267,6 +306,11 @@
 
 
 
+
+<input type='hidden' id='flask_data' 
+    data-hide-scheme-url='{{ url_for("variant.hide_scheme") }}'
+    data-set-default-scheme-url='{{ url_for("variant.set_default_scheme") }}'
+/>
 
 
 </div>

@@ -1,7 +1,12 @@
 $(document).ready(function()
 {
-    // functionality for the import & update button
 
+    const flask_data = document.getElementById('flask_data')
+    const hide_scheme_url = flask_data.dataset.hideSchemeUrl
+    const set_default_scheme_url = flask_data.dataset.setDefaultSchemeUrl
+
+
+    // functionality for the import & update button
     $('#import-variants-submit').click(function(){
         $('#import-variantsbutton').attr('disabled', true);
         /* when the submit button in the modal is clicked, submit the form */
@@ -102,6 +107,46 @@ $(document).ready(function()
     });
 
     $("#errortable");
+
+
+
+    //functionality for the hide scheme switches
+    $('.hide_scheme_switch').on("click", function(e) {
+        const scheme_id = e['target'].getAttribute('scheme_id');
+        const is_active = e['target'].checked;
+        $.ajax({
+            type: 'POST',
+            url: hide_scheme_url,
+            data: {'scheme_id': scheme_id,
+                   'is_active': is_active},
+            success: function(data, status, request) {
+                console.log(data)
+                
+            },
+            error: function() {
+                console.log('error')
+            }
+        });
+    });
+
+    $(".set_default_scheme_radio").on("click", function(e) {
+        const scheme_id = e['target'].value
+        $.ajax({
+            type: 'POST',
+            url: set_default_scheme_url,
+            data: {'scheme_id': scheme_id},
+            success: function(data, status, request) {
+                console.log(data)
+                
+            },
+            error: function() {
+                console.log('error')
+            }
+        });
+    })
+
+    
+    table_sorter(['#scheme_id_column'], '#scheme_table')
 
 
 });
