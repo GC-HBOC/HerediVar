@@ -377,10 +377,10 @@ def is_valid_scheme(selected_criteria, scheme):
     if scheme['scheme_type'] == 'none': # abort, always valid, never insert data
         return is_valid, message
 
-    # ensure that at least one criterium is selected
-    if len(selected_criteria) == 0:
-        is_valid = False
-        message = "You must select at least one of the classification scheme criteria to submit a classification scheme based classification. The classification was not submitted."
+    ## ensure that at least one criterium is selected
+    #if len(selected_criteria) == 0:
+    #    is_valid = False
+    #    message = "You must select at least one of the classification scheme criteria to submit a classification scheme based classification. The classification was not submitted."
 
     all_selected_criteria_names = [selected_criteria[x]['criterium_name'] for x in selected_criteria]
 

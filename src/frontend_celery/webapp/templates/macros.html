@@ -142,14 +142,10 @@
 
 
 {% macro draw_criteria_display(criteria, source='user') %}
+    {% if criteria | length == 0 %}
+    <div>None</div>
+    {% endif %}
     {% for criterium in criteria %}
-    <!--
-    <span class="d-inline-block ssr tooltip-lg" tabindex="0" data-bs-toggle="tooltip" data-bs-html="true" {% if source=="user" %} user_criterium_applied_id="{{ criterium.id }}" {% else %} consensus_criterium_applied_id="{{ criterium.id }}" {% endif %}
-        title="Strength: {{ criterium.strength }} <br> Evidence: {{ criterium.evidence }}">
-        <div class="btn-{{ criterium.type }} light-hover acmg-button acmg-button-small">{{ criterium.display_name() }}</div>
-    </span>
-    -->
-
     <span class="d-inline-block ssr criterium-display" data-bs-toggle="popover" 
        data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" 
        {% if source=="user" %} user_criterium_applied_id="{{ criterium.id }}" {% else %} consensus_criterium_applied_id="{{ criterium.id }}" {% endif %} 
@@ -171,9 +167,6 @@
     >
         <div class="btn-{{ criterium.type }} light-hover acmg-button acmg-button-small">{{ criterium.display_name() }}</div>
     </span>
-
-
-
     {% endfor %}
 {% endmacro %}
 

@@ -1110,11 +1110,17 @@ function select_criterium(obj) {
 function get_checked_criteria_strengths() {
     var result = []
     var all_buttons = document.querySelectorAll('.btn-check')
+    console.log(scheme)
+    console.log(scheme_type)
     for (var i = 0; i < all_buttons.length; i++) {
         var current_button = all_buttons[i];
         if (current_button.checked) {
             var new_value = document.getElementById(current_button.id + '_strength').value
-            result.push(new_value)
+            if (scheme_type == 'acmg-enigma-atm' && current_button.id == 'PM2') {
+                result.push(current_button.id + "_" + new_value)
+            } else {
+                result.push(new_value)
+            }
         }
     }
     return result
@@ -1164,7 +1170,6 @@ function update_classification_preview() {
         var selected_criteria = get_currently_checked_criteria(); // this is an array of critera ids
     } else {
         var selected_criteria = get_checked_criteria_strengths(); // this is an array of criteria strengths
-        
     }
     selected_criteria = selected_criteria.join('+')
     fetch('/calculate_class/'+scheme_type+'/'+selected_criteria).then(function (response) {

@@ -276,7 +276,7 @@ def calculate_class(scheme_type, selected_classes = ''):
 
     final_class = None
     if scheme_type == 'acmg':
-        selected_classes = [re.sub(r'[0-9]+', '', x) for x in selected_classes] # remove numbers from critera if there are any
+        #selected_classes = [re.sub(r'[0-9]+', '', x) for x in selected_classes] # remove numbers from critera if there are any
         class_counts = get_class_counts(selected_classes) # count how often we have each strength
         #print(class_counts)
         possible_classes = get_possible_classes_acmg(class_counts) # get a set of possible classes depending on selected criteria following PMC4544753
@@ -286,8 +286,10 @@ def calculate_class(scheme_type, selected_classes = ''):
         final_class = decide_for_class_task_force(selected_classes)
 
     elif 'acmg' in scheme_type:
-        selected_classes = [re.sub(r'[0-9]+', '', x) for x in selected_classes] # remove numbers from critera if there are any
+        #selected_classes = [x.strip('0123456789') for x in selected_classes] # remove numbers from critera if there are any
         class_counts = get_class_counts(selected_classes) # count how often we have each strength
+
+        #print(class_counts)
 
         if 'brca1' in scheme_type:
             possible_classes = get_possible_classes_enigma_brca1(class_counts) # get a set of possible classes depending on selected criteria
@@ -297,6 +299,8 @@ def calculate_class(scheme_type, selected_classes = ''):
             possible_classes = get_possible_classes_enigma_palb2(class_counts) # get a set of possible classes depending on selected criteria
         elif 'tp53' in scheme_type:
             possible_classes = get_possible_classes_enigma_tp53(class_counts) # get a set of possible classes depending on selected criteria
+        elif 'atm' in scheme_type:
+            possible_classes = get_possible_classes_enigma_atm(class_counts) # get a set of possible classes depending on selected criteria
         else:
             raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme? (either "acmg" or VUS "task-force" based)')
 
@@ -310,6 +314,57 @@ def calculate_class(scheme_type, selected_classes = ''):
 
 
 
+def get_possible_classes_enigma_atm(class_counts):
+    
+    possible_classes = set()
+
+    # pathogenic
+    if class_counts['pvs'] == 1:
+        if class_counts['ps'] >= 1 or class_counts['pm'] >= 2 or (class_counts['pm'] == 1 and class_counts['pp'] == 1) or class_counts['pp'] >= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] >= 2:
+        possible_classes.add(5)
+    if class_counts['ps'] == 1:
+        if class_counts['pm'] >= 3 or (class_counts['pm'] == 2 and class_counts['pp'] >= 2) or (class_counts['pm'] == 1 and class_counts['pp'] >= 4):
+            possible_classes.add(5)
+    
+    # likely pathogenic
+    if class_counts['pvs'] == 1 and class_counts['pm'] == 1:
+        possible_classes.add(4)
+    if class_counts['pvs'] == 1 and class_counts['pm2_pp'] == 1:
+        possible_classes.add(4)
+    if class_counts['ps'] == 1:
+        if class_counts['pp'] >= 2 or (class_counts['pm'] >= 1 and class_counts['pm'] <=2):
+            possible_classes.add(4)
+    if class_counts['pm'] >= 3:
+        possible_classes.add(4)
+    if class_counts['pm'] == 2 and class_counts['pp'] >= 2: # 5
+        possible_classes.add(4)
+    if class_counts['pm'] == 1 and class_counts['pp'] >= 4: # 6
+        possible_classes.add(4)
+
+    # benign
+    if class_counts['ba'] == 1:
+        possible_classes.add(1)
+    if class_counts['bs'] >= 2:
+        possible_classes.add(1)
+
+    # likely benign
+    if class_counts['bs'] == 1:
+        possible_classes.add(2)
+    if class_counts['bs'] == 1: 
+        if class_counts['bp'] == 1:
+            possible_classes.add(2)
+    if class_counts['bp'] >= 2 or class_counts['bm'] >= 1:
+        possible_classes.add(2)
+
+    #print(class_counts)
+    #print(possible_classes)
+
+    return possible_classes
+
+
+
 
 def get_possible_classes_enigma_tp53(class_counts):
     
@@ -318,7 +373,7 @@ def get_possible_classes_enigma_tp53(class_counts):
     # numbering comments are nubmers from the official ACMG paper: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4544753/ (TABLE 5)
     # pathogenic
     if class_counts['pvs'] == 1: # 1
-        if class_counts['ps'] == 1 or class_counts['pm'] >= 2 or (class_counts['pm'] == 1 and class_counts['pp'] == 1) or class_counts['pp'] >= 2:
+        if class_counts['ps'] >= 1 or class_counts['pm'] >= 2 or (class_counts['pm'] == 1 and class_counts['pp'] == 1) or class_counts['pp'] >= 2:
             possible_classes.add(5)
     if class_counts['ps'] >= 2: # 2 
         possible_classes.add(5)
@@ -559,11 +614,11 @@ def decide_for_class_task_force(selected_classes):
 
 
 def get_class_counts(data):
-    result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'bm':0, 'ba':0}
-    data = [x.lower() for x in data]
+    result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'bm':0, 'ba':0, 'pm2_pp':0} # pm2_pp is special case for ATM scheme
+    data = [x.lower().strip('0123456789') for x in data]
     for key in result:
         key = key.lower()
-        result[key] = sum(key in x for x in data)
+        result[key] = sum(key == x for x in data)
     return result
 
 
@@ -645,10 +700,10 @@ def refgene_ngsd():
     filename = "refgene_ngsd.gff3.gz"
     return send_from_directory(directory=paths.igv_data_path, path=filename, download_name="refgene_ngsd.gff3.gz", as_attachment=True, mimetype="text")
 
-@download_blueprint.route('/download/refgene_ngsd.gff3')
-def refgene_ngsd_unzip():
-    filename = "refgene_ngsd.gff3"
-    return send_from_directory(directory=paths.igv_data_path, path=filename, download_name="refgene_ngsd.gff3", as_attachment=True, mimetype="text")
+#@download_blueprint.route('/download/refgene_ngsd.gff3')
+#def refgene_ngsd_unzip():
+#    filename = "refgene_ngsd.gff3"
+#    return send_from_directory(directory=paths.igv_data_path, path=filename, download_name="refgene_ngsd.gff3", as_attachment=True, mimetype="text")
 
 @download_blueprint.route('/download/refgene_ngsd.gff3.gz.tbi')
 def refgene_ngsd_tabix():
