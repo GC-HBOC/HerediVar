@@ -1,9 +1,9 @@
 {
-    "classification_scheme_id": "",
+    "classification_scheme_id": "30",
     "name": "acmg_svi",
     "display_name": "ACMG SVI adaptation",
-    "type": "acmg",
-    "reference": "#",
+    "type": "acmg-svi",
+    "reference": "https://pubmed.ncbi.nlm.nih.gov/25741868/",
     "criteria": [
         {
             "name": "PVS1",
@@ -21,21 +21,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "1"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "0"
                 }
@@ -58,21 +62,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "1"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "0"
                 }
@@ -93,21 +101,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "1"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "0"
                 }
@@ -128,21 +140,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "1"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "0"
                 }
@@ -165,21 +181,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "1"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "0"
                 }
@@ -199,21 +219,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "1"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "0"
                 }
@@ -234,6 +258,7 @@
             "strengths": [
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "1"
                 }
@@ -254,21 +279,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "1"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "0"
                 }
@@ -287,21 +316,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "1"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "0"
                 }
@@ -323,21 +356,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "1"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "0"
                 }
@@ -356,21 +393,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "1"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "0"
                 }
@@ -392,21 +433,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "1"
                 }
@@ -425,21 +470,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "1"
                 }
@@ -460,21 +509,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "1"
                 }
@@ -493,21 +546,25 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "very strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "strong pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pm",
+                    "display_name":"mod",
                     "description": "medium pathogenic",
                     "is_default": "0"
                 },
                 {
                     "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "1"
                 }
@@ -528,16 +585,19 @@
             "strengths": [
                 {
                     "name": "ba",
+                    "display_name":"alo",
                     "description": "stand-alone benign",
                     "is_default": "1"
                 },
                 {
                     "name": "bs",
+                    "display_name":"str",
                     "description": "strong benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bp",
+                    "display_name":"sup",
                     "description": "supporting benign",
                     "is_default": "0"
                 }
@@ -557,16 +617,19 @@
             "strengths": [
                 {
                     "name": "ba",
+                    "display_name":"alo",
                     "description": "stand-alone benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bs",
+                    "display_name":"str",
                     "description": "strong benign",
                     "is_default": "1"
                 },
                 {
                     "name": "bp",
+                    "display_name":"sup",
                     "description": "supporting benign",
                     "is_default": "0"
                 }
@@ -585,16 +648,19 @@
             "strengths": [
                 {
                     "name": "ba",
+                    "display_name":"alo",
                     "description": "stand-alone benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bs",
+                    "display_name":"str",
                     "description": "strong benign",
                     "is_default": "1"
                 },
                 {
                     "name": "bp",
+                    "display_name":"sup",
                     "description": "supporting benign",
                     "is_default": "0"
                 }
@@ -613,16 +679,19 @@
             "strengths": [
                 {
                     "name": "ba",
+                    "display_name":"alo",
                     "description": "stand-alone benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bs",
+                    "display_name":"str",
                     "description": "strong benign",
                     "is_default": "1"
                 },
                 {
                     "name": "bp",
+                    "display_name":"sup",
                     "description": "supporting benign",
                     "is_default": "0"
                 }
@@ -643,16 +712,19 @@
             "strengths": [
                 {
                     "name": "ba",
+                    "display_name":"alo",
                     "description": "stand-alone benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bs",
+                    "display_name":"str",
                     "description": "strong benign",
                     "is_default": "1"
                 },
                 {
                     "name": "bp",
+                    "display_name":"sup",
                     "description": "supporting benign",
                     "is_default": "0"
                 }
@@ -672,16 +744,19 @@
             "strengths": [
                 {
                     "name": "ba",
+                    "display_name":"alo",
                     "description": "stand-alone benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bs",
+                    "display_name":"str",
                     "description": "strong benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bp",
+                    "display_name":"sup",
                     "description": "supporting benign",
                     "is_default": "1"
                 }
@@ -700,16 +775,19 @@
             "strengths": [
                 {
                     "name": "ba",
+                    "display_name":"alo",
                     "description": "stand-alone benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bs",
+                    "display_name":"str",
                     "description": "strong benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bp",
+                    "display_name":"sup",
                     "description": "supporting benign",
                     "is_default": "1"
                 }
@@ -728,16 +806,19 @@
             "strengths": [
                 {
                     "name": "ba",
+                    "display_name":"alo",
                     "description": "stand-alone benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bs",
+                    "display_name":"str",
                     "description": "strong benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bp",
+                    "display_name":"sup",
                     "description": "supporting benign",
                     "is_default": "1"
                 }
@@ -758,16 +839,19 @@
             "strengths": [
                 {
                     "name": "ba",
+                    "display_name":"alo",
                     "description": "stand-alone benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bs",
+                    "display_name":"str",
                     "description": "strong benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bp",
+                    "display_name":"sup",
                     "description": "supporting benign",
                     "is_default": "1"
                 }
@@ -786,16 +870,19 @@
             "strengths": [
                 {
                     "name": "ba",
+                    "display_name":"alo",
                     "description": "stand-alone benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bs",
+                    "display_name":"str",
                     "description": "strong benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bp",
+                    "display_name":"sup",
                     "description": "supporting benign",
                     "is_default": "1"
                 }
@@ -814,16 +901,19 @@
             "strengths": [
                 {
                     "name": "ba",
+                    "display_name":"alo",
                     "description": "stand-alone benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bs",
+                    "display_name":"str",
                     "description": "strong benign",
                     "is_default": "0"
                 },
                 {
                     "name": "bp",
+                    "display_name":"sup",
                     "description": "supporting benign",
                     "is_default": "1"
                 }
