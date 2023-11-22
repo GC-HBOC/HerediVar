@@ -470,7 +470,7 @@ class Connection:
         return [x[0] for x in res]
 
     def get_variant_ids_with_consensus_classification(self):
-        command = "SELECT DISTINCT variant_id FROM consensus_classification"
+        command = "SELECT DISTINCT variant_id FROM consensus_classification UNION SELECT DISTINCT variant_id FROM variant_heredicare_annotation WHERE consensus_class is not NULL"
         self.cursor.execute(command)
         res = self.cursor.fetchall()
         return [x[0] for x in res]
@@ -1343,7 +1343,7 @@ class Connection:
         else:
             functions.eprint("no valid \"where\" given in insert_scheme_criterium function. It was: " + str(where))
             return
-        command = "SELECT y.id,y." + prefix + "_classification_id,y.classification_criterium_id,y.criterium_strength_id,y.evidence,y.name as classification_criterium_name,classification_criterium_strength.name as classification_criterium_strength_name, classification_criterium_strength.description FROM classification_criterium_strength INNER JOIN ( \
+        command = "SELECT y.id,y." + prefix + "_classification_id,y.classification_criterium_id,y.criterium_strength_id,y.evidence,y.name as classification_criterium_name,classification_criterium_strength.name as classification_criterium_strength_name, classification_criterium_strength.description, classification_criterium_strength.display_name FROM classification_criterium_strength INNER JOIN ( \
                     SELECT id," + prefix + "_classification_id,classification_criterium_id,criterium_strength_id,evidence,name FROM " + table_oi + " \
 	                    INNER JOIN (SELECT id as inner_id,name FROM classification_criterium)x \
                     ON x.inner_id = " + table_oi + ".classification_criterium_id WHERE " + prefix + "_classification_id=%s\
@@ -2089,7 +2089,8 @@ class Connection:
                         criterium_type = criterium_raw[6]
                         criterium_evidence = criterium_raw[4]
                         criterium_strength = criterium_raw[7]
-                        criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength)
+                        strength_display_name = criterium_raw[8]
+                        criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength, strength_display_name = strength_display_name)
                         criteria.append(criterium)
                     scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class, is_active = is_active, is_default = is_default)
 
@@ -2146,7 +2147,8 @@ class Connection:
                         criterium_type = criterium_raw[6]
                         criterium_evidence = criterium_raw[4]
                         criterium_strength = criterium_raw[7]
-                        criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength)
+                        strength_display_name = criterium_raw[8]
+                        criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength, strength_display_name=strength_display_name)
                         criteria.append(criterium)
                     scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class, is_active = is_active, is_default = is_default)
 
@@ -2463,18 +2465,22 @@ class Connection:
                 new_criterium_dict["is_selectable"] = classification_criterium_is_selectable
                 new_criterium_dict["relevant_information"] = classification_criterium_relevant_information
 
-                command = "SELECT * FROM classification_criterium_strength WHERE classification_criterium_id = %s"
+                command = "SELECT id, classification_criterium_id, name, description, is_default, display_name FROM classification_criterium_strength WHERE classification_criterium_id = %s"
                 self.cursor.execute(command, (classification_criterium_id, ))
                 classification_criterium_strengths = self.cursor.fetchall()
 
                 all_criteria_strengths = []
+                strength_display_titles = {}
                 for classification_criterium_strength in classification_criterium_strengths:
                     is_default = classification_criterium_strength[4] == 1
                     classification_criterium_strength_name = classification_criterium_strength[2]
                     if is_default:
                         new_criterium_dict["default_strength"] = classification_criterium_strength_name
                     all_criteria_strengths.append(classification_criterium_strength_name)
+                    strength_display_name = classification_criterium_strength[5]
+                    strength_display_titles[classification_criterium_strength_name] = strength_display_name
                 new_criterium_dict["possible_strengths"] = all_criteria_strengths
+                new_criterium_dict["strength_display_names"] = strength_display_titles
                 new_criterium_dict['mutually_exclusive_criteria'] = mutually_exclusive_criteria_dict.get(classification_criterium_id, []) 
 
                 classification_criteria_dict[classification_criterium_name] = new_criterium_dict
@@ -2795,9 +2801,9 @@ class Connection:
         self.conn.commit()
         
 
-    def insert_criterium_strength(self, criterium_id, name, description, is_default):
-        command = "INSERT INTO classification_criterium_strength (classification_criterium_id, name, description, is_default) VALUES (%s,%s,%s,%s) ON DUPLICATE KEY UPDATE description = %s, is_default=%s"
-        self.cursor.execute(command, (criterium_id, name, description, is_default, description, is_default))
+    def insert_criterium_strength(self, criterium_id, name, display_name, description, is_default):
+        command = "INSERT INTO classification_criterium_strength (classification_criterium_id, name, display_name, description, is_default) VALUES (%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE description = %s, is_default=%s, display_name=%s"
+        self.cursor.execute(command, (criterium_id, name, display_name, description, is_default, description, is_default, display_name))
         self.conn.commit()
     
     def delete_criterium_strength(self, criterium_id, strength):

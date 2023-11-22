@@ -256,11 +256,12 @@ class Criterium:
     name: str
     type: str
     strength: str
+    strength_display_name: str
     evidence: str
 
     def display_name(self):
         the_name = self.name.lower()
-        fancy_name = self.name + '_' + self.type
+        fancy_name = self.name + '_' + self.strength_display_name
         possible_criteria = ['pvs', 'ps', 'pm', 'pp', 'ba', 'bs', 'bp']
         for criterium in possible_criteria:
             if criterium in the_name and self.type != criterium:
@@ -390,6 +391,27 @@ class Classification:
         if self.comment == '':
             return "None"
         return self.comment
+    
+    def class_to_text(self, classification = None):
+        if classification is None:
+            classification = self.selected_class
+        classification = str(classification)
+        if classification == '1':
+            return 'Benign'
+        if classification == '2':
+            return 'Likely benign'
+        if classification in ['3', '3-', '3+']:
+            return 'Uncertain significance'
+        if classification == '4':
+            return 'Likely pathogenic'
+        if classification == '5':
+            return 'Pathogenic'
+        if classification == '3-':
+            return 'Uncertain significance'
+        if classification == '3+':
+            return 'Uncertain significance'
+        if classification == '4M':
+            return 'Likely pathogenic, low penetrance'
 
     def to_vcf(self, prefix = True, simple = False):
         if not simple:
@@ -410,29 +432,9 @@ class Classification:
             cl_vcf = '~3B'.join(['classification~1Y' + str(self.selected_class), 
                                  #'comment~1Y' + self.comment, 
                                  'date~1Y' + self.date, 
-                                 'scheme~1Y' + self.scheme.display_name]) # sep: ;
+                                 'scheme~1Y' + self.scheme.display_name,
+                                 'source~1Y' + "heredivar"]) # sep: ;
         return cl_vcf
-    
-    def class_to_text(self, classification = None):
-        if classification is None:
-            classification = self.selected_class
-        classification = str(classification)
-        if classification == '1':
-            return 'Benign'
-        if classification == '2':
-            return 'Likely benign'
-        if classification in ['3', '3-', '3+']:
-            return 'Uncertain significance'
-        if classification == '4':
-            return 'Likely pathogenic'
-        if classification == '5':
-            return 'Pathogenic'
-        if classification == '3-':
-            return 'Uncertain significance'
-        if classification == '3+':
-            return 'Uncertain significance'
-        if classification == 'M':
-            return 'Likely pathogenic, low penetrance'
     
     def get_header(self, simple = False):
         if not simple:
@@ -442,7 +444,8 @@ class Classification:
             header = {'classification': '##INFO=<ID=classification,Number=1,Type=Integer,Description="The consensus classification from the VUS-task-force. Either 1 (benign), 2 (likely benign), 3 (uncertain), 4 (likely pathogenic) or 5 (pathogenic)">\n',
                       #'comment': '##INFO=<ID=comment,Number=1,Type=String,Description="The comment of the VUS-task-force for the consensus classification">\n',
                       'date': '##INFO=<ID=date,Number=1,Type=String,Description="The date when the consensus classification was submitted. FORMAT: %Y-%m-%d %H:%M:%S">\n',
-                      'scheme': '##INFO=<ID=scheme,Number=String,Type=The classification scheme which was used to classify the variant.">\n'}
+                      'scheme': '##INFO=<ID=scheme,Number=1,Type=String,Description="The classification scheme which was used to classify the variant.">\n',
+                      'source': '##INFO=<ID=source,Number=1,Type=String,Description="The source of the classification. Either heredivar or heredicare">\n'}
         return header
 
 
@@ -640,15 +643,30 @@ class HeredicareClassification:
         }
         return class2text[str(self.selected_class)]
 
-    def to_vcf(self, prefix = True):
-        info = '~7C'.join([str(self.selected_class), self.center, self.comment, self.classification_date])
-        info = info
-        if prefix:
-            info = 'heredicare_center_classifications~1Y' + info
+    def to_vcf(self, prefix = True, simple = False):
+        if not simple:
+            info = '~7C'.join([self.selected_class_to_num(), self.center, self.comment, self.classification_date])
+            info = info
+            if prefix:
+                info = 'heredicare_center_classifications~1Y' + info
+        else:
+            info = ['classification~1Y' + self.selected_class_to_num(), 
+                    #'comment~1Y' + self.comment, 
+                ]
+            if self.classification_date is not None:
+                info.append('date~1Y' + self.classification_date.strftime("%Y-%m-%d %H:%M:%S"))
+            info.append('source~1Y' + "heredicare")
+            info = '~3B'.join(info) # sep: ;
         return info
 
-    def get_header(self):
-        header = {'heredicare_center_classifications': '##INFO=<ID=heredicare_center_classifications,Number=.,Type=String,Description="An & separated list of the variant classifications from centers imported from HerediCare. Format:class|center|comment|date">\n'}
+    def get_header(self, simple = False):
+        if not simple:
+            header = {'heredicare_center_classifications': '##INFO=<ID=heredicare_center_classifications,Number=.,Type=String,Description="An & separated list of the variant classifications from centers imported from HerediCare. Format:class|center|comment|date">\n'}
+        else:
+            header = {'classification': '##INFO=<ID=classification,Number=1,Type=Integer,Description="The consensus classification from the VUS-task-force. Either 1 (benign), 2 (likely benign), 3 (uncertain), 4 (likely pathogenic) or 5 (pathogenic)">\n',
+                      #'comment': '##INFO=<ID=comment,Number=1,Type=String,Description="The comment of the VUS-task-force for the consensus classification">\n',
+                      'date': '##INFO=<ID=date,Number=1,Type=String,Description="The date when the consensus classification was submitted. FORMAT: %Y-%m-%d %H:%M:%S">\n',
+                      'source': '##INFO=<ID=source,Number=1,Type=String,Description="The source of the classification. Either heredivar or heredicare">\n'}
         return header
     
 @dataclass
@@ -668,6 +686,7 @@ class HeredicareAnnotation:
         if prefix:
             info = 'heredicare_annotation~1Y' + info
         return info
+
     
     # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
     def get_header(self):
@@ -770,6 +789,13 @@ class Variant:
                 info.append(new_info)
                 new_header = annot.get_header(simple = simple)
                 headers.update(new_header)
+            else:
+                annot = self.get_most_recent_heredicare_consensus_classification()
+                if annot is not None:
+                    new_info = annot.to_vcf(simple = simple)
+                    info.append(new_info)
+                    new_header = annot.get_header(simple = simple)
+                    headers.update(new_header)
 
         # prepate complete vcf line
         #"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
@@ -803,14 +829,23 @@ class Variant:
         result = None
         if self.heredicare_annotations is None:
             return None
+        maxdate = datetime.date.min
         for heredicare_annotation in self.heredicare_annotations:
             current_classification = heredicare_annotation.vustf_classification
             if current_classification.selected_class is not None:
-                if result is None and current_classification.classification_date is not None:
+                if result is None:
                     result = current_classification
+                    if current_classification.classification_date is None:
+                        maxdate = datetime.date.min
+                    else:
+                        maxdate = current_classification.classification_date
                 if current_classification.classification_date is not None:
-                    if current_classification.classification_date > result.classification_date:
+                    if current_classification.classification_date > maxdate:
                         result = current_classification
+                        if current_classification.classification_date is not None:
+                            maxdate = current_classification.classification_date
+                        else:
+                            maxdate = datetime.date.min
         return result
     
     # the most recent consensus class or if that does not exist the most recent heredicare consensus classification

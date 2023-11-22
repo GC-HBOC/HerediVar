@@ -18,7 +18,7 @@ const selected_text_passages = JSON.parse(flask_data.dataset.selectedTextPassage
 
 
 var previous_obj = null;
-var colors; // this maps a criterium strength to a color which are defined in css
+//var colors; // this maps a criterium strength to a color which are defined in css
 var scheme = document.getElementById('scheme').value // contains the currently selected scheme
 var scheme_type = document.getElementById('scheme').getAttribute('scheme_type')
 
@@ -347,7 +347,7 @@ function scheme_select_action(do_revert=true) {
     } else {
         $('#classification_schema_wrapper').collapse('show');
         create_criteria_buttons()
-        colors = load_colors()
+        //colors = load_colors()
         set_default_strengths()
         set_activatable_property()
         
@@ -781,7 +781,7 @@ function compare_criteria() {
 // sort helper
 function compare_strength() {
     return function(a, b) {
-        const strength_order = {'PVS': 1, 'PS': 2, 'PM': 3, 'PP': 4, 'BP': 5, 'BM':6, 'BS': 7, 'BA': 8}
+        const strength_order = {'pvs': 1, 'ps': 2, 'pm': 3, 'pp': 4, 'bp': 5, 'bm':6, 'bs': 7, 'ba': 8}
         a_num = strength_order[a]
         b_num = strength_order[b]
         
@@ -847,7 +847,7 @@ function create_criterium_button(criterium_id, strength) {
     container.appendChild(label)
 
     if (! criterium_id.toLowerCase().indexOf(strength.toLowerCase()) <= 0) {
-        label.textContent += '_' + strength;
+        label.textContent += '_' + classification_schemas[scheme]["criteria"][criterium_id]["strength_display_names"][strength];
     }
 
     var strength_select = document.createElement('input')
@@ -1129,6 +1129,7 @@ function get_currently_checked_criteria() {
     return result
 }
 
+/*
 function load_colors() {
     const red = $('.btn-pvs').css('color')
     const orange = $('.btn-ps').css('color')
@@ -1139,6 +1140,7 @@ function load_colors() {
     const darkblue = $('.btn-ba').css('color')
     return {'pvs': red, 'ps': orange, 'pm': yellow, 'pp': green, 'bp': blue, 'bs': purple, 'ba': darkblue}
 }
+*/
 
 function enable_disable_buttons(criterium_ids, is_disable) {
     for (var i = 0; i < criterium_ids.length; i++) {
@@ -1205,7 +1207,7 @@ function update_criterium_button_label(criterium_id) {
     const selected_strength = criterium_strength_select.value
 
     if (!criterium_id.toUpperCase().includes(selected_strength.toUpperCase())) {
-        criterium_button_label.innerText = criterium_id + '_' + selected_strength
+        criterium_button_label.innerText = criterium_id + '_' + classification_schemas[scheme]["criteria"][criterium_id]["strength_display_names"][selected_strength]
     } else {
         criterium_button_label.innerText = criterium_id
     }

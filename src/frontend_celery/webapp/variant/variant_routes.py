@@ -322,6 +322,7 @@ def classify(variant_id):
 
             do_redirect = True
 
+
     # either redirect or show the webpage depending on success of submission / page reload
     if do_redirect: # do redirect if the submission was successful
         current_app.logger.info(session['user']['preferred_username'] + " successfully user-classified variant " + str(variant_id) + " with class " + str(classification))

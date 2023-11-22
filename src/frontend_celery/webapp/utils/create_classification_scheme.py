@@ -37,6 +37,7 @@ def insert_criteria(conn: Connection, data, classification_scheme_id):
             conn.insert_criterium_strength(
                 criterium_id = criterium_id,
                 name = criterium_strength["name"],
+                display_name = criterium_strength["display_name"],
                 description = criterium_strength["description"],
                 is_default = criterium_strength["is_default"]
             )

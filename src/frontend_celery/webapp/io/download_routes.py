@@ -285,6 +285,11 @@ def calculate_class(scheme_type, selected_classes = ''):
     elif scheme_type == 'task-force':
         final_class = decide_for_class_task_force(selected_classes)
 
+    elif scheme_type == 'acmg-svi':
+        class_counts = get_class_counts(selected_classes)
+        possible_classes = get_possible_classes_acmg_svi(class_counts)
+        final_class = decide_for_class_acmg(possible_classes)
+
     elif 'acmg' in scheme_type:
         #selected_classes = [x.strip('0123456789') for x in selected_classes] # remove numbers from critera if there are any
         class_counts = get_class_counts(selected_classes) # count how often we have each strength
@@ -311,6 +316,57 @@ def calculate_class(scheme_type, selected_classes = ''):
 
     result = {'final_class': final_class}
     return jsonify(result)
+
+
+
+
+
+def get_possible_classes_acmg_svi(class_counts):
+    
+    possible_classes = set()
+
+    # pathogenic
+    if class_counts['pvs'] == 1:
+        if class_counts['ps'] >= 1 or class_counts['pm'] >= 2 or (class_counts['pm'] == 1 and class_counts['pp'] == 1) or class_counts['pp'] >= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] >= 2: 
+        possible_classes.add(5)
+    if class_counts['ps'] == 1:
+        if class_counts['pm'] >= 3 or (class_counts['pm'] == 2 and class_counts['pp'] >= 2) or (class_counts['pm'] == 1 and class_counts['pp'] >= 4):
+            possible_classes.add(5)
+    
+    # likely pathogenic
+    if class_counts['pvs'] == 1 and class_counts['pm'] == 1:
+        possible_classes.add(4)
+    if class_counts['pvs'] == 1 and class_counts['pp'] == 1:
+        possible_classes.add(4)
+    if class_counts['ps'] == 1 and (1 <= class_counts['pm'] <= 2):
+        possible_classes.add(4)
+    if class_counts['ps'] == 1 and class_counts['pp'] >= 2:
+        possible_classes.add(4)
+    if class_counts['pm'] >= 3:
+        possible_classes.add(4)
+    if class_counts['pm'] == 2 and class_counts['pp'] >= 2:
+        possible_classes.add(4)
+    if class_counts['pm'] == 1 and class_counts['pp'] >= 4:
+        possible_classes.add(4)
+
+    # benign
+    if class_counts['ba'] == 1:
+        possible_classes.add(1)
+    if class_counts['bs'] >=2:
+        possible_classes.add(1)
+    
+    # likely benign
+    if class_counts['bs'] == 1 and class_counts['bp'] == 1:
+        possible_classes.add(2)
+    if class_counts['bp'] >= 2:
+        possible_classes.add(2)
+
+
+    return possible_classes
+
+
 
 
 
