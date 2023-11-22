@@ -225,16 +225,6 @@ function preselect_scheme() {
     if (! found_one) {
         scheme_select.value = default_scheme_id;
     }
-
-    //if (lower_case_variant_genes.includes('tp53')) {
-    //    scheme_select.value = 3 //'acmg_TP53'
-    //} else if (lower_case_variant_genes.includes('cdh1')) {
-    //    scheme_select.value = 4 //'acmg_CDH1'
-    //} else if (lower_case_variant_genes.includes('brca1') || lower_case_variant_genes.includes('brca2')) {
-    //    scheme_select.value = 6 //'task-force-brca'
-    //} else {
-    //    scheme_select.value = 2 //'acmg_standard'
-    //}
 }
 
 //Object.keys(request_form).length
@@ -640,7 +630,6 @@ function delete_selected_literature_row(tr) {
 }
 
 
-
 function add_all_to_selected_literature(tname, inner_func) {
     const tbody = document.getElementById(tname).getElementsByTagName('tbody')[0]
     var rows = tbody.getElementsByTagName('tr')
@@ -669,26 +658,6 @@ function add_from_user_selected(current_tds) {
     var text_passage = current_tds[4].innerText
     create_literature_select(document.getElementById('selectedLiteratureList'), pmid=pmid, placeholder="Text citation", text_passage=text_passage)
 }
-
-/*
-function add_all_to_selected_literature_from_user_selected() {
-    const tbody = document.getElementById('userSelectedLiterature').getElementsByTagName('tbody')[0]
-    var rows = tbody.getElementsByTagName('tr')
-    for (var i = 0; i < rows.length; i++) {
-        var current_row = rows[i]
-        var current_tds = current_row.getElementsByTagName('td')
-        var current_selected_check = current_tds[0].getElementsByTagName('input')[0]
-        if (current_selected_check.checked) { // if was selected add a new row
-            var pmid = current_tds[3].innerText
-            var text_passage = current_tds[4].innerText
-            create_literature_select(document.getElementById('selectedLiteratureList'), pmid=pmid, placeholder="Text citation", text_passage=text_passage)
-            current_selected_check.checked = false
-        }
-    }
-    $('.modal').modal('hide');
-    $('.selected_literature').prop('checked', false);
-}
-*/
 
 
 function select_all_non_hidden_papers(check_or_not, table_id) {
@@ -1216,9 +1185,6 @@ function update_criterium_button_background(criterium_id) {
     var criterium_strength_select = document.getElementById(criterium_id + '_strength');
     var criterium_label = document.getElementById(criterium_id + '_label');
 
-    //var outer_color = colors[criterium_strength_select.value];
-    //var inner_color = colors[criterium_id.replace(/\d+/g,'')]
-
     var new_class = "btn-" + criterium_strength_select.value
 
     const current_classes = criterium_label.classList
@@ -1229,20 +1195,17 @@ function update_criterium_button_background(criterium_id) {
         }
     }
     criterium_label.classList.add(new_class)
-
-    //if (!criterium_button.checked) {
-    //    criterium_label.style['background-color'] = null
-    //} else {
-    //    criterium_label.style['background-color'] = outer_color //"radial-gradient(circle, " + inner_color + " 50%, " + outer_color + " 100%)"
-    //}
 }
 
 function update_criterium_button_label(criterium_id) {
-    var criterium_strength_select = document.getElementById(criterium_id + '_strength');
-    var criterium_button_label = document.getElementById(criterium_id + '_label');
+    const criterium_strength_select = document.getElementById(criterium_id + '_strength');
+    const criterium_button_label = document.getElementById(criterium_id + '_label');
 
-    if (criterium_strength_select.getAttribute('default_strength') != criterium_strength_select.value) {
-        criterium_button_label.innerText = criterium_id + '_' + criterium_strength_select.value
+    //const default_strength = criterium_strength_select.getAttribute('default_strength').toUpperCase()
+    const selected_strength = criterium_strength_select.value
+
+    if (!criterium_id.toUpperCase().includes(selected_strength.toUpperCase())) {
+        criterium_button_label.innerText = criterium_id + '_' + selected_strength
     } else {
         criterium_button_label.innerText = criterium_id
     }
@@ -1278,36 +1241,6 @@ function update_criterium_strength(obj, criterium_id) {
     update_classification_preview()
     update_criterium_button_background(criterium_id)
     update_criterium_button_label(criterium_id)
-}
-
-
-//
-//function update_schemes_with_info() {
-//
-//    var currently_checked_criteria = get_currently_checked_criteria()
-//    var new_selection = []
-//    for (var i in currently_checked_criteria) {
-//        var criterium_id = currently_checked_criteria[i]
-//        var current_evidence = document.getElementById(criterium_id).value
-//        var current_strength = document.getElementById(criterium_id + '_strength').value
-//        new_selection.push([-1,-1,criterium_id, current_strength, current_evidence])
-//    }
-//    schemes_with_info['selected'][scheme] = {'selected_criteria': new_selection}
-//}
-//
-
-
-
-
-
-
-
-
-
-
-
-function preselect_from_data(){
-    // TODO!!
 }
 
 

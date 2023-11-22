@@ -3,7 +3,7 @@
     "name": "enigma-ATM",
     "display_name": "ClinGen ACMG ATM v1.1.0",
     "type": "acmg-enigma-atm",
-    "reference": "#",
+    "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/fa00ysyq/clingen_atm_v1.1.0.pdf/?format=attachment",
     "criteria": [
         {
             "name": "PVS1",
