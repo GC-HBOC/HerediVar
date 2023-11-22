@@ -1047,7 +1047,10 @@
                                         {{ external_link("UCSC", "https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=chr2%3A" + variant.pos|string) }}
                                     </li>
                                     <li class="list-group-item noboarder-td">
-                                        {{ external_link("gnomAD", "https://gnomad.broadinstitute.org/variant/" + variant.chrom[3:]|string + "-" + variant.pos|string + "-" + variant.ref|string + "-" + variant.alt|string + "?dataset=gnomad_r3") }}
+                                        {{ external_link("gnomAD v3", "https://gnomad.broadinstitute.org/variant/" + variant.chrom[3:]|string + "-" + variant.pos|string + "-" + variant.ref|string + "-" + variant.alt|string + "?dataset=gnomad_r3") }}
+                                    </li>
+                                    <li class="list-group-item noboarder-td">
+                                        {{ external_link("gnomAD v4", "https://gnomad.broadinstitute.org/variant/" + variant.chrom[3:]|string + "-" + variant.pos|string + "-" + variant.ref|string + "-" + variant.alt|string + "?dataset=gnomad_r4") }}
                                     </li>
                                     <li class="list-group-item noboarder-td">
                                         {{ external_link("VarSome", "https://varsome.com/security-validation/?next=/variant/hg38/" + variant.chrom[3:]|string + ":" + variant.pos|string + ":" + variant.ref|string + ":" + variant.alt|string) }}
