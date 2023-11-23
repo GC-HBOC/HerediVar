@@ -90,10 +90,19 @@ class Connection:
         self.conn.close()
         self.cursor.close()
 
-    def get_pending_requests(self):
-        self.cursor.execute("SELECT id,variant_id,user_id FROM annotation_queue WHERE status = 'pending'")
-        pending_variant_ids = self.cursor.fetchall()
-        return pending_variant_ids
+    #def get_pending_requests(self):
+    #    self.cursor.execute("SELECT id,variant_id,user_id FROM annotation_queue WHERE status = 'pending'")
+    #    pending_variant_ids = self.cursor.fetchall()
+    #    return pending_variant_ids
+
+    def get_annotation_queue(self, status = []):
+        placeholders = self.get_placeholders(len(status))
+        command = "SELECT id, status, celery_task_id FROM annotation_queue WHERE status IN " + placeholders
+        self.cursor.execute(command, tuple(status))
+        result = self.cursor.fetchall()
+        return result
+
+
 
     def update_annotation_queue(self, row_id, status, error_msg):
         error_msg = error_msg.replace("\n", " ")
@@ -2549,8 +2558,12 @@ class Connection:
     def get_annotation_statistics(self):
         # return the most recent annotation queue entry for the variant 
         result = self.get_current_annotation_staus_all_variants()
-
-        annotation_stati = {'success': [], 'pending': [], 'error': [], 'retry': []}
+        annotation_status_types = self.get_enumtypes("annotation_queue", "status")
+        
+        annotation_stati = {}
+        for annotation_status_type in annotation_status_types:
+            annotation_stati[annotation_status_type] = []
+        #annotation_stati = {'success': [], 'pending': [], 'error': [], 'retry': [], 'aborted': []} <- it should look like this
         errors = {}
         warnings = {}
         total_num_variants = len(result)
@@ -2649,7 +2662,7 @@ class Connection:
         self.conn.commit()
     
     def get_enumtypes(self, tablename, columnname):
-        allowed_tablenames = ["consensus_classification", "user_classification", "variant"]
+        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue"]
         if tablename in allowed_tablenames:
             command = "SHOW COLUMNS FROM " + tablename + " WHERE FIELD = %s"
         else:

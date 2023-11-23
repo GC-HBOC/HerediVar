@@ -103,8 +103,8 @@ def submit_clinvar(variant_id):
         flash("There is no consensus classification for this variant! Please create one before submitting to ClinVar!", "alert-danger")
         return redirect(url_for('variant.display', variant_id = variant_id))
 
-    # get orphanet codes
-    orphanet_codes = get_orphanet_codes()
+    # get orphanet codes -- this is hardcoded now
+    #orphanet_codes = get_orphanet_codes()
 
     # check for previous heredivar clinvar submissions
     clinvar_accession = None
@@ -118,96 +118,84 @@ def submit_clinvar(variant_id):
 
     if request.method == 'POST':
         # extract submitted information
-        selected_orpha_code = request.form.get('orpha_code', "")
-        selected_orpha_name = request.form.get('orpha_name', "")
         selected_gene = request.form.get('gene', "")
         if selected_gene.strip() == "":
             selected_gene = None
-        is_orphanet_valid = any([str(x[0]) == str(selected_orpha_code) for x in orphanet_codes])
+        
+        # submit to clinvar api
+        #base_url = 'https://submit.ncbi.nlm.nih.gov/api/v1/submissions/?dry-run=true'
+        #base_url = 'https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions'
+        base_url = current_app.config['CLINVAR_API_ENDPOINT']
 
-        # flash errors if there are problems with the submitted data
-        if not selected_orpha_code and not selected_orpha_name:
-            flash("ERROR: All fields are required!", "alert-danger")
-        elif (selected_orpha_name.strip() != '' and str(selected_orpha_code).strip() == ''):
-            flash("ERROR: The orphanet condition " + selected_orpha_name + " does not exist. Keep in mind to specify the complete condition as shown in the autocomplete suggestions.", 'alert-danger')
-        elif not is_orphanet_valid :
-            flash("ERROR: The selected orphanet id (" + str(selected_orpha_code) + ") is not valid.", 'alert-danger')
-        else:
-            # submit to clinvar api
-            #base_url = 'https://submit.ncbi.nlm.nih.gov/api/v1/submissions/?dry-run=true'
-            #base_url = 'https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions'
-            base_url = current_app.config['CLINVAR_API_ENDPOINT']
+        # prepare json data to be submitted to ClinVar
+        schema = json.loads(open(paths.clinvar_submission_schema).read())
+        data = get_clinvar_submission_json(variant, selected_gene, clinvar_accession)
+        #print(data)
+        #with open("/mnt/storage2/users/ahdoebm1/HerediVar/testdat.json", "w") as jfile:
+        #    jfile.write(json.dumps(data, indent=4))
 
-            # prepare json data to be submitted to ClinVar
-            schema = json.loads(open(paths.clinvar_submission_schema).read())
-            data = get_clinvar_submission_json(variant, selected_gene, selected_orpha_code, clinvar_accession)
-            #print(data)
-            #with open("/mnt/storage2/users/ahdoebm1/HerediVar/testdat.json", "w") as jfile:
-            #    jfile.write(json.dumps(data, indent=4))
+        # check that the generated data is valid by checking against json schema
+        try:
+            jsonschema.validate(instance = data, schema = schema)
+        except jsonschema.exceptions.ValidationError as ex:
+            current_app.logger.error('There is an error in the JSON for ClinVar api submission!' + str(ex) + " For variant " + str(variant_id))
+            abort(500, 'There is an error in the JSON for ClinVar api submission! ' + str(ex))
 
-            # check that the generated data is valid by checking against json schema
-            try:
-                jsonschema.validate(instance = data, schema = schema)
-            except jsonschema.exceptions.ValidationError as ex:
-                current_app.logger.error('There is an error in the JSON for ClinVar api submission!' + str(ex) + " For variant " + str(variant_id))
-                abort(500, 'There is an error in the JSON for ClinVar api submission! ' + str(ex))
-
-            # post to ClinVar
-            api_key = current_app.config['CLINVAR_API_KEY']
-            headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
-            postable_data = {
-                "actions": [{
-                    "type": "AddData",
-                    "targetDb": "clinvar",
-                    "data": {"content": data}
-                }]
-            }
-            #print(json.dumps(postable_data))
-            resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
-            #print(resp.json())
-            if str(resp.status_code) not in ['200', '201']:
-                abort(500, 'Status code of ClinVar submission API endpoint was: ' + str(resp.status_code) + ': ' + str(resp.json()))
+        # post to ClinVar
+        api_key = current_app.config['CLINVAR_API_KEY']
+        headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
+        postable_data = {
+            "actions": [{
+                "type": "AddData",
+                "targetDb": "clinvar",
+                "data": {"content": data}
+            }]
+        }
+        #print(json.dumps(postable_data))
+        resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
+        #print(resp.json())
+        if str(resp.status_code) not in ['200', '201']:
+            abort(500, 'Status code of ClinVar submission API endpoint was: ' + str(resp.status_code) + ': ' + str(resp.json()))
             
-            submission_id = resp.json()['id']
-            clinvar_status = check_clinvar_status(submission_id)
-            #print("Clinvar status: " + str(clinvar_status))
+        submission_id = resp.json()['id']
+        clinvar_status = check_clinvar_status(submission_id)
+        #print("Clinvar status: " + str(clinvar_status))
 
-            # insert a new heredivar_clinvar_submission if the variant was not submitted previously or update if it was there previously
-            conn.insert_update_heredivar_clinvar_submission(variant_id, submission_id, clinvar_status['accession_id'], clinvar_status['status'], clinvar_status['message'], clinvar_status['last_updated'])
+        # insert a new heredivar_clinvar_submission if the variant was not submitted previously or update if it was there previously
+        conn.insert_update_heredivar_clinvar_submission(variant_id, submission_id, clinvar_status['accession_id'], clinvar_status['status'], clinvar_status['message'], clinvar_status['last_updated'])
             
-            # some user feedback that the submission was successful or not
-            if resp.status_code == 200 or resp.status_code == 201:
-                flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
-                current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded variant " + str(variant_id) + " to ClinVar.")
-                return redirect(url_for('variant.display', variant_id=variant_id))
-            flash("There was an error during submission to ClinVar. It ended with status code: " + str(resp.status_code), "alert-danger")
-            current_app.logger.error(session['user']['preferred_username'] + " tried to upload a consensus classification for variant " + str(variant_id) + " to ClinVar, but it resulted in an error with status code: " + str(resp.status_code))
+        # some user feedback that the submission was successful or not
+        if resp.status_code == 200 or resp.status_code == 201:
+            flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
+            current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded variant " + str(variant_id) + " to ClinVar.")
+            return redirect(url_for('variant.display', variant_id=variant_id))
+        flash("There was an error during submission to ClinVar. It ended with status code: " + str(resp.status_code), "alert-danger")
+        current_app.logger.error(session['user']['preferred_username'] + " tried to upload a consensus classification for variant " + str(variant_id) + " to ClinVar, but it resulted in an error with status code: " + str(resp.status_code))
 
     return render_template('variant_io/submit_clinvar.html', 
-                            variant = variant, 
-                            orphanet_codes = {'orphanet_codes': orphanet_codes}, # pack the codes in an object because having the array exposed as the first level renders parsing unsecure
+                            variant = variant,
                             genes = genes)
 
 
-def get_orphanet_codes():
-    # fetch orphanet entities for the autocomplete search bar
-    orphanet_json = requests.get(current_app.config['ORPHANET_DISCOVERY_URL'], headers={'apiKey': current_app.config['ORPHANET_API_KEY']})
-    orphanet_json = json.loads(orphanet_json.text)
-    orphanet_codes = []
-    for entry in orphanet_json:
-        if entry['Status'] == 'Active':
-            orpha_code = entry['ORPHAcode']
-            preferred_term = entry['Preferred term']
-            #orpha_definition = entry['Definition']
-            orphanet_codes.append([orpha_code, preferred_term + ': ' + str(orpha_code)])
-    return orphanet_codes
+#def get_orphanet_codes():
+#    # fetch orphanet entities for the autocomplete search bar
+#    orphanet_json = requests.get(current_app.config['ORPHANET_DISCOVERY_URL'], headers={'apiKey': current_app.config['ORPHANET_API_KEY']})
+#    orphanet_json = json.loads(orphanet_json.text)
+#    orphanet_codes = []
+#    for entry in orphanet_json:
+#        if entry['Status'] == 'Active':
+#            orpha_code = entry['ORPHAcode']
+#            preferred_term = entry['Preferred term']
+#            #orpha_definition = entry['Definition']
+#            orphanet_codes.append([orpha_code, preferred_term + ': ' + str(orpha_code)])
+#    return orphanet_codes
 
 
 
 
 
 
-def get_clinvar_submission_json(variant, selected_gene, selected_condition_orphanet_id, clinvar_accession = None):
+def get_clinvar_submission_json(variant, selected_gene, clinvar_accession = None):
     # required fields: 
     # clinvarSubmission > clinicalSignificance > clinicalSignificanceDescription (one of: "Pathogenic", "Likely pathogenic", "Uncertain significance", "Likely benign", "Benign", "Pathogenic, low penetrance", "Uncertain risk allele", "Likely pathogenic, low penetrance", "Established risk allele", "Likely risk allele", "affects", "association", "drug response", "confers sensitivity", "protective", "other", "not provided")
     # clinvarSubmission > clinicalSignificance > comment
@@ -251,7 +239,7 @@ def get_clinvar_submission_json(variant, selected_gene, selected_condition_orpha
 
     condition_set = {}
     condition = []
-    condition.append({'id': selected_condition_orphanet_id, 'db': 'Orphanet'}) #(https://www.omim.org/entry/114480)
+    condition.append({'id': "145", 'db': 'Orphanet'}) #(https://www.omim.org/entry/114480)
     condition_set['condition'] = condition
     clinvar_submission_properties['conditionSet'] =  condition_set
 

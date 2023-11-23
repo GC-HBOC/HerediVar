@@ -12,10 +12,13 @@
 <!-- navigator tabs -->
 <ul class="nav nav-tabs" id="tabs" role="tablist">
     <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">Overview</button>
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">Annotation overview</button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="reannotate-tab" data-bs-toggle="tab" data-bs-target="#reannotate" type="button" role="tab" aria-controls="reannotate" aria-selected="false">(Re-)Annotate</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="abort_annotations-tab" data-bs-toggle="tab" data-bs-target="#abort_annotations" type="button" role="tab" aria-controls="abort_annotations" aria-selected="false">Abort annotations</button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="import-tab" data-bs-toggle="tab" data-bs-target="#import" type="button" role="tab" aria-controls="import" aria-selected="false">Import variants</button>
@@ -32,7 +35,7 @@
 <div class="tab-content" id="TabContent">
     <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
 
-        <div class="sst bsb">This page does not update automatically. Please refresh it to see any changes.</div>
+        <div class="sst bsb">This page does not update automatically. Please refresh it to see changes.</div>
         
         <h4>Number of annotations</h4>
         <div class="bsb">
@@ -58,9 +61,6 @@
 
         <div class="d-flex">
             <h4 class="flex-grow-1">Erroneous variant annotations</h4>
-            <form action="{{ url_for('user.admin_dashboard', type = 'reannotate_erroneous') }}" method="post">
-                <button class="btn btn-outline-primary btn-sm" type="submit">Try erroneous again</button>
-            </form>
         </div>
         <div class="table-responsive">
             <table class="table table-hover" id="errortable">
@@ -111,7 +111,6 @@
 <div class="tab-content" id="TabContent">
     <div class="tab-pane fade" id="reannotate" role="tabpanel" aria-labelledby="reannotate-tab">
 
-
         <!-- reannotate all button -->
         <div class="bst bsb bsl d-flex items_align_center">
             <form action="{{ url_for('user.admin_dashboard', type = 'reannotate') }}" id="reannotate-variants-form" name="reannotate-variants-form" method="post">
@@ -128,13 +127,21 @@
                 <hr>
 
                 <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input ssr" id="select_all_jobs" >
+                    <input type="checkbox" class="form-check-input ssr" id="select_all_jobs">
                     <label class="form-check-label" for="select_all_jobs">select all</label>
                 </div>
 
+                <input type="text" class="visually-hidden" id="reannotate_which" name="reannotate_which">
+
                 <div class="form-group">
-                    <span id="tooltip-reannotate-variants-button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button requests an annotation of all variants in HerediVar.">
-                        <button id="reannotate-variants-button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#reannotate-variants-modal">Submit</button>
+                    <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button requests an annotation of all variants in HerediVar.">
+                        <button type="button" class="btn btn-outline-primary reannotate_variants_button" data-bs-toggle="modal" data-bs-target="#reannotate-variants-modal" modal_text="ALL" value="all">all variants</button>
+                    </span>
+                    <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button requests an annotation of all erroneous variants in HerediVar.">
+                        <button type="button" class="btn btn-outline-primary reannotate_variants_button" data-bs-toggle="modal" data-bs-target="#reannotate-variants-modal" modal_text="ALL ERRONEOUS" value="erroneous">erroneous variants</button>
+                    </span>
+                    <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button requests an annotation of all aborted variants in HerediVar.">
+                        <button type="button" class="btn btn-outline-primary reannotate_variants_button" data-bs-toggle="modal" data-bs-target="#reannotate-variants-modal" modal_text="ALL ABORTED" value="aborted">aborted variants</button>
                     </span>
                 </div>
             </form>
@@ -144,6 +151,38 @@
     </div>
 </div>
 
+
+
+<!-- ABORT ANNOTATION TAB -->
+<div class="tab-content" id="TabContent">
+    <div class="tab-pane fade" id="abort_annotations" role="tabpanel" aria-labelledby="abort_annotations-tab">
+
+
+        <div class="bst bsb bsl d-flex items_align_center">
+            <form action="{{ url_for('user.admin_dashboard', type = 'abort_annotations') }}" id="abort_annotations-form" name="abort_annotations-form" method="post">
+                
+                <div class="d-flex flex-wrap">
+                    {% for annotation_status in ['pending', 'retry', 'aborted'] %}
+                    <div class="mb-3 form-check bsr width_very_medium">
+                        <input type="checkbox" class="form-check-input ssr" id="{{annotation_status}}" name="annotation_statuses" value="{{annotation_status}}">
+                        <label class="form-check-label" for="{{ annotation_status }}">{{ annotation_status }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <hr>
+
+                <div class="form-group">
+                    <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="This button aborts all variant annotations depending on the selected status">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#abort_annotations-modal">Abort annotations</button>
+                    </span>
+                </div>
+            </form>
+        </div>
+
+
+    </div>
+</div>
 
 
 <!-- IMPORT FROM HEREDICARE TAB -->
@@ -263,8 +302,6 @@
 
 
 
-
-
 <!-- modal -->
 <div class="modal fade" id="reannotate-variants-modal" tabindex="-1" aria-labelledby="reannotate-variants-modal-label" aria-hidden="true">
     <div class="modal-dialog">
@@ -273,8 +310,8 @@
                 <h5 class="modal-title" id="reannotate-variants-modal-label">Confirm reannotation</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                Are you sure that you want to issue an annotation for ALL variants in HerediVar?
+            <div class="modal-body" id="reannotate_all_body">
+                
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -283,6 +320,28 @@
         </div>
     </div>
 </div>
+
+
+
+<!-- modal -->
+<div class="modal fade" id="abort_annotations-modal" tabindex="-1" aria-labelledby="abort_annotations-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="abort_annotations-modal-label">Confirm abort variant annotations</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure that you want to abort variant annotations? This may lead to incomplete or erroneous annotations. It is recommended to restart these annotatations afterwards.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="abort_annotations-submit" type="submit" class="btn btn-primary">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 
 <!-- modal -->

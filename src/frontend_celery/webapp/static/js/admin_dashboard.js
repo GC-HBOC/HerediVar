@@ -10,42 +10,36 @@ $(document).ready(function()
     $('#import-variants-submit').click(function(){
         $('#import-variantsbutton').attr('disabled', true);
         /* when the submit button in the modal is clicked, submit the form */
-       $('#import-variants-form').submit();
+        $('#import-variants-form').submit();
     });
 
-    $('#reannotate-variants-submit').click(function(){
-        $('#reannotate-variantsbutton').attr('disabled', true);
+    $('#abort_annotations-submit').click(function(){
+        $('#abort_annotations-submit').attr('disabled', true);
         /* when the submit button in the modal is clicked, submit the form */
-       $('#reannotate-variants-form').submit();
+        $('#abort_annotations-form').submit();
     });
-
 
     
-    // functionality for the import & update button
 
-    $('#import-variants-submit').click(function(){
-        $('#import-variantsbutton').attr('disabled', true);
-        /* when the submit button in the modal is clicked, submit the form */
-       $('#import-variants-form').submit();
+    $('#reannotate-variants-submit').click(function(e){
+        const target = e['target']
+        target.setAttribute('disabled', true)
+        // when the submit button in the modal is clicked, submit the form
+        $('#reannotate-variants-form').submit();
     });
-    
-    $('#reannotate-variants-submit').click(function(){
-        $('#reannotate-variantsbutton').attr('disabled', true);
-        /* when the submit button in the modal is clicked, submit the form */
-       $('#reannotate-variants-form').submit();
+    $('.reannotate_variants_button').click(function(e){
+        const target = e['target']
+        const modal_text = target.getAttribute('modal_text')
+        document.getElementById("reannotate_all_body").innerText = "Are you sure that you want to issue an annotation for " + modal_text + " variants in HerediVar?"
+        document.getElementById("reannotate_which").value = target.value
     });
-    
+
 
     $('#select_all_jobs').click(function() {
-        const checked_state = this.checked
-        $('input[name="job"]').each(function() {
-            if (! this.disabled) {
-                this.checked = checked_state
-            }  
-        })
+        select_all_jobs_action()
     })
-
-
+    document.getElementById("select_all_jobs").checked = true;
+    select_all_jobs_action()
 
     // Activate datatables
     $('#warningstable thead th').each(function() {
@@ -150,3 +144,14 @@ $(document).ready(function()
 
 
 });
+
+
+function select_all_jobs_action() {
+    const select_all_jobs_check = document.getElementById("select_all_jobs")
+    const checked_state = select_all_jobs_check.checked
+    $('input[name="job"]').each(function() {
+        if (! this.disabled) {
+            this.checked = checked_state
+        }  
+    })
+}

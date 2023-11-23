@@ -639,10 +639,9 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
 # this will retry 3 times before giving up
 # first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
 @celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
-def annotate_all_variants(self, selected_job_config, user_id, roles):
+def annotate_all_variants(self, variant_ids, selected_job_config, user_id, roles):
     """Background task for running the annotation service"""
     conn = Connection(roles)
-    variant_ids = conn.get_all_valid_variant_ids()
     for variant_id in variant_ids:
         _ = start_annotation_service(variant_id = variant_id, user_id = user_id, job_config = selected_job_config, conn = conn) # inserts a new annotation queue entry before submitting the task to celery
         #conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
@@ -745,3 +744,19 @@ def notify_new_user(self, full_name, email, username, password):
     )
 
 
+
+def abort_annotation_tasks(annotation_requests, conn:Connection):
+    for annotation_request in annotation_requests:
+        #id, status, celery_task_id
+        annotation_queue_id = annotation_request[0]
+        status = annotation_request[1]
+        celery_task_id = annotation_request[2]
+        if status not in ["success", "error", "aborted"]: # just for safety
+            abort_annotation_task(annotation_queue_id, celery_task_id, conn)
+
+def abort_annotation_task(annotation_queue_id, celery_task_id, conn:Connection):
+    if annotation_queue_id is not None:
+        celery.control.revoke(celery_task_id, terminate = True)
+
+    #row_id, status, error_msg
+    conn.update_annotation_queue(annotation_queue_id, "aborted", "")

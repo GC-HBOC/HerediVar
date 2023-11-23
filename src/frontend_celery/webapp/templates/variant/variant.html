@@ -21,6 +21,9 @@
             {% if current_annotation_status[4] == 'retry' %}
                 <span class="badge rounded-pill bg-warning" data-bs-toggle="tooltip" title="Most recent annotation yielded an error: {{ current_annotation_status[6] }}. Retrying soon.">Retrying annotation</span>
             {% endif %}
+            {% if current_annotation_status[4] == 'aborted' %}
+                <span class="badge rounded-pill bg-danger" data-bs-toggle="tooltip" title="The annotation was aborted by a superuser. It is recommended to restart the annotation.">Annotation aborted</span>
+            {% endif %}
 
             {% else %}
                 <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="This variant was not annotated, yet.">No annotation</span>

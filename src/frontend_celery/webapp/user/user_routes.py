@@ -10,7 +10,7 @@ from datetime import datetime
 from ..utils import *
 from flask_paginate import Pagination
 import annotation_service.main as annotation_service
-from ..tasks import start_annotation_service, start_variant_import, start_import_one_variant, annotate_all_variants
+from ..tasks import start_annotation_service, start_variant_import, start_import_one_variant, annotate_all_variants, abort_annotation_tasks
 
 
 user_blueprint = Blueprint(
@@ -345,23 +345,31 @@ def admin_dashboard():
 
         elif request_type == 'reannotate':
             selected_jobs = request.form.getlist('job')
+            reannotate_which = request.form.get('reannotate_which')
+            if reannotate_which is None:
+                abort(404)
             selected_job_config = annotation_service.get_job_config(selected_jobs)
-            annotate_all_variants.apply_async(args=[selected_job_config, session['user']['user_id'], session['user']['roles']])
-            #variant_ids = conn.get_all_valid_variant_ids()
-            #for variant_id in variant_ids:
-            #    start_annotation_service(variant_id = variant_id, user_id = session['user']['user_id'], job_config = selected_job_config, conn = conn) # inserts a new annotation queue entry before submitting the task to celery
-            #    #conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
-            current_app.logger.info(session['user']['preferred_username'] + " issued a reannotation of all variants") 
-            flash('Variant reannotation requested. It will be computed in the background.', 'alert-success')
-            do_redirect = True
-        
-        if request_type == 'reannotate_erroneous':
-            for variant_id in annotation_stati['error']:
-                start_annotation_service(variant_id = variant_id, user_id = session['user']['user_id'], job_config = job_config, conn = conn)
-            flash('Variant reannotation issued for ' + str(len(annotation_stati['error'])) + ' variants', 'alert-success')
+
+            if reannotate_which == 'all':
+                variant_ids = conn.get_all_valid_variant_ids()
+            elif reannotate_which == 'erroneous':
+                variant_ids = annotation_stati['error']
+            elif reannotate_which == 'aborted':
+                variant_ids = annotation_stati['aborted']
+
+            annotate_all_variants.apply_async(args=[variant_ids, selected_job_config, session['user']['user_id'], session['user']['roles']])
+            current_app.logger.info(session['user']['preferred_username'] + " issued a reannotation of " + reannotate_which + " variants") 
+            flash('Variant reannotation of ' + reannotate_which + ' variants requested. It will be computed in the background.', 'alert-success')
             do_redirect = True
 
-        if request_type == 'import_variants': # mass import from heredicare
+        elif request_type == 'abort_annotations':
+            annotation_statuses_to_abort = request.form.getlist('annotation_statuses')
+            annotation_requests = conn.get_annotation_queue(annotation_statuses_to_abort)
+            abort_annotation_tasks(annotation_requests, conn)
+            flash("Aborted " + str(len(annotation_requests)) + " annotation requests.", "alert-success")
+            do_redirect = True
+
+        elif request_type == 'import_variants': # mass import from heredicare
             #heredicare_interface = current_app.extensions['heredicare_interface']
             #start_variant_import(conn)
             #heredicare_variant_import.apply_async(args=[session['user']['user_id'], session['user']['roles']])
@@ -370,7 +378,7 @@ def admin_dashboard():
             
             return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id))
 
-        if request_type == 'import_one_variant':
+        elif request_type == 'import_one_variant':
             import_queue_id = request.form.get('import_queue_id')
             vid = request.form.get('vid')
             
@@ -384,8 +392,6 @@ def admin_dashboard():
             flash("Successfully requested variant import of HerediCare VID: " + str(vid), "alert-success")
             return redirect(url_for('user.single_vid_imports'))
 
-
-    
     if do_redirect:
         return redirect(url_for('user.admin_dashboard'))
     return render_template('user/admin_dashboard.html', 
