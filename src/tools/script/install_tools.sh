@@ -24,6 +24,7 @@ sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
 sudo apt-get install -y mariadb-server
 sudo apt-get install default-jdk -y
 sudo apt install genometools
+sudo apt install libpq-dev
 
 
 # prepare python venv & install packages
@@ -50,7 +51,8 @@ $tools/script/install_vep.sh -p $tools/
 # prepare ngs bits
 $tools/script/install_ngs_bits.sh -p $tools/ -v 2022_10
 
-
+# prepare automatic classification algorithm
+$tools/script/install_automatic_classification.sh -p $tools/ -v $root
 
 
 
