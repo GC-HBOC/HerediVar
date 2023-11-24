@@ -2886,3 +2886,21 @@ class Connection:
             transcripts.extend(transcripts_not_in_db)
 
         return transcripts
+    
+    def insert_automatic_classification(self, variant_id, scheme, classification):
+        date = functions.get_now()
+        command = "INSERT INTO automatic_classification (variant_id, scheme_name, classification, date) VALUES (%s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, scheme, classification, date))
+        self.conn.commit()
+        return self.get_last_insert_id()
+
+    def insert_automatic_classification_criterium_applied(self, automatic_classification_id, name, rule_type, evidence_type, strength, comment, is_selected):
+        print((automatic_classification_id, name, rule_type, evidence_type, strength, comment, is_selected))
+        command = "INSERT INTO automatic_classification_criteria_applied (automatic_classification_id, name, rule_type, evidence_type, strength, comment, is_selected) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (automatic_classification_id, name, rule_type, evidence_type, strength, comment, is_selected))
+        self.conn.commit()
+
+    def clear_automatic_classification(self, variant_id):
+        command = "DELETE FROM automatic_classification WHERE variant_id = %s"
+        self.cursor.execute(command, (variant_id,))
+        self.conn.commit()

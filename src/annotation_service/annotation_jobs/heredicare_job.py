@@ -37,6 +37,9 @@ class heredicare_job(Job):
         status_code = 0
         err_msg = ""
 
+        if not self.job_config['do_heredicare']:
+            return status_code, err_msg
+
         conn.clear_heredicare_annotation(variant_id)
         
         heredicare_vid_annotation_type_id = conn.get_most_recent_annotation_type_id('heredicare_vid')
