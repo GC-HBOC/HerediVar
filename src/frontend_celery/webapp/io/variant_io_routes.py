@@ -22,7 +22,7 @@ variant_io_blueprint = Blueprint(
 
 
 
-
+"""
 #http://srv018.img.med.uni-tuebingen.de:5000/import-variants/summary%3Fdate%3D2022-06-15-11-44-25
 @variant_io_blueprint.route('/import-variants/summary?date=<string:year>-<string:month>-<string:day>-<string:hour>-<string:minute>-<string:second>')
 @require_permission(['read_resources'])
@@ -82,7 +82,7 @@ def import_summary(year, month, day, hour, minute, second):
                             finished_at=finished_at,
                             log_file = log_file)
 
-
+"""
 
 @variant_io_blueprint.route('/submit_clinvar/<int:variant_id>', methods=['GET', 'POST'])
 @require_permission(['admin_resources'])
@@ -229,7 +229,6 @@ def get_clinvar_submission_json(variant, selected_gene, clinvar_accession = None
     clinical_significance = {}
     clinical_significance['clinicalSignificanceDescription'] = mrcc.class_to_text()
     clinical_significance['comment'] = get_extended_comment(mrcc)
-    clinical_significance['customAssertionScore'] = 0
     clinical_significance['dateLastEvaluated'] = mrcc.date.split(' ')[0] # only grab the date and trim the time
     clinvar_submission_properties['clinicalSignificance'] =  clinical_significance
 
