@@ -2566,8 +2566,11 @@ class Connection:
 
 
 
-    def insert_update_heredivar_clinvar_submission(self, variant_id, submission_id, accession_id, status, message, last_updated):
-        command = "INSERT INTO heredivar_clinvar_submissions (variant_id, submission_id, accession_id, status, message, last_updated) VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE submission_id=VALUES(submission_id), accession_id=VALUES(accession_id), status=VALUES(status),message=VALUES(message), last_updated=VALUES(last_updated)"
+    def insert_update_heredivar_clinvar_submission(self, variant_id, submission_id, accession_id, status, message, last_updated, previous_clinvar_accession):
+        if previous_clinvar_accession is None:
+            command = "INSERT INTO heredivar_clinvar_submissions (variant_id, submission_id, accession_id, status, message, last_updated) VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE submission_id=VALUES(submission_id), accession_id=VALUES(accession_id), status=VALUES(status),message=VALUES(message), last_updated=VALUES(last_updated)"
+        else: # do not reset the accession id - this one is stable once it was created by clinvar
+            command = "INSERT INTO heredivar_clinvar_submissions (variant_id, submission_id, status, message, last_updated) VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE submission_id=VALUES(submission_id), status=VALUES(status),message=VALUES(message), last_updated=VALUES(last_updated)"
         self.cursor.execute(command, (variant_id, submission_id, accession_id, status, message, last_updated))
         self.conn.commit()
 
