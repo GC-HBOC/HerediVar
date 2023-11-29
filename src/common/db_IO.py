@@ -703,7 +703,7 @@ class Connection:
 
 
     def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, 
-                                 ranges = None, genes = None, consensus = None, user = None, hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, include_heredicare_consensus = False):
+                                 ranges = None, genes = None, consensus = None, user = None, automatic = None, hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, include_heredicare_consensus = False):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -838,9 +838,7 @@ class Connection:
                 if len(user_without_dash) > 0: # if we have - AND some other class(es) we need to add an or between them
                     new_constraints_inner = new_constraints_inner + " UNION "
             if len(user_without_dash) > 0: # if we have one or more classes without the -
-                placeholders = ["%s"] * len(user_without_dash)
-                placeholders = ', '.join(placeholders)
-                placeholders = functions.enbrace(placeholders)
+                placeholders = self.get_placeholders(len(user_without_dash))
                 # search for the most recent user classifications from the user which is searching for variants and which are in the list of user classifications (variable: user)
                 new_constraints_inner = new_constraints_inner + "SELECT * FROM ( SELECT user_classification.variant_id FROM user_classification \
                                                                 LEFT JOIN user_classification uc ON uc.variant_id = user_classification.variant_id AND uc.date > user_classification.date \
@@ -848,6 +846,20 @@ class Connection:
                                                                 ORDER BY user_classification.variant_id )ub"
                 actual_information += (user_id, )
                 actual_information += tuple(user_without_dash)
+            new_constraints = "id IN (" + new_constraints_inner + ")"
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if automatic is not None and len(automatic) > 0:
+            new_constraints_inner = ''
+            automatic_without_dash = [value for value in automatic if value != '-']
+            if '-' in automatic:
+                new_constraints_inner = "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM automatic_classification)"
+                if len(automatic_without_dash) > 0: # if we have - AND some other class(es) we need to add an or between them
+                    new_constraints_inner = new_constraints_inner + " UNION "
+            if len(automatic_without_dash) > 0: # if we have one or more classes without the -
+                placeholders = self.get_placeholders(len(automatic_without_dash))
+                # search for the most recent user classifications from the user which is searching for variants and which are in the list of user classifications (variable: user)
+                new_constraints_inner = new_constraints_inner + "SELECT variant_id FROM automatic_classification WHERE classification IN " + placeholders
+                actual_information += tuple(automatic_without_dash)
             new_constraints = "id IN (" + new_constraints_inner + ")"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if hgvs is not None and len(hgvs) > 0:
@@ -1793,12 +1805,21 @@ class Connection:
             result[i] = tuple(current_list) # convert back to tuple
         return result
     
+    def get_list_size(self, list_id):
+        command = "SELECT COUNT(id) FROM list_variants WHERE list_id = %s"
+        self.cursor.execute(command, (list_id, ))
+        result = self.cursor.fetchone()[0]
+        return result
+
     def add_variant_to_list(self, list_id, variant_id):
+        num_vars_before = self.get_list_size(list_id)
         command = "INSERT INTO list_variants (list_id, variant_id) \
                     SELECT %s, %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM list_variants \
                         WHERE `list_id`=%s AND `variant_id`=%s LIMIT 1)"
         self.cursor.execute(command, (list_id, variant_id, list_id, variant_id))
         self.conn.commit()
+        num_vars_after = self.get_list_size(list_id)
+        return num_vars_after - num_vars_before # number of new variants
 
     def get_variant_ids_from_list(self, list_id):
         command = "SELECT variant_id FROM list_variants WHERE list_id=%s"
@@ -2704,7 +2725,7 @@ class Connection:
         self.conn.commit()
     
     def get_enumtypes(self, tablename, columnname):
-        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue"]
+        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue", "automatic_classification"]
         if tablename in allowed_tablenames:
             command = "SHOW COLUMNS FROM " + tablename + " WHERE FIELD = %s"
         else:

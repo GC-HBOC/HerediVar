@@ -162,7 +162,7 @@ def submit_clinvar(variant_id):
         #print("Clinvar status: " + str(clinvar_status))
 
         # insert a new heredivar_clinvar_submission if the variant was not submitted previously or update if it was there previously
-        conn.insert_update_heredivar_clinvar_submission(variant_id, submission_id, clinvar_status['accession_id'], clinvar_status['status'], clinvar_status['message'], clinvar_status['last_updated'])
+        conn.insert_update_heredivar_clinvar_submission(variant_id, submission_id, clinvar_status['accession_id'], clinvar_status['status'], clinvar_status['message'], clinvar_status['last_updated'], previous_clinvar_accession = clinvar_accession)
             
         # some user feedback that the submission was successful or not
         if resp.status_code == 200 or resp.status_code == 201:

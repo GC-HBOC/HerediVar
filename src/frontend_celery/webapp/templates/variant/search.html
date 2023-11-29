@@ -9,7 +9,7 @@
 <h1 class="bst"> {% block title %} Browse variants {% endblock %} </h1>
 
 <div id="list-content" class="sst ssr ssl">
-  {{ macros.draw_paginated_variant_table(pagination, variants, sort_bys, page_sizes, allowed_user_classes, allowed_consensus_classes, annotation_types=annotation_types, lists=lists) }}
+  {{ macros.draw_paginated_variant_table(pagination, variants, sort_bys, page_sizes, allowed_user_classes, allowed_consensus_classes, allowed_automatic_classes, annotation_types=annotation_types, lists=lists) }}
 </div>
 
 <div class="d-flex bsb align-items-center">
@@ -29,16 +29,20 @@
 
 
 <!-- modal for adding multiple variants to a list -->
+
+
 {{ macros.select_list_modal(lists,
                             'variant.search', 
-                            {'genes':request.args.get('genes'), 
+                            modal_args, 
+                            "Select a variant list to add all variants which match the current search to it.") }}
+
+<!--
+  {'genes':request.args.get('genes'), 
                              'ranges':request.args.get('ranges'), 
                              'consensus':request.args.getlist('consensus'), 
                              'user':request.args.getlist('user'), 
-                             'hgvs':request.args.get('hgvs')}, 
-                            "Select a variant list to add all variants which match the current search to it.") }}
-
-
+                             'hgvs':request.args.get('hgvs')}
+-->
 
 </div>
 

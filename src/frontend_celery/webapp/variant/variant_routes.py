@@ -25,12 +25,20 @@ variant_blueprint = Blueprint(
 @variant_blueprint.route('/search', methods=('GET', 'POST'))  
 @require_permission(['read_resources'])
 def search():
-
     conn = get_connection()
+
+    modal_args = {}
+    for arg in request.args:
+        nargs = len(request.args.getlist(arg))
+        if nargs > 1:
+            modal_args[arg] = request.args.getlist(arg)
+        elif nargs == 1:
+            modal_args[arg] = request.args.get(arg)
     user_id = session['user']['user_id']
 
     allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
     allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
+    allowed_automatic_classes = functions.order_classes(conn.get_enumtypes('automatic_classification', 'classification'))
     annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
     annotation_types = preprocess_annotation_types_for_search(annotation_types)
 
@@ -38,6 +46,7 @@ def search():
     ranges = extract_ranges(request)
     consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request, allowed_consensus_classes)
     user_classifications = extract_user_classifications(request, allowed_user_classes)
+    automatic_classifications = extract_automatic_classifications(request, allowed_automatic_classes)
     hgvs = extract_hgvs(request)
     variant_ids_oi = extract_lookup_list(request, user_id, conn)
     external_ids = extract_external_ids(request)
@@ -47,32 +56,9 @@ def search():
 
     sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden = extract_search_settings(request)
     
-    variants, total = conn.get_variants_page_merged(
-        page=page, 
-        page_size=selected_page_size, 
-        sort_by=selected_sort_by, 
-        include_hidden=include_hidden, 
-        user_id=user_id, 
-        ranges=ranges, 
-        genes = genes, 
-        consensus=consensus_classifications, 
-        user=user_classifications, 
-        hgvs=hgvs, 
-        variant_ids_oi=variant_ids_oi,
-        include_heredicare_consensus = include_heredicare_consensus,
-        external_ids = external_ids,
-        cdna_ranges = cdna_ranges,
-        annotation_restrictions = annotation_restrictions
-    )
-    lists = conn.get_lists_for_user(user_id)
-    pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
-
-
-
     # insert variants to list 
     if request.method == 'POST':
         list_id = request.args.get('selected_list_id')
-        #print(list_id)
         
         selected_variants = request.args.get('selected_variants', "").split(',')
         select_all_variants = True if request.args.get('select_all_variants', "false") == "true" else False
@@ -85,20 +71,77 @@ def search():
             else:
                 num_inserted = 0
                 if select_all_variants:
-                    variants_for_list, _ = conn.get_variants_page_merged(1, "unlimited", sort_by=selected_sort_by, include_hidden=include_hidden, user_id=user_id, ranges=ranges, genes = genes, consensus=consensus_classifications, user=user_classifications, hgvs=hgvs, variant_ids_oi=variant_ids_oi)
+                    variants_for_list, _ = conn.get_variants_page_merged(1, "unlimited", sort_by=selected_sort_by, 
+                                                include_hidden=include_hidden, 
+                                                user_id=user_id, 
+                                                ranges=ranges, 
+                                                genes = genes, 
+                                                consensus=consensus_classifications, 
+                                                user=user_classifications, 
+                                                automatic=automatic_classifications,
+                                                hgvs=hgvs, 
+                                                variant_ids_oi=variant_ids_oi,
+                                                include_heredicare_consensus = include_heredicare_consensus,
+                                                external_ids = external_ids,
+                                                cdna_ranges = cdna_ranges,
+                                                annotation_restrictions = annotation_restrictions
+                                            )
                     variant_ids = [variant.id for variant in variants_for_list]
                     for variant_id in variant_ids:
                         if str(variant_id) not in selected_variants:
-                            conn.add_variant_to_list(list_id, variant_id)
-                            num_inserted = num_inserted + 1
+                            num_new_variants = conn.add_variant_to_list(list_id, variant_id)
+                            num_inserted = num_inserted + num_new_variants
                 else:
                     for variant_id in selected_variants:
                         variant = conn.get_variant(variant_id)
                         if variant is not None:
-                            conn.add_variant_to_list(list_id, variant_id)
-                            num_inserted = num_inserted + 1
+                            num_new_variants = conn.add_variant_to_list(list_id, variant_id)
+                            num_inserted = num_inserted + num_new_variants
                 flash(Markup("Successfully inserted " + str(num_inserted) + " variant(s) from the current search to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
-                return redirect(url_for('variant.search', genes=request.args.get('genes'), ranges=request.args.get('ranges'), consensus=request.args.getlist('consensus'), user = request.args.getlist('user'), hgvs= request.args.get('hgvs')))
+
+                return redirect(url_for('variant.search', 
+                                        genes = request.args.get('genes'), 
+                                        ranges = request.args.get('ranges'), 
+                                        consensus = request.args.getlist('consensus'), 
+                                        user = request.args.getlist('user'), 
+                                        automatic = request.args.getlist('automatic'),
+                                        hgvs = request.args.get('hgvs'),
+                                        cdna_ranges = request.args.get('cdna_ranges'),
+                                        external_ids = request.args.get('external_ids'),
+                                        annotation_type_id = request.args.getlist("annotation_type_id"),
+                                        annotation_operation = request.args.getlist("annotation_operation"),
+                                        annotation_value = request.args.getlist("annotation_value"),
+                                        select_all_variants = request.args.get("select_all_variants", "false"),
+                                        selected_variants = request.args.get("selected_variants", ""),
+                                        lookup_list_id = request.args.getlist("lookup_list_id"),
+                                        lookup_list_name = request.args.getlist("lookup_list_name"),
+                                        page_size = request.args.get('page_size', page_sizes[1]),
+                                        sort_by = request.args.get('sort_by', sort_bys[0]),
+                                        include_hidden = request.args.get('include_hidden')
+                                    )
+                                )
+            
+    variants, total = conn.get_variants_page_merged(
+        page=page, 
+        page_size=selected_page_size, 
+        sort_by=selected_sort_by, 
+        include_hidden=include_hidden, 
+        user_id=user_id, 
+        ranges=ranges, 
+        genes = genes, 
+        consensus=consensus_classifications, 
+        user=user_classifications, 
+        automatic=automatic_classifications,
+        hgvs=hgvs, 
+        variant_ids_oi=variant_ids_oi,
+        include_heredicare_consensus = include_heredicare_consensus,
+        external_ids = external_ids,
+        cdna_ranges = cdna_ranges,
+        annotation_restrictions = annotation_restrictions
+    )
+    lists = conn.get_lists_for_user(user_id)
+    pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
+
     return render_template('variant/search.html',
                            variants=variants, page=page, 
                            per_page=selected_page_size, 
@@ -108,7 +151,9 @@ def search():
                            page_sizes=page_sizes,
                            allowed_user_classes = allowed_user_classes,
                            allowed_consensus_classes = allowed_consensus_classes,
-                           annotation_types = annotation_types
+                           allowed_automatic_classes = allowed_automatic_classes,
+                           annotation_types = annotation_types,
+                           modal_args = modal_args # for add all to list
                         )
 
 

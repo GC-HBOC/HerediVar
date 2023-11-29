@@ -152,6 +152,18 @@ def extract_user_classifications(request_obj, allowed_classes):
         flash("You have an error in your consensus class query(s). It must consist of a number between 1-5, 3+, 3- or M. Results are not filtered by consensus classification.", "alert-danger")
     return user_classifications
 
+def extract_automatic_classifications(request_obj, allowed_classes):
+    classes = allowed_classes + ['-']
+    automatic_classifications = request_obj.args.getlist('automatic')
+    automatic_classifications = ';'.join(automatic_classifications)
+    regex_inner = '|'.join(classes)
+    regex_inner = regex_inner.replace('+', '\+')
+    automatic_classifications = preprocess_query(automatic_classifications, r'(' + regex_inner + r')?')
+    if automatic_classifications is None:
+        flash("You have an error in your consensus class query(s). It must consist of a number between 1-5, 3+, 3- or M. Results are not filtered by consensus classification.", "alert-danger")
+    return automatic_classifications
+
+
 def extract_hgvs(request_obj):
     hgvs = request_obj.args.get('hgvs', '')
     hgvs = preprocess_query(hgvs, pattern = r".*:?c\..+") 

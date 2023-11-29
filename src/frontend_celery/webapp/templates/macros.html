@@ -446,7 +446,7 @@
 {% endmacro %}
 
 
-{% macro draw_paginated_variant_table(pagination, variants, sort_bys, page_sizes, allowed_user_classes, allowed_consensus_classes, annotation_types, lists=none) %}
+{% macro draw_paginated_variant_table(pagination, variants, sort_bys, page_sizes, allowed_user_classes, allowed_consensus_classes, allowed_automatic_classes, annotation_types, lists=none) %}
 <div id="tabnav-head" class="row align-items-end  nsl nsr">
     <div class="col nopad">{{ pagination.links }}</div>
 
@@ -563,6 +563,23 @@
                             <div class="form-check d-flex align-items-center">
                                 <input class="form-check-input ssr" type="checkbox" value="-" id="ucl-" name="user" {% if '-' in selected_user %}checked{% endif %}>
                                 <label class="form-check-label" for="ucl-">none</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group sst">
+                        {% set selected_automatic = request.args.getlist('automatic') %}
+                        <label for="user-select" class="form-label">Automatic classification</label>
+                        <div id="user-select" class="d-flex">
+                            {% for c in allowed_automatic_classes %}
+                                <div class="form-check d-flex bsr align-items-center">
+                                    <input class="form-check-input ssr" type="checkbox" value="{{c}}" id="acl{{c}}" name="automatic" {% if c in selected_automatic %}checked{% endif %}>
+                                    <label class="form-check-label" for="acl{{c}}">{{c}}</label>
+                                </div>
+                            {% endfor %}
+                            <div class="form-check d-flex align-items-center">
+                                <input class="form-check-input ssr" type="checkbox" value="-" id="acl-" name="automatic" {% if '-' in selected_automatic %}checked{% endif %}>
+                                <label class="form-check-label" for="acl-">none</label>
                             </div>
                         </div>
                     </div>
