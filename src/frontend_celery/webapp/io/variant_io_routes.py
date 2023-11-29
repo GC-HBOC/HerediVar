@@ -253,7 +253,10 @@ def get_clinvar_submission_json(variant, selected_gene, clinvar_accession = None
     observed_in.append(observed_in_properties)
     clinvar_submission_properties['observedIn'] =  observed_in
 
-    clinvar_submission_properties['recordStatus'] = 'novel'
+    if clinvar_accession is None:
+        clinvar_submission_properties['recordStatus'] = 'novel'
+    else:
+        clinvar_submission_properties['recordStatus'] = 'update'
     data['clinvarSubmissionReleaseStatus'] = 'public'
 
     variant_set = {}
