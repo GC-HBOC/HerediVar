@@ -506,6 +506,7 @@ def decode_base64(base64_string):
     return base64.b64decode(base64_string)
 
 def encode_vcf(text):
+    result = decode_html(text)
     result = text.replace(' ', '_') \
                  .replace('\r', '') \
                  .replace('\n', '_') \
@@ -535,6 +536,16 @@ def decode_vcf(text):
                  .replace('%26', '&') \
                  .replace('%7C', '|') \
                  .replace('%1Y', '=')
+    return result
+
+def encode_html(text): # this escapes special characters for the use in html text
+    result = text.replace('>', '&gt;') \
+                 .replace('<', '&lt;')
+    return result
+
+def decode_html(text):
+    result = text.replace('&gt;', '>') \
+                 .replace('&lt;', '<')
     return result
 
 

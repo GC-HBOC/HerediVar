@@ -20,7 +20,7 @@ if __name__ == '__main__':
     #sql = file.read()
     #conn.cursor.execute(sql, multi=True)
 
-    
+    """
     print("parsing OMIM ids...")
     omim = open(paths.omim_path, "r")
     symbol_to_omim = {}
@@ -35,8 +35,9 @@ if __name__ == '__main__':
             symbol_to_omim[gene_symbol] = omim_id
 
     omim.close()
+    """
 
-
+    """
     print("parsing orphanet ids...")
     orphanet = ET.parse(paths.orphanet_path)
     root = orphanet.getroot()
@@ -59,6 +60,7 @@ if __name__ == '__main__':
         
     for symbol in set(duplicates):
         del symbol_to_orphanet[symbol]
+    """
     
     """
     ## init gene table with info from HGNC tab
@@ -91,7 +93,7 @@ if __name__ == '__main__':
 
 
 
-    
+    """
     ## init transcripts table
     # format info:
     #The 'type' of gene features in gff3 is:
@@ -396,22 +398,6 @@ if __name__ == '__main__':
                 #    print(transcript_name + ":" + refseq_to_ensembl.get(transcript_name))
             
 
-                """
-                for info_entry in info:
-                    if info_entry.startswith('Dbxref='): # example of such an entry: "Dbxref=GeneID:81399,Genbank:XM_017002409.2,HGNC:HGNC:15079"
-                        transcript_name =  functions.find_between(info_entry, 'Genbank:', '(,|$)')
-                        if transcript_name is not None:
-                            if '.' in transcript_name:
-                                transcript_name = transcript_name[:transcript_name.find('.')] # remove version numbers
-                    if info_entry.startswith('gbkey='):
-                        transcript_biotype = info_entry[6:]
-                    if info_entry.startswith('Parent='):
-                        parent_id = info_entry[7:]
-                    if info_entry.startswith('ID='):
-                        transcript_id = info_entry[3:]
-                """
-            
-
                 if parent_id != gene_id:
                     print("WARNING: Found transcript which does not match its current parent! (geneid: " + str(gene_id) + ", transcript id: " + str(transcript_id) + ", parent id of transcript: " + str(parent_id))
                     keep_it = False
@@ -436,7 +422,7 @@ if __name__ == '__main__':
         #pass
 
     refseq_transcript.close()
-    
+    """
 
     """
     ## init pfam auxiliaries tables (pfam_id_mapping and pfam_legacy)
@@ -470,7 +456,7 @@ if __name__ == '__main__':
     #conn.insert_annotation_type("gnomad_af", "Frequency of the alternate allele in samples", "float", "v3.1.2_GRCh38", "2021-10-22") 
     
 
-    """
+    
     ## init VUS task force protein domains table (no download for this one, it was sent by mail)
     print("initializing VUS-Task-Force protein domain table")
     task_force_protein_domains_file = open(paths.task_force_protein_domains_path)
@@ -496,8 +482,10 @@ if __name__ == '__main__':
             start = temp
         source = parts[7].strip('\"')
 
-        conn.insert_task_force_protein_domain(chromosome, start, end, description, source)
-    """
+        gene_id = conn.get_gene_id_by_symbol(parts[0])
+
+        conn.insert_task_force_protein_domain(gene_id, chromosome, start, end, description, source)
+    
 
 
     conn.close()

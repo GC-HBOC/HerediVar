@@ -143,6 +143,7 @@ class AllAnnotations:
 
     task_force_protein_domain: Annotation = None
     task_force_protein_domain_source: Annotation = None
+    task_force_cold_spot: Annotation = None #### TODO!
 
     hexplorer: Annotation = None
     hexplorer_mut: Annotation = None
@@ -258,6 +259,8 @@ class Criterium:
     strength: str
     strength_display_name: str
     evidence: str
+
+    is_selected: bool = True
 
     def display_name(self):
         the_name = self.name.lower()
@@ -448,6 +451,29 @@ class Classification:
                       'source': '##INFO=<ID=source,Number=1,Type=String,Description="The source of the classification. Either heredivar or heredicare">\n'}
         return header
 
+@dataclass
+class AutomaticClassificationCriterium:
+    id: int
+    name: str
+    rule_type: str
+    evidence_type: str
+    is_selected: bool
+    strength: str
+    type: str
+
+    evidence: str # comment
+
+    def display_name(self):
+        return self.name.replace('protein', 'prot').replace('splicing', 'spli')
+
+@dataclass
+class AutomaticClassification:
+    id: int
+    scheme_name: str
+    classification: int
+    date: datetime
+
+    criteria: Any # list of automatic classification criterium
 
 @dataclass
 class ClinvarCondition:
@@ -708,6 +734,7 @@ class Variant:
     consensus_classifications: Any = None # list of classifications
     user_classifications: Any = None # list of classifications
     heredicare_classifications: Any = None # list of heredicare center classifications
+    automatic_classification: AutomaticClassification = None
     heredicare_annotations: Any = None # list of heredicare annotatins
     clinvar: Any = None # a clinvar object
     consequences: Any = None # list of consequences
@@ -920,6 +947,8 @@ class Variant:
                         gene_ids.append(current_gene.id)
         if how == "string" and result is not None:
             result = '~3B'.join([g.symbol for g in result])
+        if how == "list" and result is not None:
+            result = [g.symbol for g in result]
         return result
 
 

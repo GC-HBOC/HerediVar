@@ -82,7 +82,7 @@ if webapp_env == 'dev':
     refseq_transcript_path = joinpaths(datadir, "RefSeq/refseq_transcripts_110.gff.gz")
     omim_path = joinpaths(datadir, "OMIM/mim2gene.txt")
     orphanet_path = joinpaths(datadir, "OrphaNet/en_product6.xml")
-    task_force_protein_domains_path = joinpaths(datadir, "task-force_protein_domains/Proteindomänen VUS-Task-Force_2022_final.tsv")
+    task_force_protein_domains_path = joinpaths(datadir, "task-force_protein_domains/domains_task_force_27_11_2023.tsv")
 
     # further data
     parsing_refseq_ensembl = joinpaths(datadir, "mapping_tables/hg38_ensembl_transcript_matches.tsv")

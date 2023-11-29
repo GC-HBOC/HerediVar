@@ -430,11 +430,22 @@ class Connection:
         self.cursor.execute(command, (old_accession_id, new_accession_id))
         self.conn.commit()
     
-    def insert_task_force_protein_domain(self, chromsome, start, end, description, source):
-        command = "INSERT INTO task_force_protein_domains (chr, start, end, description, source) VALUES (%s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (chromsome, start, end, description, source))
+    def insert_task_force_protein_domain(self, gene_id, chromsome, start, end, description, source):
+        command = "INSERT INTO task_force_protein_domains (gene_id, chr, start, end, description, source) VALUES (%s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (gene_id, chromsome, start, end, description, source))
         self.conn.commit()
-    
+
+    def has_task_force_protein_domains(self, gene_symbol) -> bool:
+        gene_id = self.get_gene_id_by_symbol(gene_symbol)
+        if gene_id is None:
+            return False
+        command = "SELECT COUNT(id) FROM task_force_protein_domains WHERE gene_id = %s"
+        self.cursor.execute(command, (gene_id, ))
+        result = self.cursor.fetchone()[0]
+        if result > 0:
+            return True
+        return False
+
     def get_task_force_protein_domains(self, chromosome, variant_start, variant_end):
         command = "SELECT * FROM task_force_protein_domains WHERE chr = %s and ((start <= %s) and (%s <= end))"
         self.cursor.execute(command, (chromosome, variant_end, variant_start))
@@ -1991,6 +2002,7 @@ class Connection:
                     include_consensus = True, 
                     include_user_classifications = True, 
                     include_heredicare_classifications = True, 
+                    include_automatic_classification = True,
                     include_clinvar = True, 
                     include_consequences = True, 
                     include_assays = True, 
@@ -2172,6 +2184,32 @@ class Connection:
                     new_user_classification = models.Classification(id = classification_id, type = 'user classification', selected_class=selected_class, comment=comment, date=date, submitter=user, scheme=scheme, literature = literatures)
                     user_classifications.append(new_user_classification)
 
+        automatic_classification = None
+        if include_automatic_classification:
+            automatic_classification_raw = self.get_automatic_classification(variant_id)
+            if automatic_classification_raw is not None:
+                automatic_classification_id = int(automatic_classification_raw[0]) # id, scheme_name, classification, date
+                automatic_classification_criteria = self.get_automatic_classification_criteria_applied(automatic_classification_raw[0]) # id, name, rule_type, evidence_type, is_selected, strength, type, comment
+
+                all_criteria = []
+                for automatic_classification_criterium in automatic_classification_criteria:
+                    automatic_classification_criterium_id = int(automatic_classification_criterium[0])
+                    name = automatic_classification_criterium[1]
+                    rule_type = automatic_classification_criterium[2]
+                    evidence_type = automatic_classification_criterium[3]
+                    is_selected = automatic_classification_criterium[4] == 1
+                    strength = automatic_classification_criterium[5]
+                    strength_type = automatic_classification_criterium[6]
+                    evidence = automatic_classification_criterium[7]
+                    new_criterium = models.AutomaticClassificationCriterium(id = automatic_classification_criterium_id, name = name, rule_type = rule_type, evidence_type = evidence_type, is_selected = is_selected, strength = strength, type = strength_type, evidence = evidence)
+                    all_criteria.append(new_criterium)
+                
+                classification = automatic_classification_raw[2]
+                scheme_name = automatic_classification_raw[1]
+                date = automatic_classification_raw[3]
+                automatic_classification = models.AutomaticClassification(id = automatic_classification_id, scheme_name = scheme_name, classification = classification, date = date, criteria = all_criteria)
+
+
         heredicare_classifications = None
         all_heredicare_annotations = None
         if include_heredicare_classifications:
@@ -2290,6 +2328,7 @@ class Connection:
                                 consensus_classifications = consensus_classifications, 
                                 user_classifications = user_classifications,
                                 heredicare_classifications = heredicare_classifications,
+                                automatic_classification = automatic_classification,
                                 heredicare_annotations = all_heredicare_annotations,
                                 clinvar = clinvar,
                                 consequences = consequences,
@@ -2894,13 +2933,28 @@ class Connection:
         self.conn.commit()
         return self.get_last_insert_id()
 
-    def insert_automatic_classification_criterium_applied(self, automatic_classification_id, name, rule_type, evidence_type, strength, comment, is_selected):
-        print((automatic_classification_id, name, rule_type, evidence_type, strength, comment, is_selected))
-        command = "INSERT INTO automatic_classification_criteria_applied (automatic_classification_id, name, rule_type, evidence_type, strength, comment, is_selected) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (automatic_classification_id, name, rule_type, evidence_type, strength, comment, is_selected))
+    def insert_automatic_classification_criterium_applied(self, automatic_classification_id, name, rule_type, evidence_type, strength, type, comment, is_selected):
+        comment = functions.encode_html(comment)
+        command = "INSERT INTO automatic_classification_criteria_applied (automatic_classification_id, name, rule_type, evidence_type, strength, type, comment, is_selected) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (automatic_classification_id, name, rule_type, evidence_type, strength, type, comment, is_selected))
         self.conn.commit()
 
     def clear_automatic_classification(self, variant_id):
         command = "DELETE FROM automatic_classification WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id,))
         self.conn.commit()
+
+    def get_automatic_classification(self, variant_id):
+        command = "SELECT id, scheme_name, classification, date FROM automatic_classification WHERE variant_id = %s"
+        self.cursor.execute(command, (variant_id, ))
+        result = self.cursor.fetchall() # prevent unfetched result
+        if len(result) == 0:
+            return None
+        result = result[len(result) - 1] # take the newest one, this should not be neccessary
+        return result
+
+    def get_automatic_classification_criteria_applied(self, automatic_classification_id):
+        command = "SELECT id, name, rule_type, evidence_type, is_selected, strength, type, comment FROM automatic_classification_criteria_applied WHERE automatic_classification_id = %s"
+        self.cursor.execute(command, (automatic_classification_id, ))
+        result = self.cursor.fetchall()
+        return result
