@@ -156,6 +156,10 @@
                 <div class='col-8 text-center border-start'>Info</div>
             </div>
             <div class='row gx-2'>
+                <div class='col-3'>Is selected</div>
+                <div class='col-8 text-center border-start'>{{ criterium.is_selected }}</div>
+            </div>
+            <div class='row gx-2'>
                 <div class='col-3'>Strength</div>
                 <div class='col-8 text-center border-start'>{{ criterium.strength }}</div>
             </div>
@@ -165,7 +169,7 @@
             </div>
             "
     >
-        <div class="btn-{{ criterium.type }} light-hover acmg-button acmg-button-small">{{ criterium.display_name() }}</div>
+        <div class="btn-{{ criterium.type }} light-hover acmg-button acmg-button-small {% if not criterium.is_selected%}crossed{% endif %}">{{ criterium.display_name() }}</div>
     </span>
     {% endfor %}
 {% endmacro %}
@@ -638,6 +642,7 @@
         <th class="width_small">HGVS c.</th>
         <th class="width_small">HGVS p.</th>
         <th class="width_very_small">GENE</th>
+        <th class="text_align_center width_small">Automatic classification</th>
         <th class="text_align_center width_small">Your classification</th>
         <th class="text_align_center width_small">Consensus classification</th>
       </tr>
@@ -696,6 +701,10 @@
                     <abbr title="-">-</abbr>
                 </div>
             {% endif %}
+        </td>
+        <td class="text_align_center clickable" data-href="{{ url_for('variant.display', variant_id=variant.id) }}">
+            {% set automatic_classification = variant.automatic_classification %}
+            {% if automatic_classification is not none %}{{ automatic_classification.classification }}{% else %}-{% endif %}
         </td>
         <td class="text_align_center clickable" data-href="{{ url_for('variant.display', variant_id=variant.id) }}">
             {% set your_classification = variant.get_recent_user_classification(session['user']['user_id']) %}

@@ -5,6 +5,20 @@
  }*/
 
 
+
+.crossed {
+    background: 
+        linear-gradient(to top left,
+            rgba(0,0,0,0) calc(50% - 0.1em),
+            rgb(255, 0, 0) 50%,
+            rgba(0,0,0,0) calc(50% + 0.1em)),
+        linear-gradient(to top right,
+            rgba(0,0,0,0) calc(50% - 0.1em),
+            rgb(255, 0, 0) 50%,
+            rgba(0,0,0,0) calc(50% + 0.1em));
+}
+
+
 .clickable {
     cursor: pointer;
     color:blue;
