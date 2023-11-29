@@ -92,3 +92,33 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.automatic_classificat
 GRANT SELECT ON HerediVar_ahdoebm1.automatic_classification_criteria_applied TO 'HerediVar_user';
 GRANT SELECT ON HerediVar_ahdoebm1.automatic_classification_criteria_applied TO 'HerediVar_superuser';
 GRANT SELECT ON HerediVar_ahdoebm1.automatic_classification_criteria_applied TO 'HerediVar_read_only';
+
+
+
+GRANT SELECT ON HerediVar_ahdoebm1.assay TO 'HerediVar_annotation';
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`task_force_protein_domains` 
+ADD COLUMN `gene_id` INT UNSIGNED NOT NULL AFTER `source`;
+ALTER TABLE `HerediVar_ahdoebm1`.`task_force_protein_domains` 
+CHANGE COLUMN `gene_id` `gene_id` INT(10) UNSIGNED NOT NULL AFTER `id`;
+
+
+SET FOREIGN_KEY_CHECKS = 0; 
+TRUNCATE table task_force_protein_domains; 
+SET FOREIGN_KEY_CHECKS = 1;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`task_force_protein_domains` 
+ADD INDEX `FK_task_force_protein_domain_gene_idx` (`gene_id` ASC);
+;
+ALTER TABLE `HerediVar_ahdoebm1`.`task_force_protein_domains` 
+ADD CONSTRAINT `FK_task_force_protein_domain_gene`
+  FOREIGN KEY (`gene_id`)
+  REFERENCES `HerediVar_ahdoebm1`.`gene` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`automatic_classification_criteria_applied` 
+ADD COLUMN `type` VARCHAR(45) NOT NULL AFTER `strength`;
