@@ -27,7 +27,7 @@ def get_db_connection(roles):
         conn = mysql.connector.connect(user=user, password=pw,
                                host=host,
                                database=os.environ.get("DB_NAME"), 
-                               charset = 'utf8') # , buffered = True
+                               charset = 'utf8', buffered = True) # 
     except Error as e:
         raise RuntimeError("Error while connecting to HerediVar database " + str(e))
     finally:
@@ -2637,9 +2637,16 @@ class Connection:
                 errors[variant_id] = annotation_status[5]
             if annotation_status[3] != 'error' and annotation_status[5] != '':
                 warnings[variant_id] = annotation_status[5]
-                
+        
+        annotation_stati["unannotated"] = self.get_variants_without_annotation()
+
         return annotation_stati, errors, warnings, total_num_variants
     
+    def get_variants_without_annotation(self):
+        command = "SELECT id FROM variant WHERE id not in (SELECT variant_id FROM annotation_queue)"
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
 
     def get_annotation_types(self, exclude_groups = []):
         annotation_type_ids = self.get_recent_annotation_type_ids()
@@ -2950,10 +2957,10 @@ class Connection:
 
         return transcripts
     
-    def insert_automatic_classification(self, variant_id, scheme, classification):
+    def insert_automatic_classification(self, variant_id, scheme, classification, tool_version):
         date = functions.get_now()
-        command = "INSERT INTO automatic_classification (variant_id, scheme_name, classification, date) VALUES (%s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, scheme, classification, date))
+        command = "INSERT INTO automatic_classification (variant_id, scheme_name, classification, date, tool_version) VALUES (%s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, scheme, classification, date, tool_version))
         self.conn.commit()
         return self.get_last_insert_id()
 

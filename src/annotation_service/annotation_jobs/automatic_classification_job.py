@@ -37,20 +37,23 @@ class automatic_classification_job(Job):
             return status_code, err_msg
 
         autoclass_input = self.get_autoclass_json(variant_id, conn)
+
+        if autoclass_input is None:
+            return 0, "Not enough information to calculate the automatic classification"
         #print(autoclass_input)
         config_path = os.path.join(paths.automatic_classification_path, "config_production.yaml")
-        returncode, err_msg, classification_result = self.run_automatic_classification(autoclass_input, config_path)
+        returncode, err_msg, classification = self.run_automatic_classification(autoclass_input, config_path)
 
         if returncode != 0:
             raise RuntimeError(err_msg)
 
-        #print(classification_result)
-
-        classification_result = json.loads(classification_result)
+        
+        classification_result = json.loads(classification["result"])
+        scheme = classification.get("scheme", "acmg-svi")
+        tool_version = classification["version"]
 
         conn.clear_automatic_classification(variant_id)
         
-        scheme = "acmg-svi"
         selected_criteria = []
         for criterium_name in classification_result:
             current_criterium = classification_result[criterium_name]
@@ -69,7 +72,7 @@ class automatic_classification_job(Job):
         classification = resp.json().get("final_class")
         if classification is None:
             raise RuntimeError("The classification endpoint did not return a classification")
-        automatic_classification_id = conn.insert_automatic_classification(variant_id, scheme, classification)
+        automatic_classification_id = conn.insert_automatic_classification(variant_id, scheme, classification, tool_version)
 
         for criterium_name in classification_result:
             current_criterium = classification_result[criterium_name]
@@ -95,17 +98,46 @@ class automatic_classification_job(Job):
         return mapping[strength]
 
 
-    def run_automatic_classification(self, autoclass_input, config_path):
-        automatic_classification_python = os.path.join(paths.automatic_classification_path, ".venv/bin/python3")
-        command = [automatic_classification_python, os.path.join(paths.automatic_classification_path, "variant_classification/classify.py")]
-        command.extend([ "-c", config_path, "-i", autoclass_input])
+    def run_automatic_classification(self, autoclass_input: str, config_path: str):
+        ## THE CLI
+        #automatic_classification_python = os.path.join(paths.automatic_classification_path, ".venv/bin/python3")
+        #command = [automatic_classification_python, os.path.join(paths.automatic_classification_path, "variant_classification/classify.py")]
+        #command.extend([ "-c", config_path, "-i", autoclass_input])
+        #returncode, stderr, stdout = functions.execute_command(command, 'Automatic_Classification')
+        
+        ## THE API
+        #curl -X 'POST' \
+        #    'http://0.0.0.0:8080/classify_variant' \
+        #    -H 'accept: application/json' \
+        #    -H 'Content-Type: application/json' \
+        #    -d '{
+        #    "config_path": "/home/katzkean/variant_classification/config.yaml",
+        #    "variant_json": "{\"chr\": \"17\", \"pos\": 43057110, \"gene\": \"BRCA1\", \"ref\": \"A\", \"alt\": \"C\", \"variant_type\": [\"missense_variant\"], \"variant_effect\": [{\"transcript\": \"ENST00000357654\", \"hgvs_c\": \"c.5219T>G\", \"hgvs_p\": \"p.Val1740Gly\", \"variant_type\": [\"missense_variant\"], \"exon\": 19}, {\"transcript\": \"ENST00000471181\", \"hgvs_c\": \"c.5282T>G\", \"hgvs_p\": \"p.Val1761Gly\", \"variant_type\": [\"missense_variant\"], \"exon\": 20}], \"splicing_prediction_tools\": {\"SpliceAI\": 0.5}, \"pathogenicity_prediction_tools\": {\"REVEL\": 0.5, \"BayesDel\": 0.5}, \"gnomAD\": {\"AF\": 0.007, \"AC\": 12, \"popmax\": \"EAS\", \"popmax_AF\": 0.009, \"popmax_AC\": 5}, \"FLOSSIES\": {\"AFR\": 9, \"EUR\": 130}, \"mRNA_analysis\": {\"performed\": true, \"pathogenic\": true, \"benign\": true}, \"functional_data\": {\"performed\": true, \"pathogenic\": true, \"benign\": true}, \"prior\": 0.25, \"co-occurrence\": 0.56, \"segregation\": 0.56, \"multifactorial_log-likelihood\": 0.56, \"VUS_task_force_domain\": true, \"cancer_hotspot\": true, \"cold_spot\": true}"
+        #}'
+        api_host = "http://srv018.img.med.uni-tuebingen.de:5004/"
+        endpoint = "classify_variant"
+        url = api_host + endpoint
+        headers = {"accept": "application/json", "Content-Type": "application/json"}
+        data = {"config_path": config_path, "variant_json": autoclass_input}
+        data = json.dumps(data)
+        resp = requests.post(url, headers=headers, data=data)
 
-        returncode, stderr, stdout = functions.execute_command(command, 'Automatic_Classification')
+        if resp.status_code != 200:
+            status_code = resp.status_code
+            stderr = resp.text
+            stdout = ""
+        else:
+            status_code = 0
+            stderr = ""
+            stdout = resp.json()
 
-        return returncode, stderr, stdout
+        return status_code, stderr, stdout
 
     def get_autoclass_json(self, variant_id, conn: Connection) -> str:
         variant = conn.get_variant(variant_id, include_clinvar=False, include_consensus=False, include_user_classifications=False, include_heredicare_classifications=False, include_literature = False, include_external_ids = False, include_automatic_classification=False)
+        if variant is None:
+            return None
+        
         result = {}
 
         # basic info
@@ -116,31 +148,39 @@ class automatic_classification_job(Job):
 
         # gene & consequence summary
         all_genes = variant.get_genes(how = "list")
-        result["gene"] = all_genes[0]
+        if all_genes is not None:
+            result["gene"] = all_genes[0]
+        else:
+            result["gene"] = "interegenic"
         all_variant_types = []
-        for consequence in variant.consequences:
-            if consequence.transcript.source == "ensembl":
-                new_variant_types = consequence.consequence.split('&')
-                new_variant_types = [x.strip().replace(' ', '_') for x in new_variant_types]
-                all_variant_types.extend(new_variant_types)
+        if variant.consequences is not None:
+            for consequence in variant.consequences:
+                if consequence.transcript.source == "ensembl":
+                    new_variant_types = consequence.consequence.split('&')
+                    new_variant_types = [x.strip().replace(' ', '_') for x in new_variant_types]
+                    all_variant_types.extend(new_variant_types)
+        if len(all_variant_types) == 0:
+            return None
         result["variant_type"] = list(set(all_variant_types))
+
 
         # all consequences
         variant_effects = []
-        for consequence in variant.consequences:
-            if consequence.transcript.source == "ensembl" and consequence.hgvs_c is not None and consequence.hgvs_c.startswith('c'):
-                new_effect = {}
-                new_effect["transcript"] = consequence.transcript.name
-                new_effect["variant_type"] = [x.strip().replace(' ', '_') for x in consequence.consequence.split('&')]
-                if consequence.hgvs_c is not None: # this is a required field, throw error if it is missing!
-                    new_effect["hgvs_c"] = consequence.hgvs_c
-                if consequence.hgvs_p is not None:
-                    new_effect["hgvs_p"] = consequence.hgvs_p
-                if consequence.exon is not None:
-                    new_effect["exon"] = int(consequence.exon)
-                if consequence.intron is not None:
-                    new_effect["intron"] = int(consequence.intron)
-                variant_effects.append(new_effect)
+        if variant.consequences is not None:
+            for consequence in variant.consequences:
+                if consequence.transcript.source == "ensembl" and consequence.hgvs_c is not None and consequence.hgvs_c.startswith('c'):
+                    new_effect = {}
+                    new_effect["transcript"] = consequence.transcript.name
+                    new_effect["variant_type"] = [x.strip().replace(' ', '_') for x in consequence.consequence.split('&')]
+                    if consequence.hgvs_c is not None: # this is a required field, throw error if it is missing!
+                        new_effect["hgvs_c"] = consequence.hgvs_c
+                    if consequence.hgvs_p is not None:
+                        new_effect["hgvs_p"] = consequence.hgvs_p
+                    if consequence.exon is not None:
+                        new_effect["exon"] = int(consequence.exon)
+                    if consequence.intron is not None:
+                        new_effect["intron"] = int(consequence.intron)
+                    variant_effects.append(new_effect)
         result["variant_effect"] = variant_effects
 
         # splicing prediction

@@ -69,6 +69,8 @@ pip install pybedtools
 pip install openpyxl
 pip install jsonschema
 pip install pandas
+pip install fastapi
+pip install uvicorn
 
 cd $variant_classification
 bash install_dependencies/install_pyensembl.sh -v 110

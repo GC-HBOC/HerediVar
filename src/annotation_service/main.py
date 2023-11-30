@@ -187,7 +187,10 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         if any(job_config[x] for x in ['do_auto_class']):
             print("Executing automatic classification...")
             autoclass_job = automatic_classification_job.automatic_classification_job(job_config)
-            autoclass_job.save_to_db("", variant_id, conn=conn)
+            status_code, err_msg = autoclass_job.save_to_db("", variant_id, conn=conn)
+            if status_code > 0:
+                status = "error"
+            err_msgs = collect_error_msgs(err_msgs, err_msg)
 
 
 
