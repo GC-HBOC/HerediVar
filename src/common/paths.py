@@ -24,7 +24,7 @@ if webapp_env == 'dev':
     # general paths
     workdir = "/mnt/storage2/users/ahdoebm1/HerediVar/"
     datadir = joinpaths(workdir, "data/dbs")
-    toolsdir = joinpaths(workdir, "src/tools")
+    toolsdir = joinpaths(workdir, "tools")
     resources_dir = joinpaths(workdir, 'resources')
     logs_dir = joinpaths(workdir, 'logs')
     classified_variants_dir = joinpaths(workdir, 'classified_variants')
@@ -102,7 +102,7 @@ elif webapp_env == 'localtest':
     # general paths
     workdir = "/mnt/storage2/users/ahdoebm1/HerediVar/"
     datadir = joinpaths(workdir, "src/annotation_service/tests/data/testdbs/")
-    toolsdir = joinpaths(workdir, "src/tools")
+    toolsdir = joinpaths(workdir, "tools")
     resources_dir = joinpaths(workdir, 'resources')
     logs_dir = joinpaths(workdir, 'logs')
     classified_variants_dir = joinpaths(workdir, 'classified_variants')
@@ -156,7 +156,7 @@ elif webapp_env == 'githubtest':
 
     workdir = "/home/runner/work/HerediVar/HerediVar/"
     datadir =  joinpaths(workdir, "src/annotation_service/tests/data/testdbs/")
-    toolsdir = joinpaths(workdir, "src/tools")
+    toolsdir = joinpaths(workdir, "tools")
     resources_dir = joinpaths(workdir, 'resources')
     logs_dir = joinpaths(workdir, 'logs')
     classified_variants_dir = joinpaths(workdir, 'classified_variants')
@@ -208,7 +208,7 @@ elif webapp_env == 'prod':
     # general paths
     workdir = "/mnt/storage1/HerediVar"
     datadir = joinpaths(workdir, "data/dbs")
-    toolsdir = joinpaths(workdir, "src/tools")
+    toolsdir = joinpaths(workdir, "tools")
     resources_dir = joinpaths(workdir, 'resources')
     logs_dir = joinpaths(workdir, 'logs')
     classified_variants_dir = joinpaths(workdir, 'classified_variants')

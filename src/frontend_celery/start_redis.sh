@@ -37,9 +37,8 @@ echo "preparing redis startup"
 
 
 SCRIPT=$(readlink -f "$0")
-SCRIPTPATH=$(dirname "$SCRIPT")
-cd $SCRIPTPATH
-cd ../../
+ROOT=$(dirname $(dirname $(dirname "$SCRIPT")))
+cd $ROOT
 pwd
 
 
@@ -54,5 +53,5 @@ then
 fi
 
 
-cd src/tools/redis-stable
+cd tools/redis-stable
 src/redis-server

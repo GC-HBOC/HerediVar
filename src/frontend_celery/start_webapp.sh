@@ -28,39 +28,42 @@ then
 fi
 
 
-
-
-
+# set paths
 SCRIPT=$(readlink -f "$0")
-SCRIPTPATH=$(dirname "$SCRIPT")
-cd $SCRIPTPATH
-cd ../../
+ROOT=$(dirname $(dirname $(dirname "$SCRIPT")))
+cd $ROOT
 pwd
 
+
 export WEBAPP_ENV=$we
-
-source .venv/bin/activate
-cd $SCRIPTPATH
-
-echo starting Heredivar in "${WEBAPP_ENV}" mode
-
 if [ -z "${WEBAPP_ENV}" ]
 then
    echo Environment variable WEBAPP_ENV not set.
    exit 1
 fi
 
+echo starting Heredivar in "${WEBAPP_ENV}" mode
+
+
+source .venv/bin/activate
+
 if [ "${WEBAPP_ENV}" == "dev" ]
 then
+   cd src/frontend_celery
    python3 main.py
 fi
 
 if [ "${WEBAPP_ENV}" == "prod" ]
 then
    #export CURL_CA_BUNDLE=""
-   logsdir=/mnt/storage1/HerediVar/logs
+   set -o allexport
+   extension=env_
+   source $ROOT/.$extension$WEBAPP_ENV
+   set +o allexport
+   
+   logsdir=$ROOT/logs
    mkdir -p $logsdir/gunicorn-access-logs
    mkdir -p $logsdir/gunicorn-error-logs
-   gunicorn -b heredivar.uni-koeln.de:8000 -w 4 'webapp:create_app()' --access-logfile $logsdir/gunicorn-access-logs/access.log --error-logfile $logsdir/gunicorn-error-logs/error.log
+   gunicorn -b $HOST:$PORT -w 4 'webapp:create_app()' --access-logfile $logsdir/gunicorn-access-logs/access.log --error-logfile $logsdir/gunicorn-error-logs/error.log # heredivar.uni-koeln.de:8000
    #gunicorn -b SRV018.img.med.uni-tuebingen.de:8001 -w 1 'webapp:create_app()'
 fi

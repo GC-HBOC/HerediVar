@@ -128,7 +128,7 @@ class automatic_classification_job(Job):
         # all consequences
         variant_effects = []
         for consequence in variant.consequences:
-            if consequence.transcript.source == "ensembl" and consequence.hgvs_c is not None:
+            if consequence.transcript.source == "ensembl" and consequence.hgvs_c is not None and consequence.hgvs_c.startswith('c'):
                 new_effect = {}
                 new_effect["transcript"] = consequence.transcript.name
                 new_effect["variant_type"] = [x.strip().replace(' ', '_') for x in consequence.consequence.split('&')]
@@ -164,16 +164,17 @@ class automatic_classification_job(Job):
 
         # gnomAD scores
         gnomad_scores = {}
-        if variant.annotations.gnomad_af is not None:
+        if all([x is not None for x in [variant.annotations.gnomad_af, variant.annotations.gnomad_ac]]):
             gnomad_scores["AF"] = variant.annotations.gnomad_af.get_value()
-        if variant.annotations.gnomad_ac is not None:
             gnomad_scores["AC"] = variant.annotations.gnomad_ac.get_value()
-        if variant.annotations.gnomad_popmax is not None:
-            gnomad_scores["popmax"] = variant.annotations.gnomad_popmax.get_value()
-        if variant.annotations.gnomad_popmax_AC is not None:
-            gnomad_scores["popmax_AC"] = variant.annotations.gnomad_popmax_AC.get_value()
-        if variant.annotations.gnomad_popmax_AF is not None:
-            gnomad_scores["popmax_AF"] = variant.annotations.gnomad_popmax_AF.get_value()
+            if all([x is not None for x in [variant.annotations.gnomad_popmax, variant.annotations.gnomad_popmax_AC, variant.annotations.gnomad_popmax_AF]]):
+                gnomad_scores["popmax"] = variant.annotations.gnomad_popmax.get_value()
+                gnomad_scores["popmax_AC"] = variant.annotations.gnomad_popmax_AC.get_value()
+                gnomad_scores["popmax_AF"] = variant.annotations.gnomad_popmax_AF.get_value()
+            else: # if the variant is missing popmax values simply use the standard af and ac
+                gnomad_scores["popmax"] = "ALL"
+                gnomad_scores["popmax_AC"] = variant.annotations.gnomad_ac.get_value()
+                gnomad_scores["popmax_AF"] = variant.annotations.gnomad_af.get_value()
         if len(gnomad_scores) > 0:
             result["gnomAD"] = gnomad_scores
 
@@ -236,9 +237,9 @@ class automatic_classification_job(Job):
             if variant.annotations.task_force_protein_domain is not None:
                 result["VUS_task_force_domain"] = True
         
-        #result["cold_spot"] = False
-        #if variant.annotations.task_force_cold_spot is not None:
-        #    result["cold_spot"] = True
+        result["cold_spot"] = False
+        if variant.annotations.task_force_cold_spot is not None:
+            result["cold_spot"] = True
 
         # cancerhotspots
         """
@@ -251,8 +252,6 @@ class automatic_classification_job(Job):
         validate_input(result) # raises an error on fails
 
         result_json = json.dumps(result)
-
-        print(result_json)
 
         return result_json
 

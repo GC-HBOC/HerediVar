@@ -606,23 +606,17 @@ def is_snv(one_var):
         return True
 
 def read_dotenv():
-    basedir = os.path.abspath(os.path.dirname(__file__))
-
-
     webapp_env = os.environ.get('WEBAPP_ENV', None)
-
-
     if webapp_env is None:
         raise ValueError("No WEBAPP_ENV environment variable set.")
 
+    dotenv_filename = ".env_" + webapp_env
+    dotenv_path = os.path.join(paths.workdir, dotenv_filename)
 
-    dotenvfile = ".env"
-    if webapp_env == "dev": #this is just for fast switching between configurations during development
-        dotenvfile = ".env_dev"
-    if webapp_env == "localtest":
-        dotenvfile = ".env_localtest"
+    if not os.path.exists(dotenv_path):
+        raise IOError("The .env file is missing: " + dotenv_path)
     
-    load_dotenv(os.path.join(basedir, dotenvfile))
+    load_dotenv(dotenv_path)
 
 def enquote(string):
     string = str(string).strip("'") # remove quotes if the input string is already quoted!

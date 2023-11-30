@@ -46,16 +46,15 @@ echo HOME: $HOME
 
 
 SCRIPT=$(readlink -f "$0")
-SCRIPTPATH=$(dirname "$SCRIPT")
-cd $SCRIPTPATH
-cd ../../
+ROOT=$(dirname $(dirname $(dirname "$SCRIPT")))
+cd $ROOT
 pwd
 
 
 
 source .venv/bin/activate
 export WEBAPP_ENV=$we
-vep_install_dir=src/tools/ensembl-vep-release-107.0
+vep_install_dir=$ROOT/tools/ensembl-vep-release-107.0
 cpan_dir=$vep_install_dir/cpan
 export PERL5LIB=$vep_install_dir/Bio/:$cpan_dir/lib/perl5/:$PERL5LIB
 
