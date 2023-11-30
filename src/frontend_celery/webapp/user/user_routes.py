@@ -11,6 +11,7 @@ from ..utils import *
 from flask_paginate import Pagination
 import annotation_service.main as annotation_service
 from ..tasks import start_annotation_service, start_variant_import, start_import_one_variant, annotate_all_variants, abort_annotation_tasks
+import random
 
 
 user_blueprint = Blueprint(
@@ -356,10 +357,13 @@ def admin_dashboard():
 
             if reannotate_which == 'all':
                 variant_ids = conn.get_all_valid_variant_ids()
+                #variant_ids = random.sample(variant_ids, 50)
             elif reannotate_which == 'erroneous':
                 variant_ids = annotation_stati['error']
             elif reannotate_which == 'aborted':
                 variant_ids = annotation_stati['aborted']
+            elif reannotate_which == 'unannotated':
+                variant_ids = annotation_stati['unannotated']
 
             annotate_all_variants.apply_async(args=[variant_ids, selected_job_config, session['user']['user_id'], session['user']['roles']])
             current_app.logger.info(session['user']['preferred_username'] + " issued a reannotation of " + reannotate_which + " variants") 
