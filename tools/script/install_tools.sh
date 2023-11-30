@@ -12,7 +12,7 @@ root=$(dirname $(dirname $(dirname $SCRIPT_DIR)))
 
 
 # set relative paths
-tools=$root/src/tools
+tools=$root/tools
 js_packages=$root/src/frontend_celery/webapp/static/packages
 
 
@@ -52,7 +52,7 @@ $tools/script/install_vep.sh -p $tools/
 $tools/script/install_ngs_bits.sh -p $tools/ -v 2022_10
 
 # prepare automatic classification algorithm
-$tools/script/install_automatic_classification.sh -p $tools/ -v $root
+$tools/script/install_automatic_classification.sh -p $tools
 
 
 

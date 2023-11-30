@@ -35,9 +35,11 @@ echo "Downloading the automatic classification algorithm to $path."
 mkdir -p $path
 cd $path
 
-#git clone https://github.com/akatzke/variant_classification.git
+git clone https://github.com/akatzke/variant_classification.git
 
-cd variant_classification
+variant_classification_path=$path/variant_classification
+
+cd $variant_classification
 wget https://www.python.org/ftp/python/3.10.13/Python-3.10.13.tgz
 tar -zxvf Python-3.10.13.tgz
 cd Python-3.10.13
@@ -58,7 +60,6 @@ pip install --upgrade pip
 pip install wheel
 pip install setuptools
 python3 -m pip install --upgrade setuptools wheel
-
 pip install pyyaml
 pip install cyvcf2
 pip install biopython
@@ -69,22 +70,22 @@ pip install openpyxl
 pip install jsonschema
 pip install pandas
 
-cd $path/variant_classification
-bash install_dependencies/pyensemble_install.sh -v 110
+cd $variant_classification
+bash install_dependencies/install_pyensembl.sh -v 110
 
 bash install_dependencies/download_data.sh -p $path
 
 
 # adjust configuration
 cp config.yaml config_production.yaml
-sed -r -i "s:/home/katzkean/:$path/:g" config_production.yaml
+sed -r -i "s:/home/katzkean/:$variant_classification/:g" config_production.yaml
 sed -r -i "s:variant_classification/data/critical_region:data/critical_region:g" config_production.yaml
 
 
-sed -r -i "s:/home/katzkean/:$path/:g" gene_specific/acmg_brca1.yaml
+sed -r -i "s:/home/katzkean/:$variant_classification/:g" gene_specific/acmg_brca1.yaml
 sed -r -i "s:variant_classification/data/critical_region:data/critical_region:g" gene_specific/acmg_brca1.yaml
 
-sed -r -i "s:/home/katzkean/:$path/:g" gene_specific/acmg_brca2.yaml
+sed -r -i "s:/home/katzkean/:$variant_classification/:g" gene_specific/acmg_brca2.yaml
 sed -r -i "s:variant_classification/data/critical_region:data/critical_region:g" gene_specific/acmg_brca2.yaml
 
 
