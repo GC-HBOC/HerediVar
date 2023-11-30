@@ -27,7 +27,7 @@ $TEST_SCRIPT_DIR/start_keycloak_for_tests.sh
 
 # run tests
 cd src/frontend_celery
-python -m pytest #-k 'test_dev'
+python -m pytest -k 'test_dev'
 
 # stop keycloak
 pkill -s 0 -e java

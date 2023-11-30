@@ -85,7 +85,6 @@ def test_user_lists(test_client):
     ##### test showing the list #####
     response = test_client.get(url_for("user.my_lists", view=list_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
-    print(data)
     
     assert response.status_code == 200
     assert data.count('variant_id="') == 2
