@@ -689,10 +689,8 @@ def sort_transcripts(transcript_names):
     from common.db_IO import Connection
     conn = Connection()
     transcripts = conn.get_transcripts_from_names(transcript_names, remove_unknown = True)
-    #print(transcripts)
     conn.close()
     transcripts_sorted = order_transcripts(transcripts)
-    #print(transcripts_sorted)
     return [transcript.name for transcript in transcripts_sorted]
 
 

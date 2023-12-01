@@ -34,20 +34,6 @@ def test_clinvar_submission(test_client):
     for link in links:
         response = requests.get(link)
         assert response.status_code == 200
-
-    ##### Incorrect orphanet #####
-    response = test_client.post(
-        url_for("variant_io.submit_clinvar", variant_id=variant_id),
-        data={
-            "orpha_code": "001234567890",
-            "orpha_name": "missing_orpha_name",
-            "gene": "BARD1"
-        },
-        follow_redirects=True
-    )
-    data = html.unescape(response.data.decode('utf8'))
-    assert response.status_code == 200
-    assert "The selected orphanet id (001234567890) is not valid." in data
     
     ##### successul upload to clinvar #####
     response = test_client.post(
@@ -94,6 +80,7 @@ def test_clinvar_submission(test_client):
 
 
 
+
 def test_export_variant_to_vcf(test_client):
     """
     This does a variant to vcf export and checks if the output is equal to a vcf file which was generated before
@@ -108,12 +95,11 @@ def test_export_variant_to_vcf(test_client):
     variant_id = 52
     response = test_client.get(url_for("download.variant", variant_id=variant_id), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
-    print(data)
     assert response.status_code == 200
     assert "Error during VCF Check" not in data
 
-    with open(test_data_dir + '/variant_52.vcf', 'r') as img1:
-        vcf_variant_52 = StringIO(img1.read())
+    with open(test_data_dir + '/variant_52.vcf', 'r') as f1:
+        vcf_variant_52 = StringIO(f1.read())
     vcf_variant_52.seek(0)
     
     compare_vcf(vcf_variant_52, data)

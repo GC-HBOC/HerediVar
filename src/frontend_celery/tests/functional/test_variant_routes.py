@@ -126,7 +126,7 @@ def test_browse(test_client):
     data = response.data.decode('utf8')
     assert response.status_code == 403
 
-        
+
 
 def test_variant_display(test_client):
     """
@@ -168,7 +168,7 @@ def test_variant_display(test_client):
     consequences = v.consequences
     if consequences is not None:
         for consequence in consequences:
-            assert consequence.transcript in data
+            assert consequence.transcript.name in data
         
     literature = v.literature
     if literature is not None:
@@ -217,8 +217,6 @@ def test_variant_display(test_client):
     link = 'https://cancer.sanger.ac.uk/cosmic/search?q=BARD1+c.1972C>T'
     response = requests.get(link)
     assert response.status_code == 200
-
-
 
 
 

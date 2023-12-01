@@ -954,6 +954,7 @@ class Variant:
 
     # this function returns a list of consequence objects of the preferred transcripts 
     # (can be multiple if there are eg. 2 mane select transcripts for this variant)
+    # this should be renamed to get_preferred_consequences
     def get_preferred_transcripts(self):
         result = []
         consequences = self.consequences
@@ -970,12 +971,14 @@ class Variant:
             return None
         
         transcripts_sorted, consequences_sorted = functions.sort_transcript_dict(sortable_dict)
-        result.append(consequences_sorted.pop(0)) # always append the first one
-        for consequence in consequences_sorted: # scan for all mane select transcripts
-            if consequence.transcript.is_mane_select:
-                result.append(consequence)
-            else:
-                break # we can do this because the list is sorted
+        
+        if len(consequences_sorted) > 0:
+            result.append(consequences_sorted.pop(0)) # always append the first one
+            for consequence in consequences_sorted: # scan for all mane select transcripts
+                if consequence.transcript.is_mane_select:
+                    result.append(consequence)
+                else:
+                    break # we can do this because the list is sorted
 
         return result
 

@@ -371,6 +371,11 @@ def is_valid_scheme(selected_criteria, scheme):
     is_valid = True
     message = ''
 
+    if scheme is None:
+        is_valid = False
+        message = "Unknown scheme"
+        return is_valid, message
+
     scheme_criteria = scheme['criteria']
     scheme_description = scheme['description']
 

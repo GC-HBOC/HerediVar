@@ -63,11 +63,12 @@ def check_update_clinvar_status(variant_id, conn: Connection, force_update = Fal
     
     submission_id = previous_clinvar_submission[2]
     previous_clinvar_submission_status = previous_clinvar_submission[4]
+    previous_clinar_accession = previous_clinvar_submission[3]
 
     # the request is still in process -> check for an update & synchronize heredivar database
     if previous_clinvar_submission_status in ['processing', 'submitted'] or force_update:
         new_submission_status = check_clinvar_status(submission_id)
-        conn.insert_update_heredivar_clinvar_submission(variant_id, submission_id, new_submission_status['accession_id'], new_submission_status['status'], new_submission_status['message'], new_submission_status['last_updated'])
+        conn.insert_update_heredivar_clinvar_submission(variant_id, submission_id, new_submission_status['accession_id'], new_submission_status['status'], new_submission_status['message'], new_submission_status['last_updated'], previous_clinvar_accession = previous_clinar_accession)
         return conn.get_heredivar_clinvar_submission(variant_id)
     else:
         return previous_clinvar_submission

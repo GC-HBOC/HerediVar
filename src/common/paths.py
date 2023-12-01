@@ -114,11 +114,13 @@ elif webapp_env == 'localtest':
 
     
     #tools
-    vep_path = "/mnt/storage2/GRCh38/share/opt/ensembl-vep-release-104.3"
-    vep_cache_dir = "/mnt/storage2/GRCh38/share/data/dbs/ensembl-vep-104/cache"
+    #vep_path = "/mnt/storage2/GRCh38/share/opt/ensembl-vep-release-104.3"
+    #vep_cache_dir = "/mnt/storage2/GRCh38/share/data/dbs/ensembl-vep-104/cache"
+    vep_path = joinpaths(toolsdir, "ensembl-vep")
+    vep_cache_dir = joinpaths(toolsdir, "ensembl-vep/data/cache")
     #ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-70-g53bce65c/"
-    ngs_bits_path = workdir + "src/tools/ngs-bits/bin/"
-    htslib_path = workdir + "src/tools/htslib/"
+    ngs_bits_path = joinpaths(toolsdir, "ngs-bits/bin/")
+    htslib_path = joinpaths(toolsdir, "htslib/")
 
 
     # data

@@ -327,7 +327,7 @@ def classify(variant_id):
 
         # test if the input is valid
         criteria = extract_criteria_from_request(request.form, scheme_id, conn)
-        scheme_classification_is_valid, scheme_message = is_valid_scheme(criteria, classification_schemas[scheme_id])
+        scheme_classification_is_valid, scheme_message = is_valid_scheme(criteria, classification_schemas.get(scheme_id))
         pmids, text_passages = remove_empty_literature_rows(pmids, text_passages)
         literature_is_valid, literature_message = is_valid_literature(pmids, text_passages)
         
