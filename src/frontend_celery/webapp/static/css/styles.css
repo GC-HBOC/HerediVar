@@ -18,6 +18,15 @@
             rgba(0,0,0,0) calc(50% + 0.1em));
 }
 
+.stripes {
+    background: repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 7px,
+      rgba(0, 0, 0, 0.25) 7px,
+      rgba(0, 0, 0, 0.75) 14px
+  );
+}
 
 .clickable {
     cursor: pointer;

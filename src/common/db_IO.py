@@ -2132,7 +2132,8 @@ class Connection:
                         criterium_evidence = criterium_raw[4]
                         criterium_strength = criterium_raw[7]
                         strength_display_name = criterium_raw[8]
-                        criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength, strength_display_name = strength_display_name)
+                        is_selected = True
+                        criterium = models.HerediVarCriterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength, strength_display_name = strength_display_name, is_selected = is_selected)
                         criteria.append(criterium)
                     scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class, is_active = is_active, is_default = is_default)
 
@@ -2190,7 +2191,8 @@ class Connection:
                         criterium_evidence = criterium_raw[4]
                         criterium_strength = criterium_raw[7]
                         strength_display_name = criterium_raw[8]
-                        criterium = models.Criterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength, strength_display_name=strength_display_name)
+                        is_selected = True
+                        criterium = models.HerediVarCriterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength, strength_display_name=strength_display_name, is_selected=is_selected)
                         criteria.append(criterium)
                     scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class, is_active = is_active, is_default = is_default)
 
@@ -2215,7 +2217,7 @@ class Connection:
                 all_criteria = []
                 for automatic_classification_criterium in automatic_classification_criteria:
                     automatic_classification_criterium_id = int(automatic_classification_criterium[0])
-                    name = automatic_classification_criterium[1]
+                    name = automatic_classification_criterium[1].replace('_protein', '').replace('_splicing', '')
                     rule_type = automatic_classification_criterium[2]
                     evidence_type = automatic_classification_criterium[3]
                     is_selected = automatic_classification_criterium[4] == 1
@@ -2225,10 +2227,11 @@ class Connection:
                     new_criterium = models.AutomaticClassificationCriterium(id = automatic_classification_criterium_id, name = name, rule_type = rule_type, evidence_type = evidence_type, is_selected = is_selected, strength = strength, type = strength_type, evidence = evidence)
                     all_criteria.append(new_criterium)
                 
-                classification = automatic_classification_raw[2]
+                classification_splicing = automatic_classification_raw[2]
+                classification_protein = automatic_classification_raw[3]
                 scheme_name = automatic_classification_raw[1]
-                date = automatic_classification_raw[3]
-                automatic_classification = models.AutomaticClassification(id = automatic_classification_id, scheme_name = scheme_name, classification = classification, date = date, criteria = all_criteria)
+                date = automatic_classification_raw[4]
+                automatic_classification = models.AutomaticClassification(id = automatic_classification_id, scheme_name = scheme_name, classification_splicing = classification_splicing, classification_protein = classification_protein, date = date, criteria = all_criteria)
 
 
         heredicare_classifications = None
@@ -2647,6 +2650,12 @@ class Connection:
         self.cursor.execute(command)
         result = self.cursor.fetchall()
         return [x[0] for x in result]
+    
+    def get_variant_ids_without_automatic_classification(self):
+        command = "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM automatic_classification)"
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
 
     def get_annotation_types(self, exclude_groups = []):
         annotation_type_ids = self.get_recent_annotation_type_ids()
@@ -2957,10 +2966,10 @@ class Connection:
 
         return transcripts
     
-    def insert_automatic_classification(self, variant_id, scheme, classification, tool_version):
+    def insert_automatic_classification(self, variant_id, scheme, classification_splicing, classification_protein, tool_version):
         date = functions.get_now()
-        command = "INSERT INTO automatic_classification (variant_id, scheme_name, classification, date, tool_version) VALUES (%s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, scheme, classification, date, tool_version))
+        command = "INSERT INTO automatic_classification (variant_id, scheme_name, classification_splicing, classification_protein, date, tool_version) VALUES (%s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, scheme, classification_splicing, classification_protein, date, tool_version))
         self.conn.commit()
         return self.get_last_insert_id()
 
@@ -2976,7 +2985,7 @@ class Connection:
         self.conn.commit()
 
     def get_automatic_classification(self, variant_id):
-        command = "SELECT id, scheme_name, classification, date FROM automatic_classification WHERE variant_id = %s"
+        command = "SELECT id, scheme_name, classification_splicing, classification_protein, date FROM automatic_classification WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall() # prevent unfetched result
         if len(result) == 0:

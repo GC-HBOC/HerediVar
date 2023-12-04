@@ -4,6 +4,15 @@ from typing import Any
 import common.functions as functions
 from functools import cmp_to_key
 import datetime
+from abc import ABC
+
+@dataclass 
+class AbstractDataclass(ABC): 
+    def __new__(cls, *args, **kwargs): 
+        if cls == AbstractDataclass or cls.__bases__[0] == AbstractDataclass: 
+            raise TypeError("Cannot instantiate abstract class.") 
+        return super().__new__(cls)
+    
 
 @dataclass
 class Annotation:
@@ -249,18 +258,29 @@ class AllAnnotations:
     def get_max_hbond_rev(self):
         return self.max_hbond_rev, self.max_hbond_rev_wt, self.max_hbond_rev_mut
 
-
 @dataclass
-class Criterium:
-
-    id: str
+class Criterium(AbstractDataclass):
+    id: int
     name: str
     type: str
     strength: str
-    strength_display_name: str
     evidence: str
+    is_selected: bool
 
-    is_selected: bool = True
+    def to_dict(self):
+        return asdict(self)
+
+@dataclass
+class HerediVarCriterium(Criterium):
+    """
+    id: int
+    name: str
+    type: str
+    strength: str
+    evidence: str
+    is_selected: bool
+    """
+    strength_display_name: str
 
     def display_name(self):
         the_name = self.name.lower()
@@ -270,25 +290,6 @@ class Criterium:
             if criterium in the_name and self.type != criterium:
                 return fancy_name
         return self.name
-
-
-    #def strength_to_string(self):
-    #    print(self.strength)
-    #    if self.strength == "very strong pathogenic":
-    #        return "vs"
-    #    if self.strength == "strong pathogenic":
-    #        return "s"
-    #    if self.strength == "medium pathogenic":
-    #        return "m"
-    #    if self.strength == "supporting pathogenic":
-    #        return "p"
-    #    if self.strength == "stand-alone benign":
-    #        return "ba"
-    #    if self.strength == "supporting benign":
-    #        return "p"
-    #    if self.strength == "strong benign":
-    #        return "s"
-
 
     def to_vcf(self):
         info = "~2B".join([self.name, self.strength, self.evidence]) # sep: +
@@ -452,28 +453,42 @@ class Classification:
         return header
 
 @dataclass
-class AutomaticClassificationCriterium:
+class AutomaticClassificationCriterium(Criterium):
+    """
     id: int
     name: str
-    rule_type: str
-    evidence_type: str
-    is_selected: bool
-    strength: str
     type: str
-
-    evidence: str # comment
+    strength: str
+    evidence: str
+    is_selected: bool
+    """
+    rule_type: str # general/splicing/proteion
+    evidence_type: str # pathogenic/benign
 
     def display_name(self):
-        return self.name.replace('protein', 'prot').replace('splicing', 'spli')
+        return self.name.replace('protein', 'prt').replace('splicing', 'spl')
+
 
 @dataclass
 class AutomaticClassification:
     id: int
     scheme_name: str
-    classification: int
+    classification_splicing: int
+    classification_protein: int
     date: datetime
 
     criteria: Any # list of automatic classification criterium
+
+    def filter_criteria(self, rule_type):
+        result = []
+        if self.criteria is not None:
+            for criterium in self.criteria:
+                if criterium.rule_type == 'general' or criterium.rule_type == rule_type: # always keep general criteria
+                    result.append(criterium)
+        return result
+    
+    def to_dict(self):
+        return asdict(self)
 
 @dataclass
 class ClinvarCondition:

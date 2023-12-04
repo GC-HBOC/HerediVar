@@ -38,7 +38,7 @@ def search():
 
     allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
     allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
-    allowed_automatic_classes = functions.order_classes(conn.get_enumtypes('automatic_classification', 'classification'))
+    allowed_automatic_classes = functions.order_classes(conn.get_enumtypes('automatic_classification', 'classification_splicing'))
     annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
     annotation_types = preprocess_annotation_types_for_search(annotation_types)
 
@@ -504,6 +504,30 @@ def consensus_classify(variant_id):
                                 previous_classifications=previous_classifications,
                                 allowed_classes = allowed_classes
                             )
+
+
+@variant_blueprint.route('/classify/<int:variant_id>/automatic', methods=['GET'])
+@require_permission(['read_resources'])
+def automatic_classification(variant_id):
+    #{user_id: functions.list_of_objects_to_dict(variant.get_user_classifications(user_id), key_func = lambda a : a.scheme.id, val_func = lambda a : a.to_dict())}
+    conn = get_connection()
+    variant = conn.get_variant(variant_id, include_annotations=False, include_consensus=False, include_user_classifications=False, include_heredicare_classifications=False, include_clinvar=False, include_consequences=False, include_assays=False, include_literature=False, include_external_ids=False)
+    if variant is None:
+        abort(404)
+    
+    result = variant.automatic_classification.to_dict()
+    selected = {'splicing': [], 'protein': []}
+    unselected = {'splicing': [], 'protein': []}
+    for criterium in variant.automatic_classification.criteria:
+        if criterium.rule_type != 'general':
+            if criterium.is_selected:
+                selected[criterium.rule_type].append(criterium.name)
+            if not criterium.is_selected:
+                unselected[criterium.rule_type].append(criterium.name)
+    
+    
+
+    return result
 
 
 

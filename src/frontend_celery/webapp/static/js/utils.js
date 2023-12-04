@@ -577,3 +577,81 @@ function create_xlg(parent, tooltip = "") {
     path.setAttribute("d", "M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z")
     image.appendChild(path)
 }
+
+function create_spinner() {
+    /*
+    <div class="spinner-grow text-secondary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    */
+
+    var spinner = document.createElement('div')
+    spinner.classList.add('spinner-border')
+    spinner.classList.add('text-light')
+    spinner.classList.add('spinner-border-sm')
+    spinner.setAttribute('role', 'status')
+    spinner.id = 'spinner'
+
+    return spinner
+}
+
+function remove_spinner() {
+    document.getElementById('spinner').remove()
+}
+
+
+function create_check_icon(width, height) {
+    /*
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check" viewBox="0 0 16 16">
+        <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
+    </svg>
+    */
+    var image = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    image.setAttribute("id", "delete-from-list-button")
+    image.setAttribute("width", width)
+    image.setAttribute("height", height)
+    image.setAttribute("fill", "currentColor")
+    image.classList.add("bi")
+    image.classList.add("bi-box-arrow-up-right")
+    image.setAttribute("viewBox", "0 0 16 16")
+
+
+    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z")
+    image.appendChild(path)
+
+    return image
+}
+
+function create_x_icon(width, height) {
+    /*
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+    </svg>
+    */
+    var image = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    image.setAttribute("id", "delete-from-list-button")
+    image.setAttribute("width", width)
+    image.setAttribute("height", height)
+    image.setAttribute("fill", "currentColor")
+    image.classList.add("bi")
+    image.classList.add("bi-box-arrow-up-right")
+    image.setAttribute("viewBox", "0 0 16 16")
+
+
+    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", "M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z")
+    image.appendChild(path)
+
+    return image
+}
+
+function add_tooltip(element, tooltip_text) {
+    element.setAttribute('data-bs-toggle', "tooltip")
+    element.setAttribute('data-bs-title', tooltip_text)
+}
+
+function remove_tooltip(element) {
+    element.removeAttribute('data-bs-toggle')
+    element.removeAttribute('data-bs-title')
+}

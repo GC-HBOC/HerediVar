@@ -15,6 +15,7 @@ const request_form = JSON.parse(flask_data.dataset.requestForm)
 const selected_pmids = JSON.parse(flask_data.dataset.selectedPmids) // this may be non empty if there were errors in the submission
 const selected_text_passages = JSON.parse(flask_data.dataset.selectedTextPassages) // this may be non empty if there were errors in the submission
 
+const automatic_classification_url = flask_data.dataset.automaticClassificationUrl;
 
 
 var previous_obj = null;
@@ -105,7 +106,12 @@ function update_criteria_evidence_dom(criteria_evidence_dom, previous_evidence) 
 
 function update_select_criterium_button(select_criterium_button, id) {
     select_criterium_button.value = id // save the criterium in button such that it knows which one to select on press
-    select_criterium_button.checked = document.getElementById(id).checked
+    
+    if (document.getElementById(id).getAttribute('is_intermediate') == 'true') {
+        select_criterium_button.indeterminate = true
+    } else if (document.getElementById(id).checked) {
+        select_criterium_button.checked = document.getElementById(id).checked
+    }
 }
 
 function criterium_strength_to_description(criterium_strength) {
@@ -306,6 +312,9 @@ $(document).ready(function() {
     $('#add_selected_literature_button_user').click(function() {
         add_all_to_selected_literature('userSelectedLiterature', add_from_user_selected);
     });
+    $('#automatic_classification_button').click(function() {
+        preselect_criteria_automatic_classification();
+    });
 
     add_default_for_important_information()
 });
@@ -412,7 +421,9 @@ function preselect_criteria_from_database(scheme) {
     }
     if (typeof current_scheme_with_info !== "undefined") { // only preselect if there is data for it
         selected_criteria = current_scheme_with_info['scheme']['criteria']
+        preselect_criteria_from_list(selected_criteria)
         //console.log(selected_criteria)
+        /*
         for(var i = 0; i < selected_criteria.length; i++) {
             var current_data = selected_criteria[i];
             var current_criterium = current_data['name'].toUpperCase();
@@ -424,8 +435,106 @@ function preselect_criteria_from_database(scheme) {
             set_criterium_strength(current_criterium, current_strength)
             set_criterium(current_criterium, true)
         }
+        */
+    }
+
+}
+
+function preselect_criteria_from_list(selected_criteria, is_intermediate = false) {
+    for(var i = 0; i < selected_criteria.length; i++) {
+        var current_data = selected_criteria[i];
+        var current_criterium = current_data['name'].toUpperCase();
+        console.log(current_criterium)
+        var current_evidence = current_data['evidence'];
+        var current_strength = current_data['type'];
+        var is_selected = current_data['is_selected']
+
+        var selected_button = document.getElementById(current_criterium);
+        if (selected_button != null){
+            selected_button.value = current_evidence;
+            set_criterium_strength(current_criterium, current_strength)
+            set_criterium(current_criterium, is_selected, is_intermediate)
+        }
     }
 }
+
+
+function preselect_criteria_automatic_classification(){
+    const preselect_button = document.getElementById("automatic_classification_button")
+    evidence_type = $("input[name=automatic_classification_evidence_type]:checked").val()
+    console.log("Fetching automatic classification using " + evidence_type + " evidence.")
+
+    update_status(preselect_button, "processing")
+
+    $.ajax({
+        type: 'GET',
+        url: automatic_classification_url,
+        data: {'evidence_type': evidence_type},
+        success: function(returnval, status, request) {
+            console.log(returnval)
+
+            var scheme_id_automatic_classification = 30 //returnval['scheme_id']
+            console.log(scheme)
+            if (scheme_id_automatic_classification != scheme){
+                update_status(preselect_button, "failure")
+                preselect_button.classList.add("btn-warning")
+                add_tooltip(preselect_button, "You have selected the wrong scheme. This variant only has an automatic classification for " + returnval['scheme_name'])
+            } else {
+                const automatic_selected_criteria = returnval['criteria']
+                preselect_criteria_from_list(automatic_selected_criteria, is_selected = true, is_intermediate = true)
+                update_classification_preview()
+
+                update_status(preselect_button, "success")
+                preselect_button.classList.add("btn-success")
+                add_tooltip(preselect_button, "Selected " + automatic_selected_criteria.length + " criteria")
+            }
+        },
+        error: function(xhr, status, error) {
+            update_status(preselect_button, "failure")
+            preselect_button.classList.add("btn-danger")
+            add_tooltip(preselect_button, "The request returned an http error " + xhr.status + ". Please try again later or submit a bug report if the problem persists.")
+        }
+    });
+}
+
+function update_status(parent, type) {
+    parent.innerText = ""
+    parent.classList.remove("btn-success")
+    parent.classList.remove("btn-danger")
+    parent.classList.remove("btn-warning")
+    remove_tooltip(parent)
+    const current_status = create_status(type)
+    parent.appendChild(current_status)
+}
+
+function create_status(type) {
+    var container = document.createElement('div')
+    container.classList.add('d-flex')
+    container.classList.add('align-items-center')
+    container.id = "status_display"
+
+    var status_icon_container = document.createElement('div')
+    status_icon_container.classList.add('vssr')
+    container.appendChild(status_icon_container)
+
+    var status_text_container = document.createElement('span')
+    container.appendChild(status_text_container)
+    if (type == "processing") {
+        const spinner = create_spinner()
+        status_icon_container.appendChild(spinner)
+        status_text_container.innerText = "processing..."
+    } else if (type == "success") {
+        const check = create_check_icon(16, 16)
+        status_icon_container.appendChild(check)
+        status_text_container.innerText = "success"
+    } else if (type == "failure") {
+        const x_icon = create_x_icon(16, 16)
+        status_icon_container.appendChild(x_icon)
+        status_text_container.innerText = "failure"
+    }
+    return container
+}
+
 
 function set_activatable_property() {
     const criteria = classification_schemas[scheme]['criteria']
@@ -1183,7 +1292,7 @@ function update_classification_preview() {
 }
 
 function update_criterium_button_background(criterium_id) {
-    //var criterium_button = document.getElementById(criterium_id);
+    var criterium_button = document.getElementById(criterium_id);
     var criterium_strength_select = document.getElementById(criterium_id + '_strength');
     var criterium_label = document.getElementById(criterium_id + '_label');
 
@@ -1197,6 +1306,12 @@ function update_criterium_button_background(criterium_id) {
         }
     }
     criterium_label.classList.add(new_class)
+
+    if (criterium_button.getAttribute('is_intermediate') == "true") {
+        criterium_label.classList.add('stripes')
+    } else {
+        criterium_label.classList.remove('stripes')
+    }
 }
 
 function update_criterium_button_label(criterium_id) {
@@ -1223,6 +1338,7 @@ function toggle_criterium(criterium_id) {
     enable_disable_buttons(current_disable_group, obj.checked)
 }
 
+/*
 function set_criterium(criterium_id, is_checked) {
     var obj = document.getElementById(criterium_id)
     obj.checked = is_checked
@@ -1232,6 +1348,17 @@ function set_criterium(criterium_id, is_checked) {
     const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
     enable_disable_buttons(current_disable_group, obj.checked)
 }
+*/
+function set_criterium(criterium_id, is_checked, is_intermediate = false) {
+    var obj = document.getElementById(criterium_id)
+    obj.checked = is_checked
+    obj.setAttribute('is_intermediate', is_intermediate)
+    update_criterium_button_background(criterium_id)
+    document.getElementById(criterium_id + '_strength').checked = obj.checked
+    const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
+    enable_disable_buttons(current_disable_group, obj.checked)
+}
+
 
 function set_criterium_strength(criterium_id, strength) {
     document.getElementById(criterium_id + '_strength').value = strength;

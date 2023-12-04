@@ -34,8 +34,19 @@
         </div>
 
         <div class="collapse show" aria-expanded="true" id="classification_schema_wrapper">
-        
-            <div class="sst">Go <a id="scheme_reference" href="#">here</a> for more details about the currently selected scheme.</div>
+            
+            <div class="d-flex align-items-center sst">
+                <div class="flex-grow-1">
+                    Go <a id="scheme_reference" href="#">here</a> for more details about the currently selected scheme.
+                </div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-secondary ssr"  data-bs-toggle="modal" data-bs-target="#automatic_classification_options-modal">{{ macros.draw_gear(tooltip = "") }}</button>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-primary" id="automatic_classification_button">Preselect criteria</button>
+                </div>
+            </div>
+
         
             <!-- acmg criteria -->
             <div class="d-flex justify-content-center sst">
@@ -321,6 +332,36 @@
     {% endif %}
 
 
+    <!-- modal for auatomatic classification options -->
+    <div class="modal fade" id="automatic_classification_options-modal" tabindex="-1" aria-labelledby="automatic_classification_options-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="automatic_classification_options-modal-label">Automatic classification options</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Select evidence type to be used:
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="automatic_classification_evidence_type" id="automatic_classification_evidence_type_all" autocomplete="off" value="all" checked>
+                        <label class="form-check-label" for="automatic_classification_evidence_type_all">All (use splicing and protein evidence)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="automatic_classification_evidence_type" id="automatic_classification_evidence_type_splicing" autocomplete="off" value="splicing">
+                        <label class="form-check-label" for="automatic_classification_evidence_type_splicing">Splicing</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="automatic_classification_evidence_type" id="automatic_classification_evidence_type_protein" autocomplete="off" value="protein">
+                        <label class="form-check-label" for="automatic_classification_evidence_type_protein">Protein</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
       
 </div>
 
@@ -335,6 +376,7 @@
     data-request-form='{{ request.form.to_dict(flat=True) | tojson }}'
     data-selected-pmids='{{ request.form.getlist("pmid") | tojson }}'
     data-selected-text-passages='{{ request.form.getlist("text_passage") | tojson }}'
+    data-automatic-classification-url='{{ url_for("variant.automatic_classification", variant_id=variant.id) }}'
 />
 
 

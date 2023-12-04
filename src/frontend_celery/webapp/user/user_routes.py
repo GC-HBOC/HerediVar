@@ -357,6 +357,7 @@ def admin_dashboard():
 
             if reannotate_which == 'all':
                 variant_ids = conn.get_all_valid_variant_ids()
+                #variant_ids = conn.get_variant_ids_without_automatic_classification()
                 #variant_ids = random.sample(variant_ids, 50)
             elif reannotate_which == 'erroneous':
                 variant_ids = annotation_stati['error']
