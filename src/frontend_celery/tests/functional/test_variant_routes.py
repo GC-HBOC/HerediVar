@@ -51,80 +51,299 @@ def test_browse(test_client):
     assert 'MUTYH' in data
     assert 'HPDL' in data
 
-    # search for genes
-    response = test_client.get(url_for("variant.search", genes="BARD1"))
+    # test page size
+    response = test_client.get(url_for("variant.search", page_size = 5), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 5
+    assert data.count('class="page-link"') == 8 # 2 pages + 2 buttons right, left * 2 because the navbar is on top and on bottom
+
+    response = test_client.get(url_for("variant.search", page_size = 31), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "This page size is not supported. Defaulting to 20" in data
+    assert data.count('name="variant_row"') == 10
+
+    # test sort by option
+    response = test_client.get(url_for("variant.search", page_size = 5, sort_by = 'recent'), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 5
+    variant_ids = [168,164,146,139,130]
+    last_pos = -2
+    for variant_id in variant_ids:
+        cur_pos = data.find('variant_id="' + str(variant_id) + '"')
+        assert cur_pos != -1
+        assert last_pos < cur_pos
+        last_pos = cur_pos
+
+    response = test_client.get(url_for("variant.search", page_size = 5, sort_by = 'gnomic_position'), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+    with open("/mnt/storage2/users/ahdoebm1/HerediVar/src/frontend_celery/tests/test_dat/browse_01.html", "w") as file:
+        file.write(data)
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 5
+    variant_ids = [139, 130, 15, 146, 52]
+    last_pos = -2
+    for variant_id in variant_ids:
+        cur_pos = data.find('variant_id="' + str(variant_id) + '"')
+        assert cur_pos != -1
+        assert last_pos < cur_pos
+        last_pos = cur_pos
+
+def test_browse_cDNA_ranges(test_client):
+    """
+    This tests if the search for cDNA ranges works properly
+    """
+    response = test_client.get(url_for("variant.search", cdna_ranges="ENST00000357654 1 10"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    #71,168
+    #ENST00000357654
+    #c.52_64del
+    #c.670+1G>C
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 0
+
+    response = test_client.get(url_for("variant.search", cdna_ranges="ENST00000357654 670 670+1"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="168"' in data
+
+    response = test_client.get(url_for("variant.search", cdna_ranges="BRCA1 670 670+1"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="168"' in data
+
+
+def test_browse_consensus_classification(test_client):
+    """
+    This tests if the search for consensus classifications works properly
+    """
+    # one class
+    response = test_client.get(url_for("variant.search", consensus=3), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="139"' in data
+
+    # multiple classes
+    response = test_client.get(url_for("variant.search", consensus=[3,4]), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 2
+    assert 'variant_id="15"' in data
+    assert 'variant_id="139"' in data
+
+    response = test_client.get(url_for("variant.search", consensus=["1","2","3-","3","3+","4M","4","5","-"]), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 10
+    assert 'variant_id="15"' in data
+    assert 'variant_id="52"' in data
+    assert 'variant_id="71"' in data
+    assert 'variant_id="72"' in data
+    assert 'variant_id="130"' in data
+    assert 'variant_id="146"' in data
+    assert 'variant_id="32"' in data
+    assert 'variant_id="139"' in data
+    assert 'variant_id="164"' in data
+    assert 'variant_id="168"' in data
+
+    response = test_client.get(url_for("variant.search", consensus=["5"], include_heredicare_consensus="on"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 2
+    assert 'variant_id="52"' in data
+    assert 'variant_id="72"' in data
+
+def test_browse_external_ids(test_client):
+    """
+    Test if the external id search works properly
+    """
+    #serach for heredicare id
+    response = test_client.get(url_for("variant.search", external_ids="11740058"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="52"' in data
+
+    response = test_client.get(url_for("variant.search", external_ids="11740058:heredicare"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="52"' in data
+
+    #search for clinvar id
+    response = test_client.get(url_for("variant.search", external_ids="blimblam2:clinvar"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="52"' in data
+
+    # search multiple
+    response = test_client.get(url_for("variant.search", external_ids="11334923;11740058"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 2
+    assert 'variant_id="52"' in data
+    assert 'variant_id="139"' in data
+
+
+def test_browse_automatic_classification(test_client):
+    """
+    Test that automatic classification search is working properly
+    """
+    response = test_client.get(url_for("variant.search", automatic=["2"]), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 1
     assert 'variant_id="15"' in data
 
-    # search for ranges
-    response = test_client.get(url_for("variant.search", ranges="chr17:43124030-43124035"))
+    response = test_client.get(url_for("variant.search", automatic=["-"]), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 9
+    assert 'variant_id="52"' in data
+    assert 'variant_id="71"' in data
+    assert 'variant_id="72"' in data
+    assert 'variant_id="130"' in data
+    assert 'variant_id="146"' in data
+    assert 'variant_id="32"' in data
+    assert 'variant_id="139"' in data
+    assert 'variant_id="164"' in data
+    assert 'variant_id="168"' in data
+
+
+def test_browse_genes(test_client):
+    """
+    This tests if the search for genes works properly
+    """
+    response = test_client.get(url_for("variant.search", genes="BARD1"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="15"' in data
+
+def test_browse_ranges(test_client):
+    """
+    This tests if the search for genomic ranges works properly
+    """
+    response = test_client.get(url_for("variant.search", ranges="chr17:43124030-43124035"), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 1
     assert 'variant_id="71"' in data
-    
-    # search for hgvs
-    response = test_client.get(url_for("variant.search", hgvs="c.1972C>T"))
+
+def test_browse_hgvs(test_client):
+    """
+    This tests if the search for hgvs strings works properly
+    """
+    # with ensembl transcript name
+    response = test_client.get(url_for("variant.search", hgvs="ENST00000613192:c.*35C>T"), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 1
     assert 'variant_id="15"' in data
 
-    response = test_client.get(url_for("variant.search", hgvs="ENST00000613192:c.*35C>T"))
-    data = response.data.decode('utf8')
-    assert response.status_code == 200
-    assert data.count('name="variant_row"') == 1
-    assert 'variant_id="15"' in data
-
-    response = test_client.get(url_for("variant.search", hgvs="BARD1:c.*35C>T")) # not the mane select transcript
+    # with gene name, hgvs is not the mane select transcript -> this does not return the variant of interest
+    response = test_client.get(url_for("variant.search", hgvs="BARD1:c.*35C>T"), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 0
 
-    response = test_client.get(url_for("variant.search", hgvs="BARD1:c.1972C>T")) # gene + mane select transcript works
+    # gene + mane select transcript
+    response = test_client.get(url_for("variant.search", hgvs="BARD1:c.1972C>T"), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 1
     assert 'variant_id="15"' in data
 
-    response = test_client.get(url_for("variant.search", hgvs="ENST00000613192:c.*35C>T;c.1972C>T ,   ENST00000420246:c.*131C>T ")) # gene + mane select transcript works
+    # without transcript/gene
+    response = test_client.get(url_for("variant.search", hgvs="c.1972C>T"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="15"' in data
+
+    # multiple hgvs
+    response = test_client.get(url_for("variant.search", hgvs="ENST00000613192:c.*35C>T;c.1972C>T ,   ENST00000420246:c.*131C>T "), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 2
     assert 'variant_id="15"' in data
     assert 'variant_id="72"' in data
 
-    response = test_client.get(url_for("variant.search", hgvs="c.1972C>T ,   ENST00000420246:c.*131C>T ", genes="TP53")) # gene + mane select transcript works
+    response = test_client.get(url_for("variant.search", hgvs="c.1972C>T ,   ENST00000420246:c.*131C>T ", genes="TP53"), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 1
     assert 'variant_id="72"' in data
 
-    # search for consensus classifications
-    response = test_client.get(url_for("variant.search", consensus=3))
-    data = response.data.decode('utf8')
-    assert response.status_code == 200
-    assert data.count('name="variant_row"') == 1
-    assert 'variant_id="139"' in data
 
-    response = test_client.get(url_for("variant.search", consensus=[3,4]))
-    data = response.data.decode('utf8')
-    assert response.status_code == 200
-    assert data.count('name="variant_row"') == 2
-    assert 'variant_id="15"' in data
-    assert 'variant_id="139"' in data
-
-    response = test_client.get(url_for("variant.search", lookup_list_id=8, lookup_list_name="public read"))
+def test_browse_annotations(test_client):
+    """
+    Test that annotation search is working properly
+    """
+    #annotation_type_id=21&annotation_operation=&annotation_value=
+    response = test_client.get(url_for("variant.search", annotation_type_id="4", annotation_operation=">", annotation_value="5"), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 1
     assert 'variant_id="15"' in data
 
-    response = test_client.get(url_for("variant.search", lookup_list_id=10, lookup_list_name="private inaccessible"))
+    response = test_client.get(url_for("variant.search", annotation_type_id=["4", "4"], annotation_operation=[">", "<"], annotation_value=["5", "1"]), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 0
+
+    response = test_client.get(url_for("variant.search", annotation_type_id="4", annotation_operation="=", annotation_value="5"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 0
+
+    response = test_client.get(url_for("variant.search", annotation_type_id="4", annotation_operation="<", annotation_value="2"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="52"' in data
+
+    response = test_client.get(url_for("variant.search", annotation_type_id="16", annotation_operation="<", annotation_value="eas"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert 'The operation &lt; is not allowed for popmax.' in data
+
+    response = test_client.get(url_for("variant.search", annotation_type_id="16", annotation_operation="=", annotation_value="eas"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="15"' in data
+
+    response = test_client.get(url_for("variant.search", annotation_type_id="16", annotation_operation="~", annotation_value="AS"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="15"' in data
+
+
+def test_browse_list(test_client):
+    """
+    This tests if the search for variant lists works properly
+    """
+    # allowed list
+    response = test_client.get(url_for("variant.search", lookup_list_id=8, lookup_list_name="public read"), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="15"' in data
+
+    # unallowed/non existing list
+    response = test_client.get(url_for("variant.search", lookup_list_id=10, lookup_list_name="private inaccessible"), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 403
+
+
 
 
 

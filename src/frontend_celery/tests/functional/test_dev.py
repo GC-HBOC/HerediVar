@@ -47,5 +47,3 @@ def compare_vcf(reference_file, vcf_string):
 
 
 
-
-

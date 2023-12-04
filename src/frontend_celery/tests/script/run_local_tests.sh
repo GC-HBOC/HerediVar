@@ -17,7 +17,12 @@ source .venv/bin/activate
 
 
 zcat $DATABASE_DUMPER_DIR/structure/structure-$MOST_RECENT_DUMP_DATE.sql.gz | mysql --host sql.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahdoebm1_test
-mysql --host sql.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahdoebm1_test < $TEST_DATA_DIR/heredivar_test_data.sql
+mysql_errors=$(mysql --host sql.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahdoebm1_test < $TEST_DATA_DIR/heredivar_test_data.sql 2>&1)
+if [ $? = "1" ]; then
+    echo $mysql_errors
+    exit 1
+fi
+ 
 #mysql --host sql.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahdoebm1_test < $DATABASE_DUMPER_DIR/users/user_privileges_test.sql
 #mysql --host sql.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahdoebm1_test -e "SHOW TABLES"
 
