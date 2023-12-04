@@ -47,6 +47,7 @@ class automatic_classification_job(Job):
         if returncode != 0:
             raise RuntimeError(err_msg)
 
+        #print(classification)
         
         classification_result = json.loads(classification["result"])
         scheme = classification.get("scheme", "acmg-svi")
@@ -54,25 +55,28 @@ class automatic_classification_job(Job):
 
         conn.clear_automatic_classification(variant_id)
         
-        selected_criteria = []
+        selected_criteria = {} # protein, splicing, general
         for criterium_name in classification_result:
             current_criterium = classification_result[criterium_name]
             if not current_criterium['status']:
                 continue
             prefix = self.evidence_type2prefix(current_criterium['evidence_type'])
             postfix = self.strength2postfix(current_criterium['strength'])
-            selected_criteria.append(prefix+postfix)
-        selected_criteria = '+'.join(selected_criteria)
+            rule_type = current_criterium['rule_type']
+            criterium_strength_abbr = prefix + postfix
+            functions.extend_dict(selected_criteria, rule_type, criterium_strength_abbr)
+        
+        # calculate class for splicing
+        selected_criteria_splicing = '+'.join(selected_criteria.get("splicing", []) + selected_criteria.get("general", []))
+        classification_splicing = self.get_classification(selected_criteria_splicing, scheme)
+        
+        # calculate class for protein
+        selected_criteria_protein = '+'.join(selected_criteria.get("protein", []) + selected_criteria.get("general", []))
+        classification_protein = self.get_classification(selected_criteria_protein, scheme)
 
-        classification_endpoint = os.environ.get("HOST", "localhost") + ":" + os.environ.get("PORT", "5000")
-        classification_endpoint = urllib.parse.urljoin("http://" + classification_endpoint, "calculate_class/" + scheme + "/" + selected_criteria)
         #print(classification_endpoint)
-        resp = requests.get(classification_endpoint)
-        resp.raise_for_status()
-        classification = resp.json().get("final_class")
-        if classification is None:
-            raise RuntimeError("The classification endpoint did not return a classification")
-        automatic_classification_id = conn.insert_automatic_classification(variant_id, scheme, classification, tool_version)
+
+        automatic_classification_id = conn.insert_automatic_classification(variant_id, scheme, classification_splicing, classification_protein, tool_version)
 
         for criterium_name in classification_result:
             current_criterium = classification_result[criterium_name]
@@ -88,6 +92,16 @@ class automatic_classification_job(Job):
             )
 
         return status_code, err_msg
+    
+    def get_classification(self, selected_criteria: str, scheme: str):
+        classification_endpoint = os.environ.get("HOST", "localhost") + ":" + os.environ.get("PORT", "5000")
+        classification_endpoint = urllib.parse.urljoin("http://" + classification_endpoint, "calculate_class/" + scheme + "/" + selected_criteria)
+        resp = requests.get(classification_endpoint)
+        resp.raise_for_status()
+        classification = resp.json().get("final_class")
+        if classification is None:
+            raise RuntimeError("The classification endpoint did not return a classification")
+        return classification
 
     def evidence_type2prefix(self, evidence_type):
         mapping = {"benign": "b", "pathogenic": "p"}
