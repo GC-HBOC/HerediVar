@@ -457,6 +457,9 @@ wget https://www.omim.org/static/omim/data/mim2gene.txt
 #$ngsbits/VcfSort -in $bayesdel_file.vcf -out $bayesdel_file.vcf
 #$ngsbits/VcfLeftNormalize -stream -ref $genome -in $bayesdel_file.vcf -out $bayesdel_file.vcf.2
 #mv $bayesdel_file.vcf.2 $bayesdel_file.vcf
+## IDONT KNOW IF THIS IS ENOUGH TO MAKE IT UNIQUE! -> maybe there is a more sophisticated method required!
+#awk '!seen[$0]++' $bayesdel_file.vcf > $bayesdel_file.uniq.vcf
+#mv $bayesdel_file.uniq.vcf $bayesdel_file.vcf
 #bgzip $bayesdel_file.vcf
 ##$ngsbits/VcfCheck -lines 0 -in $bayesdel_file.vcf.gz -ref $genome
 #
