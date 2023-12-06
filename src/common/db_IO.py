@@ -1375,8 +1375,8 @@ class Connection:
         else:
             functions.eprint("no valid \"where\" given in insert_scheme_criterium function. It was: " + str(where))
             return
-        command = "SELECT y.id,y." + prefix + "_classification_id,y.classification_criterium_id,y.criterium_strength_id,y.evidence,y.name as classification_criterium_name,classification_criterium_strength.name as classification_criterium_strength_name, classification_criterium_strength.description, classification_criterium_strength.display_name FROM classification_criterium_strength INNER JOIN ( \
-                    SELECT id," + prefix + "_classification_id,classification_criterium_id,criterium_strength_id,evidence,name FROM " + table_oi + " \
+        command = "SELECT y.id,y." + prefix + "_classification_id,y.classification_criterium_id,y.criterium_strength_id,y.evidence,y.name as classification_criterium_name,classification_criterium_strength.name as classification_criterium_strength_name, classification_criterium_strength.description, classification_criterium_strength.display_name, y.is_selected FROM classification_criterium_strength INNER JOIN ( \
+                    SELECT id," + prefix + "_classification_id,classification_criterium_id,criterium_strength_id,evidence,name,is_selected FROM " + table_oi + " \
 	                    INNER JOIN (SELECT id as inner_id,name FROM classification_criterium)x \
                     ON x.inner_id = " + table_oi + ".classification_criterium_id WHERE " + prefix + "_classification_id=%s\
                     )y ON y.criterium_strength_id = classification_criterium_strength.id"
@@ -2191,7 +2191,7 @@ class Connection:
                         criterium_evidence = criterium_raw[4]
                         criterium_strength = criterium_raw[7]
                         strength_display_name = criterium_raw[8]
-                        is_selected = True
+                        is_selected = criterium_raw[9] == 1
                         criterium = models.HerediVarCriterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength, strength_display_name=strength_display_name, is_selected=is_selected)
                         criteria.append(criterium)
                     scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class, is_active = is_active, is_default = is_default)
@@ -2998,3 +2998,17 @@ class Connection:
         self.cursor.execute(command, (automatic_classification_id, ))
         result = self.cursor.fetchall()
         return result
+    
+
+    #### DELETE LATER!
+    def get_automatic_classification_ids(self):
+        command = "SELECT id FROM automatic_classification"
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
+    
+    #### DELETE LATER!
+    def update_automatic_classification(self, automatic_classification_id, classification_splicing, classification_protein):
+        command = "UPDATE automatic_classification SET classification_splicing = %s, classification_protein = %s WHERE id = %s"
+        self.cursor.execute(command, (classification_splicing, classification_protein, automatic_classification_id))
+        self.conn.commit()

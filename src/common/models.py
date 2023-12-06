@@ -960,10 +960,20 @@ class Variant:
                     if current_gene.id not in gene_ids and current_gene.id is not None:
                         result.append(current_gene)
                         gene_ids.append(current_gene.id)
-        if how == "string" and result is not None:
+        if result is None or len(result) == 0:
+            return None
+        if how == "string":
             result = '~3B'.join([g.symbol for g in result])
-        if how == "list" and result is not None:
+        if how == "list":
             result = [g.symbol for g in result]
+        if how == "best":
+            result = [g.symbol.upper() for g in result]
+            preferred_genes = set(["ATM", "BARD1", "BRCA1", "BRCA2", "BRIP1", "CDH1", "CHEK2", "PALB2", "PTEN", "RAD51C", "RAD51D", "STK11", "TP53"])
+            avail_preferred_genes = set(result) & preferred_genes
+            if len(avail_preferred_genes) > 0:
+                result = list(avail_preferred_genes)[0]
+            else:
+                result = result[0]
         return result
 
 
@@ -994,6 +1004,8 @@ class Variant:
                     result.append(consequence)
                 else:
                     break # we can do this because the list is sorted
+        else:
+            return None
 
         return result
 

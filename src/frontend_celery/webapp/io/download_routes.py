@@ -256,6 +256,38 @@ def get_vcf(variants_oi, conn, worker=get_variant_vcf_line):
 
     return buffer, status, "", ""
 
+"""
+@download_blueprint.route('/recalculate_automatic_classes')
+def recalculate_automatic_classes():
+    conn = get_connection()
+
+    automatic_classification_ids = conn.get_automatic_classification_ids()
+
+    for automatic_classification_id in automatic_classification_ids:
+        criteria = conn.get_automatic_classification_criteria_applied(automatic_classification_id)
+
+        selected_splicing = []
+        selected_protein = []
+        for criterium in criteria:
+            rule_type = criterium[2]
+            evidence_type = criterium[6]
+            is_selected = criterium[4] == 1
+
+            if is_selected:
+                if rule_type == 'splicing':
+                    selected_splicing.append(evidence_type)
+                elif rule_type == 'protein':
+                    selected_protein.append(evidence_type)
+                else:
+                    selected_splicing.append(evidence_type)
+                    selected_protein.append(evidence_type)
+
+        classification_splicing = calculate_class('acmg-svi', '+'.join(selected_splicing)).json['final_class']
+        classification_protein = calculate_class('acmg-svi', '+'.join(selected_protein)).json['final_class']
+
+        conn.update_automatic_classification(automatic_classification_id, classification_splicing, classification_protein)
+"""
+
 
 
 
@@ -272,7 +304,7 @@ def calculate_class(scheme_type, selected_classes = ''):
     selected_classes = selected_classes.split('+')
     #scheme = request.args.get('scheme')
 
-    print(selected_classes)
+    #print(selected_classes)
 
     final_class = None
     if scheme_type == 'acmg':
@@ -316,9 +348,6 @@ def calculate_class(scheme_type, selected_classes = ''):
 
     result = {'final_class': final_class}
     return jsonify(result)
-
-
-
 
 
 def get_possible_classes_acmg_svi(class_counts):

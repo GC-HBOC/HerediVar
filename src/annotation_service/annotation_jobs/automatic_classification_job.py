@@ -35,6 +35,8 @@ class automatic_classification_job(Job):
 
         if not any(self.job_config[x] for x in ['do_auto_class']):
             return status_code, err_msg
+        
+        conn.clear_automatic_classification(variant_id)
 
         autoclass_input = self.get_autoclass_json(variant_id, conn)
 
@@ -50,11 +52,9 @@ class automatic_classification_job(Job):
         #print(classification)
         
         classification_result = json.loads(classification["result"])
-        scheme = classification.get("scheme", "acmg-svi")
+        scheme = classification.get("config_name", "acmg-svi")
         tool_version = classification["version"]
 
-        conn.clear_automatic_classification(variant_id)
-        
         selected_criteria = {} # protein, splicing, general
         for criterium_name in classification_result:
             current_criterium = classification_result[criterium_name]
@@ -152,6 +152,10 @@ class automatic_classification_job(Job):
         if variant is None:
             return None
         
+
+        if len(variant.ref) > 15 or len(variant.alt) > 15: # cannot calculate on long insertions/deletions
+            return None
+        
         result = {}
 
         # basic info
@@ -161,15 +165,17 @@ class automatic_classification_job(Job):
         result["alt"] = variant.alt
 
         # gene & consequence summary
-        all_genes = variant.get_genes(how = "list")
-        if all_genes is not None:
-            result["gene"] = all_genes[0]
-        else:
-            result["gene"] = "interegenic"
+        best_gene = variant.get_genes(how = "best")
+        if best_gene is None:
+            return None
+        
+        result["gene"] = best_gene
         all_variant_types = []
         if variant.consequences is not None:
             for consequence in variant.consequences:
-                if consequence.transcript.source == "ensembl":
+                if consequence.transcript.gene.symbol is None:
+                    continue
+                if consequence.transcript.source == "ensembl" and best_gene.upper() == consequence.transcript.gene.symbol.upper():
                     new_variant_types = consequence.consequence.split('&')
                     new_variant_types = [x.strip().replace(' ', '_') for x in new_variant_types]
                     all_variant_types.extend(new_variant_types)
@@ -282,6 +288,7 @@ class automatic_classification_job(Job):
         "cold_spot": true
         """
         can_have_task_force_protein_domain = False
+        all_genes = variant.get_genes(how = "list")
         for gene_symbol in all_genes:
             can_have_task_force_protein_domain = conn.has_task_force_protein_domains(gene_symbol)
             if can_have_task_force_protein_domain:
@@ -315,3 +322,28 @@ def validate_input(input: dict):
     with open(json_schema_path) as f:
         json_schema = json.load(f)
     jsonschema.validate(input, json_schema) # this raises an error if it fails
+
+
+
+
+## STATS
+#SELECT COUNT(id) FROM automatic_classification
+#
+#select
+#    count(*) RecordsPerGroup,
+#    name,is_selected,strength
+#from automatic_classification_criteria_applied
+#group by name,is_selected,strength
+#
+#
+#select
+#    count(*) RecordsPerGroup,
+#    classification_splicing
+#from automatic_classification
+#group by classification_splicing
+#
+#select
+#    count(*) RecordsPerGroup,
+#    classification_protein
+#from automatic_classification
+#group by classification_protein

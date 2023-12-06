@@ -99,6 +99,17 @@
                                 data-bs-toggle="popover" data-bs-placement="left" 
                                 data-bs-content="you must provide evidence in order to select this criterion" hidden>
                             <label class="large_text" id="criteria_title"></label>
+
+                            <fieldset class="multicheck light-hover" id="test">
+                                <input id="one" type="radio" name="r" checked>
+                                <label for="one">{{ macros.draw_square(width=25,height=25) }}</label>
+                                <input id="two" type="radio" name="r">
+                                <label for="two">{{ macros.draw_check_square(width=25,height=25) }}</label>
+                                <input id="three" type="radio" name="r">
+                                <label for="three">{{ macros.draw_x_square(width=25,height=25) }}</label>
+                                <input id="four" type="radio" name="r">
+                                <label for="four">{{ macros.draw_dash_square(width=25,height=25) }}</label>
+                            </fieldset>
                         </div>
                         <hr>
                         <div id="button_container" hidden>

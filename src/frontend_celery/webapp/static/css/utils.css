@@ -239,3 +239,29 @@
     width: fit-content !important;
     max-width: 50em !important;
 }
+
+
+/************** quadcheck **************/
+.multicheck {
+    display: inline-grid;
+   }
+.multicheck label {
+ grid-area: 1 / 1;
+ background-color: white; 
+ z-index: 0;
+ opacity: 0;
+}
+.multicheck input {
+ position: absolute;
+ z-index: -1;
+}
+.multicheck input:checked + label {
+ opacity: 1;
+}
+.multicheck input:first-of-type + label {
+ z-index: 2;
+}
+.multicheck input:checked + label + input + label {
+ opacity: 0;
+ z-index: 2;
+}

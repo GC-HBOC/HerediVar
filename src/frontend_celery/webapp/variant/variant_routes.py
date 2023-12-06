@@ -302,6 +302,7 @@ def classify(variant_id):
     conn = get_connection()
 
     variant = conn.get_variant(variant_id, include_annotations=True, include_heredicare_classifications=True, include_clinvar=True, include_assays=True)
+
     if variant is None:
         return abort(404)
 
@@ -525,7 +526,7 @@ def automatic_classification(variant_id):
             if not criterium.is_selected:
                 unselected[criterium.rule_type].append(criterium.name)
     
-    
+
 
     return result
 
