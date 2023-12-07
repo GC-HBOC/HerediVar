@@ -1,5 +1,5 @@
 {
-    "classification_scheme_id": "8",
+    "classification_scheme_id": "22",
     "name": "enigma-brca2",
     "display_name": "ClinGen ENIGMA BRCA2 v1.0.0",
     "type": "acmg-enigma-brca2",
@@ -101,8 +101,8 @@
                     "is_default": "0"
                 },
                 {
-                    "name": "pm",
-                    "display_name":"mod",
+                    "name": "pp",
+                    "display_name":"sup",
                     "description": "supporting pathogenic",
                     "is_default": "0"
                 }
