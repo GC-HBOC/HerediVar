@@ -113,7 +113,7 @@ def convert_scheme_criteria_to_dict(criteria):
     criteria_dict = {} # convert to dict criterium->criterium_id,strength,evidence
     for entry in criteria:
         criterium_id = entry[2]
-        criteria_dict[criterium_id] = {'id':entry[0], 'strength_id':entry[3], 'evidence':entry[4]}
+        criteria_dict[criterium_id] = {'id':entry[0], 'strength_id':entry[3], 'evidence':entry[4], 'is_selected':entry[9]}
     return criteria_dict
 
 def handle_scheme_classification(classification_id, criteria, conn: Connection, where = "user"):
@@ -124,13 +124,12 @@ def handle_scheme_classification(classification_id, criteria, conn: Connection, 
     for criterium_id in criteria:
         evidence = criteria[criterium_id]['evidence']
         strength_id = criteria[criterium_id]['criterium_strength_id']
+        is_selected = criteria[criterium_id]['is_selected']
         # insert new criteria
         if criterium_id not in previous_criteria_dict:
-            conn.insert_scheme_criterium_applied(classification_id, criterium_id, strength_id, evidence, where=where)
-            #scheme_classification_got_update = True
-        # update records if they were present before
-        elif evidence != previous_criteria_dict[criterium_id]['evidence'] or strength_id != previous_criteria_dict[criterium_id]['strength_id']:
-            conn.update_scheme_criterium_applied(previous_criteria_dict[criterium_id]['id'], strength_id, evidence, where="user")
+            conn.insert_scheme_criterium_applied(classification_id, criterium_id, strength_id, evidence, is_selected, where=where)
+        else: # update records if they were present before
+            conn.update_scheme_criterium_applied(previous_criteria_dict[criterium_id]['id'], strength_id, evidence, is_selected, where=where)
             scheme_classification_got_update = True
     
     # delete unselected criterium tags
@@ -344,14 +343,18 @@ def extract_criteria_from_request(request_obj, scheme_id, conn: Connection):
     criteria = {}
     non_criterium_form_fields = ['scheme', 'classification_type', 'final_class', 'comment', 'strength_select', 'pmid', 'text_passage']
     for criterium_name in request_obj:
-        if criterium_name not in non_criterium_form_fields and '_strength' not in criterium_name:
+        if criterium_name not in non_criterium_form_fields and '_strength' not in criterium_name and '_state' not in criterium_name:
             evidence = request_obj[criterium_name]
             strength = request_obj[criterium_name + '_strength']
+            state = request_obj[criterium_name + '_state']
+            is_selected = 1 if state == 'selected' else 0
             criterium_id = conn.get_classification_criterium_id(scheme_id, criterium_name.upper())
             if criterium_id is None:
                 abort(500, "A criterium was selected that does not exist for this scheme.")
+            if state in ["unchecked"]:
+                continue
             criterium_strength_id = conn.get_classification_criterium_strength_id(criterium_id, strength)
-            criteria[criterium_id] = {'evidence':evidence, 'strength':strength, 'criterium_name': criterium_name.upper(), 'criterium_strength_id': criterium_strength_id}
+            criteria[criterium_id] = {'evidence':evidence, 'strength':strength, 'criterium_name': criterium_name.upper(), 'criterium_strength_id': criterium_strength_id, 'is_selected': is_selected}
     return criteria
 
 # criteria dict from the extract criteria request function is the input
@@ -361,7 +364,8 @@ def get_scheme_class(criteria_dict, scheme_type):
     if scheme_type == 'task-force':
         keyval = 'criterium_name'
     for key in criteria_dict:
-        all_criteria_strengths.append(criteria_dict[key][keyval])
+        if criteria_dict[key]['is_selected'] == 1:
+            all_criteria_strengths.append(criteria_dict[key][keyval])
     all_criteria_string = '+'.join(all_criteria_strengths)
     scheme_class = calculate_class(scheme_type, all_criteria_string)
     return scheme_class
@@ -387,7 +391,7 @@ def is_valid_scheme(selected_criteria, scheme):
     #    is_valid = False
     #    message = "You must select at least one of the classification scheme criteria to submit a classification scheme based classification. The classification was not submitted."
 
-    all_selected_criteria_names = [selected_criteria[x]['criterium_name'] for x in selected_criteria]
+    all_selected_criteria_names = [selected_criteria[x]['criterium_name'] for x in selected_criteria if selected_criteria[x]['is_selected']]
 
     # ensure that only valid criteria were submitted
     for criterium_id in selected_criteria:

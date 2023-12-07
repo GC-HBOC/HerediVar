@@ -1349,7 +1349,7 @@ class Connection:
         result = self.cursor.fetchone()
         return result
 
-    def insert_scheme_criterium_applied(self, classification_id, classification_criterium_id, criterium_strength_id, evidence, where="user"):
+    def insert_scheme_criterium_applied(self, classification_id, classification_criterium_id, criterium_strength_id, evidence, is_selected, where="user"):
         if where == "user":
             command = "INSERT INTO user_classification_criteria_applied (user_classification_id"
         elif where == "consensus":
@@ -1357,8 +1357,8 @@ class Connection:
         else:
             functions.eprint("no valid \"where\" given in insert_scheme_criterium function. It was: " + str(where))
             return
-        command = command + ", classification_criterium_id, criterium_strength_id, evidence) VALUES (%s, %s, %s, %s)"
-        actual_information = (classification_id, classification_criterium_id, criterium_strength_id, evidence)
+        command = command + ", classification_criterium_id, criterium_strength_id, evidence, is_selected) VALUES (%s, %s, %s, %s, %s)"
+        actual_information = (classification_id, classification_criterium_id, criterium_strength_id, evidence, is_selected)
         self.cursor.execute(command, actual_information)
         self.conn.commit()
 
@@ -1384,7 +1384,7 @@ class Connection:
         result = self.cursor.fetchall()
         return result
 
-    def update_scheme_criterium_applied(self, scheme_criterium_id, updated_strength, updated_evidence, where="user"):
+    def update_scheme_criterium_applied(self, scheme_criterium_id, updated_strength, updated_evidence, is_selected, where="user"):
         if where == "user":
             command = "UPDATE user_classification_criteria_applied"
         elif where == "consensus":
@@ -1392,8 +1392,8 @@ class Connection:
         else:
             functions.eprint("no valid \"where\" given in insert_scheme_criterium function. It was: " + str(where))
             return
-        command = command + " SET criterium_strength_id=%s, evidence=%s WHERE id=%s"
-        self.cursor.execute(command, (updated_strength, updated_evidence, scheme_criterium_id))
+        command = command + " SET criterium_strength_id=%s, evidence=%s, is_selected=%s WHERE id=%s"
+        self.cursor.execute(command, (updated_strength, updated_evidence, is_selected, scheme_criterium_id))
         self.conn.commit()
 
 

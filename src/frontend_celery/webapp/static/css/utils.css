@@ -241,27 +241,27 @@
 }
 
 
-/************** quadcheck **************/
+/************** multicheck **************/
 .multicheck {
     display: inline-grid;
-   }
+}
 .multicheck label {
- grid-area: 1 / 1;
- background-color: white; 
- z-index: 0;
- opacity: 0;
+    grid-area: 1 / 1;
+    background-color: white; 
+    z-index: 0;
+    opacity: 0;
 }
 .multicheck input {
- position: absolute;
- z-index: -1;
+    position: absolute;
+    z-index: -1;
 }
-.multicheck input:checked + label {
- opacity: 1;
+.multicheck input:checked:enabled + label {
+    opacity: 1;
 }
-.multicheck input:first-of-type + label {
- z-index: 2;
+.multicheck input:first-of-type:enabled + label {
+    z-index: 2;
 }
-.multicheck input:checked + label + input + label {
- opacity: 0;
- z-index: 2;
+.multicheck input:checked:enabled + label + input:enabled + label {
+    opacity: 0;
+    z-index: 2;
 }

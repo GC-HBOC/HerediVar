@@ -90,7 +90,7 @@ function show_relevant_information(criterium_id) {
     if (relevant_information != '') {
         relevant_information = relevant_information.split(';')
         for (var i = 0; i < relevant_information.length; i++) {
-            document.getElementById(relevant_information[i] + '_info').classList.remove('visually-hidden')
+            document.getElementById(relevant_information[i] + '_info').classList.remove('visually_hidden')
         }
     }
 }
@@ -106,12 +106,20 @@ function update_criteria_evidence_dom(criteria_evidence_dom, previous_evidence) 
 
 function update_select_criterium_button(select_criterium_button, id) {
     select_criterium_button.value = id // save the criterium in button such that it knows which one to select on press
-    
-    if (document.getElementById(id).getAttribute('is_intermediate') == 'true') {
-        select_criterium_button.indeterminate = true
-    } else if (document.getElementById(id).checked) {
-        select_criterium_button.checked = document.getElementById(id).checked
+
+    //const criterium_button = document.getElementById(id)
+    const criterium_state_dom = document.getElementById(id + '_state')
+    const is_intermediate = criterium_state_dom.getAttribute('is_intermediate') == 'true'
+    var criterium_state = criterium_state_dom.value
+
+    //unchecked
+    //selected
+    //unselected
+    //preselected
+    if (is_intermediate) {
+        criterium_state = "intermediate"
     }
+    document.getElementById(criterium_state).checked = true
 }
 
 function criterium_strength_to_description(criterium_strength) {
@@ -237,14 +245,13 @@ function preselect_scheme() {
 function preselect_criteria_from_request_form() {
     for (var key in request_form) {
         if (key in classification_schemas[scheme]['criteria']) { // filter for criteria
-            set_criterium(key, true)
+            var current_state = request_form[key + '_state']
+            set_criterium_strength(key, current_strength)
+            set_criterium(key, current_state)
             var current_evidence = request_form[key]
             document.getElementById(key).value = current_evidence
 
             var current_strength = request_form[key + '_strength']
-            set_criterium_strength(key, current_strength)
-
-            update_criterium_button_background(key)
         }
     }
     update_classification_preview()
@@ -440,20 +447,24 @@ function preselect_criteria_from_database(scheme) {
 
 }
 
-function preselect_criteria_from_list(selected_criteria, is_intermediate = false) {
+function preselect_criteria_from_list(selected_criteria) {
     for(var i = 0; i < selected_criteria.length; i++) {
         var current_data = selected_criteria[i];
         var current_criterium = current_data['name'].toUpperCase();
-        console.log(current_criterium)
         var current_evidence = current_data['evidence'];
         var current_strength = current_data['type'];
         var is_selected = current_data['is_selected']
+
+        var state = "unselected"
+        if (is_selected) {
+            state = "selected"
+        }
 
         var selected_button = document.getElementById(current_criterium);
         if (selected_button != null){
             selected_button.value = current_evidence;
             set_criterium_strength(current_criterium, current_strength)
-            set_criterium(current_criterium, is_selected, is_intermediate)
+            set_criterium(current_criterium, state)
         }
     }
 }
@@ -582,7 +593,7 @@ function revert_criteria_container() {
 
 function hide_all_information() {
     $('.important_information').each(function() {
-        this.classList.add('visually-hidden')
+        this.classList.add('visually_hidden')
     })
 }
 
@@ -919,6 +930,7 @@ function create_criterium_button(criterium_id, strength) {
         <input type="checkbox" class="btn-check" id="pvs1" name="pvs1" value="" strength-adjustable="true" autocomplete="off" onchange="button_select_action(this)">
         <label id="pvs1_label" class="btn btn-pvs light-hover acmg-button" for="pvs1">PVS1</label>
         <input type="checkbox" id="pvs1_strength" name="pvs1_strength" value="pvs" autocomplete="off" hidden>
+        <input type="checkbox" id="pvs1_state" name="pvs1_state" value="unchecked" is_intermediate="false" autocomplete="off" hidden>
     </div>
     `
 
@@ -967,6 +979,17 @@ function create_criterium_button(criterium_id, strength) {
     strength_select.setAttribute('autocomplete', 'off')
     strength_select.hidden = true
     container.appendChild(strength_select)
+
+
+    var state = document.createElement('input')
+    state.setAttribute('type', 'checkbox')
+    state.id = criterium_id + '_state'
+    state.name = criterium_id + '_state'
+    state.hidden = true
+    state.setAttribute('is_intermediate', 'false')
+    state.setAttribute('autocomplete', 'off')
+    state.value = 'unchecked'
+    container.appendChild(state)
 
     return container
 }
@@ -1197,14 +1220,16 @@ function add_functionality_to_table() {
 
 function select_criterium(obj) {
     const criterium_id = obj.value // this is the criterium which we want to select
-    var criterium_to_select_dom = document.getElementById(criterium_id)
-    if (document.getElementById('criteria_evidence').value.trim() == '' && !criterium_to_select_dom.checked) { 
-        $('#' + obj.id).popover('show')
-        obj.checked = false;
+    const criterium_button = document.getElementById(criterium_id)
+
+    if (document.getElementById('criteria_evidence').value.trim() == '' && !criterium_button.checked) { 
+        $(obj).popover('show')
+        set_criterium(criterium_id, "unchecked")
+        document.getElementById("unchecked").checked = true;
     } else { // only select criterium if there is evidence
-        $('#' + obj.id).popover('hide')
-        set_criterium(criterium_id, obj.checked)
-        //criterium_to_select_dom.checked = !criterium_to_select_dom.checked
+        $(obj).popover('hide')
+        const state = $("input[type='radio'][name='criterium_state']:checked").val();
+        set_criterium(criterium_id, state)
         update_classification_preview()
     }
 }
@@ -1214,7 +1239,8 @@ function get_checked_criteria_strengths() {
     var all_buttons = document.querySelectorAll('.btn-check')
     for (var i = 0; i < all_buttons.length; i++) {
         var current_button = all_buttons[i];
-        if (current_button.checked) {
+        var current_criterium_state = document.getElementById(current_button.id + '_state').value
+        if (current_button.checked && current_criterium_state == 'selected') {
             var new_value = document.getElementById(current_button.id + '_strength').value
             if (scheme_type == 'acmg-enigma-atm' && current_button.id == 'PM2') {
                 result.push(current_button.id + "_" + new_value)
@@ -1253,11 +1279,11 @@ function load_colors() {
 
 function enable_disable_buttons(criterium_ids, is_disable) {
     for (var i = 0; i < criterium_ids.length; i++) {
-        var current_criterium_id = criterium_ids[i];
-        var current_criterium_button = document.getElementById(current_criterium_id)
+        const current_criterium_id = criterium_ids[i];
+        const current_criterium_button = document.getElementById(current_criterium_id)
         // this is just a sanity check to make sure that the disabled buttons are not checked!
         if (current_criterium_button.checked) {
-            set_criterium(current_criterium_id, false)
+            set_criterium(current_criterium_id, "unchecked")
         }
         if (current_criterium_button.getAttribute('activateable') === 'true') {
             current_criterium_button.disabled = is_disable
@@ -1287,30 +1313,88 @@ function update_classification_preview() {
         if (!(scheme in pc) && !do_request_form_preselect) {
             document.getElementById('final_class').value = final_class
         }
-        
     });
 }
 
-function update_criterium_button_background(criterium_id) {
-    var criterium_button = document.getElementById(criterium_id);
-    var criterium_strength_select = document.getElementById(criterium_id + '_strength');
-    var criterium_label = document.getElementById(criterium_id + '_label');
+function get_all_btn_classes() {
+    var allRules = [];
+    var sSheetList = document.styleSheets;
+    console.log(sSheetList)
+    sSheet = 4
 
-    var new_class = "btn-" + criterium_strength_select.value
-
-    const current_classes = criterium_label.classList
-    for (var i = 0; i < current_classes.length; i++) {
-        var current_class = current_classes[i]
-        if (current_class.indexOf("btn-") >= 0) {
-            criterium_label.classList.remove(current_class)
+    var ruleList = document.styleSheets[sSheet].cssRules;
+    for (var rule = 0; rule < ruleList.length; rule ++)
+    {
+        var current_css_selector = ruleList[rule].selectorText;
+        if (current_css_selector !== undefined) {
+            if (current_css_selector.startsWith(".btn-") && current_css_selector.length < 10) {
+                allRules.push(current_css_selector);
+            }
         }
     }
-    criterium_label.classList.add(new_class)
+    return allRules
+}
 
-    if (criterium_button.getAttribute('is_intermediate') == "true") {
+function remove_criterium_button_background(criterium_id) {
+    const criterium_label = document.getElementById(criterium_id + '_label');
+    for (var i = 0; i < criterium_label.classList.length; i++) {
+        var current_class = criterium_label.classList[i]
+        if (current_class.indexOf("btn-") >= 0) {
+            criterium_label.classList.remove(current_class)
+            //criterium_label.classList.toggle(current_class)
+        }
+    }
+}
+
+function update_criterium_button_background(criterium_id) {
+    //console.log("set background of " + criterium_id)
+    
+
+    //const criterium_button = document.getElementById(criterium_id);
+    const criterium_strength = document.getElementById(criterium_id + '_strength').value;
+    const criterium_state = document.getElementById(criterium_id + '_state').value
+    const criterium_label = document.getElementById(criterium_id + '_label');
+
+    var new_class = "btn-" + criterium_strength
+
+
+    //criterium_label.classList.forEach(current_class => {
+    //    if (current_class.indexOf("btn-") >= 0) {
+    //        console.log("removed " + current_class)
+    //        criterium_label.classList.remove(current_class)
+    //    }
+    //});
+    //for (var i = 0; i < criterium_label.classList.length; i++) {
+    //    var current_class = criterium_label.classList[i]
+    //    if (current_class.indexOf("btn-") >= 0) {
+    //        console.log("removed " + current_class)
+    //        criterium_label.classList.remove(current_class)
+    //        //criterium_label.classList.toggle(current_class)
+    //        break
+    //    }
+    //}
+
+    criterium_label.classList.add(new_class)
+    
+    //const btn_classes = get_all_btn_classes()
+    //btn_classes.forEach(btn_class => {
+    //    //criterium_label.classList.remove(btn_class.substr(1, btn_class.length))
+    //    $(criterium_label).removeClass(btn_class.substr(1, btn_class.length))
+    //});
+    //criterium_label.classList.toggle(new_class)
+
+    //criterium_label.classList.add(new_class)
+
+    if (document.getElementById(criterium_id + '_state').getAttribute('is_intermediate') == "true") {
         criterium_label.classList.add('stripes')
     } else {
         criterium_label.classList.remove('stripes')
+    }
+
+    if (criterium_state == 'unselected') {
+        criterium_label.classList.add('crossed')
+    } else {
+        criterium_label.classList.remove('crossed')
     }
 }
 
@@ -1335,7 +1419,8 @@ function toggle_criterium(criterium_id) {
     update_criterium_button_background(criterium_id)
     document.getElementById(criterium_id + '_strength').checked = obj.checked
     const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
-    enable_disable_buttons(current_disable_group, obj.checked)
+    const is_selected =  obj.checked && (document.getElementById(criterium_id + '_state').value == 'selected')
+    enable_disable_buttons(current_disable_group, is_selected)
 }
 
 /*
@@ -1348,7 +1433,7 @@ function set_criterium(criterium_id, is_checked) {
     const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
     enable_disable_buttons(current_disable_group, obj.checked)
 }
-*/
+
 function set_criterium(criterium_id, is_checked, is_intermediate = false) {
     var obj = document.getElementById(criterium_id)
     obj.checked = is_checked
@@ -1358,6 +1443,43 @@ function set_criterium(criterium_id, is_checked, is_intermediate = false) {
     const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
     enable_disable_buttons(current_disable_group, obj.checked)
 }
+*/
+
+function set_criterium(criterium_id, state) {
+    // a criterium can have three states:
+    // 1. unselected: not enough information available to know anything about the criterium
+    // 2. selected: criterium has enough evidence that we know it applies to the variant
+    // 3. unselected: criterium has enough evidence that we know it does not apply to the variant
+    const criterium_button = document.getElementById(criterium_id)
+    const state_check = document.getElementById(criterium_id + '_state')
+    const strength_check = document.getElementById(criterium_id + '_strength')
+
+    is_checked = false
+    if (state == 'selected' || state == 'unselected') {
+        is_checked = true
+    }
+    criterium_button.checked = is_checked
+    state_check.checked = is_checked
+    strength_check.checked = is_checked
+
+    if (state == 'intermediate') {
+        state_check.setAttribute('is_intermediate', 'true')
+    } else {
+        state_check.value = state
+        state_check.setAttribute('is_intermediate', 'false')
+    }
+
+    update_criterium_button_label(criterium_id)
+    update_criterium_button_background(criterium_id)
+    const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
+    const is_selected = is_checked && (document.getElementById(criterium_id + '_state').value == 'selected')
+    if (state != 'unchecked') { // prevent recursion
+        enable_disable_buttons(current_disable_group, is_selected)
+    }
+}
+
+
+
 
 
 function set_criterium_strength(criterium_id, strength) {
@@ -1368,6 +1490,7 @@ function update_criterium_strength(obj, criterium_id) {
     var strength_obj = document.getElementById(criterium_id + '_strength')
     strength_obj.value = obj.value
     update_classification_preview()
+    remove_criterium_button_background(criterium_id)
     update_criterium_button_background(criterium_id)
     update_criterium_button_label(criterium_id)
 }
