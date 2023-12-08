@@ -255,13 +255,13 @@
     position: absolute;
     z-index: -1;
 }
-.multicheck input:checked:enabled + label {
+.multicheck input:checked[selectable="true"] + label {
     opacity: 1;
 }
-.multicheck input:first-of-type:enabled + label {
+.multicheck input:first-of-type[selectable="true"] + label {
     z-index: 2;
 }
-.multicheck input:checked:enabled + label + input:enabled + label {
+.multicheck input:checked[selectable="true"] + label + input[selectable="true"] + label {
     opacity: 0;
     z-index: 2;
 }

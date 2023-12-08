@@ -649,9 +649,12 @@ function create_x_icon(width, height) {
 function add_tooltip(element, tooltip_text) {
     element.setAttribute('data-bs-toggle', "tooltip")
     element.setAttribute('data-bs-title', tooltip_text)
+    $(element).tooltip({title: tooltip_text})
+    
 }
 
 function remove_tooltip(element) {
     element.removeAttribute('data-bs-toggle')
     element.removeAttribute('data-bs-title')
+    $(element).tooltip('dispose')
 }
