@@ -46,7 +46,7 @@ $tools/script/install_redis.sh -p $tools/
 $tools/script/install_samtools.sh -p $tools/ -v 1.11
 
 # prepare vep
-$tools/script/install_vep.sh -p $tools/
+$tools/script/install_vep.sh -p $tools/ -v 110 -m 1
 
 # prepare ngs bits
 $tools/script/install_ngs_bits.sh -p $tools/ -v 2022_10
