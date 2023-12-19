@@ -152,9 +152,9 @@ def extract_user_classifications(request_obj, allowed_classes):
         flash("You have an error in your consensus class query(s). It must consist of a number between 1-5, 3+, 3- or M. Results are not filtered by consensus classification.", "alert-danger")
     return user_classifications
 
-def extract_automatic_classifications(request_obj, allowed_classes):
+def extract_automatic_classifications(request_obj, allowed_classes, which):
     classes = allowed_classes + ['-']
-    automatic_classifications = request_obj.args.getlist('automatic')
+    automatic_classifications = request_obj.args.getlist(which)
     automatic_classifications = ';'.join(automatic_classifications)
     regex_inner = '|'.join(classes)
     regex_inner = regex_inner.replace('+', '\+')

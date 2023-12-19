@@ -266,7 +266,8 @@ def my_lists():
         ranges = extract_ranges(request)
         consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request, allowed_consensus_classes)
         user_classifications = extract_user_classifications(request, allowed_user_classes)
-        automatic_classifications = extract_automatic_classifications(request, allowed_automatic_classes)
+        automatic_classifications_splicing = extract_automatic_classifications(request, allowed_automatic_classes, which="automatic_splicing")
+        automatic_classifications_protein = extract_automatic_classifications(request, allowed_automatic_classes, which="automatic_protein")
         hgvs = extract_hgvs(request)
         variant_ids_from_lookup_list = extract_lookup_list(request, user_id, conn)
         variant_ids_oi = conn.get_variant_ids_from_list(view_list_id)
@@ -289,7 +290,8 @@ def my_lists():
                 genes = genes, 
                 consensus=consensus_classifications, 
                 user=user_classifications, 
-                automatic=automatic_classifications,
+                automatic_splicing=automatic_classifications_splicing,
+                automatic_protein=automatic_classifications_protein,
                 hgvs=hgvs, 
                 variant_ids_oi=variant_ids_oi,
                 include_heredicare_consensus = include_heredicare_consensus,

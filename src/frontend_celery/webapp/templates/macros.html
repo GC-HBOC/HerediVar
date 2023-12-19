@@ -568,20 +568,49 @@
                     </div>
 
                     <div class="form-group sst">
-                        {% set selected_automatic = request.args.getlist('automatic') %}
                         <label for="user-select" class="form-label">Automatic classification</label>
-                        <div id="user-select" class="d-flex">
-                            {% for c in allowed_automatic_classes %}
-                                <div class="form-check d-flex bsr align-items-center">
-                                    <input class="form-check-input ssr" type="checkbox" value="{{c}}" id="acl{{c}}" name="automatic" {% if c in selected_automatic %}checked{% endif %}>
-                                    <label class="form-check-label" for="acl{{c}}">{{c}}</label>
-                                </div>
-                            {% endfor %}
-                            <div class="form-check d-flex align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="-" id="acl-" name="automatic" {% if '-' in selected_automatic %}checked{% endif %}>
-                                <label class="form-check-label" for="acl-">none</label>
-                            </div>
-                        </div>
+                        <table class="table table-borderless table-slim">
+                            <tbody>
+                                <tr>
+                                    <td class="nopad"><div>Splicing:</div></td>
+                                    <td>
+                                        <div id="user-select" class="d-flex">
+                                            {% set selected_automatic = request.args.getlist('automatic_splicing') %}
+                                            {% for c in allowed_automatic_classes %}
+                                                <div class="form-check d-flex bsr align-items-center">
+                                                    <input class="form-check-input ssr" type="checkbox" value="{{c}}" id="acls{{c}}" name="automatic_splicing" {% if c in selected_automatic %}checked{% endif %}>
+                                                    <label class="form-check-label" for="acls{{c}}">{{c}}</label>
+                                                </div>
+                                            {% endfor %}
+                                            <div class="form-check d-flex align-items-center">
+                                                <input class="form-check-input ssr" type="checkbox" value="-" id="acls-" name="automatic_splicing" {% if '-' in selected_automatic %}checked{% endif %}>
+                                                <label class="form-check-label" for="acls-">none</label>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="nopad"><div>Protein:</div></td>
+                                    <td>
+                                        <div id="user-select" class="d-flex">
+                                            {% set selected_automatic = request.args.getlist('automatic_protein') %}
+                                            {% for c in allowed_automatic_classes %}
+                                                <div class="form-check d-flex bsr align-items-center">
+                                                    <input class="form-check-input ssr" type="checkbox" value="{{c}}" id="aclp{{c}}" name="automatic_protein" {% if c in selected_automatic %}checked{% endif %}>
+                                                    <label class="form-check-label" for="aclp{{c}}">{{c}}</label>
+                                                </div>
+                                            {% endfor %}
+                                            <div class="form-check d-flex align-items-center">
+                                                <input class="form-check-input ssr" type="checkbox" value="-" id="aclp-" name="automatic_protein" {% if '-' in selected_automatic %}checked{% endif %}>
+                                                <label class="form-check-label" for="aclp-">none</label>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+
                     </div>
 
                     {% if lists is not none %}

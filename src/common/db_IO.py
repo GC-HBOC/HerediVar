@@ -703,7 +703,7 @@ class Connection:
 
 
     def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, 
-                                 ranges = None, genes = None, consensus = None, user = None, automatic = None, hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, include_heredicare_consensus = False):
+                                 ranges = None, genes = None, consensus = None, user = None, automatic_splicing = None, automatic_protein = None, hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, include_heredicare_consensus = False):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -848,17 +848,31 @@ class Connection:
                 actual_information += tuple(user_without_dash)
             new_constraints = "id IN (" + new_constraints_inner + ")"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
-        if automatic is not None and len(automatic) > 0:
+        if automatic_splicing is not None and len(automatic_splicing) > 0:
             new_constraints_inner = ''
-            automatic_without_dash = [value for value in automatic if value != '-']
-            if '-' in automatic:
+            automatic_without_dash = [value for value in automatic_splicing if value != '-']
+            if '-' in automatic_splicing:
                 new_constraints_inner = "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM automatic_classification)"
                 if len(automatic_without_dash) > 0: # if we have - AND some other class(es) we need to add an or between them
                     new_constraints_inner = new_constraints_inner + " UNION "
             if len(automatic_without_dash) > 0: # if we have one or more classes without the -
                 placeholders = self.get_placeholders(len(automatic_without_dash))
                 # search for the most recent user classifications from the user which is searching for variants and which are in the list of user classifications (variable: user)
-                new_constraints_inner = new_constraints_inner + "SELECT variant_id FROM automatic_classification WHERE classification IN " + placeholders
+                new_constraints_inner = new_constraints_inner + "SELECT variant_id FROM automatic_classification WHERE classification_splicing IN " + placeholders
+                actual_information += tuple(automatic_without_dash)
+            new_constraints = "id IN (" + new_constraints_inner + ")"
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if automatic_protein is not None and len(automatic_protein) > 0:
+            new_constraints_inner = ''
+            automatic_without_dash = [value for value in automatic_protein if value != '-']
+            if '-' in automatic_protein:
+                new_constraints_inner = "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM automatic_classification)"
+                if len(automatic_without_dash) > 0: # if we have - AND some other class(es) we need to add an or between them
+                    new_constraints_inner = new_constraints_inner + " UNION "
+            if len(automatic_without_dash) > 0: # if we have one or more classes without the -
+                placeholders = self.get_placeholders(len(automatic_without_dash))
+                # search for the most recent user classifications from the user which is searching for variants and which are in the list of user classifications (variable: user)
+                new_constraints_inner = new_constraints_inner + "SELECT variant_id FROM automatic_classification WHERE classification_protein IN " + placeholders
                 actual_information += tuple(automatic_without_dash)
             new_constraints = "id IN (" + new_constraints_inner + ")"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
@@ -946,7 +960,7 @@ class Connection:
             offset = (page - 1) * page_size
             command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
-        #print(command % actual_information)
+        print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 
