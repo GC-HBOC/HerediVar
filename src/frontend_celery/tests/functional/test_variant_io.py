@@ -10,13 +10,10 @@ import re
 from io import StringIO, BytesIO
 import common.functions as functions
 import time
+import utils
 
 basepath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 test_data_dir = basepath + "/data"
-
-def get_all_links(html_data):
-    links = re.findall(r'href="(http.*?)"[ |>]', html_data)
-    return links
 
 
 def test_clinvar_submission(test_client):
@@ -30,7 +27,7 @@ def test_clinvar_submission(test_client):
     data = html.unescape(response.data.decode('utf8'))
 
     assert response.status_code == 200
-    links = get_all_links(data)
+    links = utils.get_all_links(data)
     for link in links:
         response = requests.get(link)
         assert response.status_code == 200
@@ -81,6 +78,8 @@ def test_clinvar_submission(test_client):
 
 
 
+
+
 def test_export_variant_to_vcf(test_client):
     """
     This does a variant to vcf export and checks if the output is equal to a vcf file which was generated before
@@ -99,37 +98,13 @@ def test_export_variant_to_vcf(test_client):
     assert "Error during VCF Check" not in data
 
     with open(test_data_dir + '/variant_52.vcf', 'r') as f1:
-        vcf_variant_52 = StringIO(f1.read())
-    vcf_variant_52.seek(0)
-    
-    compare_vcf(vcf_variant_52, data)
+        vcf_variant_52 = f1.read()
+        
+    utils.compare_vcf(vcf_variant_52, data)
+    utils.compare_vcf(data, vcf_variant_52)
 
 
 
-def compare_vcf(reference_file, vcf_string):
-    for line in reference_file:
-        line = line.strip()
-        if line == '':
-            continue
-        if line.startswith('#'): 
-            if not line.startswith('##fileDate'): # skip the filedate header line because this one changes daily, but the test data is not updated daily
-                assert line in vcf_string # test that header line is there
-            continue
-
-        parts = line.split('\t')
-        info = parts[7]
-
-        assert info[0:7].join('\t') in vcf_string # test that variant is there
-
-        for info_entry in info.split(';'):
-            if 'consequences' in info_entry:
-                for consequence in info_entry.strip('consequences=').split('&'):
-                    assert consequence in vcf_string
-            else:
-                if (info_entry not in vcf_string):
-                    print(info_entry)
-                    print(vcf_string)
-                assert info_entry.strip() in vcf_string # test that info is there
 
 
 def test_submit_assay(test_client):

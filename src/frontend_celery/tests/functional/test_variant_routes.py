@@ -154,9 +154,8 @@ def test_browse_consensus_classification(test_client):
     response = test_client.get(url_for("variant.search", consensus=["5"], include_heredicare_consensus="on"), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 200
-    assert data.count('name="variant_row"') == 2
+    assert data.count('name="variant_row"') == 1
     assert 'variant_id="52"' in data
-    assert 'variant_id="72"' in data
 
 def test_browse_external_ids(test_client):
     """
@@ -195,17 +194,23 @@ def test_browse_automatic_classification(test_client):
     """
     Test that automatic classification search is working properly
     """
-    response = test_client.get(url_for("variant.search", automatic=["2"]), follow_redirects=True)
+    response = test_client.get(url_for("variant.search", automatic_splicing=["2"]), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 1
-    assert 'variant_id="15"' in data
+    assert 'variant_id="52"' in data
 
-    response = test_client.get(url_for("variant.search", automatic=["-"]), follow_redirects=True)
+    response = test_client.get(url_for("variant.search", automatic_splicing=["2"], automatic_protein=["3"]), follow_redirects=True)
+    data = response.data.decode('utf8')
+    assert response.status_code == 200
+    assert data.count('name="variant_row"') == 1
+    assert 'variant_id="52"' in data
+
+    response = test_client.get(url_for("variant.search", automatic_splicing=["-"]), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 9
-    assert 'variant_id="52"' in data
+    assert 'variant_id="15"' in data
     assert 'variant_id="71"' in data
     assert 'variant_id="72"' in data
     assert 'variant_id="130"' in data
@@ -214,6 +219,7 @@ def test_browse_automatic_classification(test_client):
     assert 'variant_id="139"' in data
     assert 'variant_id="164"' in data
     assert 'variant_id="168"' in data
+
 
 
 def test_browse_genes(test_client):
@@ -339,7 +345,7 @@ def test_browse_list(test_client):
     assert 'variant_id="15"' in data
 
     # unallowed/non existing list
-    response = test_client.get(url_for("variant.search", lookup_list_id=10, lookup_list_name="private inaccessible"), follow_redirects=True)
+    response = test_client.get(url_for("variant.search", lookup_list_id=11, lookup_list_name="private inaccessible"), follow_redirects=True)
     data = response.data.decode('utf8')
     assert response.status_code == 403
 
@@ -486,8 +492,13 @@ def test_classify(test_client):
             'comment': "This is a test comment.",
             'ps1': "Evidence for ps1 given in this field",
             'ps2': "Evidence for ps2 given in this field",
+            'ps3': "Evidence for ps3 given in this field",
             'ps1_strength': "ps",
             'ps2_strength': "ps",
+            'ps3_strength': "ps",
+            'ps1_state': "selected",
+            'ps2_state': "selected",
+            'ps3_state': "unselected",
             'scheme': "2"
         },
         follow_redirects=True
@@ -510,6 +521,8 @@ def test_classify(test_client):
             'bs4': "Evidence for bs4 given in this field", # mutually exclusive to pp1
             'pp1_strength': "ps",
             'bs4_strength': "bs",
+            'pp1_state': "selected",
+            'bs4_state': "selected",
             'scheme': "2"
         },
         follow_redirects=True
@@ -539,7 +552,8 @@ def test_classify(test_client):
             'final_class': "2",
             'comment': "This is a test comment update.",
             'non_exist': "Evidence", 
-            'non_exist_strength': "ba", 
+            'non_exist_strength': "ba",
+            'non_exist_state': "selected",
             'scheme': "2"
         },
         follow_redirects=True
@@ -556,6 +570,7 @@ def test_classify(test_client):
             'comment': "This is a test comment update 2.",
             'pp1': "Evidence for pp1 given in this field", 
             'pp1_strength': "ba", 
+            'pp1_state': "selected",
             'scheme': "2"
         },
         follow_redirects=True
@@ -573,6 +588,7 @@ def test_classify(test_client):
             'comment': "This is a test comment update 2.",
             'pm3': "Evidence for pm3 given in this field", # forbidden for amg tp53
             'pm3_strength': "pm", 
+            'pm3_state': "selected",
             'scheme': "3"
         },
         follow_redirects=True
@@ -592,6 +608,7 @@ def test_classify(test_client):
             'comment': "This is a test comment update 2.",
             '4.4': "Evidence for 4.4 given in this field",
             '4.4_strength': "ps", 
+            '4.4_state': "selected",
             'scheme': "5"
         },
         follow_redirects=True
@@ -614,6 +631,9 @@ def test_classify(test_client):
             'ps1_strength': "ps",
             'ps2_strength': "ps",
             'ps3_strength': "ps",
+            'ps1_state': "selected",
+            'ps2_state': "selected",
+            'ps3_state': "selected",
             'scheme': "2",
             'pmid': [35205822, 33099839],
             'text_passage': ["This is a text passage...", "This is another text passage..."]

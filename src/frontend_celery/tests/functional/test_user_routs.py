@@ -10,6 +10,7 @@ import re
 from io import StringIO, BytesIO
 import common.functions as functions
 import time
+import utils
 
 basepath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 test_data_dir = basepath + "/data"
@@ -26,8 +27,12 @@ def test_user_lists(test_client):
     response = test_client.get(url_for("user.my_lists"), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
 
+    conn = Connection(['super_user'])
+    prior_number_of_lists = len(conn.get_lists_for_user(session['user']['user_id']))
+    conn.close()
+
     assert response.status_code == 200
-    assert data.count('name="user_list_row"') == 2
+    assert data.count('name="user_list_row"') == prior_number_of_lists
     assert 'Please select a list to view its content!' in data
 
 
@@ -43,14 +48,15 @@ def test_user_lists(test_client):
 
 
 
+
     assert response.status_code == 200
-    assert 'Successfully created new list' in data
+    utils.assert_flash_message('Successfully created new list', data)
 
 
     conn = Connection(['super_user'])
 
     user_lists = conn.get_lists_for_user(session['user']['user_id'])
-    assert len(user_lists) == 3
+    assert len(user_lists) == prior_number_of_lists + 1
     list_id = conn.get_latest_list_id()
 
     conn.close()
@@ -112,12 +118,12 @@ def test_user_lists(test_client):
     data = html.unescape(response.data.decode('utf8'))
 
     assert response.status_code == 200
-    assert 'Successfully changed list settings' in data
+    utils.assert_flash_message('Successfully changed list settings', data)
     
     conn = Connection(['super_user'])
 
     user_lists = conn.get_lists_for_user(session['user']['user_id'])
-    assert len(user_lists) == 3
+    assert len(user_lists) == prior_number_of_lists + 1
     assert conn.get_user_variant_list(list_id)[2] == "first list update"
 
     conn.close()
@@ -131,7 +137,7 @@ def test_user_lists(test_client):
     data = html.unescape(response.data.decode('utf8'))
 
     assert response.status_code == 200
-    assert 'Successfully removed variant from list!' in data
+    utils.assert_flash_message('Successfully removed variant from list!', data)
 
     conn = Connection(['super_user'])
 
@@ -152,18 +158,18 @@ def test_user_lists(test_client):
     data = html.unescape(response.data.decode('utf8'))
 
     assert response.status_code == 200
-    assert 'Successfully removed list' in data
+    utils.assert_flash_message('Successfully removed list', data)
 
     conn = Connection(['super_user'])
 
     user_lists = conn.get_lists_for_user(session['user']['user_id'])
-    assert len(user_lists) == 2
+    assert len(user_lists) == prior_number_of_lists
 
     conn.close()
 
 
     ##### test accessing the private list from another user #####
-    response = test_client.get(url_for("user.my_lists", view=10), follow_redirects=True)
+    response = test_client.get(url_for("user.my_lists", view=11), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
 
     assert response.status_code == 403
@@ -187,7 +193,18 @@ def test_user_lists(test_client):
     response = test_client.post(
         url_for("user.my_lists", type='delete_list'), 
         data={
-            "list_id": 9
+            "list_id": 13
+        },
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+
+    assert response.status_code == 403
+
+    response = test_client.post(
+        url_for("user.my_lists", type='delete_list'), 
+        data={
+            "list_id": 12
         },
         follow_redirects=True
     )
@@ -196,7 +213,7 @@ def test_user_lists(test_client):
     assert response.status_code == 403
 
     ##### test adding variants to the public list from another user #####
-    list_id = 9 # public read & edit -> should work
+    list_id = 13 # public read & edit -> should work
     variant_id = 71
     response = test_client.post(
         url_for("user.modify_list_content", variant_id=variant_id, action='add_to_list', selected_list_id=list_id),
@@ -211,7 +228,7 @@ def test_user_lists(test_client):
     assert '71' in variants_in_list
     conn.close()
 
-    list_id = 8 # only public read -> should not work
+    list_id = 12 # only public read -> should not work
     response = test_client.post(
         url_for("user.modify_list_content", variant_id=variant_id, action='add_to_list', selected_list_id=list_id),
         follow_redirects=True
@@ -220,7 +237,7 @@ def test_user_lists(test_client):
     assert response.status_code == 403
 
     ##### test renaming & changing the permission bits a public list from another user #####
-    list_id = 9
+    list_id = 13
     response = test_client.post(
         url_for("user.my_lists", type='edit'), 
         data={
@@ -234,7 +251,7 @@ def test_user_lists(test_client):
     assert response.status_code == 403
 
     ##### test deleting variants from the public list #####
-    list_id = 9 # should work
+    list_id = 13 # should work
     response = test_client.post(
         url_for("user.my_lists", type='delete_variant', view=list_id, variant_id=71), 
         follow_redirects=True
@@ -242,14 +259,14 @@ def test_user_lists(test_client):
     data = html.unescape(response.data.decode('utf8'))
 
     assert response.status_code == 200
-    assert 'Successfully removed variant from list!' in data
+    utils.assert_flash_message('Successfully removed variant from list!', data)
 
     conn = Connection(['super_user'])
     variants_in_list = conn.get_variant_ids_from_list(list_id)
     assert len(variants_in_list) == 0
     conn.close()
 
-    list_id = 8 # should not work
+    list_id = 12 # should not work
     response = test_client.post(
         url_for("user.my_lists", type='delete_variant', view=list_id, variant_id=52), 
         follow_redirects=True
@@ -272,7 +289,7 @@ def test_user_lists(test_client):
     data = html.unescape(response.data.decode('utf8'))
 
     assert response.status_code == 200
-    assert 'Successfully created new list' in data
+    utils.assert_flash_message('Successfully created new list', data)
 
     # check that the public and private bits are set correctly
     conn = Connection(['super_user'])
@@ -281,6 +298,8 @@ def test_user_lists(test_client):
     assert list_oi[3] == 1
     assert list_oi[4] == 1
     conn.close()
+
+
 
 
 def test_list_actions(test_client):
@@ -292,8 +311,12 @@ def test_list_actions(test_client):
     response = test_client.get(url_for("user.my_lists"), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
 
+    conn = Connection(['super_user'])
+    prior_number_of_lists = len(conn.get_lists_for_user(session['user']['user_id']))
+    conn.close()
+
     assert response.status_code == 200
-    assert data.count('name="user_list_row"') == 3
+    assert data.count('name="user_list_row"') == prior_number_of_lists
     assert 'Please select a list to view its content!' in data
 
 
@@ -308,12 +331,12 @@ def test_list_actions(test_client):
     data = html.unescape(response.data.decode('utf8'))
 
     assert response.status_code == 200
-    assert 'Successfully created new list' in data
+    utils.assert_flash_message('Successfully created new list', data)
 
 
     conn = Connection(['super_user'])
     user_lists = conn.get_lists_for_user(session['user']['user_id'])
-    assert len(user_lists) == 4
+    assert len(user_lists) == prior_number_of_lists + 1
     list_one_id = str(conn.get_latest_list_id())
     conn.close()
 
@@ -332,30 +355,35 @@ def test_list_actions(test_client):
 
     conn = Connection(['super_user'])
     user_lists = conn.get_lists_for_user(session['user']['user_id'])
-    assert len(user_lists) == 5
+    assert len(user_lists) == prior_number_of_lists + 2
     list_two_id = str(conn.get_latest_list_id())
     conn.close()
-
+    
     ##### insert variants using bulk import #####
-    response = test_client.post(    
+    response = test_client.post(
         url_for("variant.search", selected_list_id = list_one_id, selected_variants = "", select_all_variants = "true", genes = "BARD1;BRCA2"), 
         follow_redirects=True
     )
+    conn = Connection()
     data = html.unescape(response.data.decode('utf8'))
-    with open("/mnt/storage2/users/ahdoebm1/HerediVar/test.txt", "w") as testdoc:
-        testdoc.write(data)
-
     assert response.status_code == 200
-    assert "Successfully inserted 2" in data
+    utils.assert_flash_message("Successfully inserted 2", data)
+    assert conn.get_list_size(list_one_id) == 2
+    assert conn.get_list_size(list_two_id) == 0
+    conn.close()
 
-    response = test_client.post(    
+    response = test_client.post(
         url_for("variant.search", selected_list_id = list_two_id, selected_variants = "", select_all_variants = "true", genes = "BRCA1;BRCA2"), 
         follow_redirects=True
     )
+    conn = Connection()
     data = html.unescape(response.data.decode('utf8'))
 
     assert response.status_code == 200
-    assert "Successfully inserted 2" in data
+    utils.assert_flash_message("Successfully inserted 3", data)
+    assert conn.get_list_size(list_one_id) == 2
+    assert conn.get_list_size(list_two_id) == 3
+    conn.close()
 
     ##### duplicate a list #####
     response = test_client.post(
@@ -371,7 +399,8 @@ def test_list_actions(test_client):
     data = html.unescape(response.data.decode('utf8'))
 
     assert response.status_code == 200
-    assert "Successfully duplicated list" in data
+    utils.assert_flash_message("Successfully duplicated list", data)
+    
 
     # check that all variants have been duplicated properly
     conn = Connection(['super_user'])
@@ -394,7 +423,6 @@ def test_list_actions(test_client):
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
-
     assert response.status_code == 200
 
     conn = Connection(['super_user'])
@@ -415,7 +443,6 @@ def test_list_actions(test_client):
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
-
     assert response.status_code == 200
 
     conn = Connection(['super_user'])
@@ -437,14 +464,17 @@ def test_list_actions(test_client):
         follow_redirects=True
     )
     data = html.unescape(response.data.decode('utf8'))
-
     assert response.status_code == 200
 
     conn = Connection(['super_user'])
     subtracted_list_id = conn.get_latest_list_id()
     variants_in_duplicated_list = conn.get_variant_ids_from_list(subtracted_list_id)
-    variant_ids_template = ['15', '52', '71']
+    variant_ids_template = ['15', '52', '71', '168']
     for variant_id in variant_ids_template:
         assert variant_id in variants_in_duplicated_list
     assert len(variants_in_duplicated_list) == len(variant_ids_template)
     conn.close()
+
+
+
+
