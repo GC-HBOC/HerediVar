@@ -393,6 +393,15 @@ def is_valid_scheme(selected_criteria, scheme):
 
     all_selected_criteria_names = [selected_criteria[x]['criterium_name'] for x in selected_criteria if selected_criteria[x]['is_selected']]
 
+    mutually_inclusive_target_to_source = {}
+    for source in scheme_criteria:
+        current_mutually_inclusive_criteria = scheme_criteria[source]["mutually_inclusive_criteria"]
+        for target in current_mutually_inclusive_criteria:
+            functions.extend_dict(mutually_inclusive_target_to_source, target, source)
+    
+    print(mutually_inclusive_target_to_source)
+    print(selected_criteria)
+
     # ensure that only valid criteria were submitted
     for criterium_id in selected_criteria:
         current_criterium = selected_criteria[criterium_id]
@@ -424,6 +433,12 @@ def is_valid_scheme(selected_criteria, scheme):
         if any([x in current_mutually_exclusive_criteria for x in all_selected_criteria_names]):
             is_valid = False
             message = "A mutually exclusive criterium to " + str(criterium_name) + " was selected. Remember to not select " + str(criterium_name) + " together with any of " + str(current_mutually_exclusive_criteria) + ". The classification was not submitted."
+            break
+        # ensure that mutually inclusive criteria were only selected when their target is present
+        current_mutually_inclusive_sources = mutually_inclusive_target_to_source.get(criterium_name, [])
+        if not all([x in all_selected_criteria_names for x in current_mutually_inclusive_sources]):
+            is_valid = False
+            message = "If you want to select " + str(criterium_name) + " You also have to provide evidence for " + str(current_mutually_inclusive_sources) + ". The classification was not submitted."
             break
     
     return is_valid, message
