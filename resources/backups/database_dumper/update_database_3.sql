@@ -122,3 +122,19 @@ ADD CONSTRAINT `FK_task_force_protein_domain_gene`
 
 ALTER TABLE `HerediVar_ahdoebm1`.`automatic_classification_criteria_applied` 
 ADD COLUMN `type` VARCHAR(45) NOT NULL AFTER `strength`;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`automatic_classification` 
+ADD COLUMN `tool_version` VARCHAR(45) NOT NULL AFTER `date`;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`automatic_classification` 
+ADD COLUMN `classification_protein` ENUM('1', '2', '3', '4', '5') NOT NULL AFTER `classification_splicing`,
+CHANGE COLUMN `classification` `classification_splicing` ENUM('1', '2', '3', '4', '5') NOT NULL ;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`user_classification_criteria_applied` 
+ADD COLUMN `is_selected` TINYINT(1) NOT NULL DEFAULT 1 AFTER `evidence`;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`consensus_classification_criteria_applied` 
+ADD COLUMN `is_selected` TINYINT(1) NOT NULL DEFAULT 1 AFTER `evidence`;
