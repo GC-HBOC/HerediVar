@@ -32,6 +32,7 @@ GRANT SELECT ON HerediVar_ahdoebm1.gene_alias TO 'HerediVar_annotation';
 GRANT SELECT ON HerediVar_ahdoebm1.variant_ids TO 'HerediVar_annotation';
 GRANT INSERT, DELETE ON HerediVar_ahdoebm1.variant_heredicare_annotation TO 'HerediVar_annotation';
 GRANT SELECT, INSERT, UPDATE ON HerediVar_ahdoebm1.variant_transcript_annotation TO 'HerediVar_annotation';
+GRANT SELECT ON HerediVar_ahdoebm1.assay TO 'HerediVar_annotation';
 
 /* grant priviliges to standard user */
 GRANT SELECT, INSERT, UPDATE ON HerediVar_ahdoebm1.user TO 'HerediVar_user';
