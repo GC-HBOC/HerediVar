@@ -74,7 +74,9 @@
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="bst alert {{ category }} alert-dismissible fade show break_text_all">
+                        <!-- message start -->
                         {{ message }} 
+                        <!-- message end -->
                         <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 {% endfor %}

@@ -267,6 +267,9 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
     clinvar_submission = check_update_clinvar_status(variant_id, conn)
 
+
+    print(variant.get_genes("best"))
+
     return render_template('variant/variant.html',
                             current_annotation_status=current_annotation_status,
                             clinvar_submission = clinvar_submission,
@@ -516,18 +519,12 @@ def automatic_classification(variant_id):
     if variant is None:
         abort(404)
     
-    result = variant.automatic_classification.to_dict()
-    selected = {'splicing': [], 'protein': []}
-    unselected = {'splicing': [], 'protein': []}
-    for criterium in variant.automatic_classification.criteria:
-        if criterium.rule_type != 'general':
-            if criterium.is_selected:
-                selected[criterium.rule_type].append(criterium.name)
-            if not criterium.is_selected:
-                unselected[criterium.rule_type].append(criterium.name)
+    evidence_type = request.args.get('evidence_type')
+    if evidence_type is None:
+        abort(404)
     
-
-
+    variant.automatic_classification.criteria = variant.automatic_classification.filter_criteria(evidence_type)
+    result = variant.automatic_classification.to_dict()
     return result
 
 

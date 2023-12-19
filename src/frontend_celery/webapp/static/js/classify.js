@@ -164,7 +164,7 @@ function preselect_literature() {
         update_default_caption(document.getElementById('userSelectedLiterature'))
     }
     for (var user_id in previous_classifications) {
-        var all_user_classifications = previous_classifications[user_id]
+        var all_user_classifications = previous_classifications[user_id] ?? {}
         var selected_classification = all_user_classifications[scheme] ?? {}
         var previous_selected_literature = selected_classification['literature'] ?? []
         var submitter = selected_classification['submitter'] ?? {}
@@ -242,12 +242,13 @@ function preselect_criteria_from_request_form() {
     for (var key in request_form) {
         if (key in classification_schemas[scheme]['criteria']) { // filter for criteria
             var current_state = request_form[key + '_state']
+            var current_strength = request_form[key + '_strength']
             set_criterium_strength(key, current_strength)
             set_criterium(key, current_state)
             var current_evidence = request_form[key]
             document.getElementById(key).value = current_evidence
 
-            var current_strength = request_form[key + '_strength']
+            
         }
     }
     update_classification_preview()
@@ -435,20 +436,6 @@ function preselect_criteria_from_database(scheme) {
     if (typeof current_scheme_with_info !== "undefined") { // only preselect if there is data for it
         selected_criteria = current_scheme_with_info['scheme']['criteria']
         preselect_criteria_from_list(selected_criteria)
-        //console.log(selected_criteria)
-        /*
-        for(var i = 0; i < selected_criteria.length; i++) {
-            var current_data = selected_criteria[i];
-            var current_criterium = current_data['name'].toUpperCase();
-            var current_evidence = current_data['evidence'];
-            var current_strength = current_data['type'];
-
-            var selected_button = document.getElementById(current_criterium);
-            selected_button.value = current_evidence;
-            set_criterium_strength(current_criterium, current_strength)
-            set_criterium(current_criterium, true)
-        }
-        */
     }
 
 }
@@ -456,7 +443,7 @@ function preselect_criteria_from_database(scheme) {
 function preselect_criteria_from_list(selected_criteria, is_intermediate = false) {
     for(var i = 0; i < selected_criteria.length; i++) {
         var current_data = selected_criteria[i];
-        var current_criterium = current_data['name'].toUpperCase();
+        var criterium_id = current_data['name'].toUpperCase();
         var current_evidence = current_data['evidence'];
         var current_strength = current_data['type'];
         var is_selected = current_data['is_selected'];
@@ -466,11 +453,11 @@ function preselect_criteria_from_list(selected_criteria, is_intermediate = false
             state = "selected"
         }
 
-        var selected_button = document.getElementById(current_criterium);
+        var selected_button = document.getElementById(criterium_id);
         if (selected_button != null){
             selected_button.value = current_evidence;
-            set_criterium_strength(current_criterium, current_strength)
-            set_criterium(current_criterium, state, is_intermediate)
+            set_criterium_strength(criterium_id, current_strength)
+            set_criterium(criterium_id, state, is_intermediate)
         }
     }
 }
@@ -497,7 +484,13 @@ function preselect_criteria_automatic_classification(){
                 preselect_button.classList.add("btn-warning")
                 add_tooltip(preselect_button, "You have selected the wrong scheme. This variant only has an automatic classification for " + returnval['scheme_name'])
             } else {
+                revert_previous_obj() 
+                revert_selected_criteria()
+                revert_criteria_container()
                 const automatic_selected_criteria = returnval['criteria']
+                automatic_selected_criteria.forEach(element => {
+                    remove_criterium_button_background(element['name'])
+                });
                 preselect_criteria_from_list(automatic_selected_criteria, is_intermediate = true)
                 update_classification_preview()
 
@@ -598,6 +591,14 @@ function revert_criteria_container() {
     document.getElementById('criteria_evidence').value = "";
     document.getElementById('additional_content').innerHTML = "";
     hide_all_information()
+}
+
+function revert_selected_criteria() {
+    var all_criteria_checks = document.querySelectorAll(".btn-check")
+    all_criteria_checks.forEach(element => {
+        var criterium_id = element.id
+        set_criterium(criterium_id, "unchecked")
+    });
 }
 
 function hide_all_information() {
@@ -1231,16 +1232,10 @@ function select_criterium(obj) {
     const criterium_id = obj.getAttribute('criterium_id') // this is the criterium which we want to select
     const criterium_button = document.getElementById(criterium_id)
 
-    if (document.getElementById('criteria_evidence').value.trim() == '' && !criterium_button.checked) { 
-        $(obj).popover('show')
-        set_criterium(criterium_id, "unchecked")
-        document.getElementById("select_criterium_check").value = "unchecked";
-    } else { // only select criterium if there is evidence
-        $(obj).popover('hide')
-        const state = document.getElementById("select_criterium_check").value
-        set_criterium(criterium_id, state)
-        update_classification_preview()
-    }
+    $(obj).popover('hide')
+    const state = document.getElementById("select_criterium_check").value
+    set_criterium(criterium_id, state)
+    update_classification_preview()
 }
 
 function get_checked_criteria_strengths() {
@@ -1418,27 +1413,6 @@ function toggle_criterium(criterium_id) {
     enable_disable_buttons(current_disable_group, is_selected)
 }
 
-/*
-function set_criterium(criterium_id, is_checked) {
-    var obj = document.getElementById(criterium_id)
-    obj.checked = is_checked
-    update_criterium_button_background(criterium_id)
-    update_criterium_button_label(criterium_id)
-    document.getElementById(criterium_id + '_strength').checked = obj.checked
-    const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
-    enable_disable_buttons(current_disable_group, obj.checked)
-}
-
-function set_criterium(criterium_id, is_checked, is_intermediate = false) {
-    var obj = document.getElementById(criterium_id)
-    obj.checked = is_checked
-    obj.setAttribute('is_intermediate', is_intermediate)
-    update_criterium_button_background(criterium_id)
-    document.getElementById(criterium_id + '_strength').checked = obj.checked
-    const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
-    enable_disable_buttons(current_disable_group, obj.checked)
-}
-*/
 
 function set_criterium(criterium_id, state, is_intermediate = false) {
     // a criterium can have three states:

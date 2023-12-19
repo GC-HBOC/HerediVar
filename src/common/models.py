@@ -39,12 +39,15 @@ class Annotation:
             return float(self.value)
         return self.value
 
-    def to_vcf(self):
-        data = self.title + '~1Y' + self.value
+    def to_vcf(self, add_title = True):
+        data_base = ""
+        if add_title:
+            data_base = self.title + '~1Y'
+        data = data_base + self.value
         return data
     
     def get_header(self):
-        header = '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + ' (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'
+        header = {self.title: '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + ' (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'}
         return header
 
 
@@ -86,7 +89,7 @@ class TranscriptAnnotation:
         return data
     
     def get_header(self):
-        header = '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + '. A | separated list of transcript$value pairs. (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'
+        header = {self.title: '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + '. A | separated list of transcript$value pairs. (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'}
         return header
     
 
@@ -181,7 +184,7 @@ class AllAnnotations:
         for annot in self.get_non_none_annotations():
             data = annot.to_vcf()
             header = annot.get_header()
-            headers[annot.title] = header
+            headers.update(header)
             info.append(data)
         return headers, info
 
@@ -292,7 +295,7 @@ class HerediVarCriterium(Criterium):
         return self.name
 
     def to_vcf(self):
-        info = "~2B".join([self.name, self.strength, self.evidence]) # sep: +
+        info = "~2B".join([self.name, self.strength, self.evidence, "1" if self.is_selected else "0",]) # sep: +
         return info
 
     def criterium_to_num(self):
@@ -443,7 +446,7 @@ class Classification:
     def get_header(self, simple = False):
         if not simple:
             key = functions.encode_vcf(self.type)
-            header = {key: '##INFO=<ID=' + key + ',Number=1,Type=String,Description="The recent consensus classification by the VUS-task-force. Format: consensus_class|consensus_comment|submission_date|consensus_scheme|consensus_scheme_class|consensus_criteria_string. The consensus criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence ">\n'}
+            header = {key: '##INFO=<ID=' + key + ',Number=1,Type=String,Description="The recent consensus classification by the VUS-task-force. Format: consensus_class|consensus_comment|submission_date|consensus_scheme|consensus_scheme_class|consensus_criteria_string. The consensus criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence+is_selecteds ">\n'}
         else:
             header = {'classification': '##INFO=<ID=classification,Number=1,Type=Integer,Description="The consensus classification from the VUS-task-force. Either 1 (benign), 2 (likely benign), 3 (uncertain), 4 (likely pathogenic) or 5 (pathogenic)">\n',
                       #'comment': '##INFO=<ID=comment,Number=1,Type=String,Description="The comment of the VUS-task-force for the consensus classification">\n',
@@ -467,6 +470,16 @@ class AutomaticClassificationCriterium(Criterium):
 
     def display_name(self):
         return self.name.replace('protein', 'prt').replace('splicing', 'spl')
+    
+    def to_vcf(self):
+        #criterium_name+criterium_strength+criterium_evidence+is_selected+rule_type
+        return "~2B".join([
+            self.name,
+            self.strength,
+            self.evidence,
+            "1" if self.is_selected else "0",
+            self.rule_type
+        ])
 
 
 @dataclass
@@ -489,6 +502,27 @@ class AutomaticClassification:
     
     def to_dict(self):
         return asdict(self)
+    
+    def to_vcf(self, prefix = True):
+        # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
+        criteria_str = '~24'.join([criterium.to_vcf() for criterium in self.criteria])
+        info = '~7C'.join([
+            self.classification_protein,
+            self.classification_splicing,
+            self.date.strftime('%Y-%m-%d %H:%M:%S'),
+            self.scheme_name,
+            criteria_str
+        ])
+        if prefix:
+            info = 'automatic_classification~1Y' + info
+        return info
+    
+    def get_header(self):
+        #consensus_class|consensus_comment|submission_date|consensus_scheme|consensus_scheme_class|consensus_criteria_string. The consensus criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence
+        header = {
+            'automatic_classification': '##INFO=<ID=automatic_classification,Number=1,Type=String,Description="The automatic classification for this variant. FORMAT: classification_protein|classification_splicing|date|scheme|criteria. criteria is a $ separated list with the FORMAT: criterium_name+criterium_strength+criterium_evidence+is_selected+rule_type">\n',
+        }
+        return header
 
 @dataclass
 class ClinvarCondition:
@@ -767,6 +801,14 @@ class Variant:
                 if external_id.title == title:
                     result.append(external_id)
         return result
+    
+    def group_external_ids(self):
+        result = {}
+        if self.external_ids is not None:
+            for external_id in self.external_ids:
+                current_source = external_id.title
+                functions.extend_dict(result, current_source, external_id)
+        return result
 
     def get_heredicare_consensus_classifications(self):
         result = []
@@ -785,17 +827,18 @@ class Variant:
                 total_n_pat += annot.n_pat
         return total_n_fam, total_n_pat
 
-    def get_unique_genes(self):
-        result = []
-        gene_ids = []
-        if self.consequences is not None:
-            for consequence in self.consequences:
-                if consequence.gene.id not in gene_ids and consequence.gene.id is not None:
-                    result.append(consequence.gene)
-                    gene_ids.append(consequence.gene.id)
-        return result
+    #def get_unique_genes(self):
+    #    result = []
+    #    gene_ids = []
+    #    if self.consequences is not None:
+    #        for consequence in self.consequences:
+    #            if consequence.gene.id not in gene_ids and consequence.gene.id is not None:
+    #                result.append(consequence.gene)
+    #                gene_ids.append(consequence.gene.id)
+    #    return result
 
     def to_vcf(self, simple = False):
+        # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
         headers = {} # collects all headers 
         info = [] # collects info for the headers
 
@@ -805,15 +848,31 @@ class Variant:
             headers.update(new_header)
             info.extend(new_info)
 
+            # external ids
+            external_id_groups = self.group_external_ids()
+            for external_id_group in external_id_groups:
+                add_title = True
+                new_info_collection = []
+                for external_id in external_id_groups[external_id_group]:
+                    new_info = external_id.to_vcf(add_title)
+                    new_header = external_id.get_header()
+                    headers.update(new_header)
+                    new_info_collection.append(new_info)
+                    add_title = False
+                if len(new_info_collection) > 0:
+                    info.append("~26".join(new_info_collection)) # sep &
+
             # complex annotations
-            annotations_oi = [self.user_classifications, 
+            annotations_oi = [self.user_classifications,
+                              [self.get_recent_consensus_classification()],
+                              [self.automatic_classification],
                               self.heredicare_classifications,
+                              [self.clinvar],
                               self.heredicare_annotations,
                               self.consequences, 
                               self.assays, 
-                              self.literature,
-                              [self.get_recent_consensus_classification()],
-                              [self.clinvar]]
+                              self.literature
+                            ]
             for annot in annotations_oi:
                 if annot is not None:
                     if len(annot) > 0:
@@ -933,9 +992,6 @@ class Variant:
         if convert_to_dict and result is not None:
             return {scheme_id:classification.to_dict() for scheme_id, classification in result.items()}
         return result
-                    
-
-
 
     def get_recent_user_classification(self, user_id = 'all', scheme_id = 'all'):
         result = None
@@ -954,12 +1010,20 @@ class Variant:
         if self.consequences is not None:
             result = []
             gene_ids = []
+            gene2count = {}
             for consequence in self.consequences:
                 current_gene = consequence.transcript.gene
                 if current_gene is not None:
-                    if current_gene.id not in gene_ids and current_gene.id is not None:
-                        result.append(current_gene)
-                        gene_ids.append(current_gene.id)
+                    if current_gene.id is not None:
+                        gene_symbol = current_gene.symbol
+                        if gene_symbol not in gene2count:
+                            gene2count[gene_symbol] = 1
+                        else:
+                            gene2count[gene_symbol] += 1
+                        if current_gene.id not in gene_ids:
+                            result.append(current_gene)
+                            gene_ids.append(current_gene.id)
+
         if result is None or len(result) == 0:
             return None
         if how == "string":
@@ -971,16 +1035,16 @@ class Variant:
             preferred_genes = set(["ATM", "BARD1", "BRCA1", "BRCA2", "BRIP1", "CDH1", "CHEK2", "PALB2", "PTEN", "RAD51C", "RAD51D", "STK11", "TP53"])
             avail_preferred_genes = set(result) & preferred_genes
             if len(avail_preferred_genes) > 0:
-                result = list(avail_preferred_genes)[0]
-            else:
-                result = result[0]
+                result = list(avail_preferred_genes)
+            preferred_genes2count = {x:y for x,y in gene2count.items() if x.upper() in result}
+            result = max(preferred_genes2count, key=preferred_genes2count.get)
         return result
 
 
     # this function returns a list of consequence objects of the preferred transcripts 
     # (can be multiple if there are eg. 2 mane select transcripts for this variant)
     # this should be renamed to get_preferred_consequences
-    def get_preferred_transcripts(self):
+    def get_preferred_transcripts(self) -> list:
         result = []
         consequences = self.consequences
 
@@ -1004,6 +1068,8 @@ class Variant:
                     result.append(consequence)
                 else:
                     break # we can do this because the list is sorted
+        elif len(consequences_sorted) == 0 and '' in sortable_dict:
+            return [sortable_dict['']]  # intergenic variant
         else:
             return None
 

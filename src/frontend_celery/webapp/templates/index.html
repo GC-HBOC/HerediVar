@@ -114,6 +114,13 @@
             <li>Added the automatic classification result to the browse variant table & variant details page</li>
             <li>Added automatic classification search</li>
             <li>Added a button to the admin dashboard to annotate all variants which are missing an annotation</li>
+            <li>Updated VEP from 107.0 to version 110.1</li>
+            <li>Added possibility to "unselect" a criterium when there is evidence that this criterium does not hold</li>
+            <li>Added button to automatically select criteria based on the automatic classification algorithm</li>
+            <li>Added automatic classification algorithm results to vcf export</li>
+            <li>Added flag to vcf export of heredivar classifications if a criterium was selected or not selected in response of evidence</li>
+            <li>Added all external ids to variant vcf export including for example heredicare VIDs, rsids, cosmic ids, etc.</li>
+            <li>Improved display of intergenic variants on variant details page</li>
         </ul>
         Bugfixes:
         <ul>
@@ -123,6 +130,7 @@
             <li>Previously, updates to ClinVar submissions were not working & removed the 'customAssertionScore' from ClinVar submissions</li>
             <li>Fixed a bug when trying to add all variants from a search to a list</li>
             <li>In BRCA2 v1.0.0 criteria supporting strength was not selectable</li>
+            <li>Sometimes, the classification scheme was not changeable in consensus classifications</li>
         </ul>
         Known issues:
         <ul>

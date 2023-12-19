@@ -1085,7 +1085,7 @@
                         <tr>
                             <td class="width_small li-label"><abbr title="One or more strings in the format: gene hgvsc. hgvsp. This shows all 'best' transcripts and prefers mane select.">HGVS</abbr></td>
                             {% set best_consequences = variant.get_preferred_transcripts() %}
-                            {% if best_consequences is not none %}
+                            {% if best_consequences is not none and best_consequences | length > 0 and best_consequences[0].transcript.name != '' %} <!-- name != '' for intergenic variants -->
                                 <td>
                                     <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
                                         {% for consequence in best_consequences %}
