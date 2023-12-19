@@ -55,6 +55,9 @@
             ],
             "mutually_exclusive_criteria": [
                 "PP3"
+            ],
+            "mutually_inclusive_criteria": [
+                "PM5"
             ]
         },
 

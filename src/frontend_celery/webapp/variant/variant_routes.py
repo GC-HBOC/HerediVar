@@ -270,9 +270,6 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
 
     clinvar_submission = check_update_clinvar_status(variant_id, conn)
 
-
-    print(variant.get_genes("best"))
-
     return render_template('variant/variant.html',
                             current_annotation_status=current_annotation_status,
                             clinvar_submission = clinvar_submission,

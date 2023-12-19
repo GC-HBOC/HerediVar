@@ -960,7 +960,7 @@ class Connection:
             offset = (page - 1) * page_size
             command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
-        print(command % actual_information)
+        #print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 
@@ -2507,7 +2507,7 @@ class Connection:
     def get_classification_schemas(self):
         # it should look like this:
         # {schema_id -> display_name(description), scheme_type, reference, criteria}
-        #                                         -> {name,description,default_strength,possible_strengths,selectable,disable_group,mutually_exclusive_buttons}
+        #                                         -> {name,description,default_strength,possible_strengths,selectable,disable_group,mutually_exclusive_buttons,mutually_inclusive_buttons}
         command = "SELECT * FROM classification_scheme WHERE is_active = 1"
         self.cursor.execute(command)
         classification_schemas = self.cursor.fetchall()
@@ -2519,10 +2519,24 @@ class Connection:
         for mutually_exclusive_criterium in mutually_exclusive_criteria:
             source = mutually_exclusive_criterium[0]
             target = mutually_exclusive_criterium[2]
-            if source not in mutually_exclusive_criteria:
-                mutually_exclusive_criteria_dict[source] = [target]
-            else:
-                mutually_exclusive_criteria_dict[source].append(target)
+            functions.extend_dict(mutually_exclusive_criteria_dict, source, target)
+            #if source not in mutually_exclusive_criteria:
+            #    mutually_exclusive_criteria_dict[source] = [target]
+            #else:
+            #    mutually_exclusive_criteria_dict[source].append(target)
+        
+        command = "SELECT source,target,name FROM mutually_inclusive_criteria INNER JOIN (SELECT id as inner_id,name FROM classification_criterium)x ON x.inner_id = mutually_inclusive_criteria.target"
+        self.cursor.execute(command)
+        mutually_inclusive_criteria = self.cursor.fetchall()
+        mutually_inclusive_criteria_dict = {}
+        for mutually_inclusive_criterium in mutually_inclusive_criteria:
+            source = mutually_inclusive_criterium[0]
+            target = mutually_inclusive_criterium[2]
+            functions.extend_dict(mutually_inclusive_criteria_dict, source, target)
+            #if source not in mutually_inclusive_criteria_dict:
+            #    mutually_inclusive_criteria_dict[source] = [target]
+            #else:
+            #    mutually_inclusive_criteria_dict[source].append(target)
 
         result = {}
         for classification_schema in classification_schemas:
@@ -2567,7 +2581,8 @@ class Connection:
                     strength_display_titles[classification_criterium_strength_name] = strength_display_name
                 new_criterium_dict["possible_strengths"] = all_criteria_strengths
                 new_criterium_dict["strength_display_names"] = strength_display_titles
-                new_criterium_dict['mutually_exclusive_criteria'] = mutually_exclusive_criteria_dict.get(classification_criterium_id, []) 
+                new_criterium_dict['mutually_exclusive_criteria'] = mutually_exclusive_criteria_dict.get(classification_criterium_id, [])
+                new_criterium_dict["mutually_inclusive_criteria"] = mutually_inclusive_criteria_dict.get(classification_criterium_id, [])
 
                 classification_criteria_dict[classification_criterium_name] = new_criterium_dict
 

@@ -366,8 +366,6 @@ function scheme_select_action(do_revert=true) {
         $('#classification_schema_wrapper').collapse('show');
         create_criteria_buttons()
         //colors = load_colors()
-        set_default_strengths()
-        set_activatable_property()
         
         if (do_revert) {
             preselect_criteria_from_database(scheme)
@@ -867,6 +865,15 @@ function create_criteria_buttons() {
         document.querySelector("#uncertain_criteria_container").closest(".card").hidden = true
     }
 
+    set_default_strengths()
+    set_activatable_property()
+
+    // enable/disable buttons -- mainly for mutually inclusive criteria
+    for (const i in criteria_ids) {
+        var criterium_id = criteria_ids[i]
+        update_mutual_criteria(criterium_id)
+    }
+
 }
 
 
@@ -1286,7 +1293,7 @@ function enable_disable_buttons(criterium_ids, is_disable) {
         const current_criterium_id = criterium_ids[i];
         const current_criterium_button = document.getElementById(current_criterium_id)
         // this is just a sanity check to make sure that the disabled buttons are not checked!
-        if (current_criterium_button.checked) {
+        if (current_criterium_button.checked && document.getElementById(current_criterium_id + "_state").value != "unchecked") {
             set_criterium(current_criterium_id, "unchecked")
         }
         if (current_criterium_button.getAttribute('activateable') === 'true') {
@@ -1402,15 +1409,24 @@ function update_criterium_button_label(criterium_id) {
     }
 }
 
+function update_mutual_criteria(criterium_id) {
+    is_selected = document.getElementById(criterium_id + '_state').value == 'selected'
+    // mutually exclusive criteria
+    const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
+    enable_disable_buttons(current_disable_group, is_selected)
+
+    // mutually inclusive criteria
+    const current_enable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_inclusive_criteria']
+    enable_disable_buttons(current_enable_group, !is_selected)
+}
+
 // select and unselect the criterium itself + its associated strength input check which holds information about its user-assigned strenght
 function toggle_criterium(criterium_id) {
     var obj = document.getElementById(criterium_id)
     obj.checked = !obj.checked
     update_criterium_button_background(criterium_id)
     document.getElementById(criterium_id + '_strength').checked = obj.checked
-    const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
-    const is_selected =  obj.checked && (document.getElementById(criterium_id + '_state').value == 'selected')
-    enable_disable_buttons(current_disable_group, is_selected)
+    update_mutual_criteria(criterium_id)
 }
 
 
@@ -1441,11 +1457,7 @@ function set_criterium(criterium_id, state, is_intermediate = false) {
 
     update_criterium_button_label(criterium_id)
     update_criterium_button_background(criterium_id)
-    const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
-    const is_selected = is_checked && (document.getElementById(criterium_id + '_state').value == 'selected')
-    if (state != 'unchecked') { // prevent recursion
-        enable_disable_buttons(current_disable_group, is_selected)
-    }
+    update_mutual_criteria(criterium_id)
 }
 
 
