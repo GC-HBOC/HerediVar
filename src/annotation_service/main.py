@@ -19,7 +19,7 @@ import os
 def get_default_job_config():
     job_config = {
         # heredicare annotations
-        'do_heredicare': True,
+        'do_heredicare': False,
 
         # external programs
         'do_phylop': True,

@@ -5,6 +5,7 @@ import common.functions as functions
 import re
 import os
 import urllib.parse
+from common.db_IO import Connection
 
 from ..pubmed_parser import fetch
 
@@ -31,11 +32,15 @@ class vep_job(Job):
         else:
             vep_code, vep_stderr, vep_stdout = self._annotate_vep(inpath, annotated_inpath)
 
+        ## stupid workaround for this specific vep warning:
+        if vep_stderr == "VEP runtime WARNING: Smartmatch is experimental at /mnt/storage2/users/ahdoebm1/HerediVar/tools/ensembl-vep/modules/Bio/EnsEMBL/VEP/AnnotationSource/File.pm line 472.":
+            vep_stderr = ""
+
         self.handle_result(inpath, annotated_inpath, vep_code)
         return vep_code, vep_stderr, vep_stdout
 
 
-    def save_to_db(self, info, variant_id, conn):
+    def save_to_db(self, info, variant_id, conn: Connection):
         status_code = 0
         err_msg = ""
         

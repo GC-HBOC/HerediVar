@@ -42,7 +42,7 @@ class automatic_classification_job(Job):
 
         if autoclass_input is None:
             return 0, "Not enough information to calculate the automatic classification"
-        print(autoclass_input)
+        #print(autoclass_input)
         config_path = os.path.join(paths.automatic_classification_path, "config_production.yaml")
         returncode, err_msg, classification = self.run_automatic_classification(autoclass_input, config_path)
 
