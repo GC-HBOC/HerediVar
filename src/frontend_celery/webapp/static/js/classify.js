@@ -16,7 +16,7 @@ const selected_pmids = JSON.parse(flask_data.dataset.selectedPmids) // this may 
 const selected_text_passages = JSON.parse(flask_data.dataset.selectedTextPassages) // this may be non empty if there were errors in the submission
 
 const automatic_classification_url = flask_data.dataset.automaticClassificationUrl;
-
+const calculate_class_url = flask_data.dataset.calculateClassUrl;
 
 var previous_obj = null;
 //var colors; // this maps a criterium strength to a color which are defined in css
@@ -1311,20 +1311,53 @@ function update_classification_preview() {
         var selected_criteria = get_checked_criteria_strengths(); // this is an array of criteria strengths
     }
     selected_criteria = selected_criteria.join('+')
-    fetch('/calculate_class/'+scheme_type+'/'+selected_criteria).then(function (response) {
-        return response.json();
-    }).then(function (text) {
-        const final_class = text.final_class
-        document.getElementById('classification_preview').textContent = final_class
-        if (classification_type === "consensus") {
-            var pc = previous_classifications[-1] ?? {} // use imaginary consensus classification user id
-        } else {
-            var pc = previous_classifications[logged_in_user_id] ?? {}
-        }
-        if (!(scheme in pc) && !do_request_form_preselect) {
-            document.getElementById('final_class').value = final_class
+
+    const version = classification_schemas[scheme]["version"]
+
+    $.ajax({
+        type: 'GET',
+        url: calculate_class_url,
+        data: {
+            'scheme_type': scheme_type,
+            'version': version,
+            'selected_classes': selected_criteria
+        },
+        success: function(returnval, status, request) {
+            console.log(returnval)
+
+            const final_class = returnval.final_class
+            document.getElementById('classification_preview').textContent = final_class
+            if (classification_type === "consensus") {
+                var pc = previous_classifications[-1] ?? {} // use imaginary consensus classification user id
+            } else {
+                var pc = previous_classifications[logged_in_user_id] ?? {}
+            }
+            if (!(scheme in pc) && !do_request_form_preselect) {
+                document.getElementById('final_class').value = final_class
+            }
+        },
+        error: function(xhr, status, error) {
+            console.log("There was an error during classification retrieval:")
+            console.log(status)
+            console.log(error)
         }
     });
+
+
+    //fetch('/calculate_class/'+scheme_type+'/'+selected_criteria).then(function (response) {
+    //    return response.json();
+    //}).then(function (text) {
+    //    const final_class = text.final_class
+    //    document.getElementById('classification_preview').textContent = final_class
+    //    if (classification_type === "consensus") {
+    //        var pc = previous_classifications[-1] ?? {} // use imaginary consensus classification user id
+    //    } else {
+    //        var pc = previous_classifications[logged_in_user_id] ?? {}
+    //    }
+    //    if (!(scheme in pc) && !do_request_form_preselect) {
+    //        document.getElementById('final_class').value = final_class
+    //    }
+    //});
 }
 
 function remove_criterium_button_background(criterium_id) {

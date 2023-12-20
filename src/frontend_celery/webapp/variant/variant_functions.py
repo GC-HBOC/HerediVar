@@ -398,9 +398,6 @@ def is_valid_scheme(selected_criteria, scheme):
         current_mutually_inclusive_criteria = scheme_criteria[source]["mutually_inclusive_criteria"]
         for target in current_mutually_inclusive_criteria:
             functions.extend_dict(mutually_inclusive_target_to_source, target, source)
-    
-    print(mutually_inclusive_target_to_source)
-    print(selected_criteria)
 
     # ensure that only valid criteria were submitted
     for criterium_id in selected_criteria:

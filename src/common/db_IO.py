@@ -1348,6 +1348,12 @@ class Connection:
             return classification_criterium_id[0]
         return None
 
+    def get_classification_scheme_id(self, scheme_name, version):
+        command = "SELECT id FROM classification_scheme WHERE name = %s AND version = %s"
+        self.cursor.execute(command, (scheme_name, version))
+        classification_scheme_id = self.cursor.fetchone()[0]
+        return classification_scheme_id
+
 
     def get_classification_criterium_strength_id(self, classification_criterium_id, classification_criterium_strength_name):
         command = "SELECT id FROM classification_criterium_strength WHERE name = %s and classification_criterium_id = %s"
@@ -2508,7 +2514,7 @@ class Connection:
         # it should look like this:
         # {schema_id -> display_name(description), scheme_type, reference, criteria}
         #                                         -> {name,description,default_strength,possible_strengths,selectable,disable_group,mutually_exclusive_buttons,mutually_inclusive_buttons}
-        command = "SELECT * FROM classification_scheme WHERE is_active = 1"
+        command = "SELECT id,name,display_name,type,reference,is_default,version FROM classification_scheme WHERE is_active = 1"
         self.cursor.execute(command)
         classification_schemas = self.cursor.fetchall()
 
@@ -2545,7 +2551,8 @@ class Connection:
             description = classification_schema[2]
             scheme_type = classification_schema[3]
             online_reference = classification_schema[4]
-            is_default = classification_schema[6]
+            is_default = classification_schema[5]
+            version = classification_schema[6]
 
             command = "SELECT * FROM classification_criterium WHERE classification_scheme_id = %s"
             self.cursor.execute(command, (classification_schema_id, ))
@@ -2586,7 +2593,7 @@ class Connection:
 
                 classification_criteria_dict[classification_criterium_name] = new_criterium_dict
 
-            result[classification_schema_id] = {"description": description, "scheme_type": scheme_type, "reference": online_reference, 'is_default': is_default, 'criteria': classification_criteria_dict}
+            result[classification_schema_id] = {"description": description, "scheme_type": scheme_type, "version": version, "reference": online_reference, 'is_default': is_default, 'criteria': classification_criteria_dict}
 
         return result
 
@@ -2891,19 +2898,12 @@ class Connection:
 
 
 
-    def insert_criterium_scheme(self, classification_scheme_id, name, display_name, scheme_type, reference):
-        if classification_scheme_id != "":
-            command = "UPDATE classification_scheme SET name = %s, display_name = %s, type = %s, reference = %s WHERE id = %s"
-            actual_information = (name, display_name, scheme_type, reference, classification_scheme_id)
-        else:
-            command = "INSERT INTO classification_scheme (name, display_name, type, reference) VALUES (%s,%s,%s,%s)"
-            actual_information = (name, display_name, scheme_type, reference)
-        self.cursor.execute(command, actual_information)
+    def insert_criterium_scheme(self, name, version, display_name, scheme_type, reference):
+        command = "INSERT INTO classification_scheme (name, version, display_name, type, reference) VALUES (%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE display_name = %s, type = %s, reference = %s"
+        self.cursor.execute(command, (name, version, display_name, scheme_type, reference, display_name, scheme_type, reference))
         self.conn.commit()
-        if classification_scheme_id != "":
-            return classification_scheme_id
-        else:
-            return self.get_last_insert_id()
+        classification_scheme_id = self.get_classification_scheme_id(name, version)
+        return classification_scheme_id
             
         
     def insert_criterium(self, classification_scheme_id, name, description, is_selectable, relevant_info):
@@ -2933,12 +2933,22 @@ class Connection:
         self.conn.commit()
 
     def insert_mutually_exclusive_criterium(self, source, target):
-        command = "INSERT INTO mutually_exclusive_criteria (source, target) VALUES (%s,%s) ON DUPLICATE KEY UPDATE source = %s, target=%s"
-        self.cursor.execute(command, (source, target, source, target))
+        command = "INSERT INTO mutually_exclusive_criteria (source, target) VALUES (%s,%s)"
+        self.cursor.execute(command, (source, target))
         self.conn.commit()
     
     def delete_mutually_exclusive_criteria(self, source):
         command = "DELETE FROM mutually_exclusive_criteria WHERE source = %s"
+        self.cursor.execute(command, (source, ))
+        self.conn.commit()
+
+    def insert_mutually_inclusive_criterium(self, source, target):
+        command = "INSERT INTO mutually_inclusive_criteria (source, target) VALUES (%s, %s)"
+        self.cursor.execute(command, (source, target))
+        self.conn.commit()
+
+    def delete_mutually_inclusive_criteria(self, source):
+        command = "DELETE FROM mutually_inclusive_criteria WHERE source = %s"
         self.cursor.execute(command, (source, ))
         self.conn.commit()
 

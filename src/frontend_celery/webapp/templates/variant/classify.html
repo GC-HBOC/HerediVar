@@ -403,6 +403,7 @@
     data-selected-pmids='{{ request.form.getlist("pmid") | tojson }}'
     data-selected-text-passages='{{ request.form.getlist("text_passage") | tojson }}'
     data-automatic-classification-url='{{ url_for("variant.automatic_classification", variant_id=variant.id) }}'
+    data-calculate-class-url='{{ url_for("download.calculate_class") }}'
 />
 
 

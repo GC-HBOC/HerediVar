@@ -292,10 +292,22 @@ def recalculate_automatic_classes():
 
 
 # example
-@download_blueprint.route('/calculate_class/<string:scheme_type>/<string:selected_classes>')
-@download_blueprint.route('/calculate_class/<string:scheme_type>/')
-@download_blueprint.route('/calculate_class/<string:scheme_type>')
-def calculate_class(scheme_type, selected_classes = ''):
+@download_blueprint.route('/calculate_class/<string:scheme_type>/<string:version>/<string:selected_classes>')
+@download_blueprint.route('/calculate_class/<string:scheme_type>/<string:version>/')
+@download_blueprint.route('/calculate_class/<string:scheme_type>/<string:version>')
+@download_blueprint.route('/calculate_class')
+def calculate_class(scheme_type = None, version = None, selected_classes = ''):
+
+    if scheme_type is None:
+        scheme_type = request.args.get("scheme_type")
+    if version is None:
+        version = request.args.get("version")
+    if selected_classes == '':
+        selected_classes = request.args.get('selected_classes', '')
+
+    if scheme_type is None or version is None:
+        raise ValueError("The scheme type or version is missing.")
+
     scheme_type = scheme_type.lower()
 
     if scheme_type == "none":
@@ -328,23 +340,23 @@ def calculate_class(scheme_type, selected_classes = ''):
 
         #print(class_counts)
 
-        if 'brca1' in scheme_type:
+        if 'brca1' in scheme_type and version == "v1.0.0":
             possible_classes = get_possible_classes_enigma_brca1(class_counts) # get a set of possible classes depending on selected criteria
-        elif 'brca2' in scheme_type:
+        elif 'brca2' in scheme_type and version == "v1.0.0":
             possible_classes = get_possible_classes_enigma_brca2(class_counts) # get a set of possible classes depending on selected criteria
-        elif 'palb2' in scheme_type:
+        elif 'palb2' in scheme_type and version == "v1.0.0":
             possible_classes = get_possible_classes_enigma_palb2(class_counts) # get a set of possible classes depending on selected criteria
-        elif 'tp53' in scheme_type:
+        elif 'tp53' in scheme_type and version == "v1.4.0":
             possible_classes = get_possible_classes_enigma_tp53(class_counts) # get a set of possible classes depending on selected criteria
-        elif 'atm' in scheme_type:
+        elif 'atm' in scheme_type and version == "v1.1.0":
             possible_classes = get_possible_classes_enigma_atm(class_counts) # get a set of possible classes depending on selected criteria
         else:
-            raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme? (either "acmg" or VUS "task-force" based)')
+            raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme and version? (either "acmg" or VUS "task-force" based)')
 
         final_class = decide_for_class_acmg(possible_classes) # decide for class
 
     if final_class is None:
-        raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme? (either "acmg" or VUS "task-force" based)')
+        raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme and version? (either "acmg" or VUS "task-force" based)')
 
     result = {'final_class': final_class}
     return jsonify(result)
