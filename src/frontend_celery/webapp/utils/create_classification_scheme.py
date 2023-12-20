@@ -15,6 +15,10 @@ def insert_criterium_scheme(conn: Connection, data):
         scheme_type = data["type"],
         reference = data["reference"]
     )
+    aliases = data["aliases"]
+    conn.clear_classification_scheme_aliases(classification_scheme_id)
+    for alias in aliases:
+        conn.insert_classification_scheme_alias(classification_scheme_id, alias)
     return classification_scheme_id
 
 
