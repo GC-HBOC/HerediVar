@@ -138,3 +138,71 @@ ADD COLUMN `is_selected` TINYINT(1) NOT NULL DEFAULT 1 AFTER `evidence`;
 
 ALTER TABLE `HerediVar_ahdoebm1`.`consensus_classification_criteria_applied` 
 ADD COLUMN `is_selected` TINYINT(1) NOT NULL DEFAULT 1 AFTER `evidence`;
+
+
+
+
+
+CREATE TABLE `HerediVar_ahdoebm1`.`mutually_inclusive_criteria` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `source` INT UNSIGNED NOT NULL,
+  `target` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`mutually_inclusive_criteria` 
+ADD INDEX `FK_mutually_inclusive_criteria_criteria_idx` (`source` ASC),
+ADD INDEX `FK_mutually_inlusive_criteria_target_idx` (`target` ASC);
+;
+ALTER TABLE `HerediVar_ahdoebm1`.`mutually_inclusive_criteria` 
+ADD CONSTRAINT `FK_mutually_inclusive_criteria_source`
+  FOREIGN KEY (`source`)
+  REFERENCES `HerediVar_ahdoebm1`.`classification_criterium` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `FK_mutually_inlusive_criteria_target`
+  FOREIGN KEY (`target`)
+  REFERENCES `HerediVar_ahdoebm1`.`classification_criterium` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+GRANT SELECT ON HerediVar_ahdoebm1.mutually_inclusive_criteria TO 'HerediVar_user';
+GRANT SELECT ON HerediVar_ahdoebm1.mutually_inclusive_criteria TO 'HerediVar_superuser';
+GRANT DELETE,INSERT ON HerediVar_ahdoebm1.mutually_inclusive_criteria TO 'HerediVar_superuser';
+
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`mutually_inclusive_criteria` 
+ADD UNIQUE INDEX `UNIQUE_mutually_inclusive_criteria` (`source` ASC, `target` ASC);
+;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`classification_scheme` 
+ADD COLUMN `version` VARCHAR(45) NOT NULL AFTER DEFAULT 'v1.0.0' `name`;
+UPDATE classification_scheme SET version = "v1.4.0" WHERE name = "enigma-tp53";
+UPDATE classification_scheme SET version = "v1.1.0" WHERE name = "enigma-ATM";
+
+ALTER TABLE `HerediVar_ahdoebm1`.`classification_scheme` 
+CHANGE COLUMN `name` `name` VARCHAR(45) NOT NULL ;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`classification_scheme` 
+ADD UNIQUE INDEX `UNIQUE_classification_scheme` (`name` ASC, `version` ASC);
+;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`mutually_inclusive_criteria` 
+DROP FOREIGN KEY `FK_mutually_inclusive_criteria_source`,
+DROP FOREIGN KEY `FK_mutually_inlusive_criteria_target`;
+ALTER TABLE `HerediVar_ahdoebm1`.`mutually_inclusive_criteria` 
+ADD CONSTRAINT `FK_mutually_inclusive_criteria_source`
+  FOREIGN KEY (`source`)
+  REFERENCES `HerediVar_ahdoebm1`.`classification_criterium` (`id`)
+  ON DELETE CASCADE
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `FK_mutually_inlusive_criteria_target`
+  FOREIGN KEY (`target`)
+  REFERENCES `HerediVar_ahdoebm1`.`classification_criterium` (`id`)
+  ON DELETE CASCADE
+  ON UPDATE NO ACTION;
