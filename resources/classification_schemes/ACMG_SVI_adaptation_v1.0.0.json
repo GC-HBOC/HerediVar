@@ -1,6 +1,6 @@
 {
-    "classification_scheme_id": "30",
     "name": "acmg_svi",
+    "version": "v1.0.0",
     "display_name": "ACMG SVI adaptation",
     "type": "acmg-svi",
     "reference": "https://pubmed.ncbi.nlm.nih.gov/25741868/",

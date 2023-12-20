@@ -9,8 +9,8 @@ import argparse
 
 def insert_criterium_scheme(conn: Connection, data):
     classification_scheme_id = conn.insert_criterium_scheme(
-        classification_scheme_id = data.get("classification_scheme_id", ""),
         name = data["name"],
+        version = data["version"],
         display_name = data["display_name"],
         scheme_type = data["type"],
         reference = data["reference"]
@@ -45,7 +45,7 @@ def insert_criteria(conn: Connection, data, classification_scheme_id):
     for criterium in criteria:
         source_id = conn.get_classification_criterium_id(classification_scheme_id, criterium['name'])
         conn.delete_mutually_exclusive_criteria(source_id)
-        for mutually_exclusive_criterium in criterium["mutually_exclusive_criteria"]:
+        for mutually_exclusive_criterium in criterium.get("mutually_exclusive_criteria", []):
             source = criterium_name_to_criterium_id.get(criterium["name"])
             target = criterium_name_to_criterium_id.get(mutually_exclusive_criterium)
             if source is not None and target is not None:
@@ -53,6 +53,17 @@ def insert_criteria(conn: Connection, data, classification_scheme_id):
                     source = source,
                     target = target
                 )
+
+        conn.delete_mutually_inclusive_criteria(source_id)
+        for mutually_inclusive_criterium in criterium.get("mutually_inclusive_criteria", []):
+            source = criterium_name_to_criterium_id.get(criterium["name"])
+            target = criterium_name_to_criterium_id.get(mutually_inclusive_criterium)
+            if source is not None and target is not None:
+                conn.insert_mutually_inclusive_criterium(
+                    source = source,
+                    target = target
+                )
+
 
 
 def delete_criteria(conn: Connection, data, classification_scheme_id):
