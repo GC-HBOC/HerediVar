@@ -1353,7 +1353,18 @@ class Connection:
         self.cursor.execute(command, (scheme_name, version))
         classification_scheme_id = self.cursor.fetchone()[0]
         return classification_scheme_id
-
+    
+    def get_classification_scheme_id_from_alias(self, scheme_name):
+        command = "SELECT id FROM classification_scheme WHERE name = %s"
+        self.cursor.execute(command, (scheme_name, ))
+        classification_scheme_id = self.cursor.fetchone()
+        if classification_scheme_id is None:
+            command = "SELECT classification_scheme_id FROM classification_scheme_alias WHERE alias = %s"
+            self.cursor.execute(command, (scheme_name, ))
+            classification_scheme_id = self.cursor.fetchone()
+        if classification_scheme_id is not None:
+            return classification_scheme_id[0]
+        return None
 
     def get_classification_criterium_strength_id(self, classification_criterium_id, classification_criterium_strength_name):
         command = "SELECT id FROM classification_criterium_strength WHERE name = %s and classification_criterium_id = %s"
@@ -1438,7 +1449,7 @@ class Connection:
         self.conn.commit()
 
     def get_classification_scheme(self, scheme_id):
-        command = "SELECT id,name,display_name,type,reference,is_active,is_default from classification_scheme WHERE id = %s"
+        command = "SELECT id,name,display_name,type,reference,is_active,is_default,version from classification_scheme WHERE id = %s"
         self.cursor.execute(command, (scheme_id, ))
         scheme = self.cursor.fetchone()
         return scheme
@@ -1989,53 +2000,11 @@ class Connection:
         return result
 
 
-
-    # DEPRECATED!!!
-    def get_consensus_classifications_extended(self, variant_id, most_recent = True):
-        consensus_classifications = self.get_consensus_classification(variant_id, most_recent=most_recent, sql_modifier=self.add_userinfo)
-        if consensus_classifications is None:
-            return None
-        consensus_classifications_preprocessed = []
-        for consensus_classification in consensus_classifications:
-            consensus_classification = list(consensus_classification)
-            current_scheme = self.get_classification_scheme(consensus_classification[7])
-            consensus_classification.append(current_scheme[2])# append the scheme description (which is used as display name)
-            consensus_classification.append(current_scheme[3]) # append scheme type
-            current_scheme_criteria_applied = self.get_scheme_criteria_applied(consensus_classification[0], where = "consensus")
-            consensus_classification.append(current_scheme_criteria_applied)
-            previous_selected_literature = self.get_selected_literature(is_user = False, classification_id = consensus_classification[0])
-            consensus_classification.append(previous_selected_literature)
-            consensus_classifications_preprocessed.append(consensus_classification)
-        return consensus_classifications_preprocessed
-    # DEPRECATED!!!
-    def get_user_classifications_extended(self, variant_id, user_id='all', scheme_id='all'):
-        user_classifications = self.get_user_classifications(variant_id, user_id=user_id, scheme_id=scheme_id, sql_modifier=self.add_userinfo) # 0id,1classification,2variant_id,3user_id,4comment,5date,6classification_scheme_id,7user_id,8first_name,9last_name,10affiliation
-        if user_classifications is None:
-            return None
-        user_classifications_preprocessed = []
-        for user_classification in user_classifications:
-            user_classification = list(user_classification)
-            current_scheme = self.get_classification_scheme(user_classification[6])
-            user_classification.append(current_scheme[2]) # append the scheme description (which is used as display name)
-            user_classification.append(current_scheme[3]) # append scheme type
-            current_scheme_criteria_applied = self.get_scheme_criteria_applied(user_classification[0], where = "user")
-            user_classification.append(current_scheme_criteria_applied)
-            previous_selected_literature = self.get_selected_literature(is_user = True, classification_id = user_classification[0])
-            user_classification.append(previous_selected_literature)
-            user_classifications_preprocessed.append(user_classification)
-        return user_classifications_preprocessed
-
-
-
-
-
     def get_heredicare_annotations(self, variant_id):
         command = "SELECT id, vid, n_fam, n_pat, consensus_class, comment, date FROM variant_heredicare_annotation WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id, ))
         res = self.cursor.fetchall()
         return res
-
-
 
 
     def get_variant(self, variant_id, 
@@ -2247,11 +2216,12 @@ class Connection:
                     new_criterium = models.AutomaticClassificationCriterium(id = automatic_classification_criterium_id, name = name, rule_type = rule_type, evidence_type = evidence_type, is_selected = is_selected, strength = strength, type = strength_type, evidence = evidence)
                     all_criteria.append(new_criterium)
                 
-                classification_splicing = automatic_classification_raw[2]
-                classification_protein = automatic_classification_raw[3]
-                scheme_name = automatic_classification_raw[1]
-                date = automatic_classification_raw[4]
-                automatic_classification = models.AutomaticClassification(id = automatic_classification_id, scheme_name = scheme_name, classification_splicing = classification_splicing, classification_protein = classification_protein, date = date, criteria = all_criteria)
+                scheme_display_title = automatic_classification_raw[2]
+                scheme_id = automatic_classification_raw[1]
+                classification_splicing = automatic_classification_raw[3]
+                classification_protein = automatic_classification_raw[4]
+                date = automatic_classification_raw[5]
+                automatic_classification = models.AutomaticClassification(id = automatic_classification_id, scheme_id = scheme_id, scheme_display_title = scheme_display_title, classification_splicing = classification_splicing, classification_protein = classification_protein, date = date, criteria = all_criteria)
 
 
         heredicare_classifications = None
@@ -2389,69 +2359,6 @@ class Connection:
         is_hidden = 0 if is_hidden else 1
         self.cursor.execute(command, (is_hidden, variant_id))
         self.conn.commit()
-
-
-
-
-    def get_all_variant_annotations(self, variant_id, group_output=False):
-        variant_annotations = self.get_recent_annotations(variant_id)
-        standard_annotations = {} # used for grouping hierarchy: 'standard_annotations' -> group -> annotation_label
-        variant_annot_dict = {}
-
-        if group_output: # all items from the same group are put into one dictionary except for the special group 'None' which is inserted as key directly into variant_annot_dict
-            for annot in variant_annotations:
-                current_group = annot[8]
-                new_value = annot[2:len(annot)] + (annot[0], ) # put annotation id last and remove title / display text
-                new_annotation_type = annot[1]
-                if current_group == 'None':
-                    variant_annot_dict[new_annotation_type] = new_value
-                    continue
-                if current_group in standard_annotations:
-                    updated_annots = standard_annotations[current_group]
-                    updated_annots[new_annotation_type] = new_value
-                    standard_annotations[current_group] = updated_annots
-                else:
-                    standard_annotations[current_group] = {new_annotation_type: new_value}
-            variant_annot_dict['standard_annotations'] = standard_annotations
-        else:
-            for annot in variant_annotations:
-                new_value = annot[2:len(annot)] + (annot[0], )  # put annotation id last and remove title
-                new_annotation_type = annot[1]
-                variant_annot_dict[new_annotation_type] = new_value
-        
-        clinvar_variant_annotation = self.get_clinvar_variant_annotation(variant_id)
-        if clinvar_variant_annotation is not None:
-            variant_annot_dict["clinvar_variant_annotation"] = clinvar_variant_annotation # 0id,1variant_id,2variation_id,3interpretation,4review_status,5version_date
-            clinvar_variant_annotation_id = clinvar_variant_annotation[0]
-            variant_annot_dict['clinvar_submissions'] = self.get_clinvar_submissions(clinvar_variant_annotation_id)
-
-        variant_consequences = self.get_variant_consequences(variant_id) # 0transcript_name,1hgvs_c,2hgvs_p,3consequence,4impact,5exon_nr,6intron_nr,7symbol,8transcript.gene_id,9source,10pfam_accession,11pfam_description,12length,13is_gencode_basic,14is_mane_select,15is_mane_plus_clinical,16is_ensembl_canonical,17total_flag
-        if variant_consequences is not None:
-            variant_annot_dict['variant_consequences'] = variant_consequences
-
-        literature = self.get_variant_literature(variant_id, sort_year=False)
-        if literature is not None:
-            variant_annot_dict['literature'] = literature
-
-        consensus_classification = self.get_consensus_classifications_extended(variant_id, most_recent=True)
-        if consensus_classification is not None:
-            variant_annot_dict['consensus_classification'] = consensus_classification
-
-        user_classifications = self.get_user_classifications_extended(variant_id) # 0id,1classification,2variant_id,3user_id,4comment,5date,6classification_scheme_id,7user_id,8first_name,9last_name,10affiliation
-        if user_classifications is not None:
-            variant_annot_dict['user_classifications'] = user_classifications
-        
-        heredicare_center_classifications = self.get_heredicare_center_classifications(variant_id)
-        if heredicare_center_classifications is not None:
-            variant_annot_dict['heredicare_center_classifications'] = heredicare_center_classifications
-
-        assays = self.get_assays(variant_id, assay_types = 'all')
-        if assays is not None:
-            variant_annot_dict['assays'] = assays
-        #print(variant_annot_dict['standard_annotations'])
-
-    
-        return variant_annot_dict
 
 
 
@@ -2904,7 +2811,16 @@ class Connection:
         self.conn.commit()
         classification_scheme_id = self.get_classification_scheme_id(name, version)
         return classification_scheme_id
-            
+    
+    def insert_classification_scheme_alias(self, classification_scheme_id, alias):
+        command = "INSERT INTO classification_scheme_alias (classification_scheme_id, alias) VALUES (%s, %s)"
+        self.cursor.execute(command, (classification_scheme_id, alias))
+        self.conn.commit()
+
+    def clear_classification_scheme_aliases(self, classification_scheme_id):
+        command = "DELETE FROM classification_scheme_alias WHERE classification_scheme_id = %s"
+        self.cursor.execute(command, (classification_scheme_id, ))
+        self.conn.commit()
         
     def insert_criterium(self, classification_scheme_id, name, description, is_selectable, relevant_info):
         command = "INSERT INTO classification_criterium (classification_scheme_id, name, description, is_selectable, relevant_info) VALUES (%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE description = %s, is_selectable = %s, relevant_info=%s"
@@ -3005,10 +2921,10 @@ class Connection:
 
         return transcripts
     
-    def insert_automatic_classification(self, variant_id, scheme, classification_splicing, classification_protein, tool_version):
+    def insert_automatic_classification(self, variant_id, classification_scheme_id, classification_splicing, classification_protein, tool_version):
         date = functions.get_now()
-        command = "INSERT INTO automatic_classification (variant_id, scheme_name, classification_splicing, classification_protein, date, tool_version) VALUES (%s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, scheme, classification_splicing, classification_protein, date, tool_version))
+        command = "INSERT INTO automatic_classification (variant_id, classification_scheme_id, classification_splicing, classification_protein, date, tool_version) VALUES (%s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, classification_scheme_id, classification_splicing, classification_protein, date, tool_version))
         self.conn.commit()
         return self.get_last_insert_id()
 
@@ -3024,7 +2940,7 @@ class Connection:
         self.conn.commit()
 
     def get_automatic_classification(self, variant_id):
-        command = "SELECT id, scheme_name, classification_splicing, classification_protein, date FROM automatic_classification WHERE variant_id = %s"
+        command = "SELECT id, classification_scheme_id, (SELECT display_name FROM classification_scheme WHERE classification_scheme.id = automatic_classification.classification_scheme_id), classification_splicing, classification_protein, date FROM automatic_classification WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall() # prevent unfetched result
         if len(result) == 0:

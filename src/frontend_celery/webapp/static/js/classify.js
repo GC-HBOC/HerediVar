@@ -475,12 +475,12 @@ function preselect_criteria_automatic_classification(){
         success: function(returnval, status, request) {
             console.log(returnval)
 
-            var scheme_id_automatic_classification = 30 //returnval['scheme_id']
+            var scheme_id_automatic_classification = returnval['scheme_id']
             console.log(scheme)
             if (scheme_id_automatic_classification != scheme){
                 update_status(preselect_button, "failure")
                 preselect_button.classList.add("btn-warning")
-                add_tooltip(preselect_button, "You have selected the wrong scheme. This variant only has an automatic classification for " + returnval['scheme_name'])
+                add_tooltip(preselect_button, "You have selected the wrong scheme. This variant only has an automatic classification for " + returnval['scheme_display_title'])
             } else {
                 revert_previous_obj() 
                 revert_selected_criteria()

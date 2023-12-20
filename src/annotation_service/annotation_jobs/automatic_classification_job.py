@@ -52,7 +52,14 @@ class automatic_classification_job(Job):
         #print(classification)
         
         classification_result = json.loads(classification["result"])
-        scheme = classification.get("config_name", "acmg-svi")
+        scheme_alias = classification.get("config_name", "acmg_svi")
+        classification_scheme_id = conn.get_classification_scheme_id_from_alias(scheme_alias)
+        if classification_scheme_id is None:
+            raise ValueError("The scheme provided by the config: " + str(scheme_alias) + " is not in HerediVar. Please adjust config or insert scheme.")
+        scheme = conn.get_classification_scheme(classification_scheme_id)
+        scheme_id = scheme[0]
+        scheme_type = scheme[3]
+        scheme_version = scheme[7]
         tool_version = classification["version"]
 
         selected_criteria = {} # protein, splicing, general
@@ -68,15 +75,15 @@ class automatic_classification_job(Job):
         
         # calculate class for splicing
         selected_criteria_splicing = '+'.join(selected_criteria.get("splicing", []) + selected_criteria.get("general", []))
-        classification_splicing = self.get_classification(selected_criteria_splicing, scheme)
+        classification_splicing = self.get_classification(selected_criteria_splicing, scheme_type, scheme_version)
         
         # calculate class for protein
         selected_criteria_protein = '+'.join(selected_criteria.get("protein", []) + selected_criteria.get("general", []))
-        classification_protein = self.get_classification(selected_criteria_protein, scheme)
+        classification_protein = self.get_classification(selected_criteria_protein, scheme_type, scheme_version)
 
         #print(classification_endpoint)
 
-        automatic_classification_id = conn.insert_automatic_classification(variant_id, scheme, classification_splicing, classification_protein, tool_version)
+        automatic_classification_id = conn.insert_automatic_classification(variant_id, scheme_id, classification_splicing, classification_protein, tool_version)
 
         for criterium_name in classification_result:
             current_criterium = classification_result[criterium_name]
@@ -93,9 +100,9 @@ class automatic_classification_job(Job):
 
         return status_code, err_msg
     
-    def get_classification(self, selected_criteria: str, scheme: str):
-        classification_endpoint = os.environ.get("HOST", "localhost") + ":" + os.environ.get("PORT", "5000")
-        classification_endpoint = urllib.parse.urljoin("http://" + classification_endpoint, "calculate_class/" + scheme + "/" + selected_criteria)
+    def get_classification(self, selected_criteria: str, scheme: str, version: str):
+        host = os.environ.get("HOST", "localhost") + ":" + os.environ.get("PORT", "5000")
+        classification_endpoint = urllib.parse.urljoin("http://" + host, "calculate_class/" + scheme + "/" + version + "/" + selected_criteria)
         resp = requests.get(classification_endpoint)
         resp.raise_for_status()
         classification = resp.json().get("final_class")
@@ -128,7 +135,8 @@ class automatic_classification_job(Job):
         #    "config_path": "/home/katzkean/variant_classification/config.yaml",
         #    "variant_json": "{\"chr\": \"17\", \"pos\": 43057110, \"gene\": \"BRCA1\", \"ref\": \"A\", \"alt\": \"C\", \"variant_type\": [\"missense_variant\"], \"variant_effect\": [{\"transcript\": \"ENST00000357654\", \"hgvs_c\": \"c.5219T>G\", \"hgvs_p\": \"p.Val1740Gly\", \"variant_type\": [\"missense_variant\"], \"exon\": 19}, {\"transcript\": \"ENST00000471181\", \"hgvs_c\": \"c.5282T>G\", \"hgvs_p\": \"p.Val1761Gly\", \"variant_type\": [\"missense_variant\"], \"exon\": 20}], \"splicing_prediction_tools\": {\"SpliceAI\": 0.5}, \"pathogenicity_prediction_tools\": {\"REVEL\": 0.5, \"BayesDel\": 0.5}, \"gnomAD\": {\"AF\": 0.007, \"AC\": 12, \"popmax\": \"EAS\", \"popmax_AF\": 0.009, \"popmax_AC\": 5}, \"FLOSSIES\": {\"AFR\": 9, \"EUR\": 130}, \"mRNA_analysis\": {\"performed\": true, \"pathogenic\": true, \"benign\": true}, \"functional_data\": {\"performed\": true, \"pathogenic\": true, \"benign\": true}, \"prior\": 0.25, \"co-occurrence\": 0.56, \"segregation\": 0.56, \"multifactorial_log-likelihood\": 0.56, \"VUS_task_force_domain\": true, \"cancer_hotspot\": true, \"cold_spot\": true}"
         #}'
-        api_host = "http://srv018.img.med.uni-tuebingen.de:5004/"
+        api_host = "http://" + os.environ.get("AUTOCLASS_HOST", "0.0.0.0") + ":" + os.environ.get("AUTOCLASS_PORT", "8080") + "/"
+        #api_host = "http://srv018.img.med.uni-tuebingen.de:5004/"
         endpoint = "classify_variant"
         url = api_host + endpoint
         headers = {"accept": "application/json", "Content-Type": "application/json"}
@@ -327,23 +335,38 @@ def validate_input(input: dict):
 
 
 ## STATS
-#SELECT COUNT(id) FROM automatic_classification
-#
-#select
-#    count(*) RecordsPerGroup,
-#    name,is_selected,strength
-#from automatic_classification_criteria_applied
-#group by name,is_selected,strength
-#
-#
-#select
-#    count(*) RecordsPerGroup,
-#    classification_splicing
-#from automatic_classification
-#group by classification_splicing
-#
-#select
-#    count(*) RecordsPerGroup,
-#    classification_protein
-#from automatic_classification
-#group by classification_protein
+"""
+SELECT a1.variant_id, 
+	   (SELECT chr FROM variant WHERE a1.variant_id = variant.id) as chrom, 
+       (SELECT pos FROM variant WHERE a1.variant_id = variant.id) as pos, 
+       (SELECT ref FROM variant WHERE a1.variant_id = variant.id) as ref, 
+       (SELECT alt FROM variant WHERE a1.variant_id = variant.id) as alt, 
+       a1.status, 
+       a1.error_message
+    FROM annotation_queue a1 LEFT JOIN annotation_queue a2
+        ON (a1.variant_id = a2.variant_id AND a1.requested < a2.requested)
+WHERE a2.id IS NULL and a1.status = "error" and a1.error_message LIKE "%Annotation service runtime error:%"
+
+
+
+SELECT COUNT(id) FROM automatic_classification
+
+select
+    count(*) RecordsPerGroup,
+    name,is_selected,strength
+from automatic_classification_criteria_applied
+group by name,is_selected,strength
+
+
+select
+    count(*) RecordsPerGroup,
+    classification_splicing
+from automatic_classification
+group by classification_splicing
+
+select
+    count(*) RecordsPerGroup,
+    classification_protein
+from automatic_classification
+group by classification_protein
+"""

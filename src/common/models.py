@@ -485,7 +485,8 @@ class AutomaticClassificationCriterium(Criterium):
 @dataclass
 class AutomaticClassification:
     id: int
-    scheme_name: str
+    scheme_id: int
+    scheme_display_title: str
     classification_splicing: int
     classification_protein: int
     date: datetime
@@ -510,7 +511,7 @@ class AutomaticClassification:
             self.classification_protein,
             self.classification_splicing,
             self.date.strftime('%Y-%m-%d %H:%M:%S'),
-            self.scheme_name,
+            self.scheme_display_title,
             criteria_str
         ])
         if prefix:
