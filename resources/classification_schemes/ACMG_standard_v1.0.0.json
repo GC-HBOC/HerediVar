@@ -4,6 +4,7 @@
     "display_name": "ACMG standard",
     "type": "acmg",
     "reference": "https://pubmed.ncbi.nlm.nih.gov/25741868/",
+    "aliases": [],
     "criteria": [
         {
             "name": "PVS1",

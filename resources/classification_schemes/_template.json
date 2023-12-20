@@ -1,9 +1,10 @@
 {
-    "classification_scheme_id": "leave blank if new or provide id if update",
     "name": "",
+    "version": "",
     "display_name": "",
     "type": "",
     "reference": "#",
+    "aliases": [],
     "criteria": [
         {
             "name": "PVS1",
