@@ -206,3 +206,46 @@ ADD CONSTRAINT `FK_mutually_inlusive_criteria_target`
   REFERENCES `HerediVar_ahdoebm1`.`classification_criterium` (`id`)
   ON DELETE CASCADE
   ON UPDATE NO ACTION;
+
+
+CREATE TABLE `HerediVar_ahdoebm1`.`classification_scheme_alias` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `classification_scheme_id` INT UNSIGNED NOT NULL,
+  `alias` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`classification_scheme_alias` 
+ADD INDEX `FK_classification_scheme_alias_classification_scheme_idx` (`classification_scheme_id` ASC);
+;
+ALTER TABLE `HerediVar_ahdoebm1`.`classification_scheme_alias` 
+ADD CONSTRAINT `FK_classification_scheme_alias_classification_scheme`
+  FOREIGN KEY (`classification_scheme_id`)
+  REFERENCES `HerediVar_ahdoebm1`.`classification_scheme` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+
+GRANT SELECT ON HerediVar_ahdoebm1.classification_scheme_alias TO 'HerediVar_annotation';
+GRANT SELECT ON HerediVar_ahdoebm1.classification_scheme TO 'HerediVar_annotation';
+GRANT SELECT,INSERT,UPDATE,DELETE ON HerediVar_ahdoebm1.classification_scheme_alias TO 'HerediVar_superuser';
+
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`automatic_classification` 
+DROP COLUMN `scheme_name`;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`automatic_classification` 
+ADD COLUMN `classification_scheme_id` INT UNSIGNED NOT NULL AFTER `variant_id`;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`automatic_classification` 
+ADD INDEX `FK_autoclass_classification_scheme_idx` (`classification_scheme_id` ASC);
+;
+ALTER TABLE `HerediVar_ahdoebm1`.`automatic_classification` 
+ADD CONSTRAINT `FK_autoclass_classification_scheme`
+  FOREIGN KEY (`classification_scheme_id`)
+  REFERENCES `HerediVar_ahdoebm1`.`classification_scheme` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
