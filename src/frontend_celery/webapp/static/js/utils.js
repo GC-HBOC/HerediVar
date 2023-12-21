@@ -580,23 +580,33 @@ function create_xlg(parent, tooltip = "") {
 
 function create_spinner() {
     /*
-    <div class="spinner-grow text-secondary" role="status">
+    <div class="spinner-border spinner-border-sm text-secondary" role="status">
         <span class="visually-hidden">Loading...</span>
     </div>
     */
 
     var spinner = document.createElement('div')
     spinner.classList.add('spinner-border')
-    spinner.classList.add('text-light')
+    spinner.classList.add('text-secondary')
     spinner.classList.add('spinner-border-sm')
     spinner.setAttribute('role', 'status')
-    spinner.id = 'spinner'
+    //spinner.id = 'spinner'
+    spinner.setAttribute('name', 'spinner')
 
     return spinner
 }
 
-function remove_spinner() {
-    document.getElementById('spinner').remove()
+function add_spinner(parent) {
+    const spinner = create_spinner()
+    parent.appendChild(spinner)
+}
+
+function remove_spinner(parent) {
+    const spinners = parent.querySelectorAll('div[name="spinner"]')
+    spinners.forEach(spinner => {
+        parent.removeChild(spinner)
+    });
+    //parent.removeChild(spinner_obj)
 }
 
 

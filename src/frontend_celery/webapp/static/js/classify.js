@@ -528,8 +528,7 @@ function create_status(type) {
     var status_text_container = document.createElement('span')
     container.appendChild(status_text_container)
     if (type == "processing") {
-        const spinner = create_spinner()
-        status_icon_container.appendChild(spinner)
+        add_spinner(status_icon_container)
         status_text_container.innerText = "processing..."
     } else if (type == "success") {
         const check = create_check_icon(16, 16)

@@ -5,22 +5,41 @@ const vid_details_url = flask_data.dataset.vidDetailsUrl;
 const import_one_variant_url = flask_data.dataset.importOneVariantUrl
 const import_queue_id = flask_data.dataset.importQueueId
 
+var first_load = true
+
 
 $(document).ready(function(){
+
+    toggle_spinners() // show spinners
 
     activate_datatables("variant_table")
 
     update_page(data_url)
 
-
-    
-
-    
-
 });
 
 
-
+function toggle_spinners() {
+    const parent_ids = ["summary_user", "summary_requested_at", "summary_status", "summary_finished_at", "summary_message", "summary_total_num_variants",
+                        "variant_summary_pending", "variant_summary_processing", "variant_summary_erroneous", "variant_summary_success", "variant_summary_deleted",
+                        "variant_summary_update", "variant_summary_retrying"
+                    ]
+    parent_ids.forEach(id => {
+        var parent = document.getElementById(id)
+        var has_spinner = parent.getAttribute("has_spinner") ?? "false"
+        
+        if (has_spinner === "false") {
+            const spinner = create_spinner()
+            parent.appendChild(spinner)
+            //add_spinner(parent)
+            parent.setAttribute("has_spinner", "true")
+        } else {
+            remove_spinner(parent)
+            parent.setAttribute("has_spinner", "false")
+        }
+        
+    });
+}
 
 
 // polling & status display update
@@ -33,11 +52,16 @@ function update_page(url) {
         update_erroneous_variants(data['imported_variants'])
         update_variant_summary(data["import_request"]["variant_summary"])
 
+        if (first_load) {
+            toggle_spinners()
+        }
+
+        first_load = false
+
         // polling happens here:
         // rerun in 5 seconds if state resembles an unfinished task
         const import_status = data["import_request"]["status"]
         if (import_status === "pending" || import_status === "fetching vids" || import_status === "fetching variants" || import_status === "unknown" || import_status === "retry") {
-            
             setTimeout(function() {
                 update_page(url);
             }, 10000);
