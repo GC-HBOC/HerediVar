@@ -11,6 +11,7 @@ import re
 from io import StringIO, BytesIO
 import common.functions as functions
 import time
+import utils
 
 basepath = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 test_data_dir = basepath + "/data"
@@ -79,8 +80,6 @@ def test_browse(test_client):
 
     response = test_client.get(url_for("variant.search", page_size = 5, sort_by = 'gnomic_position'), follow_redirects=True)
     data = html.unescape(response.data.decode('utf8'))
-    with open("/mnt/storage2/users/ahdoebm1/HerediVar/src/frontend_celery/tests/test_dat/browse_01.html", "w") as file:
-        file.write(data)
     assert response.status_code == 200
     assert data.count('name="variant_row"') == 5
     variant_ids = [139, 130, 15, 146, 52]
@@ -456,19 +455,16 @@ def test_variant_history(test_client):
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
 
-    print(data)
-
     conn = Connection(['super_user'])
-    consensus_classifications = conn.get_consensus_classifications_extended(variant_id, most_recent=False)
-    user_classifications = conn.get_user_classifications_extended(variant_id)
+    variant = conn.get_variant(variant_id)
     conn.close()
 
     # this could be improved by making custom html attributes saving the type & id of the classification 
-    if consensus_classifications is not None:
-        assert data.count('consensus classification') == len(consensus_classifications) + 2 # add two because this string is also in the caption and the legend
+    assert variant.consensus_classifications is not None
+    assert data.count('consensus classification') == len(variant.consensus_classifications) + 2 # add two because this string is also in the caption and the legend
     
-    if user_classifications is not None:
-        assert data.count('user classification') == len(user_classifications) + 1 # also contained in the legend
+    assert variant.user_classifications is not None
+    assert data.count('user classification') == len(variant.user_classifications) + 1 # also contained in the legend
 
     
 
@@ -596,7 +592,27 @@ def test_classify(test_client):
     data = html.unescape(response.data.decode('utf8'))
     assert response.status_code == 200
     assert "Successfully updated user classification" not in data
-    assert "There are criteria which can not be activated with the provided scheme (TP_53)" not in data
+    assert "There are criteria which can not be activated with the provided scheme" not in data
+
+    time.sleep(2) # this is nececssary to not have multiple classifications at the same time
+
+
+    ##### test posting criteria to a deactivated scheme #####
+    response = test_client.post(
+        url_for("variant.classify", variant_id=variant_id),
+        data = {
+            'final_class': "2",
+            'comment': "This is a test comment update 2.",
+            'pm3': "Evidence for pm3 given in this field", # forbidden for amg tp53
+            'pm3_strength': "pm", 
+            'pm3_state': "selected",
+            'scheme': "4"
+        },
+        follow_redirects=True
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    utils.assert_flash_message("Unknown or deprecated classification scheme provided. Please provide a different one.", data)
 
     time.sleep(2) # this is nececssary to not have multiple classifications at the same time
 
@@ -668,6 +684,68 @@ def test_classify(test_client):
     assert "This is a test comment update0" == classification.comment
 
     conn.close()
+
+
+
+
+def test_delete_user_classification(test_client):
+    """
+    This tests if user classifications can be deleted by the user who created it and not by any other user
+    """
+
+    user_id = 3
+
+    ##### wrong variant id #####
+    variant_id = 169
+    user_classification_id = 30
+
+    response = test_client.get(url_for("variant.delete_classification", variant_id=variant_id, user_classification_id=user_classification_id), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 404
+
+    ##### successful deletion #####
+    variant_id = 168
+    user_classification_id = 30
+
+    response = test_client.get(url_for("variant.delete_classification", variant_id=variant_id, user_classification_id=user_classification_id), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert data == "success"
+
+    
+
+    conn = Connection(['super_user'])
+    variant = conn.get_variant(variant_id)
+    conn.close()
+
+    assert variant is not None
+    user_classification = None
+    for cl in variant.user_classifications:
+        if str(cl.id) == str(user_classification_id):
+            user_classification = cl
+    assert user_classification is None
+    
+
+    ##### not allowed to delete #####
+    variant_id = 168
+    user_classification_id = 31
+
+    response = test_client.get(url_for("variant.delete_classification", variant_id=variant_id, user_classification_id=user_classification_id), follow_redirects=True)
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 405
+
+    conn = Connection(['super_user'])
+    variant = conn.get_variant(variant_id)
+    conn.close()
+
+    assert variant is not None
+    user_classification = None
+    for cl in variant.user_classifications:
+        if str(cl.id) == str(user_classification_id):
+            user_classification = cl
+    assert user_classification is not None
+
+
 
 
     
@@ -832,3 +910,404 @@ def test_create_variant_from_hgvs(test_client):
     assert "214767531" in data
 
 
+
+def test_hide_scheme(test_client):
+    """
+    This tests if the user can hide/disable a scheme
+    """
+
+    user_id = 3
+
+    ##### successful hide #####
+    scheme_id = 2
+    is_active = 'false'
+
+    # do a nonsense get request first, because pytest is trash
+    response = test_client.get(url_for("variant.create"), follow_redirects=True)
+    assert response.status_code == 200
+
+
+    response = test_client.post(
+        url_for("variant.hide_scheme"), 
+        data={
+            "scheme_id": scheme_id,
+            "is_active": is_active
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert data == "success"
+    
+    conn = Connection()
+    scheme = conn.get_classification_scheme(scheme_id)
+    assert scheme[5] == 0
+    conn.close()
+
+    ##### successful unhide #####
+    is_active = 'true'
+
+    response = test_client.post(
+        url_for("variant.hide_scheme"), 
+        data={
+            "scheme_id": scheme_id,
+            "is_active": is_active
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert data == "success"
+    
+    conn = Connection()
+    scheme = conn.get_classification_scheme(scheme_id)
+    assert scheme[5] == 1
+    conn.close()
+
+
+
+
+
+def test_check_variant(test_client):
+    """
+    Test the check variant endpoint
+    """
+
+    ##### check availability #####
+    response = test_client.get(url_for("variant.check"), follow_redirects=True)
+    assert response.status_code == 200
+
+
+    ##### check successful snv #####
+    #chr2	214767531	C	T -- grch38
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "214767531",
+            "ref": "C",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: success" in data
+    assert "Message: hg38_msg=HG38 variant would be: chr2-214767531-C-T" in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "214.767.531",
+            "ref": "C",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: success" in data
+    assert 'Message: hg38_msg=HG38 variant would be: chr2-214767531-C-T' in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "2",
+            "pos": "214767531",
+            "ref": "C",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: success" in data
+    assert 'Message: hg38_msg=HG38 variant would be: chr2-214767531-C-T' in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "CHR2",
+            "pos": "214767531",
+            "ref": "C",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: success" in data
+    assert 'Message: hg38_msg=HG38 variant would be: chr2-214767531-C-T' in data
+
+    ##### missing data #####
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "",
+            "ref": "C",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert "Message: hg38_msg=Position is invalid: None" in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "214767531",
+            "ref": "",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert 'Message: hg38_msg=Invalid reference sequence! The sequence must contain only ACGT and must have 0 < length < 1000: ""' in data
+
+
+    ##### invalid position #####
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "-1",
+            "ref": "C",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert 'Message: hg38_msg=Position is invalid: -1' in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "0",
+            "ref": "C",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert 'Message: hg38_msg=VcfCheck runtime ERROR:' in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "xya1234",
+            "ref": "C",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert 'Message: hg38_msg=Position is invalid: xya1234' in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "  ",
+            "ref": "C",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert 'Message: hg38_msg=Position is invalid: None' in data
+
+    ##### invalid chromosome #####
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chrL",
+            "pos": "214767531",
+            "ref": "C",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert 'Message: hg38_msg=Chromosome is invalid: chrL' in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "",
+            "pos": "214767531",
+            "ref": "C",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert 'Message: hg38_msg=Chromosome is invalid:' in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": " ",
+            "pos": "214767531",
+            "ref": "C",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert 'Message: hg38_msg=Chromosome is invalid:' in data
+
+    ##### invalid sequence #####
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "214767531",
+            "ref": "N",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert 'Message: hg38_msg=Invalid reference sequence! The sequence must contain only ACGT and must have 0 < length < 1000: "N"' in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "214767531",
+            "ref": "ÖP",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert 'Message: hg38_msg=Invalid reference sequence! The sequence must contain only ACGT and must have 0 < length < 1000: "ÖP"' in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "214767531",
+            "ref": "C",
+            "alt": "N",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert 'Message: hg38_msg=Invalid alternative sequence! The sequence must contain only ACGT and must have 0 < length < 1000: "N"' in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "214767531",
+            "ref": "C",
+            "alt": "  ",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert 'Message: hg38_msg=Invalid alternative sequence! The sequence must contain only ACGT and must have 0 < length < 1000: ""' in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "214767531",
+            "ref": "A",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    #with open("/mnt/storage2/users/ahdoebm1/HerediVar/test.txt", "w") as f:
+    #    f.write(data)
+    assert "Message: hg38_msg= ERROR: Reference base(s) not correct. Is 'A', should be 'C'!" in data
+
+    response = test_client.post(
+        url_for("variant.check"), 
+        data={
+            "chrom": "chr2",
+            "pos": "214767531",
+            "ref": "T",
+            "alt": "T",
+            "genome": "GRCh38"
+        },
+        follow_redirects=True,
+        content_type='multipart/form-data'
+    )
+    data = html.unescape(response.data.decode('utf8'))
+    assert response.status_code == 200
+    assert "Status: error" in data
+    assert 'Message: hg38_msg=Equal reference and alternative base are not allowed.' in data

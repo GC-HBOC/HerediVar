@@ -99,6 +99,9 @@ def test_export_variant_to_vcf(test_client):
 
     with open(test_data_dir + '/variant_52.vcf', 'r') as f1:
         vcf_variant_52 = f1.read()
+
+    with open(test_data_dir + "/variant_52_actual.vcf", "w") as f1:
+        f1.write(data)
         
     utils.compare_vcf(vcf_variant_52, data)
     utils.compare_vcf(data, vcf_variant_52)

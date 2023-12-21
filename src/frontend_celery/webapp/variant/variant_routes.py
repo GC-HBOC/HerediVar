@@ -339,9 +339,14 @@ def classify(variant_id):
         classification_is_valid = str(classification) in allowed_classes
 
         scheme_class = '-'
+        scheme_id_is_valid = True
         if not without_scheme:
-            scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type'])
-            scheme_class = scheme_class.json['final_class']
+            if scheme_id in classification_schemas:
+                scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type'])
+                scheme_class = scheme_class.json['final_class']
+            else:
+                flash("Unknown or deprecated classification scheme provided. Please provide a different one.", "alert-danger")
+                scheme_id_is_valid = False
 
         # flash error messages
         if (not scheme_classification_is_valid) and (not without_scheme): # error in scheme
@@ -352,7 +357,7 @@ def classify(variant_id):
             flash(literature_message, "alert-danger")
 
         # actually submit the data to the database
-        if classification_is_valid and scheme_classification_is_valid and literature_is_valid:
+        if classification_is_valid and scheme_classification_is_valid and literature_is_valid and scheme_id_is_valid:
             # always handle the user classification & literature
             user_classification_id, classification_received_update, is_new_classification = handle_user_classification(variant, user_id, classification, comment, scheme_id, scheme_class, conn)
             previous_selected_literature = [] # a new classification -> no previous sleected literature
@@ -405,7 +410,7 @@ def delete_classification():
 
     user_classification = None
     for cl in variant.user_classifications:
-        if str(cl.id) == user_classification_id:
+        if str(cl.id) == str(user_classification_id):
             user_classification = cl
     
     if user_classification is None:
@@ -469,8 +474,13 @@ def consensus_classify(variant_id):
             scheme_classification_is_valid, scheme_message = is_valid_scheme(criteria, classification_schemas[scheme_id])
             classification_is_valid = str(classification) in allowed_classes
 
-            scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type']) # always calculate scheme class because no scheme is not allowed here!
-            scheme_class = scheme_class.json['final_class']
+            scheme_id_is_valid = True
+            if scheme_id in classification_schemas:
+                scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type']) # always calculate scheme class because no scheme is not allowed here!
+                scheme_class = scheme_class.json['final_class']
+            else:
+                flash("Unknown or deprecated classification scheme provided. Please provide a different one.", "alert-danger")
+                scheme_id_is_valid = False
 
             # actually submit the data to the database
             if not scheme_classification_is_valid: # error in scheme
@@ -480,7 +490,7 @@ def consensus_classify(variant_id):
             if not literature_is_valid:
                 flash(literature_message, "alert-danger")
 
-            if classification_is_valid and scheme_classification_is_valid and literature_is_valid:
+            if classification_is_valid and scheme_classification_is_valid and literature_is_valid and scheme_id_is_valid:
                 # insert consensus classification
                 classification_id = handle_consensus_classification(variant, classification, comment, scheme_id, pmids, text_passages, criteria, classification_schemas[scheme_id]['description'], scheme_class, conn)
 

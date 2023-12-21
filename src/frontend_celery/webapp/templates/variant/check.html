@@ -37,6 +37,7 @@
                          {% for chr in chroms %}
                             <option value="{{chr}}" {% if (chr == request.form['chrom']) %} selected="selected" {% endif %}> {{chr}} </option>
                          {% endfor %}
+                            <option value="CHR2" {% if (chr == request.form['chrom']) %} selected="selected" {% endif %}> chrL </option>
                     </select>
                     <div class="invalid-feedback">
                         Please provide a chromosome!

@@ -225,13 +225,16 @@ def curate_chromosome(chrom):
 
 def curate_position(pos):
     is_valid = True
-    if pos is None:
+    if pos is None or pos.strip() == '':
         is_valid = False
         return None, is_valid
     pos = str(pos).replace(',', '').replace('.', '').strip()
     allowed = "0123456789"
     is_valid = all(c in allowed for c in pos)
-    return int(pos), is_valid
+    if is_valid:
+        return int(pos), is_valid
+    else:
+        return pos, is_valid
 
 def curate_sequence(seq, allowed = "ACGT-"):
     if seq is None:
