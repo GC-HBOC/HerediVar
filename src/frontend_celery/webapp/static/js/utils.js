@@ -139,7 +139,7 @@ function update_default_caption(table) {
 
 
 
-function activate_datatables(table_id) {
+function activate_datatables(table_id, sort_columns = [[0, 'desc']]) {
     // ACTIVATE DATATABLES
     // Setup - add a text input to each header cell
     $('#' + table_id + ' thead th').each(function() {
@@ -153,7 +153,7 @@ function activate_datatables(table_id) {
     var the_table = $('#' + table_id).on("draw.dt", function () {
         $(this).find(".dataTables_empty").parents('tbody').empty();
     }).DataTable({
-        order: [[0, 'desc']],
+        order: sort_columns,
     });
  
     // Apply the search
