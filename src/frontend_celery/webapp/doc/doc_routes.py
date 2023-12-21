@@ -60,7 +60,7 @@ def contact():
 
     do_redirect = False
 
-    flash("The contact form is currently under maintenance. Enquiries will not be sent", 'alert-danger')
+    #flash("The contact form is currently under maintenance. Enquiries will not be sent", 'alert-danger')
 
     if request.method == "POST":
         first_name = request.form.get('first_name')
@@ -75,10 +75,8 @@ def contact():
         comment = request.form.get('comment')
         if any([x is None for x in [first_name, last_name, institution, e_mail, gene, transcript, question]]):
             flash("You must provide your first and last name, institution, e-mail, gene, transcript and your question", "alert-danger")
-            #return render_template('doc/contact.html', core_gene_transcripts = core_gene_transcripts)
         elif hgvs_c is None and hgvs_p is None:
             flash("You must provide either hgvs_c or hgvs_p", "alert-danger")
-            #return render_template('doc/contact.html', core_gene_transcripts = core_gene_transcripts)
         else:
             hgvs_for_subject = ' / '.join([x for x in [hgvs_c, hgvs_p] if x is not None])
             sender = "noreply@heredivar.uni-koeln.de"
@@ -93,8 +91,9 @@ def contact():
                                         hgvs_p = hgvs_p,
                                         question = question,
                                         comment = comment)
-            #send_mail(subject = "HerediVar: enquiry for variant " + hgvs_for_subject, sender = sender, recipient = "marvin.doebel@med.uni-tuebingen.de", text_body = text_body)
-            #flash("Success! Thanks for reaching out to us! You will hear from us soon.", "alert-success")
+            recipient = "jan.hauke@uk-koeln.de"
+            send_mail(subject = "HerediVar: enquiry for variant " + hgvs_for_subject, sender = sender, recipient = recipient, text_body = text_body)
+            flash("Success! Thanks for reaching out to us! You will hear from us soon.", "alert-success")
             do_redirect = True
     
     if do_redirect:
