@@ -38,7 +38,7 @@ echo $DATE > most_recent_dump.txt
 #mysqldump --quick -h SRV011.img.med.uni-tuebingen.de -P 3306 -u ahdoebm1 -p --column-statistics=0 --no-tablespaces --no-create-info -r /mnt/storage2/users/ahdoebm1/HerediVar/resources/backups/database_dumper/init_db/criterium_new.sql HerediVar_ahdoebm1 classification_criterium_strength classification_criterium
 #mysqldump --quick -h SRV011.img.med.uni-tuebingen.de -P 3306 -u ahdoebm1 -p --column-statistics=0 --no-tablespaces --no-create-info -r /mnt/storage2/users/ahdoebm1/HerediVar/resources/backups/database_dumper/init_db/criterium_old.sql HerediVar_ahdoebm1_test classification_criterium_strength classification_criterium
 
-#mysqldump --quick -h sql.img.med.uni-tuebingen.de -P 3306 -u ahdoebm1 -p --column-statistics=0 --no-tablespaces --no-create-info -r /mnt/storage2/users/ahdoebm1/HerediVar/resources/backups/database_dumper/temp.sql HerediVar_ahdoebm1 classification_scheme classification_criterium classification_criterium_strength mutually_exclusive_criteria
+#mysqldump --quick -h sql.img.med.uni-tuebingen.de -P 3306 -u ahdoebm1 -p --column-statistics=0 --no-tablespaces --no-create-info -r /mnt/storage2/users/ahdoebm1/HerediVar/resources/backups/database_dumper/temp.sql HerediVar_ahdoebm1 classification_scheme classification_criterium classification_criterium_strength mutually_exclusive_criteria mutually_inclusive_criteria
 
 #mysql -h SRV011.img.med.uni-tuebingen.de -P 3306 -u ahdoebm1 -p HerediVar_ahdoebm1_test < /mnt/storage2/users/ahdoebm1/HerediVar/resources/backups/database_dumper/init_db/criterium_new.sql
 
