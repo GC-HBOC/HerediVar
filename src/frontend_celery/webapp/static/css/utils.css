@@ -127,6 +127,9 @@
     width:90%
 }
 
+.fit_content {
+    width:fit-content
+}
 
 /************** alignment **************/
 .float_right {

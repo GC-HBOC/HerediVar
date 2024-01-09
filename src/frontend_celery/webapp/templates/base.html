@@ -17,25 +17,31 @@
                         <a class="nav-link" href="{{url_for('variant.search')}}">Browse variants</a>
                     </li>
                     {% if session.get('user') is not none and 'user' in session['user']['roles'] %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('variant.create')}}">New variant</a>
-                    </li>
-                    {% endif %}
-                    {% if session.get('user') is not none and 'super_user' in session['user']['roles'] %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('user.admin_dashboard')}}">Admin dashboard</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="create_dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Create
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="create_dropdown" > <!--style="min-width: 1rem;"-->
+                            <li><a class="dropdown-item" href="{{url_for('variant.create')}}">Simple variant</a></li>
+                            <li><a class="dropdown-item" href="{{url_for('variant.create_sv')}}">Structural variant</a></li>
+                        </ul>
                     </li>
                     {% endif %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="public_dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             Public
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="navbarDropdown" > <!--style="min-width: 1rem;"-->
+                        <ul class="dropdown-menu dropdown-menu-start" aria-labelledby="public_dropdown" > <!--style="min-width: 1rem;"-->
                             <li><a class="dropdown-item" href="{{url_for('variant.check')}}">Check variants</a></li>
                             <li class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{url_for('main.downloads')}}">Downloads</a></li>
                         </ul>
                     </li>
+                    {% if session.get('user') is not none and 'super_user' in session['user']['roles'] %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{url_for('user.admin_dashboard')}}">Admin dashboard</a>
+                    </li>
+                    {% endif %}
                 </ul>
                 <ul class="navbar-nav ">
                     <div class="d-flex align-items-center">

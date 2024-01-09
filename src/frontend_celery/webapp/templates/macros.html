@@ -681,10 +681,11 @@
     <thead id="variantTableHead">
       <tr>
         <th class="visually_hidden">id</th>
-        <th class="text_align_center width_minimal">CHR</th>
-        <th class="width_small">POS</th>
-        <th class="width_medium">REF</th>
-        <th class="width_medium">ALT</th>
+        <th class="text_align_center width_minimal">CHROM</th>
+        <th class="width_very_medium">POS</th>
+        <th class="width_very_medium">REF</th>
+        <th class="width_very_medium">ALT</th>
+        <th class="width_very_small">V_TYPE</th>
         <th class="width_small">HGVS c.</th>
         <th class="width_small">HGVS p.</th>
         <th class="width_very_small">GENE</th>
@@ -699,20 +700,45 @@
       <tr name="variant_row" {% if variant.is_hidden %}class="bg_hidden_variant"{% endif %} variant_id="{{ variant.id }}">
         <td class="visually_hidden">{{ variant.id }}</td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="text_align_center clickable nowrap">{{ variant.chrom }}</td>
-        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable nowrap">{{ variant.pos }}</td>
-        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss"><abbr title="{{ variant.ref }}">{{ variant.ref }}</abbr></td>
-        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss"><abbr title="{{ variant.alt }}">{{ variant.alt }}</abbr></td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable nowrap">
+            {% if variant.variant_type == 'sv' %}
+                {{ variant.start }} - {{ variant.end }}
+            {% else %}
+                {{ variant.pos }}
+            {% endif %}
+        </td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss">
+            {% if variant.variant_type == 'sv' %}
+                <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="-">-</div>
+            {% else %}
+                <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="{{ variant.ref }}">{{ variant.ref }}</div>
+            {% endif %}
+        </td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss">
+            {% if variant.variant_type == 'sv' %}
+                <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="-">-</div>
+            {% else %}
+                <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="{{ variant.alt }}">{{ variant.alt }}</div>
+            {% endif %}
+        </td>
+        <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable">
+            {% if variant.variant_type == 'sv' %}
+                {{ variant.variant_type }}:{{ variant.sv_type }}
+            {% else %}
+                {{ variant.variant_type }}
+            {% endif %}
+        </td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss nowrap">
             {% if preferred_transcripts is not none %}
                 {% for consequence in preferred_transcripts %}
                     {% if consequence.hgvs_c is not none %} {% set hgvs_c = consequence.hgvs_c %} {% else %} {% set hgvs_c = '-' %} {% endif %}
                     <div>
-                        <abbr title="{{ hgvs_c }}">{{ hgvs_c }}</abbr>
+                        <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="{{ hgvs_c }}">{{ hgvs_c }}</div>
                     </div>
                 {% endfor %}
             {% else %}
                 <div>
-                    <abbr title="-">-</abbr>
+                    <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="-">-</div>
                 </div>
             {% endif %}
         </td>
@@ -721,12 +747,12 @@
                 {% for consequence in preferred_transcripts %}
                     {% if consequence.hgvs_p is not none %} {% set hgvs_p = consequence.hgvs_p %} {% else %} {% set hgvs_p = '-' %} {% endif %}
                     <div>
-                        <abbr title="{{ hgvs_p }}">{{ hgvs_p }}</abbr>
+                        <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="{{ hgvs_p }}">{{ hgvs_p }}</div>
                     </div>
                 {% endfor %}
             {% else %}
                 <div>
-                    <abbr title="-">-</abbr>
+                    <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="-">-</div>
                 </div>
             {% endif %}
         </td>
@@ -743,9 +769,7 @@
                     </div>
                 {% endfor %}
             {% else %}
-                <div>
-                    <abbr title="-">-</abbr>
-                </div>
+                <div>-</div>
             {% endif %}
         </td>
         <td class="text_align_center clickable" data-href="{{ url_for('variant.display', variant_id=variant.id) }}">

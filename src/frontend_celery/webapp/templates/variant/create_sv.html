@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="bst">{% block title %} Create a new structural variant {% endblock %}</h1>
+
+
+
+    <ul class="nav nav-tabs bst" id="tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="vcf-tab" data-bs-toggle="tab" data-bs-target="#vcf" type="button" role="tab" aria-controls="home" aria-selected="true">DEL, DUP, INV</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="TabContent">
+        <div class="tab-pane fade show active sst" id="vcf" role="tabpanel" aria-labelledby="vcf-tab">
+            <form action="/create_sv?type=cnv" method="post" class="needs-validation" novalidate>
+                <div class="form-group">
+                     <label for="Chromosome" class="form-label">Chromosome</label>
+                     <select class="form-select" name="chrom" id="Chromosome" required>
+                        {% for chrom in chroms %}
+                            <option value="{{chrom}}" {% if (chrom == request.form['chrom']) %} selected="selected" {% endif %}> {{chrom}} </option>
+                        {% endfor %}
+                    </select>
+                    <div class="invalid-feedback">
+                        Please provide a chromosome!
+                    </div>
+                </div>
+            
+                <div class="form-group sst">
+                    <label for="Start" class="form-label">Chromosomal start</label>
+                    <input type="text" name="start" pattern="[0-9 ]+" id="Start"
+                           placeholder="start" class="form-control validationreq"
+                           value="{{ request.form['start'] }}" required>
+                    </input>
+                    <div class="invalid-feedback">
+                        Please provide the start position!
+                    </div>
+                </div>
+            
+                <div class="form-group sst">
+                    <label for="End" class="form-label">Chromosomal end</label>
+                    <input type="text" name="end" pattern="[0-9 ]+" id="End"
+                           placeholder="end" class="form-control validationreq"
+                           value="{{ request.form['end'] }}" required>
+                    </input>
+                    <div class="invalid-feedback">
+                        Please provide the end position!
+                    </div>
+                </div>
+            
+                <div class="form-group">
+                    <label for="sv_type" class="form-label">Type</label>
+                    <select class="form-select" name="sv_type" id="sv_type" required>
+                       {% for sv_type in sv_types %}
+                           <option value="{{sv_type}}" {% if (sv_type == request.form['sv_type']) %} selected="selected" {% endif %}> {{sv_type}} </option>
+                       {% endfor %}
+                   </select>
+                   <div class="invalid-feedback">
+                       Please provide a structural variant type!
+                   </div>
+               </div>
+
+                <div class="form-group sst">
+                    <label for="reference-genome" class="form-label">Reference genome build</label>
+                    <select class="form-select" name="genome" id="reference-genome" required>
+                        <option value="" {% if ('GRCh38' != request.form['genome'] and 'GRCh37' != request.form['genome']) %} selected="selected" {% endif %} disabled hidden>Choose reference genome build</option>
+                        <option value="GRCh38" class="color_black" {% if ('GRCh38' == request.form['genome']) %} selected="selected" {% endif %}>GRCh38 (hg38)</option>
+                        <option value="GRCh37" class="color_black" {% if ('GRCh37' == request.form['genome']) %} selected="selected" {% endif %}>GRCh37 (hg19)</option>
+                   </select>
+                   <div class="invalid-feedback">
+                        Please select a reference genome build.
+                   </div>
+               </div>
+
+               <div class="form-group sst">
+                    <label for="hgvs_strings" class="form-label">hgvs (optional)</label>
+                    <textarea type="text" name="hgvs_strings" id="hgvs_strings"
+                        placeholder="any string, comma or newline separated" class="form-control"
+                        >{{ request.form.get('hgvs_strings', '') }}</textarea>
+                </div>
+           
+           
+                <div class="form-group sst">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+</div>
+
+{% endblock %}
+
+{% block special_scripts %}
+    <script src="/static/js/create.js"></script>
+{% endblock%}

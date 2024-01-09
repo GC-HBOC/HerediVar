@@ -43,6 +43,12 @@ def variant_to_vcf(chr, pos, ref, alt, path):
     file.close()
     return True
 
+def cnv_to_bed(chrom, start, end, path):
+    with open(path, "w") as file:
+        line = '\t'.join([chrom, str(start), str(end)])
+        file.write(line + '\n')
+    return True
+
 #def read_vcf_info(path):
 #    file = open(path, "r")
 #    entries = []
@@ -179,7 +185,7 @@ def preprocess_variant(infile, do_liftover=False):
     if do_liftover:
         returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh37")
         if returncode != 0: return returncode, err_msg + " " + vcf_errors_pre, command_output
-        returncode, err_msg, command_output = execute_command([os.path.join(paths.htslib_path, 'bgzip'), '-f', '-k', infile], process_name="bgzip")
+        returncode, err_msg, command_output = bgzip(infile)
         if returncode != 0: return returncode, err_msg, command_output
         returncode, err_msg, command_output = perform_liftover(infile, infile + ".lifted")
         if returncode != 0: return returncode, err_msg, command_output
@@ -208,7 +214,9 @@ def preprocess_variant(infile, do_liftover=False):
 
     return final_returncode, err_msg, command_output
 
-
+def bgzip(path):
+    returncode, err_msg, command_output = execute_command([os.path.join(paths.htslib_path, 'bgzip'), '-f', '-k', path], process_name="bgzip")
+    return returncode, err_msg, command_output
 
 def curate_chromosome(chrom):
     if chrom is None:
@@ -253,7 +261,7 @@ def curate_sequence(seq, allowed = "ACGT-"):
 
 
 # infile has to be .gz
-def perform_liftover(infile, outfile, from_genome="GRCh37", to_genome="GRCh38"):
+def perform_liftover(infile, outfile, from_genome="GRCh37", to_genome="GRCh38", infile_format = "vcf"):
     if from_genome == "GRCh37" and to_genome == "GRCh38":
         chainfile = paths.chainfile_path
     if to_genome == "GRCh38":
@@ -261,7 +269,11 @@ def perform_liftover(infile, outfile, from_genome="GRCh37", to_genome="GRCh38"):
     elif to_genome == "GRCh37":
         genome_path = paths.ref_genome_path_grch37
 
-    returncode, err_msg, command_output = execute_command(['CrossMap.py', 'vcf', chainfile, infile, genome_path, outfile], process_name="CrossMap")
+    command = ['CrossMap.py', infile_format, chainfile, infile]
+    if infile_format == 'vcf':
+        command.append(genome_path)
+    command.append(outfile)
+    returncode, err_msg, command_output = execute_command(command, process_name="CrossMap")
     return returncode, err_msg, command_output
 
 

@@ -4,7 +4,7 @@ from typing import Any
 import common.functions as functions
 from functools import cmp_to_key
 import datetime
-from abc import ABC
+from abc import ABC, abstractmethod
 
 @dataclass 
 class AbstractDataclass(ABC): 
@@ -772,14 +772,10 @@ class HeredicareAnnotation:
 
 
 @dataclass
-class Variant:
-    id: int
-    chrom: str
-    pos: int
-    ref: str
-    alt: str
-
+class AbstractVariant(AbstractDataclass):
+    id: int # variant_id
     is_hidden: bool
+    variant_type: str
 
     consensus_classifications: Any = None # list of classifications
     user_classifications: Any = None # list of classifications
@@ -818,7 +814,6 @@ class Variant:
                 result.append(heredicare_annotation.vustf_classification)
         return result
 
-
     def get_total_heredicare_counts(self):
         total_n_fam = 0
         total_n_pat = 0
@@ -828,89 +823,6 @@ class Variant:
                 total_n_pat += annot.n_pat
         return total_n_fam, total_n_pat
 
-    #def get_unique_genes(self):
-    #    result = []
-    #    gene_ids = []
-    #    if self.consequences is not None:
-    #        for consequence in self.consequences:
-    #            if consequence.gene.id not in gene_ids and consequence.gene.id is not None:
-    #                result.append(consequence.gene)
-    #                gene_ids.append(consequence.gene.id)
-    #    return result
-
-    def to_vcf(self, simple = False):
-        # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
-        headers = {} # collects all headers 
-        info = [] # collects info for the headers
-
-        if not simple:
-            # standard annotations
-            new_header, new_info = self.annotations.to_vcf()
-            headers.update(new_header)
-            info.extend(new_info)
-
-            # external ids
-            external_id_groups = self.group_external_ids()
-            for external_id_group in external_id_groups:
-                add_title = True
-                new_info_collection = []
-                for external_id in external_id_groups[external_id_group]:
-                    new_info = external_id.to_vcf(add_title)
-                    new_header = external_id.get_header()
-                    headers.update(new_header)
-                    new_info_collection.append(new_info)
-                    add_title = False
-                if len(new_info_collection) > 0:
-                    info.append("~26".join(new_info_collection)) # sep &
-
-            # complex annotations
-            annotations_oi = [self.user_classifications,
-                              [self.get_recent_consensus_classification()],
-                              [self.automatic_classification],
-                              self.heredicare_classifications,
-                              [self.clinvar],
-                              self.heredicare_annotations,
-                              self.consequences, 
-                              self.assays, 
-                              self.literature
-                            ]
-            for annot in annotations_oi:
-                if annot is not None:
-                    if len(annot) > 0:
-                        if annot[0] is not None:
-                            new_info = functions.process_multiple(annot)
-                            info.append(new_info)
-                            new_header = annot[0].get_header()
-                            headers.update(new_header)
-
-        elif simple:
-            # only collect consensus classification
-            annot = self.get_recent_consensus_classification()
-            if annot is not None:
-                new_info = annot.to_vcf(simple = simple)
-                info.append(new_info)
-                new_header = annot.get_header(simple = simple)
-                headers.update(new_header)
-            else:
-                annot = self.get_most_recent_heredicare_consensus_classification()
-                if annot is not None:
-                    new_info = annot.to_vcf(simple = simple)
-                    info.append(new_info)
-                    new_header = annot.get_header(simple = simple)
-                    headers.update(new_header)
-
-        # prepate complete vcf line
-        #"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
-        info = '~3B'.join(info) # sep: ;
-        info = functions.encode_vcf(info)
-        if info.strip() == '':
-            info = '.'
-        variant_vcf = '\t'.join((self.chrom, str(self.pos), str(self.id), self.ref, self.alt, '.', '.', info))
-        #print(headers)
-        #print(variant_vcf)
-        return headers, variant_vcf
-    
-
     def get_user_classifications(self, user_id):
         result = []
         if self.user_classifications is not None:
@@ -919,12 +831,9 @@ class Variant:
                     result.append(classification)
         return result
 
-
-    #def get_annotation_keys(self):
-    #    return ['annotations', 'consensus_classifications', 'user_classifications', 'heredicare_classifications', 'clinvar', 'assays', 'literature']
-    
     def to_json(self):
         return json.dumps(asdict(self))
+
 
 
     def get_most_recent_heredicare_consensus_classification(self):
@@ -1075,6 +984,119 @@ class Variant:
             return None
 
         return result
+
+    @abstractmethod
+    def to_vcf(self, simple = False):
+        pass
+
+    @abstractmethod
+    def get_string_repr(self):
+        pass
+
+@dataclass
+class Variant(AbstractVariant):
+    chrom: str = None
+    pos: int = None
+    ref: str = None
+    alt: str = None
+
+    def __post_init__(self):
+        if any([x is None for x in [self.chrom, self.pos, self.ref, self.alt]]):
+            raise ValueError("Some arguments are missing")
+
+    def to_vcf(self, simple = False):
+        # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
+        headers = {} # collects all headers 
+        info = [] # collects info for the headers
+
+        if not simple:
+            # standard annotations
+            new_header, new_info = self.annotations.to_vcf()
+            headers.update(new_header)
+            info.extend(new_info)
+
+            # external ids
+            external_id_groups = self.group_external_ids()
+            for external_id_group in external_id_groups:
+                add_title = True
+                new_info_collection = []
+                for external_id in external_id_groups[external_id_group]:
+                    new_info = external_id.to_vcf(add_title)
+                    new_header = external_id.get_header()
+                    headers.update(new_header)
+                    new_info_collection.append(new_info)
+                    add_title = False
+                if len(new_info_collection) > 0:
+                    info.append("~26".join(new_info_collection)) # sep &
+
+            # complex annotations
+            annotations_oi = [self.user_classifications,
+                              [self.get_recent_consensus_classification()],
+                              [self.automatic_classification],
+                              self.heredicare_classifications,
+                              [self.clinvar],
+                              self.heredicare_annotations,
+                              self.consequences, 
+                              self.assays, 
+                              self.literature
+                            ]
+            for annot in annotations_oi:
+                if annot is not None:
+                    if len(annot) > 0:
+                        if annot[0] is not None:
+                            new_info = functions.process_multiple(annot)
+                            info.append(new_info)
+                            new_header = annot[0].get_header()
+                            headers.update(new_header)
+
+        elif simple:
+            # only collect consensus classification
+            annot = self.get_recent_consensus_classification()
+            if annot is not None:
+                new_info = annot.to_vcf(simple = simple)
+                info.append(new_info)
+                new_header = annot.get_header(simple = simple)
+                headers.update(new_header)
+            else:
+                annot = self.get_most_recent_heredicare_consensus_classification()
+                if annot is not None:
+                    new_info = annot.to_vcf(simple = simple)
+                    info.append(new_info)
+                    new_header = annot.get_header(simple = simple)
+                    headers.update(new_header)
+
+        # prepate complete vcf line
+        #"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
+        info = '~3B'.join(info) # sep: ;
+        info = functions.encode_vcf(info)
+        if info.strip() == '':
+            info = '.'
+        variant_vcf = '\t'.join((self.chrom, str(self.pos), str(self.id), self.ref, self.alt, '.', '.', info))
+        #print(headers)
+        #print(variant_vcf)
+        return headers, variant_vcf
+    
+    def get_string_repr(self):
+        return '-'.join([self.chrom, str(self.pos), self.ref, self.alt])
+
+@dataclass
+class SV_Variant(AbstractVariant):
+    sv_variant_id: int = None
+    chrom: str = None
+    start: int = None
+    end: int = None
+    sv_type: str = None
+
+    def __post_init__(self):
+        if any([x is None for x in [self.sv_variant_id, self.chrom, self.start, self.end, self.sv_type]]):
+            raise ValueError("Some arguments are missing")
+
+    def to_vcf(self, simple=False):
+        pass # TODO!
+
+    def get_string_repr(self):
+        return '-'.join([self.chrom, str(self.start), str(self.end), self.sv_type])
+
 
 
 @dataclass

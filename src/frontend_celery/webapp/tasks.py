@@ -627,7 +627,105 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
     return was_successful, message, variant_id
 
 
+def validate_and_insert_cnv(chrom: str, start: int, end: int, sv_type: str, hgvs_strings: list, genome_build: str, conn: Connection, insert_variant = True):
+    message = ""
+    was_successful = True
+    variant_id = None
 
+    chrom, chrom_is_valid = functions.curate_chromosome(chrom)
+    start, start_is_valid = functions.curate_position(start)
+    end, end_is_valid = functions.curate_position(end)
+
+    sv_types = conn.get_enumtypes("sv_variant", "sv_type")
+    sv_type_is_valid = True
+    if sv_type not in sv_types:
+        message = "Unknown cnv type: " + str(sv_type)
+        sv_type_is_valid = False
+
+    if not chrom_is_valid:
+        message = "Chromosome is invalid: " + str(chrom)
+    elif not start_is_valid:
+        message = "Start position is invalid: " + str(start)
+    elif not end_is_valid:
+        message = "End position is invalid: " + str(end)
+    elif start == end:
+        message = "Equal start and end positions are not allowed."
+        start_is_valid = False
+    elif end < start:
+        message = "End position is smaller than start position."
+        start_is_valid = False
+    
+    if not chrom_is_valid or not start_is_valid or not end_is_valid or not sv_type_is_valid:
+        was_successful = False
+        return was_successful, message, variant_id
+
+
+    do_liftover = genome_build == 'GRCh37'
+    if do_liftover:
+        tmp_file_path = functions.get_random_temp_file("bed")
+        functions.cnv_to_bed(chrom, start, end, tmp_file_path)
+        returncode, err_msg, command_output = functions.bgzip(tmp_file_path)
+        if returncode != 0: 
+            was_successful = False
+            message = err_msg
+            return was_successful, message, variant_id
+        returncode, err_msg, command_output = functions.perform_liftover(infile = tmp_file_path, outfile = tmp_file_path + ".lifted", infile_format = "bed")
+        if returncode != 0: # runtime error
+            was_successful = False
+            message = err_msg
+            functions.rm(tmp_file_path)
+            functions.rm(tmp_file_path + ".lifted")
+            functions.rm(tmp_file_path + ".lifted.unmap")
+            return was_successful, message, variant_id
+        
+        new_chrom = None
+        new_start = None
+        new_end = None
+        l = 0
+        with open(tmp_file_path + ".lifted") as lifted_file:
+            for line in lifted_file:
+                line = line.strip()
+                if line.startswith('#') and line == '':
+                    continue
+                parts = line.split('\t')
+                if l == 0:
+                    new_chrom = parts[0]
+                    new_start = parts[1]
+                new_end = parts[2]
+                l += 1
+        if l == 0:
+            was_successful = False
+            message = "The region could not be lifted."
+            functions.rm(tmp_file_path)
+            functions.rm(tmp_file_path + ".lifted")
+            functions.rm(tmp_file_path + ".lifted.unmap")
+            return was_successful, message, variant_id
+        if l >= 2:
+            was_successful = False
+            message = "The region was split into multiple parts during lifting. Please provide GRCh38 coordinates. Your region is in this area in GRCh38: " + new_chrom + "-" + new_start + "-" + new_end
+            functions.rm(tmp_file_path)
+            functions.rm(tmp_file_path + ".lifted")
+            functions.rm(tmp_file_path + ".lifted.unmap")
+            return was_successful, message, variant_id
+        chrom = new_chrom
+        start = new_start
+        end = new_end
+
+
+    is_duplicate = conn.check_sv_duplicate(chrom, start, end, sv_type)
+
+    if not is_duplicate and insert_variant:
+        variant_id, sv_variant_id = conn.insert_sv_variant(chrom, start, end, sv_type)
+    else:
+        sv_variant_id = conn.get_sv_variant_id(chrom, start, end, sv_type)
+        variant_id = conn.get_variant_id_by_sv_variant_id(sv_variant_id)
+        if variant_id is None: # variant id is missing for some reason...
+            variant_id = conn.insert_dummy_sv_variant(sv_variant_id, chrom, start)
+        message = "The variant is already in database."
+
+    conn.add_hgvs_strings_sv_variant(sv_variant_id, hgvs_strings) # always update the hgvs strings independent of duplicate or not
+
+    return was_successful, message, variant_id
 
 
 
