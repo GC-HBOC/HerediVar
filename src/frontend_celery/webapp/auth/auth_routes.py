@@ -484,7 +484,7 @@ def auth():
         session['user'] = user_info
         session['tokenResponse'] = token_response
 
-        print(session['user'])
+        #print(session['user'])
 
         if affiliation is None or affiliation.strip() == '':
             flash('LOGIN ERROR: You are missing the affiliation tag ask a HerediVar administrator to add it!', 'alert-danger')

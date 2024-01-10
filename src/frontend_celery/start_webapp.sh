@@ -46,10 +46,10 @@ echo starting Heredivar in "${WEBAPP_ENV}" mode
 
 
 source .venv/bin/activate
+cd src/frontend_celery
 
 if [ "${WEBAPP_ENV}" == "dev" ]
 then
-   cd src/frontend_celery
    python3 main.py
 fi
 
