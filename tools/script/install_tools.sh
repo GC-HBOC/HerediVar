@@ -24,7 +24,7 @@ sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
 sudo apt-get install -y mariadb-server
 sudo apt-get install default-jdk -y
 sudo apt install genometools
-sudo apt install libpq-dev
+sudo apt install libdb-dev
 
 
 # prepare python venv & install packages
