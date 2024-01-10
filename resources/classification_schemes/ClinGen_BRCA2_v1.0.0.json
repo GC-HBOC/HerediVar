@@ -410,7 +410,7 @@
                 "PP1_Very Strong - LR>350:1",
                 "PP1_Strong - LR>18.7:1",
                 "PP1_Moderate - LR>4.3:1",
-                "PP1 - LR >2.08:1",
+                "PP1 - LR>2.08:1",
                 "",
                 "Instructions:",
                 "Recommend use of online tool: https://fengbj-laboratory.org/cool3/analysis.html ",
@@ -420,6 +420,12 @@
             "is_selectable": "1",
             "relevant_info": "",
             "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "0"
+                },
                 {
                     "name": "ps",
                     "display_name":"str",
@@ -506,10 +512,10 @@
                 "Gene-specific modifications:",
                 "Breast cancer is very common and has a high degree of genetic heterogeneity (caused by pathogenic variants in numerous genes). Use ONLY to capture combined LR towards pathogenicity, based on multifactorial likelihood clinical data.",
                 "",
-                "PP4_Strong - LR>18.7:1",
                 "PP4_Very Strong - LR>350:1",
+                "PP4_Strong - LR>18.7:1",
                 "PP4_Moderate - LR>4.3:1",
-                "PP4 - LR >2.08:1",
+                "PP4 - LR>2.08:1",
                 "",
                 "Combined LR 1.00-2.08 is not informative (PP4 not applicable).",
                 "See Specifications Table7 and Appendix B for details.",
@@ -521,6 +527,12 @@
             "is_selectable": "1",
             "relevant_info": "",
             "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "0"
+                },
                 {
                     "name": "ps",
                     "display_name":"str",

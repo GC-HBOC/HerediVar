@@ -19,7 +19,7 @@ import os
 def get_default_job_config():
     job_config = {
         # heredicare annotations
-        'do_heredicare': False,
+        'do_heredicare': True,
 
         # external programs
         'do_phylop': True,
@@ -50,7 +50,7 @@ def get_default_job_config():
         # additional annotations
         'do_taskforce_domains': True,
         'do_litvar': True,
-        'do_auto_class': True
+        'do_auto_class': False
     }
     return job_config
 
