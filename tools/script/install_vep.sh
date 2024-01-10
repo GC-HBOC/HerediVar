@@ -52,7 +52,8 @@ rm $vep_version.tar.gz
 
 #install dependencies
 mkdir -p $cpan_dir
-cpanm -l $cpan_dir -L $cpan_dir Set::IntervalTree URI::Escape DB_File Carp::Assert JSON::XS PerlIO::gzip DBI
+cpanm -l $cpan_dir -L $cpan_dir Set::IntervalTree URI::Escape DB_File Carp::Assert JSON::XS PerlIO::gzip DBI 
+cpanm -l $cpan_dir -L $cpan_dir Bio::PrimarySeqI
 
 #download VEP cache data
 mkdir -p $vep_data_dir
