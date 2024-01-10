@@ -178,74 +178,78 @@
 -- ;
 
 
-ALTER TABLE `HerediVar`.`classification_scheme` 
-ADD COLUMN `version` VARCHAR(45) NOT NULL DEFAULT 'v1.0.0' AFTER `name`;
-UPDATE classification_scheme SET version = "v1.4.0" WHERE name = "enigma-tp53";
-UPDATE classification_scheme SET version = "v1.1.0" WHERE name = "enigma-ATM";
+-- ALTER TABLE `HerediVar`.`classification_scheme` 
+-- ADD COLUMN `version` VARCHAR(45) NOT NULL DEFAULT 'v1.0.0' AFTER `name`;
+-- UPDATE classification_scheme SET version = "v1.4.0" WHERE name = "enigma-tp53";
+-- UPDATE classification_scheme SET version = "v1.1.0" WHERE name = "enigma-ATM";
+-- 
+-- ALTER TABLE `HerediVar`.`classification_scheme` 
+-- CHANGE COLUMN `name` `name` VARCHAR(45) NOT NULL ;
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`classification_scheme` 
+-- ADD UNIQUE INDEX `UNIQUE_classification_scheme` (`name` ASC, `version` ASC);
+-- ;
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`mutually_inclusive_criteria` 
+-- DROP FOREIGN KEY `FK_mutually_inclusive_criteria_source`,
+-- DROP FOREIGN KEY `FK_mutually_inlusive_criteria_target`;
+-- ALTER TABLE `HerediVar`.`mutually_inclusive_criteria` 
+-- ADD CONSTRAINT `FK_mutually_inclusive_criteria_source`
+--   FOREIGN KEY (`source`)
+--   REFERENCES `HerediVar`.`classification_criterium` (`id`)
+--   ON DELETE CASCADE
+--   ON UPDATE NO ACTION,
+-- ADD CONSTRAINT `FK_mutually_inlusive_criteria_target`
+--   FOREIGN KEY (`target`)
+--   REFERENCES `HerediVar`.`classification_criterium` (`id`)
+--   ON DELETE CASCADE
+--   ON UPDATE NO ACTION;
+-- 
+-- 
+-- CREATE TABLE `HerediVar`.`classification_scheme_alias` (
+--   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+--   `classification_scheme_id` INT UNSIGNED NOT NULL,
+--   `alias` VARCHAR(45) NOT NULL,
+--   PRIMARY KEY (`id`))
+-- ENGINE = InnoDB
+-- DEFAULT CHARACTER SET = utf8;
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`classification_scheme_alias` 
+-- ADD INDEX `FK_classification_scheme_alias_classification_scheme_idx` (`classification_scheme_id` ASC);
+-- ;
+-- ALTER TABLE `HerediVar`.`classification_scheme_alias` 
+-- ADD CONSTRAINT `FK_classification_scheme_alias_classification_scheme`
+--   FOREIGN KEY (`classification_scheme_id`)
+--   REFERENCES `HerediVar`.`classification_scheme` (`id`)
+--   ON DELETE NO ACTION
+--   ON UPDATE NO ACTION;
+-- 
+-- 
+-- GRANT SELECT ON HerediVar.classification_scheme_alias TO 'HerediVar_annotation';
+-- GRANT SELECT ON HerediVar.classification_scheme TO 'HerediVar_annotation';
+-- GRANT SELECT,INSERT,UPDATE,DELETE ON HerediVar.classification_scheme_alias TO 'HerediVar_superuser';
+-- 
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`automatic_classification` 
+-- DROP COLUMN `scheme_name`;
+-- 
+-- ALTER TABLE `HerediVar`.`automatic_classification` 
+-- ADD COLUMN `classification_scheme_id` INT UNSIGNED NOT NULL AFTER `variant_id`;
+-- 
+-- ALTER TABLE `HerediVar`.`automatic_classification` 
+-- ADD INDEX `FK_autoclass_classification_scheme_idx` (`classification_scheme_id` ASC);
+-- ;
+-- ALTER TABLE `HerediVar`.`automatic_classification` 
+-- ADD CONSTRAINT `FK_autoclass_classification_scheme`
+--   FOREIGN KEY (`classification_scheme_id`)
+--   REFERENCES `HerediVar`.`classification_scheme` (`id`)
+--   ON DELETE NO ACTION
+--   ON UPDATE NO ACTION;
+-- 
 
-ALTER TABLE `HerediVar`.`classification_scheme` 
-CHANGE COLUMN `name` `name` VARCHAR(45) NOT NULL ;
-
-
-ALTER TABLE `HerediVar`.`classification_scheme` 
-ADD UNIQUE INDEX `UNIQUE_classification_scheme` (`name` ASC, `version` ASC);
-;
-
-
-ALTER TABLE `HerediVar`.`mutually_inclusive_criteria` 
-DROP FOREIGN KEY `FK_mutually_inclusive_criteria_source`,
-DROP FOREIGN KEY `FK_mutually_inlusive_criteria_target`;
-ALTER TABLE `HerediVar`.`mutually_inclusive_criteria` 
-ADD CONSTRAINT `FK_mutually_inclusive_criteria_source`
-  FOREIGN KEY (`source`)
-  REFERENCES `HerediVar`.`classification_criterium` (`id`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `FK_mutually_inlusive_criteria_target`
-  FOREIGN KEY (`target`)
-  REFERENCES `HerediVar`.`classification_criterium` (`id`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION;
-
-
-CREATE TABLE `HerediVar`.`classification_scheme_alias` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `classification_scheme_id` INT UNSIGNED NOT NULL,
-  `alias` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
-ALTER TABLE `HerediVar`.`classification_scheme_alias` 
-ADD INDEX `FK_classification_scheme_alias_classification_scheme_idx` (`classification_scheme_id` ASC);
-;
-ALTER TABLE `HerediVar`.`classification_scheme_alias` 
-ADD CONSTRAINT `FK_classification_scheme_alias_classification_scheme`
-  FOREIGN KEY (`classification_scheme_id`)
-  REFERENCES `HerediVar`.`classification_scheme` (`id`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-
-GRANT SELECT ON HerediVar.classification_scheme_alias TO 'HerediVar_annotation';
-GRANT SELECT ON HerediVar.classification_scheme TO 'HerediVar_annotation';
-GRANT SELECT,INSERT,UPDATE,DELETE ON HerediVar.classification_scheme_alias TO 'HerediVar_superuser';
-
-
-
-ALTER TABLE `HerediVar`.`automatic_classification` 
-DROP COLUMN `scheme_name`;
-
-ALTER TABLE `HerediVar`.`automatic_classification` 
-ADD COLUMN `classification_scheme_id` INT UNSIGNED NOT NULL AFTER `variant_id`;
-
-ALTER TABLE `HerediVar`.`automatic_classification` 
-ADD INDEX `FK_autoclass_classification_scheme_idx` (`classification_scheme_id` ASC);
-;
-ALTER TABLE `HerediVar`.`automatic_classification` 
-ADD CONSTRAINT `FK_autoclass_classification_scheme`
-  FOREIGN KEY (`classification_scheme_id`)
-  REFERENCES `HerediVar`.`classification_scheme` (`id`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
+GRANT INSERT,UPDATE ON HerediVar.heredivar_clinvar_submissions TO 'HerediVar_user';
+GRANT INSERT,UPDATE ON HerediVar.heredivar_clinvar_submissions TO 'HerediVar_read_only';

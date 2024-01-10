@@ -50,6 +50,7 @@ GRANT SELECT ON HerediVar_ahdoebm1.gene_alias TO 'HerediVar_user';
 GRANT SELECT ON HerediVar_ahdoebm1.variant_heredicare_annotation TO 'HerediVar_user';
 GRANT SELECT ON HerediVar_ahdoebm1.variant_transcript_annotation TO 'HerediVar_user';
 GRANT SELECT ON HerediVar_ahdoebm1.mutually_inclusive_criteria TO 'HerediVar_user';
+GRANT INSERT,UPDATE ON HerediVar_ahdoebm1.heredivar_clinvar_submissions TO 'HerediVar_user';
 
 /* grant priviliges to super user */
 GRANT SELECT, INSERT, UPDATE ON HerediVar_ahdoebm1.user TO 'HerediVar_superuser';
@@ -95,3 +96,4 @@ GRANT INSERT, UPDATE, DELETE ON HerediVar_ahdoebm1.user_variant_lists TO 'Heredi
 GRANT SELECT ON HerediVar_ahdoebm1.gene_alias TO 'HerediVar_read_only';
 GRANT SELECT ON HerediVar_ahdoebm1.variant_heredicare_annotation TO 'HerediVar_read_only';
 GRANT SELECT ON HerediVar_ahdoebm1.variant_transcript_annotation TO 'HerediVar_read_only';
+GRANT INSERT,UPDATE ON HerediVar.heredivar_clinvar_submissions TO 'HerediVar_read_only';
