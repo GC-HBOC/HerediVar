@@ -52,7 +52,7 @@
                 <label for="c_hgvs" class="form-label">c.HGVS</label>
                 <input type="text" name="c_hgvs"
                        placeholder="c_hgvs" class="form-control validationreq"
-                       value="{{ request.form['c_hgvs'] }}" id="c_hgvs" required>
+                       value="{{ request.form['c_hgvs'] }}" id="c_hgvs">
                 </input>
                 <div class="invalid-feedback">
                     Please provide either c.HGVS or p.HGVS!
@@ -64,7 +64,7 @@
                 <label for="p_hgvs" class="form-label">p.HGVS</label>
                 <input type="text" name="p_hgvs"
                        placeholder="p_hgvs" class="form-control validationreq"
-                       value="{{ request.form['p_hgvs'] }}" id="p_hgvs" required>
+                       value="{{ request.form['p_hgvs'] }}" id="p_hgvs">
                 </input>
                 <div class="invalid-feedback">
                     Please provide either c.HGVS or p.HGVS!
