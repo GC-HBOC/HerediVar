@@ -223,7 +223,7 @@ elif webapp_env == 'prod':
 
 
     #tools
-    vep_path = joinpaths(toolsdir, "ensembl-vep-release-107.0")
+    vep_path = joinpaths(toolsdir, "ensembl-vep")
     vep_cache_dir = joinpaths(vep_path, "data/cache")
     os.environ['PERL5LIB'] = vep_path + "/Bio/:" + vep_path + "/cpan/lib/perl5/:" + os.environ.get('PERL5LIB', '')
     #ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-70-g53bce65c/"
