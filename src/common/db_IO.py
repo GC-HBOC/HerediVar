@@ -298,12 +298,18 @@ class Connection:
         placeholders = []
         actual_information = ()
         for hgvs_string in hgvs_strings:
-            hgvs_string = hgvs_string.strip()
-            actual_information += (sv_variant_id, hgvs_string)
-            placeholders.append(self.get_placeholders(2))
+            hgvs_parts = hgvs_string.strip().split(':')
+            transcript = hgvs_parts[0].strip() if hgvs_parts[0].strip() != '' else None
+            hgvs = hgvs_parts[1].strip()
+            hgvs_type = 'o' # other
+            if hgvs.startswith('c') or hgvs.startswith('p'):
+                hgvs_type = hgvs[0]
+            actual_information += (sv_variant_id, transcript, hgvs, hgvs_type)
+            placeholders.append(self.get_placeholders(4))
         if len(placeholders) > 0:
             placeholders = ','.join(placeholders)
-            command = "INSERT INTO sv_variant_hgvs (sv_variant_id, hgvs) VALUES " + placeholders
+            command = "INSERT INTO sv_variant_hgvs (sv_variant_id, transcript, hgvs, hgvs_type) VALUES " + placeholders + " ON DUPLICATE KEY UPDATE sv_variant_id = %s"
+            actual_information += (sv_variant_id, )
             self.cursor.execute(command, actual_information)
             self.conn.commit()
 
