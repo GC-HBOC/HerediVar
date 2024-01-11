@@ -748,9 +748,9 @@ def num2heredicare(classification):
         "2": ["12"],
         "3-": ["32"],
         "3+": ["34"],
-        "4": ["34"],
+        "4": ["14"],
         "-": ["20", "21", "4", "-1"],
-        "M": ["M"]
+        "4M": ["M"]
     }
     return mapping[str(classification)]
 
