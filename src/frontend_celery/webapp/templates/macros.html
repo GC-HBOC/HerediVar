@@ -477,6 +477,13 @@
 
             <div>
                 <form action="" method="GET" novalidate>
+
+                    <div class="form-group">
+                        <label for="variants" class="form-label">Variants</label>
+                        <textarea type="text" name="variants" id="variants"
+                               placeholder="chr16-23608020-C-T; chr17-43045752-43045852-DUP; ...." class="form-control height_zero"
+                               >{{ request.args.get('variants', '') }}</textarea>
+                    </div>
         
                     <div class="form-group">
                         <label for="genes" class="form-label">Genes</label>
@@ -515,9 +522,9 @@
                     </div>
 
                     <div class="form-group sst">
-                        <label for="external_ids" class="form-label">External IDs</label>
+                        <label for="external_ids" class="form-label">IDs</label>
                         <textarea type="text" name="external_ids" id="external_ids"
-                               placeholder="COSV99639284; rs9217747" class="form-control height_zero"
+                               placeholder="COSV99639284; rs9217747; 35110:heredivar; ..." class="form-control height_zero"
                                >{{ request.args.get('external_ids', '') }}</textarea>
                     </div>
 

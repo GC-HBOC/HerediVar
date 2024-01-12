@@ -42,6 +42,7 @@ def search():
     annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
     annotation_types = preprocess_annotation_types_for_search(annotation_types)
 
+    variant_strings = extract_variants(request)
     genes = extract_genes(request)
     ranges = extract_ranges(request)
     consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request, allowed_consensus_classes)
@@ -86,7 +87,8 @@ def search():
                                                 include_heredicare_consensus = include_heredicare_consensus,
                                                 external_ids = external_ids,
                                                 cdna_ranges = cdna_ranges,
-                                                annotation_restrictions = annotation_restrictions
+                                                annotation_restrictions = annotation_restrictions,
+                                                variant_strings = variant_strings
                                             )
                     variant_ids = [variant.id for variant in variants_for_list]
                     for variant_id in variant_ids:
@@ -140,7 +142,8 @@ def search():
         include_heredicare_consensus = include_heredicare_consensus,
         external_ids = external_ids,
         cdna_ranges = cdna_ranges,
-        annotation_restrictions = annotation_restrictions
+        annotation_restrictions = annotation_restrictions,
+        variant_strings = variant_strings
     )
     lists = conn.get_lists_for_user(user_id)
     pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')

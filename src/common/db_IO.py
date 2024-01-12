@@ -733,49 +733,12 @@ class Connection:
     #        result.append(variant + (None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None))
     #    return result
     
-    ## DEPRECATED
-    #def order_consequences(self, consequences):
-    #    keyfunc = cmp_to_key(mycmp = self.sort_consequences)
-    #            
-    #    consequences.sort(key = keyfunc) # sort by preferred transcript
-    #    return consequences
-    
-    ## DEPRECATED
-    #def sort_consequences(self, a, b):
-    #    # sort by ensembl/refseq
-    #    if a[9] == 'ensembl' and b[9] == 'refseq':
-    #        return -1
-    #    elif a[9] == 'refseq' and b[9] == 'ensembl':
-    #        return 1
-    #    elif a[9] == b[9]:
-    #
-    #        # sort by mane select
-    #        if a[14] is None or b[14] is None:
-    #            return 1
-    #        elif a[14] == 1 and b[14] == 0:
-    #            return -1
-    #        elif a[14] == 0 and b[14] == 1:
-    #            return 1
-    #        elif a[14] == b[14]:
-    #
-    #            # sort by biotype
-    #            if a[18] == 'protein coding' and b[18] != 'protein coding':
-    #                return -1
-    #            elif a[18] != 'protein coding' and b[18] == 'protein coding':
-    #                return 1
-    #            elif (a[18] != 'protein coding' and b[18] != 'protein coding') or (a[18] == 'protein coding' and b[18] == 'protein coding'):
-    #
-    #                # sort by length
-    #                if a[12] > b[12]:
-    #                    return -1
-    #                elif a[12] < b[12]:
-    #                    return 1
-    #                else:
-    #                    return 0
 
 
     def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, 
-                                 ranges = None, genes = None, consensus = None, user = None, automatic_splicing = None, automatic_protein = None, hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, include_heredicare_consensus = False):
+                                 ranges = None, genes = None, consensus = None, user = None, automatic_splicing = None, automatic_protein = None, 
+                                 hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, 
+                                 include_heredicare_consensus = False, variant_strings = None):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -869,11 +832,21 @@ class Connection:
                 placeholders = ["%s"] * len(hgnc_ids)
                 placeholders = ', '.join(placeholders)
                 placeholders = functions.enbrace(placeholders)
-                new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE hgnc_id IN " + placeholders + ")"
-                actual_information += tuple(hgnc_ids)
+                new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE hgnc_id IN " + placeholders + " UNION SELECT DISTINCT variant.id FROM variant WHERE sv_variant_id IN ( \
+                                    SELECT DISTINCT sv_variant.id FROM sv_variant INNER JOIN (SELECT * FROM transcript WHERE gene_id IN (SELECT gene.id FROM gene WHERE hgnc_id IN " + placeholders + "))x ON sv_variant.chrom = x.chrom AND sv_variant.start <= x.end AND sv_variant.end >= x.start \
+                                    ))"
+                actual_information += tuple(hgnc_ids) * 2
                 postfix = self.add_constraints_to_command(postfix, new_constraints)
             else:
                 return [], 0
+        if variant_strings is not None and len(variant_strings) > 0:
+            new_constraints = []
+            for variant_string in variant_strings:
+                parts = variant_string.split('-')
+                new_constraints.append("(SELECT id FROM variant WHERE chr = %s AND pos = %s AND ref = %s AND alt = %s UNION SELECT variant.id FROM variant WHERE sv_variant_id IN (SELECT id FROM sv_variant WHERE chrom = %s AND start = %s AND end = %s AND sv_type LIKE %s))")
+                actual_information += (parts[0], parts[1], parts[2], parts[3], parts[0], parts[1], parts[2], functions.enpercent(parts[3]))
+            new_constraints = "id IN " + ' OR '.join(new_constraints)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
         if consensus is not None and len(consensus) > 0:
             new_constraints_inner = ''
             consensus_without_dash = [value for value in consensus if value != '-']
@@ -980,36 +953,49 @@ class Connection:
                     external_id = external_id.strip('rs').strip(':rsid')
                     functions.extend_dict(ids_known_source, 'rsid', external_id)
                     continue
+                # handle cosmic ids
                 if external_id.startswith('COSV') or external_id[-7:].lower() == ':cosmic':
                     external_id = external_id.strip(':cosmic')
                     functions.extend_dict(ids_known_source, 'cosmic', external_id)
                     continue
+                # handle clinvar ids
                 if external_id[-8:].lower() == ':clinvar':
                     external_id = external_id.strip(':clinvar')
                     functions.extend_dict(ids_known_source, 'clinvar', external_id)
                     continue
+                # handle heredicare vids
                 if external_id[-11:] == ':heredicare':
                     external_id = external_id.strip(':heredicare')
                     functions.extend_dict(ids_known_source, 'heredicare_vid', external_id)
+                    continue
+                # handle heredivar variant_ids
+                if external_id[-10:] == ':heredivar':
+                    external_id = external_id.strip(':heredivar')
+                    functions.extend_dict(ids_known_source, 'heredivar_variant_id', external_id)
                     continue
                 ids_unknown_source.append(external_id)
             new_constraints = []
 
             for id_source in ids_known_source:
-                annotation_type_id = self.get_most_recent_annotation_type_id(id_source)
                 current_external_ids = ids_known_source[id_source]
-                placeholders = self.get_placeholders(len(current_external_ids))
-                new_constraints.append("id IN (SELECT variant_id FROM variant_ids WHERE external_id IN " + placeholders + " AND annotation_type_id = %s )")
-                actual_information += tuple(current_external_ids)
-                actual_information += (annotation_type_id, )
+                if id_source == 'heredivar_variant_id':
+                    placeholders = self.get_placeholders(len(current_external_ids))
+                    new_constraints.append("id IN (" + placeholders + ")")
+                    actual_information += tuple(current_external_ids)
+                else:
+                    annotation_type_id = self.get_most_recent_annotation_type_id(id_source)
+
+                    placeholders = self.get_placeholders(len(current_external_ids))
+                    new_constraints.append("id IN (SELECT variant_id FROM variant_ids WHERE external_id IN " + placeholders + " AND annotation_type_id = %s )")
+                    actual_information += tuple(current_external_ids)
+                    actual_information += (annotation_type_id, )
 
             if len(ids_unknown_source) > 0:
                 placeholders = self.get_placeholders(len(ids_unknown_source))
-                new_constraints.append("id IN (SELECT variant_id FROM variant_ids WHERE external_id IN " + placeholders + ")")
-                actual_information += tuple(ids_unknown_source)
+                new_constraints.append("id IN (SELECT variant_id FROM variant_ids WHERE external_id IN " + placeholders + " UNION SELECT id FROM variant WHERE id IN " + placeholders + ")")
+                actual_information += tuple(ids_unknown_source) * 2
             new_constraints = ' OR '.join(new_constraints)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
-
 
         if variant_ids_oi is not None and len(variant_ids_oi) > 0:
             placeholders = ["%s"] * len(variant_ids_oi)
@@ -1032,7 +1018,7 @@ class Connection:
             offset = (page - 1) * page_size
             command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
-        #print(command % actual_information)
+        print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 
@@ -1135,6 +1121,8 @@ class Connection:
         for current_batch in batches:
             # (2)
             current_batch = self.order_consequences(current_batch)
+            # THIS SHOULD BE REPLACED WITH SOMETHING LIKE THIS:
+            #transcripts, current_batch = functions.order_transcripts(sortable_dict)
             best_consequence = current_batch[0]
 
             # (3)
@@ -1152,6 +1140,48 @@ class Connection:
         matching_variant_ids = list(set(matching_variant_ids)) # removes duplicates
 
         return matching_variant_ids
+
+    # DEPRECATED
+    def order_consequences(self, consequences):
+        keyfunc = cmp_to_key(mycmp = self.sort_consequences)
+                
+        consequences.sort(key = keyfunc) # sort by preferred transcript
+        return consequences
+    
+    # DEPRECATED
+    def sort_consequences(self, a, b):
+        # sort by ensembl/refseq
+        if a[9] == 'ensembl' and b[9] == 'refseq':
+            return -1
+        elif a[9] == 'refseq' and b[9] == 'ensembl':
+            return 1
+        elif a[9] == b[9]:
+    
+            # sort by mane select
+            if a[14] is None or b[14] is None:
+                return 1
+            elif a[14] == 1 and b[14] == 0:
+                return -1
+            elif a[14] == 0 and b[14] == 1:
+                return 1
+            elif a[14] == b[14]:
+    
+                # sort by biotype
+                if a[18] == 'protein coding' and b[18] != 'protein coding':
+                    return -1
+                elif a[18] != 'protein coding' and b[18] == 'protein coding':
+                    return 1
+                elif (a[18] != 'protein coding' and b[18] != 'protein coding') or (a[18] == 'protein coding' and b[18] == 'protein coding'):
+    
+                    # sort by length
+                    if a[12] > b[12]:
+                        return -1
+                    elif a[12] < b[12]:
+                        return 1
+                    else:
+                        return 0
+
+
 
 
     """
