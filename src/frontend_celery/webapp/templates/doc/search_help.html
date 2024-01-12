@@ -15,6 +15,7 @@
         <li>POS: GRCH38, left-aligned position</li>
         <li>REF: reference base(s)</li>
         <li>ALT: alternative base(s)</li>
+        <li>VARTYPE: the type of the variant. This value is "sv:sv_type" if the variant is a structural variant or "small" if the variant is a regular small variant</li>
         <li>HGVS c.: the HGVS c. string for this variant. The reference transcript is the mane select transcript for the gene of this variants' gene.</li>
         <li>HGVS p.: the HGVS p. HGVS string for this variant. The reference transcript is the mane select transcript for the gene of this variants' gene.</li>
         <li>GENE: the gene which has the variant. Sometimes there are multiple genes, because the variant has consequences in all of them.</li>
@@ -27,6 +28,10 @@
 <div class="bst">
     <strong>You can filter the table of variants by:</strong>
     <ul>
+        <li>
+            A variant: <br>
+            The variant strings are of this format: chrom-pos-ref-alt in case of small variants and chrom-start-end-sv_type in case of structural variants
+        </li>
         <li>A gene name or unique alias or HGVS-ID (e. g. BARD1)</li>
         <li>
             There are two possible ways of describing a chromosomal range: <br>
@@ -49,9 +54,18 @@
             In case you neither know the transcript nor the gene it is also possible to omit the reference sequence. But be careful with this type of search as it will provide you with ALL possible nucleotide changes that COULD be the one you were looking for. Thus, you should inspect the results carefully before continueing. (e. g. c.1972C>T)<br>
             WARNING: If you do not specify the reference transcript the algorithm will choose the ensembl mane select transcript as reference. If there is no mane select transcript it will omit this HGNC.
         </li>
-        <li>external ids <br>
-            You may search for dbSNP rsids, clinvar variation ids, COSMIC ids (COSV) or heredicare vids. You can insert the ids directly or choose to append a ":" followed by the database name. For example: You can search for rs1057519871, 1057519871:rsid or 1057519871. All of which should return the same variant.
-            Nevertheless, it is recommended to specify the database of the identifier to make results more accurate.
+        <li>IDs<br>
+            You can search for HerediVar variant_ids or dbSNP rsids, clinvar variation ids, COSMIC ids (COSV) or heredicare vids. <br>
+            You can insert the ids directly or choose to append a ":" followed by the database name. For example: You can search for rs1057519871, 1057519871:rsid or 1057519871. All of which return the same variant. <br>
+            It is recommended to specify the database of the identifier to make results more accurate. <br>
+            Extensions used by heredivar: <br>
+            <ul>
+                <li>HerediVar variant_ids: heredivar</li>
+                <li>dbSNP rsids: rsid</li>
+                <li>clinvar variation ids: clinvar</li>
+                <li>cosmic COSV ids: cosmic</li>
+                <li>heredicare vids: heredicare</li>
+            </ul>
         </li>
         <li>annotations <br>
             First select the annotation from the dropdown menu, then type the operator. For numerical values you may choose from &lt;, &lt;=, &gt;, &gt;=, = and !=. For text-like values you may choose from =, != and ~. Hereby, ~ is a case insensitive substring match. Finally, provide the value in the next textbox. <br>
@@ -70,7 +84,10 @@
     <ul>
         <li>1: Benign</li>
         <li>2: Likely benign</li>
+        <li>3-: Uncertain significance with tendency to likely benign</li>
         <li>3: Uncertain significance</li>
+        <li>3+: Uncertain significance with tendency to likely pathogenic</li>
+        <li>4M: Modifier</li>
         <li>4: Likely pathogenic</li>
         <li>5: Pathogenic</li>
         <li>none ("-"): Unclassified</li>
