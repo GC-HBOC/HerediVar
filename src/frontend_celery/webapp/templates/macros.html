@@ -701,25 +701,17 @@
         <td class="visually_hidden">{{ variant.id }}</td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="text_align_center clickable nowrap">{{ variant.chrom }}</td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable nowrap">
-            {% if variant.variant_type == 'sv' %}
-                {{ variant.start }} - {{ variant.end }}
+            {% if variant.variant_type == 'sv' and variant.alt[0] == '<' %}
+                {% if variant.imprecise %}{{draw_exclamation_mark("Structural variant with imprecise position")}}{% endif %}{{ variant.start }} - {{ variant.end }}
             {% else %}
                 {{ variant.pos }}
             {% endif %}
         </td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss">
-            {% if variant.variant_type == 'sv' %}
-                <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="-">-</div>
-            {% else %}
-                <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="{{ variant.ref }}">{{ variant.ref }}</div>
-            {% endif %}
+            <div class="fit_content Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ variant.ref }}">{{ variant.ref }}</div>
         </td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss">
-            {% if variant.variant_type == 'sv' %}
-                <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="-">-</div>
-            {% else %}
-                <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="{{ variant.alt }}">{{ variant.alt }}</div>
-            {% endif %}
+            <div class="fit_content Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ variant.alt }}">{{ variant.alt }}</div>
         </td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable">
             {% if variant.variant_type == 'sv' %}
@@ -729,48 +721,76 @@
             {% endif %}
         </td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss nowrap">
-            {% if preferred_transcripts is not none %}
-                {% for consequence in preferred_transcripts %}
-                    {% if consequence.hgvs_c is not none %} {% set hgvs_c = consequence.hgvs_c %} {% else %} {% set hgvs_c = '-' %} {% endif %}
-                    <div>
-                        <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="{{ hgvs_c }}">{{ hgvs_c }}</div>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <div>
+            {% if variant.variant_type == 'sv' %}
+                {% set all_custom_hgvs = variant.get_custom_hgvs(hgvs_type = 'c') %}
+                {% if all_custom_hgvs | length > 0 %}
+                    {% for custom_hgvs in all_custom_hgvs %}
+                        <div class="fit_content Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ custom_hgvs.hgvs }}">{{ custom_hgvs.hgvs }}</div>
+                    {% endfor %}
+                {% else %}
                     <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="-">-</div>
-                </div>
+                {% endif %}
+            {% else %}
+                {% if preferred_transcripts is not none %}
+                    {% for consequence in preferred_transcripts %}
+                        {% if consequence.hgvs_c is not none %} {% set hgvs_c = consequence.hgvs_c %} {% else %} {% set hgvs_c = '-' %} {% endif %}
+                        <div class="fit_content Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ hgvs_c }}">{{ hgvs_c }}</div>
+                    {% endfor %}
+                {% else %}
+                    <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="-">-</div>
+                {% endif %}
             {% endif %}
         </td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss nowrap">
-            {% if preferred_transcripts is not none %}
-                {% for consequence in preferred_transcripts %}
-                    {% if consequence.hgvs_p is not none %} {% set hgvs_p = consequence.hgvs_p %} {% else %} {% set hgvs_p = '-' %} {% endif %}
-                    <div>
-                        <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="{{ hgvs_p }}">{{ hgvs_p }}</div>
-                    </div>
-                {% endfor %}
-            {% else %}
-                <div>
+            {% if variant.variant_type == 'sv' %}
+                {% set all_custom_hgvs = variant.get_custom_hgvs(hgvs_type = 'c') %}
+                {% if all_custom_hgvs | length > 0 %}
+                    {% for custom_hgvs in variant.get_custom_hgvs(hgvs_type = 'p') %}
+                        <div class="fit_content Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ custom_hgvs.hgvs }}">{{ custom_hgvs.hgvs }}</div>
+                    {% endfor %}
+                {% else %}
                     <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="-">-</div>
-                </div>
+                {% endif %}
+            {% else %}
+                {% if preferred_transcripts is not none %}
+                    {% for consequence in preferred_transcripts %}
+                        {% if consequence.hgvs_p is not none %} {% set hgvs_p = consequence.hgvs_p %} {% else %} {% set hgvs_p = '-' %} {% endif %}
+                            <div class="fit_content Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ hgvs_p }}">{{ hgvs_p }}</div>
+                    {% endfor %}
+                {% else %}
+                        <div class="fit_content" data-bs-toggle="tooltip" data-bs-title="-">-</div>
+                {% endif %}
             {% endif %}
         </td>
         <td class="clickable" data-href="{{ url_for('variant.display', variant_id=variant.id) }}">
-            {% if preferred_transcripts is not none %}
-                {% for consequence in preferred_transcripts %}
-                    <div>
+            {% if variant.variant_type == 'sv' %}
+                {% set breakpoint_genes = variant.get_breakpoint_genes() %}
+                {% if breakpoint_genes | length > 0 %}
+                        {% for overlapping_gene in breakpoint_genes %}
+                        <div>
+                            <a href="{{ url_for('extended_information.gene', gene_id=overlapping_gene[0] | int) }}">{{ overlapping_gene[1] }}</a>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div>-</div>
+                {% endif %}
+            {% else %}
+                {% if preferred_transcripts is not none %}
+                    {% for consequence in preferred_transcripts %}
                         {% if consequence.transcript.gene is not none %} 
                             {% if consequence.transcript.gene.symbol is not none %} {% set gene_symbol = consequence.transcript.gene.symbol %} {% else %} {% set gene_symbol = '-' %} {% endif %}
-                            <a href="{{ url_for('extended_information.gene', gene_id=consequence.transcript.gene.id | int) }}">{{ gene_symbol }}</a>
+                            <div>
+                                <a href="{{ url_for('extended_information.gene', gene_id=consequence.transcript.gene.id | int) }}">{{ gene_symbol }}</a>
+                            </div>
                         {% else %}
                             <div>-</div>
                         {% endif %}
-                    </div>
-                {% endfor %}
-            {% else %}
-                <div>-</div>
+                    {% endfor %}
+                {% else %}
+                    <div>-</div>
+                {% endif %}
             {% endif %}
+
         </td>
         <td class="text_align_center clickable" data-href="{{ url_for('variant.display', variant_id=variant.id) }}">
             {% set automatic_classification = variant.automatic_classification %}
@@ -1131,32 +1151,67 @@
                             <td class="width_small li-label">Variant</td>
                             <td > 
                                 <div class="break_text_all">
-                                    {{ variant.chrom }}-{{ variant.pos }}-{{ variant.ref }}-{{ variant.alt }}
+                                    {{ variant.get_string_repr() }}
                                 </div>
                             </td>
                         </tr>
                         <tr>
                             <td class="width_small li-label"><abbr title="One or more strings in the format: gene hgvsc. hgvsp. This shows all 'best' transcripts and prefers mane select.">HGVS</abbr></td>
-                            {% set best_consequences = variant.get_preferred_transcripts() %}
-                            {% if best_consequences is not none and best_consequences | length > 0 and best_consequences[0].transcript.name != '' %} <!-- name != '' for intergenic variants -->
-                                <td>
-                                    <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
-                                        {% for consequence in best_consequences %}
-                                        <li class="list-group-item noboarder-td">
-                                            <div class="d-flex">
-                                                <div class="bsr"><a href="{{ url_for('extended_information.gene', gene_id=consequence.transcript.gene.id | int) }}">{{ consequence.transcript.gene.symbol }}</a></div>
-                                                <div class="bsr">{{consequence.transcript.name}}</div>
-                                                <div class="bsr">{{consequence.hgvs_c}}</div>
-                                                <div>{{consequence.hgvs_p}}</div>
-                                            </div>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                </td>
-                            {% else %}
-                                <td>---</td>
-                            {% endif %}
+                            <td>
+                                {% if variant.variant_type == 'sv' %}
+                                    {% if variant.custom_hgvs | length > 0 %}
+                                        <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground">
+                                            {% for custom_hgvs in variant.custom_hgvs %}
+                                            <li class="list-group-item noboarder-td">
+                                                <div class="d-flex">
+                                                    <div class="bsr">{{ custom_hgvs.transcript }}</div>
+                                                    <div class="bsr">{{ custom_hgvs.hgvs }}</div>
+                                                </div>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <div>---</div>
+                                    {% endif %}
+                                {% else %}
+                                    {% set best_consequences = variant.get_preferred_transcripts() %}
+                                    {% if best_consequences is not none and best_consequences | length > 0 and best_consequences[0].transcript.name != '' %} <!-- name != '' for intergenic variants -->
+                                        <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground">
+                                            {% for consequence in best_consequences %}
+                                            <li class="list-group-item noboarder-td">
+                                                <div class="d-flex">
+                                                    <div class="bsr"><a href="{{ url_for('extended_information.gene', gene_id=consequence.transcript.gene.id | int) }}">{{ consequence.transcript.gene.symbol }}</a></div>
+                                                    <div class="bsr">{{consequence.transcript.name}}</div>
+                                                    <div class="bsr">{{consequence.hgvs_c}}</div>
+                                                    <div>{{consequence.hgvs_p}}</div>
+                                                </div>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        ---
+                                    {% endif %}
+                                {% endif %}
+                            </td>
                         </tr>
+
+                        {% if variant.variant_type == 'sv' %}
+                        <tr>
+                            <td class="li-label"><abbr title="All genes which overlap the variant. Purple are breakpoint genes, bold are task-force genes.">Gene(s)</abbr></td>
+                            <td>
+                                <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
+                                    {% set breakpoint_genes = variant.get_breakpoint_genes(how = 'string') %}
+                                    {% set preferred_genes = variant.get_genes(how='preferred') %}
+                                    {% for overlapping_gene in variant.overlapping_genes %}
+                                        <li class="list-group-item noboarder-td" >
+                                            {% set current_symbol = overlapping_gene[1] %}
+                                            <div class="{% if current_symbol in preferred_genes %}bold{% endif %} {% if current_symbol in breakpoint_genes%}stylish_purple{% endif %} nowrap">{{ current_symbol }}</div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                        </tr>
+                        {% endif %}
 
                         <!-- External Links / Further Information on external websites-->
                         <tr>

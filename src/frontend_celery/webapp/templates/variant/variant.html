@@ -58,7 +58,7 @@
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
             {% if session.get('user') is not none and 'user' in session['user']['roles']%}
             <li>
-                <button id="reannotate_button" type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#reannotate-modal">(Re-)Annotate</button>
+                <button id="reannotate_button" type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#reannotate-modal" {% if variant.variant_type == 'sv' %}disabled{% endif %}>(Re-)Annotate</button>
             </li>
             <li>
                 <a type="button" class="dropdown-item" href="{{url_for('variant_io.submit_assay', variant_id = variant.id)}}" 

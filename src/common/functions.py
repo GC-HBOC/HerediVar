@@ -773,3 +773,69 @@ def extend_dict(dictionary, key, new_value):
     else:
         dictionary[key] = [new_value]
     return dictionary
+
+# format: chr:start-stop
+def get_sequence(chrom: str, start: int, end: int):
+    # chrom, start and end is the region of interest
+    # The resulting sequence will be of length size with the region of interest in the middle
+    if not chrom.startswith('chr'):
+        chrom = 'chr' + str(chrom)
+
+    region = chrom + ':' + str(start) + '-' + str(end)
+
+    command = [paths.samtools_path, 'faidx', paths.ref_genome_path, region]
+    returncode, stderr, stdout = execute_command(command, process_name='samtools')
+
+    if returncode != 0:
+        raise ValueError("There was an error during sequence retrieval using samtools:" + stderr)
+
+    # stdout contains the sequences
+    sequence, region = extract_sequence(stdout)
+    return sequence, region
+
+# fasta_str should only contain a single fasta entry
+def extract_sequence(fasta_str):
+    lines = fasta_str.split('\n')
+    sequence = ""
+    region = ""
+    for line in lines:
+        line = line.strip()
+        if line == '':
+            continue
+        if line.startswith('>'):
+            region = line.strip('>')
+        else:
+            sequence += line
+    return sequence, region
+
+def get_sv_variant_sequence(chrom, start, end, sv_type):
+    start = int(start)
+    end = int(end)
+    ref = ""
+    alt = ""
+    pos = start
+
+    if sv_type == 'DEL':
+        sequence, region = get_sequence(chrom, start - 1, end) # subtract one because we need one reference base
+
+        if len(sequence) < 1001:
+            ref = sequence
+            alt = sequence[0]
+            pos = start - 1
+        else:
+            ref = sequence[1]
+            alt = "<DEL>"
+    
+    elif sv_type == 'DUP' or sv_type == 'INV':
+        sequence, region = get_sequence(chrom, start, end)
+
+        ref = sequence[0]
+        alt = "<" + sv_type +">"
+
+    return ref, alt, pos
+
+
+
+
+def get_preferred_genes():
+    return set(["ATM", "BARD1", "BRCA1", "BRCA2", "BRIP1", "CDH1", "CHEK2", "PALB2", "PTEN", "RAD51C", "RAD51D", "STK11", "TP53"])

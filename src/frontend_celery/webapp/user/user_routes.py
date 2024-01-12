@@ -322,7 +322,7 @@ def my_lists():
 def admin_dashboard():
     conn = get_connection()
     job_config = annotation_service.get_default_job_config()
-    annotation_stati, errors, warnings, total_num_variants = conn.get_annotation_statistics()
+    annotation_stati, errors, warnings, total_num_variants = conn.get_annotation_statistics(exclude_sv=True)
     schemes = conn.get_all_classification_schemes()
     do_redirect = False
 
@@ -358,7 +358,7 @@ def admin_dashboard():
             selected_job_config = annotation_service.get_job_config(selected_jobs)
 
             if reannotate_which == 'all':
-                variant_ids = conn.get_all_valid_variant_ids()
+                variant_ids = conn.get_all_valid_variant_ids(exclude_sv=True)
                 #variant_ids = conn.get_variant_ids_without_automatic_classification()
                 #variant_ids = random.sample(variant_ids, 50)
             elif reannotate_which == 'erroneous':

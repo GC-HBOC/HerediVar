@@ -255,6 +255,22 @@ function setup_igv(chrom, start, end, variant_id) {
                     //"infoURL": "https://www.ncbi.nlm.nih.gov/gene/?term=$$"
                 },
                 {
+                    "name": "Classified structural variants",
+                    "type": "variant",
+                    "format": "vcf",
+                    "url": "/download/vcf/classified_sv",
+                    "indexed": false,
+                    "autoHeight": true,
+                    "color": (variant) => {
+                        if ('classification' in variant.info) {
+                            const classification = variant.info['classification']
+                            return get_consensus_classification_color(classification)
+                        } else {
+                            return get_consensus_classification_color('-')
+                        }
+                    }
+                },
+                {
                     "name": "Classified variants",
                     "type": "variant",
                     "format": "vcf",

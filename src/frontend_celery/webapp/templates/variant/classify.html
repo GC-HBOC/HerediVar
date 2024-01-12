@@ -39,11 +39,12 @@
                 <div class="flex-grow-1">
                     Go <a id="scheme_reference" href="#">here</a> for more details about the currently selected scheme.
                 </div>
+                
                 <div>
-                    <button type="button" class="btn btn-sm btn-secondary ssr"  data-bs-toggle="modal" data-bs-target="#automatic_classification_options-modal">{{ macros.draw_gear(tooltip = "") }}</button>
+                    <button type="button" class="btn btn-sm btn-secondary ssr"  data-bs-toggle="modal" data-bs-target="#automatic_classification_options-modal" {% if variant.variant_type == 'sv' %}disabled{% endif %}>{{ macros.draw_gear(tooltip = "") }}</button>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-sm btn-primary" id="automatic_classification_button">Preselect criteria</button>
+                    <button type="button" class="btn btn-sm btn-primary" id="automatic_classification_button" {% if variant.variant_type == 'sv' %}disabled{% endif %}>Preselect criteria</button>
                 </div>
             </div>
 

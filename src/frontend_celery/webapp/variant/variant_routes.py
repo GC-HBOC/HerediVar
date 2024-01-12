@@ -251,6 +251,7 @@ def create_sv():
             start = request.form['start']
             end = request.form['end']
             sv_type = request.form.get('sv_type', '')
+            imprecise = 1 if request.form.get('imprecise', 'off') == 'on' else 0
 
             hgvs_strings = request.form.get('hgvs_strings', '')
             hgvs_strings = re.split('[\n,]', hgvs_strings)
@@ -260,7 +261,7 @@ def create_sv():
                 flash('All fields are required!', 'alert-danger')
             else: # all valid
                 genome_build = request.form['genome']
-                was_successful, message, variant_id = validate_and_insert_cnv(chrom = chrom, start = start, end = end, sv_type = sv_type, hgvs_strings = hgvs_strings, conn = conn, genome_build = genome_build)
+                was_successful, message, variant_id = validate_and_insert_cnv(chrom = chrom, start = start, end = end, sv_type = sv_type, imprecise = imprecise, hgvs_strings = hgvs_strings, conn = conn, genome_build = genome_build)
                 variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
                 if 'already in database' in message:
                         flash(Markup("Variant not imported: already in database!! Missing hgvs strings were added. View it " + 

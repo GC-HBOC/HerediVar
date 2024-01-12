@@ -23,7 +23,7 @@
             <h1>
                 {% block title_ext %} {% endblock %}
                 <div id="variant_page_title" class="break_text_all w-90" chrom="{{ variant.chrom }}" pos="{{ variant.pos }}" ref="{{ variant.ref }}" alt="{{ variant.alt }}">
-                    {{consequence}} {% block title %} {{ variant.chrom }}-{{ variant.pos }}-{{ variant.ref }}-{{ variant.alt }} {% endblock %}(GRCh38)
+                    {{consequence}} {% block title %} {{ variant.get_string_repr() }} {% endblock %}(GRCh38)
                 </div>
             </h1>
 

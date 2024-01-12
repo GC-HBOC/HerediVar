@@ -260,23 +260,23 @@ class Connection:
         variant_id = self.get_variant_id(chr, pos, ref, alt)
         return variant_id # return the annotation_queue_id of the new variant
 
-    def insert_sv_variant(self, chrom, start, end, sv_type):
+    def insert_sv_variant(self, chrom, start, end, sv_type, imprecise):
+        # calculate reference and alternative sequences
+        ref, alt, pos = functions.get_sv_variant_sequence(chrom, start, end, sv_type)
+
         # insert the sv variant itself
-        command = "INSERT INTO sv_variant (chrom, start, end, sv_type) VALUES (%s, %s, %s, %s)"
-        self.cursor.execute(command, (chrom, start, end, sv_type))
+        command = "INSERT INTO sv_variant (chrom, start, end, sv_type, imprecise) VALUES (%s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (chrom, start, end, sv_type, imprecise))
         self.conn.commit()
         sv_variant_id = self.get_sv_variant_id(chrom, start, end, sv_type)
 
-        variant_id = self.insert_dummy_sv_variant(sv_variant_id, chrom, start)
-        return variant_id, sv_variant_id
-    
-    def insert_dummy_sv_variant(self, sv_variant_id, chrom, start):
-        # insert dummy data into the variant table
+        # insert data into variant table to generate the variant_id
         command = "INSERT INTO variant (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, variant_type, sv_variant_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'sv', %s)"
-        self.cursor.execute(command, (chrom, start, None,None,None,None,None,None, sv_variant_id))
+        self.cursor.execute(command, (chrom, pos, ref, alt, None,None,None,None, sv_variant_id))
         self.conn.commit()
         variant_id = self.get_variant_id_by_sv_variant_id(sv_variant_id)
-        return variant_id
+        return variant_id, sv_variant_id
+    
 
     def get_variant_id_by_sv_variant_id(self, sv_variant_id):
         command = "SELECT id FROM variant WHERE sv_variant_id = %s"
@@ -313,6 +313,11 @@ class Connection:
             self.cursor.execute(command, actual_information)
             self.conn.commit()
 
+    def get_overlapping_genes(self, chrom, start, end): # function for structural variants
+        command = "SELECT DISTINCT gene_id, (SELECT symbol FROM gene WHERE gene.id = gene_id) symbol, min(start), max(end) FROM transcript WHERE chrom = %s AND %s < transcript.end AND %s > transcript.start GROUP BY gene_id"
+        self.cursor.execute(command, (chrom, start, end))
+        result = self.cursor.fetchall()
+        return result
     
     def insert_external_variant_id(self, variant_id, external_id, annotation_type_id):
         command = "INSERT INTO variant_ids (variant_id, external_id, annotation_type_id) \
@@ -537,15 +542,28 @@ class Connection:
             return None
         return res
 
-    def get_all_valid_variant_ids(self):
+    def get_all_valid_variant_ids(self, exclude_sv = True):
         command = "SELECT id FROM variant"
+        if exclude_sv:
+            command += " WHERE variant_type = 'small'"
         self.cursor.execute(command)
         res = self.cursor.fetchall()
         return [x[0] for x in res]
 
-    def get_variant_ids_with_consensus_classification(self):
-        command = "SELECT DISTINCT variant_id FROM consensus_classification UNION SELECT DISTINCT variant_id FROM variant_heredicare_annotation WHERE consensus_class is not NULL"
-        self.cursor.execute(command)
+    def get_variant_ids_with_consensus_classification(self, variant_types: list):
+        command_base = """
+            SELECT variant.id FROM variant INNER JOIN (
+                SELECT DISTINCT variant_id FROM consensus_classification UNION SELECT DISTINCT variant_id FROM variant_heredicare_annotation WHERE consensus_class is not NULL
+            )x ON variant.id = x.variant_id
+        """
+        command_ext = ""
+        actual_information = ()
+        for variant_type in variant_types:
+            command_ext = self.add_constraints_to_command(command_ext, "variant_type = %s", operator = 'OR')
+            actual_information += (variant_type, )
+        
+        command = command_base + ' ' + command_ext
+        self.cursor.execute(command, actual_information)
         res = self.cursor.fetchall()
         return [x[0] for x in res]
 
@@ -2031,23 +2049,26 @@ class Connection:
         return result
     
     def get_one_sv_variant(self, variant_id):
-        command = "SELECT sv_variant_id, is_hidden, variant_type FROM variant WHERE id = %s AND variant_type = 'sv'"
+        command = "SELECT pos, ref, alt, sv_variant_id, is_hidden, variant_type FROM variant WHERE id = %s AND variant_type = 'sv'"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchone()
 
         if result is None:
             return None
         
-        sv_variant_id = result[0]
-        is_hidden = result[1]
-        variant_type = result[2]
+        pos = result[0]
+        ref = result[1]
+        alt = result[2]
+        sv_variant_id = result[3]
+        is_hidden = result[4]
+        variant_type = result[5]
         if sv_variant_id is None:
             return None
         
-        command = "SELECT id, chrom, start, end, sv_type FROM sv_variant WHERE id = %s"
+        command = "SELECT id, chrom, start, end, sv_type, imprecise FROM sv_variant WHERE id = %s"
         self.cursor.execute(command, (sv_variant_id, ))
         result = self.cursor.fetchone()
-        result += (is_hidden, variant_type)
+        result += (is_hidden, variant_type, pos, ref, alt)
         return result
 
 
@@ -2431,7 +2452,7 @@ class Connection:
             pos = variant_raw[2]
             ref = variant_raw[3]
             alt = variant_raw[4]
-            is_hidden = True if variant_raw[5] == 1 else False
+            is_hidden = variant_raw[5] == 1
             variant_type = variant_raw[6]
             variant = models.Variant(id=variant_id, variant_type = variant_type, is_hidden = is_hidden, chrom = chrom, pos = pos, ref = ref, alt = alt,
                         annotations = annotations, 
@@ -2447,15 +2468,22 @@ class Connection:
                         external_ids = external_ids
                     )
         if variant_type == 'sv':
-            variant_raw = self.get_one_sv_variant(variant_id)
+            variant_raw = self.get_one_sv_variant(variant_id) # id, chrom, start, end, sv_type, imprecise, is_hidden, variant_type, , pos, ref, alt
             sv_variant_id = variant_raw[0]
             chrom = variant_raw[1]
             start = variant_raw[2]
             end = variant_raw[3]
             sv_type = variant_raw[4]
-            is_hidden = True if variant_raw[5] == 1 else False
-            variant_type = variant_raw[6]
-            variant = models.SV_Variant(id=variant_id, variant_type=variant_type, is_hidden = is_hidden, chrom = chrom, start = start, end = end, sv_type = sv_type, sv_variant_id = sv_variant_id,
+            imprecise = variant_raw[5] == 1
+            is_hidden = variant_raw[6] == 1
+            variant_type = variant_raw[7]
+            pos = variant_raw[8]
+            ref = variant_raw[9]
+            alt = variant_raw[10]
+            custom_hgvs = self.get_custom_hgvs(sv_variant_id)
+            variant = models.SV_Variant(id=variant_id, variant_type=variant_type, is_hidden = is_hidden, 
+                        chrom = chrom, pos = pos, ref = ref, alt = alt, start = start, end = end, sv_type = sv_type, sv_variant_id = sv_variant_id, imprecise = imprecise,
+                        custom_hgvs = custom_hgvs, overlapping_genes = self.get_overlapping_genes(chrom, start, end),
                         annotations = annotations, 
                         consensus_classifications = consensus_classifications, 
                         user_classifications = user_classifications,
@@ -2470,7 +2498,19 @@ class Connection:
                     )
         return variant
 
-
+    def get_custom_hgvs(self, sv_variant_id):
+        command = "SELECT id, transcript, hgvs, hgvs_type FROM sv_variant_hgvs WHERE sv_variant_id = %s"
+        self.cursor.execute(command, (sv_variant_id, ))
+        result = self.cursor.fetchall()
+        result = [self.convert_custom_hgvs_raw(custom_hgvs_raw) for custom_hgvs_raw in result]
+        return result
+    
+    def convert_custom_hgvs_raw(self, custom_hgvs_raw):
+        return models.Custom_Hgvs(id = custom_hgvs_raw[0],
+                                  transcript = custom_hgvs_raw[1],
+                                  hgvs = custom_hgvs_raw[2],
+                                  hgvs_type = custom_hgvs_raw[3]
+                                )
 
     def hide_variant(self, variant_id, is_hidden):
         command = "UPDATE variant SET is_hidden = %s WHERE id = %s"
@@ -2682,7 +2722,7 @@ class Connection:
         result = self.cursor.fetchall()
         return result
 
-    def get_annotation_statistics(self):
+    def get_annotation_statistics(self, exclude_sv=True):
         # return the most recent annotation queue entry for the variant 
         result = self.get_current_annotation_staus_all_variants()
         annotation_status_types = self.get_enumtypes("annotation_queue", "status")
@@ -2702,12 +2742,14 @@ class Connection:
             if annotation_status[3] != 'error' and annotation_status[5] != '':
                 warnings[variant_id] = annotation_status[5]
         
-        annotation_stati["unannotated"] = self.get_variants_without_annotation()
+        annotation_stati["unannotated"] = self.get_variants_without_annotation(exclude_sv=exclude_sv)
 
         return annotation_stati, errors, warnings, total_num_variants
     
-    def get_variants_without_annotation(self):
+    def get_variants_without_annotation(self, exclude_sv=True):
         command = "SELECT id FROM variant WHERE id not in (SELECT variant_id FROM annotation_queue)"
+        if exclude_sv:
+            command += " AND variant_type = 'small'"
         self.cursor.execute(command)
         result = self.cursor.fetchall()
         return [x[0] for x in result]
@@ -3073,15 +3115,26 @@ class Connection:
         return result
     
 
-    #### DELETE LATER!
-    def get_automatic_classification_ids(self):
-        command = "SELECT id FROM automatic_classification"
-        self.cursor.execute(command)
-        result = self.cursor.fetchall()
-        return [x[0] for x in result]
-    
-    #### DELETE LATER!
-    def update_automatic_classification(self, automatic_classification_id, classification_splicing, classification_protein):
-        command = "UPDATE automatic_classification SET classification_splicing = %s, classification_protein = %s WHERE id = %s"
-        self.cursor.execute(command, (classification_splicing, classification_protein, automatic_classification_id))
+    ##### DELETE LATER!
+    #def get_automatic_classification_ids(self):
+    #    command = "SELECT id FROM automatic_classification"
+    #    self.cursor.execute(command)
+    #    result = self.cursor.fetchall()
+    #    return [x[0] for x in result]
+    #
+    ##### DELETE LATER!
+    #def update_automatic_classification(self, automatic_classification_id, classification_splicing, classification_protein):
+    #    command = "UPDATE automatic_classification SET classification_splicing = %s, classification_protein = %s WHERE id = %s"
+    #    self.cursor.execute(command, (classification_splicing, classification_protein, automatic_classification_id))
+    #    self.conn.commit()
+
+    def insert_coldspot(self, chrom, start, end, source):
+        command = "INSERT INTO coldspots (chrom, start, end, source) VALUES (%s, %s, %s, %s)"
+        self.cursor.execute(command, (chrom, start, end, source))
         self.conn.commit()
+
+    def get_coldspots(self, chrom, variant_start, variant_end):
+        command = "SELECT id, chrom, start, end source FROM coldspots WHERE chrom = %s AND ((start <= %s) AND (%s <= end))"
+        self.cursor.execute(command, (chrom, variant_end, variant_start))
+        result = self.cursor.fetchall()
+        return result

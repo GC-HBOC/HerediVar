@@ -627,7 +627,7 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
     return was_successful, message, variant_id
 
 
-def validate_and_insert_cnv(chrom: str, start: int, end: int, sv_type: str, hgvs_strings: list, genome_build: str, conn: Connection, insert_variant = True):
+def validate_and_insert_cnv(chrom: str, start: int, end: int, sv_type: str, imprecise: int, hgvs_strings: list, genome_build: str, conn: Connection, insert_variant = True):
     message = ""
     was_successful = True
     variant_id = None
@@ -715,7 +715,7 @@ def validate_and_insert_cnv(chrom: str, start: int, end: int, sv_type: str, hgvs
     is_duplicate = conn.check_sv_duplicate(chrom, start, end, sv_type)
 
     if not is_duplicate and insert_variant:
-        variant_id, sv_variant_id = conn.insert_sv_variant(chrom, start, end, sv_type)
+        variant_id, sv_variant_id = conn.insert_sv_variant(chrom, start, end, sv_type, imprecise)
     else:
         sv_variant_id = conn.get_sv_variant_id(chrom, start, end, sv_type)
         variant_id = conn.get_variant_id_by_sv_variant_id(sv_variant_id)

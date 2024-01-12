@@ -48,8 +48,13 @@
                         Please provide the end position!
                     </div>
                 </div>
+
+                <div class="form-check sst">
+                    <input type="checkbox" class="form-check-input" id="imprecise" name="imprecise">
+                    <label class="form-check-label" for="imprecise">Coordinates imprecise</label>
+                </div>
             
-                <div class="form-group">
+                <div class="form-group sst">
                     <label for="sv_type" class="form-label">Type</label>
                     <select class="form-select" name="sv_type" id="sv_type" required>
                        {% for sv_type in sv_types %}

@@ -155,7 +155,7 @@ class AllAnnotations:
 
     task_force_protein_domain: Annotation = None
     task_force_protein_domain_source: Annotation = None
-    task_force_cold_spot: Annotation = None #### TODO!
+    coldspot: Annotation = None
 
     hexplorer: Annotation = None
     hexplorer_mut: Annotation = None
@@ -437,7 +437,7 @@ class Classification:
         else:
 
             cl_vcf = '~3B'.join(['classification~1Y' + str(self.selected_class), 
-                                 #'comment~1Y' + self.comment, 
+                                 'comment~1Y' + self.comment, 
                                  'date~1Y' + self.date, 
                                  'scheme~1Y' + self.scheme.display_name,
                                  'source~1Y' + "heredivar"]) # sep: ;
@@ -449,7 +449,7 @@ class Classification:
             header = {key: '##INFO=<ID=' + key + ',Number=1,Type=String,Description="The recent consensus classification by the VUS-task-force. Format: consensus_class|consensus_comment|submission_date|consensus_scheme|consensus_scheme_class|consensus_criteria_string. The consensus criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence+is_selecteds ">\n'}
         else:
             header = {'classification': '##INFO=<ID=classification,Number=1,Type=Integer,Description="The consensus classification from the VUS-task-force. Either 1 (benign), 2 (likely benign), 3 (uncertain), 4 (likely pathogenic) or 5 (pathogenic)">\n',
-                      #'comment': '##INFO=<ID=comment,Number=1,Type=String,Description="The comment of the VUS-task-force for the consensus classification">\n',
+                      'comment': '##INFO=<ID=comment,Number=1,Type=String,Description="The comment of the VUS-task-force for the consensus classification">\n',
                       'date': '##INFO=<ID=date,Number=1,Type=String,Description="The date when the consensus classification was submitted. FORMAT: %Y-%m-%d %H:%M:%S">\n',
                       'scheme': '##INFO=<ID=scheme,Number=1,Type=String,Description="The classification scheme which was used to classify the variant.">\n',
                       'source': '##INFO=<ID=source,Number=1,Type=String,Description="The source of the classification. Either heredivar or heredicare">\n'}
@@ -777,6 +777,11 @@ class AbstractVariant(AbstractDataclass):
     is_hidden: bool
     variant_type: str
 
+    chrom: str
+    pos: int
+    ref: str
+    alt: str
+
     consensus_classifications: Any = None # list of classifications
     user_classifications: Any = None # list of classifications
     heredicare_classifications: Any = None # list of heredicare center classifications
@@ -942,7 +947,7 @@ class AbstractVariant(AbstractDataclass):
             result = [g.symbol for g in result]
         if how == "best":
             result = [g.symbol.upper() for g in result]
-            preferred_genes = set(["ATM", "BARD1", "BRCA1", "BRCA2", "BRIP1", "CDH1", "CHEK2", "PALB2", "PTEN", "RAD51C", "RAD51D", "STK11", "TP53"])
+            preferred_genes = functions.get_preferred_genes()
             avail_preferred_genes = set(result) & preferred_genes
             if len(avail_preferred_genes) > 0:
                 result = list(avail_preferred_genes)
@@ -984,6 +989,23 @@ class AbstractVariant(AbstractDataclass):
             return None
 
         return result
+    
+    def get_sorted_consequences(self) -> list:
+        consequences = self.consequences
+        if consequences is None:
+            return None
+        
+        sortable_dict = {}
+        for consequence in consequences:
+            if consequence.transcript.source == 'ensembl':
+                sortable_dict[consequence.transcript.name] = consequence
+
+        if len(sortable_dict) == 0:
+            return None
+        
+        transcripts_sorted, consequences_sorted = functions.sort_transcript_dict(sortable_dict)
+
+        return consequences_sorted
 
     @abstractmethod
     def to_vcf(self, simple = False):
@@ -995,15 +1017,6 @@ class AbstractVariant(AbstractDataclass):
 
 @dataclass
 class Variant(AbstractVariant):
-    chrom: str = None
-    pos: int = None
-    ref: str = None
-    alt: str = None
-
-    def __post_init__(self):
-        if any([x is None for x in [self.chrom, self.pos, self.ref, self.alt]]):
-            raise ValueError("Some arguments are missing")
-
     def to_vcf(self, simple = False):
         # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
         headers = {} # collects all headers 
@@ -1079,25 +1092,141 @@ class Variant(AbstractVariant):
     def get_string_repr(self):
         return '-'.join([self.chrom, str(self.pos), self.ref, self.alt])
 
+
+@dataclass
+class Custom_Hgvs():
+    id: int
+    transcript: str
+    hgvs: str
+    hgvs_type: str
+
 @dataclass
 class SV_Variant(AbstractVariant):
     sv_variant_id: int = None
-    chrom: str = None
     start: int = None
     end: int = None
     sv_type: str = None
+    imprecise: bool = None
+
+    custom_hgvs: Any = None # a list of custom hgvs objects
+
+    overlapping_genes: Any = None # list of lists with: gene_id, gene name, min(start), max(end)
 
     def __post_init__(self):
-        if any([x is None for x in [self.sv_variant_id, self.chrom, self.start, self.end, self.sv_type]]):
+        if any([x is None for x in [self.sv_variant_id, self.chrom, self.start, self.end, self.sv_type, self.imprecise]]):
             raise ValueError("Some arguments are missing")
 
-    def to_vcf(self, simple=False):
-        pass # TODO!
+    def to_vcf(self, simple = False):
+        # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
+        headers = {} # collects all headers 
+        info = [] # collects info for the headers
+
+        # first add information for structural variants
+        headers["START"] = '##INFO=<ID=START,Number=1,Type=Integer,Description="Start position of the variant described in this record">'
+        info.append("START~1Y" + str(self.start))
+        headers["END"] = '##INFO=<ID=END,Number=1,Type=Integer,Description="End position of the variant described in this record">'
+        info.append("END~1Y" + str(self.end))
+        headers["SVTYPE"] = '##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">'
+        info.append("SVTYPE~1Y" + self.sv_type)
+        if self.imprecise:
+            headers["IMPRECISE"] = '##INFO=<ID=IMPRECISE,Number=0,Type=Flag,Description="Imprecise structural variation">'
+            info.append("IMPRECISE")
+
+        if not simple:
+            # standard annotations
+            new_header, new_info = self.annotations.to_vcf()
+            headers.update(new_header)
+            info.extend(new_info)
+
+            # external ids
+            external_id_groups = self.group_external_ids()
+            for external_id_group in external_id_groups:
+                add_title = True
+                new_info_collection = []
+                for external_id in external_id_groups[external_id_group]:
+                    new_info = external_id.to_vcf(add_title)
+                    new_header = external_id.get_header()
+                    headers.update(new_header)
+                    new_info_collection.append(new_info)
+                    add_title = False
+                if len(new_info_collection) > 0:
+                    info.append("~26".join(new_info_collection)) # sep &
+
+            # complex annotations
+            annotations_oi = [self.user_classifications,
+                              [self.get_recent_consensus_classification()],
+                              [self.automatic_classification],
+                              self.heredicare_classifications,
+                              [self.clinvar],
+                              self.heredicare_annotations,
+                              self.consequences, 
+                              self.assays, 
+                              self.literature
+                            ]
+            for annot in annotations_oi:
+                if annot is not None:
+                    if len(annot) > 0:
+                        if annot[0] is not None:
+                            new_info = functions.process_multiple(annot)
+                            info.append(new_info)
+                            new_header = annot[0].get_header()
+                            headers.update(new_header)
+
+        elif simple:
+            # only collect consensus classification
+            annot = self.get_recent_consensus_classification()
+            if annot is not None:
+                new_info = annot.to_vcf(simple = simple)
+                info.append(new_info)
+                new_header = annot.get_header(simple = simple)
+                headers.update(new_header)
+            else:
+                annot = self.get_most_recent_heredicare_consensus_classification()
+                if annot is not None:
+                    new_info = annot.to_vcf(simple = simple)
+                    info.append(new_info)
+                    new_header = annot.get_header(simple = simple)
+                    headers.update(new_header)
+
+        # prepate complete vcf line
+        #"#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO
+        info = '~3B'.join(info) # sep: ;
+        info = functions.encode_vcf(info)
+        if info.strip() == '':
+            info = '.'
+        variant_vcf = '\t'.join((self.chrom, str(self.pos), str(self.id), self.ref, self.alt, '.', '.', info))
+        #print(headers)
+        #print(variant_vcf)
+        return headers, variant_vcf
 
     def get_string_repr(self):
         return '-'.join([self.chrom, str(self.start), str(self.end), self.sv_type])
+    
+    def get_custom_hgvs(self, hgvs_type):
+        result = []
+        for custom_hgvs in self.custom_hgvs:
+            if custom_hgvs.hgvs_type == hgvs_type:
+                result.append(custom_hgvs)
+        return result
 
-
+    def get_breakpoint_genes(self, how = "object"):
+        result = []
+        for overlapping_gene in self.overlapping_genes:
+            gene_start = overlapping_gene[2]
+            gene_end = overlapping_gene[3]
+            if self.start in range(gene_start, gene_end) or self.end in range(gene_start, gene_end):
+                result.append(overlapping_gene)
+        if how == 'string':
+            result = [x[1] for x in result]
+        return result
+    
+    def get_genes(self, how = 'object'):
+        if how == 'string':
+            return [x[1] for x in self.overlapping_genes]
+        if how == 'preferred':
+            return functions.get_preferred_genes()
+        return self.overlapping_genes
+            
 
 @dataclass
 class import_request:
