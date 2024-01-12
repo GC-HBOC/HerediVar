@@ -1,16 +1,14 @@
 import sys
 from os import path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-from common.db_IO import Connection
-import common.paths as paths
+from src.common.db_IO import Connection
+import src.common.paths as paths
 import gzip
-import common.functions as functions
+import src.common.functions as functions
 import re
 import xml.etree.ElementTree as ET
 
 conn = Connection(['db_admin'])
-
-
 
 
 if __name__ == '__main__':
@@ -456,10 +454,10 @@ if __name__ == '__main__':
     #conn.insert_annotation_type("gnomad_af", "Frequency of the alternate allele in samples", "float", "v3.1.2_GRCh38", "2021-10-22") 
     
 
-    
+    """
     ## init VUS task force protein domains table (no download for this one, it was sent by mail)
     print("initializing VUS-Task-Force protein domain table")
-    task_force_protein_domains_file = open(paths.task_force_protein_domains_path)
+    task_force_protein_domains_file = open(paths.task_force_protein_domains_path, 'r')
     for line in task_force_protein_domains_file:
         line = line.strip()
         if line.startswith('#') or line == '':
@@ -485,6 +483,38 @@ if __name__ == '__main__':
         gene_id = conn.get_gene_id_by_symbol(parts[0])
 
         conn.insert_task_force_protein_domain(gene_id, chromosome, start, end, description, source)
+    """
+
+    ## init coldspots
+    print("initializing coldspot table")
+    coldspot_file = open(paths.coldspots_path, 'r')
+
+    for line in coldspot_file:
+        line = line.strip('\n')
+        if line.startswith('#') or line == '':
+            continue
+
+        parts = line.split('\t')
+
+        chrom = parts[0]
+        chrom, chrom_valid = functions.curate_chromosome(chrom)
+        start = parts[1]
+        start, start_valid = functions.curate_position(start)
+        end = parts[2]
+        end, end_valid = functions.curate_position(end)
+        if not chrom_valid or not start_valid or not end_valid:
+            raise ValueError("Invalid data encountered in coldspot.bed file:" + str(line))
+        source = parts[8]
+
+        if end < start:
+            temp = end
+            end = start
+            start = temp
+
+        conn.insert_coldspot(chrom, start, end, source)
+
+
+    coldspot_file.close()
     
 
 
