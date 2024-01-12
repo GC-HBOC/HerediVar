@@ -19,7 +19,7 @@ import os
 def get_default_job_config():
     job_config = {
         # heredicare annotations
-        'do_heredicare': False,
+        'do_heredicare': True,
 
         # external programs
         'do_phylop': True,
@@ -49,6 +49,7 @@ def get_default_job_config():
 
         # additional annotations
         'do_taskforce_domains': True,
+        'do_coldspots': True,
         'do_litvar': True,
         'do_auto_class': True
     }
@@ -76,7 +77,8 @@ def get_jobs(job_config):
         task_force_protein_domain_job.task_force_protein_domain_job(job_config),
         litvar2_job.litvar2_job(job_config), # must be called after vep_jobs & annotate from vcf job
         heredicare_job.heredicare_job(job_config),
-        maxentscan_job.maxentscan_job(job_config)
+        maxentscan_job.maxentscan_job(job_config),
+        coldspots_job.coldspots_job(job_config)
     ]
     return all_jobs
 
