@@ -37,24 +37,36 @@ class litvar2_job(Job):
         if not self.job_config['do_litvar']:
             return status_code, err_msg
         
-        rsid_annotation_type_id = conn.get_most_recent_annotation_type_id("rsid")
+        variant = conn.get_variant(variant_id, 
+                    include_annotations = False, 
+                    include_consensus = False, 
+                    include_user_classifications = False, 
+                    include_heredicare_classifications = False, 
+                    include_automatic_classification = False,
+                    include_clinvar = False, 
+                    include_consequences = True, 
+                    include_assays = False, 
+                    include_literature = False,
+                    include_external_ids = True
+                )
+        
         litvar_pmids = None
 
-        rsid = conn.get_variant_annotation(variant_id, rsid_annotation_type_id)
-        if rsid is not None:
-            rsid = "rs" + str(rsid[0][3])
-            litvar_pmids = self.query_litvar(rsid)
-            if litvar_pmids is None:
-                rsid = None # hack to trigger search using hgvs if rsid did not yield a result
+        rsids = variant.get_external_ids('rsid')
+        if rsids is not None:
+            for rsid in rsids:
+                rsid = "rs" + str(rsid.strip('rs'))
+                litvar_pmids = self.query_litvar(rsid)
+                if litvar_pmids is not None:
+                    break
 
 
-        if rsid is None:
-            consequences = conn.get_variant_consequences(variant_id)
+        if litvar_pmids is None:
+            consequences = variant.get_sorted_consequences()
             if consequences is not None:
-                consequences = conn.order_consequences(consequences)
                 for consequence in consequences: # search for the first consequence which has a litvar response in order of preferred transcript
-                    gene = consequence[7]
-                    hgvs = consequence[1] # hgvsc
+                    gene = consequence.transcript.gene.symbol
+                    hgvs = consequence.hgvs_c # hgvsc
                     if hgvs is None or gene is None: # no hgvsc -> skip
                         continue
                     
