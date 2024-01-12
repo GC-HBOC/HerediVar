@@ -4,7 +4,7 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 import argparse
 from gc import collect
 from ntpath import join
-import common.functions as functions
+import src.common.functions as functions
 
 
 parser = argparse.ArgumentParser(description="")

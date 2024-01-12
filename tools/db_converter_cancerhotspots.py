@@ -2,7 +2,7 @@ from os import path
 import sys
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 import argparse
-import common.functions as functions
+import src.common.functions as functions
 import json
 
 

@@ -3,7 +3,7 @@ from os import path
 import sys
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 import argparse
-import common.functions as functions
+import src.common.functions as functions
 
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("-i", "--input",  default="", help="path to input csv file will default to stdin")
