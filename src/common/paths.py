@@ -230,6 +230,7 @@ elif webapp_env == 'prod':
     os.environ['PERL5LIB'] = vep_path + "/Bio/:" + vep_path + "/cpan/lib/perl5/:" + os.environ.get('PERL5LIB', '')
     ngs_bits_path = joinpaths(toolsdir, "ngs-bits/bin")
     htslib_path = joinpaths(toolsdir, "htslib-1.16")
+    samtools_path = joinpaths(toolsdir, "samtools/samtools")
 
 
 
