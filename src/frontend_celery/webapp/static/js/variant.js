@@ -258,7 +258,7 @@ function setup_igv(chrom, start, end, variant_id) {
                     "name": "Classified structural variants",
                     "type": "variant",
                     "format": "vcf",
-                    "url": "/download/vcf/classified_sv",
+                    "url": "/download/vcf/classified?variant_type=sv",
                     "indexed": false,
                     "autoHeight": true,
                     "color": (variant) => {
@@ -274,7 +274,7 @@ function setup_igv(chrom, start, end, variant_id) {
                     "name": "Classified variants",
                     "type": "variant",
                     "format": "vcf",
-                    "url": "/download/vcf/classified",
+                    "url": "/download/vcf/classified?variant_type=small",
                     "indexed": false,
                     "autoHeight": true,
                     "color": (variant) => {

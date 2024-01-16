@@ -565,8 +565,9 @@ def decode_html(text):
 
 
 # a helper function for the generation of vcf lines
-def process_multiple(list_of_objects, sep = '~26', do_prefix = True):
+def process_multiple(list_of_objects, sep = '~26', do_prefix = True) -> str:
     infos = [] # collect info vcfs in here
+    #print(list_of_objects)
     for obj in list_of_objects:
         new_info = obj.to_vcf(prefix = do_prefix)
         infos.append(new_info)
@@ -827,7 +828,7 @@ def get_sv_variant_sequence(chrom, start, end, sv_type):
             alt = "<DEL>"
     
     elif sv_type == 'DUP' or sv_type == 'INV':
-        sequence, region = get_sequence(chrom, start, end)
+        sequence, region = get_sequence(chrom, start, end) ## never put the full sequence
 
         ref = sequence[0]
         alt = "<" + sv_type +">"

@@ -48,7 +48,7 @@
         </svg>
         {% else %}
         {% if class == "4M" %}
-        <svg name="consensus_class_svg" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" viewBox="2.469 1.934 10 12" preserveAspectRatio="xMidYMid meet" fill="currentColor">
+        <svg name="consensus_class_svg" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" viewBox="2.469 1.934 10 10" preserveAspectRatio="xMidYMid meet" fill="currentColor">
             <!--<path transform="translate(-4,10) scale(1.3)" d="M5.295 11V5.995H7V5H2.403v.994h1.701V11h1.19zm3.397 0V7.01h.058l1.428 3.239h.773l1.42-3.24h.057V11H13.5V5.001h-1.2l-1.71 3.894h-.039l-1.71-3.894H7.634V11h1.06z"/>-->
             <text class="classM_text" x="3.9" y="8.8">4M</text>
         </svg>
@@ -446,7 +446,7 @@
 {% endmacro %}
 
 
-{% macro draw_paginated_variant_table(pagination, variants, sort_bys, page_sizes, allowed_user_classes, allowed_consensus_classes, allowed_automatic_classes, annotation_types, lists=none) %}
+{% macro draw_paginated_variant_table(pagination, variants, sort_bys, page_sizes, allowed_user_classes, allowed_consensus_classes, allowed_automatic_classes, annotation_types, allowed_variant_types, lists=none) %}
 <div id="tabnav-head" class="row align-items-end  nsl nsr">
     <div class="col nopad">{{ pagination.links }}</div>
 
@@ -484,8 +484,21 @@
                                placeholder="chr16-23608020-C-T; chr17-43045752-43045852-DUP; ...." class="form-control height_zero"
                                >{{ request.args.get('variants', '') }}</textarea>
                     </div>
+
+                    <div class="form-group sst">
+                        {% set selected_variant_types = request.args.getlist('variant_type') %}
+                        <label for="variant_type-select" class="form-label">Variant types</label>
+                        <div id="variant_type-select" class="d-flex">
+                            {% for variant_type in allowed_variant_types %}
+                                <div class="form-check d-flex bsr align-items-center">
+                                    <input class="form-check-input ssr" type="checkbox" value="{{variant_type}}" id="variant_type_{{variant_type}}" name="variant_type" {% if variant_type in selected_variant_types %}checked{% endif %}>
+                                    <label class="form-check-label" for="variant_type_{{variant_type}}">{{variant_type.replace('_', ' ')}}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
         
-                    <div class="form-group">
+                    <div class="form-group sst">
                         <label for="genes" class="form-label">Genes</label>
                         <textarea type="text" name="genes" id="genes"
                                placeholder="BRCA1; BARD1; ..." class="form-control height_zero"
@@ -708,8 +721,9 @@
         <td class="visually_hidden">{{ variant.id }}</td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="text_align_center clickable nowrap">{{ variant.chrom }}</td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable nowrap">
+            {% if variant.imprecise %}{{draw_exclamation_mark(variant.variant_type + " variant with imprecise position!")}}{% endif %}
             {% if variant.variant_type == 'sv' and variant.alt[0] == '<' %}
-                {% if variant.imprecise %}{{draw_exclamation_mark("Structural variant with imprecise position")}}{% endif %}{{ variant.start }} - {{ variant.end }}
+                {{ variant.start }} - {{ variant.end }}
             {% else %}
                 {{ variant.pos }}
             {% endif %}
@@ -750,9 +764,9 @@
         </td>
         <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss nowrap">
             {% if variant.variant_type == 'sv' %}
-                {% set all_custom_hgvs = variant.get_custom_hgvs(hgvs_type = 'c') %}
+                {% set all_custom_hgvs = variant.get_custom_hgvs(hgvs_type = 'p') %}
                 {% if all_custom_hgvs | length > 0 %}
-                    {% for custom_hgvs in variant.get_custom_hgvs(hgvs_type = 'p') %}
+                    {% for custom_hgvs in all_custom_hgvs %}
                         <div class="fit_content Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ custom_hgvs.hgvs }}">{{ custom_hgvs.hgvs }}</div>
                     {% endfor %}
                 {% else %}
@@ -970,7 +984,7 @@
 
 {% macro draw_exclamation_mark(tooltip) %}
 <span class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="{{tooltip}}">
-    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="red" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="red" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
         <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
     </svg>
 </span>
@@ -1157,8 +1171,13 @@
                         <tr>
                             <td class="width_small li-label">Variant</td>
                             <td > 
-                                <div class="break_text_all">
-                                    {{ variant.get_string_repr() }}
+                                <div class="break_text_all d-flex align-items-center">
+
+                                    {% if variant.imprecise %} <span class="ssr">{{draw_exclamation_mark(variant.variant_type + " variant with imprecise position!")}}</span> {% endif %}
+                                    <span>
+                                        {{ variant.get_string_repr() }}
+                                    </span>
+                                    
                                 </div>
                             </td>
                         </tr>

@@ -27,8 +27,7 @@ if webapp_env == 'dev':
     toolsdir = joinpaths(workdir, "tools")
     resources_dir = joinpaths(workdir, 'resources')
     logs_dir = joinpaths(workdir, 'logs')
-    classified_variants_dir = joinpaths(workdir, 'classified_variants')
-    classified_structural_variants_dir = joinpaths(workdir, 'classified_structural_variants')
+    # classified variants folders are calculated in tasks.py
     #report_dir = joinpaths(workdir, "") #'downloads/consensus_classification_reports/'
 
     # webapp logs path
@@ -216,7 +215,7 @@ elif webapp_env == 'prod':
     toolsdir = joinpaths(workdir, "tools")
     resources_dir = joinpaths(workdir, 'resources')
     logs_dir = joinpaths(workdir, 'logs')
-    classified_variants_dir = joinpaths(workdir, 'classified_variants')
+    #classified_variants_dir = joinpaths(workdir, 'classified_variants')
     #report_dir = joinpaths(workdir, "") #'downloads/consensus_classification_reports/'
 
     # webapp logs path

@@ -9,11 +9,11 @@
 <h1 class="bst"> {% block title %} Downloads {% endblock %} </h1>
 
 <div>
-    <a class="btn btn-primary" href="{{url_for('download.classified_variants')}}">Download all classified variants</a>
+    <a class="btn btn-primary" href="{{url_for('download.classified_variants', variant_type='small')}}">Download all classified variants</a>
 </div>
 
 <div class="bst">
-    <a class="btn btn-primary" href="{{url_for('download.classified_structural_variants')}}">Download all classified structural variants</a>
+    <a class="btn btn-primary" href="{{url_for('download.classified_variants', variant_type='sv')}}">Download all classified structural variants</a>
 </div>
 
 {% endblock %}

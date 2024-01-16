@@ -719,8 +719,9 @@ def validate_and_insert_cnv(chrom: str, start: int, end: int, sv_type: str, impr
     else:
         sv_variant_id = conn.get_sv_variant_id(chrom, start, end, sv_type)
         variant_id = conn.get_variant_id_by_sv_variant_id(sv_variant_id)
-        if variant_id is None: # variant id is missing for some reason...
-            variant_id = conn.insert_dummy_sv_variant(sv_variant_id, chrom, start)
+        if variant_id is None: # variant id is missing for some reason... add it afterwards -- failsave
+            ref, alt, pos = functions.get_sv_variant_sequence(chrom, start, end, sv_type)
+            variant_id = conn.insert_variant(chrom, pos, ref, alt, None,None,None,None,None, 'sv', sv_variant_id)
         message = "The variant is already in database."
 
     conn.add_hgvs_strings_sv_variant(sv_variant_id, hgvs_strings) # always update the hgvs strings independent of duplicate or not
@@ -805,7 +806,11 @@ def annotate_variant(self, annotation_queue_id, job_config):
 def generate_consensus_only_vcf_task(self):
     """Background task for generating consensus only vcf"""
     from webapp.io.download_routes import generate_consensus_only_vcf
-    generate_consensus_only_vcf()
+    conn = Connection()
+    variant_types = conn.get_enumtypes("variant", "variant_type")
+    for variant_type in variant_types:
+        generate_consensus_only_vcf([variant_type])
+    conn.close()
 
 
 def send_mail(subject, sender, recipient, text_body):

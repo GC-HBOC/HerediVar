@@ -107,11 +107,16 @@
             <li>Added variant search which allows the user to search directly for a specific variant using this format: chrom-pos-ref-alt OR chrom-start-end-sv_type in case of structural variants</li>
             <li>Changed External ID search to overall ID search. It now also allows to search for heredivar variant ids.</li>
             <li>Update search help</li>
+            <li>Added variant type search option</li>
+            <li>Updated ClinVar to v. 20240207</li>
         </ul>
         Bugfixes:
         <ul>
             <li>Fixed tooltips in browse variant table</li>
             <li>The annotation service would fail when the variant does not have a dbsnp rsid</li>
+            <li>Fixed a bug that increased the size of the consensus classification label for class 4M</li>
+            <li>The clinvar variation was in the downloaded vcf files twice. Removed one of the copies. The clinvar variation id info is now called "clinvar"</li>
+            <li>In rare cases ClinVar submissions are missing which would result in an error when downloading the vcf file. In such cases the clinvar_submissions info in the downloaded vcf file will be set to None</li>
         </ul>
         Known issues:
         <ul>

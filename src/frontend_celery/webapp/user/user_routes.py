@@ -61,6 +61,7 @@ def my_lists():
     allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
     allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
     allowed_automatic_classes = functions.order_classes(conn.get_enumtypes('automatic_classification', 'classification_splicing'))
+    allowed_variant_types = ['small_variants', 'structural_variant']
     annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
     annotation_types = preprocess_annotation_types_for_search(annotation_types)
 
@@ -262,6 +263,8 @@ def my_lists():
 
 
     if view_list_id is not None:
+        variant_strings = extract_variants(request)
+        variant_types = extract_variant_types(request, allowed_variant_types)
         genes = extract_genes(request)
         ranges = extract_ranges(request)
         consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request, allowed_consensus_classes)
@@ -297,7 +300,9 @@ def my_lists():
                 include_heredicare_consensus = include_heredicare_consensus,
                 external_ids = external_ids,
                 cdna_ranges = cdna_ranges,
-                annotation_restrictions = annotation_restrictions
+                annotation_restrictions = annotation_restrictions,
+                variant_strings = variant_strings,
+                variant_types = variant_types
             )
     #print(variants)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
@@ -312,7 +317,8 @@ def my_lists():
                             allowed_user_classes = allowed_user_classes,
                             allowed_consensus_classes = allowed_consensus_classes,
                             allowed_automatic_classes = allowed_automatic_classes,
-                            annotation_types = annotation_types
+                            annotation_types = annotation_types,
+                            allowed_variant_types = allowed_variant_types
                         )
 
 

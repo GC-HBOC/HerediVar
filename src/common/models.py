@@ -561,19 +561,19 @@ class Clinvar:
 
     def get_header(self):
         headers = {'clinvar_submissions': '##INFO=<ID=clinvar_submissions,Number=.,Type=String,Description="An & separated list of clinvar submissions. Format:interpretation|last_evaluated|review_status|submission_condition|submitter|comment">\n',
-                   'clinvar_summary': '##INFO=<ID=clinvar_summary,Number=.,Type=String,Description="summary of the clinvar submissions. FORMAT: review_status:interpretation_summary">\n',
-                   'variation_id': '##INFO=<ID=variation_id,Number=1,Type=Integer,Description="The ClinVar variation id of the variant.">\n'
+                   'clinvar_summary': '##INFO=<ID=clinvar_summary,Number=.,Type=String,Description="summary of the clinvar submissions. FORMAT: review_status:interpretation_summary">\n'
                    }
         return headers
 
     def to_vcf(self, prefix = True):
-        submissions_vcf = functions.process_multiple(self.submissions)
-        variation_id_vcf = str(self.variation_id)
+        if self.submissions is not None:
+            submissions_vcf = functions.process_multiple(self.submissions)
+        else:
+            submissions_vcf = "clinvar_submissions~1YNone"
         summary_vcf = self.review_status + ':' + self.interpretation_summary
         if prefix:
-            variation_id_vcf =  'variation_id~1Y' + variation_id_vcf
             summary_vcf = 'clinvar_summary~1Y' + summary_vcf
-        return '~3B'.join([variation_id_vcf, summary_vcf, submissions_vcf])
+        return '~3B'.join([summary_vcf, submissions_vcf])
 
 
 @dataclass
@@ -781,6 +781,8 @@ class AbstractVariant(AbstractDataclass):
     pos: int
     ref: str
     alt: str
+
+    imprecise: bool = False
 
     consensus_classifications: Any = None # list of classifications
     user_classifications: Any = None # list of classifications
@@ -1106,7 +1108,6 @@ class SV_Variant(AbstractVariant):
     start: int = None
     end: int = None
     sv_type: str = None
-    imprecise: bool = None
 
     custom_hgvs: Any = None # a list of custom hgvs objects
 

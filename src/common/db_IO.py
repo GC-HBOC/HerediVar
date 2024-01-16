@@ -251,13 +251,16 @@ class Connection:
         self.cursor.execute(command, (variant_id, annotation_type_id, value, value))
         self.conn.commit()
 
-    def insert_variant(self, chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, user_id):
+    def insert_variant(self, chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, user_id, variant_type = 'small', sv_variant_id = None):
         ref = ref.upper()
         alt = alt.upper()
-        command = "INSERT INTO variant (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, variant_type) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'small')"
-        self.cursor.execute(command, (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt))
+        command = "INSERT INTO variant (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, variant_type, sv_variant_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, variant_type, sv_variant_id))
         self.conn.commit()
-        variant_id = self.get_variant_id(chr, pos, ref, alt)
+        if variant_type == 'small':
+            variant_id = self.get_variant_id(chr, pos, ref, alt)
+        elif variant_type == 'sv':
+            variant_id = self.get_variant_id_by_sv_variant_id(sv_variant_id)
         return variant_id # return the annotation_queue_id of the new variant
 
     def insert_sv_variant(self, chrom, start, end, sv_type, imprecise):
@@ -271,10 +274,11 @@ class Connection:
         sv_variant_id = self.get_sv_variant_id(chrom, start, end, sv_type)
 
         # insert data into variant table to generate the variant_id
-        command = "INSERT INTO variant (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, variant_type, sv_variant_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'sv', %s)"
-        self.cursor.execute(command, (chrom, pos, ref, alt, None,None,None,None, sv_variant_id))
-        self.conn.commit()
-        variant_id = self.get_variant_id_by_sv_variant_id(sv_variant_id)
+        variant_id = self.insert_variant(chrom, pos, ref, alt, None,None,None,None,None, 'sv', sv_variant_id)
+        #command = "INSERT INTO variant (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, variant_type, sv_variant_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'sv', %s)"
+        #self.cursor.execute(command, (chrom, pos, ref, alt, None,None,None,None,None, 'sv', sv_variant_id))
+        #self.conn.commit()
+        #variant_id = self.get_variant_id_by_sv_variant_id(sv_variant_id)
         return variant_id, sv_variant_id
     
 
@@ -738,7 +742,7 @@ class Connection:
     def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, 
                                  ranges = None, genes = None, consensus = None, user = None, automatic_splicing = None, automatic_protein = None, 
                                  hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, 
-                                 include_heredicare_consensus = False, variant_strings = None):
+                                 include_heredicare_consensus = False, variant_strings = None, variant_types = None):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -753,6 +757,15 @@ class Connection:
             new_constraints = ' OR '.join(new_constraints)
             new_constraints = functions.enbrace(new_constraints)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if variant_types is not None and len(variant_types) > 0:
+            for variant_type in variant_types:
+                if 'small' in variant_type:
+                    actual_information += ('small', )
+                elif 'struct' in variant_type:
+                    actual_information += ('sv',)
+            placeholders = self.get_placeholders(len(actual_information))
+            postfix = self.add_constraints_to_command(postfix, "variant_type IN " + placeholders)
+
         if cdna_ranges is not None and len(cdna_ranges) > 0:
             new_constraints = []
             for cdna_range in cdna_ranges:
@@ -1018,7 +1031,7 @@ class Connection:
             offset = (page - 1) * page_size
             command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
-        print(command % actual_information)
+        #print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 
