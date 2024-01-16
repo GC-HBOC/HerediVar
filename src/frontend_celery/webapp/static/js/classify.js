@@ -319,9 +319,9 @@ $(document).ready(function() {
     $('#automatic_classification_button').click(function() {
         preselect_criteria_automatic_classification();
     });
-    $('.criterium_option').click(function() {
-        select_criterium(this.parentElement);
-    })
+    $('#select_criterium_check').on('change', function() {
+        select_criterium(this);
+    });
 
     add_default_for_important_information()
 });
@@ -1235,6 +1235,7 @@ function add_functionality_to_table() {
 ///////////// helper functions /////////////
 
 function select_criterium(obj) {
+    console.log(obj)
     const criterium_id = obj.getAttribute('criterium_id') // this is the criterium which we want to select
     const criterium_button = document.getElementById(criterium_id)
 
