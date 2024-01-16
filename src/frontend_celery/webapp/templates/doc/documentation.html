@@ -24,6 +24,8 @@
             <a class="nav-link ms-3 my-1" href="#item-1-4">Classify a variant</a>
           </nav>
           <a class="nav-link" href="#item-2">User variant lists</a>
+          <a class="nav-link" href="#item-svs">Structural variants</a>
+          <a class="nav-link" href="#item-download">Download data</a>
           <a class="nav-link" href="#item-3">User management</a>
           <nav class="nav nav-pills flex-column">
             <a class="nav-link ms-3 my-1" href="#item-3-1">Create a new user</a>
@@ -38,7 +40,7 @@
       <div data-bs-spy="scroll" data-bs-target="#navbar-example3" data-bs-smooth-scroll="true" class="scrollspy-example-2" tabindex="0">
 
         <div id="item-0">
-          <h4>General Thoughts</h4>
+          <h4>General Thoughts & Conventions</h4>
           <p>
             There are four types of users in HerediVar:
             <ol>
@@ -48,14 +50,17 @@
                 <li>Anonymous user</li>
                 <li>Account manager</li>
             </ol>
-            An anonymous user can not view or edit any variant information on HerediVar. Anonymous users must ask a superuser to create an account for them. 
+            An anonymous user can not view or edit any variant information on HerediVar. Anonymous users must ask an account manager to create an account for them. 
             As the name implies, the read only user can only view information. He can neither insert variants nor classify them. 
             The standard user is allwed to view and edit information on HerediVar and the superuser has access to the admin dashboard
-            which allws him to import variants from HerediCare, reannotate all variants at once and create users. <br>
-            The account manager is a special role which allows the user to create and modify user data.
+            which allows him to import variants from HerediCare, reannotate all variants at once and do multiple other administrative tasks. <br>
+            The account manager is a special role which allows the user to create and modify user data. <br>
             <br>
-            It is very easy to differentiate external links from internal ones: Whenever a link is displayed like {{ macros.external_link('this', '#') }} 
-            it references an external website and if a link is shown like <a href="#">this</a> it references an internal page.
+            Conventions for links: It is very easy to differentiate external links from internal ones: Whenever a link is displayed like {{ macros.external_link('this', '#') }} 
+            it references an external website and if a link is shown like <a href="#">this</a> it references an internal page. <br>
+            <br>
+            It is very important to understand that each user is able to insert one classification for each variant - classification scheme combination. In addition,
+            a superuser can insert one consensus classification for each variant. Consensus classifications are always superseded by the newest consensus classification.
           </p>
         </div>
 
@@ -67,9 +72,13 @@
         <div id="item-1-1">
           <h5>Insert variants</h5>
           <p>
-            There are two ways to insert variants. The most common one is to import variants from HerediCare. However, only superusers can do that. Standard users can 
-            insert variants through the <a href="{{ url_for('variant.create')}}">create variant page</a>. New variants are automatically added to the annotation queue
-            and processed once a worker is ready to process it. The status of the annotation can be seen when navigating to the variant details page.
+            There are two ways to insert small variants. The most common one is to import variants from HerediCare. However, only superusers can do that. Standard users can 
+            insert variants through the <a href="{{ url_for('variant.create')}}">create variant page</a> for small variants. New variants are automatically added to the annotation queue
+            and processed once a worker is ready to process it. The status of the annotation can be seen when navigating to the variant details page. <br>
+            <br>
+            HerediVar also supports structural variants, however, in a limited manner. Thus, it is currently only possible to insert deletions, duplications and inversions.
+            These must be inserted manually through the <a href="{{ url_for('variant.create_sv') }}"> create structural variant page</a>. Although they generally behave identical compared
+            to a small variant, they are currently not annotated with meta information.
           </p>
         </div>
         <div id="item-1-2">
@@ -88,7 +97,7 @@
         <div id="item-1-3">
           <h5>The variant details page</h5>
           <p>
-            This page displays all annotations of a variant. The top headline shows the variant and its most recent HediVar consensus classification. There are six types of
+            This page displays all annotations of a variant. The top headline shows the variant and its most recent consensus classification by the VUS task-force. There are multiple types of
             consensus classifications:
             <div class="d-flex">
               {% for classification in ['-', '1', '2', '3-', '3', '3+', '4M', '4', '5'] %}
@@ -104,17 +113,18 @@
               <li>3: uncertain</li>
               <li>3+: uncertain with tendency to pathogenic</li>
               <li>4: likely pathogenic</li>
+              <li>4M: modifier</li>
               <li>5: pathogenic</li>
-              <li>M: modifier</li>
             </ul>
             If the consensus classification symbol shows a red download icon like so:
             <div class="d-flex">
               <div class="ssr">{{macros.render_consensus_classification_label('2', 'heredicare') }}</div>
             </div>
-            It means that the consensus classification was imported from heredicare and there is no consensus classification available for this variant which was made on HerediVar. <br>
+            It means that the consensus classification was imported from HerediCare and there is no consensus classification available for this variant which was made on HerediVar. <br>
             <div class="bsb"></div>
             Right below the headline one can find status information about the variant. The first pill shows the status of the annotation. It could be queued, processing, done or erroneous.
-            Next to the annotation status pill there is the clinvar submission status. This shows if the variant was already uploaded to ClinVar from HerediVar. When you click the "gear" button
+            Next to the annotation status pill there is the clinvar submission status. This shows if the variant was already uploaded to ClinVar from HerediVar. There is one additional, optional 
+            status pill which sais "HIDDEN" if the variant is hidden. When you click the "gear" button
             the website presents options on what to do with the variant. <br>
             The main body of the page displays visualizations, classifications and annotations which are organized in multiple tabs. The tabs contain the following information:
             <ul>
@@ -124,12 +134,12 @@
               <li>Assays: Functional, splicing, etc. assays. Add a new assay by clicking the gear button at the top.</li>
               <li>Literature: Papers annotated by VEP, TP53db and litvar2</li>
               <li>
-                IGV: The IGV genome browser. The first track shows the variant itself. The second track shows all classified variants (click on them to find a link to the variant details page). The third track
+                IGV: The IGV genome browser. The first track shows the variant itself. The second and third track show all classified variants (click on them to find a link to the variant details page). The fourth track
                 shows the ensembl transcripts. Red transcripts are MANE select or MANE plus clinical transcripts, orange ones are ensembl canonical and dark blue ones are gencode basic transcripts. Other transcripts
                 which do not satisfy the aforementioned criteria are not shown.
               </li>
             </ul>
-            Remember that the annotations are not shown if the variant is not known to the respective database. 
+            Remember that annotations are not shown if the variant is unknown to the respective database. 
           </p>
         </div>
         <div id="item-1-4">
@@ -148,12 +158,12 @@
             of interest. <br>
             Finally, select the final classification and leave a comment possibly referencing literature to complete the classification. <br>
             Note that each user can only have one user classification per variant and scheme, but they can be edited anytime. <br>
-            Consensus classifications work just alike. The only difference is that the number of users is displayed next to the criterium like so:
+            Consensus classifications work just alike. The only difference is that the number of users who chose that criterium is displayed next to it like so:
             <div>
               <img src="/static/img/documentation/classify_02.PNG" alt="missing img"  width="100%">
             </div>
             The selected criterium, "PS1" was chosen by two HerediVar users to be important for this variant. The actual user input is shown in the "User selections" table. When you click the copy symbol
-            it is possible to quickly copy the data and strength of that user. Now you only have to select the criterium by clicking the checkbox next to the name of the criterium.
+            it is possible to quickly copy this users selection and evidence. Then, simply select the criterium using the dropdown menu next to the criterium name.
           </p>
         </div>
 
@@ -196,7 +206,62 @@
         </div>
         
         
+        <div id="item-svs">
+          <h4>Structural variants</h4>
+          <p>
+            Structural variants can only be inserted using the <a href="{{ url_for('variant.create_sv') }}">create structural variants page</a>. They generally behave identical to a small variant, but are not annotated by
+            the annotation service. Also, the interpretation of the information in the browse variants table differs slightly:
+            <div>
+              <img src="/static/img/documentation/structural_variants_01.PNG" alt="missing img"  width="100%">
+            </div>
+            The differences are:
+            <ul>
+              <li>If a deletion is longer than 1000 bp, the POS column contains the start and end position of the structural variant separated by a dash (-). 
+                The sequence of duplications and inversions is never displayed, independent of the length of the variant.</li>
+              <li>The POS column will show a red triangle if the position is imprecise</li>
+              <li>The HGVS c. and p. columns contain the hgvs strings that were provided by the user upon creation of the variant. They are not ordered in any way nor are they curated or correspond to the genes shown in the gene column</li>
+              <li>The GENE column shows only genes that overlap the breakpoints of the structural variants</li>
+            </ul>
+            The variant details page of structural variants is also similar to that of small variants with the only difference being that the variant banner at the top shows all genes that overlap the region of the structural variant.
+            These are color coded:
+            <ul>
+              <li>blue: gene overlaps breakpoint</li>
+              <li>bold: VUS-Task-Force important gene</li>
+              <li>black: non breakpoint overlapping gene</li>
+            </ul>
+          </p>
+        </div>
 
+
+        <div id="item-download">
+          <h4>Download data</h4>
+          <p>
+            Anonymous users can download all classified variants and all classified structural variants in vcf <a href="{{ url_for('main.downloads') }}">here</a>. They will only see the consensus classifications by the VUS-task-force along
+            with some meta information. Most of this data is also publically available through ClinVar. <br>
+            <br>
+            Registered users are able to download a vcf file for one variant through the respective variant details page by clicking the gear button and selecting "Export to VCF". This file will contain all information that are available
+            for this variant. Including all annotations and classifications. <br>
+            <br>
+            If a registered user wants to download more than one variant in a single file they have to collect relevant variants in a user defined list (see previous section on how to create one). Then, simply click the "Export list to VCF"
+            button at the bottom right of the list details page.  Note that structural variants and small variants can be mixed in this case. <br>
+            <br>
+            In rare cases ClinVar submissions are missing although there is a ClinVar summary available. In such cases the clinvar_submissions info in the downloaded vcf file will be set to None. This is usually because of erroneous data hosted
+            by ClinVar and is often fixed by updating ClinVar.<br>
+            <br>
+            In any case, downloaded VCF files are encoded using the url encoding (<a href="https://en.wikipedia.org/wiki/Percent-encoding">Wikipedia</a>). Excluding whitespace, which is replaced with underscores "_". This ensures that the
+            file is machine readable and consistent when special characters that are also used as delimiters are used within the actual information. It is fast forward to revert the encoding once relevant information was read from the file.
+            Many programming languages support url decoding out of the box.<br>
+            <br>
+            The downloaded VCF files from HerediVar always adhere to this delimiter order:
+            <ol>
+              <li>;</li>
+              <li>&</li>
+              <li>|</li>
+              <li>$</li>
+              <li>+</li>
+            </ol>
+          </p>
+        </div>
 
 
         <div id="item-3">
