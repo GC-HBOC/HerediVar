@@ -39,7 +39,7 @@ echo "Downloading data to $basedir..."
 ###
 
 root=$basedir
-tools=$root/src/tools
+tools=$root/tools
 data=$root/data
 dbs=$data/dbs
 ngsbits=$tools/ngs-bits/bin
@@ -443,17 +443,17 @@ wget https://www.omim.org/static/omim/data/mim2gene.txt
 
 
 #### download ClinVar (https://www.ncbi.nlm.nih.gov/clinvar/)
-#cd $dbs
-#mkdir -p ClinVar
-#cd ClinVar
-#
-### submissions table for 'Submitted interpretations and evidence' table from website
-#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
-#
-## most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # previous version used: clinvar_20220320.vcf.gz 
-#wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # newest version: clinvar_20230226.vcf.gz  
-#gunzip -c clinvar.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_converted_GRCh38.vcf.gz
-#tabix -p vcf clinvar_converted_GRCh38.vcf.gz
+cd $dbs
+mkdir -p ClinVar
+cd ClinVar
+
+## submissions table for 'Submitted interpretations and evidence' table from website
+wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.txt.gz
+
+# most recent release: https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # previous version used: clinvar_20220320.vcf.gz, clinvar_20230226.vcf.gz 
+wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # newest version:  clinvar_20240107.vcf.gz
+gunzip -c clinvar.vcf.gz  | python3 $tools/db_converter_clinvar.py --submissions submission_summary.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $genome | $ngsbits/VcfStreamSort | bgzip > clinvar_converted_GRCh38.vcf.gz
+tabix -p vcf clinvar_converted_GRCh38.vcf.gz
 
 
 ### CNVs - not used atm
