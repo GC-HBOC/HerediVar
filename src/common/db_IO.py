@@ -251,14 +251,77 @@ class Connection:
         self.cursor.execute(command, (variant_id, annotation_type_id, value, value))
         self.conn.commit()
 
-    def insert_variant(self, chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, user_id):
+    def insert_variant(self, chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, user_id, variant_type = 'small', sv_variant_id = None):
         ref = ref.upper()
         alt = alt.upper()
-        command = "INSERT INTO variant (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt))
+        command = "INSERT INTO variant (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, variant_type, sv_variant_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, variant_type, sv_variant_id))
         self.conn.commit()
-        variant_id = self.get_variant_id(chr, pos, ref, alt)
+        if variant_type == 'small':
+            variant_id = self.get_variant_id(chr, pos, ref, alt)
+        elif variant_type == 'sv':
+            variant_id = self.get_variant_id_by_sv_variant_id(sv_variant_id)
         return variant_id # return the annotation_queue_id of the new variant
+
+    def insert_sv_variant(self, chrom, start, end, sv_type, imprecise):
+        # calculate reference and alternative sequences
+        ref, alt, pos = functions.get_sv_variant_sequence(chrom, start, end, sv_type)
+
+        # insert the sv variant itself
+        command = "INSERT INTO sv_variant (chrom, start, end, sv_type, imprecise) VALUES (%s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (chrom, start, end, sv_type, imprecise))
+        self.conn.commit()
+        sv_variant_id = self.get_sv_variant_id(chrom, start, end, sv_type)
+
+        # insert data into variant table to generate the variant_id
+        variant_id = self.insert_variant(chrom, pos, ref, alt, None,None,None,None,None, 'sv', sv_variant_id)
+        #command = "INSERT INTO variant (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, variant_type, sv_variant_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'sv', %s)"
+        #self.cursor.execute(command, (chrom, pos, ref, alt, None,None,None,None,None, 'sv', sv_variant_id))
+        #self.conn.commit()
+        #variant_id = self.get_variant_id_by_sv_variant_id(sv_variant_id)
+        return variant_id, sv_variant_id
+    
+
+    def get_variant_id_by_sv_variant_id(self, sv_variant_id):
+        command = "SELECT id FROM variant WHERE sv_variant_id = %s"
+        self.cursor.execute(command, (sv_variant_id, ))
+        res = self.cursor.fetchone()
+        if res is None:
+            return None
+        return res[0]
+
+    def get_sv_variant_id(self, chrom, start, end, sv_type):
+        command = "SELECT * FROM sv_variant WHERE chrom = %s AND start = %s AND end = %s AND sv_type = %s"
+        self.cursor.execute(command, (chrom, start, end, sv_type))
+        sv_variant_id = self.cursor.fetchone()
+        if sv_variant_id is not None:
+            return sv_variant_id[0]
+        return None
+
+    def add_hgvs_strings_sv_variant(self, sv_variant_id, hgvs_strings):
+        placeholders = []
+        actual_information = ()
+        for hgvs_string in hgvs_strings:
+            hgvs_parts = hgvs_string.strip().split(':')
+            transcript = hgvs_parts[0].strip() if hgvs_parts[0].strip() != '' else None
+            hgvs = hgvs_parts[1].strip()
+            hgvs_type = 'o' # other
+            if hgvs.startswith('c') or hgvs.startswith('p'):
+                hgvs_type = hgvs[0]
+            actual_information += (sv_variant_id, transcript, hgvs, hgvs_type)
+            placeholders.append(self.get_placeholders(4))
+        if len(placeholders) > 0:
+            placeholders = ','.join(placeholders)
+            command = "INSERT INTO sv_variant_hgvs (sv_variant_id, transcript, hgvs, hgvs_type) VALUES " + placeholders + " ON DUPLICATE KEY UPDATE sv_variant_id = %s"
+            actual_information += (sv_variant_id, )
+            self.cursor.execute(command, actual_information)
+            self.conn.commit()
+
+    def get_overlapping_genes(self, chrom, start, end): # function for structural variants
+        command = "SELECT DISTINCT gene_id, (SELECT symbol FROM gene WHERE gene.id = gene_id) symbol, min(start), max(end) FROM transcript WHERE chrom = %s AND %s < transcript.end AND %s > transcript.start GROUP BY gene_id"
+        self.cursor.execute(command, (chrom, start, end))
+        result = self.cursor.fetchall()
+        return result
     
     def insert_external_variant_id(self, variant_id, external_id, annotation_type_id):
         command = "INSERT INTO variant_ids (variant_id, external_id, annotation_type_id) \
@@ -483,15 +546,28 @@ class Connection:
             return None
         return res
 
-    def get_all_valid_variant_ids(self):
+    def get_all_valid_variant_ids(self, exclude_sv = True):
         command = "SELECT id FROM variant"
+        if exclude_sv:
+            command += " WHERE variant_type = 'small'"
         self.cursor.execute(command)
         res = self.cursor.fetchall()
         return [x[0] for x in res]
 
-    def get_variant_ids_with_consensus_classification(self):
-        command = "SELECT DISTINCT variant_id FROM consensus_classification UNION SELECT DISTINCT variant_id FROM variant_heredicare_annotation WHERE consensus_class is not NULL"
-        self.cursor.execute(command)
+    def get_variant_ids_with_consensus_classification(self, variant_types: list):
+        command_base = """
+            SELECT variant.id FROM variant INNER JOIN (
+                SELECT DISTINCT variant_id FROM consensus_classification UNION SELECT DISTINCT variant_id FROM variant_heredicare_annotation WHERE consensus_class is not NULL
+            )x ON variant.id = x.variant_id
+        """
+        command_ext = ""
+        actual_information = ()
+        for variant_type in variant_types:
+            command_ext = self.add_constraints_to_command(command_ext, "variant_type = %s", operator = 'OR')
+            actual_information += (variant_type, )
+        
+        command = command_base + ' ' + command_ext
+        self.cursor.execute(command, actual_information)
         res = self.cursor.fetchall()
         return [x[0] for x in res]
 
@@ -588,122 +664,85 @@ class Connection:
             return False
         return True
 
-    def get_variant_more_info(self, variant_id, user_id = None):
-        command = "SELECT * FROM variant WHERE id = %s"
-        command = self.annotate_genes(command)
-        command = self.annotate_consensus_classification(command)
-        actual_information = (variant_id, )
-        if user_id is not None:
-            command = self.annotate_specific_user_classification(command)
-            actual_information += (user_id, )
-        self.cursor.execute(command, actual_information)
-        result = self.cursor.fetchone()
-        return result
+    #def get_variant_more_info(self, variant_id, user_id = None):
+    #    command = "SELECT * FROM variant WHERE id = %s"
+    #    command = self.annotate_genes(command)
+    #    command = self.annotate_consensus_classification(command)
+    #    actual_information = (variant_id, )
+    #    if user_id is not None:
+    #        command = self.annotate_specific_user_classification(command)
+    #        actual_information += (user_id, )
+    #    self.cursor.execute(command, actual_information)
+    #    result = self.cursor.fetchone()
+    #    return result
 
-    # these functions add additional columns to the variant table
-    def annotate_genes(self, command):
-        prefix = """
-        				SELECT id, chr, pos, ref, alt, group_concat(gene_id SEPARATOR '; ') as gene_id, group_concat(symbol SEPARATOR '; ') as symbol FROM (
-							SELECT * FROM (
-        """
-        postfix = """
-        						) a LEFT JOIN (
-                                    SELECT DISTINCT variant_id, gene_id FROM variant_consequence WHERE gene_id IS NOT NULL) b ON a.id=b.variant_id
-					) c LEFT JOIN (
-                                SELECT id AS gene_id_2, symbol FROM gene WHERE id
-				) d ON c.gene_id=d.gene_id_2
-                        GROUP BY id, chr, pos, ref, alt
-        """
-        return prefix + command + postfix
+    ## these functions add additional columns to the variant table
+    #def annotate_genes(self, command):
+    #    prefix = """
+    #    				SELECT id, chr, pos, ref, alt, group_concat(gene_id SEPARATOR '; ') as gene_id, group_concat(symbol SEPARATOR '; ') as symbol FROM (
+	#						SELECT * FROM (
+    #    """
+    #    postfix = """
+    #    						) a LEFT JOIN (
+    #                                SELECT DISTINCT variant_id, gene_id FROM variant_consequence WHERE gene_id IS NOT NULL) b ON a.id=b.variant_id
+	#				) c LEFT JOIN (
+    #                            SELECT id AS gene_id_2, symbol FROM gene WHERE id
+	#			) d ON c.gene_id=d.gene_id_2
+    #                    GROUP BY id, chr, pos, ref, alt
+    #    """
+    #    return prefix + command + postfix
 
-    def annotate_specific_user_classification(self, command):
-        prefix = """
-        SELECT g.*, h.user_classification FROM (
-        """
-        postfix = """
-        		) g LEFT JOIN (
-                    SELECT user_classification.variant_id, user_classification.classification as user_classification FROM user_classification
-                        LEFT JOIN user_classification x ON x.variant_id = user_classification.variant_id AND x.date > user_classification.date
-                    WHERE x.variant_id IS NULL AND user_classification.user_id=%s
-                    ORDER BY user_classification.variant_id) h ON g.id = h.variant_id ORDER BY chr, pos, ref, alt
-        """
-        return prefix + command + postfix
+    #def annotate_specific_user_classification(self, command):
+    #    prefix = """
+    #    SELECT g.*, h.user_classification FROM (
+    #    """
+    #    postfix = """
+    #    		) g LEFT JOIN (
+    #                SELECT user_classification.variant_id, user_classification.classification as user_classification FROM user_classification
+    #                    LEFT JOIN user_classification x ON x.variant_id = user_classification.variant_id AND x.date > user_classification.date
+    #                WHERE x.variant_id IS NULL AND user_classification.user_id=%s
+    #                ORDER BY user_classification.variant_id) h ON g.id = h.variant_id ORDER BY chr, pos, ref, alt
+    #    """
+    #    return prefix + command + postfix
     
-    def annotate_consensus_classification(self, command):
-        prefix = """
-            SELECT e.*, f.classification FROM (
-        """
-        postfix = """
-        	) e LEFT JOIN (
-                SELECT variant_id, classification FROM consensus_classification WHERE is_recent=1) f ON e.id = f.variant_id
-        """
-        return prefix + command + postfix
+    #def annotate_consensus_classification(self, command):
+    #    prefix = """
+    #        SELECT e.*, f.classification FROM (
+    #    """
+    #    postfix = """
+    #    	) e LEFT JOIN (
+    #            SELECT variant_id, classification FROM consensus_classification WHERE is_recent=1) f ON e.id = f.variant_id
+    #    """
+    #    return prefix + command + postfix
 
-    ### DEPRECATED!
-    # this function returns a list of variant tuples (can have length more than one if there are multiple mane select transcripts for this variant)
-    def annotate_preferred_transcripts(self, variant):
-        result = []
-        consequences = self.get_variant_consequences(variant_id = variant[0])
-        if consequences is not None:
-            consequences = self.order_consequences(consequences)
-            best_consequence = consequences[0]
-                
-            if best_consequence[14] == 1: # if the best one is a mane select transcript scan also the following and add them as well
-                for consequence in consequences:
-                    if consequence[14] == 1: # append one variant entry for each mane select transcript (in case of multiple genes, usually a low number)
-                        result.append(variant + consequence)
-                    else:
-                        break # we can do this because the list is sorted
-            else: # in case the best consequence is no mane select transcrip
-                result.append(variant + best_consequence)
-
-        else:
-            result.append(variant + (None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None))
-        return result
+    #### DEPRECATED!
+    ## this function returns a list of variant tuples (can have length more than one if there are multiple mane select transcripts for this variant)
+    #def annotate_preferred_transcripts(self, variant):
+    #    result = []
+    #    consequences = self.get_variant_consequences(variant_id = variant[0])
+    #    if consequences is not None:
+    #        consequences = self.order_consequences(consequences)
+    #        best_consequence = consequences[0]
+    #            
+    #        if best_consequence[14] == 1: # if the best one is a mane select transcript scan also the following and add them as well
+    #            for consequence in consequences:
+    #                if consequence[14] == 1: # append one variant entry for each mane select transcript (in case of multiple genes, usually a low number)
+    #                    result.append(variant + consequence)
+    #                else:
+    #                    break # we can do this because the list is sorted
+    #        else: # in case the best consequence is no mane select transcrip
+    #            result.append(variant + best_consequence)
+#
+    #    else:
+    #        result.append(variant + (None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None))
+    #    return result
     
-    # DEPRECATED
-    def order_consequences(self, consequences):
-        keyfunc = cmp_to_key(mycmp = self.sort_consequences)
-                
-        consequences.sort(key = keyfunc) # sort by preferred transcript
-        return consequences
-    
-    # DEPRECATED
-    def sort_consequences(self, a, b):
-        # sort by ensembl/refseq
-        if a[9] == 'ensembl' and b[9] == 'refseq':
-            return -1
-        elif a[9] == 'refseq' and b[9] == 'ensembl':
-            return 1
-        elif a[9] == b[9]:
-
-            # sort by mane select
-            if a[14] is None or b[14] is None:
-                return 1
-            elif a[14] == 1 and b[14] == 0:
-                return -1
-            elif a[14] == 0 and b[14] == 1:
-                return 1
-            elif a[14] == b[14]:
-
-                # sort by biotype
-                if a[18] == 'protein coding' and b[18] != 'protein coding':
-                    return -1
-                elif a[18] != 'protein coding' and b[18] == 'protein coding':
-                    return 1
-                elif (a[18] != 'protein coding' and b[18] != 'protein coding') or (a[18] == 'protein coding' and b[18] == 'protein coding'):
-
-                    # sort by length
-                    if a[12] > b[12]:
-                        return -1
-                    elif a[12] < b[12]:
-                        return 1
-                    else:
-                        return 0
 
 
     def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, 
-                                 ranges = None, genes = None, consensus = None, user = None, automatic_splicing = None, automatic_protein = None, hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, include_heredicare_consensus = False):
+                                 ranges = None, genes = None, consensus = None, user = None, automatic_splicing = None, automatic_protein = None, 
+                                 hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, 
+                                 include_heredicare_consensus = False, variant_strings = None, variant_types = None):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -718,6 +757,15 @@ class Connection:
             new_constraints = ' OR '.join(new_constraints)
             new_constraints = functions.enbrace(new_constraints)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if variant_types is not None and len(variant_types) > 0:
+            for variant_type in variant_types:
+                if 'small' in variant_type:
+                    actual_information += ('small', )
+                elif 'struct' in variant_type:
+                    actual_information += ('sv',)
+            placeholders = self.get_placeholders(len(actual_information))
+            postfix = self.add_constraints_to_command(postfix, "variant_type IN " + placeholders)
+
         if cdna_ranges is not None and len(cdna_ranges) > 0:
             new_constraints = []
             for cdna_range in cdna_ranges:
@@ -797,11 +845,21 @@ class Connection:
                 placeholders = ["%s"] * len(hgnc_ids)
                 placeholders = ', '.join(placeholders)
                 placeholders = functions.enbrace(placeholders)
-                new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE hgnc_id IN " + placeholders + ")"
-                actual_information += tuple(hgnc_ids)
+                new_constraints = "id IN (SELECT DISTINCT variant_id FROM variant_consequence WHERE hgnc_id IN " + placeholders + " UNION SELECT DISTINCT variant.id FROM variant WHERE sv_variant_id IN ( \
+                                    SELECT DISTINCT sv_variant.id FROM sv_variant INNER JOIN (SELECT * FROM transcript WHERE gene_id IN (SELECT gene.id FROM gene WHERE hgnc_id IN " + placeholders + "))x ON sv_variant.chrom = x.chrom AND sv_variant.start <= x.end AND sv_variant.end >= x.start \
+                                    ))"
+                actual_information += tuple(hgnc_ids) * 2
                 postfix = self.add_constraints_to_command(postfix, new_constraints)
             else:
                 return [], 0
+        if variant_strings is not None and len(variant_strings) > 0:
+            new_constraints = []
+            for variant_string in variant_strings:
+                parts = variant_string.split('-')
+                new_constraints.append("(SELECT id FROM variant WHERE chr = %s AND pos = %s AND ref = %s AND alt = %s UNION SELECT variant.id FROM variant WHERE sv_variant_id IN (SELECT id FROM sv_variant WHERE chrom = %s AND start = %s AND end = %s AND sv_type LIKE %s))")
+                actual_information += (parts[0], parts[1], parts[2], parts[3], parts[0], parts[1], parts[2], functions.enpercent(parts[3]))
+            new_constraints = "id IN " + ' OR '.join(new_constraints)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
         if consensus is not None and len(consensus) > 0:
             new_constraints_inner = ''
             consensus_without_dash = [value for value in consensus if value != '-']
@@ -908,36 +966,49 @@ class Connection:
                     external_id = external_id.strip('rs').strip(':rsid')
                     functions.extend_dict(ids_known_source, 'rsid', external_id)
                     continue
+                # handle cosmic ids
                 if external_id.startswith('COSV') or external_id[-7:].lower() == ':cosmic':
                     external_id = external_id.strip(':cosmic')
                     functions.extend_dict(ids_known_source, 'cosmic', external_id)
                     continue
+                # handle clinvar ids
                 if external_id[-8:].lower() == ':clinvar':
                     external_id = external_id.strip(':clinvar')
                     functions.extend_dict(ids_known_source, 'clinvar', external_id)
                     continue
+                # handle heredicare vids
                 if external_id[-11:] == ':heredicare':
                     external_id = external_id.strip(':heredicare')
                     functions.extend_dict(ids_known_source, 'heredicare_vid', external_id)
+                    continue
+                # handle heredivar variant_ids
+                if external_id[-10:] == ':heredivar':
+                    external_id = external_id.strip(':heredivar')
+                    functions.extend_dict(ids_known_source, 'heredivar_variant_id', external_id)
                     continue
                 ids_unknown_source.append(external_id)
             new_constraints = []
 
             for id_source in ids_known_source:
-                annotation_type_id = self.get_most_recent_annotation_type_id(id_source)
                 current_external_ids = ids_known_source[id_source]
-                placeholders = self.get_placeholders(len(current_external_ids))
-                new_constraints.append("id IN (SELECT variant_id FROM variant_ids WHERE external_id IN " + placeholders + " AND annotation_type_id = %s )")
-                actual_information += tuple(current_external_ids)
-                actual_information += (annotation_type_id, )
+                if id_source == 'heredivar_variant_id':
+                    placeholders = self.get_placeholders(len(current_external_ids))
+                    new_constraints.append("id IN (" + placeholders + ")")
+                    actual_information += tuple(current_external_ids)
+                else:
+                    annotation_type_id = self.get_most_recent_annotation_type_id(id_source)
+
+                    placeholders = self.get_placeholders(len(current_external_ids))
+                    new_constraints.append("id IN (SELECT variant_id FROM variant_ids WHERE external_id IN " + placeholders + " AND annotation_type_id = %s )")
+                    actual_information += tuple(current_external_ids)
+                    actual_information += (annotation_type_id, )
 
             if len(ids_unknown_source) > 0:
                 placeholders = self.get_placeholders(len(ids_unknown_source))
-                new_constraints.append("id IN (SELECT variant_id FROM variant_ids WHERE external_id IN " + placeholders + ")")
-                actual_information += tuple(ids_unknown_source)
+                new_constraints.append("id IN (SELECT variant_id FROM variant_ids WHERE external_id IN " + placeholders + " UNION SELECT id FROM variant WHERE id IN " + placeholders + ")")
+                actual_information += tuple(ids_unknown_source) * 2
             new_constraints = ' OR '.join(new_constraints)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
-
 
         if variant_ids_oi is not None and len(variant_ids_oi) > 0:
             placeholders = ["%s"] * len(variant_ids_oi)
@@ -1063,6 +1134,8 @@ class Connection:
         for current_batch in batches:
             # (2)
             current_batch = self.order_consequences(current_batch)
+            # THIS SHOULD BE REPLACED WITH SOMETHING LIKE THIS:
+            #transcripts, current_batch = functions.order_transcripts(sortable_dict)
             best_consequence = current_batch[0]
 
             # (3)
@@ -1080,6 +1153,48 @@ class Connection:
         matching_variant_ids = list(set(matching_variant_ids)) # removes duplicates
 
         return matching_variant_ids
+
+    # DEPRECATED
+    def order_consequences(self, consequences):
+        keyfunc = cmp_to_key(mycmp = self.sort_consequences)
+                
+        consequences.sort(key = keyfunc) # sort by preferred transcript
+        return consequences
+    
+    # DEPRECATED
+    def sort_consequences(self, a, b):
+        # sort by ensembl/refseq
+        if a[9] == 'ensembl' and b[9] == 'refseq':
+            return -1
+        elif a[9] == 'refseq' and b[9] == 'ensembl':
+            return 1
+        elif a[9] == b[9]:
+    
+            # sort by mane select
+            if a[14] is None or b[14] is None:
+                return 1
+            elif a[14] == 1 and b[14] == 0:
+                return -1
+            elif a[14] == 0 and b[14] == 1:
+                return 1
+            elif a[14] == b[14]:
+    
+                # sort by biotype
+                if a[18] == 'protein coding' and b[18] != 'protein coding':
+                    return -1
+                elif a[18] != 'protein coding' and b[18] == 'protein coding':
+                    return 1
+                elif (a[18] != 'protein coding' and b[18] != 'protein coding') or (a[18] == 'protein coding' and b[18] == 'protein coding'):
+    
+                    # sort by length
+                    if a[12] > b[12]:
+                        return -1
+                    elif a[12] < b[12]:
+                        return 1
+                    else:
+                        return 0
+
+
 
 
     """
@@ -1173,6 +1288,16 @@ class Connection:
             return False
         else:
             return True
+
+    def check_sv_duplicate(self, chrom, start, end, sv_type): # currently only checks for cnv duplicates
+        command = "SELECT EXISTS (SELECT * FROM sv_variant WHERE chrom = %s AND start = %s AND end = %s AND sv_type = %s)"
+        self.cursor.execute(command, (chrom, start, end, sv_type))
+        result = self.cursor.fetchone()[0]
+        if result == 0:
+            return False
+        else:
+            return True
+
 
     def get_gene(self, gene_id): # return all info of a gene for the gene page
         command = "SELECT * FROM gene WHERE id = %s"
@@ -1517,12 +1642,6 @@ class Connection:
     #    self.cursor.execute(command, (variant_id,))
     #    self.conn.commit()
     #    return status, message
-
-    #def get_orig_variant(self, variant_id):
-    #    command = "SELECT orig_chr, orig_pos, orig_ref, orig_alt FROM variant WHERE id = %s"
-    #    self.cursor.execute(command, (variant_id, ))
-    #    res = self.cursor.fetchone()
-    #    return res
 
 
 
@@ -1967,10 +2086,35 @@ class Connection:
         self.conn.commit()
 
     def get_one_variant(self, variant_id):
-        command = "SELECT id,chr,pos,ref,alt,is_hidden FROM variant WHERE id = %s"
+        command = "SELECT id,chr,pos,ref,alt,is_hidden,variant_type FROM variant WHERE id = %s AND variant_type = 'small'"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchone()
         return result
+    
+    def get_one_sv_variant(self, variant_id):
+        command = "SELECT pos, ref, alt, sv_variant_id, is_hidden, variant_type FROM variant WHERE id = %s AND variant_type = 'sv'"
+        self.cursor.execute(command, (variant_id, ))
+        result = self.cursor.fetchone()
+
+        if result is None:
+            return None
+        
+        pos = result[0]
+        ref = result[1]
+        alt = result[2]
+        sv_variant_id = result[3]
+        is_hidden = result[4]
+        variant_type = result[5]
+        if sv_variant_id is None:
+            return None
+        
+        command = "SELECT id, chrom, start, end, sv_type, imprecise FROM sv_variant WHERE id = %s"
+        self.cursor.execute(command, (sv_variant_id, ))
+        result = self.cursor.fetchone()
+        result += (is_hidden, variant_type, pos, ref, alt)
+        return result
+
+
     
     def get_variant_id(self, chr, pos, ref, alt):
         #command = "SELECT id FROM variant WHERE chr = " + functions.enquote(chr) + " AND pos = " + str(pos) + " AND ref = " + functions.enquote(ref) + " AND alt = " + functions.enquote(alt)
@@ -2006,6 +2150,21 @@ class Connection:
         res = self.cursor.fetchall()
         return res
 
+    def valid_variant_id(self, variant_id):
+        command = "SELECT id from variant WHERE id = %s"
+        self.cursor.execute(command, (variant_id, ))
+        res = self.cursor.fetchone()
+        if res is None:
+            return False
+        return True
+    
+    def get_variant_type(self, variant_id):
+        command = "SELECT variant_type FROM variant WHERE id = %s"
+        self.cursor.execute(command, (variant_id, ))
+        res = self.cursor.fetchone()
+        if res is None:
+            return None
+        return res[0]
 
     def get_variant(self, variant_id, 
                     include_annotations = True, 
@@ -2019,17 +2178,9 @@ class Connection:
                     include_literature = True,
                     include_external_ids = True
                 ) -> models.Variant:
-        variant_raw = self.get_one_variant(variant_id)
-        if variant_raw is None:
+
+        if not self.valid_variant_id(variant_id):
             return None
-
-        variant_id = variant_raw[0]
-        chrom = variant_raw[1]
-        pos = variant_raw[2]
-        ref = variant_raw[3]
-        alt = variant_raw[4]
-
-        is_hidden = True if variant_raw[5] == 1 else False
 
         annotations = None
         if include_annotations:
@@ -2337,22 +2488,72 @@ class Connection:
                     new_paper = models.Paper(year = paper[6], authors = paper[4], title = paper[3], journal = paper[5], pmid = paper[2], source = paper[7])
                     literature.append(new_paper)
 
-        variant = models.Variant(id=variant_id, chrom = chrom, pos = pos, ref = ref, alt = alt, is_hidden = is_hidden,
-                                annotations = annotations, 
-                                consensus_classifications = consensus_classifications, 
-                                user_classifications = user_classifications,
-                                heredicare_classifications = heredicare_classifications,
-                                automatic_classification = automatic_classification,
-                                heredicare_annotations = all_heredicare_annotations,
-                                clinvar = clinvar,
-                                consequences = consequences,
-                                assays = assays,
-                                literature = literature,
-                                external_ids = external_ids
-                            )
+        variant_type = self.get_variant_type(variant_id)
+        if variant_type == 'small':
+            variant_raw = self.get_one_variant(variant_id)
+            chrom = variant_raw[1]
+            pos = variant_raw[2]
+            ref = variant_raw[3]
+            alt = variant_raw[4]
+            is_hidden = variant_raw[5] == 1
+            variant_type = variant_raw[6]
+            variant = models.Variant(id=variant_id, variant_type = variant_type, is_hidden = is_hidden, chrom = chrom, pos = pos, ref = ref, alt = alt,
+                        annotations = annotations, 
+                        consensus_classifications = consensus_classifications, 
+                        user_classifications = user_classifications,
+                        heredicare_classifications = heredicare_classifications,
+                        automatic_classification = automatic_classification,
+                        heredicare_annotations = all_heredicare_annotations,
+                        clinvar = clinvar,
+                        consequences = consequences,
+                        assays = assays,
+                        literature = literature,
+                        external_ids = external_ids
+                    )
+        if variant_type == 'sv':
+            variant_raw = self.get_one_sv_variant(variant_id) # id, chrom, start, end, sv_type, imprecise, is_hidden, variant_type, , pos, ref, alt
+            sv_variant_id = variant_raw[0]
+            chrom = variant_raw[1]
+            start = variant_raw[2]
+            end = variant_raw[3]
+            sv_type = variant_raw[4]
+            imprecise = variant_raw[5] == 1
+            is_hidden = variant_raw[6] == 1
+            variant_type = variant_raw[7]
+            pos = variant_raw[8]
+            ref = variant_raw[9]
+            alt = variant_raw[10]
+            custom_hgvs = self.get_custom_hgvs(sv_variant_id)
+            variant = models.SV_Variant(id=variant_id, variant_type=variant_type, is_hidden = is_hidden, 
+                        chrom = chrom, pos = pos, ref = ref, alt = alt, start = start, end = end, sv_type = sv_type, sv_variant_id = sv_variant_id, imprecise = imprecise,
+                        custom_hgvs = custom_hgvs, overlapping_genes = self.get_overlapping_genes(chrom, start, end),
+                        annotations = annotations, 
+                        consensus_classifications = consensus_classifications, 
+                        user_classifications = user_classifications,
+                        heredicare_classifications = heredicare_classifications,
+                        automatic_classification = automatic_classification,
+                        heredicare_annotations = all_heredicare_annotations,
+                        clinvar = clinvar,
+                        consequences = consequences,
+                        assays = assays,
+                        literature = literature,
+                        external_ids = external_ids
+                    )
         return variant
 
-
+    def get_custom_hgvs(self, sv_variant_id):
+        command = "SELECT id, transcript, hgvs, hgvs_type FROM sv_variant_hgvs WHERE sv_variant_id = %s"
+        self.cursor.execute(command, (sv_variant_id, ))
+        result = self.cursor.fetchall()
+        result = [self.convert_custom_hgvs_raw(custom_hgvs_raw) for custom_hgvs_raw in result]
+        return result
+    
+    def convert_custom_hgvs_raw(self, custom_hgvs_raw):
+        return models.Custom_Hgvs(id = custom_hgvs_raw[0],
+                                  transcript = custom_hgvs_raw[1],
+                                  hgvs = custom_hgvs_raw[2],
+                                  hgvs_type = custom_hgvs_raw[3]
+                                )
 
     def hide_variant(self, variant_id, is_hidden):
         command = "UPDATE variant SET is_hidden = %s WHERE id = %s"
@@ -2564,7 +2765,7 @@ class Connection:
         result = self.cursor.fetchall()
         return result
 
-    def get_annotation_statistics(self):
+    def get_annotation_statistics(self, exclude_sv=True):
         # return the most recent annotation queue entry for the variant 
         result = self.get_current_annotation_staus_all_variants()
         annotation_status_types = self.get_enumtypes("annotation_queue", "status")
@@ -2584,12 +2785,14 @@ class Connection:
             if annotation_status[3] != 'error' and annotation_status[5] != '':
                 warnings[variant_id] = annotation_status[5]
         
-        annotation_stati["unannotated"] = self.get_variants_without_annotation()
+        annotation_stati["unannotated"] = self.get_variants_without_annotation(exclude_sv=exclude_sv)
 
         return annotation_stati, errors, warnings, total_num_variants
     
-    def get_variants_without_annotation(self):
+    def get_variants_without_annotation(self, exclude_sv=True):
         command = "SELECT id FROM variant WHERE id not in (SELECT variant_id FROM annotation_queue)"
+        if exclude_sv:
+            command += " AND variant_type = 'small'"
         self.cursor.execute(command)
         result = self.cursor.fetchall()
         return [x[0] for x in result]
@@ -2684,11 +2887,11 @@ class Connection:
         self.conn.commit()
     
     def get_enumtypes(self, tablename, columnname):
-        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue", "automatic_classification"]
+        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue", "automatic_classification", "sv_variant"]
         if tablename in allowed_tablenames:
             command = "SHOW COLUMNS FROM " + tablename + " WHERE FIELD = %s"
         else:
-            return None
+            raise IOError("Table " + tablename + " is not allowed in get_enumtypes!")
         self.cursor.execute(command, (columnname, ))
         result = self.cursor.fetchone()
         column_type = result[1]
@@ -2955,15 +3158,26 @@ class Connection:
         return result
     
 
-    #### DELETE LATER!
-    def get_automatic_classification_ids(self):
-        command = "SELECT id FROM automatic_classification"
-        self.cursor.execute(command)
-        result = self.cursor.fetchall()
-        return [x[0] for x in result]
-    
-    #### DELETE LATER!
-    def update_automatic_classification(self, automatic_classification_id, classification_splicing, classification_protein):
-        command = "UPDATE automatic_classification SET classification_splicing = %s, classification_protein = %s WHERE id = %s"
-        self.cursor.execute(command, (classification_splicing, classification_protein, automatic_classification_id))
+    ##### DELETE LATER!
+    #def get_automatic_classification_ids(self):
+    #    command = "SELECT id FROM automatic_classification"
+    #    self.cursor.execute(command)
+    #    result = self.cursor.fetchall()
+    #    return [x[0] for x in result]
+    #
+    ##### DELETE LATER!
+    #def update_automatic_classification(self, automatic_classification_id, classification_splicing, classification_protein):
+    #    command = "UPDATE automatic_classification SET classification_splicing = %s, classification_protein = %s WHERE id = %s"
+    #    self.cursor.execute(command, (classification_splicing, classification_protein, automatic_classification_id))
+    #    self.conn.commit()
+
+    def insert_coldspot(self, chrom, start, end, source):
+        command = "INSERT INTO coldspots (chrom, start, end, source) VALUES (%s, %s, %s, %s)"
+        self.cursor.execute(command, (chrom, start, end, source))
         self.conn.commit()
+
+    def get_coldspots(self, chrom, variant_start, variant_end):
+        command = "SELECT id, chrom, start, end source FROM coldspots WHERE chrom = %s AND ((start <= %s) AND (%s <= end))"
+        self.cursor.execute(command, (chrom, variant_end, variant_start))
+        result = self.cursor.fetchall()
+        return result

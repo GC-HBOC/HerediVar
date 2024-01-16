@@ -95,6 +95,24 @@ def extract_genes(request_obj):
         flash("You have an error in your genes query(s). Results are not filtered by genes.", "alert-danger")
     return genes
 
+def extract_variants(request_obj):
+    variant_strings = request_obj.args.get('variants', '')
+    variant_strings = preprocess_query(variant_strings, pattern=r"(chr)?.+-\d+-.+-.+")
+    if variant_strings is None:
+        flash("You have an error in your variant query(s). This form is required: chrom-pos-ref-alt OR chrom-start-end-sv_type in case of structural variants. Results are not filtered by genes.", "alert-danger")
+    return variant_strings
+
+def extract_variant_types(request_obj, allowed_variant_types):
+    variant_types = request_obj.args.getlist('variant_type')
+    variant_types = ';'.join(variant_types)
+    regex_inner = '|'.join(allowed_variant_types)
+    regex_inner = regex_inner.replace('+', '\+')
+    variant_types = preprocess_query(variant_types, r'(' + regex_inner + r')?')
+    if variant_types is None:
+        flash("You have an error in your variant query(s). This form is required: chrom-pos-ref-alt OR chrom-start-end-sv_type in case of structural variants. Results are not filtered by genes.", "alert-danger")
+    return variant_types
+
+
 def extract_external_ids(request_obj):
     external_ids = request_obj.args.get('external_ids', '')
     external_ids = preprocess_query(external_ids)

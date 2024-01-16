@@ -61,6 +61,7 @@ def my_lists():
     allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
     allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
     allowed_automatic_classes = functions.order_classes(conn.get_enumtypes('automatic_classification', 'classification_splicing'))
+    allowed_variant_types = ['small_variants', 'structural_variant']
     annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
     annotation_types = preprocess_annotation_types_for_search(annotation_types)
 
@@ -262,6 +263,8 @@ def my_lists():
 
 
     if view_list_id is not None:
+        variant_strings = extract_variants(request)
+        variant_types = extract_variant_types(request, allowed_variant_types)
         genes = extract_genes(request)
         ranges = extract_ranges(request)
         consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request, allowed_consensus_classes)
@@ -297,7 +300,9 @@ def my_lists():
                 include_heredicare_consensus = include_heredicare_consensus,
                 external_ids = external_ids,
                 cdna_ranges = cdna_ranges,
-                annotation_restrictions = annotation_restrictions
+                annotation_restrictions = annotation_restrictions,
+                variant_strings = variant_strings,
+                variant_types = variant_types
             )
     #print(variants)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
@@ -312,7 +317,8 @@ def my_lists():
                             allowed_user_classes = allowed_user_classes,
                             allowed_consensus_classes = allowed_consensus_classes,
                             allowed_automatic_classes = allowed_automatic_classes,
-                            annotation_types = annotation_types
+                            annotation_types = annotation_types,
+                            allowed_variant_types = allowed_variant_types
                         )
 
 
@@ -322,7 +328,7 @@ def my_lists():
 def admin_dashboard():
     conn = get_connection()
     job_config = annotation_service.get_default_job_config()
-    annotation_stati, errors, warnings, total_num_variants = conn.get_annotation_statistics()
+    annotation_stati, errors, warnings, total_num_variants = conn.get_annotation_statistics(exclude_sv=True)
     schemes = conn.get_all_classification_schemes()
     do_redirect = False
 
@@ -358,7 +364,7 @@ def admin_dashboard():
             selected_job_config = annotation_service.get_job_config(selected_jobs)
 
             if reannotate_which == 'all':
-                variant_ids = conn.get_all_valid_variant_ids()
+                variant_ids = conn.get_all_valid_variant_ids(exclude_sv=True)
                 #variant_ids = conn.get_variant_ids_without_automatic_classification()
                 #variant_ids = random.sample(variant_ids, 50)
             elif reannotate_which == 'erroneous':

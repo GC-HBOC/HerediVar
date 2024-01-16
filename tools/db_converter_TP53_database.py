@@ -2,7 +2,7 @@ import argparse
 from distutils.log import error
 from os import path
 import sys
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+sys.path.append(  path.join(path.dirname(path.dirname(path.abspath(__file__))), "src")  )
 import common.functions as functions
 import sys
 import csv

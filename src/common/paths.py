@@ -27,7 +27,7 @@ if webapp_env == 'dev':
     toolsdir = joinpaths(workdir, "tools")
     resources_dir = joinpaths(workdir, 'resources')
     logs_dir = joinpaths(workdir, 'logs')
-    classified_variants_dir = joinpaths(workdir, 'classified_variants')
+    # classified variants folders are calculated in tasks.py
     #report_dir = joinpaths(workdir, "") #'downloads/consensus_classification_reports/'
 
     # webapp logs path
@@ -41,6 +41,7 @@ if webapp_env == 'dev':
     ngs_bits_path = joinpaths(toolsdir, "ngs-bits/bin")
     htslib_path = joinpaths(toolsdir, "htslib")
     automatic_classification_path = joinpaths(toolsdir, "variant_classification")
+    samtools_path = joinpaths(toolsdir, "samtools/samtools")
 
     # data
     ref_genome_dir = joinpaths(workdir, "data/genomes")
@@ -83,6 +84,7 @@ if webapp_env == 'dev':
     omim_path = joinpaths(datadir, "OMIM/mim2gene.txt")
     orphanet_path = joinpaths(datadir, "OrphaNet/en_product6.xml")
     task_force_protein_domains_path = joinpaths(datadir, "task-force_protein_domains/domains_task_force_27_11_2023.tsv")
+    coldspots_path = joinpaths(datadir, "coldspots/coldspots_12_01_2024.bed")
 
     # further data
     parsing_refseq_ensembl = joinpaths(datadir, "mapping_tables/hg38_ensembl_transcript_matches.tsv")
@@ -213,7 +215,7 @@ elif webapp_env == 'prod':
     toolsdir = joinpaths(workdir, "tools")
     resources_dir = joinpaths(workdir, 'resources')
     logs_dir = joinpaths(workdir, 'logs')
-    classified_variants_dir = joinpaths(workdir, 'classified_variants')
+    #classified_variants_dir = joinpaths(workdir, 'classified_variants')
     #report_dir = joinpaths(workdir, "") #'downloads/consensus_classification_reports/'
 
     # webapp logs path

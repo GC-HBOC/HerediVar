@@ -176,7 +176,9 @@ table.scroll th {
 .bolder {
     font-weight: bolder;
 }
-
+.bold {
+    font-weight: bold;
+}
 
 
 

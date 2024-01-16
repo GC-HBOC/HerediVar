@@ -49,6 +49,7 @@ def get_default_job_config():
 
         # additional annotations
         'do_taskforce_domains': True,
+        'do_coldspots': True,
         'do_litvar': True,
         'do_auto_class': False
     }
@@ -76,7 +77,8 @@ def get_jobs(job_config):
         task_force_protein_domain_job.task_force_protein_domain_job(job_config),
         litvar2_job.litvar2_job(job_config), # must be called after vep_jobs & annotate from vcf job
         heredicare_job.heredicare_job(job_config),
-        maxentscan_job.maxentscan_job(job_config)
+        maxentscan_job.maxentscan_job(job_config),
+        coldspots_job.coldspots_job(job_config)
     ]
     return all_jobs
 
@@ -123,12 +125,19 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
 
         annotation_queue_entry = conn.get_annotation_queue_entry(annotation_queue_id)
         if annotation_queue_entry is None:
-            return "error: annotation queue entry not found"
+            status = "error"
+            return status, "error: annotation queue entry not found"
         variant_id = annotation_queue_entry[1]
         user_id = annotation_queue_entry[2]
 
         err_msgs = ""
         one_variant = conn.get_one_variant(variant_id) # 0id,1chr,2pos,3ref,4alt
+        variant_type = one_variant[6]
+        if variant_type in ['sv']:
+            print("Request" + str(annotation_queue_id) + " can not be processed because the variant type is not supported by the annotation algorithm: " + str(variant_type))
+            status = "error"
+            return "error: variant type " + str(variant_type) + " is not supported by the annotation algorithm."
+        
         print("processing request " + str(annotation_queue_id)  + " annotating variant: " + " ".join([str(x) for x in one_variant[1:5]]) + " with id: " + str(one_variant[0]) )
 
         functions.variant_to_vcf(one_variant[1], one_variant[2], one_variant[3], one_variant[4], vcf_path)

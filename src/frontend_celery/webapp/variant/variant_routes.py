@@ -5,7 +5,7 @@ from ..utils import *
 import sys
 from os import path
 from .variant_functions import *
-from ..tasks import generate_consensus_only_vcf_task, start_annotation_service, validate_and_insert_variant, map_hg38
+from ..tasks import generate_consensus_only_vcf_task, start_annotation_service, validate_and_insert_variant, map_hg38, validate_and_insert_cnv
 
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
@@ -39,9 +39,12 @@ def search():
     allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
     allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
     allowed_automatic_classes = functions.order_classes(conn.get_enumtypes('automatic_classification', 'classification_splicing'))
+    allowed_variant_types = ['small_variants', 'structural_variant']
     annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
     annotation_types = preprocess_annotation_types_for_search(annotation_types)
 
+    variant_strings = extract_variants(request)
+    variant_types = extract_variant_types(request, allowed_variant_types)
     genes = extract_genes(request)
     ranges = extract_ranges(request)
     consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request, allowed_consensus_classes)
@@ -86,7 +89,9 @@ def search():
                                                 include_heredicare_consensus = include_heredicare_consensus,
                                                 external_ids = external_ids,
                                                 cdna_ranges = cdna_ranges,
-                                                annotation_restrictions = annotation_restrictions
+                                                annotation_restrictions = annotation_restrictions,
+                                                variant_strings = variant_strings,
+                                                variant_types = variant_types
                                             )
                     variant_ids = [variant.id for variant in variants_for_list]
                     for variant_id in variant_ids:
@@ -119,7 +124,8 @@ def search():
                                         lookup_list_name = request.args.getlist("lookup_list_name"),
                                         page_size = request.args.get('page_size', page_sizes[1]),
                                         sort_by = request.args.get('sort_by', sort_bys[0]),
-                                        include_hidden = request.args.get('include_hidden')
+                                        include_hidden = request.args.get('include_hidden'),
+                                        variant_types = request.args.getlist('variant_type')
                                     )
                                 )
             
@@ -140,7 +146,9 @@ def search():
         include_heredicare_consensus = include_heredicare_consensus,
         external_ids = external_ids,
         cdna_ranges = cdna_ranges,
-        annotation_restrictions = annotation_restrictions
+        annotation_restrictions = annotation_restrictions,
+        variant_strings = variant_strings,
+        variant_types = variant_types
     )
     lists = conn.get_lists_for_user(user_id)
     pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
@@ -155,6 +163,7 @@ def search():
                            allowed_user_classes = allowed_user_classes,
                            allowed_consensus_classes = allowed_consensus_classes,
                            allowed_automatic_classes = allowed_automatic_classes,
+                           allowed_variant_types = allowed_variant_types,
                            annotation_types = annotation_types,
                            modal_args = modal_args # for add all to list
                         )
@@ -220,11 +229,11 @@ def create():
                     new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
                     if 'already in database' in message:
                         flash(Markup("Variant not imported: already in database!! View it " + 
-                                     "<a href=" + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
+                                     "<a href=" + url_for("variant.display", variant_id = variant_id) + 
                                      " class=\"alert-link\">here</a>"), "alert-danger")
                     elif was_successful:
-                        flash(Markup("Successfully inserted variant: " + str(new_variant.chrom) + ' ' + str(new_variant.pos) + ' ' + new_variant.ref + ' ' + new_variant.alt + 
-                                     ' (view your variant <a href="' + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
+                        flash(Markup("Successfully inserted variant: " + new_variant.get_string_repr() + 
+                                     ' (view your variant <a href="' + url_for("variant.display", variant_id = variant_id) + 
                                      '" class="alert-link">here</a>)'), "alert-success")
                         current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([str(new_variant.chrom), str(new_variant.pos), new_variant.ref, new_variant.alt, "GRCh38"]))
                         return redirect(url_for('variant.create'))
@@ -233,6 +242,49 @@ def create():
                         flash(message, 'alert-danger')
 
     return render_template('variant/create.html', chrs=chrs)
+
+
+
+@variant_blueprint.route('/create_sv', methods=('GET', 'POST'))
+@require_permission(['edit_resources'])
+def create_sv():
+    conn = get_connection()
+    chroms = conn.get_enumtypes("sv_variant", "chrom")
+    sv_types = conn.get_enumtypes("sv_variant", "sv_type")
+    
+    if request.method == 'POST':
+        variant_type = request.args.get("type")
+        
+        if variant_type == 'cnv':
+            chrom = request.form.get('chrom', '')
+            start = request.form['start']
+            end = request.form['end']
+            sv_type = request.form.get('sv_type', '')
+            imprecise = 1 if request.form.get('imprecise', 'off') == 'on' else 0
+
+            hgvs_strings = request.form.get('hgvs_strings', '')
+            hgvs_strings = re.split('[\n,]', hgvs_strings)
+            hgvs_strings = [x for x in hgvs_strings if x.strip() != '']
+
+            if not chrom or not start or not end or not sv_type or 'genome' not in request.form:
+                flash('All fields are required!', 'alert-danger')
+            else: # all valid
+                genome_build = request.form['genome']
+                was_successful, message, variant_id = validate_and_insert_cnv(chrom = chrom, start = start, end = end, sv_type = sv_type, imprecise = imprecise, hgvs_strings = hgvs_strings, conn = conn, genome_build = genome_build)
+                variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
+                if 'already in database' in message:
+                        flash(Markup("Variant not imported: already in database!! Missing hgvs strings were added. View it " + 
+                                     "<a href=" + url_for("variant.display", variant_id = variant_id) + 
+                                     " class=\"alert-link\">here</a>"), "alert-danger")
+                elif was_successful:
+                    flash(Markup("Successfully inserted structural variant: " + variant.get_string_repr() + 
+                                     ' (view your variant <a href="' + url_for("variant.display", variant_id = variant_id) + 
+                                     '" class="alert-link">here</a>)'), "alert-success")
+                    return redirect(url_for('variant.create_sv'))
+                else:
+                    flash("There was an error while importing the variant: " + message, "alert-danger")
+
+    return render_template('variant/create_sv.html', chroms=chroms, sv_types=sv_types)
 
 
 

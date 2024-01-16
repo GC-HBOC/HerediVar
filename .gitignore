@@ -173,11 +173,9 @@ fabric.properties
 .env_dev
 src/frontend_celery/logs
 /src/frontend_celery/webapp/static/files/
-
+classified_structural_variants
 
 /src/frontend_celery/webapp/static/packages/
 /logs
-/classified_variants
+/classified_variants_*
 /src/frontend_celery/tests/keycloak*
-
-

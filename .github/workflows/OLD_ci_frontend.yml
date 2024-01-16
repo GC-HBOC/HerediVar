@@ -1,0 +1,336 @@
+name: ci frontend
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+
+  test_frontend:
+    runs-on: ubuntu-20.04
+
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+            MYSQL_ALLOW_EMPTY_PASSWORD: yes
+            MYSQL_USER: test_user
+            MYSQL_PASSWORD: password
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: test_db
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      # download repository
+      - uses: actions/checkout@v3
+
+      - name: set environment variables
+        run: |
+          echo "ngs-bits-version=2022_10" >> $GITHUB_ENV
+          echo "samtools-version=1.11" >> $GITHUB_ENV
+          echo "htslib-version=1.16" >> $GITHUB_ENV
+          echo "toolspath=src/tools" >> $GITHUB_ENV
+          echo "install_scripts_path=src/tools/script" >> $GITHUB_ENV
+          
+        # echo "job-name=test_annotation_service" >> $GITHUB_ENV
+
+        
+      # install os dependencies
+      - name: install OS dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install autoconf automake make gcc perl zlib1g-dev libbz2-dev liblzma-dev libcurl4-gnutls-dev libssl-dev libncurses5-dev libncursesw5-dev
+          sudo apt-get install g++ libqt5xmlpatterns5-dev libqt5sql5-mysql libcurl4 libcurl4-openssl-dev
+          sudo apt-get install qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools
+          sudo apt-get install -y mysql-client
+
+      # setup keycloak
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 11
+      - name: Prepare Keycloak
+        run: |
+          chmod 755 src/frontend_celery/tests/script/prepare_keycloak.sh
+          src/frontend_celery/tests/script/prepare_keycloak.sh
+
+      - name: Start Keycloak
+        run: |
+          chmod 755 src/frontend_celery/tests/script/start_keycloak_for_tests.sh
+          src/frontend_celery/tests/script/start_keycloak_for_tests.sh
+
+
+
+      # init dbs
+      - name: Verify MySQL connection from container 
+        run: |
+          export MOST_RECENT_DUMP_DATE=$(cat resources/backups/database_dumper/most_recent_dump.txt)
+          gunzip resources/backups/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql.gz
+          mysql --host 0.0.0.0 -uroot -ppassword test_db < resources/backups/database_dumper/structure/structure-$MOST_RECENT_DUMP_DATE.sql
+          mysql --host 0.0.0.0 -uroot -ppassword test_db < src/frontend_celery/tests/data/heredivar_test_data.sql
+          mysql --host 0.0.0.0 -uroot -ppassword test_db -e "SHOW TABLES"
+
+
+      - name: Init NGSD
+        run: |
+          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "CREATE DATABASE IF NOT EXISTS ngsd;"
+          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "SHOW DATABASES LIKE 'ngsd';"
+          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 ngsd < src/frontend_celery/tests/data/ngsd_test_data.sql
+          mysql --host 0.0.0.0 -uroot -ppassword --port 3306 -e "SHOW TABLES FROM ngsd"
+
+
+      # setup ngs-bits
+      - name: cache ngs-bits
+        id: cache-ngs-bits
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-ngs-bits
+        with:
+          path: ${{ env.toolspath }}/ngs-bits
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.ngs-bits-version }}
+      - if: ${{ steps.cache-ngs-bits.outputs.cache-hit != 'true' }}
+        name: install ngs-bits local
+        run: |
+          chmod 755 ${{ env.install_scripts_path }}/install_ngs_bits.sh
+          ${{ env.install_scripts_path }}/install_ngs_bits.sh -p ${{ env.toolspath }} -v ${{ env.ngs-bits-version }}
+
+      - name: Connect ngs-bits with ngsd
+        run: |
+          echo $(pwd)
+          settingsfile=${{ env.toolspath }}/ngs-bits/bin/settings.ini
+          echo $settingsfile
+          echo "ngsd_host = \"0.0.0.0\"" > $settingsfile
+          echo "ngsd_port = 3306" >> $settingsfile
+          echo "ngsd_name = \"ngsd\"" >> $settingsfile
+          echo "ngsd_user = \"root\"" >> $settingsfile
+          echo "ngsd_pass = \"password\"" >> $settingsfile
+
+
+      # install tools dependencies (used for crossmap)
+      # install tools dependencies
+      - name: cache samtools
+        id: cache-samtools
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-samtools
+        with:
+          path: ${{ env.toolspath }}/samtools
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.samtools-version }}
+      - if: ${{ steps.cache-samtools.outputs.cache-hit != 'true' }}
+        name: install samtools
+        run: |
+          chmod 755 ${{ env.install_scripts_path }}/install_samtools.sh
+          ${{ env.install_scripts_path }}/install_samtools.sh -p ${{ env.toolspath }} -v ${{ env.samtools-version }}
+
+      - name: cache htslib
+        id: cache-htslib
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-htslib
+        with:
+          path: ${{ env.toolspath }}/htslib
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.htslib-version }}
+      - if: ${{ steps.cache-htslib.outputs.cache-hit != 'true' }}
+        name: install htslib
+        run: |
+          chmod 755 ${{ env.install_scripts_path }}/install_htslib.sh
+          ${{ env.install_scripts_path }}/install_htslib.sh -p ${{ env.toolspath }} -v ${{ env.htslib-version }}
+
+      - name: update environment variables
+        run: |
+          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/samtools" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/htslib" >> $GITHUB_PATH
+          echo "$GITHUB_WORKSPACE/${{ env.toolspath }}/ngs-bits/bin" >> $GITHUB_PATH
+
+
+      # build python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8.10'  # use 3.x to use the most up-to-date python3 version
+          architecture: 'x64' # Optional - x64 or x86 architecture, defaults to x64
+      - uses: actions/cache@v3 # cache the python environment to speed up tests
+        id: cache-python-modules
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
+      - if: ${{ steps.cache-python-modules.outputs.cache-hit != 'true' }}
+        name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install wheel setuptools
+          python3 -m pip install --upgrade setuptools wheel
+          pip install pytest
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+
+      # download genomes
+      - name: download grch37
+        run: |
+          wget -q ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/phase2_reference_assembly_sequence/hs37d5.fa.gz
+          (gunzip -c hs37d5.fa.gz | sed -r 's/>/>chr/g' > GRCh37.fa) || true
+          rm hs37d5.fa.gz
+          samtools faidx GRCh37.fa
+
+      - name: download grch38
+        run: |  
+          wget -q ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
+          (gunzip -c GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz |  sed -r 's/>chrM/>chrMT/g' > GRCh38.fa) || true
+          rm GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
+          samtools faidx GRCh38.fa
+
+      - name: download chainfile
+        run: |
+          wget -q http://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz
+          (gunzip -c hg19ToHg38.over.chain.gz | sed -r 's/chrM/chrMT/g' | bgzip > hg19ToHg38.fixed.over.chain.gz) || true
+          rm hg19ToHg38.over.chain.gz
+
+      # download other dependencies
+      - name: download phylop
+        run: wget -q http://hgdownload.soe.ucsc.edu/goldenPath/hg38/phyloP100way/hg38.phyloP100way.bw
+
+
+      # write .env file
+      - name: prepare settings
+        run: |
+          cd src/common
+          echo "HOST=127.0.0.1" > .env
+
+          echo "ISSUER=http://0.0.0.0:5050/realms/HerediVar" >> .env
+
+          echo "DB_HOST=0.0.0.0" >> .env
+          echo "DB_NAME=test_db" >> .env
+
+          echo "DB_USER=test_user" >> .env
+          echo "DB_USER_PW=password" >> .env
+          echo "DB_SUPER_USER=test_user" >> .env
+          echo "DB_SUPER_USER_PW=password" >> .env
+          echo "DB_ANNOTATION_USER=test_user" >> .env
+          echo "DB_ANNOTATION_USER_PW=password" >> .env
+          echo "DB_READ_ONLY=test_user" >> .env
+          echo "DB_READ_ONLY_PW=password" >> .env
+
+          echo "CLINVAR_API_KEY=${{ secrets.CLINVAR_API_KEY }}" >> .env
+
+          echo "FLASK_SECRET_KEY=The_testing_key" >> .env
+          
+          echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
+          echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> .env
+
+          echo "ENTREZ_MAIL=${{ secrets.ENTREZ_MAIL }}" >> .env
+
+
+      # run tests
+      - name: test frontend
+        run: |
+          chmod 755 src/frontend_celery/tests/script/run_tests.sh
+          src/frontend_celery/tests/script/run_tests.sh
+        ##### !secrets are loaded from github: https://github.com/Azure/actions-workflow-samples/blob/master/assets/create-secrets-for-GitHub-workflows.md
+        env:
+          WEBAPP_ENV: githubtest
+        shell: bash
+
+      # run tests
+      - name: test annotation service
+        run: |
+          echo $PATH
+          chmod 755 src/annotation_service/tests/run_tests.sh
+          src/annotation_service/tests/run_tests.sh
+        env:
+          WEBAPP_ENV: githubtest
+        shell: bash
+      
+
+      #- name: Lint with flake8
+      #  run: |
+      #    # stop the build if there are Python syntax errors or undefined names
+      #    flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      #    # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+      #    flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      #- uses: conda-incubator/setup-miniconda@v2
+      #  with:
+      #    python-version: 3.6.9
+      #    auto-activate-base: false
+      #    channels: defaults,conda-forge,bioconda
+
+
+      #- name: test install conda
+      #  run: |
+      #    conda install flake8
+      #    conda list
+      #    conda info
+        
+      #- name: install ngs-bits
+      #  run: conda install ngs-bits
+
+      #- name: install perl
+      #  uses: shogo82148/actions-setup-perl@v1
+      #  with:
+      #    perl-version: '5.34'
+
+      #- name: install vep
+      #  run: src/tools/download_tools_vep.sh
+
+      #- name: install vep
+      #  run: docker pull ensemblorg/ensembl-vep:release_104.3
+      
+      #- name: start vep container
+      #  run: |
+      #    docker images
+      #    docker run -d -it 43bc9e0feefb /bin/bash > vep-container.txt
+      #    docker ps -a
+      
+      #- name: install vep plugins
+      #  run: |
+      #    vepcontainer=$(cat vep-container.txt)
+      #    docker exec $vepcontainer INSTALL.pl -a p --PLUGINS REVEL,CADD,MaxEntScan --NO_UPDATE --NO_BIOPERL --NO_TEST --NO_HTSLIB
+
+      #    docker exec $vepcontainer cp /opt/vep/.vep/Plugins/REVEL.pm modules
+      #    docker exec $vepcontainer cp /opt/vep/.vep/Plugins/CADD.pm modules
+      #    docker exec $vepcontainer cp /opt/vep/.vep/Plugins/MaxEntScan.pm modules
+
+
+      #- name: install maxentscan
+      #  run: |
+      #    vepcontainer=$(cat vep-container.txt)
+      #    docker exec $vepcontainer mkdir -p MaxEntScan
+      #    docker exec $vepcontainer wget http://hollywood.mit.edu/burgelab/maxent/download/fordownload.tar.gz MaxEntScan
+      #    docker exec $vepcontainer tar xzf MaxEntScan/fordownload.tar.gz
+      #    docker exec $vepcontainer mv MaxEntScan/fordownload/* .
+      #    docker exec $vepcontainer rm -rf MaxEntScan/fordownload*
+      #    docker exec $vepcontainer chmod -R 755 MaxEntScan
+          
+      #- name: test vep
+      #  run: |
+      #    vepcontainer=$(cat vep-container.txt)
+      #    docker exec $vepcontainer ./vep --help
+
+
+
+      
+      # this step installs ngs-bits though miniconda
+      # $CONDA is an environment variable pointing to the root of the miniconda directory
+      #- name: prepare conda
+      #  run: |
+      #    $CONDA/bin/conda config --add channels conda-forge
+      #    $CONDA/bin/conda config --add channels bioconda
+      #    $CONDA/bin/conda config --add channels defaults
+          
+
+      #- name: install samtools
+      #  run: |
+      #    conda install -c bioconda samtools
+      #    conda list
+      #    conda info
+      #    ls -l $CONDA/bin
+
+      #- name: install ngs-bits
+      #  run: |
+      #    $CONDA/bin/conda install ngs-bits
+      #    $CONDA/bin/ReadQC --help

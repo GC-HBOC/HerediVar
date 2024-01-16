@@ -78,22 +78,31 @@ def log_file(log_file):
 
 
 
+            
+
 # listens on get parameter: raw
 @download_blueprint.route('/download/vcf/classified')
 @require_permission(['read_resources'])
 def classified_variants():
+    conn = get_connection()
+    allowed_variant_types = conn.get_enumtypes("variant", "variant_type")
+
     return_raw = request.args.get('raw')
-    classified_variants_folder = paths.classified_variants_dir #current_app.static_folder + "/files/classified_variants"
-    Path(classified_variants_folder).mkdir(parents=True, exist_ok=True)
+    variant_types = request.args.getlist('variant_type')
+    
+    variant_types_status, variant_types_err_message = validate_variant_types(variant_types, allowed_variant_types)
+    if variant_types_status != 'success':
+        return variant_types_err_message
+    classified_variants_folder = get_classified_variants_folder(variant_types) #current_app.static_folder + "/files/classified_variants"
     last_dump_path = classified_variants_folder + "/.last_dump.txt"
-    force_url = url_for("download.classified_variants", raw=return_raw, force = True)
+    force_url = url_for("download.classified_variants", variant_type=variant_types, raw=return_raw, force = True)
     redirect_url = url_for("main.index")
 
     if os.path.isfile(last_dump_path):
         with open(last_dump_path, 'r') as last_dump_file:
             last_dump_date = last_dump_file.read()
     else: # generate a new file if it is missing...
-        generate_consensus_only_vcf()
+        generate_consensus_only_vcf(variant_types)
         with open(last_dump_path, 'r') as last_dump_file:
             last_dump_date = last_dump_file.read()
     
@@ -103,7 +112,7 @@ def classified_variants():
     if returncode != 0:
         if request.args.get('force') is None:
             flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
-            current_app.logger.error(get_preferred_username() + " tried to download a all classified variants as vcf, but it contains errors: " + vcf_errors)
+            current_app.logger.error(get_preferred_username() + " tried to download all classified variants as vcf, but it contains errors: " + vcf_errors)
             return redirect(redirect_url)
 
     if return_raw is not None:
@@ -113,10 +122,66 @@ def classified_variants():
             resp.mimetype = "text/plain"
             return resp
     else:
-        return send_file(path_to_download, download_name="HerediVar-classified-" + functions.get_today(), as_attachment=True, mimetype="text/vcf")  
+        return send_file(path_to_download, download_name="HerediVar-classified-" + '-'.join(variant_types) + "-" + functions.get_today(), as_attachment=True, mimetype="text/vcf")
 
-def generate_consensus_only_vcf():
-    classified_variants_folder = paths.classified_variants_dir
+
+def validate_variant_types(variant_types, allowed_variant_types):
+    status = 'success'
+    message = ""
+    for variant_type in variant_types:
+        if variant_type not in allowed_variant_types:
+            status = "error"
+            message = "Variant type " + str(variant_type) + " is unknown."
+    return status, message
+
+## listens on get parameter: raw
+#@download_blueprint.route('/download/vcf/classified_sv')
+#@require_permission(['read_resources'])
+#def classified_structural_variants():
+#    return_raw = request.args.get('raw')
+#    variant_types = ['sv']
+#    classified_variants_folder = get_classified_variants_folder(variant_types) #current_app.static_folder + "/files/classified_variants"
+#    Path(classified_variants_folder).mkdir(parents=True, exist_ok=True)
+#    last_dump_path = classified_variants_folder + "/.last_dump.txt"
+#    force_url = url_for("download.classified_structural_variants", raw=return_raw, force = True)
+#    redirect_url = url_for("main.index")
+#
+#    if os.path.isfile(last_dump_path):
+#        with open(last_dump_path, 'r') as last_dump_file:
+#            last_dump_date = last_dump_file.read()
+#    else: # generate a new file if it is missing...
+#        generate_consensus_only_vcf(variant_types)
+#        with open(last_dump_path, 'r') as last_dump_file:
+#            last_dump_date = last_dump_file.read()
+#    
+#    path_to_download = classified_variants_folder + "/" + last_dump_date + ".vcf"
+#    returncode, err_msg, vcf_errors = functions.check_vcf(path_to_download)
+#
+#    if returncode != 0:
+#        if request.args.get('force') is None:
+#            flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
+#            current_app.logger.error(get_preferred_username() + " tried to download a all classified variants as vcf, but it contains errors: " + vcf_errors)
+#            return redirect(redirect_url)
+#
+#    if return_raw is not None:
+#        with open(path_to_download, "r") as file_to_download:
+#            download_text = file_to_download.read()
+#            resp = make_response(download_text, 200)
+#            resp.mimetype = "text/plain"
+#            return resp
+#    else:
+#        return send_file(path_to_download, download_name="HerediVar-classified-svs-" + functions.get_today(), as_attachment=True, mimetype="text/vcf")  
+
+
+def get_classified_variants_folder(variant_types):
+    classified_variants_folder = path.join(paths.workdir, "classified_variants_" + '_'.join(variant_types))
+    Path(classified_variants_folder).mkdir(parents=True, exist_ok=True)
+    return classified_variants_folder
+
+
+def generate_consensus_only_vcf(variant_types):
+    classified_variants_folder = get_classified_variants_folder(variant_types)
+
     last_dump_path = classified_variants_folder + "/.last_dump.txt"
     last_dump_date = functions.get_today()
     path_to_download = classified_variants_folder + "/" + last_dump_date + ".vcf"
@@ -124,7 +189,7 @@ def generate_consensus_only_vcf():
     remove_oldest_file(classified_variants_folder, maxfiles=10)
 
     conn = Connection(['read_only'])
-    variant_ids_oi = conn.get_variant_ids_with_consensus_classification()
+    variant_ids_oi = conn.get_variant_ids_with_consensus_classification(variant_types = variant_types)
     vcf_file_buffer, x, xx, xxx = get_vcf(variant_ids_oi, conn, get_variant_vcf_line_only_consensus)
     functions.buffer_to_file_system(vcf_file_buffer, path_to_download)
     conn.close()
@@ -810,7 +875,7 @@ def refgene_ngsd_tabix():
 @download_blueprint.route('/download/hg38.fa')
 def ref_genome():
     filename = "GRCh38.fa"
-    print(paths.ref_genome_dir) # /mnt/storage2/users/ahdoebm1/HerediVar/data/genomes/GRCh38.fa
+    # reg_genome_dir: /mnt/storage2/users/ahdoebm1/HerediVar/data/genomes/GRCh38.fa
     return send_from_directory(directory=paths.ref_genome_dir, path=filename, download_name="GRCh38.fa", as_attachment=True, mimetype="text")
 
 @download_blueprint.route('/download/hg38.fa.fai')
