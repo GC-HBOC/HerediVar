@@ -290,7 +290,7 @@ class automatic_classification_job(Job):
         "multifactorial_log-likelihood": 0.56,
         """
 
-        # protein domains: cold_spot missing
+        # protein domains:
         """
         "VUS_task_force_domain" : true,
         "cold_spot": true
@@ -307,7 +307,7 @@ class automatic_classification_job(Job):
                 result["VUS_task_force_domain"] = True
         
         result["cold_spot"] = False
-        if variant.annotations.task_force_cold_spot is not None:
+        if variant.annotations.coldspot is not None:
             result["cold_spot"] = True
 
         # cancerhotspots

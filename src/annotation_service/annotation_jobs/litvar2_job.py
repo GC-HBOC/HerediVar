@@ -55,7 +55,7 @@ class litvar2_job(Job):
         rsids = variant.get_external_ids('rsid')
         if rsids is not None:
             for rsid in rsids:
-                rsid = "rs" + str(rsid.strip('rs'))
+                rsid = "rs" + str(rsid.value.strip('rs'))
                 litvar_pmids = self.query_litvar(rsid)
                 if litvar_pmids is not None:
                     break
