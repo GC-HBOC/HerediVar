@@ -113,17 +113,17 @@ UNLOCK TABLES;
 
 LOCK TABLES `variant` WRITE;
 INSERT INTO `variant` VALUES 
-	(15,'chr2',214730440,'G','A',0,NULL,'chr2',214730440,'G','A',0),
-	(32,'chr13',32362509,'T','C',0,NULL,'chr1',32362509,'T','C',0),
-	(52,'chr13',32314943,'A','G',0,'dummy BRCA variant','chr13',32314943,'A','G',0),
-	(71,'chr17',43124032,'AAGATTTTCTGCAT','A',0,'ARUP BRCA classification example','chr17',43124032,'AAGATTTTCTGCAT','A',0),
-	(72,'chr17',7670685,'G','A',0,'dummy TP53 variant','chr17',7670685,'G','A',0),
-	(130,'chr1',45331755,'G','A',0,'variant with two mane select transcripts in consequences','chr1',45331755,'G','A',0),
-	(139,'chr1',10304277,'T','C',0,NULL,'chr1',10364335,'T','C',0),
-	(146,'chr11',108229267,'A','C',0,NULL,'chr11',108229267,'A','C',0),
-	(164,'chr14',39335204,'A','G',0,NULL,'chr14',39335204,'A','G',0),
-	(168,'chr17',43095845,'C','G',0,'dummy BRCA variant with prior','chr17',43095845,'C','G',0),
-	(167,'chr11',108251073,'G','T',0,'dummy deleted variant','chr11',108251073,'G','T',1);
+	(15,'chr2',214730440,'G','A','chr2',214730440,'G','A',0,'small',NULL),
+	(32,'chr13',32362509,'T','C','chr1',32362509,'T','C',0,'small',NULL),
+	(52,'chr13',32314943,'A','G','chr13',32314943,'A','G',0,'small',NULL),
+	(71,'chr17',43124032,'AAGATTTTCTGCAT','A','chr17',43124032,'AAGATTTTCTGCAT','A',0,'small',NULL),
+	(72,'chr17',7670685,'G','A','chr17',7670685,'G','A',0,'small',NULL),
+	(130,'chr1',45331755,'G','A','chr1',45331755,'G','A',0,'small',NULL),
+	(139,'chr1',10304277,'T','C','chr1',10364335,'T','C',0,'small',NULL),
+	(146,'chr11',108229267,'A','C','chr11',108229267,'A','C',0,'small',NULL),
+	(164,'chr14',39335204,'A','G','chr14',39335204,'A','G',0,'small',NULL),
+	(168,'chr17',43095845,'C','G','chr17',43095845,'C','G',0,'small',NULL),
+	(167,'chr11',108251073,'G','T','chr11',108251073,'G','T',1,'small',NULL);
 UNLOCK TABLES;
 
 
