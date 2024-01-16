@@ -1235,7 +1235,6 @@ function add_functionality_to_table() {
 ///////////// helper functions /////////////
 
 function select_criterium(obj) {
-    console.log(obj)
     const criterium_id = obj.getAttribute('criterium_id') // this is the criterium which we want to select
     const criterium_button = document.getElementById(criterium_id)
 
