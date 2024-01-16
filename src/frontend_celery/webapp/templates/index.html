@@ -92,7 +92,8 @@
 
 <div class="bst bsb">
     <h4>Changelog</h4>
-    <div class="underline">v 1.7 ()</div>
+    <div class="underline">v 1.7 (16.01.2024)</div>
+    <div class="btn-pvs">!! The automatic classification algorithm is currently under construction. HerediVar is already prepared for it. Thus, you might encounter disabled buttons or dummy data. It will be enabled in a future update</div>
     <div>
         General changes:
         <ul>
@@ -116,52 +117,6 @@
             <li>Fixed a bug that increased the size of the consensus classification label for class 4M</li>
             <li>The clinvar variation was in the downloaded vcf files twice. Removed one of the copies. The clinvar variation id info is now called "clinvar"</li>
             <li>In rare cases ClinVar submissions are missing which would result in an error when downloading the vcf file. In such cases the clinvar_submissions info in the downloaded vcf file will be set to None</li>
-        </ul>
-        Known issues:
-        <ul>
-            <li>HerediCare Center specific classifications are not available</li>
-            <li>HerediCare priors, log likelihood, segregation & cooccurance are not available</li>
-        </ul>
-    </div>
-
-    <div class="underline">v 1.6.1 (11.01.2024)</div>
-    <div>
-        Bugfixes:
-        <ul>
-            <li>Searching for 4M criterium with include_heredicare option would result in an error</li>
-            <li>Searching for class 4 consensus classification with include_heredicare option previously resulted in consensus class 4 and heredicare class 3+</li>
-        </ul>
-    </div>
-    <div class="underline">v 1.6 (10.01.2024)</div>
-    <div class="btn-pvs">!! The automatic classification algorithm is currently under construction. HerediVar is already prepared for it. Thus, you might encounter disabled buttons or dummy data. It will be enabled in a future update</div>
-    <div>
-        General changes:
-        <ul>
-            <li>Added form to create structural variants: DEL, DUP, INV</li>
-            <li>Added structural variants to browse variants table</li>
-            <li>Added START, END, SVTYPE, IMPRECISE info columns to vcf with structural variants</li>
-            <li>Added the general comment to the classified variants download</li>
-            <li>Added a separate download link for all classified structural variants</li>
-            <li>Added structural variants track to IGV</li>
-            <li>Added the coldspot annotation</li>
-            <li>Added variant search which allows the user to search directly for a specific variant using this format: chrom-pos-ref-alt OR chrom-start-end-sv_type in case of structural variants</li>
-            <li>Changed External ID search to overall ID search. It now also allows to search for heredivar variant ids.</li>
-            <li>Update search help</li>
-            <li>Added variant type search option</li>
-            <li>Updated ClinVar to v. 20240207</li>
-        </ul>
-        Bugfixes:
-        <ul>
-            <li>Fixed a bug where the criterium strength addition to the label would reset when the default strength was not its original strength.</li>
-            <li>Fixed the order of selectable criteria strengths on the classify variants page</li>
-            <li>Fixed a bug when submitting 4M classifications</li>
-            <li>Previously, updates to ClinVar submissions were not working & removed the 'customAssertionScore' from ClinVar submissions</li>
-            <li>Fixed a bug when trying to add all variants from a search to a list</li>
-            <li>In BRCA2 v1.0.0 criteria supporting strength was not selectable</li>
-            <li>Sometimes, the classification scheme was not changeable in consensus classifications</li>
-            <li>BRCA1 v1.0.0 PP1 criterium was missing strength selection and PP4 criterium was missing very strong strength</li>
-            <li>BRCA2 v1.0.0 PP1 and PP4 criteria were missing very strong strength</li>
-            <li>Fixed a bug when a standard or read only user was accessing the variant details page when a ClinVar submission was unfinished</li>
         </ul>
         Known issues:
         <ul>
