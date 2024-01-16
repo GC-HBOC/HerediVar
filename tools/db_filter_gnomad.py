@@ -1,8 +1,8 @@
 import argparse
 from os import path
 import sys
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-import src.common.functions as functions
+sys.path.append(  path.join(path.dirname(path.dirname(path.abspath(__file__))), "src")  )
+import common.functions as functions
 import sys
 
 parser = argparse.ArgumentParser(description="This script takes a gnomad.vcf file and filters it such that only a few interesting fields in the INFO column are left")

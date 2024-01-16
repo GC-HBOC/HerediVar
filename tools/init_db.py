@@ -1,10 +1,10 @@
 import sys
 from os import path
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-from src.common.db_IO import Connection
-import src.common.paths as paths
+sys.path.append(  path.join(path.dirname(path.dirname(path.abspath(__file__))), "src")  )
+from common.db_IO import Connection
+import common.paths as paths
 import gzip
-import src.common.functions as functions
+import common.functions as functions
 import re
 import xml.etree.ElementTree as ET
 

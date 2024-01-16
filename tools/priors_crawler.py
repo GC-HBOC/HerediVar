@@ -1,8 +1,8 @@
 import argparse
 from os import path
 import sys
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-import src.common.functions as functions
+sys.path.append(  path.join(path.dirname(path.dirname(path.abspath(__file__))), "src")  )
+import common.functions as functions
 import sys
 from urllib.parse import urljoin
 import requests

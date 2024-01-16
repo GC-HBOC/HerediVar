@@ -39,10 +39,12 @@ def search():
     allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
     allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
     allowed_automatic_classes = functions.order_classes(conn.get_enumtypes('automatic_classification', 'classification_splicing'))
+    allowed_variant_types = ['small_variants', 'structural_variant']
     annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
     annotation_types = preprocess_annotation_types_for_search(annotation_types)
 
     variant_strings = extract_variants(request)
+    variant_types = extract_variant_types(request, allowed_variant_types)
     genes = extract_genes(request)
     ranges = extract_ranges(request)
     consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request, allowed_consensus_classes)
@@ -88,7 +90,8 @@ def search():
                                                 external_ids = external_ids,
                                                 cdna_ranges = cdna_ranges,
                                                 annotation_restrictions = annotation_restrictions,
-                                                variant_strings = variant_strings
+                                                variant_strings = variant_strings,
+                                                variant_types = variant_types
                                             )
                     variant_ids = [variant.id for variant in variants_for_list]
                     for variant_id in variant_ids:
@@ -121,7 +124,8 @@ def search():
                                         lookup_list_name = request.args.getlist("lookup_list_name"),
                                         page_size = request.args.get('page_size', page_sizes[1]),
                                         sort_by = request.args.get('sort_by', sort_bys[0]),
-                                        include_hidden = request.args.get('include_hidden')
+                                        include_hidden = request.args.get('include_hidden'),
+                                        variant_types = request.args.getlist('variant_type')
                                     )
                                 )
             
@@ -143,7 +147,8 @@ def search():
         external_ids = external_ids,
         cdna_ranges = cdna_ranges,
         annotation_restrictions = annotation_restrictions,
-        variant_strings = variant_strings
+        variant_strings = variant_strings,
+        variant_types = variant_types
     )
     lists = conn.get_lists_for_user(user_id)
     pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
@@ -158,6 +163,7 @@ def search():
                            allowed_user_classes = allowed_user_classes,
                            allowed_consensus_classes = allowed_consensus_classes,
                            allowed_automatic_classes = allowed_automatic_classes,
+                           allowed_variant_types = allowed_variant_types,
                            annotation_types = annotation_types,
                            modal_args = modal_args # for add all to list
                         )

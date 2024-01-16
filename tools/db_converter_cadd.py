@@ -1,10 +1,10 @@
 import sys
 from os import path
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+sys.path.append(  path.join(path.dirname(path.dirname(path.abspath(__file__))), "src")  )
 import argparse
 from gc import collect
 from ntpath import join
-import src.common.functions as functions
+import common.functions as functions
 
 
 parser = argparse.ArgumentParser(description="")

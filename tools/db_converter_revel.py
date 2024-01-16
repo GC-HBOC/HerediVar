@@ -1,8 +1,8 @@
 import sys
 from os import path
 import argparse
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-import src.common.functions as functions
+sys.path.append(  path.join(path.dirname(path.dirname(path.abspath(__file__))), "src")  )
+import common.functions as functions
 
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("-i", "--input",  default="", help="path to input.vcf file")
