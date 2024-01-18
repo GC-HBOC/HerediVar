@@ -92,32 +92,16 @@
 
 <div class="bst bsb">
     <h4>Changelog</h4>
-    <div class="underline">v 1.7 (16.01.2024)</div>
+    <div class="underline">v 1.8 ()</div>
     <div class="btn-pvs">!! The automatic classification algorithm is currently under construction. HerediVar is already prepared for it. Thus, you might encounter disabled buttons or dummy data. It will be enabled in a future update</div>
     <div>
         General changes:
         <ul>
-            <li>Added form to create structural variants: DEL, DUP, INV</li>
-            <li>Added structural variants to browse variants table</li>
-            <li>Added START, END, SVTYPE, IMPRECISE info columns to vcf with structural variants</li>
-            <li>Added the general comment to the classified variants download</li>
-            <li>Added a separate download link for all classified structural variants</li>
-            <li>Added structural variants track to IGV</li>
-            <li>Added the coldspot annotation</li>
-            <li>Added variant search which allows the user to search directly for a specific variant using this format: chrom-pos-ref-alt OR chrom-start-end-sv_type in case of structural variants</li>
-            <li>Changed External ID search to overall ID search. It now also allows to search for heredivar variant ids.</li>
-            <li>Update search help</li>
-            <li>Added variant type search option</li>
-            <li>Updated ClinVar to v. 20240207</li>
+            <li></li>
         </ul>
         Bugfixes:
         <ul>
-            <li>Fixed tooltips in browse variant table</li>
-            <li>The annotation service would fail when the variant does not have a dbsnp rsid</li>
-            <li>Fixed a bug that increased the size of the consensus classification label for class 4M</li>
-            <li>The clinvar variation was in the downloaded vcf files twice. Removed one of the copies. The clinvar variation id info is now called "clinvar"</li>
-            <li>In rare cases ClinVar submissions are missing which would result in an error when downloading the vcf file. In such cases the clinvar_submissions info in the downloaded vcf file will be set to None</li>
-            <li>Fixed a bug that prevented the user to change the state of criteria when using microsoft edge</li>
+            <li>Fixed a bug where some variants got raw SpliceAI scores instead of the masked ones</li>
         </ul>
         Known issues:
         <ul>

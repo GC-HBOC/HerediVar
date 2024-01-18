@@ -6,38 +6,35 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common.functions as functions
 from common.xml_validator import xml_validator
 from datetime import datetime, timedelta
+from common.singleton import Singleton
 
 
 
 
 
-
-class Heredicare_Flask():
-    def __init__(self, app=None):
-        self.app = app
-        if app is not None:
-            self.state = self.init_app(app)
-        else:
-            self.state = None
-
-    def init_app(self, app):
-        state = Heredicare()
-
-        # register extension with app
-        app.extensions = getattr(app, 'extensions', {})
-        app.extensions['heredicare'] = state
-        return state
-
-    def __getattr__(self, name):
-        return getattr(self.state, name, None)
-
+#class Heredicare_Flask():
+#    def __init__(self, app=None):
+#        self.app = app
+#        if app is not None:
+#            self.state = self.init_app(app)
+#        else:
+#            self.state = None
+#
+#    def init_app(self, app):
+#        state = Heredicare()
+#
+#        # register extension with app
+#        app.extensions = getattr(app, 'extensions', {})
+#        app.extensions['heredicare'] = state
+#        return state
+#
+#    def __getattr__(self, name):
+#        return getattr(self.state, name, None)
 
 
 
 
-
-
-class Heredicare:
+class Heredicare(metaclass=Singleton):
     bearer = None
     bearer_timestamp = None
 
@@ -185,11 +182,6 @@ class Heredicare:
             variant[item_name] = item_value
         return variant
 
-
-
-    
-
-heredicare_interface = Heredicare()
 
 
 

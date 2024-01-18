@@ -10,7 +10,7 @@ from celery.exceptions import Ignore
 from flask_mail import Message
 from flask import render_template
 import time
-from annotation_service.heredicare_interface import heredicare_interface
+from annotation_service.heredicare_interface import Heredicare
 # errors:
 from mysql.connector import Error, InternalError
 from urllib.error import HTTPError
@@ -135,6 +135,7 @@ def heredicare_variant_import(self, user_id, user_roles, min_date, import_queue_
 def import_variants(conn: Connection, user_id, user_roles, min_date, import_queue_id): # the task worker
     status = "success"
 
+    heredicare_interface = Heredicare()
     vids_heredicare, status, message = heredicare_interface.get_vid_list()
     if status == "success":
         vids_heredicare, all_vids_heredicare, status, message = heredicare_interface.filter_vid_list(vids_heredicare, min_date)
@@ -307,6 +308,7 @@ def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant
     
     try:
         conn = Connection(user_roles)
+        heredicare_interface = Heredicare()
         conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
         status, message = fetch_heredicare(vid, heredicare_interface, user_id, conn, insert_variant = True, perform_annotation = True)
     except InternalError as e:

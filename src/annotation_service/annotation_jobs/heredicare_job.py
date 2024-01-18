@@ -3,7 +3,7 @@ from ._job import Job
 import common.paths as paths
 import common.functions as functions
 import os
-from annotation_service.heredicare_interface import heredicare_interface
+from annotation_service.heredicare_interface import Heredicare
 import time
 from datetime import datetime
 
@@ -40,6 +40,7 @@ class heredicare_job(Job):
         if not self.job_config['do_heredicare']:
             return status_code, err_msg
 
+        heredicare_interface = Heredicare()
         conn.clear_heredicare_annotation(variant_id)
         
         heredicare_vid_annotation_type_id = conn.get_most_recent_annotation_type_id('heredicare_vid')
