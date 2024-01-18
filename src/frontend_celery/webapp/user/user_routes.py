@@ -5,7 +5,6 @@ sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath
 from common.db_IO import Connection
 from werkzeug.exceptions import abort
 import common.functions as functions
-import annotation_service.fetch_heredicare_variants as heredicare
 from datetime import datetime
 from ..utils import *
 from flask_paginate import Pagination
@@ -340,23 +339,7 @@ def admin_dashboard():
 
     if request.method == 'POST':
         request_type = request.args.get("type")
-        if request_type == 'update_variants':
-            if status == 'finished':
-                import_queue_id = conn.insert_import_request(user_id = session['user']['user_id'])
-                requested_at = conn.get_import_request(import_queue_id = import_queue_id)[2]
-                requested_at = datetime.strptime(str(requested_at), '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d-%H-%M-%S')
-
-                logs_folder = path.join(path.dirname(current_app.root_path), current_app.config['LOGS_FOLDER'])
-                log_file_path = logs_folder + 'heredicare_import:' + requested_at + '.log'
-                heredicare.process_all(log_file_path, user_id=session['user']['user_id'])
-                log_file_path = heredicare.get_log_file_path()
-                date = log_file_path.strip('.log').split(':')[1].split('-')
-
-                conn.close_import_request(import_queue_id)
-                current_app.logger.info(session['user']['preferred_username'] + " issued a full HerediCare import.")
-                return redirect(url_for('variant_io.import_summary', year=date[0], month=date[1], day=date[2], hour=date[3], minute=date[4], second=date[5]))
-
-        elif request_type == 'reannotate':
+        if request_type == 'reannotate':
             selected_jobs = request.form.getlist('job')
             reannotate_which = request.form.get('reannotate_which')
             if reannotate_which is None:

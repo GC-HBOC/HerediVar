@@ -1,7 +1,5 @@
 from ..utils import *
-import datetime
 import io
-from common.pdf_generator import pdf_gen
 from ..io.download_routes import calculate_class
 from functools import cmp_to_key
 from flask import render_template
@@ -100,7 +98,8 @@ from flask import render_template
 
     functions.rm(tmp_file_path)
     functions.rm(tmp_file_path + ".lifted.unmap")
-    return was_successful"""
+    return was_successful
+"""
 
 
 
@@ -174,7 +173,6 @@ def handle_consensus_classification(variant, classification, comment, scheme_id,
     for criterium_id in criteria:
         criteria[criterium_id]['strength_description'] = conn.get_classification_criterium_strength(criteria[criterium_id]['criterium_strength_id'])[3]
     evidence_b64 = functions.buffer_to_base64(io.BytesIO())
-    #evidence_b64 = get_evidence_pdf(variant, classification, comment, current_datetime, pmids, text_passages, scheme_description, criteria)
 
     #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/frontend/downloads/consensus_classification_reports/testreport.pdf')
     conn.insert_consensus_classification(session['user']['user_id'], variant.id, classification, comment, evidence_document=evidence_b64, date = current_datetime, scheme_id = scheme_id, scheme_class = scheme_class)
@@ -256,87 +254,6 @@ def add_classification_report(variant_id, conn):
     evidence_document_bytes = bytes(evidence_document_str, 'utf-8')
     print(len(evidence_document_bytes))
     conn.update_consensus_classification_report(consensus_classification_id, evidence_document_bytes)
-
-
-
-def get_evidence_pdf(variant, classification, comment, current_date, pmids, text_passages, scheme_description, selected_criteria):
-    buffer = io.BytesIO()
-    generator = pdf_gen(buffer)
-    generator.add_title('Classification report')
-    v = str(variant.chrom) + '-' + str(variant.pos) + '-' + str(variant.ref) + '-' + str(variant.alt)
-    if variant.annotations is not None:
-        rsid = variant.annotations.rsid
-        if rsid is not None:
-            rsid = rsid.value
-    selected_literature = list(zip(pmids, text_passages))
-    selected_criteria_table = []
-    for criterium_id in selected_criteria:
-        selected_criteria_table.append([selected_criteria[criterium_id]['criterium_name'], selected_criteria[criterium_id]['strength_description'], selected_criteria[criterium_id]['evidence']])
-
-    generator.add_variant_info(v, classification, current_date, comment, rsid, selected_literature, scheme_description, selected_criteria_table)
-
-    # basic information
-    generator.add_subtitle("Scores & annotations:")
-    annotations = variant.annotations
-    if annotations is not None:
-        for key in annotations.get_all_annotation_names():
-            #print(key)
-            current_obj = getattr(annotations, key)
-            if current_obj is not None: 
-                generator.add_relevant_information(key.replace('_', ' '), str(current_obj.value))
-    if variant.consequences is not None:
-        generator.add_subtitle("Variant consequences:")
-        generator.add_text("Flags column: first number = is_gencode_basic, second number: is_mane_select, third number: is_mane_plus_clinical, fourth number: is_ensembl_canonical")
-        generator.add_table([[x.transcript, x.hgvs_c, x.hgvs_p, x.consequence, x.impact, x.exon, x.intron, x.gene.symbol, x.protein_domain_title, str(x.is_gencode_basic) + str(x.is_mane_select) + str(x.is_mane_plus_clinical) + str(x.is_ensembl_canonical)] for x in variant.consequences], 
-            ('Transcript Name', 'HGVSc', 'HGVSp', 'Consequence', 'Impact', 'Exon Nr.', 'Intron Nr.', 'Gene Symbol', 'Protein Domain', 'Flags'), [3, 2, 2, 3, 1.5, 1.2, 1.3, 1.5, 1.6, 1.5])
-    if variant.literature is not None:
-        generator.add_subtitle("PubMed IDs:")
-        generator.add_relevant_literature([str(x.pmid) for x in variant.literature])
-    if any(x is not None for x in [variant.user_classifications, variant.clinvar, variant.heredicare_classifications]):
-        generator.add_subtitle("Classifications:")
-    if variant.user_classifications is not None:
-        generator.add_text("HerediVar user classifications:")
-        for user_classification in variant.user_classifications:
-            generator.add_text("Basic information")
-            generator.add_relevant_information("Class", user_classification.selected_class)
-            generator.add_relevant_information("Full name", user_classification.submitter.full_name)
-            generator.add_relevant_information("Affiliation", user_classification.submitter.affiliation)
-            generator.add_relevant_information("Date", user_classification.date)
-            generator.add_relevant_information("Comment", user_classification.comment)
-
-            # add scheme classification
-            scheme = user_classification.scheme
-            generator.add_text("Selected scheme: " + scheme.display_name)
-            selected_criteria = scheme.criteria
-            if selected_criteria is not None and len(selected_criteria) > 0:
-                generator.add_text("Selected criteria:")
-                generator.add_table([[x.name, x.strength, x.evidence] for x in selected_criteria], ["Criterium", "Strength", "Evidence"], [2,3.5,13.5]) # criterium, strength, evidence
-            
-            # add text passages
-            selected_literature = user_classification.literature
-            if selected_literature is not None:
-                generator.add_text("Selected literature:")
-                generator.add_table([[x.pmid, x.text_passage] for x in selected_literature], ["PMID", "Text passage"], [2, 17]) # pmid, text_passage
-            else:
-                generator.add_text("No further literature evidence selected.")
-    if variant.heredicare_classifications is not None:
-        generator.add_text("HerediCare center classifications:")
-        generator.add_table([[x.selected_class, x.center, x.date, x.comment] for x in variant.heredicare_classifications], ('Class', 'Center', 'Date', 'Comment'),  [2, 2, 2, 12])
-    if variant.clinvar is not None:
-        clinvar_submissions = variant.clinvar.submissions
-        if clinvar_submissions is not None:
-            generator.add_text("ClinVar submissions:")
-            generator.add_table([[x.interpretation, x.last_evaluated, x.review_status, ';'.join([condition.title for condition in x.conditions]), x.submitter, x.comment] for x in clinvar_submissions], 
-                ('Interpretation', 'Last evaluated', 'Review status', 'Condition', 'Submitter', 'Comment'), [1.5, 2, 2, 2, 2, 9])
-    if variant.assays is not None:
-        generator.add_text("Assays:")
-        generator.add_table([[x.type, str(x.score), x.date] for x in variant.assays], ("Assay type", "Score", "Date"), [3,3,3])
-
-    generator.save_pdf()
-    buffer.seek(io.SEEK_SET)
-    evidence_b64 = functions.buffer_to_base64(buffer)
-    return evidence_b64
-
 
 
 def extract_criteria_from_request(request_obj, scheme_id, conn: Connection):

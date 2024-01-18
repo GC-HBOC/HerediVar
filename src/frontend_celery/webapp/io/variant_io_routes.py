@@ -6,7 +6,6 @@ from common.db_IO import Connection
 from werkzeug.exceptions import abort
 import common.functions as functions
 import common.paths as paths
-import annotation_service.fetch_heredicare_variants as heredicare
 from datetime import datetime
 from ..utils import require_permission, get_clinvar_submission_status, get_connection, check_clinvar_status, check_update_clinvar_status
 import jsonschema
@@ -20,69 +19,6 @@ variant_io_blueprint = Blueprint(
     __name__
 )
 
-
-
-"""
-#http://srv018.img.med.uni-tuebingen.de:5000/import-variants/summary%3Fdate%3D2022-06-15-11-44-25
-@variant_io_blueprint.route('/import-variants/summary?date=<string:year>-<string:month>-<string:day>-<string:hour>-<string:minute>-<string:second>')
-@require_permission(['read_resources'])
-def import_summary(year, month, day, hour, minute, second):
-    logs_folder = path.join(path.dirname(current_app.root_path), current_app.config['LOGS_FOLDER'])
-    requested_at = '-'.join([year, month, day, hour, minute, second])
-    log_file = secure_filename('heredicare_import:' + requested_at + '.log')
-    try:
-        import_log_file = open(path.join(logs_folder, log_file), 'r')
-    except:
-        abort(404) # redirect to 404 page if the log file does not exist!
-    num_new_variants = 0
-    num_deleted_variants = 0
-    num_error_new_variants = 0
-    num_variants_new_annotations = 0
-    num_rejected_to_delete_variants = 0
-    num_duplicate_variants = 0
-
-    num_heredivar_exclusive = 0
-    num_heredicare_exclusive = 0
-    num_heredivar_and_heredicare = 0
-    for line in import_log_file:
-        if '~~s0~~' in line:
-            num_new_variants += 1 #functions.find_between(line, 'a total of ', ' vids were')
-        if '~~s1~~' in line:
-            num_deleted_variants += 1
-        if '~~e2~~' in line:
-            num_error_new_variants += 1
-        if '~~i8~~' in line:
-            num_variants_new_annotations += 1
-        if '~~i2~~' in line:
-            num_rejected_to_delete_variants += 1
-        if '~~i1~~' in line:
-            num_duplicate_variants += 1
-
-        if '~~i5~~' in line:
-            num_heredivar_exclusive = functions.find_between(line, 'a total of ', ' vids were')
-        if '~~i6~~' in line:
-            num_heredicare_exclusive = functions.find_between(line, 'a total of ', ' vids were')
-        if '~~i7~~' in line:
-            num_heredivar_and_heredicare = functions.find_between(line, 'a total of ', ' vids were')
-    
-    conn = get_connection()
-    finished_at = conn.get_import_request(date = requested_at)[4]
-    requested_at = datetime.strptime(requested_at, '%Y-%m-%d-%H-%M-%S').strftime('%Y-%m-%d %H:%M:%S')
-    return render_template('variant_io/import_variants_summary.html', 
-                            num_new_variants=num_new_variants,
-                            num_deleted_variants=num_deleted_variants, 
-                            num_error_new_variants=num_error_new_variants, 
-                            num_variants_new_annotations=num_variants_new_annotations,
-                            num_rejected_to_delete_variants=num_rejected_to_delete_variants,
-                            num_heredivar_exclusive=num_heredivar_exclusive,
-                            num_heredicare_exclusive=num_heredicare_exclusive,
-                            num_heredivar_and_heredicare=num_heredivar_and_heredicare,
-                            num_duplicate_variants=num_duplicate_variants,
-                            requested_at=requested_at,
-                            finished_at=finished_at,
-                            log_file = log_file)
-
-"""
 
 @variant_io_blueprint.route('/submit_clinvar/<int:variant_id>', methods=['GET', 'POST'])
 @require_permission(['admin_resources'])

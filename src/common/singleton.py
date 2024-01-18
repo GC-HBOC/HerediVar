@@ -1,4 +1,5 @@
-class Singleton(type):
+# metaclass
+class Singleton(type): 
     _instances = {}
     # override call method: how is the class instantiated
     def __call__(cls, *args, **kwargs):
