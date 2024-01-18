@@ -64,7 +64,6 @@ def create_app():
 
     from .main import create_module as main_create_module
     from .variant import create_module as variant_create_module
-    from .doc import create_module as doc_create_module
     from .extended_information import create_module as extended_information_create_module
     from .io import create_module as io_create_module
     from .auth import create_module as auth_create_module
@@ -74,7 +73,6 @@ def create_app():
     main_create_module(app)
     variant_create_module(app)
     io_create_module(app)
-    doc_create_module(app)
     extended_information_create_module(app)
     auth_create_module(app)
     user_create_module(app)

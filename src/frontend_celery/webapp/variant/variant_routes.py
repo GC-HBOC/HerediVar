@@ -308,7 +308,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     if variant is None:
         # show another error message if the variant was deleted vs the variant does not exist anyway
         if request.args.get('from_reannotate', 'False') == 'True': 
-            return redirect(url_for('doc.deleted_variant'))
+            return redirect(url_for('main.deleted_variant'))
         else:
             abort(404)  
     
