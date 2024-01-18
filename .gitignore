@@ -101,7 +101,7 @@ ENV/
 [Ll]ocal
 [Ss]cripts
 pyvenv.cfg
-.venv
+.venv*
 pip-selfcheck.json
 ### JetBrains template
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
@@ -179,3 +179,4 @@ classified_structural_variants
 /logs
 /classified_variants_*
 /src/frontend_celery/tests/keycloak*
+/Python-*
