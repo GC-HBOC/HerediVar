@@ -394,7 +394,7 @@ def classify(variant_id):
         scheme_id_is_valid = True
         if not without_scheme:
             if scheme_id in classification_schemas:
-                scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type'])
+                scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type'], classification_schemas[scheme_id]['version'])
                 scheme_class = scheme_class.json['final_class']
             else:
                 flash("Unknown or deprecated classification scheme provided. Please provide a different one.", "alert-danger")
@@ -528,7 +528,7 @@ def consensus_classify(variant_id):
 
             scheme_id_is_valid = True
             if scheme_id in classification_schemas:
-                scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type']) # always calculate scheme class because no scheme is not allowed here!
+                scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type'], classification_schemas[scheme_id]['version']) # always calculate scheme class because no scheme is not allowed here!
                 scheme_class = scheme_class.json['final_class']
             else:
                 flash("Unknown or deprecated classification scheme provided. Please provide a different one.", "alert-danger")

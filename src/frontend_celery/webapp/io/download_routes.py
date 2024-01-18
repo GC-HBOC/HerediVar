@@ -379,8 +379,9 @@ def calculate_class(scheme_type = None, version = None, selected_classes = ''):
         return jsonify({'final_class': '-'})
 
     selected_classes = selected_classes.split('+')
-    #scheme = request.args.get('scheme')
 
+    #print(scheme_type)
+    #print(version)
     #print(selected_classes)
 
     final_class = None
