@@ -2118,6 +2118,9 @@ class Connection:
     
     def get_variant_id(self, chr, pos, ref, alt):
         #command = "SELECT id FROM variant WHERE chr = " + functions.enquote(chr) + " AND pos = " + str(pos) + " AND ref = " + functions.enquote(ref) + " AND alt = " + functions.enquote(alt)
+        chr, chr_valid = functions.curate_chromosome(chr)
+        if not chr_valid:
+            return None
         command = "SELECT id FROM variant WHERE chr = %s AND pos = %s AND ref = %s AND alt = %s"
         self.cursor.execute(command, (chr, pos, ref, alt))
         variant_id = self.cursor.fetchone()

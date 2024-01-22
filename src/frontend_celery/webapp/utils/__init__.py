@@ -25,12 +25,6 @@ import pathlib
 #    return variant
 
 
-def get_variant_id(conn, chr, pos, ref, alt):
-    if chr is None or pos is None or ref is None or alt is None:
-        abort(404)
-    variant_id = conn.get_variant_id(chr, pos, ref, alt)
-    return variant_id
-
 
 def remove_oldest_file(folder, maxfiles=10):
     if os.path.exists(folder):

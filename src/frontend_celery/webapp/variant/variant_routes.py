@@ -296,7 +296,9 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     conn = get_connection()
 
     if variant_id is None:
-        variant_id = get_variant_id(conn, chr, pos, ref, alt)
+        if chr is None or pos is None or ref is None or alt is None:
+            abort(404)
+        variant_id = conn.get_variant_id(chr, pos, ref, alt)
 
     current_annotation_status = conn.get_current_annotation_status(variant_id)
     if current_annotation_status is not None:
