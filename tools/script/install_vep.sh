@@ -7,7 +7,7 @@ set -o verbose
 helpFunction()
 {
    echo ""
-   echo "Usage: $0 -p path -v version"
+   echo "Usage: $0 -p path -v version -m minor_version -n foldername"
    echo "This script installs the defined version of VEP"
    echo -e "\t-p The path where VEP will be installed"
    echo -e "\t-v The VEP version. Eg. 110"
@@ -15,18 +15,19 @@ helpFunction()
    exit 1 # Exit script after printing help
 }
 
-while getopts "p:v:m:" opt
+while getopts "p:v:m:n:" opt
 do
    case "$opt" in
       p ) path="$OPTARG" ;;
       v ) version="$OPTARG" ;;
       m ) minor="$OPTARG" ;;
+      n ) foldername="$OPTARG" ;;
       ? ) helpFunction ;; # Print helpFunction in case parameter is non-existent
    esac
 done
 
 # Print helpFunction in case parameters are empty
-if [ -z "$path" ] || [ -z "$version" ]
+if [ -z "$path" ] || [ -z "$version" ] || [ -z "$foldername" ]
 then
    echo "Some or all of the parameters are empty";
    helpFunction
@@ -38,9 +39,9 @@ echo "Installing VEP $version.$minor to $path"
 
 cd $path
 
-vep_install_dir=$path/ensembl-vep
-vep_data_dir=$path/ensembl-vep/data
-cpan_dir=$path/ensembl-vep/cpan
+vep_install_dir=$path/$foldername
+vep_data_dir=$path/$foldername/data
+cpan_dir=$path/$foldername/cpan
 
 # download ensembl-vep
 vep_version=$version.$minor

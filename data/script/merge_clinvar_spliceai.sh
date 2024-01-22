@@ -8,7 +8,7 @@ ngsbits=$tools/ngs-bits/bin
 grch38=$data/genomes/GRCh38.fa
 
 
-clinvar_dat=$dbs/ClinVar/clinvar_converted_GRCh38.vcf.gz
+clinvar_dat=$tools/variant_classification/databases/Clinvar/clinvar_snv.vcf.gz
 spliceai_snv_dat=$dbs/SpliceAI/spliceai_scores.masked.snv.hg38.vcf.gz
 spliceai_indel_dat=$dbs/SpliceAI/spliceai_scores.masked.indel.hg38.vcf.gz
 
@@ -43,10 +43,11 @@ $ngsbits/VcfSubstract -in clinvar_annotated_snv_indel.vcf -in2 clinvar_only_anno
 
 bgzip -f variants_missing_annotation.vcf
 tabix -f -p vcf variants_missing_annotation.vcf.gz
-spliceai -I variants_missing_annotation.vcf.gz -O variants_added_annotation.vcf -R $grch38 -A grch38
+spliceai -I variants_missing_annotation.vcf.gz -O variants_added_annotation.vcf -R $grch38 -A grch38 -M 1
 
 
 $ngsbits/VcfAdd -in variants_added_annotation.vcf -in2 clinvar_only_annotated.vcf -out clinvar_spliceai_all.vcf
 
+$ngsbits/VcfSort -in clinvar_spliceai_all.vcf -out clinvar_spliceai_all_sorted.vcf
 
-
+bgzip clinvar_spliceai_all_sorted.vcf

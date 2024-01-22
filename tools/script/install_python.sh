@@ -1,79 +1,51 @@
 #!/bin/bash
 set -e
 set -o pipefail
+set -o verbose
 
 
 helpFunction()
 {
    echo ""
-   echo "Usage: $0 -p path"
-   echo "This script installs a python venv with all required packages for heredivar"
-   echo -e "\t-p The path ngs-bits will be installed"
+   echo "Usage: $0 -p path -v version -n folder_name"
+   echo "This script installs a python with all required packages for heredivar"
+   echo -e "\t-p The path python will be installed"
    exit 1 # Exit script after printing help
 }
 
-while getopts "p:" opt
+while getopts "p:v:n:" opt
 do
    case "$opt" in
       p ) basedir="$OPTARG" ;;
+      v ) version="$OPTARG" ;;
+      n ) foldername="$OPTARG" ;;
       ? ) helpFunction ;; # Print helpFunction in case parameter is non-existent
    esac
 done
 
 # Print helpFunction in case parameters are empty
-if [ -z "$basedir" ]
+if [ -z "$basedir" ] || [ -z "$version" ] || [ -z "$foldername" ]
 then
    echo "Some or all of the parameters are empty";
    helpFunction
 fi
 
 # Begin script in case all parameters are correct
-echo "Setting up python venv in $basedir..."
+echo "Setting up python $version in $basedir/$foldername..."
 
-
-# do this on windows to allow activation of virtualenvs
-#Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process
 
 cd $basedir
-python3 -m venv .venv
-source .venv/bin/activate
+wget https://www.python.org/ftp/python/$version/Python-$version.tgz
+tar -zxvf Python-$version.tgz
+cd Python-$version
+mkdir -p $foldername
+./configure --prefix=$basedir/$foldername
+make
+make install
 
-python3 -m pip install --upgrade pip
-pip install wheel
-pip install setuptools
-python3 -m pip install --upgrade setuptools wheel
+cd ..
+cd $foldername/bin
+./pip3 install virtualenv
 
-pip install flask flask-session flask-paginate
-#pip install Flask-OIDC
-pip install authlib
-pip install mysql-connector
-
-
-pip install spliceai tensorflow
-pip install CrossMap
-
-
-
-pip install blinker
-pip install lxml
-
-
-pip install celery redis
-
-#pip install reportlab
-
-pip install python-dotenv
-
-
-pip install biopython
-
-
-
-pip install jsonschema
-
-pip install pytest
-
-
-pip install gunicorn
-
-pip install flask-mail
+cd $basedir
+rm Python-$version.tgz
