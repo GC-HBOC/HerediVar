@@ -60,8 +60,8 @@ chainfile=$basedir/$foldername
 cd $basedir
 
 
-# download GRCh37 to GRCh38 chain file for liftover (version date: 2013-12-31 23:08  222K)
-wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz
+# download GRCh37 to GRCh38 chain file for liftover 
+wget -O hg19ToHg38.over.chain.gz http://ftp.ensembl.org/pub/assembly_mapping/homo_sapiens/GRCh37_to_GRCh38.chain.gz
 (gunzip -c hg19ToHg38.over.chain.gz | sed -r 's/chrM/chrMT/g' | bgzip > $chainfile) || true
 rm hg19ToHg38.over.chain.gz
-# alternatively use the chain file from ensembl download: wget http://ftp.ensembl.org/pub/assembly_mapping/homo_sapiens/GRCh37_to_GRCh38.chain.gz
+# alternatively use the chain file: wget http://hgdownload.soe.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz (version date: 2013-12-31 23:08  222K)

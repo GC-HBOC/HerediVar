@@ -2148,7 +2148,7 @@ class Connection:
 
 
     def get_heredicare_annotations(self, variant_id):
-        command = "SELECT id, vid, n_fam, n_pat, consensus_class, comment, date FROM variant_heredicare_annotation WHERE variant_id = %s"
+        command = "SELECT id, vid, n_fam, n_pat, consensus_class, comment, date, lr_cooc, lr_coseg, lr_family FROM variant_heredicare_annotation WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id, ))
         res = self.cursor.fetchall()
         return res
@@ -2405,9 +2405,12 @@ class Connection:
                 consensus_class = annot[4]
                 comment = annot[5]
                 classification_date = annot[6]
+                lr_cooc = annot[7]
+                lr_coseg = annot[8]
+                lr_family = annot[9]
 
                 classification = models.HeredicareClassification(id = heredicare_annotation_id, selected_class = consensus_class, comment = comment, classification_date = classification_date, center = "VUSTF", vid = vid)
-                new_heredicare_annotation = models.HeredicareAnnotation(id = heredicare_annotation_id, vid = vid, n_fam = n_fam, n_pat = n_pat, vustf_classification = classification)
+                new_heredicare_annotation = models.HeredicareAnnotation(id = heredicare_annotation_id, vid = vid, n_fam = n_fam, n_pat = n_pat, vustf_classification = classification, lr_cooc = lr_cooc, lr_coseg = lr_coseg, lr_family = lr_family)
                 all_heredicare_annotations.append(new_heredicare_annotation)
         
         # add clinvar annotation
@@ -2879,9 +2882,9 @@ class Connection:
     
 
 
-    def insert_heredicare_annotation(self, variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment):
-        command = "INSERT INTO variant_heredicare_annotation (variant_id, vid, n_fam, n_pat, consensus_class, date, comment) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment))
+    def insert_heredicare_annotation(self, variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family):
+        command = "INSERT INTO variant_heredicare_annotation (variant_id, vid, n_fam, n_pat, consensus_class, date, comment, lr_cooc, lr_coseg, lr_family) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family))
         self.conn.commit()
 
     def clear_heredicare_annotation(self, variant_id):

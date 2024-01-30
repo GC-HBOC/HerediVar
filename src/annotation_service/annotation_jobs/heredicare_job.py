@@ -51,12 +51,13 @@ class heredicare_job(Job):
         for vid in vids:
             status = "retry"
             tries = 0
-            max_tries = 3
+            max_tries = 5
             while status == "retry" and tries < max_tries:
                 heredicare_variant, status, message = heredicare_interface.get_variant(vid)
-                #print(heredicare_variant)
+                print(heredicare_variant)
                 if tries > 0:
                     time.sleep(30 * tries)
+                tries += 1
             if status == "error":
                 err_msg += "There was an error during variant retrieval from heredicare: " + str(message)
                 status_code = 1
@@ -68,6 +69,9 @@ class heredicare_job(Job):
                 comment = comment.strip()
                 comment = comment if comment != '' else None
                 classification_date = heredicare_variant["VUSTF_DATUM"] if heredicare_variant["VUSTF_DATUM"] != '' else None
+                lr_cooc = heredicare_variant["LR_COOC"]
+                lr_coseg = heredicare_variant["LR_COSEG"]
+                lr_family = heredicare_variant["LR_FAMILY"]
                 if classification_date is not None:
                     try:
                         classification_date = datetime.strptime(classification_date, "%d.%m.%Y")
@@ -76,7 +80,7 @@ class heredicare_job(Job):
                         status_code = 1
 
                 if status_code == 0:
-                    conn.insert_heredicare_annotation(variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment)
+                    conn.insert_heredicare_annotation(variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family)
 
         return status_code, err_msg
 

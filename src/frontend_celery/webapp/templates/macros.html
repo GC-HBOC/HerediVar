@@ -374,6 +374,7 @@
         {% set heredicare_annotations = variant.heredicare_annotations %}
 
         {% set total_n_fam, total_n_pat = variant.get_total_heredicare_counts() %}
+        {% set best_lr_cooc, best_lr_coseg, best_lr_family = variant.get_best_lr_scores() %}
         <div>
             {% if heredicare_annotations | length > 1 %}
                 {{ draw_exclamation_mark('Multiple VIDs in HerediCare for this variant. Thus, these counts might be inaccurate!') }}
@@ -416,6 +417,66 @@
                 details
             </a>
         </div>
+        {% if best_lr_cooc is not none %}
+        <div>
+            <abbr class="ssr" title="The cooccurance"><a class="dashed_underline">lr_cooc:</a></abbr>{{ best_lr_cooc }}
+            <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" 
+            data-bs-content="
+                <div class='row gx-2 border-bottom bg-light width_very_medium'>
+                    <div class='col-7'>HerediCare VID</div>
+                    <div class='col-4 text-center border-start'>lr_cooc</div>
+                </div>
+                {% for annot in heredicare_annotations %}
+                <div class='row gx-2 width_very_medium'>
+                    <div class='col-7'>{{annot.vid}}</div>
+                    <div class='col-4 text-center border-start'>{{annot.lr_cooc}}</div>
+                </div>
+                {% endfor %}
+            ">
+                details
+            </a>
+        </div>
+        {% endif %}
+        {% if best_lr_coseg is not none %}
+        <div>
+            <abbr class="ssr" title="The cosegregation"><a class="dashed_underline">lr_coseg:</a></abbr>{{ best_lr_coseg }}
+            <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" 
+            data-bs-content="
+                <div class='row gx-2 border-bottom bg-light width_very_medium'>
+                    <div class='col-7'>HerediCare VID</div>
+                    <div class='col-4 text-center border-start'>lr_coseg</div>
+                </div>
+                {% for annot in heredicare_annotations %}
+                <div class='row gx-2 width_very_medium'>
+                    <div class='col-7'>{{annot.vid}}</div>
+                    <div class='col-4 text-center border-start'>{{annot.lr_coseg}}</div>
+                </div>
+                {% endfor %}
+            ">
+                details
+            </a>
+        </div>
+        {% endif %}
+        {% if best_lr_family is not none %}
+        <div>
+            <abbr class="ssr" title="The family"><a class="dashed_underline">lr_cooc:</a></abbr>{{ best_lr_family }}
+            <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" 
+            data-bs-content="
+                <div class='row gx-2 border-bottom bg-light width_very_medium'>
+                    <div class='col-7'>HerediCare VID</div>
+                    <div class='col-4 text-center border-start'>lr_family</div>
+                </div>
+                {% for annot in heredicare_annotations %}
+                <div class='row gx-2 width_very_medium'>
+                    <div class='col-7'>{{annot.vid}}</div>
+                    <div class='col-4 text-center border-start'>{{annot.lr_family}}</div>
+                </div>
+                {% endfor %}
+            ">
+                details
+            </a>
+        </div>
+        {% endif %}
         
 
     </td>

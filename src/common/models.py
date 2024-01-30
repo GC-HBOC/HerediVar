@@ -753,11 +753,15 @@ class HeredicareAnnotation:
     n_pat: int
     vustf_classification: HeredicareClassification # kind of ugly to use that here because to_vcf can not be used as this is used for the center classifications...
 
+    lr_cooc: float
+    lr_coseg: float
+    lr_family: str
+
     def to_vcf(self, prefix = True):
         vustf_class = str(self.vustf_classification.selected_class) if self.vustf_classification.selected_class is not None else ""
         vustf_comment = str(self.vustf_classification.comment) if self.vustf_classification.comment is not None else ""
         vustf_date = str(self.vustf_classification.classification_date) if self.vustf_classification.classification_date is not None else ""
-        info = '~7C'.join([str(self.vid), str(self.n_fam), str(self.n_pat), vustf_class, vustf_comment, vustf_date])
+        info = '~7C'.join([str(self.vid), str(self.n_fam), str(self.n_pat), vustf_class, vustf_comment, vustf_date, self.lr_cooc, self.lr_coseg, self.lr_family])
         info = info
         if prefix:
             info = 'heredicare_annotation~1Y' + info
@@ -766,7 +770,7 @@ class HeredicareAnnotation:
     
     # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
     def get_header(self):
-        header = {'heredicare_annotation': '##INFO=<ID=heredicare_annotation,Number=.,Type=String,Description="An & separated list of the variant annotations from heredicare. Format:vid|n_fam|n_pat|vustf_selected_class|vustf_comment|vustf_classification_date. n_fam is the number of families having the variant and n_pat is the number of individuals having the variant.">\n'}
+        header = {'heredicare_annotation': '##INFO=<ID=heredicare_annotation,Number=.,Type=String,Description="An & separated list of the variant annotations from heredicare. Format:vid|n_fam|n_pat|vustf_selected_class|vustf_comment|vustf_classification_date|lr_cooc|lr_coseg|lr_family. n_fam is the number of families having the variant and n_pat is the number of individuals having the variant.">\n'}
         return header
 
 
@@ -829,6 +833,19 @@ class AbstractVariant(AbstractDataclass):
                 total_n_fam += annot.n_fam
                 total_n_pat += annot.n_pat
         return total_n_fam, total_n_pat
+    
+    def get_best_lr_scores(self):
+        lr_cooc = None
+        lr_coseg = None
+        lr_family = None
+        if self.heredicare_annotations is not None:
+            for annot in self.heredicare_annotations:
+                if annot.lr_coseg is not None:
+                    if lr_coseg is None or lr_coseg < annot.lr_coseg:
+                        lr_coseg = annot.lr_coseg
+                        lr_cooc = annot.lr_cooc
+                        lr_family = annot.lr_family
+        return lr_coseg, lr_cooc, lr_family
 
     def get_user_classifications(self, user_id):
         result = []
