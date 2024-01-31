@@ -72,6 +72,9 @@ cd $basedir/$foldername
 
 ## download CancerHotspots.org (version date: 2017-12-15 corresponds to the release date of the publication: Accelerating Discovery of Functional Mutant Alleles in Cancer, Chang et al. (PMCID: PMC5809279 ))
 
+oncotree_name=oncotree_2021_11_02.json
+wget -O - http://oncotree.mskcc.org/api/tumorTypes?version=oncotree_2021_11_02 > $oncotree_name
+
 cancerhotspotsfile=cancerhotspots.v2
 wget -O $cancerhotspotsfile.maf.gz http://download.cbioportal.org/cancerhotspots/cancerhotspots.v2.maf.gz
 gunzip $cancerhotspotsfile.maf.gz
@@ -98,4 +101,47 @@ rm -f $cancerhotspotsfile.sorted.maf
 $ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $grch38
 
 tabix -p vcf $cancerhotspotsfile.final.vcf.gz
+
+
+
+
+
+## download oncotree (version: oncotree_2021_11_02, downloaded from: http://oncotree.mskcc.org/#/home?tab=api) FOR Cancerhotspots
+#cd $dbs
+#mkdir -p cancerhotspots
+#cd cancerhotspots
+#oncotree_name=oncotree_2021_11_02.json
+#wget -O - http://oncotree.mskcc.org/api/tumorTypes?version=oncotree_2021_11_02 > $oncotree_name
+
+## download CancerHotspots.org (version date: 2017-12-15 corresponds to the release date of the publication: Accelerating Discovery of Functional Mutant Alleles in Cancer, Chang et al. (PMCID: PMC5809279 ))
+#cd $dbs
+#mkdir -p cancerhotspots
+#cd cancerhotspots
+#
+#cancerhotspotsfile=cancerhotspots.v2
+#wget -O $cancerhotspotsfile.maf.gz http://download.cbioportal.org/cancerhotspots/cancerhotspots.v2.maf.gz
+#gunzip $cancerhotspotsfile.maf.gz
+#(head -n 2  $cancerhotspotsfile.maf && tail -n +3  $cancerhotspotsfile.maf | sort -t$'\t' -f -k5,5V -k6,6n -k11,11 -k13,13) >  $cancerhotspotsfile.sorted.maf
+#
+#cancerhotspotssamples=$(awk -F '\t' '{print $16}' $cancerhotspotsfile.sorted.maf | sort | uniq -c | wc -l)
+#python3 $data/script/db_converter_cancerhotspots.py -i $cancerhotspotsfile.sorted.maf --samples $cancerhotspotssamples --oncotree $oncotree_name -o $cancerhotspotsfile.vcf
+#$ngsbits/VcfSort -in $cancerhotspotsfile.vcf -out $cancerhotspotsfile.vcf
+#cat $cancerhotspotsfile.vcf | $ngsbits/VcfLeftNormalize -stream -ref $grch37 | $ngsbits/VcfStreamSort > $cancerhotspotsfile.final.vcf
+#awk -v OFS="\t" '!/##/ {$9=$10=""}1' $cancerhotspotsfile.final.vcf | sed 's/^\s\+//g' > $cancerhotspotsfile.final.vcf.2 # remove SAMPLE and FORMAT columns from vcf as they are added by vcfsort
+#mv -f $cancerhotspotsfile.final.vcf.2 $cancerhotspotsfile.final.vcf
+#bgzip -f $cancerhotspotsfile.final.vcf
+#$ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $grch37
+#
+## crossmap to lift from GRCh37 to GRCh38
+#CrossMap.py vcf $chainfile $cancerhotspotsfile.final.vcf.gz $grch38 $cancerhotspotsfile.final.vcf
+#cat $cancerhotspotsfile.final.vcf | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | bgzip > $cancerhotspotsfile.final.vcf.gz
+#rm -f $cancerhotspotsfile.final.vcf
+#rm -f $cancerhotspotsfile.vcf
+#rm -f $cancerhotspotsfile.maf
+#rm -f $cancerhotspotsfile.sorted.maf
+#
+#$ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $grch38
+#
+#tabix -p vcf $cancerhotspotsfile.final.vcf.gz
+
 
