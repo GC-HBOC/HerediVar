@@ -181,3 +181,4 @@ classified_structural_variants
 /src/frontend_celery/tests/keycloak*
 /Python-*
 /data_makefile
+/.localpython
