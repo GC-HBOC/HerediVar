@@ -69,10 +69,6 @@ class annotate_from_vcf_job(Job):
         self.insert_annotation(variant_id, info, "FLOSSIES_num_afr=", recent_annotation_ids['flossies_num_afr'], conn)
         self.insert_annotation(variant_id, info, "FLOSSIES_num_eur=", recent_annotation_ids['flossies_num_eur'], conn)
 
-        self.insert_annotation(variant_id, info, "cancerhotspots_cancertypes=", recent_annotation_ids['cancerhotspots_cancertypes'], conn)
-        self.insert_annotation(variant_id, info, "cancerhotspots_AC=", recent_annotation_ids['cancerhotspots_ac'], conn)
-        self.insert_annotation(variant_id, info, "cancerhotspots_AF=", recent_annotation_ids['cancerhotspots_af'], conn)
-
         self.insert_annotation(variant_id, info, "ARUP_classification=", recent_annotation_ids['arup_classification'], conn)
 
         self.insert_annotation(variant_id, info, "HCI_prior=", recent_annotation_ids['hci_prior'], conn)
@@ -80,6 +76,25 @@ class annotate_from_vcf_job(Job):
         self.insert_annotation(variant_id, info, "BayesDEL_noAF=", recent_annotation_ids['bayesdel'], conn)
 
         self.insert_multiple_ids(variant_id, info, "COSMIC_COSV=", recent_annotation_ids['cosmic'], conn, sep = '&')
+
+
+        # cancerhotspots
+        #self.insert_annotation(variant_id, info, "cancerhotspots_cancertypes=", recent_annotation_ids['cancerhotspots_cancertypes'], conn)
+        cancerhotspots = functions.find_between(info, "cancerhotspots_cancertypes=", '(;|$)')
+        if cancerhotspots is not None and cancerhotspots != '':
+            cancerhotspots = cancerhotspots.split('|')
+            for cancerhotspot in cancerhotspots:
+                cancerhotspot_parts = cancerhotspot.split(':')
+                oncotree_symbol = functions.decode_vcf(cancerhotspot_parts[0])
+                cancertype = functions.decode_vcf(cancerhotspot_parts[1])
+                tissue = functions.decode_vcf(cancerhotspot_parts[2])
+                occurances = functions.decode_vcf(cancerhotspot_parts[3])
+                conn.insert_cancerhotspots_annotation(variant_id, recent_annotation_ids['cancerhotspots'], oncotree_symbol, cancertype, tissue, occurances)
+
+        
+        self.insert_annotation(variant_id, info, "cancerhotspots_AC=", recent_annotation_ids['cancerhotspots_ac'], conn)
+        self.insert_annotation(variant_id, info, "cancerhotspots_AF=", recent_annotation_ids['cancerhotspots_af'], conn)
+
 
         # spliceai is saved to the database in the dedicated spliceai job (which must be called after this job anyway)
         #self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )
@@ -98,7 +113,7 @@ class annotate_from_vcf_job(Job):
 
 
         self.insert_annotation(variant_id, info, "tp53db_class=", recent_annotation_ids['tp53db_class'], conn)
-        self.insert_annotation(variant_id, info, "tp53db_bayes_del=", recent_annotation_ids['tp53db_bayes_del'], conn)
+        #self.insert_annotation(variant_id, info, "tp53db_bayes_del=", recent_annotation_ids['tp53db_bayes_del'], conn)
         self.insert_annotation(variant_id, info, "tp53db_DNE_LOF_class=", recent_annotation_ids['tp53db_DNE_LOF_class'], conn)
         self.insert_annotation(variant_id, info, "tp53db_DNE_class=", recent_annotation_ids['tp53db_DNE_class'], conn)
         self.insert_annotation(variant_id, info, "tp53db_domain_function=", recent_annotation_ids['tp53db_domain_function'], conn)
@@ -202,7 +217,7 @@ class annotate_from_vcf_job(Job):
 
         ## add TP53 database information
         if self.job_config['do_tp53_database']:
-            config_file.write(paths.tp53_db + "\ttp53db\tclass,bayes_del,transactivation_class,DNE_LOF_class,DNE_class,domain_function,pubmed\t\n")
+            config_file.write(paths.tp53_db + "\ttp53db\tclass,transactivation_class,DNE_LOF_class,DNE_class,domain_function,pubmed\t\n")
 
         ## add priors
         if self.job_config['do_priors']:

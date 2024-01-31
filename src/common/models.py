@@ -12,10 +12,9 @@ class AbstractDataclass(ABC):
         if cls == AbstractDataclass or cls.__bases__[0] == AbstractDataclass: 
             raise TypeError("Cannot instantiate abstract class.") 
         return super().__new__(cls)
-    
 
 @dataclass
-class Annotation:
+class Abstract_Annotation(AbstractDataclass):
     id: int
     value: Any
     
@@ -30,6 +29,38 @@ class Annotation:
 
     draw: bool = True
 
+    is_transcript_specific: bool = False
+
+    @abstractmethod
+    def to_vcf(self, add_title = True):
+        pass
+
+    @abstractmethod
+    def get_header(self):
+        pass
+
+
+@dataclass
+class CancerhotspotsAnnotation(Abstract_Annotation):
+    # value = cancertype
+    oncotree_symbol: str = None
+    tissue: str = None
+    occurances: int = None
+
+    def to_vcf(self, add_title = True): # TODO
+        data_base = ""
+        if add_title:
+            data_base = self.title + '~1Y'
+        data = data_base + self.value
+        return data
+    
+    def get_header(self): # TODO
+        header = {self.title: '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + ' (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'}
+        return header 
+
+
+@dataclass
+class Annotation(Abstract_Annotation):
     def get_value(self):
         if self.value_type == 'text':
             return str(self.value)
@@ -38,7 +69,7 @@ class Annotation:
         if self.value_type == 'float':
             return float(self.value)
         return self.value
-
+    
     def to_vcf(self, add_title = True):
         data_base = ""
         if add_title:
@@ -52,22 +83,8 @@ class Annotation:
 
 
 @dataclass
-class TranscriptAnnotation:
-    id: int
-    value: dict # a transcript -> value dict
-
-    title: str
-    display_title: str
-    description: str
-    version: str
-    version_date: str
-    value_type: str
-
-    group_name: str
-
-    draw: bool = True
-
-    is_transcript_specific: bool = True
+class TranscriptAnnotation(Abstract_Annotation):
+    #value is a transcript -> value dict
 
     def get_value(self, transcript):
         the_value = self.value[transcript]
@@ -91,7 +108,6 @@ class TranscriptAnnotation:
     def get_header(self):
         header = {self.title: '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + '. A | separated list of transcript$value pairs. (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'}
         return header
-    
 
     def sort(self):
         transcripts_sorted, values_sorted = functions.sort_transcript_dict(self.value)
@@ -142,13 +158,13 @@ class AllAnnotations:
     flossies_num_afr: Annotation = None
     flossies_num_eur: Annotation = None
     
-    cancerhotspots_cancertypes: Annotation = None
+    #cancerhotspots_cancertypes: Annotation = None
     cancerhotspots_ac: Annotation = None
     cancerhotspots_af: Annotation = None
 
     tp53db_class: Annotation = None
     tp53db_DNE_LOF_class: Annotation = None
-    tp53db_bayes_del: Annotation = None
+    #tp53db_bayes_del: Annotation = None
     tp53db_DNE_class: Annotation = None
     tp53db_domain_function: Annotation = None
     tp53db_transactivation_class: Annotation = None
@@ -194,7 +210,9 @@ class AllAnnotations:
     def flag_linked_annotations(self):
         self.setattr_advanced(self.spliceai_details, 'draw', False)
         self.setattr_advanced(self.spliceai_max_delta, 'draw', False)
-        self.setattr_advanced(self.cancerhotspots_cancertypes, 'draw', False)
+        #self.setattr_advanced(self.cancerhotspots_cancertypes, 'draw', False)
+        self.setattr_advanced(self.cancerhotspots_ac, 'draw', False)
+        self.setattr_advanced(self.cancerhotspots_af, 'draw', False)
         self.setattr_advanced(self.hexplorer, 'draw', False)
         self.setattr_advanced(self.hexplorer_mut, 'draw', False)
         self.setattr_advanced(self.hexplorer_wt, 'draw', False)
@@ -246,8 +264,8 @@ class AllAnnotations:
     def get_spliceai(self):
         return self.spliceai_details, self.spliceai_max_delta
     
-    def get_cancerhotspots(self):
-        return self.cancerhotspots_cancertypes
+    #def get_cancerhotspots(self):
+    #    return self.cancerhotspots_cancertypes
 
     def get_hexplorer(self):
         return self.hexplorer, self.hexplorer_wt, self.hexplorer_mut
@@ -797,6 +815,7 @@ class AbstractVariant(AbstractDataclass):
     consequences: Any = None # list of consequences
     assays: Any = None # list of assays
     literature: Any = None # list of papers
+    cancerhotspots_annotations: Any = None # list of cancerhotspotsAnnotations
 
     annotations: AllAnnotations = AllAnnotations()
 

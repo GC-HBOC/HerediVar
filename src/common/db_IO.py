@@ -2132,7 +2132,7 @@ class Connection:
     def get_recent_annotations(self, variant_id): # ! the ordering of the columns in the outer select statement is important and should not be changed
         command = "SELECT variant_annotation.id, title, description, version, version_date, variant_id, value, supplementary_document, group_name, display_title, value_type, group_name FROM variant_annotation INNER JOIN ( \
                         SELECT * \
-	                        FROM annotation_type WHERE (title, version_date) IN ( \
+	                        FROM annotation_type WHERE is_deleted = 0 AND (title, version_date) IN ( \
 		                        select title, MAX(version_date) version_date from annotation_type INNER JOIN ( \
 				                    select variant_id, annotation_type_id, value, supplementary_document from variant_annotation where variant_id=%s \
 			                ) x \
@@ -2186,10 +2186,12 @@ class Connection:
             return None
 
         annotations = None
+        cancerhotspots_annotations = None
         if include_annotations:
             annotations = models.AllAnnotations()
-            annotations_raw = self.get_recent_annotations(variant_id)
 
+            # standard one value annotations
+            annotations_raw = self.get_recent_annotations(variant_id)
             for annot in annotations_raw:
                 annotation_id = annot[0]
                 title = annot[1]
@@ -2203,12 +2205,14 @@ class Connection:
 
                 new_annotation = models.Annotation(id = annotation_id, value = value, title = title, display_title = display_title, description = description, version = version, version_date = version_date, value_type = value_type, group_name = group_name)
                 setattr(annotations, annot[1], new_annotation)
-                #annotations.insert_annotation(new_annotation)
             
+            # transcript specific annotatations
             transcript_annotations = self.get_recent_transcript_annotations(variant_id)
-
             for annot in transcript_annotations:
                 setattr(annotations, annot.title, annot)
+
+            # cancerhotspots annotations
+            cancerhotspots_annotations = self.get_recent_cancerhotspots_annotations(variant_id)
             
             annotations.flag_linked_annotations()
 
@@ -2510,6 +2514,7 @@ class Connection:
                         heredicare_classifications = heredicare_classifications,
                         automatic_classification = automatic_classification,
                         heredicare_annotations = all_heredicare_annotations,
+                        cancerhotspots_annotations = cancerhotspots_annotations,
                         clinvar = clinvar,
                         consequences = consequences,
                         assays = assays,
@@ -2539,6 +2544,7 @@ class Connection:
                         heredicare_classifications = heredicare_classifications,
                         automatic_classification = automatic_classification,
                         heredicare_annotations = all_heredicare_annotations,
+                        cancerhotspots_annotations = cancerhotspots_annotations,
                         clinvar = clinvar,
                         consequences = consequences,
                         assays = assays,
@@ -2863,7 +2869,7 @@ class Connection:
                 INNER JOIN (
                   SELECT title, MAX(version_date) as max_version_date
                   FROM annotation_type %s GROUP BY title
-                ) AS max ON max.title = n.title and max.max_version_date = n.version_date
+                ) AS max ON max.title = n.title and max.max_version_date = n.version_date WHERE is_deleted = 0
         """ % (addon, )
         self.cursor.execute(command)
         result = self.cursor.fetchall()
@@ -3115,6 +3121,33 @@ class Connection:
         return final_result
     
 
+    def get_recent_cancerhotspots_annotations(self, variant_id):
+        recent_annotation_type_ids = self.get_recent_annotation_type_ids()
+        cancerhotspots_annotation_id = recent_annotation_type_ids["cancerhotspots"]
+        command = """SELECT id, oncotree_symbol, cancertype, tissue, occurances,
+                            (SELECT title FROM annotation_type WHERE annotation_type.id = variant_cancerhotspots_annotation.annotation_type_id) title,
+                            (SELECT description FROM annotation_type WHERE annotation_type.id = variant_cancerhotspots_annotation.annotation_type_id) description,
+                            (SELECT version FROM annotation_type WHERE annotation_type.id = variant_cancerhotspots_annotation.annotation_type_id) version,
+                            (SELECT version_date FROM annotation_type WHERE annotation_type.id = variant_cancerhotspots_annotation.annotation_type_id) version_date,
+                            (SELECT title FROM annotation_type WHERE annotation_type.id = variant_cancerhotspots_annotation.annotation_type_id) title,
+                            (SELECT group_name FROM annotation_type WHERE annotation_type.id = variant_cancerhotspots_annotation.annotation_type_id) title,
+                            (SELECT display_title FROM annotation_type WHERE annotation_type.id = variant_cancerhotspots_annotation.annotation_type_id) display_title,
+                            (SELECT value_type FROM annotation_type WHERE annotation_type.id = variant_cancerhotspots_annotation.annotation_type_id) value_type,
+                            (SELECT group_name FROM annotation_type WHERE annotation_type.id = variant_cancerhotspots_annotation.annotation_type_id) group_name
+                     FROM variant_cancerhotspots_annotation WHERE variant_id = %s and annotation_type_id = %s
+        """
+        self.cursor.execute(command, (variant_id, cancerhotspots_annotation_id))
+        cancerhotspots_annotations_raw = self.cursor.fetchall()
+
+        result = []
+        for annot_raw in cancerhotspots_annotations_raw:
+            new_cancerhotspots_annotation = models.CancerhotspotsAnnotation(id = annot_raw[0], value = annot_raw[2], title = annot_raw[5], display_title = annot_raw[11], description = annot_raw[6], version = annot_raw[7], 
+                                                                            version_date = annot_raw[8], value_type = annot_raw[12], group_name = annot_raw[10], draw = False, 
+                                                                            is_transcript_specific = False, oncotree_symbol = annot_raw[1], tissue = annot_raw[3], occurances = annot_raw[4])
+            result.append(new_cancerhotspots_annotation)
+        return result
+    
+
     def get_transcripts_from_names(self, transcript_names, remove_unknown = False):
         command = "SELECT id, gene_id, (SELECT symbol FROM gene WHERE transcript.gene_id = gene.id), name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical, start, end, chrom, orientation FROM transcript WHERE name IN "
         placeholders = self.get_placeholders(len(transcript_names))
@@ -3187,3 +3220,12 @@ class Connection:
         self.cursor.execute(command, (chrom, variant_end, variant_start))
         result = self.cursor.fetchall()
         return result
+    
+
+    def insert_cancerhotspots_annotation(self, variant_id, annotation_type_id, oncotree_symbol, cancertype, tissue, occurances):
+        command = "INSERT INTO variant_cancerhotspots_annotation (variant_id, annotation_type_id, oncotree_symbol, cancertype, tissue, occurances) VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE variant_id = %s"
+        self.cursor.execute(command, (variant_id, annotation_type_id, oncotree_symbol, cancertype, tissue, occurances, variant_id))
+        self.conn.commit()
+        
+
+

@@ -54,7 +54,6 @@ class heredicare_job(Job):
             max_tries = 5
             while status == "retry" and tries < max_tries:
                 heredicare_variant, status, message = heredicare_interface.get_variant(vid)
-                print(heredicare_variant)
                 if tries > 0:
                     time.sleep(30 * tries)
                 tries += 1

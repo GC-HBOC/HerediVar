@@ -307,30 +307,6 @@
                 </div>
             {% endif %}
 
-            <!-- cancerhotspots cancertypes -->
-            {% if annot.title == 'cancerhotspots_cancertypes' %} <!-- cancerhotspots cancertypes -->
-            {% set cancerhotspots_cancertypes = annot.value.split('|') %}
-            <div class="table-responsive tableFixHead" annotation_id="{{ annot.id }}">
-                <table class="table table-hover" id="cancerhotspots_table">
-                    <thead>
-                        <tr>
-                            <th class="full_page bg_white nopad">
-                                <div class="sortable"><a class="dashed_underline">cancertypes</a></div>
-                                <input type="text" class="form-control form-control-sm column-filter sst width_small" placeholder="search..." autocomplete="off">
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for cancer in cancerhotspots_cancertypes %}
-                            <tr>
-                                <td>{{ cancer.replace(':', ': ') }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% endif %}
-
             <!-- Hexplorer -->
             {% if annot.title == 'hexplorer' %} <!-- details for hexplorer score -->
                 {% set delta, wt, mut = annotations.get_hexplorer() %}
@@ -348,17 +324,6 @@
                 {% set delta, wt, mut = annotations.get_max_hbond_rev() %}
                 {{ draw_hexplorer_score(delta, wt, mut) }}
             {% endif %}
-
-            <!-- HerediCare  add red exclamation mark for heredicare counts
-            {% if annot.title == 'heredicare' %}
-            <div annotation_id="{{ annot.id }}">
-                {% if has_multiple_vids  %}
-                    {{ draw_exclamation_mark('Multiple VIDs in HerediCare for this variant. Thus, these counts might be inaccurate!') }}
-                {% endif %}
-                <abbr class="ssr" title="{{ annot.description }}"><a class="dashed_underline">{{ annot.display_title }}:</a></abbr>{{ annot.value }}
-            </div>
-            {% endif %}
-            -->
         {% endfor %}
     </td>
 </tr>
@@ -477,8 +442,42 @@
             </a>
         </div>
         {% endif %}
-        
+    </td>
+</tr>
+{% endif %}
+{% endmacro %}
 
+
+{% macro draw_cancerhotspots_annotation(variant) %}
+{% if variant.cancerhotspots_annotations is not none and variant.cancerhotspots_annotations | length > 0 %}
+<div>TEST</div>
+<tr>
+    <td class="li-label nowrap">Cancerhotspots</td>
+    <td>
+        {{ draw_annotation(variant.annotations.cancerhotspots_ac) }}
+        {{ draw_annotation(variant.annotations.cancerhotspots_af) }}
+        <div class="table-responsive tableFixHead">
+            <table class="table table-hover" style="max-height:15em" id="cancerhotspots_table">
+                <thead>
+                    <tr>
+                        <th class="width_very_small" style="background:white; padding:0;"><div class="sortable">oncotree symbol</div><input type="text" class="form-control form-control-sm column-filter sst" style="max-width:10em" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_medium" id="cancerhotspots_cancertype_col" style="width: 40%; background:white; padding:0;" asc="false"><div class="sortable">cancertype</div><input type="text" class="form-control form-control-sm column-filter sst" style="max-width:10em" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_small" style="background:white; padding:0;"><div class="sortable">tissue</div><input type="text" class="form-control form-control-sm column-filter sst" style="max-width:10em" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_very_small" style="background:white; padding:0;"><div class="sortable"># occurances</div><input type="text" class="form-control form-control-sm column-filter sst" style="max-width:10em" placeholder="search..." autocomplete="off"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for annot in variant.cancerhotspots_annotations %}
+                        <tr annotation_id="{{ annot.id }}">
+                            <td>{{ annot.oncotree_symbol }}</td>
+                            <td>{{ annot.value }}</td>
+                            <td>{{ annot.tissue }}</td>
+                            <td>{{ annot.occurances }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </td>
 </tr>
 {% endif %}
