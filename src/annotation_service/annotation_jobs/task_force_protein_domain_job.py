@@ -23,8 +23,8 @@ class task_force_protein_domain_job(Job):
             task_force_protein_domains = conn.get_task_force_protein_domains(one_variant[1], one_variant[2], int(one_variant[2]) + len(one_variant[4]))
             recent_annotation_ids = conn.get_recent_annotation_type_ids()
             for domain in task_force_protein_domains:
-                conn.insert_variant_annotation(variant_id, recent_annotation_ids["task_force_protein_domain"], domain[4])
-                conn.insert_variant_annotation(variant_id, recent_annotation_ids["task_force_protein_domain_source"], domain[5])
+                conn.insert_variant_annotation(variant_id, recent_annotation_ids["task_force_protein_domain"], domain[5])
+                conn.insert_variant_annotation(variant_id, recent_annotation_ids["task_force_protein_domain_source"], domain[6])
         
         return status_code, err_msg
 

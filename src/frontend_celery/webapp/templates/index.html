@@ -94,18 +94,19 @@
     <h4>Changelog</h4>
     <div class="underline">v 1.8 ()</div>
     <div class="btn-pvs">!! The automatic classification algorithm is currently under construction. HerediVar is already prepared for it. Thus, you might encounter disabled buttons or dummy data. It will be enabled in a future update</div>
-    <div class="btn-pvs">!! Scores from likelihood ratio tests are currently under construction. A simple reannotation is required to show them on HerediVar once they are calculated in HerediCaRe.</div>
+    <div class="btn-pvs">!! Scores from likelihood ratio tests are currently under construction. A simple reannotation is required to show them on HerediVar once they are ready to be downloaded from HerediCaRe.</div>
     <div>
         General changes:
         <ul>
             <li>Added scores from likelihood ratio tests. </li>
             <li>Removed BayesDel annotations from TP53 DB, because they are annotated from a dedicated BayesDel anntation anyway.</li>
-            <li>Improved Cancerhotspots display and internal representation</li>
+            <li>Improved Cancerhotspots internal representation, display & representation in the INFO column of vcfs</li>
         </ul>
         Bugfixes:
         <ul>
             <li>Fixed a bug where some variants got raw SpliceAI scores instead of the masked ones</li>
             <li>When constructing an URL for the variant details page it was previously not possible to omit the "chr" prefix for the chromosome</li>
+            <li>Task force protein domains are now shown correctly</li>
         </ul>
         Known issues:
         <ul>
