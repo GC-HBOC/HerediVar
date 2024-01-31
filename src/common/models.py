@@ -32,7 +32,7 @@ class Abstract_Annotation(AbstractDataclass):
     is_transcript_specific: bool = False
 
     @abstractmethod
-    def to_vcf(self, add_title = True):
+    def to_vcf(self, prefix = True):
         pass
 
     @abstractmethod
@@ -47,15 +47,17 @@ class CancerhotspotsAnnotation(Abstract_Annotation):
     tissue: str = None
     occurances: int = None
 
-    def to_vcf(self, add_title = True): # TODO
-        data_base = ""
-        if add_title:
-            data_base = self.title + '~1Y'
-        data = data_base + self.value
+    def to_vcf(self, prefix = True):
+        # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
+        data = [self.oncotree_symbol, self.value, self.tissue, self.occurances]
+        data = [str(x) for x in data]
+        data = '~7C'.join(data)
+        if prefix:
+            data = self.title + '~1Y' + data
         return data
     
     def get_header(self): # TODO
-        header = {self.title: '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + ' (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'}
+        header = {self.title: '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + '. An & separated list of cancerhotspots annotations. Each annotation has the FORMAT: oncotree_symbol|cancertype|tissue|num_occurances. (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'}
         return header 
 
 
@@ -70,9 +72,9 @@ class Annotation(Abstract_Annotation):
             return float(self.value)
         return self.value
     
-    def to_vcf(self, add_title = True):
+    def to_vcf(self, prefix = True):
         data_base = ""
-        if add_title:
+        if prefix:
             data_base = self.title + '~1Y'
         data = data_base + self.value
         return data
@@ -96,7 +98,7 @@ class TranscriptAnnotation(Abstract_Annotation):
             return float(the_value)
         return self.value
 
-    def to_vcf(self):
+    def to_vcf(self, prefix = False):
         value_strings = []
         for transcript in self.value:
             new_value_string = transcript + "~24" + self.value[transcript] # sep: $
@@ -239,9 +241,8 @@ class AllAnnotations:
             current_annotation = getattr(self, current_field.name)
             if current_annotation is not None:
                 current_group_name = current_annotation.group_name
-                if current_group_name is not None:
-                    if current_group_name != 'None':
-                        result.add(current_group_name)
+                if str(current_group_name) != "None":
+                    result.add(current_group_name)
         return list(result) # ['Pathogenicity', 'Splicing', 'gnomAD', 'FLOSSIES', 'Cancerhotspots', 'TP53database', 'HerediCare', 'Protein Domain']
 
     def get_group(self, group_identifier):
@@ -776,10 +777,12 @@ class HeredicareAnnotation:
     lr_family: str
 
     def to_vcf(self, prefix = True):
-        vustf_class = str(self.vustf_classification.selected_class) if self.vustf_classification.selected_class is not None else ""
-        vustf_comment = str(self.vustf_classification.comment) if self.vustf_classification.comment is not None else ""
-        vustf_date = str(self.vustf_classification.classification_date) if self.vustf_classification.classification_date is not None else ""
-        info = '~7C'.join([str(self.vid), str(self.n_fam), str(self.n_pat), vustf_class, vustf_comment, vustf_date, self.lr_cooc, self.lr_coseg, self.lr_family])
+        vustf_class = self.vustf_classification.selected_class if self.vustf_classification.selected_class is not None else ""
+        vustf_comment = self.vustf_classification.comment if self.vustf_classification.comment is not None else ""
+        vustf_date = self.vustf_classification.classification_date if self.vustf_classification.classification_date is not None else ""
+        data = [self.vid, self.n_fam, self.n_pat, vustf_class, vustf_comment, vustf_date, self.lr_cooc, self.lr_coseg, self.lr_family]
+        data = [str(x) for x in data]
+        info = '~7C'.join(data)
         info = info
         if prefix:
             info = 'heredicare_annotation~1Y' + info
@@ -1089,7 +1092,8 @@ class Variant(AbstractVariant):
                               self.heredicare_annotations,
                               self.consequences, 
                               self.assays, 
-                              self.literature
+                              self.literature,
+                              self.cancerhotspots_annotations
                             ]
             for annot in annotations_oi:
                 if annot is not None:
@@ -1198,7 +1202,8 @@ class SV_Variant(AbstractVariant):
                               self.heredicare_annotations,
                               self.consequences, 
                               self.assays, 
-                              self.literature
+                              self.literature,
+                              self.cancerhotspots_annotations
                             ]
             for annot in annotations_oi:
                 if annot is not None:
