@@ -61,6 +61,7 @@ class heredicare_job(Job):
                 err_msg += "There was an error during variant retrieval from heredicare: " + str(message)
                 status_code = 1
             else:
+                print(heredicare_variant)
                 n_fam = heredicare_variant["N_FAM"]
                 n_pat = heredicare_variant["N_PAT"]
                 consensus_class = heredicare_variant["PATH_TF"] if heredicare_variant["PATH_TF"] != "-1" else None

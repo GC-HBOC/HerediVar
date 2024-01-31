@@ -5,6 +5,7 @@ import common.functions as functions
 from functools import cmp_to_key
 import datetime
 from abc import ABC, abstractmethod
+import math
 
 @dataclass 
 class AbstractDataclass(ABC): 
@@ -774,7 +775,7 @@ class HeredicareAnnotation:
 
     lr_cooc: float
     lr_coseg: float
-    lr_family: str
+    lr_family: float
 
     def to_vcf(self, prefix = True):
         vustf_class = self.vustf_classification.selected_class if self.vustf_classification.selected_class is not None else ""
@@ -863,11 +864,15 @@ class AbstractVariant(AbstractDataclass):
         if self.heredicare_annotations is not None:
             for annot in self.heredicare_annotations:
                 if annot.lr_coseg is not None:
-                    if lr_coseg is None or lr_coseg < annot.lr_coseg:
+                    if lr_coseg is None or abs(math.log10(annot.lr_coseg)) > abs(math.log10(lr_coseg)):
                         lr_coseg = annot.lr_coseg
+                if annot.lr_cooc is not None:
+                    if lr_cooc is None or abs(math.log10(annot.lr_cooc)) > abs(math.log10(lr_cooc)):
                         lr_cooc = annot.lr_cooc
+                if annot.lr_family is not None:
+                    if lr_family is None or abs(math.log10(annot.lr_family)) > abs(math.log10(lr_family)):
                         lr_family = annot.lr_family
-        return lr_coseg, lr_cooc, lr_family
+        return lr_cooc, lr_coseg, lr_family
 
     def get_user_classifications(self, user_id):
         result = []
