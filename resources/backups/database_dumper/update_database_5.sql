@@ -48,3 +48,7 @@ CHANGE COLUMN `tissue` `tissue` VARCHAR(45) CHARACTER SET 'utf8mb4' NOT NULL ;
 
 UPDATE annotation_type SET group_name = "None" WHERE title = "cancerhotspots_ac";
 UPDATE annotation_type SET group_name = "None" WHERE title = "cancerhotspots_af";
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`variant_heredicare_annotation` 
+CHANGE COLUMN `lr_family` `lr_family` FLOAT NULL DEFAULT NULL ;
