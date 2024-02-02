@@ -31,6 +31,7 @@ gast==0.4.0
 google-auth==2.17.3
 google-auth-oauthlib==1.0.0
 google-pasta==0.2.0
+greenlet==3.0.3
 grpcio==1.54.0
 gunicorn==20.1.0
 h5py==3.8.0
@@ -58,6 +59,7 @@ pandas==2.0.0
 Pillow==9.5.0
 pkg_resources==0.0.0
 pkgutil_resolve_name==1.3.10
+playwright==1.41.1
 pluggy==1.0.0
 prompt-toolkit==3.0.38
 protobuf==4.22.3
@@ -65,12 +67,17 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pyBigWig==0.3.22
 pycparser==2.21
+pyee==11.0.1
 pyfaidx==0.7.2.1
 pyrsistent==0.19.3
 pysam==0.21.0
 pytest==7.3.1
+pytest-asyncio==0.23.4
+pytest-base-url==2.1.0
+pytest-playwright==0.4.3
 python-dateutil==2.8.2
 python-dotenv==1.0.0
+python-slugify==8.0.3
 pytz==2023.3
 redis==4.5.4
 reportlab==3.6.12
@@ -87,6 +94,7 @@ tensorflow==2.12.0
 tensorflow-estimator==2.12.0
 tensorflow-io-gcs-filesystem==0.32.0
 termcolor==2.2.0
+text-unidecode==1.3
 tomli==2.0.1
 typing_extensions==4.5.0
 tzdata==2023.3
