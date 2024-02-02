@@ -14,5 +14,5 @@ unzip keycloak-18.0.0.zip
 rm keycloak-18.0.0.zip
 
 # initialize keycloak
-keycloak-18.0.0/bin/kc.sh import --file ../../../resources/backups/keycloak_export/Heredivar-realm-test.json
+keycloak-18.0.0/bin/kc.sh import --file ../../resources/backups/keycloak_export/Heredivar-realm-test.json
 #/mnt/storage2/users/ahdoebm1/HerediVar/resources/backups/keycloak_export/Heredivar-realm-test.json

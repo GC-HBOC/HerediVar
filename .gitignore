@@ -178,7 +178,8 @@ classified_structural_variants
 /src/frontend_celery/webapp/static/packages/
 /logs
 /classified_variants_*
-/src/frontend_celery/tests/keycloak*
+/src/frontend_celery/playwright/keycloak*
+/src/frontend_celery/playwright/screenshots
 /Python-*
 /data_makefile
 /.localpython

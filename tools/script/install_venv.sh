@@ -79,3 +79,9 @@ pip install pytest
 pip install gunicorn
 
 pip install flask-mail
+
+
+pip install pytest-playwright
+playwright install
+#pip install pytest-asyncio
+pip install pytest-flask

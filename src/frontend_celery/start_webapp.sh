@@ -53,6 +53,11 @@ then
    python3 main.py
 fi
 
+if [ "${WEBAPP_ENV}" == "localtest" ]
+then
+   python3 main.py
+fi
+
 if [ "${WEBAPP_ENV}" == "prod" ]
 then
    #export CURL_CA_BUNDLE=""

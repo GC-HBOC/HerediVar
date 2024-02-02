@@ -4,9 +4,8 @@
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
 cd $SCRIPTPATH
-cd ../
 pwd
-ROOT=$(dirname $(dirname $(dirname $(dirname "$SCRIPTPATH"))))
+ROOT=$(dirname $(dirname $(dirname "$SCRIPTPATH")))
 
 function waitForServer {
   dist=$1
@@ -37,5 +36,5 @@ extension=env_
 source $ROOT/.$extension$WEBAPP_ENV
 set +o allexport
 
-keycloak-18.0.0/bin/kc.sh start-dev --hostname $KEYCLOAK_HOST --http-port $KEYCLOAK_PORT > keycloak.log 2>&1 & # --log-level debug
+$SCRIPTPATH/keycloak-18.0.0/bin/kc.sh start-dev --hostname $KEYCLOAK_HOST --http-port $KEYCLOAK_PORT > keycloak.log 2>&1 & # --log-level debug
 waitForServer "Keycloak"

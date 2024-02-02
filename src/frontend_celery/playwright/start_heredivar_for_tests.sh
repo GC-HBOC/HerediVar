@@ -4,9 +4,8 @@
 SCRIPT=$(readlink -f "$0")
 SCRIPTPATH=$(dirname "$SCRIPT")
 cd $SCRIPTPATH
-cd ../
 pwd
-ROOT=$(dirname $(dirname $(dirname $(dirname "$SCRIPTPATH"))))
+ROOT=$(dirname $(dirname $(dirname "$SCRIPTPATH")))
 
 function waitForServer {
   dist=$1
@@ -16,7 +15,7 @@ function waitForServer {
   C=50
   while :
   do
-    grep "$dist .* (powered by Quarkus .*) started" keycloak.log
+    grep "* Debugger PIN: " heredivar.log
     if [ $? -eq 0 ]; then
       echo " server started."
       break
@@ -26,7 +25,7 @@ function waitForServer {
       sleep 1
     else
       echo " timeout!"
-      cat keycloak.log
+      cat heredivar.log
       exit 1
     fi
   done
@@ -37,5 +36,5 @@ extension=env_
 source $ROOT/.$extension$WEBAPP_ENV
 set +o allexport
 
-keycloak-18.0.0/bin/kc.sh start-dev --hostname $KEYCLOAK_HOST --http-port $KEYCLOAK_PORT > keycloak.log 2>&1 & # --log-level debug
-waitForServer "Keycloak"
+python3 $ROOT/src/frontend_celery/main.py > heredivar.log 2>&1 &
+waitForServer "HerediVar"
