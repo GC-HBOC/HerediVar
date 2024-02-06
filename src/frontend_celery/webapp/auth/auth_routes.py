@@ -333,11 +333,12 @@ def edit_general_info(username, e_mail, first_name, last_name, affiliation):
         resp._content = b'{ "errorMessage" : "No such user" }'
         return resp
 
-
+    
     email_verified = user['emailVerified']
     if e_mail != user['email']:
         email_verified = False
-        
+    if current_app.config["TESTING"]:
+        email_verified = True
 
     data = {
         "id":user['id'],
@@ -371,7 +372,6 @@ def change_password():
 def profile():
 
     username = session['user']['preferred_username']
-    print(username)
 
     user = get_profile()
         
@@ -386,9 +386,11 @@ def profile():
         
         resp = edit_general_info(username, e_mail, first_name, last_name, affiliation)
         if resp.status_code == 204:
-            flash("Successfully changed information", 'alert-success')
+            flash("Successfully changed information", 'alert-success flash_id:success_userinfo')
             return redirect(url_for('auth.profile'))
-        return resp.json()
+        error_message = ''.join(resp.json()["errorMessage"].split())
+        flash_id = "flash_id:" + error_message
+        flash("Error: " + error_message, "alert-danger " + flash_id)
 
     return render_template('auth/profile.html', user = user)
 
@@ -520,11 +522,11 @@ def logout():
             "client_secret": current_app.config['CLIENTSECRET'],
             "refresh_token": refreshToken,
         })
-    
-    logout_reason = "manual logout"
-    if auto_logout:
-        logout_reason = "automatic logout"
-    current_app.logger.info("Successfully logged " + session['user']['preferred_username'] + " out. Reason: " + logout_reason)
+
+        logout_reason = "manual logout"
+        if auto_logout:
+            logout_reason = "automatic logout"
+        current_app.logger.info("Successfully logged " + session['user']['preferred_username'] + " out. Reason: " + logout_reason)
 
     session.pop('user', None)
     session.pop('tokenResponse', None)

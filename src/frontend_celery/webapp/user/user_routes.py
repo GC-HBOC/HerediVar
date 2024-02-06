@@ -101,7 +101,7 @@ def my_lists():
                 flash("You can not add a public list which is not publicly readable but publicly editable. List was not created.", 'alert-danger')
             else:
                 conn.insert_user_variant_list(user_id, list_name, public_read, public_edit)
-                flash("Successfully created new list: \"" + list_name + "\"", "alert-success")
+                flash("Successfully created new list: \"" + list_name + "\"", "alert-success flash_id:list_add_success")
                 current_app.logger.info(session['user']['preferred_username'] + " successfully created list " + list_name)
                 return redirect(url_for('user.my_lists'))
         if request_type == 'edit':

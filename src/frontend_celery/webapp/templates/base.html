@@ -55,10 +55,10 @@
                             <a class="nav-link" href="{{url_for('auth.login')}}">login</a>
                         {% else %}
                             <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown_userdata" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     {{ session.get('user').get('preferred_username')}}
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown" > <!--style="min-width: 1rem;"-->
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown_userdata" > <!--style="min-width: 1rem;"-->
                                     <li><a class="dropdown-item" href="{{url_for('auth.profile')}}">Profile</a></li>
                                     <li><a class="dropdown-item" href="{{ url_for('auth.change_password') }}">Change Password</a></li>
                                     <li><a class="dropdown-item" href="{{ url_for('user.my_lists') }}">My lists</a></li>

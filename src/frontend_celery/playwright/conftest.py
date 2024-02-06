@@ -4,12 +4,14 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from webapp import create_app
 import pytest
 import os
+sys.path.append(path.dirname(path.abspath(__file__)))
+import utils
 
 
 @pytest.fixture
 def app():
     app = create_app()
-    yield app
+    return app
 
 @pytest.fixture
 def test_client(app):
@@ -20,9 +22,9 @@ def test_client(app):
 def config(app):
     return app.config
 
-@pytest.fixture()
-def client():
-    return app.test_client()
+#@pytest.fixture()
+#def client():
+#    return app.test_client()
 
 @pytest.fixture(autouse=True)
 def _push_request_context(request, app):
@@ -34,6 +36,13 @@ def _push_request_context(request, app):
 
     request.addfinalizer(teardown)
 
+
+@pytest.fixture
+def page(browser):
+    context = utils.get_context(browser)
+    page = utils.get_page(context)
+    yield page
+    utils.save_browser_state(context)
 
 #@pytest.fixture()
 #def page2(playwright):

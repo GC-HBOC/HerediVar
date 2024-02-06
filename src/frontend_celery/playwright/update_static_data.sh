@@ -75,7 +75,7 @@ echo $path_to_data
 
 # dump structure
 mysqldump --quick --column-statistics=0 $DB_NAME -P $DB_PORT -h $DB_HOST -u $DB_ADMIN -p$DB_ADMIN_PW --no-tablespaces --no-data -r $path_to_structure
-gzip --force $path_to_structure
+#gzip --force $path_to_structure
 
 # dump static data
 mysqldump --quick --column-statistics=0 $DB_NAME -P $DB_PORT -h $DB_HOST -u $DB_ADMIN -p$DB_ADMIN_PW --no-tablespaces --no-create-info -r $path_to_data annotation_type classification_scheme classification_criterium classification_criterium_strength classification_scheme_alias mutually_exclusive_criteria mutually_inclusive_criteria 
