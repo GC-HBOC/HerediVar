@@ -40,7 +40,7 @@ if webapp_env == 'dev':
     #ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_10-1-gcb80a2dd/"
     ngs_bits_path = joinpaths(toolsdir, "ngs-bits/bin")
     htslib_path = joinpaths(toolsdir, "htslib")
-    automatic_classification_path = joinpaths(toolsdir, "variant_classification")
+    automatic_classification_path = joinpaths(toolsdir, "herediclass")
     samtools_path = joinpaths(toolsdir, "samtools/samtools")
 
     # data

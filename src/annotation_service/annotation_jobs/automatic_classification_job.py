@@ -55,7 +55,7 @@ class automatic_classification_job(Job):
         scheme_alias = classification.get("config_name", "acmg_svi")
         classification_scheme_id = conn.get_classification_scheme_id_from_alias(scheme_alias)
         if classification_scheme_id is None:
-            raise ValueError("The scheme provided by the config: " + str(scheme_alias) + " is not in HerediVar. Please adjust config or insert scheme.")
+            raise ValueError("The scheme provided by the config: " + str(scheme_alias) + " is not in HerediVar. Please adjust config, insert scheme or add scheme alias.")
         scheme = conn.get_classification_scheme(classification_scheme_id)
         scheme_id = scheme[0]
         scheme_type = scheme[3]
@@ -314,9 +314,14 @@ class automatic_classification_job(Job):
         """
         "cancer_hotspot": true,
         """
-        result["cancer_hotspot"] = False
-        if variant.annotations.cancerhotspots_cancertypes is not None:
-            result["cancer_hotspot"] = True
+        cancerhotspots_ac = variant.annotations.cancerhotspots_ac
+        cancerhotspots_af = variant.annotations.cancerhotspots_af
+        cancerhotspots = {}
+        if cancerhotspots_af is not None:
+            cancerhotspots["AF"] = cancerhotspots_af
+        if cancerhotspots_ac is not None:
+            cancerhotspots["AC"] = cancerhotspots_ac
+        result["cancer_hotspots"] = cancerhotspots
 
         validate_input(result) # raises an error on fails
 

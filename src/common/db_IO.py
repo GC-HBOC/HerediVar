@@ -2671,7 +2671,7 @@ class Connection:
             description = classification_schema[2]
             scheme_type = classification_schema[3]
             online_reference = classification_schema[4]
-            is_default = classification_schema[5]
+            is_scheme_default = classification_schema[5]
             version = classification_schema[6]
 
             command = "SELECT * FROM classification_criterium WHERE classification_scheme_id = %s"
@@ -2713,7 +2713,7 @@ class Connection:
 
                 classification_criteria_dict[classification_criterium_name] = new_criterium_dict
 
-            result[classification_schema_id] = {"description": description, "scheme_type": scheme_type, "version": version, "reference": online_reference, 'is_default': is_default, 'criteria': classification_criteria_dict}
+            result[classification_schema_id] = {"description": description, "scheme_type": scheme_type, "version": version, "reference": online_reference, 'is_default': is_scheme_default, 'criteria': classification_criteria_dict}
 
         return result
 

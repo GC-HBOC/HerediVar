@@ -416,6 +416,8 @@ def calculate_class(scheme_type = None, version = None, selected_classes = ''):
             possible_classes = get_possible_classes_enigma_tp53(class_counts) # get a set of possible classes depending on selected criteria
         elif 'atm' in scheme_type and version == "v1.1.0":
             possible_classes = get_possible_classes_enigma_atm(class_counts) # get a set of possible classes depending on selected criteria
+        elif 'pten' in scheme_type and version == "v3.0.0":
+            possible_classes = get_possible_classes_enigma_pten(class_counts) # get a set of possible classes depending on selected criteria
         else:
             raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme and version? (either "acmg" or VUS "task-force" based)')
 
@@ -474,7 +476,54 @@ def get_possible_classes_acmg_svi(class_counts):
     return possible_classes
 
 
+def get_possible_classes_enigma_pten(class_counts):
+    
+    possible_classes = set()
 
+    # pathogenic
+    if class_counts['pvs'] == 1:
+        if class_counts['ps'] >= 1 or class_counts['pm'] >= 2 or (class_counts['pm'] == 1 and class_counts['pp'] == 1) or class_counts['pp'] >= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] >= 2: 
+        possible_classes.add(5)
+    if class_counts['ps'] == 1:
+        if class_counts['pm'] >= 3 or (class_counts['pm'] == 2 and class_counts['pp'] >= 2) or (class_counts['pm'] == 1 and class_counts['pp'] >= 4):
+            possible_classes.add(5)
+    
+    # likely pathogenic
+    if class_counts['pvs'] == 1 and class_counts['pm'] == 1:
+        possible_classes.add(4)
+    if class_counts['pvs'] == 1 and class_counts['pp'] == 1:
+        possible_classes.add(4)
+    
+
+    #if class_counts['ps'] == 1 and (1 <= class_counts['pm'] <= 2):
+    #    possible_classes.add(4)
+    #if class_counts['ps'] == 1 and class_counts['pp'] >= 2:
+    #    possible_classes.add(4)
+    #if class_counts['pm'] >= 3:
+    #    possible_classes.add(4)
+    #if class_counts['pm'] == 2 and class_counts['pp'] >= 2:
+    #    possible_classes.add(4)
+    #if class_counts['pm'] == 1 and class_counts['pp'] >= 4:
+    #    possible_classes.add(4)
+
+    # benign
+    if class_counts['ba'] == 1:
+        possible_classes.add(1)
+    if class_counts['bs'] >=2:
+        possible_classes.add(1)
+    
+    # likely benign
+    if class_counts['bs'] == 1:
+        possible_classes.add(2)
+    if class_counts['bs'] == 1 and class_counts['bp'] == 1:
+        possible_classes.add(2)
+    if class_counts['bp'] >= 2:
+        possible_classes.add(2)
+
+
+    return possible_classes
 
 
 def get_possible_classes_enigma_atm(class_counts):

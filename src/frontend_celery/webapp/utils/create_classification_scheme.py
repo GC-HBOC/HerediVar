@@ -124,6 +124,7 @@ for data_path in data_paths:
     if not path.exists(data_path):
         print("SKIPPING: path does not exist: " + data_path)
         continue
+    print(data_path)
     insert_scheme(conn, data_path)
 
 
