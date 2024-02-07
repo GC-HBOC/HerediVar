@@ -1,5 +1,3 @@
-
-
 #!/bin/bash
 set -e
 set -o pipefail
@@ -40,12 +38,12 @@ git clone https://github.com/akatzke/variant_classification.git $foldername
 
 variant_classification_path=$path/$foldername
 
-cd $variant_classification
+cd $variant_classification_path
 wget https://www.python.org/ftp/python/3.10.13/Python-3.10.13.tgz
 tar -zxvf Python-3.10.13.tgz
 cd Python-3.10.13
 mkdir -p .localpython
-./configure --prefix=$path/variant_classification/.localpython
+./configure --prefix=$variant_classification_path/.localpython
 make
 make install
 
@@ -64,7 +62,7 @@ python3 -m pip install --upgrade setuptools wheel
 pip install pyyaml
 pip install cyvcf2
 pip install biopython
-pip install pyensembl
+pip install pyensembl==2.2.9
 pip install hgvs
 pip install pybedtools
 pip install openpyxl
@@ -73,22 +71,22 @@ pip install pandas
 pip install fastapi
 pip install uvicorn
 
-cd $variant_classification
+cd $variant_classification_path
 bash install_dependencies/install_pyensembl.sh -v 110
 
-bash install_dependencies/download_data.sh -p $path
+bash install_dependencies/download_data.sh -p $variant_classification_path
 
 
 # adjust configuration
 cp config.yaml config_production.yaml
-sed -r -i "s:/home/katzkean/:$variant_classification/:g" config_production.yaml
+sed -r -i "s:/home/katzkean/:$variant_classification_path/:g" config_production.yaml
 sed -r -i "s:variant_classification/data/critical_region:data/critical_region:g" config_production.yaml
 
+gene_specific_config_path=$variant_classification_path/gene_specific
+for filename in $gene_specific_config_path/*.yaml; do
+   sed -r -i "s:/home/katzkean/:$variant_classification_path/:g" $filename
+   sed -r -i "s:variant_classification/data/critical_region:data/critical_region:g" $filename
+done
 
-sed -r -i "s:/home/katzkean/:$variant_classification/:g" gene_specific/acmg_brca1.yaml
-sed -r -i "s:variant_classification/data/critical_region:data/critical_region:g" gene_specific/acmg_brca1.yaml
-
-sed -r -i "s:/home/katzkean/:$variant_classification/:g" gene_specific/acmg_brca2.yaml
-sed -r -i "s:variant_classification/data/critical_region:data/critical_region:g" gene_specific/acmg_brca2.yaml
 
 

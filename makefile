@@ -34,36 +34,26 @@ folders:
 #### INSTALL TOOLS
 
 
-SAMTOOLS := $(TOOLS)/samtools
-SAMTOOLS_VERSION := 1.11
 
+
+
+
+
+
+
+
+
+
+
+
+
+tools: python venv htslib keycloak redis vep ngs_bits samtools herediclass
+
+## python
 PYTHONPATH := $(ROOT)
 PYTHONNAME := .localpython
 PYTHONVERSION := 3.8.10
 PYTHON := $(PYTHONPATH)/$(PYTHONNAME)
-
-VENVPATH := $(ROOT)
-VENVNAME := .venv_mkfile
-VENV := $(VENVPATH)/$(VENVNAME)
-
-HTSLIBPATH := $(TOOLS)
-HTSLIBNAME := htslib
-HTSLIB := $(HTSLIBPATH)/$(HTSLIBNAME)
-HTSLIBVERSION := 1.16
-
-KEYCLOAKPATH := $(TOOLS)
-KEYCLOAKNAME := keycloak
-KEYCLOAK := $(KEYCLOAKPATH)/$(KEYCLOAKNAME)
-KEYCLOAKVERSION := 18.0.0
-
-NGSBITSPATH := $(TOOLS)
-NGSBITSNAME := ngs-bits
-NGSBITS := $(NGSBITSPATH)/$(NGSBITSNAME)
-NGSBITSVERSION := 2022_10
-
-
-tools: python venv htslib keycloak redis vep ngs_bits samtools autoclass
-## python
 python:
 	if [ ! -d "${PYTHON}" ]; then \
 		printf ${_TEXTCOL_RED} "Installing python $(PYTHONVERSION)" ; \
@@ -77,6 +67,10 @@ python_clean: venv_clean
 
 python_update: python_clean python venv
 
+
+VENVPATH := $(ROOT)
+VENVNAME := .venv_mkfile
+VENV := $(VENVPATH)/$(VENVNAME)
 venv:
 	if [ ! -d "${VENV}" ]; then \
 		printf ${_TEXTCOL_RED} "Installing venv" ; \
@@ -89,6 +83,10 @@ venv_clean:
 venv_update: venv_clean venv
 
 ## HTSLIB
+HTSLIBPATH := $(TOOLS)
+HTSLIBNAME := htslib
+HTSLIB := $(HTSLIBPATH)/$(HTSLIBNAME)
+HTSLIBVERSION := 1.16
 htslib:
 	if [ ! -d "${HTSLIB}" ]; then \
 		printf ${_TEXTCOL_RED} "Installing htslib $(HTSLIBVERSION)" ; \
@@ -102,6 +100,10 @@ htslib_update: htslib_clean htslib
 
 
 ## keycloak
+KEYCLOAKPATH := $(TOOLS)
+KEYCLOAKNAME := keycloak
+KEYCLOAK := $(KEYCLOAKPATH)/$(KEYCLOAKNAME)
+KEYCLOAKVERSION := 18.0.0
 keycloak:
 	if [ ! -d "${KEYCLOAK}" ]; then \
 		printf ${_TEXTCOL_RED} "Installing keycloak $(KEYCLOAKVERSION)" ; \
@@ -140,6 +142,10 @@ vep_clean:
 vep_update: vep_clean vep
 
 ## NGS-BITS
+NGSBITSPATH := $(TOOLS)
+NGSBITSNAME := ngs-bits
+NGSBITS := $(NGSBITSPATH)/$(NGSBITSNAME)
+NGSBITSVERSION := 2022_10
 ngs_bits:
 	if [ ! -d "${NGSBITS}" ]; then \
 		printf ${_TEXTCOL_RED} "Installing ngs-bits ${NGSBITSVERSION}" ; \
@@ -152,6 +158,8 @@ ngs_bits_clean:
 ngs_bits_update: ngs_bits_clean ngs_bits
 
 ## SAMTOOLS
+SAMTOOLS := $(TOOLS)/samtools
+SAMTOOLS_VERSION := 1.11
 samtools:
 	if [ ! -d "$(SAMTOOLS)" ]; then \
 		printf ${_TEXTCOL_RED} "Installing samtools" ; \
@@ -164,17 +172,20 @@ samtools_clean:
 samtools_update: samtools_clean samtools
 
 
-## AUTOMATIC CLASSIFICATION
-autoclass:
-	if [ ! -d "${AUTOCLASS}" ]; then \
+## AUTOMATIC CLASSIFICATION HEREDICLASS
+HEREDICLASSPATH := $(TOOLS)
+HEREDICLASSNAME := herediclass
+HEREDICLASS := $(HEREDICLASSPATH)/$(HEREDICLASSNAME)
+herediclass:
+	if [ ! -d "${HEREDICLASS}" ]; then \
 		printf ${_TEXTCOL_RED} "Installing the automatic classification algorithm" ; \
-		${TOOLS}/script/install_automatic_classification.sh -p ${AUTOCLASSPATH} -n ${AUTOCLASSNAME} ; \
+		${TOOLS}/script/install_herediclass.sh -p ${HEREDICLASSPATH} -n ${HEREDICLASSNAME} ; \
 	fi
 
-autoclass_clean:
-	rm -rf ${AUTOCLASS}
+herediclass_clean:
+	rm -rf ${HEREDICLASS}
 
-autoclass_update: autoclass_clean autoclass
+herediclass_update: herediclass_clean herediclass
 
 
 
@@ -566,6 +577,8 @@ gnomad_clean:
 	rm -rf ${GNOMAD}
 
 gnomad_update: gnomad_clean gnomad
+
+
 
 ## hci_priors
 HCIPRIORSPATH = $(DBS)

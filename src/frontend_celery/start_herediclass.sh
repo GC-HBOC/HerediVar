@@ -28,7 +28,7 @@ then
 fi
 
 
-echo "preparing automatic classification startup"
+echo "preparing herediclass startup"
 
 
 
@@ -53,7 +53,7 @@ source $ROOT/.$extension$WEBAPP_ENV
 set +o allexport
 
 
-autoclass_path=$ROOT/tools/variant_classification
+autoclass_path=$ROOT/tools/herediclass
 cd $autoclass_path
 
 source .venv/bin/activate
