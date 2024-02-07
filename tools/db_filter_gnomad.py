@@ -31,16 +31,26 @@ while(line is None or line.startswith('##')):
 
     
 if include_header:
-    # write INFO
+    # write INFO columns for standard gnomAD scores
+    print('##INFO=<ID=AN,Number=A,Type=Float,Description="Total number of alleles in samples">')
     print('##INFO=<ID=AF,Number=A,Type=Float,Description="Alternate allele frequency in samples">')
     print('##INFO=<ID=AC,Number=A,Type=Integer,Description="Alternate allele count for samples">')
     print('##INFO=<ID=hom,Number=A,Type=Integer,Description="Count of homozygous individuals in samples">')
+    print('##INFO=<ID=hemi,Number=A,Type=Integer,Description="Count of hemizygous individuals in samples">')
+    print('##INFO=<ID=het,Number=A,Type=Integer,Description="Count of heterozygous individuals in samples">')
+    # write INFO columns for non cancer gnomAD scores
+    print('##INFO=<ID=AN_NC,Number=A,Type=Float,Description="Total number of alleles in samples in non_cancer subset">')
+    print('##INFO=<ID=AF_NC,Number=A,Type=Float,Description="Alternate allele frequency in samples in non_cancer subset">')
+    print('##INFO=<ID=AC_NC,Number=A,Type=Integer,Description="Alternate allele count for samples in non_cancer subset">')
+    print('##INFO=<ID=hom_NC,Number=A,Type=Integer,Description="Count of homozygous individuals in samples in non_cancer subset">')
+    print('##INFO=<ID=hemi_NC,Number=A,Type=Integer,Description="Count of hemizygous individuals in samples in non_cancer subset">')
+    print('##INFO=<ID=het_NC,Number=A,Type=Integer,Description="Count of heterozygous individuals in samples in non_cancer subset">')
+    # write INFO columns for popmax
     print('##INFO=<ID=popmax,Number=A,Type=String,Description="Population with maximum AF">')
     print('##INFO=<ID=AC_popmax,Number=A,Type=Integer,Description="Allele count in the population with the maximum allele frequency">')
     print('##INFO=<ID=AN_popmax,Number=A,Type=Integer,Description="Total number of alleles in the population with the maximum allele frequency">')
     print('##INFO=<ID=AF_popmax,Number=A,Type=Float,Description="Maximum allele frequency across populations">')
-    print('##INFO=<ID=hemi,Number=A,Type=Integer,Description="Count of hemizygous individuals in samples">')
-    print('##INFO=<ID=het,Number=A,Type=Integer,Description="Count of heterozygous individuals in samples">')
+
 
     print(line.strip()) # prints the column spec
 
@@ -58,22 +68,34 @@ while line != "":
         is_gonosome = (chr_num == "X") or (chr_num == "Y")
         is_nonpar = "nonpar" in entries[7]
 
-        nhomalt = ''
+        # total gnomAD
+        an = ''
         ac = ''
         af = ''
         hom = ''
+        ac_xy = ''
+        hemi = ''
+        het = ''
+
+        # non cancer gnomAD
+        an_nc = ''
+        ac_nc = ''
+        af_nc = ''
+        hom_nc = ''
+        ac_xy_nc = ''
+        hemi_nc = ''
+        het_nc = ''
+
+        # popmax scores
         popmax = ''
         ac_popmax = ''
         an_popmax = ''
         af_popmax = ''
-        hemi = ''
-        het = ''
 
         for info in infos:
             if info.startswith('AF='):
                 af = info[3:]
             elif info.startswith('nhomalt='):
-                nhomalt = int(info[8:])
                 hom = info[8:]
             elif info.startswith('popmax='):
                 popmax = info[7:]
@@ -83,34 +105,71 @@ while line != "":
                 an_popmax = info[10:]
             elif info.startswith('AF_popmax='):
                 af_popmax = info[10:]
-            elif info.startswith('AC_male=') and is_gonosome and is_nonpar:
-                hemi = info[8:]
+            elif info.startswith('AC_XY=') and is_gonosome and is_nonpar:
+                ac_xy = info[8:]
             elif info.startswith('AC='):
-                ac = int(info[3:])
-                if chr_num == "Y": # gnomad does not record AC_male for chrY as AC_male=AC
-                    hemi = str(ac)
+                ac = info[3:]
+            elif info.startswith('AN='):
+                an = info[3:]
+            elif info.startswith('AN_non_cancer='):
+                an_nc = info[14:]
+            elif info.startswith('AF_non_cancer='):
+                af_nc = info[14:]
+            elif info.startswith('AC_non_cancer='):
+                ac_nc = info[14:]
+            elif info.startswith('nhomalt_non_cancer='):
+                hom_nc = info[19:]
+            elif info.startswith('AC_non_cancer_XY='):
+                ac_xy_nc = info[17:]
     
         #calculate the number of heterozygotes
-        if nhomalt != '' and ac != '':
-            het = str(ac - (2*nhomalt))
+        if hom != '' and ac != '':
+            het = str(int(ac) - (2*int(hom)))
+        
+        #calculate the number of hemizygotes
+        if ac_xy != '' and chr_num == "X" and is_nonpar:
+            hemi = ac_xy
+        elif chr_num == "Y":
+            hemi = ac # every variant on Y is hemizygous
+
+        #calculate the number of heterozygotes for non cancer subset
+        if hom_nc != '' and ac_nc != '':
+            het_nc = str(int(ac_nc) - (2*int(hom_nc)))
+        
+        #calculate the number of hemizygotes for non cancer subset
+        if ac_xy_nc != '' and chr_num == "X" and is_nonpar:
+            hemi_nc = ac_xy_nc
+        elif chr_num == "Y":
+            hemi_nc = ac_nc # every variant on Y is hemizygous
+
 
         entries[0] = "chr" + chr_num
 
         info = ''
+        # standard gnomAD scores
+        info = functions.collect_info(info, "AN=", an)
         info = functions.collect_info(info, "AF=", af)
         info = functions.collect_info(info, "AC=", ac)
         info = functions.collect_info(info, "hom=", hom)
+        info = functions.collect_info(info, "het=", het)
+        info = functions.collect_info(info, "hemi=", hemi)
+        # non cancer gnomAD scores
+        info = functions.collect_info(info, "AN_NC=", an_nc)
+        info = functions.collect_info(info, "AF_NC=", af_nc)
+        info = functions.collect_info(info, "AC_NC=", ac_nc)
+        info = functions.collect_info(info, "hom_NC=", hom_nc)
+        info = functions.collect_info(info, "het_NC=", het_nc)
+        info = functions.collect_info(info, "hemi_NC=", hemi_nc)
+        # popmax
         info = functions.collect_info(info, "popmax=", popmax)
         info = functions.collect_info(info, "AC_popmax=", ac_popmax)
         info = functions.collect_info(info, "AN_popmax=", an_popmax)
         info = functions.collect_info(info, "AF_popmax=", af_popmax)
-        info = functions.collect_info(info, "hemi=", hemi)
-        info = functions.collect_info(info, "het=", het)
+
+        if info == '':
+            info = '.'
 
         print('\t'.join(entries[:7]) + '\t' + info)
-    
-
-    
 
 
 # für #hemi: 
