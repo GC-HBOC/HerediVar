@@ -4,7 +4,7 @@
     "display_name": "ClinGen ENIGMA BRCA2 v1.0.0",
     "type": "acmg-enigma-brca2",
     "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/pbpwnhly/clingen_brca2_v1.0.0.pdf/?format=attachment",
-    "aliases": [],
+    "aliases": ["ACMG BRCA2"],
     "criteria": [
         {
             "name": "PVS1",

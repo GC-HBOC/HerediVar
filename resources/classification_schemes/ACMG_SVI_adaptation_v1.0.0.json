@@ -4,7 +4,7 @@
     "display_name": "ACMG SVI adaptation",
     "type": "acmg-svi",
     "reference": "https://pubmed.ncbi.nlm.nih.gov/25741868/",
-    "aliases": ["ACMG standard"],
+    "aliases": ["ACMG standard + SVI"],
     "criteria": [
         {
             "name": "PVS1",
