@@ -39,12 +39,7 @@ def test_variant_lists(page):
     page.locator("td:has-text('" + list_one_name + "')").click()
     utils.screenshot(page)
 
-    conn = utils.Test_Connection(["db_admin"])
-    conn.revert_database()
-    conn.close()
-    conn = utils.Test_Connection(["db_admin"])
-    conn.test()
-    conn.close()
+    utils.revert_database()
     
 
 
