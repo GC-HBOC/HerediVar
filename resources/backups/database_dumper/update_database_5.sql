@@ -52,3 +52,5 @@ UPDATE annotation_type SET group_name = "None" WHERE title = "cancerhotspots_af"
 
 ALTER TABLE `HerediVar_ahdoebm1`.`variant_heredicare_annotation` 
 CHANGE COLUMN `lr_family` `lr_family` FLOAT NULL DEFAULT NULL ;
+
+
