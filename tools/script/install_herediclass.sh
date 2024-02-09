@@ -72,20 +72,29 @@ pip install fastapi
 pip install uvicorn
 
 cd $variant_classification_path
-bash install_dependencies/install_pyensembl.sh -v 110
+bash $variant_classification_path/install_dependencies/install_pyensembl.sh -v 110
 
-bash install_dependencies/download_data.sh -p $variant_classification_path
+sed -r -i "s:/variant_classification::g" $variant_classification_path/install_dependencies/download_data.sh
+
+bash $variant_classification_path/install_dependencies/download_data.sh -p $variant_classification_path
+
+
+cd databases/Clinvar
+wget --no-check-certificate https://download.imgag.de/ahdoebm1/extern/clinvar_spliceai_all_sorted.vcf.gz
+in_path_spliceai_clinvar=$variant_classification_path/databases/Clinvar/clinvar_spliceai_all_sorted.vcf.gz
+python $variant_classification_path/install_dependencies/data_filter_clinvar.py -i $in_path_spliceai_clinvar
 
 
 # adjust configuration
+cd $variant_classification_path
 cp config.yaml config_production.yaml
 sed -r -i "s:/home/katzkean/:$variant_classification_path/:g" config_production.yaml
-sed -r -i "s:variant_classification/data/critical_region:data/critical_region:g" config_production.yaml
+sed -r -i "s:variant_classification/::g" config_production.yaml
 
 gene_specific_config_path=$variant_classification_path/gene_specific
 for filename in $gene_specific_config_path/*.yaml; do
    sed -r -i "s:/home/katzkean/:$variant_classification_path/:g" $filename
-   sed -r -i "s:variant_classification/data/critical_region:data/critical_region:g" $filename
+   sed -r -i "s:variant_classification/::g" $filename
 done
 
 

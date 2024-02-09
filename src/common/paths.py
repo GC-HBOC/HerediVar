@@ -67,7 +67,7 @@ if webapp_env == 'dev':
     BRCA_exchange_path = joinpaths(datadir, "BRCA_exchange/BRCA_exchange_02-22-22.vcf.gz")
     FLOSSIES_path = joinpaths(datadir, "FLOSSIES/FLOSSIES_25-03-2022.vcf.gz")
     cancerhotspots_path = joinpaths(datadir, "cancerhotspots/cancerhotspots.v2.final.vcf.gz")
-    arup_brca_path = joinpaths(datadir, "ARUP/ARUP_BRCA_2022_04_01.vcf.gz")
+    #arup_brca_path = joinpaths(datadir, "ARUP/ARUP_BRCA_2022_04_01.vcf.gz")
     tp53_db = joinpaths(datadir, "TP53_database/GermlineDownload_r20.normalized.vcf.gz")
     hci_priors = joinpaths(datadir, "HCI_priors/priors.vcf.gz")
     bayesdel = joinpaths(datadir, "BayesDEL/bayesdel_4.4.vcf.gz")
@@ -145,7 +145,7 @@ elif webapp_env == 'localtest':
     BRCA_exchange_path = datadir + "BRCA_exchange.vcf.gz"
     FLOSSIES_path = datadir + "FLOSSIES.vcf.gz"
     cancerhotspots_path = datadir + "cancerhotspots.vcf.gz"
-    arup_brca_path = datadir + "ARUP_BRCA.vcf.gz"
+    #arup_brca_path = datadir + "ARUP_BRCA.vcf.gz"
     tp53_db = datadir + "TP53_database.vcf.gz"
     hci_priors = datadir + "HCI_priors.vcf.gz"
 
@@ -193,7 +193,7 @@ elif webapp_env == 'githubtest':
     BRCA_exchange_path = datadir + "BRCA_exchange.vcf.gz"
     FLOSSIES_path = datadir + "FLOSSIES.vcf.gz"
     cancerhotspots_path = datadir + "cancerhotspots.vcf.gz"
-    arup_brca_path = datadir + "ARUP_BRCA.vcf.gz"
+    #arup_brca_path = datadir + "ARUP_BRCA.vcf.gz"
     tp53_db = datadir + "TP53_database.vcf.gz"
     hci_priors = datadir + "HCI_priors.vcf.gz"
 
@@ -259,7 +259,7 @@ elif webapp_env == 'prod':
     BRCA_exchange_path = joinpaths(datadir, "BRCA_exchange/BRCA_exchange_02-22-22.vcf.gz")
     FLOSSIES_path = joinpaths(datadir, "FLOSSIES/FLOSSIES_25-03-2022.vcf.gz")
     cancerhotspots_path = joinpaths(datadir, "cancerhotspots/cancerhotspots.v2.final.vcf.gz")
-    arup_brca_path = joinpaths(datadir, "ARUP/ARUP_BRCA_2022_04_01.vcf.gz")
+    #arup_brca_path = joinpaths(datadir, "ARUP/ARUP_BRCA_2022_04_01.vcf.gz")
     tp53_db = joinpaths(datadir, "TP53_database/GermlineDownload_r20.normalized.vcf.gz")
     hci_priors = joinpaths(datadir, "HCI_priors/priors.vcf.gz")
     bayesdel = joinpaths(datadir, "BayesDEL/bayesdel_4.4.vcf.gz")

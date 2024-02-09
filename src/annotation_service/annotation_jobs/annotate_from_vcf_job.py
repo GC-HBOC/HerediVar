@@ -21,8 +21,8 @@ class annotate_from_vcf_job(Job):
                                                 'do_clinvar', 'do_gnomad', 
                                                 'do_brca_exchange', 
                                                 'do_flossies', 
-                                                'do_cancerhotspots', 
-                                                'do_arup', 'do_tp53_database', 'do_priors', 'do_bayesdel', 'do_cosmic']):
+                                                'do_cancerhotspots', #'do_arup',
+                                                'do_tp53_database', 'do_priors', 'do_bayesdel', 'do_cosmic']):
             return 0, '', ''
 
         self.print_executing()
@@ -69,7 +69,7 @@ class annotate_from_vcf_job(Job):
         self.insert_annotation(variant_id, info, "FLOSSIES_num_afr=", recent_annotation_ids['flossies_num_afr'], conn)
         self.insert_annotation(variant_id, info, "FLOSSIES_num_eur=", recent_annotation_ids['flossies_num_eur'], conn)
 
-        self.insert_annotation(variant_id, info, "ARUP_classification=", recent_annotation_ids['arup_classification'], conn)
+        #self.insert_annotation(variant_id, info, "ARUP_classification=", recent_annotation_ids['arup_classification'], conn)
 
         self.insert_annotation(variant_id, info, "HCI_prior=", recent_annotation_ids['hci_prior'], conn)
 
@@ -211,9 +211,9 @@ class annotate_from_vcf_job(Job):
         if self.job_config['do_cancerhotspots']:
             config_file.write(paths.cancerhotspots_path + "\tcancerhotspots\tcancertypes,AC,AF\t\n")
 
-        ## add arup brca classification
-        if self.job_config['do_arup']:
-            config_file.write(paths.arup_brca_path + "\tARUP\tclassification\t\n")
+        ### add arup brca classification
+        #if self.job_config['do_arup']:
+        #    config_file.write(paths.arup_brca_path + "\tARUP\tclassification\t\n")
 
         ## add TP53 database information
         if self.job_config['do_tp53_database']:

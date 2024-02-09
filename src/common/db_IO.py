@@ -2820,6 +2820,7 @@ class Connection:
         annotation_type_ids = annotation_type_ids.values()
         placeholders = self.get_placeholders(len(annotation_type_ids))
         command = "SELECT id, title, display_title, description, value_type, version, version_date, group_name, is_transcript_specific FROM annotation_type WHERE id IN " + placeholders
+        print(command % tuple(annotation_type_ids))
         self.cursor.execute(command, tuple(annotation_type_ids))
         result = self.cursor.fetchall()
         annotation_types = [self.convert_annotation_type_raw(annotation_type_raw) for annotation_type_raw in result if annotation_type_raw]

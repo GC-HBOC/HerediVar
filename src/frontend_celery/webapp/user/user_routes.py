@@ -54,7 +54,7 @@ def modify_list_content():
 @require_permission(['read_resources'])
 def my_lists():
     user_id = session['user']['user_id']
-    conn = get_connection()
+    conn = Connection()
     user_lists = conn.get_lists_for_user(user_id)
 
     allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
@@ -259,6 +259,8 @@ def my_lists():
             flash(Markup("Successfully removed variant from list! Go <a class='alert-link' href='" + url_to_deleted_variant + "'>here</a> to undo this action."), "alert-success")
 
             return redirect(url_for('user.my_lists', view=view_list_id))
+        
+    
 
 
     if view_list_id is not None:
@@ -305,6 +307,8 @@ def my_lists():
             )
     #print(variants)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
+
+    conn.close()
     
     return render_template('user/my_lists.html', 
                             user_lists = user_lists,

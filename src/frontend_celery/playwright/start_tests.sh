@@ -27,18 +27,18 @@ source $ROOT/.venv/bin/activate
 
 
 
-# init structure of the database
-cat $DB_STRUCTURE | mysql -h $DB_HOST -P $DB_PORT -u$DB_ADMIN -p$DB_ADMIN_PW $DB_NAME 
+## init structure of the database
+#cat $DB_STRUCTURE | mysql -h $DB_HOST -P $DB_PORT -u$DB_ADMIN -p$DB_ADMIN_PW $DB_NAME 
+#
+## init static information
+#mysql_errors=$(mysql -h $DB_HOST -P $DB_PORT -u$DB_ADMIN -p$DB_ADMIN_PW  $DB_NAME < $DB_STATIC_SEED 2>&1)
+#if [ $? = "1" ]; then
+#    echo $mysql_errors
+#    exit 1
+#fi
 
-# init static information
-mysql_errors=$(mysql -h $DB_HOST -P $DB_PORT -u$DB_ADMIN -p$DB_ADMIN_PW  $DB_NAME < $DB_STATIC_SEED 2>&1)
-if [ $? = "1" ]; then
-    echo $mysql_errors
-    exit 1
-fi
-
-#mysql --host sql.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahdoebm1_test < $DATABASE_DUMPER_DIR/users/user_privileges_test.sql
-#mysql --host sql.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahdoebm1_test -e "SHOW TABLES"
+##mysql --host sql.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahdoebm1_test < $DATABASE_DUMPER_DIR/users/user_privileges_test.sql
+##mysql --host sql.img.med.uni-tuebingen.de -uahdoebm1 -p20220303 HerediVar_ahdoebm1_test -e "SHOW TABLES"
 
 
 # seed keycloak
@@ -57,7 +57,7 @@ $TESTDIR/start_heredivar_for_tests.sh
 cd $TESTDIR
 export TESTUSER=$TEST_READONLY
 export TESTUSERPW=$TEST_READONLY_PW
-pytest --screenshot=only-on-failure --browser firefox tests/read_only/ -k 'test_variant_lists' #-k 'test_dev' --browser webkit --browser chromium
+pytest --screenshot=only-on-failure --browser firefox tests/read_only/ -k 'test_variant_lists or test_variant_lists_2 or test_delet' #-k 'test_dev' --browser webkit --browser chromium
 
 # stop keycloak
 pkill -s 0 -e java
