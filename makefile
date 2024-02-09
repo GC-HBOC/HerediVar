@@ -187,7 +187,9 @@ herediclass_clean:
 
 herediclass_update: herediclass_clean herediclass
 
-
+herediclass_update_soft:
+	cd ${HEREDICLASS}
+	git pull
 
 
 
