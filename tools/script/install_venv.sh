@@ -85,3 +85,6 @@ pip install pytest-playwright
 playwright install
 #pip install pytest-asyncio
 pip install pytest-flask
+
+
+pip install xlsx2csv
