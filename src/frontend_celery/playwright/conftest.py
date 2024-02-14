@@ -39,10 +39,7 @@ def _push_request_context(request, app):
     
 @pytest.fixture(autouse=True)
 def _seed_db():
-    import time
-    time.sleep(10)
     utils.execute_sql_script("/mnt/storage2/users/ahdoebm1/HerediVar/src/frontend_celery/playwright/data/db_structure/structure.sql")
-    time.sleep(10)
     utils.execute_sql_script("/mnt/storage2/users/ahdoebm1/HerediVar/src/frontend_celery/playwright/data/db_seeds/static.sql")
 
 @pytest.fixture

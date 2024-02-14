@@ -51,6 +51,7 @@ $(document).ready(function()
         //var index = $(this).parents('th').index()
         filterTable_multiple_columns($(this).val(), table, true)
     });
+    $(".column-filter").removeAttr("disabled")
 
     // make ALL elements with data-href clickable to open that link
     activate_data_href_links()

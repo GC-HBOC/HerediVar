@@ -84,11 +84,10 @@ def create_app():
     from .utils import request_has_connection, get_connection
     @app.teardown_request
     def close_db_connection(ex):
-        if not app.config['TESTING']:
-            if request_has_connection():
-                conn = get_connection()
-                conn.close()
-                app.logger.debug("Closed db connection")
+        if request_has_connection():
+            conn = get_connection()
+            conn.close()
+            app.logger.debug("Closed db connection")
 
     #@app.after_request
     #def add_header(response):

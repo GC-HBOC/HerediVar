@@ -65,26 +65,55 @@ def login(page: Page, user: dict):
     if not ili:
         logout(page)
         print("not logged in loggin in user now!")
-        page.on("response", assert_good_stati)
         response = page.goto(url_for("auth.login", _external=True))
         assert response.status == 200
 
         page.locator("#username").fill(user["username"])
         page.locator("#password").fill(user["password"])
 
+        subscribe_stati(page, expected_stati = GOOD_STATI)
         page.locator("#kc-login").click()
-        page.remove_listener("response", assert_good_stati)
+        remove_response_listeners(page)
 
         ili = is_logged_in(page, user["username"])
     #print("after: " + str(ili))
     page.screenshot(path="screenshots/login_after.png")
     assert ili
 
+GOOD_STATI=[200, 302, 304]
+ERROR_STATI=[500, 302, 304]
+NO_ACCESS_STATI=[403, 302, 304]
+NOT_FOUND_STATI=[404, 302, 304]
 
-def assert_good_stati(response, good_stati=[200, 302, 304]):
-    if response.status not in good_stati:
+def click_link(page, locator, expected_stati = GOOD_STATI, link_attribute = "data-href"):
+    link_handle = page.locator(locator)
+    link_url = link_handle.get_attribute(link_attribute)
+    link_handle.click()
+    subscribe_stati(page, expected_stati = expected_stati)
+    page.wait_for_url("**" + link_url)
+    remove_response_listeners(page)
+
+
+current_listeners = {"response": []}
+
+def remove_response_listeners(page):
+    for func in current_listeners["response"]:
+        page.remove_listener("response", func)
+    current_listeners["response"] = []
+
+
+def subscribe_stati(page, expected_stati=[]):
+    def __assert_stati(response):
+        assert_stati(response, expected_stati)
+    page.on("response", __assert_stati)
+    current_listeners["response"].append(__assert_stati)
+
+def assert_stati(response, expected_stati):
+    print(response.status)
+    if response.status not in expected_stati:
         print("URL: " + response.url + " has status code: " + str(response.status))
-    assert response.status in good_stati
+    assert response.status in expected_stati
+
 
 def save_browser_state(context, filename = ".auth/state.json"):
     storage = context.storage_state(path=filename)

@@ -17,10 +17,10 @@
                     <thead>
                         <tr>
                             <th class="nopad width_minimal">
-                                <div class="sortable">access</div><input type="text" class="form-control form-control-sm column-filter" placeholder="search..." autocomplete="off">
+                                <div class="sortable">access</div><input id="access_col_search" type="text" class="form-control form-control-sm column-filter" placeholder="search..." autocomplete="off" disabled>
                             </th>
                             <th class="nopad">
-                                <div class="sortable">list name</div><input type="text" class="form-control form-control-sm column-filter" placeholder="search..." autocomplete="off">
+                                <div class="sortable">list name</div><input id="list_name_col_search" type="text" class="form-control form-control-sm column-filter" placeholder="search..." autocomplete="off" disabled>
                             </th>
                             <th class="nopad width_very_minimal">
                                 <button id="create-list-button" type="button" class="btn btn-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="create">+</button>
@@ -36,7 +36,7 @@
                             {% set additional_classes_svg = "color_white"%}
                             <div id="list-permissions" class="visually_hidden" data-owner="{{list[5]}}" data-editable="{{list[4]}}"></div>
                         {% endif %}
-                        <tr>
+                        <tr list_id="{{list[0]}}">
                             <td data-href="{{ url_for('user.my_lists', view=list[0]) }}" class="cursor_pointer">
                                 <div class="d-flex justify-content-center">
                                     {% if list[3] == 1 %} <!-- is public -->

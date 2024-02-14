@@ -46,19 +46,19 @@ source $ROOT/.venv/bin/activate
 
 
 # start keycloak
-$TESTDIR/start_keycloak_for_tests.sh
+#$TESTDIR/start_keycloak_for_tests.sh
 
 
 # start heredivar
-$TESTDIR/start_heredivar_for_tests.sh
+#$TESTDIR/start_heredivar_for_tests.sh
 
 
 # run tests
 cd $TESTDIR
 export TESTUSER=$TEST_READONLY
 export TESTUSERPW=$TEST_READONLY_PW
-pytest --screenshot=only-on-failure --browser firefox tests/read_only/ -k 'test_variant_lists or test_variant_lists_2 or test_delet' #-k 'test_dev' --browser webkit --browser chromium
+pytest --screenshot=only-on-failure --browser firefox tests/read_only/ -k 'test_private_list_actions' #-k 'test_dev' --browser webkit --browser chromium
 
 # stop keycloak
-pkill -s 0 -e java
-pkill -s 0 -e python3
+#pkill -s 0 -e java
+#pkill -s 0 -e python3

@@ -39,7 +39,7 @@ def modify_list_content():
         if not list_permissions['owner'] and not list_permissions['edit']:
             current_app.logger.error(session['user']['preferred_username'] + " attempted edit list with id " + str(list_id) + ", but this list was not created by him and did not have the right to edit it.")
             flash('This action is not allowed', 'alert-danger')
-            return abort(403)
+            abort(403)
 
         if user_action == 'add_to_list':
             conn.add_variant_to_list(list_id, variant_id)
@@ -54,7 +54,7 @@ def modify_list_content():
 @require_permission(['read_resources'])
 def my_lists():
     user_id = session['user']['user_id']
-    conn = Connection()
+    conn = get_connection()
     user_lists = conn.get_lists_for_user(user_id)
 
     allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
@@ -308,7 +308,7 @@ def my_lists():
     #print(variants)
     pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
 
-    conn.close()
+    #conn.close()
     
     return render_template('user/my_lists.html', 
                             user_lists = user_lists,
