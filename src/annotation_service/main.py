@@ -41,17 +41,23 @@ def get_default_job_config():
         'do_brca_exchange': True,
         'do_flossies': True,
         'do_cancerhotspots': True,
-        #'do_arup': True,
+        
         'do_tp53_database': True,
         'do_priors': True,
         'do_bayesdel': True,
         'do_cosmic': True,
+
+        # assays
+        'do_cspec_brca_assays': True,
 
         # additional annotations
         'do_taskforce_domains': True,
         'do_coldspots': True,
         'do_litvar': True,
         'do_auto_class': True
+
+        # outdated
+        #'do_arup': True,
     }
     return job_config
 

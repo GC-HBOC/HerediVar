@@ -408,19 +408,37 @@
                             <thead>
                                 <tr>
                                     <th class="width_small" id="assayTableAssayTypeCol" asc="false"><div class="sortable">Assay type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th class="width_small"><div class="sortable">Score</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small"><div class="sortable">Data</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                     <th class="width_medium" id="assayTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th class="width_small"><div class="sortable">Report</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small"><div class="sortable">Source</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% if variant.assays is not none %}
                                     {% for assay in variant.assays %}
                                     <tr assay_id="assay.id">
-                                        <td>{{ assay.type }}</td>
-                                        <td>{{ assay.score }}</td>
+                                        <td>{{ assay.type_title }}</td>
+                                        <td>
+
+                                            <div>
+                                                {% for assay_metadata_title in assay.metadata %}
+                                                <div class="d-flex">
+                                                    <div class="width_small">{{assay.metadata[assay_metadata_title].metadata_type.display_title}}</div>
+                                                    <div class="width_small">{{assay.metadata[assay_metadata_title].value}}</div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+
+
+                                        </td>
                                         <td class="nobreak">{{ assay.date }}</td>
-                                        <td><a href="{{ url_for('download.assay_report', assay_id=assay.id) }}">Download report</a></td>
+                                        <td>
+                                            {% if assay.link is not none %}
+                                                {{ macros.external_link("report", assay.link) }}
+                                            {% else %}
+                                                <a href="{{url_for('download.assay_report', assay_id=assay.id)}}">Download report</a>
+                                            {% endif %}
+                                        </td>
                                     </tr>
                                     {% endfor %}
                                 {% endif %}

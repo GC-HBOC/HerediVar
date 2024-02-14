@@ -22,7 +22,9 @@ class annotate_from_vcf_job(Job):
                                                 'do_brca_exchange', 
                                                 'do_flossies', 
                                                 'do_cancerhotspots', #'do_arup',
-                                                'do_tp53_database', 'do_priors', 'do_bayesdel', 'do_cosmic']):
+                                                'do_tp53_database', 'do_priors', 
+                                                'do_bayesdel', 'do_cosmic',
+                                                'do_cspec_brca_assays']):
             return 0, '', ''
 
         self.print_executing()
@@ -48,6 +50,9 @@ class annotate_from_vcf_job(Job):
         err_msg = ""
         status_code = 0
         recent_annotation_ids = conn.get_recent_annotation_type_ids()
+
+        print(info)
+
         self.insert_external_id(variant_id, info, "dbSNP_RS=", recent_annotation_ids['rsid'], conn)
 
         #self.insert_annotation(variant_id, info, "REVEL=", recent_annotation_ids['revel'], conn)
@@ -151,10 +156,40 @@ class annotate_from_vcf_job(Job):
                 submissions = [functions.decode_vcf(s) for s in submissions]
                 #submissions = functions.decode_vcf(submission)#.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').replace('&', ';').split('|')
                 conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
+
+        assay_type_dict = conn.get_assay_type_id_dict()
+        conn.delete_assays(user_id = None) # delete only automatically annotated assays
+        # CSpec splicing assays
+        cspec_splicing_assays = functions.find_between(info, "cspec_splicing_assay=", '(;|$)')
+        if cspec_splicing_assays == '' or cspec_splicing_assays is None:
+            cspec_splicing_assays = []
+        else:
+            cspec_splicing_assays = cspec_splicing_assays.split('&')
+        
+        assay_type_id = assay_type_dict["splicing"]
+        assay_metadata_types = conn.get_assay_metadata_types(assay_type_id, format = "dict")
+        for assay in cspec_splicing_assays:
+            assay_parts = assay.split('|')
+            link = assay_parts[5]
+            assay_id = conn.insert_assay(variant_id, assay_type_id, report = None, filename = None, link = link, date = functions.get_today(), user_id = None)
+
+            is_patient_rna = self.convert_assay_dat(assay_parts[0]) 
+            is_minigene = self.convert_assay_dat(assay_parts[1])
+            minimal_percentage = self.convert_assay_dat(assay_parts[2])
+            allele_specific = self.convert_assay_dat(assay_parts[3])
+            comment = self.convert_assay_dat(assay_parts[4])
+            conn.insert_assay_metadata(assay_id, assay_metadata_types["patient_rna"].id, is_patient_rna)
+            conn.insert_assay_metadata(assay_id, assay_metadata_types["minigene"].id, is_minigene)
+            conn.insert_assay_metadata(assay_id, assay_metadata_types["minimal_percentage"].id, minimal_percentage)
+            conn.insert_assay_metadata(assay_id, assay_metadata_types["allele_specific"].id, allele_specific)
+            conn.insert_assay_metadata(assay_id, assay_metadata_types["comment"].id, comment)
         
         return status_code, err_msg
 
-
+    def convert_assay_dat(self, value):
+        value = value.strip()
+        assay_bool_converter = {"Y": "True", "N": "False", "": None}
+        return assay_bool_converter.get(value, value)
 
 
     def annotate_from_vcf(self, config_file_path, input_vcf, output_vcf):
@@ -230,6 +265,11 @@ class annotate_from_vcf_job(Job):
         ## add COSMIC database CMC significance tier
         if self.job_config['do_cosmic']:
             config_file.write(paths.cosmic + "\t\tCOSMIC_CMC,COSMIC_COSV\t\n")
+
+        ## add cspec brca assays
+        if self.job_config['do_cspec_brca_assays']:
+            config_file.write(paths.cspec_brca_assays_functional + "\tcspec\tfunctional_assay\t\n")
+            config_file.write(paths.cspec_brca_assays_splicing + "\tcspec\tsplicing_assay\t\n")
 
         config_file.close()
         return config_file_path

@@ -647,14 +647,34 @@ class Consequence:
         all_flags = [self.transcript.is_gencode_basic, self.transcript.is_ensembl_canonical, self.transcript.is_mane_select, self.transcript.is_mane_plus_clinical]
         prepared_group = [x for x in all_flags if x is not None]
         return sum(prepared_group)
-    
+
+
+@dataclass
+class Assay_Metadata_Type:
+    id: int
+    title: str
+    display_title: str
+    assay_type_id: int
+    value_type: str
+    is_deleted: bool
+    is_required: bool
+
+@dataclass
+class Assay_Metadata:
+    id: int
+    metadata_type: Assay_Metadata_Type
+    value: str
+
 
 @dataclass
 class Assay:
     id: int
-    type: str
-    score: Any
+    assay_type_id: int
+    type_title: str
     date: str
+    link: str
+
+    metadata: Any # dict of Assay Metadata
 
     def get_header(self):
         header = {'assays': '##INFO=<ID=assays,Number=.,Type=String,Description="All types of assays (e. g. functional or splicing) which were submitted to HerediVar. Assays are separated by "&" symbols. Format:date|assay_type|score.">\n'}

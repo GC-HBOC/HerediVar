@@ -25,8 +25,7 @@ def require_login(f):
         
         token = session['tokenResponse']
 
-        print(session['user'])
-
+        #print(session['user'])
         #print(token)
 
         # maybe also add: 

@@ -261,7 +261,7 @@ class Connection:
             variant_id = self.get_variant_id(chr, pos, ref, alt)
         elif variant_type == 'sv':
             variant_id = self.get_variant_id_by_sv_variant_id(sv_variant_id)
-        return variant_id # return the annotation_queue_id of the new variant
+        return variant_id # return the variant_id of the new variant
 
     def insert_sv_variant(self, chrom, start, end, sv_type, imprecise):
         # calculate reference and alternative sequences
@@ -2481,11 +2481,27 @@ class Connection:
 
         assays = None
         if include_assays:
-            assays_raw = self.get_assays(variant_id, assay_types = 'all')
+            assays_raw = self.get_assays(variant_id, assay_type_ids = 'all')
             if assays_raw is not None:
                 assays = []
                 for assay in assays_raw:
-                    new_assay = models.Assay(id = int(assay[0]), type = assay[1], score = assay[2], date = assay[3].strftime('%Y-%m-%d'))
+                    #id, assay_type_id, link, date
+                    assay_id = assay[0]
+                    assay_type_id = assay[1]
+                    assay_type_name = assay[4]
+                    date = assay[3].strftime('%Y-%m-%d')
+                    link = assay[2]
+                    assay_metadata_dict = {}
+                    metadata_raw = self.get_assay_metadata(assay_id)
+                    for metadata in metadata_raw:
+                        assay_metadata_id = metadata[0]
+                        assay_metadata_type_id = metadata[1]
+                        assay_metadata_value = metadata[2]
+                        assay_metadata_type_raw = self.get_assay_metadata_type(assay_metadata_type_id)
+                        assay_metadata_type = self.convert_assay_metadata_type(assay_metadata_type_raw)
+                        assay_metadata = models.Assay_Metadata(id = assay_metadata_id, metadata_type = assay_metadata_type, value = assay_metadata_value)
+                        assay_metadata_dict[assay_metadata_type.title] = assay_metadata
+                    new_assay = models.Assay(id = int(assay_id), assay_type_id = assay_type_id, type_title=assay_type_name, metadata = assay_metadata_dict, date = date, link = link)
                     assays.append(new_assay)
         
 
@@ -2576,23 +2592,81 @@ class Connection:
 
 
 
-    def get_assays(self, variant_id, assay_types = 'all'):
-        command = "SELECT id, assay_type, score, date FROM assay WHERE variant_id = %s"
+    def get_assays(self, variant_id, assay_type_ids = 'all'):
+        command = "SELECT id, assay_type_id, link, date, (SELECT title from assay_type WHERE assay_type.id = assay.assay_type_id) FROM assay WHERE variant_id = %s"
         actual_information = (variant_id, )
 
-        if assay_types != 'all':
-            placeholders = ["%s"] * len(assay_types)
-            placeholders = ', '.join(placeholders)
-            placeholders = functions.enbrace(placeholders)
-            new_constraints = " id IN " + placeholders
-            command += new_constraints
-            actual_information += tuple(assay_types)
+        if assay_type_ids != 'all':
+            placeholders = self.get_placeholders(len(assay_type_ids))
+            new_constraints = " assay_type_id IN " + placeholders
+            self.add_constraints_to_command(command, new_constraints)
+            actual_information += tuple(assay_type_ids)
         
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
         if len(result) == 0:
             return None
         return result
+    
+    def get_assay_metadata(self, assay_id):
+        command = """SELECT id, assay_metadata_type_id, value FROM (
+                    SELECT id, assay_metadata_type_id, value,
+                        (SELECT is_deleted FROM assay_metadata_type WHERE assay_metadata_type.id = assay_metadata.assay_metadata_type_id) as is_deleted
+                    FROM assay_metadata WHERE assay_id = %s )x WHERE is_deleted = 0
+                """
+        self.cursor.execute(command, (assay_id, ))
+        res = self.cursor.fetchall()
+        if len(res) == 0:
+            return None
+        return res
+    
+    def get_assay_metadata_type(self, assay_metadata_type_id):
+        #!!!! SELECT MUST BE EQUAL TO the one in get_assay_metadata_types
+        command = "SELECT id, title, display_title, assay_type_id, value_type, is_deleted, is_required FROM assay_metadata_type WHERE id= %s AND is_deleted = 0"
+        self.cursor.execute(command, (assay_metadata_type_id, ))
+        res = self.cursor.fetchone()
+        return res
+    
+    def get_assay_metadata_types(self, assay_type_id, format = "dict"):
+        #!!!! SELECT MUST BE EQUAL TO the one in get_assay_metadata_type
+        command = "SELECT id, title, display_title, assay_type_id, value_type, is_deleted, is_required FROM assay_metadata_type WHERE assay_type_id = %s AND is_deleted = 0"
+        self.cursor.execute(command, (assay_type_id, ))
+        assay_metadata_types_raw = self.cursor.fetchall()
+        if len(assay_metadata_types_raw) == 0:
+            return None
+        if format == "list":
+            result = []
+            for assay_metadata_type_raw in assay_metadata_types_raw:
+                assay_metadata_type = self.convert_assay_metadata_type(assay_metadata_type_raw)
+                result.append(assay_metadata_type)
+        elif format == "dict":
+            result = {}
+            for assay_metadata_type_raw in assay_metadata_types_raw:
+                assay_metadata_type = self.convert_assay_metadata_type(assay_metadata_type_raw)
+                result[assay_metadata_type.title] = assay_metadata_type
+        return result
+    
+    def insert_assay_metadata(self, assay_id, assay_metadata_type_id, value):
+        if value is not None:
+            command = "INSERT INTO assay_metadata (assay_id, assay_metadata_type_id, value) VALUES (%s, %s, %s)"
+            self.cursor.execute(command, (assay_id, assay_metadata_type_id, value))
+            self.conn.commit()
+    
+    def convert_assay_metadata_type(self, assay_metadata_type_raw):
+        is_deleted = assay_metadata_type_raw[5] == "1"
+        is_required = assay_metadata_type_raw[6] == "1"
+        assay_metadata_type = models.Assay_Metadata_Type(id = int(assay_metadata_type_raw[0]), title = assay_metadata_type_raw[1], display_title = assay_metadata_type_raw[2], assay_type_id = int(assay_metadata_type_raw[3]),
+                                                         value_type = assay_metadata_type_raw[4], is_deleted = is_deleted, is_required = is_required)
+        return assay_metadata_type
+
+    def get_assay_type_id_dict(self):
+        command = "SELECT id, title FROM assay_type"
+        self.cursor.execute(command)
+        res = self.cursor.fetchall()
+        d = {}
+        for elem in res:
+            d[elem[1]] = elem[0]
+        return d
 
 
     def get_last_insert_id(self):
@@ -2612,9 +2686,24 @@ class Connection:
         result = prefix + command + postfix
         return result
 
-    def insert_assay(self, variant_id, assay_type, report, filename, score, date):
-        command = "INSERT INTO assay (variant_id, assay_type, report, filename, score, date) VALUES (%s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, assay_type, report, filename, score, date))
+    def insert_assay(self, variant_id, assay_type_id, report, filename, link, date, user_id):
+        command = "INSERT INTO assay (variant_id, assay_type_id, report, filename, link, date, user_id) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, assay_type_id, report, filename, link, date, user_id))
+        self.conn.commit()
+        return self.get_last_insert_id()
+    
+    def delete_assay(self, assay_id):
+        pass
+
+    def delete_assays(self, user_id):
+        command = "DELETE FROM assay WHERE"
+        actual_information = ()
+        if user_id is None:
+            command += " user_id IS NULL"
+        else:
+            command += " user_id = %s"
+            actual_information += (user_id, )
+        self.cursor.execute(command, actual_information)
         self.conn.commit()
 
     def get_assay_report(self, assay_id):
@@ -2820,7 +2909,6 @@ class Connection:
         annotation_type_ids = annotation_type_ids.values()
         placeholders = self.get_placeholders(len(annotation_type_ids))
         command = "SELECT id, title, display_title, description, value_type, version, version_date, group_name, is_transcript_specific FROM annotation_type WHERE id IN " + placeholders
-        print(command % tuple(annotation_type_ids))
         self.cursor.execute(command, tuple(annotation_type_ids))
         result = self.cursor.fetchall()
         annotation_types = [self.convert_annotation_type_raw(annotation_type_raw) for annotation_type_raw in result if annotation_type_raw]

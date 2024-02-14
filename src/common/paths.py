@@ -50,8 +50,8 @@ if webapp_env == 'dev':
     chainfile_path = joinpaths(ref_genome_dir, "hg19ToHg38.fixed.over.chain.gz")
     
     #metadata
-    gnomad_path = joinpaths(datadir, "gnomAD/gnomAD_genome_v3.1.2_GRCh38.vcf.gz")
-    gnomad_m_path = joinpaths(datadir, "gnomAD/gnomad_m.vcf.gz")
+    gnomad_path = joinpaths(datadir, "gnomAD_bac/gnomAD_genome_v3.1.2_GRCh38.vcf.gz")
+    gnomad_m_path = joinpaths(datadir, "gnomAD_bac/gnomad_m.vcf.gz")
     phylop_file_path = joinpaths(datadir, "phyloP/hg38.phyloP100way.bw")
     dbsnp_path = joinpaths(datadir, "dbSNP/dbSNP_v155.vcf.gz")
     revel_path = joinpaths(datadir, "REVEL/revel_grch38_all_chromosomes.vcf.gz")
@@ -72,6 +72,10 @@ if webapp_env == 'dev':
     hci_priors = joinpaths(datadir, "HCI_priors/priors.vcf.gz")
     bayesdel = joinpaths(datadir, "BayesDEL/bayesdel_4.4.vcf.gz")
     cosmic = joinpaths(datadir, "COSMIC/cosmic_cmc.vcf.gz")
+
+    # assays
+    cspec_brca_assays_splicing = joinpaths(datadir, "CSpec_BRCA_assays/splicing_assays.vcf.gz")
+    cspec_brca_assays_functional = joinpaths(datadir, "CSpec_BRCA_assays/functional_assays.vcf.gz")
 
     # data for init_db
     hgnc_path = joinpaths(datadir, "HGNC/hgnc_complete_set.tsv")
