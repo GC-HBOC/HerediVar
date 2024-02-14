@@ -51,11 +51,7 @@ class annotate_from_vcf_job(Job):
         status_code = 0
         recent_annotation_ids = conn.get_recent_annotation_type_ids()
 
-        print(info)
-
         self.insert_external_id(variant_id, info, "dbSNP_RS=", recent_annotation_ids['rsid'], conn)
-
-        #self.insert_annotation(variant_id, info, "REVEL=", recent_annotation_ids['revel'], conn)
 
         self.insert_annotation(variant_id, info, "CADD=", recent_annotation_ids['cadd_scaled'], conn)
 
@@ -158,7 +154,7 @@ class annotate_from_vcf_job(Job):
                 conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
 
         assay_type_dict = conn.get_assay_type_id_dict()
-        conn.delete_assays(user_id = None) # delete only automatically annotated assays
+        conn.delete_assays(variant_id = variant_id,user_id = None) # delete only automatically annotated assays
         # CSpec splicing assays
         cspec_splicing_assays = functions.find_between(info, "cspec_splicing_assay=", '(;|$)')
         if cspec_splicing_assays == '' or cspec_splicing_assays is None:
@@ -183,6 +179,23 @@ class annotate_from_vcf_job(Job):
             conn.insert_assay_metadata(assay_id, assay_metadata_types["minimal_percentage"].id, minimal_percentage)
             conn.insert_assay_metadata(assay_id, assay_metadata_types["allele_specific"].id, allele_specific)
             conn.insert_assay_metadata(assay_id, assay_metadata_types["comment"].id, comment)
+
+        # CSpec functional assays
+        cspec_functional_assays = functions.find_between(info, "cspec_functional_assay=", "(;|$)")
+        if cspec_functional_assays == '' or cspec_functional_assays is None:
+            cspec_functional_assays = []
+        else:
+            cspec_functional_assays = cspec_functional_assays.split('&')
+        
+        assay_type_id = assay_type_dict["functional"]
+        assay_metadata_types = conn.get_assay_metadata_types(assay_type_id, format = "dict")
+        for assay in cspec_functional_assays:
+            assay_parts = assay.split('|')
+            link = assay_parts[1]
+            assay_id = conn.insert_assay(variant_id, assay_type_id, report = None, filename = None, link = link, date = functions.get_today(), user_id = None)
+
+            functional_category = self.convert_assay_dat(assay_parts[0])
+            conn.insert_assay_metadata(assay_id, assay_metadata_types["functional_category"].id, functional_category)
         
         return status_code, err_msg
 

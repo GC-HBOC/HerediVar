@@ -2695,13 +2695,13 @@ class Connection:
     def delete_assay(self, assay_id):
         pass
 
-    def delete_assays(self, user_id):
-        command = "DELETE FROM assay WHERE"
-        actual_information = ()
+    def delete_assays(self, variant_id, user_id):
+        command = "DELETE FROM assay WHERE variant_id = %s"
+        actual_information = (variant_id, )
         if user_id is None:
-            command += " user_id IS NULL"
+            command += " AND user_id IS NULL"
         else:
-            command += " user_id = %s"
+            command += " AND user_id = %s"
             actual_information += (user_id, )
         self.cursor.execute(command, actual_information)
         self.conn.commit()

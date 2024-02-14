@@ -267,9 +267,21 @@ class automatic_classification_job(Job):
          "pathogenic": true,
          "benign": true},
         """
-        result["mRNA_analysis"] = {"performed": False,
-                                   "pathogenic": False,
-                                   "benign": False}
+        assays_dict = variant.order_assays_by_type()
+        splicing_assays = assays_dict.get("splicing")
+        splicing_assay_performed = False
+        pathogenic_splicing_assay = False
+        benign_splicing_assay = False
+        if splicing_assays is not None and len(splicing_assays) > 0:
+            splicing_assay_performed = True
+            for splicing_assay in splicing_assays:
+                if splicing_assay.metadata.get("functional_category", "") == "pathogenic":
+                    pathogenic_splicing_assay = True
+                if splicing_assay.metadata.get("functional_category", "") == "benign":
+                    benign_splicing_assay = True
+        result["mRNA_analysis"] = {"performed": splicing_assay_performed,
+                                   "pathogenic": pathogenic_splicing_assay,
+                                   "benign": benign_splicing_assay}
 
         # functional data: currently missing
         """

@@ -677,11 +677,18 @@ class Assay:
     metadata: Any # dict of Assay Metadata
 
     def get_header(self):
-        header = {'assays': '##INFO=<ID=assays,Number=.,Type=String,Description="All types of assays (e. g. functional or splicing) which were submitted to HerediVar. Assays are separated by "&" symbols. Format:date|assay_type|score.">\n'}
+        ## Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
+        header = {'assays': '##INFO=<ID=assays,Number=.,Type=String,Description="All types of assays (e. g. functional or splicing) which were submitted to HerediVar. Assays are separated by "&" symbols. Format:assay_type|date|link|metadata. Metadata itself is a $ separated list of key+value pairs.">\n'}
         return header
 
     def to_vcf(self, prefix = True):
-        info = '~7C'.join([str(self.date), self.type, str(self.score)]) # sep: |
+        metadata_parts = []
+        for assay_metadata_title in self.metadata:
+            assay_metadata = self.metadata[assay_metadata_title]
+            new_element = "~2B".join([assay_metadata.metadata_type.display_title, assay_metadata.value])
+            metadata_parts.append(new_element)
+        metadata = "~24".join(metadata_parts)
+        info = '~7C'.join([self.type_title, str(self.date), self.link, metadata]) # sep: |
         if prefix:
             info = 'assays~1Y' + info
         return info
@@ -844,6 +851,14 @@ class AbstractVariant(AbstractDataclass):
     annotations: AllAnnotations = AllAnnotations()
 
     external_ids: Any = None # list of Annotations
+
+    def order_assays_by_type(self):
+        # dict of assay_type title -> assay
+        result = {}
+        if self.assays is not None:
+            for assay in self.assays:
+                result = functions.extend_dict(result, assay.type_title, assay)
+        return result
 
     def get_external_ids(self, title):
         result = []
