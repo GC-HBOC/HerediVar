@@ -69,7 +69,7 @@ python_update: python_clean python venv
 
 
 VENVPATH := $(ROOT)
-VENVNAME := .venv_mkfile
+VENVNAME := .venv
 VENV := $(VENVPATH)/$(VENVNAME)
 venv:
 	if [ ! -d "${VENV}" ]; then \
@@ -684,7 +684,20 @@ coldspot_update: coldspot_clean coldspot
 
 
 
+## assays CSpec
+CSPECASSAYSPATH = $(DBS)
+CSPECASSAYSNAME = CSpec_BRCA_assays
+CSPECASSAYS= $(CSPECASSAYSPATH)/$(CSPECASSAYSNAME)
+cspecassays: genomes venv ngs_bits
+	if [ ! -d "${CSPECASSAYS}" ]; then \
+		printf ${_TEXTCOL_RED} "Downloading CSpec BRCA assays..." ; \
+		${DATA}/script/download_cspec_brca_assays.sh -p ${CSPECASSAYSPATH} -n ${CSPECASSAYSNAME} -y ${VENV} -t "dbconverter_splicing=${TOOLS}/db_converter_CSpec_splicing_assays.py dbconverter_functional=${TOOLS}/db_converter_CSpec_functional_assays.py db_cspec_merge=${TOOLS}/db_converter_CSpec_merge.py ngsbits=${NGSBITS}/bin" -g "grch38=${GRCH38}" ; \
+	fi
 
+cspecassays_clean:
+	rm -rf ${CSPECASSAYS}
+
+cspecassays_update: cspecassays_clean cspecassays
 
 
 
