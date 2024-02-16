@@ -226,3 +226,120 @@ ADD CONSTRAINT `FK_assay_metadata_assay_metadata_type`
   REFERENCES `HerediVar_ahdoebm1`.`assay_metadata_type` (`id`)
   ON DELETE CASCADE
   ON UPDATE NO ACTION;
+
+
+
+
+CREATE TABLE `HerediVar_ahdoebm1`.`heredicare_ZID` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `ZID` INT NOT NULL,
+  `name` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`heredicare_ZID` 
+DROP COLUMN `id`,
+CHANGE COLUMN `ZID` `ZID` INT(11) UNSIGNED NOT NULL ,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`ZID`);
+;
+
+INSERT INTO heredicare_ZID (ZID, name) VALUES
+(1, "Berlin"),
+(2, "Leipzig"),
+(3, "Dresden"),
+(4, "München-LMU"),
+(5, "Würzburg"),
+(6, "Ulm"),
+(7, "Heidelberg"),
+(8, "Frankfurt"),
+(9, "Köln"),
+(10, "Düsseldorf"),
+(11, "Münster"),
+(12, "Kiel"),
+(13, "Wiesbaden"),
+(14, "München-TU"),
+(15, "Hannover"),
+(16, "Regensburg"),
+(17, "Tübingen"),
+(18, "Göttingen"),
+(19, "Hamburg"),
+(20, "Greifswald"),
+(21, "Freiburg"),
+(22, "Erlangen"),
+(23, "Halle"),
+(24, "Mainz"),
+(25, "Lübeck")
+
+
+-- ALTER TABLE `HerediVar_ahdoebm1`.`heredicare_center_classification` 
+-- DROP FOREIGN KEY `FK_heredicare_center_classification_variant`;
+-- ALTER TABLE `HerediVar_ahdoebm1`.`heredicare_center_classification` 
+-- DROP COLUMN `date`,
+-- CHANGE COLUMN `variant_id` `variant_heredicare_annotation_id` INT(10) UNSIGNED NOT NULL ,
+-- CHANGE COLUMN `center_name` `heredicare_ZID` INT UNSIGNED NOT NULL ,
+-- CHANGE COLUMN `comment` `comment` TEXT NULL ,
+-- DROP INDEX `FK_classification_center_heredicare_variant_idx` ;
+-- ;
+-- ALTER TABLE `HerediVar_ahdoebm1`.`heredicare_center_classification` 
+-- ADD INDEX `FK_heredicare_center_classification_heredicare_ZID_idx` (`heredicare_ZID` ASC);
+-- ;
+-- ALTER TABLE `HerediVar_ahdoebm1`.`heredicare_center_classification` 
+-- ADD CONSTRAINT `FK_heredicare_center_classification_heredicare_ZID`
+--   FOREIGN KEY (`heredicare_ZID`)
+--   REFERENCES `HerediVar_ahdoebm1`.`heredicare_ZID` (`ZID`)
+--   ON DELETE NO ACTION
+--   ON UPDATE NO ACTION;
+-- 
+-- ALTER TABLE `HerediVar_ahdoebm1`.`heredicare_center_classification` 
+-- ADD CONSTRAINT `FK_center_classification_heredicare_annotation`
+--   FOREIGN KEY (`heredicare_ZID`)
+--   REFERENCES `HerediVar_ahdoebm1`.`variant_heredicare_annotation` (`id`)
+--   ON DELETE NO ACTION
+--   ON UPDATE NO ACTION;
+-- 
+-- ALTER TABLE `HerediVar_ahdoebm1`.`heredicare_center_classification` 
+-- CHANGE COLUMN `classification` `classification` ENUM('1', '2', '3', '11', '12', '32', '13', '34', '14', '15', '20', '21', '4') NOT NULL AFTER `heredicare_ZID`;
+-- 
+-- ALTER TABLE `HerediVar_ahdoebm1`.`heredicare_center_classification` 
+-- DROP FOREIGN KEY `FK_center_classification_heredicare_annotation`;
+-- 
+-- ALTER TABLE `HerediVar_ahdoebm1`.`heredicare_center_classification` 
+-- DROP INDEX `FK_center_classification_heredicare_annotation_idx` ;
+-- ;
+-- 
+-- ALTER TABLE `HerediVar_ahdoebm1`.`heredicare_center_classification` 
+-- ADD INDEX `FK_center_classification_heredicare_annotation_idx` (`variant_heredicare_annotation_id` ASC);
+-- ;
+-- ALTER TABLE `HerediVar_ahdoebm1`.`heredicare_center_classification` 
+-- ADD CONSTRAINT `FK_center_classification_heredicare_annotation`
+--   FOREIGN KEY (`variant_heredicare_annotation_id`)
+--   REFERENCES `HerediVar_ahdoebm1`.`variant_heredicare_annotation` (`id`)
+--   ON DELETE NO ACTION
+--   ON UPDATE NO ACTION;
+-- 
+-- ALTER TABLE `HerediVar_ahdoebm1`.`heredicare_center_classification` 
+-- DROP FOREIGN KEY `FK_center_classification_heredicare_annotation`;
+-- ALTER TABLE `HerediVar_ahdoebm1`.`heredicare_center_classification` 
+-- ADD CONSTRAINT `FK_center_classification_heredicare_annotation`
+--   FOREIGN KEY (`variant_heredicare_annotation_id`)
+--   REFERENCES `HerediVar_ahdoebm1`.`variant_heredicare_annotation` (`id`)
+--   ON DELETE CASCADE
+--   ON UPDATE NO ACTION;
+-- 
+
+DROP TABLE IF EXISTS `HerediVar_ahdoebm1`.`heredicare_center_classification` 
+CREATE TABLE `HerediVar_ahdoebm1`.`heredicare_center_classification`  (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `variant_heredicare_annotation_id` int(10) unsigned NOT NULL,
+  `heredicare_ZID` int(10) unsigned NOT NULL,
+  `classification` enum('1','2','3','11','12','32','13','34','14','15','20','21','4') NOT NULL,
+  `comment` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_heredicare_center_classification_heredicare_ZID_idx` (`heredicare_ZID`),
+  KEY `FK_center_classification_heredicare_annotation_idx` (`variant_heredicare_annotation_id`),
+  CONSTRAINT `FK_center_classification_heredicare_annotation` FOREIGN KEY (`variant_heredicare_annotation_id`) REFERENCES `variant_heredicare_annotation` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  CONSTRAINT `FK_heredicare_center_classification_heredicare_ZID` FOREIGN KEY (`heredicare_ZID`) REFERENCES `heredicare_ZID` (`ZID`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
