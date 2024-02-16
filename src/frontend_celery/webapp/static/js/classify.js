@@ -1254,6 +1254,8 @@ function get_checked_criteria_strengths() {
             var new_value = document.getElementById(current_button.id + '_strength').value
             if (scheme_type == 'acmg-enigma-atm' && current_button.id == 'PM2') {
                 result.push(current_button.id + "_" + new_value)
+            } else if ((scheme_type == 'acmg-enigma-brca1' || scheme_type == 'acmg-enigma-brca2') && current_button.id == "BP1") {
+                result.push(current_button.id + "_" + new_value)
             } else {
                 result.push(new_value)
             }

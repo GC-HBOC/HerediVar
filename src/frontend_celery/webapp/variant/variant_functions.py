@@ -153,7 +153,7 @@ def handle_user_classification(variant, user_id, new_classification, new_comment
     is_new_classification = False
     previous_classification_oi = variant.get_recent_user_classification(user_id, scheme_id)
     if previous_classification_oi is not None: # user already has a classification -> he requests an update
-        if previous_classification_oi.comment != new_comment or previous_classification_oi.selected_class != new_classification:
+        if previous_classification_oi.comment != new_comment or previous_classification_oi.selected_class != new_classification or previous_classification_oi.scheme.selected_class != scheme_class:
             conn.update_user_classification(previous_classification_oi.id, new_classification, new_comment, date = current_datetime, scheme_class = scheme_class)
             received_update = True
         return None, received_update, is_new_classification
@@ -282,7 +282,14 @@ def get_scheme_class(criteria_dict, scheme_type, version):
         keyval = 'criterium_name'
     for key in criteria_dict:
         if criteria_dict[key]['is_selected'] == 1:
-            all_criteria_strengths.append(criteria_dict[key][keyval])
+            #special cases
+            if criteria_dict[key]["criterium_name"] == "BP1" and scheme_type in ["acmg-enigma-brca1", "acmg-enigma-brca2"]:
+                all_criteria_strengths.append(criteria_dict[key]["criterium_name"] + '_' + criteria_dict[key][keyval])
+            elif criteria_dict[key]["criterium_name"] == "PM2" and scheme_type in ["acmg-enigma-atm"]:
+                all_criteria_strengths.append(criteria_dict[key]["criterium_name"] + '_' + criteria_dict[key][keyval])
+            # default case
+            else:
+                all_criteria_strengths.append(criteria_dict[key][keyval])
     all_criteria_string = '+'.join(all_criteria_strengths)
     scheme_class = calculate_class(scheme_type, version, all_criteria_string)
     return scheme_class

@@ -725,7 +725,7 @@ def get_possible_classes_enigma_brca2(class_counts):
         possible_classes.add(2)
     if class_counts['bp'] >= 2: # 2
         possible_classes.add(2)
-    if class_counts['bs'] == 1: # 2
+    if class_counts['bp1_bs'] == 1: # 2
         possible_classes.add(2)
     if class_counts['bs'] == 1 and class_counts['bm'] == 1: # 1
         possible_classes.add(2)
@@ -790,7 +790,7 @@ def get_possible_classes_enigma_brca1(class_counts):
         possible_classes.add(2)
     if class_counts['bp'] >= 2: # 2
         possible_classes.add(2)
-    if class_counts['bs'] == 1: # 2
+    if class_counts['bp1_bs'] == 1: # 2
         possible_classes.add(2)
     if class_counts['bs'] == 1 and class_counts['bm'] == 1: # 1
         possible_classes.add(2)
@@ -826,7 +826,7 @@ def decide_for_class_task_force(selected_classes):
 
 
 def get_class_counts(data):
-    result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'bm':0, 'ba':0, 'pm2_pp':0} # pm2_pp is special case for ATM scheme
+    result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'bm':0, 'ba':0, 'pm2_pp':0, 'bp1_bs': 0} # pm2_pp is special case for ATM scheme and bp1_bs is special case for brca1/2
     data = [x.lower().strip('0123456789') for x in data]
     for key in result:
         key = key.lower()

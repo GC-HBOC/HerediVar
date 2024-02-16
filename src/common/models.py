@@ -716,13 +716,11 @@ class Paper:
 
 
 @dataclass
-class HeredicareClassification:
+class AbstractHeredicareClassification(AbstractDataclass):
     id: int
     selected_class: int
     comment: str
-    classification_date: str
-    center: str
-    vid: str
+
 
     def selected_class_to_text(self):
         if self.selected_class is None:
@@ -765,13 +763,29 @@ class HeredicareClassification:
             "-1": "-"
         }
         return class2text[str(self.selected_class)]
+    
+    @abstractmethod
+    def to_vcf(self):
+        pass
+
+    @abstractmethod
+    def get_header(self):
+        pass
+
+
+    
+@dataclass
+class HeredicareConsensusClassification(AbstractHeredicareClassification):
+    classification_date: str
 
     def to_vcf(self, prefix = True, simple = False):
         if not simple:
-            info = '~7C'.join([self.selected_class_to_num(), self.center, self.comment, self.classification_date])
+            comment = "" if self.comment is None else self.comment
+            date = "" if self.classification_date is None else self.classification_date.strftime('%Y-%m-%d')
+            info = '~2B'.join([self.selected_class_to_num(), comment, date])
             info = info
             if prefix:
-                info = 'heredicare_center_classifications~1Y' + info
+                info = 'heredicare_consensus_classifications~1Y' + info
         else:
             info = ['classification~1Y' + self.selected_class_to_num(), 
                     #'comment~1Y' + self.comment, 
@@ -784,7 +798,7 @@ class HeredicareClassification:
 
     def get_header(self, simple = False):
         if not simple:
-            header = {'heredicare_center_classifications': '##INFO=<ID=heredicare_center_classifications,Number=.,Type=String,Description="An & separated list of the variant classifications from centers imported from HerediCare. Format:class|center|comment|date">\n'}
+            header = {'heredicare_consensus_classifications': '##INFO=<ID=heredicare_consensus_classifications,Number=.,Type=String,Description="An & separated list of the consensus classification imported from HerediCare. Format:class&comment&date">\n'}
         else:
             header = {'classification': '##INFO=<ID=classification,Number=1,Type=Integer,Description="The consensus classification from the VUS-task-force. Either 1 (benign), 2 (likely benign), 3 (uncertain), 4 (likely pathogenic) or 5 (pathogenic)">\n',
                       #'comment': '##INFO=<ID=comment,Number=1,Type=String,Description="The comment of the VUS-task-force for the consensus classification">\n',
@@ -793,33 +807,61 @@ class HeredicareClassification:
         return header
     
 @dataclass
+class HeredicareCenterClassification(AbstractHeredicareClassification):
+    center_name: str
+    zid: int
+
+    def to_vcf(self, prefix = True):
+        ## Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
+        comment = "" if self.comment is None else comment
+        info = "~2B".join([self.center_name, str(self.zid), self.selected_class_to_num(), comment])
+        if prefix:
+            info = "heredicare_center_classifications~1Y" + info
+        return info
+
+    def get_header(self):
+        header = {'heredicare_center_classifications': '##INFO=<ID=heredicare_center_classifications,Number=.,Type=String,Description="An & separated list of the consensus classification imported from HerediCare. Format:center_name|zid|class|comment">\n'}
+        return header
+
+    
+    
+@dataclass
 class HeredicareAnnotation:
     id: int
     vid: str
     n_fam: int
     n_pat: int
-    vustf_classification: HeredicareClassification # kind of ugly to use that here because to_vcf can not be used as this is used for the center classifications...
+    consensus_classification: HeredicareConsensusClassification # kind of ugly to use that here because to_vcf can not be used as this is used for the center classifications...
 
     lr_cooc: float
     lr_coseg: float
     lr_family: float
 
+    center_classifications: Any # list of HerediCareCenterClassification objects
+
+    def get_centers_with_classifications(self):
+        center_classifications = self.center_classifications
+        result = None
+        if center_classifications is not None:
+            result = []
+            for center_classification in center_classifications:
+                if center_classification.selected_class is not None:
+                    result.append(center_classification.center_name)
+        return result
+
     def to_vcf(self, prefix = True):
-        vustf_class = self.vustf_classification.selected_class if self.vustf_classification.selected_class is not None else ""
-        vustf_comment = self.vustf_classification.comment if self.vustf_classification.comment is not None else ""
-        vustf_date = self.vustf_classification.classification_date if self.vustf_classification.classification_date is not None else ""
-        data = [self.vid, self.n_fam, self.n_pat, vustf_class, vustf_comment, vustf_date, self.lr_cooc, self.lr_coseg, self.lr_family]
-        data = [str(x) for x in data]
-        info = '~7C'.join(data)
-        info = info
+        consensus_comment = "" if self.consensus_classification.comment is None else self.consensus_classification.comment
+        consensus_date = "" if self.consensus_classification.classification_date is None else self.consensus_classification.classification_date.strftime('%Y-%m-%d')
+        center_specific_vcf = functions.process_multiple(self.center_classifications, sep="~24", do_prefix = False)
+        heredicare_annotation_vcf = "~7C".join([str(x) for x in [self.vid, self.n_fam, self.n_pat, self.lr_cooc, self.lr_coseg, self.lr_family, self.consensus_classification.selected_class_to_num(), consensus_comment, consensus_date, center_specific_vcf]])
         if prefix:
-            info = 'heredicare_annotation~1Y' + info
-        return info
+            heredicare_annotation_vcf = "heredicare_annotation~1Y" + heredicare_annotation_vcf
+        return heredicare_annotation_vcf
 
     
     # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
     def get_header(self):
-        header = {'heredicare_annotation': '##INFO=<ID=heredicare_annotation,Number=.,Type=String,Description="An & separated list of the variant annotations from heredicare. Format:vid|n_fam|n_pat|vustf_selected_class|vustf_comment|vustf_classification_date|lr_cooc|lr_coseg|lr_family. n_fam is the number of families having the variant and n_pat is the number of individuals having the variant.">\n'}
+        header = {'heredicare_annotation': '##INFO=<ID=heredicare_annotation,Number=.,Type=String,Description="An & separated list of the variant annotations from heredicare. Format:vid|n_fam|n_pat|lr_cooc|lr_coseg|lr_family|consensus_classification_class|consensus_classification_comment|consensus_classification_date|center_specific_classifications. center_specific_classifications is a $ seperated list with FORMAT: center_name+zid+class+comment">\n'}
         return header
 
 
@@ -839,7 +881,6 @@ class AbstractVariant(AbstractDataclass):
 
     consensus_classifications: Any = None # list of classifications
     user_classifications: Any = None # list of classifications
-    heredicare_classifications: Any = None # list of heredicare center classifications
     automatic_classification: AutomaticClassification = None
     heredicare_annotations: Any = None # list of heredicare annotatins
     clinvar: Any = None # a clinvar object
@@ -879,8 +920,8 @@ class AbstractVariant(AbstractDataclass):
     def get_heredicare_consensus_classifications(self):
         result = []
         for heredicare_annotation in self.heredicare_annotations:
-            if heredicare_annotation.vustf_classification.selected_class is not None:
-                result.append(heredicare_annotation.vustf_classification)
+            if heredicare_annotation.consensus_classification.selected_class is not None:
+                result.append(heredicare_annotation.consensus_classification)
         return result
 
     def get_total_heredicare_counts(self):
@@ -928,7 +969,7 @@ class AbstractVariant(AbstractDataclass):
             return None
         maxdate = datetime.date.min
         for heredicare_annotation in self.heredicare_annotations:
-            current_classification = heredicare_annotation.vustf_classification
+            current_classification = heredicare_annotation.consensus_classification
             if current_classification.selected_class is not None:
                 if result is None:
                     result = current_classification
@@ -1127,7 +1168,6 @@ class Variant(AbstractVariant):
             annotations_oi = [self.user_classifications,
                               [self.get_recent_consensus_classification()],
                               [self.automatic_classification],
-                              self.heredicare_classifications,
                               [self.clinvar],
                               self.heredicare_annotations,
                               self.consequences, 
@@ -1237,7 +1277,6 @@ class SV_Variant(AbstractVariant):
             annotations_oi = [self.user_classifications,
                               [self.get_recent_consensus_classification()],
                               [self.automatic_classification],
-                              self.heredicare_classifications,
                               [self.clinvar],
                               self.heredicare_annotations,
                               self.consequences, 

@@ -1376,9 +1376,9 @@ class Connection:
         self.cursor.execute(command, (variant_id,))
         self.conn.commit()
     
-    def insert_heredicare_center_classification(self, variant_id, classification, center_name, comment, date):
-        command = "INSERT INTO heredicare_center_classification (variant_id, classification, center_name, comment, date) VALUES (%s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, classification, center_name, comment, date))
+    def insert_heredicare_center_classification(self, heredicare_annotation_id, zid, classification, comment):
+        command = "INSERT INTO heredicare_center_classification (variant_heredicare_annotation_id, heredicare_ZID, classification, comment) VALUES (%s, %s, %s, %s)"
+        self.cursor.execute(command, (heredicare_annotation_id, zid, classification, comment))
         self.conn.commit()
 
     def check_heredicare_center_classification(self, variant_id, classification, center_name, comment, date): # this returns true if this classification is already in there and fals if it is not
@@ -1618,6 +1618,7 @@ class Connection:
 
     def update_user_classification(self, user_classification_id, classification, comment, date, scheme_class):
         command = "UPDATE user_classification SET classification = %s, comment = %s, date = %s, scheme_class = %s WHERE id = %s"
+        print(command % (str(classification), comment, date, str(scheme_class), user_classification_id))
         self.cursor.execute(command, (str(classification), comment, date, str(scheme_class), user_classification_id))
         self.conn.commit()
 
@@ -1885,9 +1886,9 @@ class Connection:
         return None
     """
 
-    def get_heredicare_center_classifications(self, variant_id):
-        command = 'SELECT * FROM heredicare_center_classification WHERE variant_id = %s'
-        self.cursor.execute(command, (variant_id, ))
+    def get_heredicare_center_classifications(self, heredicare_annotation_id):
+        command = 'SELECT id, heredicare_ZID, (SELECT name FROM heredicare_ZID WHERE heredicare_ZID.ZID = heredicare_center_classification.heredicare_ZID) as center_name, classification, comment FROM heredicare_center_classification WHERE variant_heredicare_annotation_id = %s'
+        self.cursor.execute(command, (heredicare_annotation_id, ))
         result = self.cursor.fetchall()
         if len(result) == 0:
             return None
@@ -2382,21 +2383,8 @@ class Connection:
                 automatic_classification = models.AutomaticClassification(id = automatic_classification_id, scheme_id = scheme_id, scheme_display_title = scheme_display_title, classification_splicing = classification_splicing, classification_protein = classification_protein, date = date, criteria = all_criteria)
 
 
-        heredicare_classifications = None
         all_heredicare_annotations = None
         if include_heredicare_classifications:
-            heredicare_classifications_raw = self.get_heredicare_center_classifications(variant_id)
-            if heredicare_classifications_raw is not None:
-                heredicare_classifications = []
-                for cl_raw in heredicare_classifications_raw:
-                    id = int(cl_raw[0])
-                    selected_class = cl_raw[1]
-                    comment = cl_raw[4]
-                    center = cl_raw[3]
-                    date = cl_raw[5].strftime('%Y-%m-%d')
-                    new_heredicare_classification = models.HeredicareClassification(id = id, selected_class = selected_class, comment = comment, center = center, classification_date = date, vid="")
-                    heredicare_classifications.append(new_heredicare_classification)
-
 
             heredicare_annotations_raw = self.get_heredicare_annotations(variant_id)
             all_heredicare_annotations = []
@@ -2407,14 +2395,31 @@ class Connection:
                 n_fam = annot[2]
                 n_pat = annot[3]
                 consensus_class = annot[4]
-                comment = annot[5]
+                consensus_comment = annot[5]
                 classification_date = annot[6]
                 lr_cooc = annot[7]
                 lr_coseg = annot[8]
                 lr_family = annot[9]
+                consensus_classification = models.HeredicareConsensusClassification(id = heredicare_annotation_id, selected_class = consensus_class, comment = consensus_comment, classification_date = classification_date)
 
-                classification = models.HeredicareClassification(id = heredicare_annotation_id, selected_class = consensus_class, comment = comment, classification_date = classification_date, center = "VUSTF", vid = vid)
-                new_heredicare_annotation = models.HeredicareAnnotation(id = heredicare_annotation_id, vid = vid, n_fam = n_fam, n_pat = n_pat, vustf_classification = classification, lr_cooc = lr_cooc, lr_coseg = lr_coseg, lr_family = lr_family)
+
+                heredicare_classifications_raw = self.get_heredicare_center_classifications(heredicare_annotation_id)
+                heredicare_center_classifications = None
+                if heredicare_classifications_raw is not None:
+                    heredicare_center_classifications = []
+                    for cl_raw in heredicare_classifications_raw:
+                        #id, heredicare_ZID, center_name, classification, comment
+                        id = int(cl_raw[0])
+                        zid = cl_raw[1]
+                        center_name = cl_raw[2]
+                        selected_class = cl_raw[3]
+                        comment = cl_raw[4]
+                        #date = cl_raw[5].strftime('%Y-%m-%d')
+                        new_heredicare_classification = models.HeredicareCenterClassification(id = id, selected_class = selected_class, comment = comment, center_name = center_name, zid = zid)
+                        heredicare_center_classifications.append(new_heredicare_classification)
+
+
+                new_heredicare_annotation = models.HeredicareAnnotation(id = heredicare_annotation_id, vid = vid, n_fam = n_fam, n_pat = n_pat, consensus_classification = consensus_classification, lr_cooc = lr_cooc, lr_coseg = lr_coseg, lr_family = lr_family, center_classifications = heredicare_center_classifications)
                 all_heredicare_annotations.append(new_heredicare_annotation)
         
         # add clinvar annotation
@@ -2527,7 +2532,6 @@ class Connection:
                         annotations = annotations, 
                         consensus_classifications = consensus_classifications, 
                         user_classifications = user_classifications,
-                        heredicare_classifications = heredicare_classifications,
                         automatic_classification = automatic_classification,
                         heredicare_annotations = all_heredicare_annotations,
                         cancerhotspots_annotations = cancerhotspots_annotations,
@@ -2557,7 +2561,6 @@ class Connection:
                         annotations = annotations, 
                         consensus_classifications = consensus_classifications, 
                         user_classifications = user_classifications,
-                        heredicare_classifications = heredicare_classifications,
                         automatic_classification = automatic_classification,
                         heredicare_annotations = all_heredicare_annotations,
                         cancerhotspots_annotations = cancerhotspots_annotations,
@@ -2838,9 +2841,11 @@ class Connection:
     def insert_update_heredivar_clinvar_submission(self, variant_id, submission_id, accession_id, status, message, last_updated, previous_clinvar_accession):
         if previous_clinvar_accession is None:
             command = "INSERT INTO heredivar_clinvar_submissions (variant_id, submission_id, accession_id, status, message, last_updated) VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE submission_id=VALUES(submission_id), accession_id=VALUES(accession_id), status=VALUES(status),message=VALUES(message), last_updated=VALUES(last_updated)"
+            actual_information = (variant_id, submission_id, accession_id, status, message, last_updated)
         else: # do not reset the accession id - this one is stable once it was created by clinvar
-            command = "INSERT INTO heredivar_clinvar_submissions (variant_id, submission_id, status, message, last_updated) VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE submission_id=VALUES(submission_id), status=VALUES(status),message=VALUES(message), last_updated=VALUES(last_updated)"
-        self.cursor.execute(command, (variant_id, submission_id, accession_id, status, message, last_updated))
+            command = "INSERT INTO heredivar_clinvar_submissions (variant_id, submission_id, status, message, last_updated) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE submission_id=VALUES(submission_id), status=VALUES(status),message=VALUES(message), last_updated=VALUES(last_updated)"
+            actual_information = (variant_id, submission_id, status, message, last_updated)
+        self.cursor.execute(command, actual_information)
         self.conn.commit()
 
     def get_heredivar_clinvar_submission(self, variant_id):
@@ -2981,6 +2986,7 @@ class Connection:
         command = "INSERT INTO variant_heredicare_annotation (variant_id, vid, n_fam, n_pat, consensus_class, date, comment, lr_cooc, lr_coseg, lr_family) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         self.cursor.execute(command, (variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family))
         self.conn.commit()
+        return self.get_last_insert_id()
 
     def clear_heredicare_annotation(self, variant_id):
         command = "DELETE FROM variant_heredicare_annotation WHERE variant_id = %s"

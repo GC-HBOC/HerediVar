@@ -79,8 +79,17 @@ class heredicare_job(Job):
                         err_msg += "The date could not be saved in the database. Format should be dd.mm.yyyy, but was: " + str(classification_date)
                         status_code = 1
 
+                heredicare_annotation_id = None
                 if status_code == 0:
-                    conn.insert_heredicare_annotation(variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family)
+                    heredicare_annotation_id = conn.insert_heredicare_annotation(variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family)
+
+                for key in heredicare_variant:
+                    if key.startswith("PATH_Z") and heredicare_variant[key] is not None:
+                        zid = int(key[6:])
+                        print(zid)
+                        classification = heredicare_variant[key] if heredicare_variant[key] != "-1" else None
+                        conn.insert_heredicare_center_classification(heredicare_annotation_id, zid, classification, comment = None) # TODO! COMMENT!
+
 
         return status_code, err_msg
 

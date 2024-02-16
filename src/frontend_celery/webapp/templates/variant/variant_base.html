@@ -177,61 +177,68 @@
                     </div>
                     {% endif %}
 
-                    <!-- heredicare consensus classifications -->
-                    {% set heredicare_consensus_classifications = variant.get_heredicare_consensus_classifications() %}
-                    {% if heredicare_consensus_classifications | length > 0 %}
+                    <!-- HerediCare classifications -->
+                    {% if variant.heredicare_annotations is not none %}
                     <div class="ssb">
-                        <h4 class="card-subcaption">HerediCare consensus classifications</h4>
+                        <h4 class="card-subcaption">HerediCare classifications</h4>
                         <div class="left-space-padding">
-                            <table class="table table-borderless table-slim">
-                                <tbody>
-                                    {% for heredicare_consensus_classification in heredicare_consensus_classifications %}
-                                    <tr class="nsl">
-                                        <td class="li-label width_small">VID {{heredicare_consensus_classification.vid}}</td>
-                                        <td class="vertical_align_middle">
-                                            <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground">
-                                                <li class="list-group-item noboarder-td width_small">
-                                                    Class: {{heredicare_consensus_classification.selected_class_to_text()}}
-                                                </li>
-                                                <li class="list-group-item noboarder-td width_small">
-                                                    Date: {{heredicare_consensus_classification.classification_date}}
-                                                </li>
-                                                <li class="list-group-item noboarder-td">
-                                                    Comment: {{heredicare_consensus_classification.comment}}
-                                                </li>
-                                            </ul>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- heredicare center classifications -->
-                    {% if variant.heredicare_classifications is not none %}
-                    <div>
-                        <h4 class="card-subcaption">HerediCare center classifications</h4>
-                        <div class="ssl sst ssb">
                             <div class="table-responsive tableFixHead">
-                                <table class="table table-hover" id="heredicareCenterClassificationsTable">
+                                <table class="table" id="heredicare_classifications_table">
                                     <thead>
                                         <tr>
-                                            <th class="width_minimal"><div class="sortable">Class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_small"><div class="sortable">Center</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_small" id="heredicareCenterClassificationsTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_minimal"><div class="sortable">VID</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Consensus class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small" id="heredicare_classifications_data_col"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                             <th class="width_very_large"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="sortable">Centers with classifications</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for classification in variant.heredicare_classifications %}
-                                        <tr heredicare_center_classification_id="{{ classification.id }}">
-                                            <td class="text_align_center">{{ classification.selected_class }}</td>
-                                            <td>{{ classification.center }}</td>
-                                            <td class="nowrap">{{ classification.date }}</td>
-                                            <td>{{ classification.comment }}</td>
+                                        {% for heredicare_annot in variant.heredicare_annotations %}
+                                        {% if heredicare_annot.consensus_classification.selected_class is not none or (heredicare_annot.center_classifications is not none and heredicare_center_classifications | length > 0) %}
+                                        <tr>
+                                            <tr heredicare_annotation_id="heredicare_annot.id">
+                                                <td class="text_align_center">{{ heredicare_annot.consensus_classification.vid }}</td>
+                                                <td>{{ heredicare_annot.consensus_classification.selected_class_to_num() }}</td>
+                                                <td class="nowrap">{{ heredicare_annot.consensus_classification.classification_date }}</td>
+                                                <td>{{ heredicare_annot.consensus_classification.comment }}</td>
+                                                <td >
+                                                    <div class="d-flex">
+                                                        <div class="flex-grow-1">
+                                                            {{ ", ".join(heredicare_annot.get_centers_with_classifications()) }}
+                                                        </div>
+                                                        <div>
+                                                            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                                                                +
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr class="collapse" id="collapseExample">
+                                                <td colspan="5" >
+                                                    <table class="table table-sm" id="heredicare_center_classifications_table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th class="width_small bg_white"><div class="sortable">Center</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                                                <th class="width_small bg_white"><div class="sortable">Classification</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                                                <th class="width_small bg_white"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for center_classification in heredicare_annot.center_classifications %}
+                                                            <tr>
+                                                                <td>{{center_classification.center_name}}</td>
+                                                                <td>{{center_classification.selected_class_to_num()}}</td>
+                                                                <td>{{center_classification.comment}}</td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </td>
+                                            </tr>
                                         </tr>
+                                        {% endif %}
                                         {% endfor %}
                                     </tbody>
                                 </table>
