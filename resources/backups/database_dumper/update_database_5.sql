@@ -119,6 +119,10 @@ INSERT INTO `HerediVar_ahdoebm1`.assay_metadata_type (title, display_title, assa
 INSERT INTO `HerediVar_ahdoebm1`.assay_metadata_type (title, display_title, assay_type_id, value_type) VALUES ('score', 'Score', (SELECT id FROM assay_type WHERE title='functional'), 'float')
 
 
+UPDATE `HerediVar_ahdoebm1`.`assay_metadata_type` SET `is_required` = '0' WHERE (`title` = 'comment');
+UPDATE `HerediVar_ahdoebm1`.`assay_metadata_type` SET `is_required` = '0' WHERE (`title` = 'score');
+
+
 
 ALTER TABLE `HerediVar_ahdoebm1`.`assay` 
 ADD COLUMN `assay_type_id` INT UNSIGNED NOT NULL AFTER `assay_type`;
