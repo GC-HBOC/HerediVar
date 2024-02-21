@@ -107,16 +107,19 @@
 -- ALTER TABLE `HerediVar`.`assay_metadata_type` 
 -- CHANGE COLUMN `value_type` `value_type` TEXT NOT NULL ;
 
+ALTER TABLE `HerediVar_ahdoebm1`.`assay_metadata_type` 
+ADD COLUMN `is_required` TINYINT(1) NOT NULL DEFAULT 1 AFTER `is_deleted`;
 
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('patient_rna', 'Patient RNA', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'bool');
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('minigene', 'Minigene', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'bool');
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('allele_specific', 'Allele-Specific', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'ENUM:True,False,Construct');
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('comment', 'Comment', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'text');
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('score', 'Score', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'float');
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('minimal_percentage', 'Percent aberrant transcript', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'float');
 
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('functional_category', 'Functional category', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='functional'), 'ENUM:Pathogenic,Benign,Ambigous');
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('score', 'Score', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='functional'), 'float');
+-- INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('patient_rna', 'Patient RNA', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'bool');
+-- INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('minigene', 'Minigene', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'bool');
+-- INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('allele_specific', 'Allele-Specific', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'ENUM:True,False,Construct');
+-- INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('comment', 'Comment', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'text');
+-- INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('score', 'Score', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'float');
+-- INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('minimal_percentage', 'Percent aberrant transcript', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'float');
+-- 
+-- INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('functional_category', 'Functional category', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='functional'), 'ENUM:Pathogenic,Benign,Ambigous');
+-- INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('score', 'Score', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='functional'), 'float');
 
 
 UPDATE `HerediVar`.`assay_metadata_type` SET `is_required` = '0' WHERE (`title` = 'comment');
