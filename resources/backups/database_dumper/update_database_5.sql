@@ -145,139 +145,139 @@
 -- CHANGE COLUMN `paper` `link` TEXT NULL DEFAULT NULL ;
 
 
-ALTER TABLE `HerediVar`.`assay_metadata` 
-CHANGE COLUMN `metadata_type_id` `assay_metadata_type_id` INT(11) NOT NULL ;
-
-
-GRANT SELECT ON HerediVar.assay_type TO 'HerediVar_annotation';
-GRANT SELECT ON HerediVar.assay_type TO 'HerediVar_user';
-GRANT SELECT ON HerediVar.assay_type TO 'HerediVar_superuser';
-GRANT SELECT ON HerediVar.assay_type TO 'HerediVar_read_only';
-
-
-GRANT SELECT ON HerediVar.assay_metadata_type TO 'HerediVar_annotation';
-GRANT SELECT ON HerediVar.assay_metadata_type TO 'HerediVar_user';
-GRANT SELECT ON HerediVar.assay_metadata_type TO 'HerediVar_superuser';
-GRANT SELECT ON HerediVar.assay_metadata_type TO 'HerediVar_read_only';
-
-
-GRANT SELECT, INSERT ON HerediVar.assay_metadata TO 'HerediVar_annotation';
-GRANT SELECT, INSERT ON HerediVar.assay_metadata TO 'HerediVar_user';
-GRANT SELECT, INSERT ON HerediVar.assay_metadata TO 'HerediVar_superuser';
-GRANT SELECT ON HerediVar.assay_metadata TO 'HerediVar_read_only';
-
-GRANT INSERT ON HerediVar.assay TO 'HerediVar_annotation';
-GRANT DELETE ON HerediVar.assay TO 'HerediVar_annotation';
-
-
-ALTER TABLE `HerediVar`.`assay` 
-ADD COLUMN `user_id` INT UNSIGNED NULL AFTER `date`;
-
-
-ALTER TABLE `HerediVar`.`assay` 
-ADD INDEX `FK_assay_assay_type_idx` (`assay_type_id` ASC);
-;
-ALTER TABLE `HerediVar`.`assay` 
-ADD CONSTRAINT `FK_assay_assay_type`
-  FOREIGN KEY (`assay_type_id`)
-  REFERENCES `HerediVar`.`assay_type` (`id`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-
-ALTER TABLE `HerediVar`.`assay` 
-ADD INDEX `FK_assay_user_idx` (`user_id` ASC);
-;
-ALTER TABLE `HerediVar`.`assay` 
-ADD CONSTRAINT `FK_assay_user`
-  FOREIGN KEY (`user_id`)
-  REFERENCES `HerediVar`.`user` (`id`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-ALTER TABLE `HerediVar`.`assay` 
-DROP FOREIGN KEY `FK_assay_variant`;
-ALTER TABLE `HerediVar`.`assay` 
-ADD CONSTRAINT `FK_assay_variant`
-  FOREIGN KEY (`variant_id`)
-  REFERENCES `HerediVar`.`variant` (`id`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-
-ALTER TABLE `HerediVar`.`assay_metadata` 
-CHANGE COLUMN `assay_metadata_type_id` `assay_metadata_type_id` INT(11) UNSIGNED NOT NULL ,
-ADD INDEX `FK_assay_metadata_assay_idx` (`assay_id` ASC),
-ADD INDEX `FK_assay_metadata_assay_metadata_type_idx` (`assay_metadata_type_id` ASC);
-;
-ALTER TABLE `HerediVar`.`assay_metadata` 
-ADD CONSTRAINT `FK_assay_metadata_assay`
-  FOREIGN KEY (`assay_id`)
-  REFERENCES `HerediVar`.`assay` (`id`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION,
-ADD CONSTRAINT `FK_assay_metadata_assay_metadata_type`
-  FOREIGN KEY (`assay_metadata_type_id`)
-  REFERENCES `HerediVar`.`assay_metadata_type` (`id`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
-
-
-ALTER TABLE `HerediVar`.`assay_metadata` 
-DROP FOREIGN KEY `FK_assay_metadata_assay_metadata_type`;
-ALTER TABLE `HerediVar`.`assay_metadata` 
-ADD CONSTRAINT `FK_assay_metadata_assay_metadata_type`
-  FOREIGN KEY (`assay_metadata_type_id`)
-  REFERENCES `HerediVar`.`assay_metadata_type` (`id`)
-  ON DELETE CASCADE
-  ON UPDATE NO ACTION;
-
-
-
-
-CREATE TABLE `HerediVar`.`heredicare_ZID` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `ZID` INT NOT NULL,
-  `name` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-ALTER TABLE `HerediVar`.`heredicare_ZID` 
-DROP COLUMN `id`,
-CHANGE COLUMN `ZID` `ZID` INT(11) UNSIGNED NOT NULL ,
-DROP PRIMARY KEY,
-ADD PRIMARY KEY (`ZID`);
-;
-
-INSERT INTO `HerediVar`.`heredicare_ZID` (ZID, name) VALUES
-(1, "Berlin"),
-(2, "Leipzig"),
-(3, "Dresden"),
-(4, "München-LMU"),
-(5, "Würzburg"),
-(6, "Ulm"),
-(7, "Heidelberg"),
-(8, "Frankfurt"),
-(9, "Köln"),
-(10, "Düsseldorf"),
-(11, "Münster"),
-(12, "Kiel"),
-(13, "Wiesbaden"),
-(14, "München-TU"),
-(15, "Hannover"),
-(16, "Regensburg"),
-(17, "Tübingen"),
-(18, "Göttingen"),
-(19, "Hamburg"),
-(20, "Greifswald"),
-(21, "Freiburg"),
-(22, "Erlangen"),
-(23, "Halle"),
-(24, "Mainz"),
-(25, "Lübeck");
-
-
+-- ALTER TABLE `HerediVar`.`assay_metadata` 
+-- CHANGE COLUMN `metadata_type_id` `assay_metadata_type_id` INT(11) NOT NULL ;
+-- 
+-- 
+-- GRANT SELECT ON HerediVar.assay_type TO 'HerediVar_annotation';
+-- GRANT SELECT ON HerediVar.assay_type TO 'HerediVar_user';
+-- GRANT SELECT ON HerediVar.assay_type TO 'HerediVar_superuser';
+-- GRANT SELECT ON HerediVar.assay_type TO 'HerediVar_read_only';
+-- 
+-- 
+-- GRANT SELECT ON HerediVar.assay_metadata_type TO 'HerediVar_annotation';
+-- GRANT SELECT ON HerediVar.assay_metadata_type TO 'HerediVar_user';
+-- GRANT SELECT ON HerediVar.assay_metadata_type TO 'HerediVar_superuser';
+-- GRANT SELECT ON HerediVar.assay_metadata_type TO 'HerediVar_read_only';
+-- 
+-- 
+-- GRANT SELECT, INSERT ON HerediVar.assay_metadata TO 'HerediVar_annotation';
+-- GRANT SELECT, INSERT ON HerediVar.assay_metadata TO 'HerediVar_user';
+-- GRANT SELECT, INSERT ON HerediVar.assay_metadata TO 'HerediVar_superuser';
+-- GRANT SELECT ON HerediVar.assay_metadata TO 'HerediVar_read_only';
+-- 
+-- GRANT INSERT ON HerediVar.assay TO 'HerediVar_annotation';
+-- GRANT DELETE ON HerediVar.assay TO 'HerediVar_annotation';
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`assay` 
+-- ADD COLUMN `user_id` INT UNSIGNED NULL AFTER `date`;
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`assay` 
+-- ADD INDEX `FK_assay_assay_type_idx` (`assay_type_id` ASC);
+-- ;
+-- ALTER TABLE `HerediVar`.`assay` 
+-- ADD CONSTRAINT `FK_assay_assay_type`
+--   FOREIGN KEY (`assay_type_id`)
+--   REFERENCES `HerediVar`.`assay_type` (`id`)
+--   ON DELETE NO ACTION
+--   ON UPDATE NO ACTION;
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`assay` 
+-- ADD INDEX `FK_assay_user_idx` (`user_id` ASC);
+-- ;
+-- ALTER TABLE `HerediVar`.`assay` 
+-- ADD CONSTRAINT `FK_assay_user`
+--   FOREIGN KEY (`user_id`)
+--   REFERENCES `HerediVar`.`user` (`id`)
+--   ON DELETE NO ACTION
+--   ON UPDATE NO ACTION;
+-- 
+-- ALTER TABLE `HerediVar`.`assay` 
+-- DROP FOREIGN KEY `FK_assay_variant`;
+-- ALTER TABLE `HerediVar`.`assay` 
+-- ADD CONSTRAINT `FK_assay_variant`
+--   FOREIGN KEY (`variant_id`)
+--   REFERENCES `HerediVar`.`variant` (`id`)
+--   ON DELETE NO ACTION
+--   ON UPDATE NO ACTION;
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`assay_metadata` 
+-- CHANGE COLUMN `assay_metadata_type_id` `assay_metadata_type_id` INT(11) UNSIGNED NOT NULL ,
+-- ADD INDEX `FK_assay_metadata_assay_idx` (`assay_id` ASC),
+-- ADD INDEX `FK_assay_metadata_assay_metadata_type_idx` (`assay_metadata_type_id` ASC);
+-- ;
+-- ALTER TABLE `HerediVar`.`assay_metadata` 
+-- ADD CONSTRAINT `FK_assay_metadata_assay`
+--   FOREIGN KEY (`assay_id`)
+--   REFERENCES `HerediVar`.`assay` (`id`)
+--   ON DELETE CASCADE
+--   ON UPDATE NO ACTION,
+-- ADD CONSTRAINT `FK_assay_metadata_assay_metadata_type`
+--   FOREIGN KEY (`assay_metadata_type_id`)
+--   REFERENCES `HerediVar`.`assay_metadata_type` (`id`)
+--   ON DELETE NO ACTION
+--   ON UPDATE NO ACTION;
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`assay_metadata` 
+-- DROP FOREIGN KEY `FK_assay_metadata_assay_metadata_type`;
+-- ALTER TABLE `HerediVar`.`assay_metadata` 
+-- ADD CONSTRAINT `FK_assay_metadata_assay_metadata_type`
+--   FOREIGN KEY (`assay_metadata_type_id`)
+--   REFERENCES `HerediVar`.`assay_metadata_type` (`id`)
+--   ON DELETE CASCADE
+--   ON UPDATE NO ACTION;
+-- 
+-- 
+-- 
+-- 
+-- CREATE TABLE `HerediVar`.`heredicare_ZID` (
+--   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+--   `ZID` INT NOT NULL,
+--   `name` VARCHAR(45) NOT NULL,
+--   PRIMARY KEY (`id`))
+-- ENGINE = InnoDB
+-- DEFAULT CHARACTER SET = utf8;
+-- 
+-- ALTER TABLE `HerediVar`.`heredicare_ZID` 
+-- DROP COLUMN `id`,
+-- CHANGE COLUMN `ZID` `ZID` INT(11) UNSIGNED NOT NULL ,
+-- DROP PRIMARY KEY,
+-- ADD PRIMARY KEY (`ZID`);
+-- ;
+-- 
+-- INSERT INTO `HerediVar`.`heredicare_ZID` (ZID, name) VALUES
+-- (1, "Berlin"),
+-- (2, "Leipzig"),
+-- (3, "Dresden"),
+-- (4, "München-LMU"),
+-- (5, "Würzburg"),
+-- (6, "Ulm"),
+-- (7, "Heidelberg"),
+-- (8, "Frankfurt"),
+-- (9, "Köln"),
+-- (10, "Düsseldorf"),
+-- (11, "Münster"),
+-- (12, "Kiel"),
+-- (13, "Wiesbaden"),
+-- (14, "München-TU"),
+-- (15, "Hannover"),
+-- (16, "Regensburg"),
+-- (17, "Tübingen"),
+-- (18, "Göttingen"),
+-- (19, "Hamburg"),
+-- (20, "Greifswald"),
+-- (21, "Freiburg"),
+-- (22, "Erlangen"),
+-- (23, "Halle"),
+-- (24, "Mainz"),
+-- (25, "Lübeck");
+-- 
+-- 
 -- ALTER TABLE `HerediVar`.`heredicare_center_classification` 
 -- DROP FOREIGN KEY `FK_heredicare_center_classification_variant`;
 -- ALTER TABLE `HerediVar`.`heredicare_center_classification` 
@@ -334,7 +334,6 @@ INSERT INTO `HerediVar`.`heredicare_ZID` (ZID, name) VALUES
 --   ON UPDATE NO ACTION;
 -- 
 
-DROP TABLE IF EXISTS `HerediVar`.`heredicare_center_classification` 
 CREATE TABLE `HerediVar`.`heredicare_center_classification`  (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `variant_heredicare_annotation_id` int(10) unsigned NOT NULL,
