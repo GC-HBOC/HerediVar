@@ -2280,7 +2280,7 @@ class Connection:
                         criterium_evidence = criterium_raw[4]
                         criterium_strength = criterium_raw[7]
                         strength_display_name = criterium_raw[8]
-                        is_selected = True
+                        is_selected = criterium_raw[9]
                         criterium = models.HerediVarCriterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength, strength_display_name = strength_display_name, is_selected = is_selected)
                         criteria.append(criterium)
                     scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class, is_active = is_active, is_default = is_default)
@@ -2624,14 +2624,14 @@ class Connection:
         return res
     
     def get_assay_metadata_type(self, assay_metadata_type_id):
-        #!!!! SELECT MUST BE EQUAL TO the one in get_assay_metadata_types
+        #!!!! SELECT columns MUST BE EQUAL TO the one in get_assay_metadata_types
         command = "SELECT id, title, display_title, assay_type_id, value_type, is_deleted, is_required FROM assay_metadata_type WHERE id= %s AND is_deleted = 0"
         self.cursor.execute(command, (assay_metadata_type_id, ))
         res = self.cursor.fetchone()
         return res
     
     def get_assay_metadata_types(self, assay_type_id, format = "dict"):
-        #!!!! SELECT MUST BE EQUAL TO the one in get_assay_metadata_type
+        #!!!! SELECT columns MUST BE EQUAL TO the one in get_assay_metadata_type
         command = "SELECT id, title, display_title, assay_type_id, value_type, is_deleted, is_required FROM assay_metadata_type WHERE assay_type_id = %s AND is_deleted = 0"
         self.cursor.execute(command, (assay_type_id, ))
         assay_metadata_types_raw = self.cursor.fetchall()
@@ -2656,8 +2656,8 @@ class Connection:
             self.conn.commit()
     
     def convert_assay_metadata_type(self, assay_metadata_type_raw):
-        is_deleted = assay_metadata_type_raw[5] == "1"
-        is_required = assay_metadata_type_raw[6] == "1"
+        is_deleted = assay_metadata_type_raw[5] == 1
+        is_required = assay_metadata_type_raw[6] == 1
         assay_metadata_type = models.Assay_Metadata_Type(id = int(assay_metadata_type_raw[0]), title = assay_metadata_type_raw[1], display_title = assay_metadata_type_raw[2], assay_type_id = int(assay_metadata_type_raw[3]),
                                                          value_type = assay_metadata_type_raw[4], is_deleted = is_deleted, is_required = is_required)
         return assay_metadata_type

@@ -688,7 +688,7 @@ class Assay:
             new_element = "~2B".join([assay_metadata.metadata_type.display_title, assay_metadata.value])
             metadata_parts.append(new_element)
         metadata = "~24".join(metadata_parts)
-        info = '~7C'.join([self.type_title, str(self.date), self.link, metadata]) # sep: |
+        info = '~7C'.join([self.type_title, str(self.date), str(self.link), metadata]) # sep: |
         if prefix:
             info = 'assays~1Y' + info
         return info

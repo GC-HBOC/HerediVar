@@ -295,9 +295,6 @@ $(document).ready(function() {
     $('#scheme').change(function () {
         scheme_select_action();
     });
-    //$('#select_criterium_check').change(function () {
-    //    select_criterium(this);
-    //});
     $('#blank_row_button').click(function () {
         create_literature_select(document.getElementById('selectedLiteratureList'));
     });
@@ -1078,8 +1075,8 @@ function create_user_acmg_details_table() {
     header_row.appendChild(create_sortable_header('User', 'width_small'))
     header_row.appendChild(create_sortable_header('Affiliation', 'width_small'))
     header_row.appendChild(create_sortable_header('Strength', 'width_small'))
-    var evidence_header = create_sortable_header('Evidence')
-    header_row.appendChild(evidence_header)
+    header_row.appendChild(create_sortable_header('Evidence'))
+    header_row.appendChild(create_sortable_header('Selected', 'width_very_small'))
     header_row.appendChild(create_sortable_header('Date', 'width_small'))
     header_row.appendChild(create_non_sortable_header('Copy', 'width_minimal'))
     header.appendChild(header_row)
@@ -1131,12 +1128,13 @@ function create_subcaption(text) {
 }
 
 // this returns one row of the user scheme table shown when making a consensus classification
-function create_row_user_acmg_details(user, affiliation, strength, evidence, date) {
+function create_row_user_acmg_details(user, criterium_id, affiliation, strength, evidence, date, is_selected) {
     var new_row = document.createElement('tr')
     new_row.appendChild(create_table_data(user))
     new_row.appendChild(create_table_data(affiliation))
     new_row.appendChild(create_table_data(criterium_strength_to_description(strength)))
     new_row.appendChild(create_table_data(evidence))
+    new_row.appendChild(create_table_data(is_selected))
     new_row.appendChild(create_table_data(date))
     //new_row.appendChild(create_table_data('copy...')) // TODO
     var copy_evidence_td = document.createElement('td')
@@ -1152,6 +1150,8 @@ function create_row_user_acmg_details(user, affiliation, strength, evidence, dat
     `
     copy_evidence_text.value = evidence
     copy_evidence_text.setAttribute('strength', strength)
+    copy_evidence_text.setAttribute('is_selected', is_selected)
+    copy_evidence_text.setAttribute('criterium_id', criterium_id)
     copy_evidence_text.onclick = function() {copy_evidence(this)}
     copy_evidence_text.classList.add('clickable')
     copy_evidence_td.appendChild(copy_evidence_text)
@@ -1169,6 +1169,18 @@ function copy_evidence(obj) {
     if (radio_to_select != null) {
         radio_to_select.click()
     }
+
+    const is_selected = obj.getAttribute('is_selected')
+    const criterium_id = obj.getAttribute('criterium_id')
+
+    var state = "unchecked"
+    if (is_selected == "true") {
+        state = "selected"
+    } else if (is_selected == "false") {
+        state = "unselected"
+    }
+    select_criterium_check.value = state
+    set_criterium(criterium_id, state, is_intermediate = true)
 }
 
 function add_user_acmg_classification_details(criterium_id) {
@@ -1192,8 +1204,9 @@ function add_user_acmg_classification_details(criterium_id) {
                     var current_criterium_id = criterium['name']
                     var current_strength = criterium['type']
                     var current_evidence = criterium['evidence']
+                    var is_selected = criterium['is_selected']
                     if (current_criterium_id === criterium_id) {
-                        var new_row = create_row_user_acmg_details(user, affiliation, current_strength, current_evidence, current_date)
+                        var new_row = create_row_user_acmg_details(user, criterium_id, affiliation, current_strength, current_evidence, current_date, is_selected)
                         document.getElementById('user_acmg_details').appendChild(new_row)
                     }
                 }

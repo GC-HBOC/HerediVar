@@ -256,50 +256,90 @@ def get_assertion_criteria(scheme_type, assertion_criteria_source):
 @variant_io_blueprint.route('/submit_assay/<int:variant_id>', methods=['GET', 'POST'])
 @require_permission(['edit_resources'])
 def submit_assay(variant_id):
+    conn = get_connection()
+
+    assay_type2id = conn.get_assay_type_id_dict()
+    possible_assays = {}
+    for assay_type in assay_type2id:
+        assay_type_id = assay_type2id[assay_type]
+        metadata_types = conn.get_assay_metadata_types(assay_type_id, format = "dict")
+        possible_assays[assay_type] = {"id": assay_type_id, "metadata_types": metadata_types}
 
     do_redirect = False
     if request.method == 'POST':
         assay_type = request.form.get('assay_type')
-        assay_report = request.files.get('report')
-        assay_score = request.form.get('score')
 
-        #print(assay_type)
-        #print(assay_report)
-        #print(assay_score)
+        selected_assay = possible_assays.get(assay_type)
 
-
-        if not assay_type or not assay_report or not assay_score or not assay_report.filename:
-            flash('All fields are required!', 'alert-danger')
+        if selected_assay is None:
+            flash("Assay type is not supported!", "alert-danger")
         else:
+            # extract selected data from request and make sure that only valid data is submitted
+            metadata_types = selected_assay["metadata_types"]
+            status = "success"
+            extracted_data = {}
+            for metadata_type_name in metadata_types:
+                metadata_type = metadata_types[metadata_type_name]
+                
+                current_data = request.form.get(str(metadata_type.id))
+                if metadata_type.is_required and metadata_type.value_type != 'bool' and (current_data is None or current_data.strip() == ''):
+                    flash("The metadata " + str(metadata_type.display_title) + " is required", "alert-danger")
+                    status = "error"
+                    break
+                if metadata_type.value_type == "text" and current_data.strip() != '':
+                    extracted_data[metadata_type.id] = str(current_data)
+                elif metadata_type.value_type == "bool":
+                    current_data = str(current_data)
+                    if current_data not in ["None", "on"]:
+                        flash("The value " + str(current_data) + " is not allowed for a boolean input field", "alert-danger")
+                        status = "error"
+                        break
+                    extracted_data[metadata_type.id] = current_data == "on"
+                elif metadata_type.value_type == "float" and current_data.strip() != '':
+                    try:
+                        extracted_data[metadata_type.id] = float(current_data)
+                    except:
+                        flash("The metadata " + str(metadata_type.display_title) + " is not numeric.", "alert-danger")
+                        status = "error"
+                        break
+                elif "ENUM" in metadata_type.value_type:
+                    possible_values = metadata_type.value_type.split(':')[1].split(',')
+                    if current_data not in possible_values:
+                        flash("The value " + str(current_data) + " is not allowed for field " + str(metadata_type.display_title), "alert-danger")
+                        status = "error"
+                        break
+                    extracted_data[metadata_type.id] = current_data
 
-            assay_report.filename = secure_filename(assay_report.filename)
+            if status == "success":
+                # extract report
+                assay_report = request.files.get("report")
+                if not assay_report or not assay_report.filename:
+                    flash("No assay report provided or filename is missing", "alert-danger")
+                    status = "error"
 
-            # the buffer is required as larger files (>500kb) are saved to /tmp upon upload
-            # this file must be read back in
-            buffer = io.BytesIO()
-            for line in assay_report:
-                buffer.write(line)
-            buffer.seek(0)
+            if status == "success":
+                assay_report.filename = secure_filename(assay_report.filename)
+                # the buffer is required as larger files (>500kb) are saved to /tmp upon upload
+                # this file must be read back in
+                buffer = io.BytesIO()
+                for line in assay_report:
+                    buffer.write(line)
+                buffer.seek(0)
 
-            b_64_assay_report = functions.buffer_to_base64(buffer)
+                b_64_assay_report = functions.buffer_to_base64(buffer)
 
-            if len(b_64_assay_report) > 16777215: # limited by the database mediumblob
-                current_app.logger.error(session['user']['preferred_username'] + " attempted uploading an assay which excedes the maximum filesize. The filesize was: " + str(len(b_64_assay_report)))
-                abort(500, "The uploaded file is too large. Please upload a smaller file.")
+                if len(b_64_assay_report) > 16777215: # limited by the database mediumblob
+                    current_app.logger.error(session['user']['preferred_username'] + " attempted uploading an assay which excedes the maximum filesize. The filesize was: " + str(len(b_64_assay_report)))
+                    abort(500, "The uploaded file is too large. Please upload a smaller file.")
 
-            conn = get_connection()
-            conn.insert_assay(variant_id, assay_type, b_64_assay_report, assay_report.filename, assay_score, functions.get_today())
+                assay_id = conn.insert_assay(variant_id, assay_type_id, b_64_assay_report, assay_report.filename, link = None, date = functions.get_today(), user_id = session["user"]["user_id"])
+                for metadata_type_id in extracted_data:
+                    conn.insert_assay_metadata(assay_id, metadata_type_id, extracted_data[metadata_type_id])
 
-            flash("Successfully uploaded a new assay for variant " + str(variant_id), "alert-success")
-
-            current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded a new assay for variant " + str(variant_id))
-
-            do_redirect = True
-
-
-            #functions.base64_to_file(b_64_assay_report, '/mnt/users/ahdoebm1/HerediVar/src/frontend/webapp/io/test.pdf')
+                flash("Successfully inserted new assay for variant " + str(variant_id), "alert-success")
+                do_redirect = True
 
 
     if do_redirect :
         return redirect(url_for('variant_io.submit_assay', variant_id = variant_id))
-    return render_template('variant_io/submit_assay.html')
+    return render_template('variant_io/submit_assay.html', possible_assays = possible_assays)

@@ -150,8 +150,8 @@
                                         <tr>
                                             <th class="width_very_small text_align_center">Selected class</th>
                                             <th class="width_small">Scheme</th>
-                                            <th class="width_small">Evidence type</th>
-                                            <th class="">Criteria</th>
+                                            <th class="width_very_small">Evidence type</th>
+                                            <th class="width_very_large">Criteria</th>
                                             <th class="width_very_medium">Date</th>
                                         </tr>
                                     </thead>
@@ -186,8 +186,8 @@
                                 <table class="table" id="heredicare_classifications_table">
                                     <thead>
                                         <tr>
-                                            <th class="width_minimal"><div class="sortable">VID</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_small"><div class="sortable">Consensus class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_very_small"><div class="sortable">VID</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_very_small"><div class="sortable">Consensus class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                             <th class="width_small" id="heredicare_classifications_data_col"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                             <th class="width_very_large"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                             <th class="width_small"><div class="sortable">Centers with classifications</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
@@ -198,7 +198,7 @@
                                         {% if heredicare_annot.consensus_classification.selected_class is not none or (heredicare_annot.center_classifications is not none and heredicare_center_classifications | length > 0) %}
                                         <tr>
                                             <tr heredicare_annotation_id="heredicare_annot.id">
-                                                <td class="text_align_center">{{ heredicare_annot.consensus_classification.vid }}</td>
+                                                <td class="nowrap">{{ heredicare_annot.vid }}</td>
                                                 <td>{{ heredicare_annot.consensus_classification.selected_class_to_num() }}</td>
                                                 <td class="nowrap">{{ heredicare_annot.consensus_classification.classification_date }}</td>
                                                 <td>{{ heredicare_annot.consensus_classification.comment }}</td>
@@ -415,8 +415,8 @@
                             <thead>
                                 <tr>
                                     <th class="width_small" id="assayTableAssayTypeCol" asc="false"><div class="sortable">Assay type</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th class="width_small"><div class="sortable">Data</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                    <th class="width_medium" id="assayTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_large"><div class="sortable">Data</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    <th class="width_small" id="assayTableDateCol"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                     <th class="width_small"><div class="sortable">Source</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                 </tr>
                             </thead>
@@ -426,17 +426,12 @@
                                     <tr assay_id="assay.id">
                                         <td>{{ assay.type_title }}</td>
                                         <td>
-
-                                            <div>
-                                                {% for assay_metadata_title in assay.metadata %}
-                                                <div class="d-flex">
-                                                    <div class="width_small">{{assay.metadata[assay_metadata_title].metadata_type.display_title}}</div>
-                                                    <div class="width_small">{{assay.metadata[assay_metadata_title].value}}</div>
-                                                </div>
-                                                {% endfor %}
+                                            {% for assay_metadata_title in assay.metadata %}
+                                            <div class="d-flex">
+                                                <div class="width_medium">{{assay.metadata[assay_metadata_title].metadata_type.display_title}}</div>
+                                                <div class="width_medium">{{assay.metadata[assay_metadata_title].value}}</div>
                                             </div>
-
-
+                                            {% endfor %}
                                         </td>
                                         <td class="nobreak">{{ assay.date }}</td>
                                         <td>

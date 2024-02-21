@@ -104,6 +104,7 @@
             <li>Added gnomAD non-cancer scores</li>
             <li>Added HerediCaRe center specific classifications</li>
             <li>Added CSpec BRCA1/2 assays to annotation algorithm</li>
+            <li>Copy evidence of user classifications to a consensus classification now also automatically selects the state correctly</li>
         </ul>
         Bugfixes:
         <ul>
@@ -116,10 +117,8 @@
             <li>Fixed a bug when updating ClinVar submissions</li>
             <li>When selecting any BP criterium the enigma BRCA1/2 schemes would instantly switch to class 2. This is now fixed and only BP1_str triggers class 2</li>
             <li>Previously the class by scheme was not updated correctly when the user updated their classification</li>
-        </ul>
-        Known issues:
-        <ul>
-            <li>HerediCare priors, log likelihood, segregation & cooccurance are not available</li>
+            <li>Fixed a bug in the criteria column of the automatic classification results that would shrink to width zero when the screen is resized</li>
+            <li>Fixed a bug where unselected criteria where shown as selected for consensus classifications</li>
         </ul>
     </div>
     <a class="btn btn-outline-primary" href="{{url_for('main.changelog')}}">previous changelog</a>

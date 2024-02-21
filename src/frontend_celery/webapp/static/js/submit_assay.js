@@ -7,6 +7,7 @@ $(document).ready(function(){
     $('#assay_type').click(function() {
         select_assay_type_action(this.value);
     });
+
 });
 
 
@@ -19,18 +20,12 @@ function on_page_load() {
 
 
 
-
 function select_assay_type_action(assay_type) {
-    var score_label_obj = document.getElementById('score_label')
+    $('form').each(function(i, obj) {
+        obj.hidden=true;
+    })
 
     if (assay_type !== '') {
-        document.getElementById('report_form_group').hidden=false
-        document.getElementById('score_form_group').hidden=false
-    }
-
-    if (assay_type === 'functional') {
-        score_label_obj.innerText = "Functional assay score"
-    } else if (assay_type === 'splicing') {
-        score_label_obj.innerText = "Splicing assay score"
+        document.getElementById(assay_type + '_assay').hidden=false
     }
 }

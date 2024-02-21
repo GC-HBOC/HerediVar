@@ -54,7 +54,7 @@ def get_default_job_config():
         'do_taskforce_domains': True,
         'do_coldspots': True,
         'do_litvar': True,
-        'do_auto_class': True
+        'do_auto_class': False
 
         # outdated
         #'do_arup': True,
