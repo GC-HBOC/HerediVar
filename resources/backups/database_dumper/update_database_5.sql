@@ -107,8 +107,8 @@
 -- ALTER TABLE `HerediVar`.`assay_metadata_type` 
 -- CHANGE COLUMN `value_type` `value_type` TEXT NOT NULL ;
 
-ALTER TABLE `HerediVar`.`assay_metadata_type` 
-ADD COLUMN `is_required` TINYINT(1) NOT NULL DEFAULT 1 AFTER `is_deleted`;
+-- ALTER TABLE `HerediVar`.`assay_metadata_type` 
+-- ADD COLUMN `is_required` TINYINT(1) NOT NULL DEFAULT 1 AFTER `is_deleted`;
 
 
 -- INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('patient_rna', 'Patient RNA', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'bool');
@@ -121,22 +121,22 @@ ADD COLUMN `is_required` TINYINT(1) NOT NULL DEFAULT 1 AFTER `is_deleted`;
 -- INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('functional_category', 'Functional category', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='functional'), 'ENUM:Pathogenic,Benign,Ambigous');
 -- INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('score', 'Score', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='functional'), 'float');
 
+-- 
+-- UPDATE `HerediVar`.`assay_metadata_type` SET `is_required` = '0' WHERE (`title` = 'comment');
+-- UPDATE `HerediVar`.`assay_metadata_type` SET `is_required` = '0' WHERE (`title` = 'score');
+-- 
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`assay` 
+-- ADD COLUMN `assay_type_id` INT UNSIGNED NOT NULL AFTER `assay_type`;
+-- 
+-- UPDATE `HerediVar`.`assay` SET assay_type_id = (SELECT id FROM `HerediVar`.`assay_type` WHERE title = 'functional') WHERE assay_type = 'functional';
+-- UPDATE `HerediVar`.`assay` SET assay_type_id = (SELECT id FROM `HerediVar`.`assay_type` WHERE title = 'splicing') WHERE assay_type = 'splicing';
+-- 
+-- ALTER TABLE `HerediVar`.`assay` 
+-- DROP COLUMN `assay_type`;
 
-UPDATE `HerediVar`.`assay_metadata_type` SET `is_required` = '0' WHERE (`title` = 'comment');
-UPDATE `HerediVar`.`assay_metadata_type` SET `is_required` = '0' WHERE (`title` = 'score');
-
-
-
-ALTER TABLE `HerediVar`.`assay` 
-ADD COLUMN `assay_type_id` INT UNSIGNED NOT NULL AFTER `assay_type`;
-
-UPDATE `HerediVar`.`assay` SET assay_type_id = (SELECT id FROM `HerediVar`.`assay_type` WHERE title = 'functional') WHERE assay_type = 'functional';
-UPDATE `HerediVar`.`assay` SET assay_type_id = (SELECT id FROM `HerediVar`.`assay_type` WHERE title = 'splicing') WHERE assay_type = 'splicing';
-
-ALTER TABLE `HerediVar`.`assay` 
-DROP COLUMN `assay_type`;
-
-INSERT INTO `HerediVar`.`assay_metadata` (assay_id, metadata_type_id, value) SELECT id, (SELECT id FROM `HerediVar`.assay_metadata_type WHERE assay_metadata_type.title = 'score' AND assay_metadata_type.assay_type_id = assay.assay_type_id), score FROM assay
+INSERT INTO `HerediVar`.`assay_metadata` (assay_id, metadata_type_id, value) SELECT id, (SELECT id FROM `HerediVar`.assay_metadata_type WHERE assay_metadata_type.title = 'score' AND assay_metadata_type.assay_type_id = assay.assay_type_id), score FROM assay;
 
 ALTER TABLE `HerediVar`.`assay` 
 DROP COLUMN `score`;
