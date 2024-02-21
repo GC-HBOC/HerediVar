@@ -52,71 +52,71 @@
 -- 
 -- ALTER TABLE `HerediVar`.`variant_heredicare_annotation` 
 -- CHANGE COLUMN `lr_family` `lr_family` FLOAT NULL DEFAULT NULL ;
+-- 
+-- 
+-- UPDATE `HerediVar`.`annotation_type` SET is_deleted=1 WHERE title="arup_classification";
+-- 
+-- 
+-- 
+-- 
+-- CREATE TABLE `HerediVar`.`assay_metadata` (
+--   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+--   `assay_id` INT UNSIGNED NOT NULL,
+--   `metadata_type` VARCHAR(45) NOT NULL,
+--   `value` VARCHAR(45) NULL,
+--   PRIMARY KEY (`id`))
+-- ENGINE = InnoDB
+-- DEFAULT CHARACTER SET = utf8;
+-- 
+-- 
+-- CREATE TABLE `HerediVar`.`assay_metadata_type` (
+--   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+--   `title` VARCHAR(45) NOT NULL,
+--   `display_title` VARCHAR(45) NOT NULL,
+--   `assay_type_id` INT NOT NULL,
+--   `value_type` ENUM('int', 'float', 'text', 'bool') NOT NULL,
+--   PRIMARY KEY (`id`))
+-- ENGINE = InnoDB
+-- DEFAULT CHARACTER SET = utf8;
+-- 
+-- ALTER TABLE `HerediVar`.`assay_metadata` 
+-- CHANGE COLUMN `metadata_type` `metadata_type_id` INT NOT NULL ;
+-- 
+-- 
+-- ALTER TABLE `HerediVar`.`assay_metadata_type` 
+-- ADD COLUMN `is_deleted` TINYINT(1) NOT NULL DEFAULT 0 AFTER `value_type`;
+-- 
+-- CREATE TABLE `HerediVar`.`assay_type` (
+--   `id` INT NOT NULL,
+--   `title` VARCHAR(45) NOT NULL,
+--   PRIMARY KEY (`id`))
+-- ENGINE = InnoDB
+-- DEFAULT CHARACTER SET = utf8;
+-- 
+-- ALTER TABLE `HerediVar`.`assay_type` 
+-- CHANGE COLUMN `id` `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT ;
+-- 
+-- INSERT INTO `HerediVar`.`assay_type` (`title`) VALUES ('functional');
+-- INSERT INTO `HerediVar`.`assay_type` (`title`) VALUES ('splicing');
+-- 
+-- ALTER TABLE `HerediVar`.`assay` 
+-- ADD COLUMN `paper` TEXT NULL AFTER `filename`,
+-- CHANGE COLUMN `report` `report` MEDIUMBLOB NULL ,
+-- CHANGE COLUMN `filename` `filename` TEXT NULL ;
+-- 
+-- ALTER TABLE `HerediVar`.`assay_metadata_type` 
+-- CHANGE COLUMN `value_type` `value_type` TEXT NOT NULL ;
 
 
-UPDATE `HerediVar`.`annotation_type` SET is_deleted=1 WHERE title="arup_classification";
+INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('patient_rna', 'Patient RNA', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'bool');
+INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('minigene', 'Minigene', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'bool');
+INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('allele_specific', 'Allele-Specific', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'ENUM:True,False,Construct');
+INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('comment', 'Comment', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'text');
+INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('score', 'Score', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'float');
+INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('minimal_percentage', 'Percent aberrant transcript', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='splicing'), 'float');
 
-
-
-
-CREATE TABLE `HerediVar`.`assay_metadata` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `assay_id` INT UNSIGNED NOT NULL,
-  `metadata_type` VARCHAR(45) NOT NULL,
-  `value` VARCHAR(45) NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-
-CREATE TABLE `HerediVar`.`assay_metadata_type` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `title` VARCHAR(45) NOT NULL,
-  `display_title` VARCHAR(45) NOT NULL,
-  `assay_type_id` INT NOT NULL,
-  `value_type` ENUM('int', 'float', 'text', 'bool') NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-ALTER TABLE `HerediVar`.`assay_metadata` 
-CHANGE COLUMN `metadata_type` `metadata_type_id` INT NOT NULL ;
-
-
-ALTER TABLE `HerediVar`.`assay_metadata_type` 
-ADD COLUMN `is_deleted` TINYINT(1) NOT NULL DEFAULT 0 AFTER `value_type`;
-
-CREATE TABLE `HerediVar`.`assay_type` (
-  `id` INT NOT NULL,
-  `title` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`id`))
-ENGINE = InnoDB
-DEFAULT CHARACTER SET = utf8;
-
-ALTER TABLE `HerediVar`.`assay_type` 
-CHANGE COLUMN `id` `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT ;
-
-INSERT INTO `HerediVar`.`assay_type` (`title`) VALUES ('functional');
-INSERT INTO `HerediVar`.`assay_type` (`title`) VALUES ('splicing');
-
-ALTER TABLE `HerediVar`.`assay` 
-ADD COLUMN `paper` TEXT NULL AFTER `filename`,
-CHANGE COLUMN `report` `report` MEDIUMBLOB NULL ,
-CHANGE COLUMN `filename` `filename` TEXT NULL ;
-
-ALTER TABLE `HerediVar`.`assay_metadata_type` 
-CHANGE COLUMN `value_type` `value_type` TEXT NOT NULL ;
-
-
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('patient_rna', 'Patient RNA', (SELECT id FROM assay_type WHERE title='splicing'), 'bool');
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('minigene', 'Minigene', (SELECT id FROM assay_type WHERE title='splicing'), 'bool');
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('allele_specific', 'Allele-Specific', (SELECT id FROM assay_type WHERE title='splicing'), 'ENUM:True,False,Construct');
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('comment', 'Comment', (SELECT id FROM assay_type WHERE title='splicing'), 'text');
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('score', 'Score', (SELECT id FROM assay_type WHERE title='splicing'), 'float');
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('minimal_percentage', 'Percent aberrant transcript', (SELECT id FROM assay_type WHERE title='splicing'), 'float');
-
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('functional_category', 'Functional category', (SELECT id FROM assay_type WHERE title='functional'), 'ENUM:Pathogenic,Benign,Ambigous');
-INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('score', 'Score', (SELECT id FROM assay_type WHERE title='functional'), 'float');
+INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('functional_category', 'Functional category', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='functional'), 'ENUM:Pathogenic,Benign,Ambigous');
+INSERT INTO `HerediVar`.`assay_metadata_type` (title, display_title, assay_type_id, value_type) VALUES ('score', 'Score', (SELECT id FROM `HerediVar`.`assay_type` WHERE title='functional'), 'float');
 
 
 UPDATE `HerediVar`.`assay_metadata_type` SET `is_required` = '0' WHERE (`title` = 'comment');
@@ -127,13 +127,13 @@ UPDATE `HerediVar`.`assay_metadata_type` SET `is_required` = '0' WHERE (`title` 
 ALTER TABLE `HerediVar`.`assay` 
 ADD COLUMN `assay_type_id` INT UNSIGNED NOT NULL AFTER `assay_type`;
 
-UPDATE assay SET assay_type_id = (SELECT id FROM assay_type WHERE title = 'functional') WHERE assay_type = 'functional';
-UPDATE assay SET assay_type_id = (SELECT id FROM assay_type WHERE title = 'splicing') WHERE assay_type = 'splicing';
+UPDATE `HerediVar`.`assay` SET assay_type_id = (SELECT id FROM `HerediVar`.`assay_type` WHERE title = 'functional') WHERE assay_type = 'functional';
+UPDATE `HerediVar`.`assay` SET assay_type_id = (SELECT id FROM `HerediVar`.`assay_type` WHERE title = 'splicing') WHERE assay_type = 'splicing';
 
 ALTER TABLE `HerediVar`.`assay` 
 DROP COLUMN `assay_type`;
 
-INSERT INTO `HerediVar`.`assay_metadata` (assay_id, metadata_type_id, value) SELECT id, (SELECT id FROM assay_metadata_type WHERE assay_metadata_type.title = 'score' AND assay_metadata_type.assay_type_id = assay.assay_type_id), score FROM assay
+INSERT INTO `HerediVar`.`assay_metadata` (assay_id, metadata_type_id, value) SELECT id, (SELECT id FROM `HerediVar`.assay_metadata_type WHERE assay_metadata_type.title = 'score' AND assay_metadata_type.assay_type_id = assay.assay_type_id), score FROM assay
 
 ALTER TABLE `HerediVar`.`assay` 
 DROP COLUMN `score`;
