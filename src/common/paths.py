@@ -269,6 +269,10 @@ elif webapp_env == 'prod':
     bayesdel = joinpaths(datadir, "BayesDEL/bayesdel_4.4.vcf.gz")
     cosmic = joinpaths(datadir, "COSMIC/cosmic_cmc.vcf.gz")
 
+    # assays
+    cspec_brca_assays_splicing = joinpaths(datadir, "CSpec_BRCA_assays/splicing_assays.vcf.gz")
+    cspec_brca_assays_functional = joinpaths(datadir, "CSpec_BRCA_assays/functional_assays.vcf.gz")
+
     # IGV data
     igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
 
