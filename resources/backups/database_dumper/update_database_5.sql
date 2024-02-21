@@ -136,16 +136,14 @@
 -- ALTER TABLE `HerediVar`.`assay` 
 -- DROP COLUMN `assay_type`;
 
-INSERT INTO `HerediVar`.`assay_metadata` (assay_id, metadata_type_id, value) SELECT id, (SELECT id FROM `HerediVar`.`assay_metadata_type` WHERE assay_metadata_type.title = 'score' AND assay_metadata_type.assay_type_id = assay.assay_type_id), score FROM `HerediVar`.`assay`;
+-- INSERT INTO `HerediVar`.`assay_metadata` (assay_id, metadata_type_id, value) SELECT id, (SELECT id FROM `HerediVar`.`assay_metadata_type` WHERE assay_metadata_type.title = 'score' AND assay_metadata_type.assay_type_id = assay.assay_type_id), score FROM `HerediVar`.`assay`;
+-- 
+-- ALTER TABLE `HerediVar`.`assay` 
+-- DROP COLUMN `score`;
+-- 
+-- ALTER TABLE `HerediVar`.`assay` 
+-- CHANGE COLUMN `paper` `link` TEXT NULL DEFAULT NULL ;
 
-ALTER TABLE `HerediVar`.`assay` 
-DROP COLUMN `score`;
-
-ALTER TABLE `HerediVar`.`assay` 
-CHANGE COLUMN `paper` `link` TEXT NULL DEFAULT NULL ;
-
-ALTER TABLE `HerediVar`.`assay_metadata_type` 
-ADD COLUMN `is_required` TINYINT(1) NOT NULL DEFAULT 1 AFTER `is_deleted`;
 
 ALTER TABLE `HerediVar`.`assay_metadata` 
 CHANGE COLUMN `metadata_type_id` `assay_metadata_type_id` INT(11) NOT NULL ;
