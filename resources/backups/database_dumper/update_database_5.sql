@@ -107,7 +107,7 @@
 -- ALTER TABLE `HerediVar`.`assay_metadata_type` 
 -- CHANGE COLUMN `value_type` `value_type` TEXT NOT NULL ;
 
-ALTER TABLE `HerediVar_ahdoebm1`.`assay_metadata_type` 
+ALTER TABLE `HerediVar`.`assay_metadata_type` 
 ADD COLUMN `is_required` TINYINT(1) NOT NULL DEFAULT 1 AFTER `is_deleted`;
 
 
