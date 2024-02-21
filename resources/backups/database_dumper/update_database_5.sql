@@ -276,8 +276,8 @@
 -- (23, "Halle"),
 -- (24, "Mainz"),
 -- (25, "Lübeck");
--- 
--- 
+
+
 -- ALTER TABLE `HerediVar`.`heredicare_center_classification` 
 -- DROP FOREIGN KEY `FK_heredicare_center_classification_variant`;
 -- ALTER TABLE `HerediVar`.`heredicare_center_classification` 
@@ -334,6 +334,7 @@
 --   ON UPDATE NO ACTION;
 -- 
 
+DROP TABLE IF EXISTS `HerediVar`.`heredicare_center_classification`;
 CREATE TABLE `HerediVar`.`heredicare_center_classification`  (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `variant_heredicare_annotation_id` int(10) unsigned NOT NULL,
