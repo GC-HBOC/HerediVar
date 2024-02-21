@@ -136,7 +136,7 @@
 -- ALTER TABLE `HerediVar`.`assay` 
 -- DROP COLUMN `assay_type`;
 
-INSERT INTO `HerediVar`.`assay_metadata` (assay_id, metadata_type_id, value) SELECT id, (SELECT id FROM `HerediVar`.assay_metadata_type WHERE assay_metadata_type.title = 'score' AND assay_metadata_type.assay_type_id = assay.assay_type_id), score FROM assay;
+INSERT INTO `HerediVar`.`assay_metadata` (assay_id, metadata_type_id, value) SELECT id, (SELECT id FROM `HerediVar`.`assay_metadata_type` WHERE assay_metadata_type.title = 'score' AND assay_metadata_type.assay_type_id = assay.assay_type_id), score FROM `HerediVar`.`assay`;
 
 ALTER TABLE `HerediVar`.`assay` 
 DROP COLUMN `score`;
