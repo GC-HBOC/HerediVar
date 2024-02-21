@@ -21,7 +21,7 @@ class Config(object):
 
     HOST = os.environ.get('HOST')
     PORT = os.environ.get('PORT')
-    SERVER_NAME = HOST + ':' + PORT
+    #SERVER_NAME = HOST + ':' + PORT
 
     ##### production config ####
     TESTING = False
