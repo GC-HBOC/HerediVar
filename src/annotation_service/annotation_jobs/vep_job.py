@@ -18,6 +18,7 @@ class vep_job(Job):
             self.job_name = "vep ensembl"
         self.refseq=refseq
         self.job_config = job_config
+        self.err_subber = re.compile(r"Smartmatch is experimental at /.*/VEP/AnnotationSource/File.pm line 472.")
 
 
     def execute(self, inpath, annotated_inpath, **kwargs):
@@ -33,7 +34,8 @@ class vep_job(Job):
             vep_code, vep_stderr, vep_stdout = self._annotate_vep(inpath, annotated_inpath)
 
         ## stupid workaround for this specific vep warning:
-        if vep_stderr == "VEP runtime WARNING: Smartmatch is experimental at /mnt/storage2/users/ahdoebm1/HerediVar/tools/ensembl-vep/modules/Bio/EnsEMBL/VEP/AnnotationSource/File.pm line 472.":
+        vep_stderr = re.sub(self.err_subber, "", vep_stderr)
+        if vep_stderr.strip() == "VEP runtime WARNING:" or vep_stderr.strip() == "VEP runtime ERROR:":
             vep_stderr = ""
 
         self.handle_result(inpath, annotated_inpath, vep_code)
