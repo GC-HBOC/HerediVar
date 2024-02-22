@@ -18,7 +18,7 @@ class vep_job(Job):
             self.job_name = "vep ensembl"
         self.refseq=refseq
         self.job_config = job_config
-        self.err_subber = re.compile(r"Smartmatch is experimental at /.*/VEP/AnnotationSource/File.pm line 472.")
+        self.err_subber = re.compile(r"Smartmatch is experimental at /.*/VEP/AnnotationSource/File.pm line 472.") 
 
 
     def execute(self, inpath, annotated_inpath, **kwargs):
@@ -33,7 +33,7 @@ class vep_job(Job):
         else:
             vep_code, vep_stderr, vep_stdout = self._annotate_vep(inpath, annotated_inpath)
 
-        ## stupid workaround for this specific vep warning:
+        ## stupid workaround for this specific vep smartmatch warning:
         vep_stderr = re.sub(self.err_subber, "", vep_stderr)
         if vep_stderr.strip() == "VEP runtime WARNING:" or vep_stderr.strip() == "VEP runtime ERROR:":
             vep_stderr = ""

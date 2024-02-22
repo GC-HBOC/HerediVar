@@ -263,8 +263,7 @@ class automatic_classification_job(Job):
         # mRNA analyses: currently missing
         """
         "mRNA_analysis" : [
-        {"performed": true,
-         "minigene": true,
+        {"minigene": true,
          "patient_rna": false,
          "allelic" : "Construct",
          "quantification": null}
@@ -272,33 +271,40 @@ class automatic_classification_job(Job):
         """
         assays_dict = variant.order_assays_by_type()
 
+        splicing_assays = assays_dict.get("splicing")
+
+        all_splicing_assays = []
+        if splicing_assays is not None:
+            for assay in all_splicing_assays:
+                minigene = assay.metadata.get("minigene", "") == "True"
+                patient_rna = assay.metadata.get("patient_rna", "") == "True"
+                allelic = assay.metadata.get("allele_specific", "False")
+                quantification = assay.metadata.get("minimal_percentage", None)
+                all_splicing_assays.append({"minigene": minigene,
+                                            "patient_rna": patient_rna,
+                                            "allelic": allelic,
+                                            "quantification": quantification})
+        
+        result["mRNA_analysis"] = all_splicing_assays
 
 
-        # functional data: currently missing
+        # functional data:
         """
         "functional_data": [
-        {"performed": true,
-         "pathogenic": false,
+        {"pathogenic": false,
          "benign": true},
-        {"performed": true,
-         "pathogenic": false,
+        {"pathogenic": false,
          "benign": true}
         ]
         """
         functional_assays = assays_dict.get("functional")
 
         all_functional_assays = []
-        if functional_assays is not None and len(functional_assays) > 0:
+        if functional_assays is not None:
             for assay in functional_assays:
-                is_performed = True
-                is_pathogenic = False
-                is_benign = False
-                if assay.metadata.get("functional_category", "") == "pathogenic":
-                    is_pathogenic = True
-                if assay.metadata.get("functional_category", "") == "benign":
-                    is_benign = True
-                all_functional_assays.append({"performed": is_performed,
-                                              "pathogenic": is_pathogenic,
+                is_pathogenic = assay.metadata.get("functional_category", "") == "pathogenic"
+                is_benign =  assay.metadata.get("functional_category", "") == "benign"
+                all_functional_assays.append({"pathogenic": is_pathogenic,
                                               "benign": is_benign})
         result["functional_data"] = all_functional_assays
         
