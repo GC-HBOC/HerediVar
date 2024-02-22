@@ -294,7 +294,7 @@ def submit_assay(variant_id):
                         flash("The value " + str(current_data) + " is not allowed for a boolean input field", "alert-danger")
                         status = "error"
                         break
-                    extracted_data[metadata_type.id] = current_data == "on"
+                    extracted_data[metadata_type.id] = str(current_data == "on")
                 elif metadata_type.value_type == "float" and current_data.strip() != '':
                     try:
                         extracted_data[metadata_type.id] = float(current_data)
