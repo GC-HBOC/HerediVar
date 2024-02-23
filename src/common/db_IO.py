@@ -1505,7 +1505,7 @@ class Connection:
         result = self.cursor.fetchone()
         return result
 
-    def insert_scheme_criterium_applied(self, classification_id, classification_criterium_id, criterium_strength_id, evidence, is_selected, where="user"):
+    def insert_scheme_criterium_applied(self, classification_id, classification_criterium_id, criterium_strength_id, evidence, state, where="user"):
         if where == "user":
             command = "INSERT INTO user_classification_criteria_applied (user_classification_id"
         elif where == "consensus":
@@ -1513,8 +1513,8 @@ class Connection:
         else:
             functions.eprint("no valid \"where\" given in insert_scheme_criterium function. It was: " + str(where))
             return
-        command = command + ", classification_criterium_id, criterium_strength_id, evidence, is_selected) VALUES (%s, %s, %s, %s, %s)"
-        actual_information = (classification_id, classification_criterium_id, criterium_strength_id, evidence, is_selected)
+        command = command + ", classification_criterium_id, criterium_strength_id, evidence, state) VALUES (%s, %s, %s, %s, %s)"
+        actual_information = (classification_id, classification_criterium_id, criterium_strength_id, evidence, state)
         self.cursor.execute(command, actual_information)
         self.conn.commit()
 
@@ -1531,8 +1531,8 @@ class Connection:
         else:
             functions.eprint("no valid \"where\" given in insert_scheme_criterium function. It was: " + str(where))
             return
-        command = "SELECT y.id,y." + prefix + "_classification_id,y.classification_criterium_id,y.criterium_strength_id,y.evidence,y.name as classification_criterium_name,classification_criterium_strength.name as classification_criterium_strength_name, classification_criterium_strength.description, classification_criterium_strength.display_name, y.is_selected FROM classification_criterium_strength INNER JOIN ( \
-                    SELECT id," + prefix + "_classification_id,classification_criterium_id,criterium_strength_id,evidence,name,is_selected FROM " + table_oi + " \
+        command = "SELECT y.id,y." + prefix + "_classification_id,y.classification_criterium_id,y.criterium_strength_id,y.evidence,y.name as classification_criterium_name,classification_criterium_strength.name as classification_criterium_strength_name, classification_criterium_strength.description, classification_criterium_strength.display_name, y.state FROM classification_criterium_strength INNER JOIN ( \
+                    SELECT id," + prefix + "_classification_id,classification_criterium_id,criterium_strength_id,evidence,name,state FROM " + table_oi + " \
 	                    INNER JOIN (SELECT id as inner_id,name FROM classification_criterium)x \
                     ON x.inner_id = " + table_oi + ".classification_criterium_id WHERE " + prefix + "_classification_id=%s\
                     )y ON y.criterium_strength_id = classification_criterium_strength.id"
@@ -1540,7 +1540,7 @@ class Connection:
         result = self.cursor.fetchall()
         return result
 
-    def update_scheme_criterium_applied(self, scheme_criterium_id, updated_strength, updated_evidence, is_selected, where="user"):
+    def update_scheme_criterium_applied(self, scheme_criterium_id, updated_strength, updated_evidence, state, where="user"):
         if where == "user":
             command = "UPDATE user_classification_criteria_applied"
         elif where == "consensus":
@@ -1548,8 +1548,8 @@ class Connection:
         else:
             functions.eprint("no valid \"where\" given in insert_scheme_criterium function. It was: " + str(where))
             return
-        command = command + " SET criterium_strength_id=%s, evidence=%s, is_selected=%s WHERE id=%s"
-        self.cursor.execute(command, (updated_strength, updated_evidence, is_selected, scheme_criterium_id))
+        command = command + " SET criterium_strength_id=%s, evidence=%s, state=%s WHERE id=%s"
+        self.cursor.execute(command, (updated_strength, updated_evidence, state, scheme_criterium_id))
         self.conn.commit()
 
 
@@ -2280,8 +2280,8 @@ class Connection:
                         criterium_evidence = criterium_raw[4]
                         criterium_strength = criterium_raw[7]
                         strength_display_name = criterium_raw[8]
-                        is_selected = criterium_raw[9]
-                        criterium = models.HerediVarCriterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength, strength_display_name = strength_display_name, is_selected = is_selected)
+                        state = criterium_raw[9]
+                        criterium = models.HerediVarCriterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength, strength_display_name = strength_display_name, state = state)
                         criteria.append(criterium)
                     scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class, is_active = is_active, is_default = is_default)
 
@@ -2339,8 +2339,8 @@ class Connection:
                         criterium_evidence = criterium_raw[4]
                         criterium_strength = criterium_raw[7]
                         strength_display_name = criterium_raw[8]
-                        is_selected = criterium_raw[9] == 1
-                        criterium = models.HerediVarCriterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength, strength_display_name=strength_display_name, is_selected=is_selected)
+                        state = criterium_raw[9]
+                        criterium = models.HerediVarCriterium(id = criterium_id, name = criterium_name, type=criterium_type, evidence = criterium_evidence, strength = criterium_strength, strength_display_name=strength_display_name, state=state)
                         criteria.append(criterium)
                     scheme = models.Scheme(id = scheme_id, display_name = scheme_display_name, type = scheme_type, criteria = criteria, reference = reference, selected_class = scheme_class, is_active = is_active, is_default = is_default)
 
@@ -2360,7 +2360,7 @@ class Connection:
             automatic_classification_raw = self.get_automatic_classification(variant_id)
             if automatic_classification_raw is not None:
                 automatic_classification_id = int(automatic_classification_raw[0]) # id, scheme_name, classification, date
-                automatic_classification_criteria = self.get_automatic_classification_criteria_applied(automatic_classification_raw[0]) # id, name, rule_type, evidence_type, is_selected, strength, type, comment
+                automatic_classification_criteria = self.get_automatic_classification_criteria_applied(automatic_classification_raw[0]) # id, name, rule_type, evidence_type, state, strength, type, comment
 
                 all_criteria = []
                 for automatic_classification_criterium in automatic_classification_criteria:
@@ -2368,11 +2368,11 @@ class Connection:
                     name = automatic_classification_criterium[1].replace('_protein', '').replace('_splicing', '')
                     rule_type = automatic_classification_criterium[2]
                     evidence_type = automatic_classification_criterium[3]
-                    is_selected = automatic_classification_criterium[4] == 1
+                    state = automatic_classification_criterium[4]
                     strength = automatic_classification_criterium[5]
                     strength_type = automatic_classification_criterium[6]
                     evidence = automatic_classification_criterium[7]
-                    new_criterium = models.AutomaticClassificationCriterium(id = automatic_classification_criterium_id, name = name, rule_type = rule_type, evidence_type = evidence_type, is_selected = is_selected, strength = strength, type = strength_type, evidence = evidence)
+                    new_criterium = models.AutomaticClassificationCriterium(id = automatic_classification_criterium_id, name = name, rule_type = rule_type, evidence_type = evidence_type, state = state, strength = strength, type = strength_type, evidence = evidence)
                     all_criteria.append(new_criterium)
                 
                 scheme_display_title = automatic_classification_raw[2]
@@ -2994,7 +2994,7 @@ class Connection:
         self.conn.commit()
     
     def get_enumtypes(self, tablename, columnname):
-        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue", "automatic_classification", "sv_variant"]
+        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue", "automatic_classification", "sv_variant", "user_classification_criteria_applied", "consensus_classification_criteria_applied"]
         if tablename in allowed_tablenames:
             command = "SHOW COLUMNS FROM " + tablename + " WHERE FIELD = %s"
         else:
@@ -3286,7 +3286,7 @@ class Connection:
         return result
 
     def get_automatic_classification_criteria_applied(self, automatic_classification_id):
-        command = "SELECT id, name, rule_type, evidence_type, is_selected, strength, type, comment FROM automatic_classification_criteria_applied WHERE automatic_classification_id = %s"
+        command = "SELECT id, name, rule_type, evidence_type, state, strength, type, comment FROM automatic_classification_criteria_applied WHERE automatic_classification_id = %s"
         self.cursor.execute(command, (automatic_classification_id, ))
         result = self.cursor.fetchall()
         return result

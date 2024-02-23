@@ -385,7 +385,8 @@ def classify(variant_id):
 
         # test if the input is valid
         criteria = extract_criteria_from_request(request.form, scheme_id, conn)
-        scheme_classification_is_valid, scheme_message = is_valid_scheme(criteria, classification_schemas.get(scheme_id))
+        possible_states = conn.get_enumtypes("user_classification_criteria_applied", "state")
+        scheme_classification_is_valid, scheme_message = is_valid_scheme(criteria, classification_schemas.get(scheme_id), possible_states)
         pmids, text_passages = remove_empty_literature_rows(pmids, text_passages)
         literature_is_valid, literature_message = is_valid_literature(pmids, text_passages)
         
@@ -525,7 +526,8 @@ def consensus_classify(variant_id):
             criteria = extract_criteria_from_request(request.form, scheme_id, conn)
             pmids, text_passages = remove_empty_literature_rows(pmids, text_passages)
             literature_is_valid, literature_message = is_valid_literature(pmids, text_passages)
-            scheme_classification_is_valid, scheme_message = is_valid_scheme(criteria, classification_schemas[scheme_id])
+            possible_states = conn.get_enumtypes("consensus_classification_criteria_applied", "state")
+            scheme_classification_is_valid, scheme_message = is_valid_scheme(criteria, classification_schemas[scheme_id], possible_states)
             classification_is_valid = str(classification) in allowed_classes
 
             scheme_id_is_valid = True

@@ -112,7 +112,7 @@ def convert_scheme_criteria_to_dict(criteria):
     criteria_dict = {} # convert to dict criterium->criterium_id,strength,evidence
     for entry in criteria:
         criterium_id = entry[2]
-        criteria_dict[criterium_id] = {'id':entry[0], 'strength_id':entry[3], 'evidence':entry[4], 'is_selected':entry[9]}
+        criteria_dict[criterium_id] = {'id':entry[0], 'strength_id':entry[3], 'evidence':entry[4], 'state':entry[9]}
     return criteria_dict
 
 def handle_scheme_classification(classification_id, criteria, conn: Connection, where = "user"):
@@ -123,12 +123,12 @@ def handle_scheme_classification(classification_id, criteria, conn: Connection, 
     for criterium_id in criteria:
         evidence = criteria[criterium_id]['evidence']
         strength_id = criteria[criterium_id]['criterium_strength_id']
-        is_selected = criteria[criterium_id]['is_selected']
+        state = criteria[criterium_id]['state']
         # insert new criteria
         if criterium_id not in previous_criteria_dict:
-            conn.insert_scheme_criterium_applied(classification_id, criterium_id, strength_id, evidence, is_selected, where=where)
+            conn.insert_scheme_criterium_applied(classification_id, criterium_id, strength_id, evidence, state, where=where)
         else: # update records if they were present before
-            conn.update_scheme_criterium_applied(previous_criteria_dict[criterium_id]['id'], strength_id, evidence, is_selected, where=where)
+            conn.update_scheme_criterium_applied(previous_criteria_dict[criterium_id]['id'], strength_id, evidence, state, where=where)
             scheme_classification_got_update = True
     
     # delete unselected criterium tags
@@ -264,14 +264,13 @@ def extract_criteria_from_request(request_obj, scheme_id, conn: Connection):
             evidence = request_obj[criterium_name]
             strength = request_obj[criterium_name + '_strength']
             state = request_obj[criterium_name + '_state']
-            is_selected = 1 if state == 'selected' else 0
             criterium_id = conn.get_classification_criterium_id(scheme_id, criterium_name.upper())
             if criterium_id is None:
                 abort(500, "A criterium was selected that does not exist for this scheme.")
             if state in ["unchecked"]:
                 continue
             criterium_strength_id = conn.get_classification_criterium_strength_id(criterium_id, strength)
-            criteria[criterium_id] = {'evidence':evidence, 'strength':strength, 'criterium_name': criterium_name.upper(), 'criterium_strength_id': criterium_strength_id, 'is_selected': is_selected}
+            criteria[criterium_id] = {'evidence':evidence, 'strength':strength, 'criterium_name': criterium_name.upper(), 'criterium_strength_id': criterium_strength_id, 'state': state}
     return criteria
 
 # criteria dict from the extract criteria request function is the input
@@ -281,7 +280,7 @@ def get_scheme_class(criteria_dict, scheme_type, version):
     if scheme_type == 'task-force':
         keyval = 'criterium_name'
     for key in criteria_dict:
-        if criteria_dict[key]['is_selected'] == 1:
+        if criteria_dict[key]['state'] == 'selected':
             #special cases
             if criteria_dict[key]["criterium_name"] == "BP1" and scheme_type in ["acmg-enigma-brca1", "acmg-enigma-brca2"]:
                 all_criteria_strengths.append(criteria_dict[key]["criterium_name"] + '_' + criteria_dict[key][keyval])
@@ -295,7 +294,7 @@ def get_scheme_class(criteria_dict, scheme_type, version):
     return scheme_class
 
 
-def is_valid_scheme(selected_criteria, scheme):
+def is_valid_scheme(selected_criteria, scheme, possible_states):
     is_valid = True
     message = ''
 
@@ -315,7 +314,7 @@ def is_valid_scheme(selected_criteria, scheme):
     #    is_valid = False
     #    message = "You must select at least one of the classification scheme criteria to submit a classification scheme based classification. The classification was not submitted."
 
-    all_selected_criteria_names = [selected_criteria[x]['criterium_name'] for x in selected_criteria if selected_criteria[x]['is_selected']]
+    all_selected_criteria_names = [selected_criteria[x]['criterium_name'] for x in selected_criteria if selected_criteria[x]['state'] == 'selected']
 
     mutually_inclusive_target_to_source = {}
     for source in scheme_criteria:
@@ -327,7 +326,12 @@ def is_valid_scheme(selected_criteria, scheme):
     for criterium_id in selected_criteria:
         current_criterium = selected_criteria[criterium_id]
         criterium_name = current_criterium['criterium_name']
-        #ensure that each criterum has some evidence
+        # ensure that the criterium state is valid
+        if current_criterium['state'] not in possible_states:
+            is_valid = False
+            message = "Criterium " + str(criterium_name) + " has an unknown state: " + str(current_criterium["state"])
+            break
+        # ensure that each criterum has some evidence
         if current_criterium['evidence'].strip() == '':
             is_valid = False
             message = "Criterium " + str(criterium_name) + " is missing evidence. The classification was not submitted."
@@ -351,10 +355,11 @@ def is_valid_scheme(selected_criteria, scheme):
             break
         # ensure that no mutually exclusive criteria are selected
         current_mutually_exclusive_criteria = scheme_criteria[criterium_name]['mutually_exclusive_criteria']
-        if any([x in current_mutually_exclusive_criteria for x in all_selected_criteria_names]):
-            is_valid = False
-            message = "A mutually exclusive criterium to " + str(criterium_name) + " was selected. Remember to not select " + str(criterium_name) + " together with any of " + str(current_mutually_exclusive_criteria) + ". The classification was not submitted."
-            break
+        if criterium_name in all_selected_criteria_names: # skip unselected criteria
+            if any([x in current_mutually_exclusive_criteria for x in all_selected_criteria_names]):
+                is_valid = False
+                message = "A mutually exclusive criterium to " + str(criterium_name) + " was selected. Remember to not select " + str(criterium_name) + " together with any of " + str(current_mutually_exclusive_criteria) + ". The classification was not submitted."
+                break
         # ensure that mutually inclusive criteria were only selected when their target is present
         current_mutually_inclusive_sources = mutually_inclusive_target_to_source.get(criterium_name, [])
         if not all([x in all_selected_criteria_names for x in current_mutually_inclusive_sources]):

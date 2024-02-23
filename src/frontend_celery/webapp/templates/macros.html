@@ -156,8 +156,8 @@
                 <div class='col-8 text-center border-start'>Info</div>
             </div>
             <div class='row gx-2'>
-                <div class='col-3'>Is selected</div>
-                <div class='col-8 text-center border-start'>{{ criterium.is_selected }}</div>
+                <div class='col-3'>State</div>
+                <div class='col-8 text-center border-start'>{{ criterium.state }}</div>
             </div>
             <div class='row gx-2'>
                 <div class='col-3'>Strength</div>
@@ -169,7 +169,7 @@
             </div>
             "
     >
-        <div class="btn-{{ criterium.type }} light-hover acmg-button acmg-button-small {% if not criterium.is_selected%}crossed{% endif %}">{{ criterium.display_name() }}</div>
+        <div class="btn-{{ criterium.type }} light-hover acmg-button acmg-button-small {% if criterium.state == 'unselected' %}crossed{% endif %}">{{ criterium.display_name() }}</div>
     </span>
     {% endfor %}
 {% endmacro %}

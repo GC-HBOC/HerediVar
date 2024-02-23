@@ -288,7 +288,7 @@ class Criterium(AbstractDataclass):
     type: str
     strength: str
     evidence: str
-    is_selected: bool
+    state: str
 
     def to_dict(self):
         return asdict(self)
@@ -301,7 +301,7 @@ class HerediVarCriterium(Criterium):
     type: str
     strength: str
     evidence: str
-    is_selected: bool
+    state: str
     """
     strength_display_name: str
 
@@ -315,7 +315,7 @@ class HerediVarCriterium(Criterium):
         return self.name
 
     def to_vcf(self):
-        info = "~2B".join([self.name, self.strength, self.evidence, "1" if self.is_selected else "0",]) # sep: +
+        info = "~2B".join([self.name, self.strength, self.evidence, self.state,]) # sep: +
         return info
 
     def criterium_to_num(self):
@@ -466,7 +466,7 @@ class Classification:
     def get_header(self, simple = False):
         if not simple:
             key = functions.encode_vcf(self.type)
-            header = {key: '##INFO=<ID=' + key + ',Number=1,Type=String,Description="The recent consensus classification by the VUS-task-force. Format: consensus_class|consensus_comment|submission_date|consensus_scheme|consensus_scheme_class|consensus_criteria_string. The consensus criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence+is_selecteds ">\n'}
+            header = {key: '##INFO=<ID=' + key + ',Number=1,Type=String,Description="The recent consensus classification by the VUS-task-force. Format: consensus_class|consensus_comment|submission_date|consensus_scheme|consensus_scheme_class|consensus_criteria_string. The consensus criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence+state ">\n'}
         else:
             header = {'classification': '##INFO=<ID=classification,Number=1,Type=Integer,Description="The consensus classification from the VUS-task-force. Either 1 (benign), 2 (likely benign), 3 (uncertain), 4 (likely pathogenic) or 5 (pathogenic)">\n',
                       'comment': '##INFO=<ID=comment,Number=1,Type=String,Description="The comment of the VUS-task-force for the consensus classification">\n',
@@ -483,7 +483,7 @@ class AutomaticClassificationCriterium(Criterium):
     type: str
     strength: str
     evidence: str
-    is_selected: bool
+    state: str
     """
     rule_type: str # general/splicing/proteion
     evidence_type: str # pathogenic/benign
@@ -492,12 +492,12 @@ class AutomaticClassificationCriterium(Criterium):
         return self.name.replace('protein', 'prt').replace('splicing', 'spl')
     
     def to_vcf(self):
-        #criterium_name+criterium_strength+criterium_evidence+is_selected+rule_type
+        #criterium_name+criterium_strength+criterium_evidence+state+rule_type
         return "~2B".join([
             self.name,
             self.strength,
             self.evidence,
-            "1" if self.is_selected else "0",
+            self.state,
             self.rule_type
         ])
 
@@ -541,7 +541,7 @@ class AutomaticClassification:
     def get_header(self):
         #consensus_class|consensus_comment|submission_date|consensus_scheme|consensus_scheme_class|consensus_criteria_string. The consensus criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence
         header = {
-            'automatic_classification': '##INFO=<ID=automatic_classification,Number=1,Type=String,Description="The automatic classification for this variant. FORMAT: classification_protein|classification_splicing|date|scheme|criteria. criteria is a $ separated list with the FORMAT: criterium_name+criterium_strength+criterium_evidence+is_selected+rule_type">\n',
+            'automatic_classification': '##INFO=<ID=automatic_classification,Number=1,Type=String,Description="The automatic classification for this variant. FORMAT: classification_protein|classification_splicing|date|scheme|criteria. criteria is a $ separated list with the FORMAT: criterium_name+criterium_strength+criterium_evidence+state+rule_type">\n',
         }
         return header
 

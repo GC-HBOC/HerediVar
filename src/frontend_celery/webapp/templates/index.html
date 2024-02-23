@@ -92,9 +92,23 @@
 
 <div class="bst bsb">
     <h4>Changelog</h4>
-    <div class="underline">v 1.8 (21.02.2024)</div>
+    <div class="underline">v 1.8.1 (23.02.2024)</div>
     <div class="btn-pvs">!! The automatic classification algorithm is currently under construction. HerediVar is already prepared for it. Thus, you might encounter disabled buttons or dummy data. It will be enabled in a future update</div>
     <div class="btn-pvs">!! Scores from likelihood ratio tests are currently under construction. A simple reannotation is required to show them on HerediVar once they are ready to be downloaded from HerediCaRe.</div>
+    <div>
+        General changes:
+        <ul>
+            <li>Changed is_selected for classifications to a more descriptive state information in downloaded vcf files</li>
+        </ul>
+        Bugfixes:
+        <ul>
+            <li>Fixed a bug when there were no HerediCaRe center classifications but a consensus classification from HerediCaRe</li>
+            <li>A selected criterium would automatically uncheck if a mutually exclusive criterium was unselected and the mutually exclusive criterium itself is mutually exclusive with the selected criterium</li>
+            <li>Fixed default strength for supporting criteria in ACMG standard scheme</li>
+            <li>Fixed wrapping of PVS1_mod criterium</li>
+        </ul>
+    </div>
+    <div class="underline">v 1.8 (21.02.2024)</div>
     <div>
         General changes:
         <ul>

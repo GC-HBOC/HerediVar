@@ -199,9 +199,11 @@ table.scroll th {
     border: 1px solid rgb(155, 155, 155);
 
     cursor:pointer;
+
+    white-space: nowrap;
 }
 .acmg-button-small {
-    width: 4.5em;
+    width: 5.5em;
     height: 2em;
 }
 .acmg-button-large {

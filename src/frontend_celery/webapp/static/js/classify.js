@@ -441,12 +441,7 @@ function preselect_criteria_from_list(selected_criteria, is_intermediate = false
         var criterium_id = current_data['name'].toUpperCase();
         var current_evidence = current_data['evidence'];
         var current_strength = current_data['type'];
-        var is_selected = current_data['is_selected'];
-
-        var state = "unselected"
-        if (is_selected) {
-            state = "selected"
-        }
+        var state = current_data['state'];
 
         var selected_button = document.getElementById(criterium_id);
         if (selected_button != null){
@@ -1128,13 +1123,13 @@ function create_subcaption(text) {
 }
 
 // this returns one row of the user scheme table shown when making a consensus classification
-function create_row_user_acmg_details(user, criterium_id, affiliation, strength, evidence, date, is_selected) {
+function create_row_user_acmg_details(user, criterium_id, affiliation, strength, evidence, date, state) {
     var new_row = document.createElement('tr')
     new_row.appendChild(create_table_data(user))
     new_row.appendChild(create_table_data(affiliation))
     new_row.appendChild(create_table_data(criterium_strength_to_description(strength)))
     new_row.appendChild(create_table_data(evidence))
-    new_row.appendChild(create_table_data(is_selected))
+    new_row.appendChild(create_table_data(state))
     new_row.appendChild(create_table_data(date))
     //new_row.appendChild(create_table_data('copy...')) // TODO
     var copy_evidence_td = document.createElement('td')
@@ -1150,7 +1145,7 @@ function create_row_user_acmg_details(user, criterium_id, affiliation, strength,
     `
     copy_evidence_text.value = evidence
     copy_evidence_text.setAttribute('strength', strength)
-    copy_evidence_text.setAttribute('is_selected', is_selected)
+    copy_evidence_text.setAttribute('state', state)
     copy_evidence_text.setAttribute('criterium_id', criterium_id)
     copy_evidence_text.onclick = function() {copy_evidence(this)}
     copy_evidence_text.classList.add('clickable')
@@ -1170,15 +1165,9 @@ function copy_evidence(obj) {
         radio_to_select.click()
     }
 
-    const is_selected = obj.getAttribute('is_selected')
+    const state = obj.getAttribute('state')
     const criterium_id = obj.getAttribute('criterium_id')
 
-    var state = "unchecked"
-    if (is_selected == "true") {
-        state = "selected"
-    } else if (is_selected == "false") {
-        state = "unselected"
-    }
     select_criterium_check.value = state
     set_criterium(criterium_id, state, is_intermediate = true)
 }
@@ -1204,9 +1193,9 @@ function add_user_acmg_classification_details(criterium_id) {
                     var current_criterium_id = criterium['name']
                     var current_strength = criterium['type']
                     var current_evidence = criterium['evidence']
-                    var is_selected = criterium['is_selected']
+                    var state = criterium['state']
                     if (current_criterium_id === criterium_id) {
-                        var new_row = create_row_user_acmg_details(user, criterium_id, affiliation, current_strength, current_evidence, current_date, is_selected)
+                        var new_row = create_row_user_acmg_details(user, criterium_id, affiliation, current_strength, current_evidence, current_date, state)
                         document.getElementById('user_acmg_details').appendChild(new_row)
                     }
                 }
@@ -1306,14 +1295,15 @@ function enable_disable_buttons(criterium_ids, is_disable) {
     for (var i = 0; i < criterium_ids.length; i++) {
         const current_criterium_id = criterium_ids[i];
         const current_criterium_button = document.getElementById(current_criterium_id)
-        // this is just a sanity check to make sure that the disabled buttons are not checked!
-        if (current_criterium_button.checked && document.getElementById(current_criterium_id + "_state").value != "unchecked") {
-            set_criterium(current_criterium_id, "unchecked")
-        }
+        const current_selected_criterium_id = document.getElementById('select_criterium_check').getAttribute('criterium_id')
         if (current_criterium_button.getAttribute('activateable') === 'true') {
             current_criterium_button.disabled = is_disable
         } else {
             current_criterium_button.disabled = true
+        }
+        // this is just a sanity check to make sure that the disabled buttons are not checked!
+        if (current_criterium_button.checked && current_criterium_button.disabled && current_selected_criterium_id != current_criterium_id) {
+            set_criterium(current_criterium_id, "unchecked")
         }
     }
 }
@@ -1337,7 +1327,7 @@ function update_classification_preview() {
             'selected_classes': selected_criteria
         },
         success: function(returnval, status, request) {
-            console.log(returnval)
+            //console.log(returnval)
 
             const final_class = returnval.final_class
             document.getElementById('classification_preview').textContent = final_class
@@ -1457,6 +1447,7 @@ function update_criterium_button_label(criterium_id) {
 }
 
 function update_mutual_criteria(criterium_id) {
+    console.log("update_mutual_criteria triggered by: " + criterium_id)
     is_selected = document.getElementById(criterium_id + '_state').value == 'selected'
     // mutually exclusive criteria
     const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
@@ -1468,18 +1459,18 @@ function update_mutual_criteria(criterium_id) {
 }
 
 // select and unselect the criterium itself + its associated strength input check which holds information about its user-assigned strenght
-function toggle_criterium(criterium_id) {
-    var obj = document.getElementById(criterium_id)
-    obj.checked = !obj.checked
-    update_criterium_button_background(criterium_id)
-    document.getElementById(criterium_id + '_strength').checked = obj.checked
-    update_mutual_criteria(criterium_id)
-}
+//function toggle_criterium(criterium_id) {
+//    var obj = document.getElementById(criterium_id)
+//    obj.checked = !obj.checked
+//    update_criterium_button_background(criterium_id)
+//    document.getElementById(criterium_id + '_strength').checked = obj.checked
+//    update_mutual_criteria(criterium_id)
+//}
 
 
 function set_criterium(criterium_id, state, is_intermediate = false) {
     // a criterium can have three states:
-    // 1. unselected: not enough information available to know anything about the criterium
+    // 1. unchecked: not enough information available to know anything about the criterium
     // 2. selected: criterium has enough evidence that we know it applies to the variant
     // 3. unselected: criterium has enough evidence that we know it does not apply to the variant
     const criterium_button = document.getElementById(criterium_id)
@@ -1501,6 +1492,8 @@ function set_criterium(criterium_id, state, is_intermediate = false) {
     }
 
     state_check.value = state
+
+    console.log("set_criterium: " + criterium_id + " to state: " + state)
 
     update_criterium_button_label(criterium_id)
     update_criterium_button_background(criterium_id)
