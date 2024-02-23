@@ -229,6 +229,7 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody>
+                                                            {% if heredicare_annot.center_classifications is not none %}
                                                             {% for center_classification in heredicare_annot.center_classifications %}
                                                             <tr>
                                                                 <td>{{center_classification.center_name}}</td>
@@ -236,6 +237,7 @@
                                                                 <td>{{center_classification.comment}}</td>
                                                             </tr>
                                                             {% endfor %}
+                                                            {% endif %}
                                                         </tbody>
                                                     </table>
                                                 </td>
