@@ -205,7 +205,10 @@
                                                 <td >
                                                     <div class="d-flex">
                                                         <div class="flex-grow-1">
-                                                            {{ ", ".join(heredicare_annot.get_centers_with_classifications()) }}
+                                                            {% set centers_oi = heredicare_annot.get_centers_with_classifications() %}
+                                                            {% if centers_oi is not none %}
+                                                                {{ ", ".join(heredicare_annot.get_centers_with_classifications()) }}
+                                                            {% endif %}
                                                         </div>
                                                         <div>
                                                             <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
