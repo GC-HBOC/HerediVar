@@ -22,18 +22,19 @@ class spliceai_job(Job):
 
         self.print_executing()
 
-
         spliceai_code, spliceai_stderr, splicai_stdout = self.annotate_missing_spliceai(inpath, annotated_inpath)
 
-
         self.handle_result(inpath, annotated_inpath, spliceai_code)
+
         return spliceai_code, spliceai_stderr, splicai_stdout
 
 
     def save_to_db(self, info, variant_id, conn):
-        for prefix in ['snv', 'indel']:
-            self.insert_annotation(variant_id, info, prefix + '_SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.replace(',', '&').split('&')]) )
-            self.insert_annotation(variant_id, info, prefix + '_SpliceAI=', 8, conn, value_modifier_function= lambda value : ','.join([str(max([float(x) for x in x.split('|')[2:6]])) for x in value.replace(',', '&').split('&')]) )
+        recent_annotation_ids = conn.get_recent_annotation_type_ids()
+
+        for prefix in ['snv_', 'indel_', '']:
+            self.insert_annotation(variant_id, info, prefix + 'SpliceAI=', recent_annotation_ids["spliceai_details"], conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.replace(',', '&').split('&')]) )
+            self.insert_annotation(variant_id, info, prefix + 'SpliceAI=', recent_annotation_ids["spliceai_max_delta"], conn, value_modifier_function= lambda value : ','.join([str(max([float(x) for x in x.split('|')[2:6]])) for x in value.replace(',', '&').split('&')]) )
         
         return 0, ""
 
@@ -41,9 +42,6 @@ class spliceai_job(Job):
 
 
     def annotate_missing_spliceai(self, input_vcf_path, output_vcf_path):
-        #input_file = open(input_vcf_path, 'r')
-        #temp_path = tempfile.gettempdir() + '/' + str(uuid.uuid4()) + '.vcf'
-        #temp_file = open(temp_path, 'w')
 
         found_spliceai_header = False
         need_annotation = False
@@ -54,7 +52,6 @@ class spliceai_job(Job):
         with open(input_vcf_path, 'r') as input_file:
             for line in input_file:
                 if line.startswith('#'):
-                    #temp_file.write(line)
                     if line.startswith('##INFO=<ID=snv_SpliceAI') or line.startswith('##INFO=<ID=indel_SpliceAI') :
                         found_spliceai_header = True
                     continue
@@ -63,19 +60,10 @@ class spliceai_job(Job):
                         continue
                     
                     need_annotation = True
-                    #temp_file.write(line)
-        #temp_file.close()
+
         if not found_spliceai_header:
             errors.append("SpliceAI WARNING: did not find a SpliceAI INFO entry in input vcf, did you annotate the file using a precomputed file before?")
         if need_annotation:
-            #returncode, stderr, stdout = functions.execute_command(['sed', '-i', '/SpliceAI/d', input_vcf_path], "sed")
-            #if returncode != 0:
-            #    errors.append(stderr)
-            #returncode, stderr, stdout = functions.execute_command(['chmod', '777', input_vcf_path], 'chmod')
-            #if returncode != 0:
-            #    errors.append(stderr)
-            #returncode, stderr, stdout = functions.execute_command(["ls", "-l", "/tmp"], "ls")
-            #print(stdout)
             spliceai_code, spliceai_stderr, spliceai_stdout = self.annotate_spliceai_algorithm(input_vcf_path, output_vcf_path)
             if 'SpliceAI runtime ERROR:' in spliceai_stderr:
                 errors.append(spliceai_stderr)
@@ -84,7 +72,6 @@ class spliceai_job(Job):
 
         # need to insert some code here to merge the newly annotated variants and previously 
         # annotated ones from the db if there are files which contain more than one variant! 
-        #input_file.close()
 
 
 
@@ -113,8 +100,6 @@ class spliceai_job(Job):
         functions.rm(input_vcf_zipped_path + ".tbi")
 
         return returncode, stderr, stdout
-
-
 
 
 

@@ -61,7 +61,7 @@ class heredicare_job(Job):
                 err_msg += "There was an error during variant retrieval from heredicare: " + str(message)
                 status_code = 1
             else:
-                print(heredicare_variant)
+                #print(heredicare_variant)
                 n_fam = heredicare_variant["N_FAM"]
                 n_pat = heredicare_variant["N_PAT"]
                 consensus_class = heredicare_variant["PATH_TF"] if heredicare_variant["PATH_TF"] != "-1" else None
@@ -86,7 +86,6 @@ class heredicare_job(Job):
                 for key in heredicare_variant:
                     if key.startswith("PATH_Z") and heredicare_variant[key] is not None:
                         zid = int(key[6:])
-                        print(zid)
                         classification = heredicare_variant[key] if heredicare_variant[key] != "-1" else None
                         conn.insert_heredicare_center_classification(heredicare_annotation_id, zid, classification, comment = None) # TODO! COMMENT!
 
