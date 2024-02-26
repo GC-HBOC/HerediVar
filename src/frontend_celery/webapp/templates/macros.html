@@ -292,12 +292,16 @@
                 <div class="d-flex" annotation_id="{{ spliceai_details.id }};{{ max_delta_spliceai.id }}">
                     <abbr class="ssr" title="{{ max_delta_spliceai.description }}"><a class="dashed_underline">{{ spliceai_details.display_title }}:</a></abbr>
                     <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
-                        {% for spliceai in spliceai_details.value.split(',') %}
+                        {% set max_spliceai_scores = max_delta_spliceai.value.split(',') %}
+                        {% set spliceai_detail_scores = spliceai_details.value.split(',') %}
+                        {% for i in range(spliceai_detail_scores | length) %}
+                        {% set current_max_value = max_spliceai_scores[i] %}
+                        {% set current_spliceai_score = spliceai_detail_scores[i] %}
                         <li class="list-group-item noboarder-td" >
                             <div class="d-flex">
-                                <div class="ssr">{{ spliceai.split('|')[0] }}:</div> <div class="ssr">{{ spliceai.split('|')[1:5] | map('float') | max }}</div>
+                                <div class="ssr">{{ current_spliceai_score.split('|')[0] }}:</div> <div class="ssr">{{ current_max_value }}</div>
                                 <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true"
-                                    data-bs-content="{{ spliceai_details.description }} <br/> {{ spliceai }}">
+                                    data-bs-content="{{ spliceai_details.description }} <br/> {{ current_spliceai_score }}">
                                         details
                                 </a>
                             </div>

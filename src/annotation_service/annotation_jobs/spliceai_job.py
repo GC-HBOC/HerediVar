@@ -34,11 +34,25 @@ class spliceai_job(Job):
 
         for prefix in ['snv_', 'indel_', '']:
             self.insert_annotation(variant_id, info, prefix + 'SpliceAI=', recent_annotation_ids["spliceai_details"], conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.replace(',', '&').split('&')]) )
-            self.insert_annotation(variant_id, info, prefix + 'SpliceAI=', recent_annotation_ids["spliceai_max_delta"], conn, value_modifier_function= lambda value : ','.join([str(max([float(x) for x in x.split('|')[2:6]])) for x in value.replace(',', '&').split('&')]) )
+            self.insert_annotation(variant_id, info, prefix + 'SpliceAI=', recent_annotation_ids["spliceai_max_delta"], conn, value_modifier_function= self.get_spliceai_max_delta )
         
         return 0, ""
 
 
+    #','.join([str(max([float(x) for x in x.split('|')[2:6] if x != '.'])) for x in value.replace(',', '&').split('&')])
+    def get_spliceai_max_delta(self, spliceai_raw):
+        spliceai_parts = spliceai_raw.replace(',', '&').split('&')
+        all_max_values = []
+        for splice_ai in spliceai_parts:
+            all_values = []
+            for value in splice_ai.split('|')[2:6]:
+                if value != '.':
+                    all_values.append(float(value))
+            if len(all_values) > 0:
+                all_max_values.append(str(max(all_values)))
+            else:
+                all_max_values.append('.')
+        return ','.join(all_max_values)
 
 
     def annotate_missing_spliceai(self, input_vcf_path, output_vcf_path):
