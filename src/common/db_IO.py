@@ -1246,7 +1246,7 @@ class Connection:
             submission_condition.append("missing")
         elif len(submission_condition) > 2:
             functions.eprint("WARNING: the clinvar submission condition: " + str(submission_condition) + " has more than two entries. Although it should only have 2: id and description. Will be neglecting everything after the first two entries.")
-            submission_condition = submission_condition[0:2]
+            submission_condition = [submission_condition[0], ':'.join(submission_condition[1:])]
         return submission_condition
     
     def get_variant_consequences(self, variant_id):

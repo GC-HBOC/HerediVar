@@ -153,6 +153,8 @@ class annotate_from_vcf_job(Job):
                 #submissions = functions.decode_vcf(submission)#.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').replace('&', ';').split('|')
                 conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
 
+
+
         assay_type_dict = conn.get_assay_type_id_dict()
         conn.delete_assays(variant_id = variant_id,user_id = None) # delete only automatically annotated assays
         # CSpec splicing assays

@@ -92,9 +92,20 @@
 
 <div class="bst bsb">
     <h4>Changelog</h4>
-    <div class="underline">v 1.8.1 (23.02.2024)</div>
+
+    <div class="underline">v 1.8.2 (26.02.2024)</div>
     <div class="btn-pvs">!! The automatic classification algorithm is currently under construction. HerediVar is already prepared for it. Thus, you might encounter disabled buttons or dummy data. It will be enabled in a future update</div>
     <div class="btn-pvs">!! Scores from likelihood ratio tests are currently under construction. A simple reannotation is required to show them on HerediVar once they are ready to be downloaded from HerediCaRe.</div>
+    <div>
+        Bugfixes:
+        <ul>
+            <li>Fixed a bug where the SpliceAI score was not shown correctly when it is "."</li>
+            <li>In rare cases the submission condition in ClinVar submissions is na with a description. This case is now handled properly and does not produce erroneous links.</li>
+            <li>Fixed a bug when the assay comment for splicing assays could not be inserted due to length</li>
+        </ul>
+    </div>
+
+    <div class="underline">v 1.8.1 (23.02.2024)</div>
     <div>
         General changes:
         <ul>
@@ -107,7 +118,6 @@
             <li>Fixed default strength for supporting criteria in ACMG standard scheme</li>
             <li>Fixed wrapping of PVS1_mod criterium</li>
             <li>Fixed a bug where the SpliceAI scores would not show on longer indels</li>
-            <li>Fixed a bug where the SpliceAI score was not shown correctly when it is "."</li>
         </ul>
     </div>
     <div class="underline">v 1.8 (21.02.2024)</div>

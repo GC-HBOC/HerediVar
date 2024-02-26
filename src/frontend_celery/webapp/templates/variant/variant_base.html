@@ -301,9 +301,15 @@
                                             <td>{{ submission.review_status }}</td>
                                             <td>
                                                 {% for clinvar_submission_condition in submission.conditions %}
+                                                    {% if clinvar_submission_condition.condition_id == 'na' %}
+                                                    <div>
+                                                        {{clinvar_submission_condition.title}}
+                                                    </div>
+                                                    {% else %}
                                                     <div>
                                                         {{ macros.external_link(clinvar_submission_condition.title, "https://www.ncbi.nlm.nih.gov/medgen/" + clinvar_submission_condition.condition_id) }}
                                                     </div>
+                                                    {% endif %}
                                                 {% endfor %}
                                             </td>
                                             <td>{{ submission.submitter }}</td>
@@ -434,7 +440,7 @@
                                             {% for assay_metadata_title in assay.metadata %}
                                             <div class="d-flex">
                                                 <div class="width_medium">{{assay.metadata[assay_metadata_title].metadata_type.display_title}}</div>
-                                                <div class="width_medium">{{assay.metadata[assay_metadata_title].value}}</div>
+                                                <div class="width_large flex-grow-1">{{assay.metadata[assay_metadata_title].value}}</div>
                                             </div>
                                             {% endfor %}
                                         </td>
