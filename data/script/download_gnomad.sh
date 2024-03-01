@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 set -o pipefail
-set -o verbose
+#set -o verbose
 
 helpFunction()
 {
@@ -73,39 +73,112 @@ cd $basedir/$foldername
 
 
 ## download gnomAD genome data
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr1.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter --header > gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr2.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr3.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr4.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr5.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr6.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr7.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr8.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr9.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr10.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr11.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr12.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr13.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr14.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr15.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr16.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr17.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr18.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr19.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr20.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr21.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr22.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chrX.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chrY.vcf.bgz | gunzip  | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
-bgzip gnomAD_genome_GRCh38.vcf
-tabix -p vcf gnomAD_genome_GRCh38.vcf.gz
-$ngsbits/VcfCheck -in gnomAD_genome_GRCh38.vcf -ref $grch38 -lines 0
+pids=""
+failed=0
+wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr1.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter --header > gnomAD_genome_GRCh38_chr1.vcf &
+pids="$pids $!"
+for chr_num in 2 3 4 5 X; do
+   echo $chr_num
+   wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr$chr_num.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter > gnomAD_genome_GRCh38_chr$chr_num.vcf &
+   pids="$pids $!"
+done
 
-wget -O - https://gnomad-public-us-east-1.s3.amazonaws.com/release/$mito_version/vcf/genomes/gnomad.genomes.v$mito_version.sites.chrM.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | sed 's/chrM/chrMT/g' > gnomAD_mito_GRCh38.vcf
-bgzip gnomAD_mito_GRCh38.vcf
-tabix -p vcf gnomAD_mito_GRCh38.vcf.gz
-$ngsbits/VcfCheck -in gnomAD_mito_GRCh38.vcf -ref $grch38 -lines 0
+for pid in $pids; do
+    wait $pid || let "RESULT=1"
+done
 
+if [ "$RESULT" == "1" ];
+    then
+       exit 1
+fi
+
+
+for chr_num in 6 7 8 9 10; do
+   echo $chr_num
+   wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr$chr_num.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter > gnomAD_genome_GRCh38_chr$chr_num.vcf &
+   pids="$pids $!"
+done
+
+for pid in $pids; do
+    wait $pid || let "RESULT=1"
+done
+
+if [ "$RESULT" == "1" ];
+    then
+       exit 1
+fi
+
+
+for chr_num in 11 12 13 14 15; do
+   echo $chr_num
+   wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr$chr_num.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter > gnomAD_genome_GRCh38_chr$chr_num.vcf &
+   pids="$pids $!"
+done
+
+for pid in $pids; do
+    wait $pid || let "RESULT=1"
+done
+
+if [ "$RESULT" == "1" ];
+    then
+       exit 1
+fi
+
+
+for chr_num in 16 17 18 19 20 21 22 Y; do
+   echo $chr_num
+   wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr$chr_num.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter > gnomAD_genome_GRCh38_chr$chr_num.vcf &
+   pids="$pids $!"
+done
+
+for pid in $pids; do
+    wait $pid || let "RESULT=1"
+done
+
+if [ "$RESULT" == "1" ];
+    then
+       exit 1
+fi
+
+
+
+
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr1.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter --header > gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr2.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr3.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr4.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr5.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr6.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr7.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr8.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr9.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr10.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr11.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr12.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr13.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr14.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr15.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr16.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr17.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr18.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr19.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr20.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr21.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chr22.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chrX.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+#wget -O - https://storage.googleapis.com/gcp-public-data--gnomad/release/$version/vcf/genomes/gnomad.genomes.v$version.sites.chrY.vcf.bgz | gunzip  | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | python3 $dbconverter >> gnomAD_genome_GRCh38.vcf
+
+
+
+#bgzip gnomAD_genome_GRCh38.vcf
+#tabix -p vcf gnomAD_genome_GRCh38.vcf.gz
+#$ngsbits/VcfCheck -in gnomAD_genome_GRCh38.vcf -ref $grch38 -lines 0
+#
+#wget -O - https://gnomad-public-us-east-1.s3.amazonaws.com/release/$mito_version/vcf/genomes/gnomad.genomes.v$mito_version.sites.chrM.vcf.bgz | gunzip | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | sed 's/chrM/chrMT/g' > gnomAD_mito_GRCh38.vcf
+#bgzip gnomAD_mito_GRCh38.vcf
+#tabix -p vcf gnomAD_mito_GRCh38.vcf.gz
+#$ngsbits/VcfCheck -in gnomAD_mito_GRCh38.vcf -ref $grch38 -lines 0
+#
 
 
 

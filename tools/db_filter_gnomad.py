@@ -22,154 +22,135 @@ else:
 
 include_header = args.header
 
-line = None
 
-while(line is None or line.startswith('##')):
-    line = input_file.readline()
-    if not line.startswith('##INFO') and not line.startswith('#CHROM') and include_header:
-        print(line.strip())
-
-    
 if include_header:
-    # write INFO columns for standard gnomAD scores
-    print('##INFO=<ID=AN,Number=A,Type=Float,Description="Total number of alleles in samples">')
-    print('##INFO=<ID=AF,Number=A,Type=Float,Description="Alternate allele frequency in samples">')
-    print('##INFO=<ID=AC,Number=A,Type=Integer,Description="Alternate allele count for samples">')
-    print('##INFO=<ID=hom,Number=A,Type=Integer,Description="Count of homozygous individuals in samples">')
-    print('##INFO=<ID=hemi,Number=A,Type=Integer,Description="Count of hemizygous individuals in samples">')
-    print('##INFO=<ID=het,Number=A,Type=Integer,Description="Count of heterozygous individuals in samples">')
-    # write INFO columns for non cancer gnomAD scores
-    print('##INFO=<ID=AN_NC,Number=A,Type=Float,Description="Total number of alleles in samples in non_cancer subset">')
-    print('##INFO=<ID=AF_NC,Number=A,Type=Float,Description="Alternate allele frequency in samples in non_cancer subset">')
-    print('##INFO=<ID=AC_NC,Number=A,Type=Integer,Description="Alternate allele count for samples in non_cancer subset">')
-    print('##INFO=<ID=hom_NC,Number=A,Type=Integer,Description="Count of homozygous individuals in samples in non_cancer subset">')
-    print('##INFO=<ID=hemi_NC,Number=A,Type=Integer,Description="Count of hemizygous individuals in samples in non_cancer subset">')
-    print('##INFO=<ID=het_NC,Number=A,Type=Integer,Description="Count of heterozygous individuals in samples in non_cancer subset">')
-    # write INFO columns for popmax
-    print('##INFO=<ID=popmax,Number=A,Type=String,Description="Population with maximum AF">')
-    print('##INFO=<ID=AC_popmax,Number=A,Type=Integer,Description="Allele count in the population with the maximum allele frequency">')
-    print('##INFO=<ID=AN_popmax,Number=A,Type=Integer,Description="Total number of alleles in the population with the maximum allele frequency">')
-    print('##INFO=<ID=AF_popmax,Number=A,Type=Float,Description="Maximum allele frequency across populations">')
+    info_headers = [
+        # write INFO columns for standard gnomAD scores
+        '##INFO=<ID=AN,Number=A,Type=Float,Description="Total number of alleles in samples">',
+        '##INFO=<ID=AF,Number=A,Type=Float,Description="Alternate allele frequency in samples">',
+        '##INFO=<ID=AC,Number=A,Type=Integer,Description="Alternate allele count for samples">',
+        '##INFO=<ID=hom,Number=A,Type=Integer,Description="Count of homozygous individuals in samples">',
+        '##INFO=<ID=hemi,Number=A,Type=Integer,Description="Count of hemizygous individuals in samples">',
+        '##INFO=<ID=het,Number=A,Type=Integer,Description="Count of heterozygous individuals in samples">',
+        '##INFO=<ID=faf95,Number=A,Type=Float,Description="Filtering allele frequency (using Poisson 95% CI)">',
+        '##INFO=<ID=faf99,Number=A,Type=Float,Description="Filtering allele frequency (using Poisson 99% CI)">',
+        # write INFO columns for non cancer gnomAD scores
+        '##INFO=<ID=AN_NC,Number=A,Type=Float,Description="Total number of alleles in samples in non_cancer subset">',
+        '##INFO=<ID=AF_NC,Number=A,Type=Float,Description="Alternate allele frequency in samples in non_cancer subset">',
+        '##INFO=<ID=AC_NC,Number=A,Type=Integer,Description="Alternate allele count for samples in non_cancer subset">',
+        '##INFO=<ID=hom_NC,Number=A,Type=Integer,Description="Count of homozygous individuals in samples in non_cancer subset">',
+        '##INFO=<ID=hemi_NC,Number=A,Type=Integer,Description="Count of hemizygous individuals in samples in non_cancer subset">',
+        '##INFO=<ID=het_NC,Number=A,Type=Integer,Description="Count of heterozygous individuals in samples in non_cancer subset">',
+        # write INFO columns for popmax
+        '##INFO=<ID=popmax,Number=A,Type=String,Description="Population with maximum AF">',
+        '##INFO=<ID=AC_popmax,Number=A,Type=Integer,Description="Allele count in the population with the maximum allele frequency">',
+        '##INFO=<ID=AN_popmax,Number=A,Type=Integer,Description="Total number of alleles in the population with the maximum allele frequency">',
+        '##INFO=<ID=AF_popmax,Number=A,Type=Float,Description="Maximum allele frequency across populations">',
+        '##INFO=<ID=faf95_popmax,Number=A,Type=Float,Description="Filtering allele frequency (using Poisson 95% CI) for the population with the maximum allele frequency">'
+    ]
+    functions.write_vcf_header(info_headers)
 
 
-    print(line.strip()) # prints the column spec
+def get_annotation(info: str, annot_id: str) -> str:
+    an = ""
+    if annot_id in info:
+        an = info[info.find(annot_id)+len(annot_id):]
+        an = an[:an.find(';')]
+    return an
 
 
-while line != "":
-    line = input_file.readline().strip()
-    if len(line) > 0:
-        entries = line.split('\t')
-        infos = entries[7].split(';')
+for line in input_file:
+    line = line.strip()
 
-        chr_num = functions.validate_chr(entries[0])
-        if not chr_num:
-            continue
+    if line.startswith('#') or line == '':
+        continue
 
-        is_gonosome = (chr_num == "X") or (chr_num == "Y")
-        is_nonpar = "nonpar" in entries[7]
+    parts = line.split('\t')
+    info = parts[7]
 
-        # total gnomAD
-        an = ''
-        ac = ''
-        af = ''
-        hom = ''
-        ac_xy = ''
-        hemi = ''
-        het = ''
+    chr_num = functions.validate_chr(parts[0])
+    if not chr_num:
+        continue
+    parts[0] = "chr" + chr_num
+    parts[6] = "."
 
-        # non cancer gnomAD
-        an_nc = ''
-        ac_nc = ''
-        af_nc = ''
-        hom_nc = ''
-        ac_xy_nc = ''
-        hemi_nc = ''
-        het_nc = ''
+    is_gonosome = (chr_num == "X") or (chr_num == "Y")
+    is_nonpar = "nonpar" in parts[7]
 
-        # popmax scores
-        popmax = ''
-        ac_popmax = ''
-        an_popmax = ''
-        af_popmax = ''
+    # total gnomAD
+    an = get_annotation(info, "AN=")
+    af = get_annotation(info, "AF=")
+    ac = get_annotation(info, "AC=")
+    hom = get_annotation(info, "nhomalt=")
+    ac_xy = get_annotation(info, "AC_XY=")
+    faf95 = get_annotation(info, "faf95=")
+    faf99 = get_annotation(info, "faf99=")
 
-        for info in infos:
-            if info.startswith('AF='):
-                af = info[3:]
-            elif info.startswith('nhomalt='):
-                hom = info[8:]
-            elif info.startswith('popmax='):
-                popmax = info[7:]
-            elif info.startswith('AC_popmax='):
-                ac_popmax = info[10:]
-            elif info.startswith('AN_popmax='):
-                an_popmax = info[10:]
-            elif info.startswith('AF_popmax='):
-                af_popmax = info[10:]
-            elif info.startswith('AC_XY=') and is_gonosome and is_nonpar:
-                ac_xy = info[8:]
-            elif info.startswith('AC='):
-                ac = info[3:]
-            elif info.startswith('AN='):
-                an = info[3:]
-            elif info.startswith('AN_non_cancer='):
-                an_nc = info[14:]
-            elif info.startswith('AF_non_cancer='):
-                af_nc = info[14:]
-            elif info.startswith('AC_non_cancer='):
-                ac_nc = info[14:]
-            elif info.startswith('nhomalt_non_cancer='):
-                hom_nc = info[19:]
-            elif info.startswith('AC_non_cancer_XY='):
-                ac_xy_nc = info[17:]
+    # non cancer gnomAD
+    popmax = get_annotation(info, "popmax=")
+    ac_popmax = get_annotation(info, "AC_popmax=")
+    an_popmax = get_annotation(info, "AN_popmax=")
+    af_popmax = get_annotation(info, "AF_popmax=")
+    faf95_popmax = get_annotation(info, "faf95_popmax=")
     
-        #calculate the number of heterozygotes
-        if hom != '' and ac != '':
-            het = str(int(ac) - (2*int(hom)))
-        
-        #calculate the number of hemizygotes
-        if ac_xy != '' and chr_num == "X" and is_nonpar:
-            hemi = ac_xy
-        elif chr_num == "Y":
-            hemi = ac # every variant on Y is hemizygous
+    # popmax scores
+    an_nc = get_annotation(info, "AN_non_cancer=")
+    af_nc = get_annotation(info, "AF_non_cancer=")
+    ac_nc = get_annotation(info, "AC_non_cancer=")
+    hom_nc = get_annotation(info, "nhomalt_non_cancer=")
+    ac_xy_nc = get_annotation(info, "AC_non_cancer_XY=")
+    
+    #calculate the number of heterozygotes
+    het = ""
+    if hom != '' and ac != '':
+        het = str(int(ac) - (2*int(hom)))
+    #calculate the number of hemizygotes
+    hemi = ""
+    if ac_xy != '' and chr_num == "X" and is_nonpar:
+        hemi = ac_xy
+    elif chr_num == "Y":
+        hemi = ac # every variant on Y is hemizygous
 
-        #calculate the number of heterozygotes for non cancer subset
-        if hom_nc != '' and ac_nc != '':
-            het_nc = str(int(ac_nc) - (2*int(hom_nc)))
-        
-        #calculate the number of hemizygotes for non cancer subset
-        if ac_xy_nc != '' and chr_num == "X" and is_nonpar:
-            hemi_nc = ac_xy_nc
-        elif chr_num == "Y":
-            hemi_nc = ac_nc # every variant on Y is hemizygous
+    #calculate the number of heterozygotes for non cancer subset
+    het_nc = ""
+    if hom_nc != '' and ac_nc != '':
+        het_nc = str(int(ac_nc) - (2*int(hom_nc)))
+    #calculate the number of hemizygotes for non cancer subset
+    hemi_nc = ""
+    if ac_xy_nc != '' and chr_num == "X" and is_nonpar:
+        hemi_nc = ac_xy_nc
+    elif chr_num == "Y":
+        hemi_nc = ac_nc # every variant on Y is hemizygous
 
 
-        entries[0] = "chr" + chr_num
+    info = ''
+    # standard gnomAD scores
+    info = functions.collect_info(info, "AN=", an)
+    info = functions.collect_info(info, "AF=", af)
+    info = functions.collect_info(info, "AC=", ac)
+    info = functions.collect_info(info, "hom=", hom)
+    info = functions.collect_info(info, "het=", het)
+    info = functions.collect_info(info, "hemi=", hemi)
+    info = functions.collect_info(info, "faf95=", faf95)
+    info = functions.collect_info(info, "faf99=", faf99)
+    # non cancer gnomAD scores
+    info = functions.collect_info(info, "AN_NC=", an_nc)
+    info = functions.collect_info(info, "AF_NC=", af_nc)
+    info = functions.collect_info(info, "AC_NC=", ac_nc)
+    info = functions.collect_info(info, "hom_NC=", hom_nc)
+    info = functions.collect_info(info, "het_NC=", het_nc)
+    info = functions.collect_info(info, "hemi_NC=", hemi_nc)
+    # popmax
+    info = functions.collect_info(info, "popmax=", popmax)
+    info = functions.collect_info(info, "AC_popmax=", ac_popmax)
+    info = functions.collect_info(info, "AN_popmax=", an_popmax)
+    info = functions.collect_info(info, "AF_popmax=", af_popmax)
+    info = functions.collect_info(info, "faf95_popmax=", faf95_popmax)
 
-        info = ''
-        # standard gnomAD scores
-        info = functions.collect_info(info, "AN=", an)
-        info = functions.collect_info(info, "AF=", af)
-        info = functions.collect_info(info, "AC=", ac)
-        info = functions.collect_info(info, "hom=", hom)
-        info = functions.collect_info(info, "het=", het)
-        info = functions.collect_info(info, "hemi=", hemi)
-        # non cancer gnomAD scores
-        info = functions.collect_info(info, "AN_NC=", an_nc)
-        info = functions.collect_info(info, "AF_NC=", af_nc)
-        info = functions.collect_info(info, "AC_NC=", ac_nc)
-        info = functions.collect_info(info, "hom_NC=", hom_nc)
-        info = functions.collect_info(info, "het_NC=", het_nc)
-        info = functions.collect_info(info, "hemi_NC=", hemi_nc)
-        # popmax
-        info = functions.collect_info(info, "popmax=", popmax)
-        info = functions.collect_info(info, "AC_popmax=", ac_popmax)
-        info = functions.collect_info(info, "AN_popmax=", an_popmax)
-        info = functions.collect_info(info, "AF_popmax=", af_popmax)
+    if info == '':
+        info = '.'
 
-        if info == '':
-            info = '.'
-
-        print('\t'.join(entries[:7]) + '\t' + info)
+    print('\t'.join(parts[:7]) + '\t' + info)
 
 
 # für #hemi: 
