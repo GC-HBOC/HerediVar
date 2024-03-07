@@ -154,6 +154,13 @@ class AllAnnotations:
     gnomadm_ac_hom: Annotation = None
     gnomad_popmax_AF: Annotation = None
     gnomad_popmax_AC: Annotation = None
+    faf95_popmax: Annotation = None
+    gnomad_ac_nc: Annotation = None
+    gnomad_af_nc: Annotation = None
+    gnomad_hom_nc: Annotation = None
+    gnomad_hemi_nc: Annotation = None
+    gnomad_het_nc: Annotation = None
+
 
     brca_exchange_clinical_significance: Annotation = None
     arup_classification: Annotation = None

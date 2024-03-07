@@ -50,8 +50,8 @@ if webapp_env == 'dev':
     chainfile_path = joinpaths(ref_genome_dir, "hg19ToHg38.fixed.over.chain.gz")
     
     #metadata
-    gnomad_path = joinpaths(datadir, "gnomAD_bac/gnomAD_genome_v3.1.2_GRCh38.vcf.gz")
-    gnomad_m_path = joinpaths(datadir, "gnomAD_bac/gnomad_m.vcf.gz")
+    gnomad_path = joinpaths(datadir, "gnomAD/gnomAD_genome_GRCh38.vcf.gz")
+    gnomad_m_path = joinpaths(datadir, "gnomAD/gnomAD_mito_GRCh38.vcf.gz")
     phylop_file_path = joinpaths(datadir, "phyloP/hg38.phyloP100way.bw")
     dbsnp_path = joinpaths(datadir, "dbSNP/dbSNP_v155.vcf.gz")
     revel_path = joinpaths(datadir, "REVEL/revel_grch38_all_chromosomes.vcf.gz")
@@ -248,8 +248,8 @@ elif webapp_env == 'prod':
 
     
     #metadata
-    gnomad_path = joinpaths(datadir, "gnomAD/gnomAD_genome_v3.1.2_GRCh38.vcf.gz")
-    gnomad_m_path  = joinpaths(datadir, "gnomAD/gnomAD_genome_v3.1.mito_GRCh38.vcf.gz")
+    gnomad_path = joinpaths(datadir, "gnomAD/gnomAD_genome_GRCh38.vcf.gz")
+    gnomad_m_path  = joinpaths(datadir, "gnomAD/gnomAD_mito_GRCh38.vcf.gz")
     phylop_file_path = joinpaths(datadir, "phyloP/hg38.phyloP100way.bw")
     dbsnp_path = joinpaths(datadir, "dbSNP/dbSNP_v155.vcf.gz")
     revel_path = joinpaths(datadir, "REVEL/revel_grch38_all_chromosomes.vcf.gz")

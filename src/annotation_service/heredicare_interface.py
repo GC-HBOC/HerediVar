@@ -164,6 +164,9 @@ class Heredicare(metaclass=Singleton):
         if resp.status_code == 401: # unauthorized
             message = "ERROR: HerediCare API get vid list endpoint returned an HTTP 401, unauthorized error. Attempting retry."
             status = "retry"
+        elif resp.status_code == 404: # deleted
+            message = "WARNING: The HerediCare API returned status code 404 For vid " + str(vid)
+            status = "deleted"
         elif resp.status_code != 200:
             message = "ERROR: HerediCare API get variant details endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
             status = "error"

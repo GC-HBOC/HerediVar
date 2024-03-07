@@ -89,13 +89,13 @@ class automatic_classification_job(Job):
             current_criterium = classification_result[criterium_name]
             conn.insert_automatic_classification_criterium_applied(
                 automatic_classification_id = automatic_classification_id,
-                name = criterium_name,
+                name = criterium_name.split('_')[0],
                 rule_type = current_criterium["rule_type"],
                 evidence_type = current_criterium["evidence_type"],
                 strength = current_criterium["strength"],
                 type = self.evidence_type2prefix(current_criterium['evidence_type']) + self.strength2postfix(current_criterium['strength']),
                 comment = current_criterium["comment"],
-                is_selected = 1 if current_criterium["status"] else 0
+                state = "selected" if current_criterium["status"] else "unselected"
             )
 
         return status_code, err_msg
@@ -235,14 +235,17 @@ class automatic_classification_job(Job):
         if all([x is not None for x in [variant.annotations.gnomad_af, variant.annotations.gnomad_ac]]):
             gnomad_scores["AF"] = variant.annotations.gnomad_af.get_value()
             gnomad_scores["AC"] = variant.annotations.gnomad_ac.get_value()
-            if all([x is not None for x in [variant.annotations.gnomad_popmax, variant.annotations.gnomad_popmax_AC, variant.annotations.gnomad_popmax_AF]]):
-                gnomad_scores["popmax"] = variant.annotations.gnomad_popmax.get_value()
+            if all([x is not None for x in [variant.annotations.gnomad_popmax, variant.annotations.gnomad_popmax_AC, variant.annotations.gnomad_popmax_AF, variant.annotations.faf95_popmax]]):
+                gnomad_scores["subpopulation"] = variant.annotations.gnomad_popmax.get_value()
                 gnomad_scores["popmax_AC"] = variant.annotations.gnomad_popmax_AC.get_value()
                 gnomad_scores["popmax_AF"] = variant.annotations.gnomad_popmax_AF.get_value()
+                gnomad_scores["faf_popmax_AF"] = variant.annotations.faf95_popmax.get_value()
             else: # if the variant is missing popmax values simply use the standard af and ac
-                gnomad_scores["popmax"] = "ALL"
+                gnomad_scores["subpopulation"] = "ALL"
                 gnomad_scores["popmax_AC"] = variant.annotations.gnomad_ac.get_value()
                 gnomad_scores["popmax_AF"] = variant.annotations.gnomad_af.get_value()
+                gnomad_scores["faf_popmax_AF"] = variant.annotations.gnomad_af.get_value()
+            
         if len(gnomad_scores) > 0:
             result["gnomAD"] = gnomad_scores
 
@@ -345,9 +348,9 @@ class automatic_classification_job(Job):
         cancerhotspots_af = variant.annotations.cancerhotspots_af
         cancerhotspots = {}
         if cancerhotspots_af is not None:
-            cancerhotspots["AF"] = cancerhotspots_af
+            cancerhotspots["AF"] = cancerhotspots_af.get_value()
         if cancerhotspots_ac is not None:
-            cancerhotspots["AC"] = cancerhotspots_ac
+            cancerhotspots["AC"] = cancerhotspots_ac.get_value()
         result["cancer_hotspots"] = cancerhotspots
 
         validate_input(result) # raises an error on fails

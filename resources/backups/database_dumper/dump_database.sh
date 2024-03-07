@@ -29,7 +29,7 @@ echo $DATE > most_recent_dump.txt
 
 
 # information after init_db.py
-##mysqldump --quick -h sql.img.med.uni-tuebingen.de -P 3306 -u ahdoebm1 -p --column-statistics=0 --no-tablespaces --no-create-info -r /mnt/storage2/users/ahdoebm1/HerediVar/resources/backups/database_dumper/init_db/init_transcripts.sql HerediVar_ahdoebm1  gene gene_alias transcript exon
+##mysqldump --quick -h sql.img.med.uni-tuebingen.de -P 3306 -u ahdoebm1 -p --column-statistics=0 --no-tablespaces -r /mnt/storage2/users/ahdoebm1/HerediVar/resources/backups/database_dumper/init_db/init_transcripts_w_tables.sql HerediVar_ahdoebm1  gene gene_alias transcript exon
 
 ##mysqldump --quick -h sql.img.med.uni-tuebingen.de -P 3306 -u ahdoebm1 -p --column-statistics=0 --no-tablespaces -r /mnt/storage2/users/ahdoebm1/HerediVar/resources/backups/database_dumper/init_db/task_force_protein_domains.sql HerediVar_ahdoebm1 task_force_protein_domains
 

@@ -2365,7 +2365,7 @@ class Connection:
                 all_criteria = []
                 for automatic_classification_criterium in automatic_classification_criteria:
                     automatic_classification_criterium_id = int(automatic_classification_criterium[0])
-                    name = automatic_classification_criterium[1].replace('_protein', '').replace('_splicing', '')
+                    name = automatic_classification_criterium[1]#.replace('_protein', '').replace('_splicing', '')
                     rule_type = automatic_classification_criterium[2]
                     evidence_type = automatic_classification_criterium[3]
                     state = automatic_classification_criterium[4]
@@ -3265,10 +3265,10 @@ class Connection:
         self.conn.commit()
         return self.get_last_insert_id()
 
-    def insert_automatic_classification_criterium_applied(self, automatic_classification_id, name, rule_type, evidence_type, strength, type, comment, is_selected):
+    def insert_automatic_classification_criterium_applied(self, automatic_classification_id, name, rule_type, evidence_type, strength, type, comment, state):
         comment = functions.encode_html(comment)
-        command = "INSERT INTO automatic_classification_criteria_applied (automatic_classification_id, name, rule_type, evidence_type, strength, type, comment, is_selected) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (automatic_classification_id, name, rule_type, evidence_type, strength, type, comment, is_selected))
+        command = "INSERT INTO automatic_classification_criteria_applied (automatic_classification_id, name, rule_type, evidence_type, strength, type, comment, state) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (automatic_classification_id, name, rule_type, evidence_type, strength, type, comment, state))
         self.conn.commit()
 
     def clear_automatic_classification(self, variant_id):

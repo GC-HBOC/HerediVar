@@ -57,9 +57,12 @@ class heredicare_job(Job):
                 if tries > 0:
                     time.sleep(30 * tries)
                 tries += 1
-            if status == "error":
-                err_msg += "There was an error during variant retrieval from heredicare: " + str(message)
+            if status in ["error", "deleted"]:
+                err_msg += "There was an error during variant retrieval from heredicare: " + str(message) + ". VID: " + str(vid)
                 status_code = 1
+            #elif status == "deleted":
+            #    err_msg += str(message)
+            #    conn.delete_external_id(vid, heredicare_vid_annotation_type_id, variant_id)
             else:
                 #print(heredicare_variant)
                 n_fam = heredicare_variant["N_FAM"]

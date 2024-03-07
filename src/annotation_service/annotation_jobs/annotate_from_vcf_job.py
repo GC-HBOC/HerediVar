@@ -60,10 +60,19 @@ class annotate_from_vcf_job(Job):
         self.insert_annotation(variant_id, info, "GnomAD_hom=", recent_annotation_ids['gnomad_hom'], conn)
         self.insert_annotation(variant_id, info, "GnomAD_hemi=", recent_annotation_ids['gnomad_hemi'], conn)
         self.insert_annotation(variant_id, info, "GnomAD_het=", recent_annotation_ids['gnomad_het'], conn)
+
+        self.insert_annotation(variant_id, info, "GnomAD_AC_NC=", recent_annotation_ids['gnomad_ac_nc'], conn)
+        self.insert_annotation(variant_id, info, "GnomAD_AF_NC=", recent_annotation_ids['gnomad_af_nc'], conn)
+        self.insert_annotation(variant_id, info, "GnomAD_hom_NC=", recent_annotation_ids['gnomad_hom_nc'], conn)
+        self.insert_annotation(variant_id, info, "GnomAD_hemi_NC=", recent_annotation_ids['gnomad_hemi_nc'], conn)
+        self.insert_annotation(variant_id, info, "GnomAD_het_NC=", recent_annotation_ids['gnomad_het_nc'], conn)
+
         self.insert_annotation(variant_id, info, "GnomAD_popmax=", recent_annotation_ids['gnomad_popmax'], conn, value_modifier_function = lambda value : value.upper())
         self.insert_annotation(variant_id, info, "GnomAD_AF_popmax=", recent_annotation_ids['gnomad_popmax_AF'], conn)
         self.insert_annotation(variant_id, info, "GnomADm_AC_hom=", recent_annotation_ids['gnomadm_ac_hom'], conn)
         self.insert_annotation(variant_id, info, "GnomAD_AC_popmax=", recent_annotation_ids['gnomad_popmax_AC'], conn)
+        self.insert_annotation(variant_id, info, "faf95_popmax=", recent_annotation_ids['faf95_popmax'], conn)
+
 
         self.insert_annotation(variant_id, info, "BRCA_exchange_clin_sig_short=", recent_annotation_ids['brca_exchange_clinical_significance'], conn, value_modifier_function = lambda value : value.replace('_', ' ').replace(',', ';'))
 
@@ -246,7 +255,7 @@ class annotate_from_vcf_job(Job):
 
         ## add gnomAD annotation
         if self.job_config['do_gnomad']:
-            config_file.write(paths.gnomad_path + "\tGnomAD\tAF,AC,hom,hemi,het,popmax,AF_popmax,AC_popmax\t\n")
+            config_file.write(paths.gnomad_path + "\tGnomAD\tAF,AC,hom,hemi,het,AF_NC,AC_NC,hom_NC,hemi_NC,het_NC,popmax,AF_popmax,AC_popmax,faf95_popmax\t\n")
             config_file.write(paths.gnomad_m_path + "\tGnomADm\tAC_hom\t\n")
 
         ## add BRCA_exchange clinical significance
