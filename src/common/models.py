@@ -859,7 +859,9 @@ class HeredicareAnnotation:
     def to_vcf(self, prefix = True):
         consensus_comment = "" if self.consensus_classification.comment is None else self.consensus_classification.comment
         consensus_date = "" if self.consensus_classification.classification_date is None else self.consensus_classification.classification_date.strftime('%Y-%m-%d')
-        center_specific_vcf = functions.process_multiple(self.center_classifications, sep="~24", do_prefix = False)
+        center_specific_vcf = ""
+        if self.center_classifications is not None:
+            center_specific_vcf = functions.process_multiple(self.center_classifications, sep="~24", do_prefix = False)
         heredicare_annotation_vcf = "~7C".join([str(x) for x in [self.vid, self.n_fam, self.n_pat, self.lr_cooc, self.lr_coseg, self.lr_family, self.consensus_classification.selected_class_to_num(), consensus_comment, consensus_date, center_specific_vcf]])
         if prefix:
             heredicare_annotation_vcf = "heredicare_annotation~1Y" + heredicare_annotation_vcf
