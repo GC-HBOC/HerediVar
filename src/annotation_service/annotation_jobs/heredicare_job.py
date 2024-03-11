@@ -6,6 +6,7 @@ import os
 from annotation_service.heredicare_interface import Heredicare
 import time
 from datetime import datetime
+from urllib.parse import unquote
 
 
 ## annotate variant with hexplorer splicing scores (Hexplorer score + HBond score)
@@ -41,10 +42,11 @@ class heredicare_job(Job):
             return status_code, err_msg
 
         heredicare_interface = Heredicare()
-        conn.clear_heredicare_annotation(variant_id)
+        #conn.clear_heredicare_annotation(variant_id)
         
         heredicare_vid_annotation_type_id = conn.get_most_recent_annotation_type_id('heredicare_vid')
         vids = conn.get_external_ids_from_variant_id(variant_id, annotation_type_id=heredicare_vid_annotation_type_id) # the vids are imported from the import variants admin page
+        conn.delete_unknown_heredicare_annotations(variant_id) # remove legacy annotations from vids that are deleted now
 
         #print(vids)
         
@@ -57,12 +59,13 @@ class heredicare_job(Job):
                 if tries > 0:
                     time.sleep(30 * tries)
                 tries += 1
-            if status in ["error", "deleted"]:
+            if status in ["error"]:
                 err_msg += "There was an error during variant retrieval from heredicare: " + str(message) + ". VID: " + str(vid)
                 status_code = 1
-            #elif status == "deleted":
-            #    err_msg += str(message)
-            #    conn.delete_external_id(vid, heredicare_vid_annotation_type_id, variant_id)
+            elif status == "deleted":
+                err_msg += str(message)
+                conn.delete_external_id(vid, heredicare_vid_annotation_type_id, variant_id)
+                conn.delete_unknown_heredicare_annotations()
             else:
                 #print(heredicare_variant)
                 n_fam = heredicare_variant["N_FAM"]
@@ -84,15 +87,34 @@ class heredicare_job(Job):
 
                 heredicare_annotation_id = None
                 if status_code == 0:
-                    heredicare_annotation_id = conn.insert_heredicare_annotation(variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family)
+                    heredicare_annotation_id = conn.insert_update_heredicare_annotation(variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family)
 
                 for key in heredicare_variant:
-                    if key.startswith("PATH_Z") and heredicare_variant[key] is not None:
+                    if key.startswith("PATH_Z"):
                         zid = int(key[6:])
-                        classification = heredicare_variant[key] if heredicare_variant[key] != "-1" else None
-                        conn.insert_heredicare_center_classification(heredicare_annotation_id, zid, classification, comment = None) # TODO! COMMENT!
-
+                        heredicare_center_classification_raw = heredicare_variant[key]
+                        if heredicare_center_classification_raw is not None and heredicare_variant[key] == "-1":
+                            heredicare_center_classification_raw = None
+                        classification, comment = self.preprocess_heredicare_center_classification(heredicare_center_classification_raw)
+                        if classification is not None:
+                            conn.insert_update_heredicare_center_classification(heredicare_annotation_id, zid, classification, comment)
+                        else:
+                            conn.delete_heredicare_center_classification(heredicare_annotation_id, zid)
 
         return status_code, err_msg
 
 
+
+    def preprocess_heredicare_center_classification(self, info):
+        if info is None:
+            return None, None
+        parts = info.split('|')
+        classification = parts[0]
+        comment = parts[1]
+        comment = unquote(comment)
+        comment = comment.strip()
+        if comment == "" or comment == "<k.A. zur Begründung>":
+            comment = None
+        return classification, comment
+
+        

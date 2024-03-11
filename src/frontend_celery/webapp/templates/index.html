@@ -93,59 +93,25 @@
 <div class="bst bsb">
     <h4>Changelog</h4>
 
-    <div class="underline">v 1.8.2 (26.02.2024)</div>
+
+    <div class="underline">v 1.9 ()</div>
     <div class="btn-pvs">!! The automatic classification algorithm is currently under construction. HerediVar is already prepared for it. Thus, you might encounter disabled buttons or dummy data. It will be enabled in a future update</div>
     <div class="btn-pvs">!! Scores from likelihood ratio tests are currently under construction. A simple reannotation is required to show them on HerediVar once they are ready to be downloaded from HerediCaRe.</div>
     <div>
+        General changes:
+        <ul>
+            <li>Added comments from HerediCaRe center specific classifications</li>
+            <li>Added gnomAD non-cancer scores & faf95 popmax value</li>
+        </ul>
         Bugfixes:
         <ul>
-            <li>Fixed a bug where the SpliceAI score was not shown correctly when it is "."</li>
-            <li>In rare cases the submission condition in ClinVar submissions is na with a description. This case is now handled properly and does not produce erroneous links.</li>
-            <li>Fixed a bug when the assay comment for splicing assays could not be inserted due to length</li>
+            <li>Fixed a bug where the HerediCaRe center specific classifications were not shown when the HerediCaRe consensus classification was unavailable</li>
+            <li>When there were multiple rows in the HerediCaRe classifications table the center details button would always open and close details of all rows</li>
+            <li>Previously, an empty HerediCaRe table was shown on the variant details page when the variant was known to HerediCaRe, but was not classified. The empty table was removed in this case</li>
+            <li>Longer insertions were previously clogging the header line. This was fixed by cropping the reference and alternative bases if their length is large</li>
         </ul>
     </div>
 
-    <div class="underline">v 1.8.1 (23.02.2024)</div>
-    <div>
-        General changes:
-        <ul>
-            <li>Changed is_selected for classifications to a more descriptive state information in downloaded vcf files</li>
-        </ul>
-        Bugfixes:
-        <ul>
-            <li>Fixed a bug when there were no HerediCaRe center classifications but a consensus classification from HerediCaRe</li>
-            <li>A selected criterium would automatically uncheck if a mutually exclusive criterium was unselected and the mutually exclusive criterium itself is mutually exclusive with the selected criterium</li>
-            <li>Fixed default strength for supporting criteria in ACMG standard scheme</li>
-            <li>Fixed wrapping of PVS1_mod criterium</li>
-            <li>Fixed a bug where the SpliceAI scores would not show on longer indels</li>
-        </ul>
-    </div>
-    <div class="underline">v 1.8 (21.02.2024)</div>
-    <div>
-        General changes:
-        <ul>
-            <li>Added scores from likelihood ratio tests. </li>
-            <li>Removed BayesDel annotations from TP53 DB, because they are annotated from a dedicated BayesDel anntation anyway.</li>
-            <li>Improved Cancerhotspots internal representation, display & representation in the INFO column of vcfs</li>
-            <li>Added HerediCaRe center specific classifications</li>
-            <li>Added CSpec BRCA1/2 assays to annotation algorithm</li>
-            <li>Copy evidence of user classifications to a consensus classification now also automatically selects the state correctly</li>
-        </ul>
-        Bugfixes:
-        <ul>
-            <li>Fixed a bug where some variants got raw SpliceAI scores instead of the masked ones</li>
-            <li>When constructing an URL for the variant details page it was previously not possible to omit the "chr" prefix for the chromosome</li>
-            <li>Task force protein domains are now shown correctly</li>
-            <li>Transcripts on the negative strand were shown as if they were on the positive strand in the IGV browser</li>
-            <li>Fixed a bug when the user clicked on logout even though the user was already logged out (for example because of inactivity)</li>
-            <li>The default scheme was not properly working. It would automatically select the last scheme in the list as default no matter what was selected on the admin dashboard</li>
-            <li>Fixed a bug when updating ClinVar submissions</li>
-            <li>When selecting any BP criterium the enigma BRCA1/2 schemes would instantly switch to class 2. This is now fixed and only BP1_str triggers class 2</li>
-            <li>Previously the class by scheme was not updated correctly when the user updated their classification</li>
-            <li>Fixed a bug in the criteria column of the automatic classification results that would shrink to width zero when the screen is resized</li>
-            <li>Fixed a bug where unselected criteria where shown as selected for consensus classifications</li>
-        </ul>
-    </div>
     <a class="btn btn-outline-primary" href="{{url_for('main.changelog')}}">previous changelog</a>
 </div>
 

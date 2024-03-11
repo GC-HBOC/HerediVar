@@ -39,10 +39,13 @@ class Heredicare(metaclass=Singleton):
     bearer_timestamp = None
 
     def __init__(self):
+        #OLD URL: "https://hazel.imise.uni-leipzig.de"
         self.base_url = "https://hazel.imise.uni-leipzig.de"
+        #https://hazel.imise.uni-leipzig.de:8443/pids2/heredivar/vars/get/:id
         self.endpoints = {"bearer": "pids2/heredivar/oauth/token",
-                          "vid_list": "pids2/heredivar/get/vars",
-                          "variant": "pids2/heredivar/vars"}
+                          "vid_list": "pids2/heredivar/vars/list",
+                          "variant": "pids2/heredivar/vars/get",
+                          "info": "pids2/heredivar/vars/info"}
         #self.bearer = None
         #self.bearer_timestamp = None
 
@@ -164,9 +167,6 @@ class Heredicare(metaclass=Singleton):
         if resp.status_code == 401: # unauthorized
             message = "ERROR: HerediCare API get vid list endpoint returned an HTTP 401, unauthorized error. Attempting retry."
             status = "retry"
-        elif resp.status_code == 404: # deleted
-            message = "WARNING: The HerediCare API returned status code 404 For vid " + str(vid)
-            status = "deleted"
         elif resp.status_code != 200:
             message = "ERROR: HerediCare API get variant details endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
             status = "error"

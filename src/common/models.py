@@ -900,6 +900,19 @@ class AbstractVariant(AbstractDataclass):
 
     external_ids: Any = None # list of Annotations
 
+    def has_heredicare_classifications(self) -> bool:
+        result = False
+        if self.heredicare_annotations is not None:
+            for heredicare_annotation in self.heredicare_annotations:
+                if heredicare_annotation.consensus_classification.selected_class is not None:
+                    result = True
+                    break
+                if heredicare_annotation.center_classifications is not None:
+                    result = True
+                    break
+        return result
+
+
     def order_assays_by_type(self):
         # dict of assay_type title -> assay
         result = {}
@@ -1141,7 +1154,7 @@ class AbstractVariant(AbstractDataclass):
         pass
 
     @abstractmethod
-    def get_string_repr(self):
+    def get_string_repr(self, abbreviate = False):
         pass
 
 @dataclass
@@ -1218,8 +1231,15 @@ class Variant(AbstractVariant):
         #print(variant_vcf)
         return headers, variant_vcf
     
-    def get_string_repr(self):
-        return '-'.join([self.chrom, str(self.pos), self.ref, self.alt])
+    def get_string_repr(self, abbreviate = False):
+        ref = self.ref
+        alt = self.alt
+        if abbreviate:
+            if len(ref) > 100:
+                ref = ref[:100] + "..."
+            if len(alt) > 100:
+                alt = alt[:100] + "..."
+        return '-'.join([self.chrom, str(self.pos), ref, alt])
 
 
 @dataclass
@@ -1327,7 +1347,7 @@ class SV_Variant(AbstractVariant):
         #print(variant_vcf)
         return headers, variant_vcf
 
-    def get_string_repr(self):
+    def get_string_repr(self, abbreviate = False):
         return '-'.join([self.chrom, str(self.start), str(self.end), self.sv_type])
     
     def get_custom_hgvs(self, hgvs_type):

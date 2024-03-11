@@ -2498,14 +2498,15 @@ class Connection:
                     link = assay[2]
                     assay_metadata_dict = {}
                     metadata_raw = self.get_assay_metadata(assay_id)
-                    for metadata in metadata_raw:
-                        assay_metadata_id = metadata[0]
-                        assay_metadata_type_id = metadata[1]
-                        assay_metadata_value = metadata[2]
-                        assay_metadata_type_raw = self.get_assay_metadata_type(assay_metadata_type_id)
-                        assay_metadata_type = self.convert_assay_metadata_type(assay_metadata_type_raw)
-                        assay_metadata = models.Assay_Metadata(id = assay_metadata_id, metadata_type = assay_metadata_type, value = assay_metadata_value)
-                        assay_metadata_dict[assay_metadata_type.title] = assay_metadata
+                    if metadata_raw is not None:
+                        for metadata in metadata_raw:
+                            assay_metadata_id = metadata[0]
+                            assay_metadata_type_id = metadata[1]
+                            assay_metadata_value = metadata[2]
+                            assay_metadata_type_raw = self.get_assay_metadata_type(assay_metadata_type_id)
+                            assay_metadata_type = self.convert_assay_metadata_type(assay_metadata_type_raw)
+                            assay_metadata = models.Assay_Metadata(id = assay_metadata_id, metadata_type = assay_metadata_type, value = assay_metadata_value)
+                            assay_metadata_dict[assay_metadata_type.title] = assay_metadata
                     new_assay = models.Assay(id = int(assay_id), assay_type_id = assay_type_id, type_title=assay_type_name, metadata = assay_metadata_dict, date = date, link = link)
                     assays.append(new_assay)
         
@@ -2987,6 +2988,43 @@ class Connection:
         self.cursor.execute(command, (variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family))
         self.conn.commit()
         return self.get_last_insert_id()
+
+    def insert_update_heredicare_annotation(self, variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family):
+        #"INSERT INTO classification_scheme (name, version, display_name, type, reference) VALUES (%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE display_name = %s, type = %s, reference = %s"
+        command = """INSERT INTO variant_heredicare_annotation (variant_id, vid, n_fam, n_pat, consensus_class, date, comment, lr_cooc, lr_coseg, lr_family) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON DUPLICATE KEY UPDATE n_fam = %s, n_pat = %s, consensus_class = %s, date = %s, comment = %s, lr_cooc = %s, lr_coseg = %s, lr_family = %s    
+            """
+        self.cursor.execute(command, (variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family))
+        self.conn.commit()
+        return self.get_heredicare_annotation_id(variant_id, vid)
+
+    def get_heredicare_annotation_id(self, variant_id, vid):
+        command = "SELECT id FROM variant_heredicare_annotation WHERE variant_id = %s AND vid = %s"
+        self.cursor.execute(command, (variant_id, vid))
+        res = self.cursor.fetchone()
+        if res is not None:
+            return res[0]
+        return res
+
+    def delete_unknown_heredicare_annotations(self, variant_id):
+        heredicare_vid_annotation_type_id = self.get_most_recent_annotation_type_id('heredicare_vid')
+        command = """
+                DELETE FROM variant_heredicare_annotation WHERE id IN (
+	                SELECT id FROM variant_heredicare_annotation WHERE variant_id = %s AND vid NOT IN (SELECT external_id FROM variant_ids WHERE annotation_type_id = %s AND variant_id = %s)
+                )
+            """
+        self.cursor.execute(command, (variant_id, heredicare_vid_annotation_type_id, variant_id))
+        self.conn.commit()
+    
+    def insert_update_heredicare_center_classification(self, heredicare_annotation_id, zid, classification, comment):
+        command = "INSERT INTO heredicare_center_classification (variant_heredicare_annotation_id, heredicare_ZID, classification, comment) VALUES (%s, %s ,%s, %s) ON DUPLICATE KEY UPDATE classification = %s, comment = %s"
+        self.cursor.execute(command, (heredicare_annotation_id, zid, classification, comment, classification, comment))
+        self.conn.commit()
+
+    def delete_heredicare_center_classification(self, heredicare_annotation_id, zid):
+        command = "DELETE FROM heredicare_center_classification WHERE variant_heredicare_annotation_id = %s AND heredicare_ZID = %s"
+        self.cursor.execute(command, (heredicare_annotation_id, zid))
+        self.conn.commit()
 
     def clear_heredicare_annotation(self, variant_id):
         command = "DELETE FROM variant_heredicare_annotation WHERE variant_id = %s"

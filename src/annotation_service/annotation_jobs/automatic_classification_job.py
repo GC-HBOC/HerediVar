@@ -215,8 +215,12 @@ class automatic_classification_job(Job):
         splicing_prediction_scores = {}
         spliceai_scores = variant.annotations.spliceai_max_delta
         if spliceai_scores is not None:
-            spliceai_score = max([float(x) for x in spliceai_scores.value.split(',')])
-            splicing_prediction_scores["SpliceAI"] = spliceai_score
+            all_scores = []
+            for spliceai_score in spliceai_scores.value.split(','):
+                if spliceai_score != '.':
+                    all_scores.append(float(spliceai_score))
+            if len(all_scores) > 0:
+                splicing_prediction_scores["SpliceAI"] = max(all_scores)
         if len(splicing_prediction_scores) > 0: # only insert if at least one splicing score available
             result["splicing_prediction_tools"] = splicing_prediction_scores
 

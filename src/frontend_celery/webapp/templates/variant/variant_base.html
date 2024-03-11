@@ -23,7 +23,7 @@
             <h1>
                 {% block title_ext %} {% endblock %}
                 <div id="variant_page_title" class="break_text_all w-90" chrom="{{ variant.chrom }}" pos="{{ variant.pos }}" ref="{{ variant.ref }}" alt="{{ variant.alt }}">
-                    {{consequence}} {% block title %} {{ variant.get_string_repr() }} {% endblock %}(GRCh38)
+                    {{consequence}} {% block title %} {{ variant.get_string_repr(abbreviate = True) }} {% endblock %}(GRCh38)
                 </div>
             </h1>
 
@@ -178,26 +178,27 @@
                     {% endif %}
 
                     <!-- HerediCare classifications -->
-                    {% if variant.heredicare_annotations is not none %}
+                    {% if variant.has_heredicare_classifications() %}
                     <div class="ssb">
-                        <h4 class="card-subcaption">HerediCare classifications</h4>
+                        <h4 class="card-subcaption">HerediCaRe classifications</h4>
                         <div class="left-space-padding">
                             <div class="table-responsive tableFixHead">
                                 <table class="table" id="heredicare_classifications_table">
                                     <thead>
                                         <tr>
-                                            <th class="width_very_small"><div class="sortable">VID</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_very_small"><div class="sortable">Consensus class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_small" id="heredicare_classifications_data_col"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_very_large"><div class="sortable">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                                            <th class="width_small"><div class="sortable">Centers with classifications</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_very_small"><div class="">VID</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_very_small"><div class="">Consensus class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small" id="heredicare_classifications_data_col"><div class="">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_very_large"><div class="">Comment</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                            <th class="width_small"><div class="">Centers with classifications</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for heredicare_annot in variant.heredicare_annotations %}
-                                        {% if heredicare_annot.consensus_classification.selected_class is not none or (heredicare_annot.center_classifications is not none and heredicare_center_classifications | length > 0) %}
+                                        {% if heredicare_annot.consensus_classification.selected_class is not none or heredicare_annot.center_classifications is not none %}
+                                        
                                         <tr>
-                                            <tr heredicare_annotation_id="heredicare_annot.id">
+                                            <tr heredicare_annotation_id="{{heredicare_annot.id}}">
                                                 <td class="nowrap">{{ heredicare_annot.vid }}</td>
                                                 <td>{{ heredicare_annot.consensus_classification.selected_class_to_num() }}</td>
                                                 <td class="nowrap">{{ heredicare_annot.consensus_classification.classification_date }}</td>
@@ -211,14 +212,14 @@
                                                             {% endif %}
                                                         </div>
                                                         <div>
-                                                            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                                                            <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#center_details_{{heredicare_annot.id}}" aria-expanded="false" aria-controls="center_details_{{heredicare_annot.id}}">
                                                                 +
                                                             </button>
                                                         </div>
                                                     </div>
                                                 </td>
                                             </tr>
-                                            <tr class="collapse" id="collapseExample">
+                                            <tr class="collapse" id="center_details_{{heredicare_annot.id}}">
                                                 <td colspan="5" >
                                                     <table class="table table-sm" id="heredicare_center_classifications_table">
                                                         <thead>
