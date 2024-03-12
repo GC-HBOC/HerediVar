@@ -17,3 +17,5 @@ GRANT UPDATE ON HerediVar.heredicare_center_classification TO 'HerediVar_annotat
 GRANT UPDATE ON HerediVar.variant_heredicare_annotation TO 'HerediVar_annotation';
 
 GRANT DELETE ON HerediVar.heredicare_center_classification TO 'HerediVar_annotation';
+
+GRANT SELECT ON HerediVar.heredicare_center_classification TO 'HerediVar_annotation';
