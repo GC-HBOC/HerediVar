@@ -10,7 +10,7 @@
         {% if current_annotation_status is not none %}
 
             {% if current_annotation_status[4] == 'pending' %}
-                <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="Annotation requested at {{ current_annotation_status[3] }}">Annotation requested, <br> refresh page to see if it is ready</span>
+                <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="Annotation requested at {{ current_annotation_status[3] }}">Annotation requested</span>
             {% endif %}
             {% if current_annotation_status[4] == 'success' %}
                 <span class="badge rounded-pill bg-success" data-bs-toggle="tooltip" title="Most recent annotation finished at {{ current_annotation_status[5] }}">Annotation done</span>

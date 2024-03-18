@@ -765,7 +765,6 @@ class Connection:
                     actual_information += ('sv',)
             placeholders = self.get_placeholders(len(actual_information))
             postfix = self.add_constraints_to_command(postfix, "variant_type IN " + placeholders)
-
         if cdna_ranges is not None and len(cdna_ranges) > 0:
             new_constraints = []
             for cdna_range in cdna_ranges:

@@ -849,7 +849,8 @@ def notify_new_user(self, full_name, email, username, password):
     )
 
 
-
+# It is not possible to put this into a task itself because if the queue is full it would need to wait for all
+# tasks first to finish before aborting them -> this defeats the purpose of aborting tasks
 def abort_annotation_tasks(annotation_requests, conn:Connection):
     for annotation_request in annotation_requests:
         #id, status, celery_task_id
