@@ -143,6 +143,7 @@ class automatic_classification_job(Job):
         data = {"config_path": config_path, "variant_json": autoclass_input}
         data = json.dumps(data)
         resp = requests.post(url, headers=headers, data=data)
+        #print(resp.__dict__)
 
         if resp.status_code != 200:
             status_code = resp.status_code
@@ -360,7 +361,7 @@ class automatic_classification_job(Job):
         validate_input(result) # raises an error on fails
 
         result_json = json.dumps(result)
-
+        
         return result_json
 
 

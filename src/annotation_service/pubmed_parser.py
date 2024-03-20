@@ -10,7 +10,7 @@ Entrez.email = os.environ.get('ENTREZ_MAIL')
 def fetch(pmids):
     pmids = pmids.replace('&', ',')
     handle = Entrez.efetch(db='pubmed', id=pmids, retmode='xml')
-    records = Entrez.read(handle)
+    records = Entrez.read(handle, validate = False)
     handle.close()
     result = []
     for record in records['PubmedArticle']: # PubmedBookArticle

@@ -5,7 +5,7 @@ from ..utils import *
 import sys
 from os import path
 from .variant_functions import *
-from ..tasks import generate_consensus_only_vcf_task, start_annotation_service, validate_and_insert_variant, map_hg38, validate_and_insert_cnv
+from ..tasks import generate_consensus_only_vcf_task, start_annotation_service, validate_and_insert_variant, map_hg38, validate_and_insert_cnv, start_variant_import_vcf
 
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
@@ -175,6 +175,7 @@ def search():
 def create():
     chrs = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
             'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY', 'chrMT']
+    vcf_file_import_active = False
     
     if request.method == 'POST':
         create_variant_from = request.args.get("type")
@@ -241,7 +242,30 @@ def create():
                     else:
                         flash(message, 'alert-danger')
 
-    return render_template('variant/create.html', chrs=chrs)
+        if create_variant_from == 'vcf_file' and vcf_file_import_active:
+            genome_build = request.form.get('genome')
+            if 'file' not in request.files or genome_build is None:
+                flash('You must specify the genome build and select a vcf file.', 'alert-danger')
+            else:
+                file = request.files['file']
+                filename = file.filename
+
+                if file.filename.strip() == '' or not functions.filename_allowed(file.filename, allowed_extensions = {"vcf", "txt"}):
+                    flash('No valid file selected.', 'alert-danger')
+                else:
+                    filepath = functions.get_random_temp_file(fileending = "tsv", filename_ext = "import_vcf")
+                    with open(filepath, "w") as f: # file is deleted in task + we have to write to disk because filehandle can not be json serialized and thus, can not be given to a celery task
+                        f.write(file.read().decode("utf-8"))
+                    user_id = session["user"]["user_id"]
+                    user_roles = session["user"]["roles"]
+                    conn = get_connection()
+                    #inserted_variants, skipped_variants = variant_functions.insert_variants_vcf_file(vcf_file, genome_build, conn)
+                    import_queue_id = start_variant_import_vcf(user_id, user_roles, conn, filename, filepath, genome_build)
+                    flash("Successfully submitted vcf file. The import is processed in the background", "alert-success")
+                    return redirect(url_for('variant.create'))
+
+
+    return render_template('variant/create.html', chrs=chrs, vcf_file_import_active=vcf_file_import_active)
 
 
 

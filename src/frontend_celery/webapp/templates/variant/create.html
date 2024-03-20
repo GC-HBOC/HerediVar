@@ -8,12 +8,17 @@
 
     <ul class="nav nav-tabs bst" id="tabs" role="tablist">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="vcf-tab" data-bs-toggle="tab" data-bs-target="#vcf" type="button" role="tab" aria-controls="home" aria-selected="true">VCF import</button>
+            <button class="nav-link active" id="vcf-tab" data-bs-toggle="tab" data-bs-target="#vcf" type="button" role="tab" aria-controls="home" aria-selected="true">VCF import</button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link" id="hgvs-tab" data-bs-toggle="tab" data-bs-target="#hgvs" type="button" role="tab" aria-controls="hgvs" aria-selected="false">HGVS import</button>
+            <button class="nav-link" id="hgvs-tab" data-bs-toggle="tab" data-bs-target="#hgvs" type="button" role="tab" aria-controls="hgvs" aria-selected="false">HGVS import</button>
         </li>
-      </ul>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="vcf_file-tab" data-bs-toggle="tab" data-bs-target="#vcf_file" type="button" role="tab" aria-controls="vcf_file" aria-selected="false">from VCF file</button>
+        </li>
+    </ul>
+
+
       <div class="tab-content" id="TabContent">
         <div class="tab-pane fade show active sst" id="vcf" role="tabpanel" aria-labelledby="vcf-tab">
             <form action="/create?type=vcf" method="post" class="needs-validation" novalidate>
@@ -80,6 +85,8 @@
                 </div>
             </form>
         </div>
+
+
         <div class="tab-pane fade" id="hgvs" role="tabpanel" aria-labelledby="hgvs-tab">
             <form action="/create?type=hgvsc" method="post" class="needs-validation" novalidate>
                 <div class="form-group sst" >
@@ -108,7 +115,39 @@
                 </div>
             </form>
         </div>
-      </div>
+
+        {% if vcf_file_import_active %}
+        <!-- import from vcf file -->
+        <div class="tab-pane fade" id="vcf_file" role="tabpanel" aria-labelledby="vcf_file-tab">
+            <form action="/create?type=vcf_file" method="post" class="needs-validation" enctype=multipart/form-data novalidate>
+                <div class="form-group sst">
+                    <label for="reference-genome" class="form-label">Reference genome build</label>
+                    <select class="form-select" name="genome" id="reference-genome" required>
+                        <option value="" {% if ('GRCh38' != request.form['genome'] and 'GRCh37' != request.form['genome']) %} selected="selected" {% endif %} disabled hidden>Choose reference genome build</option>
+                        <option value="GRCh38" style="color:black;" {% if ('GRCh38' == request.form['genome']) %} selected="selected" {% endif %}>GRCh38 (hg38)</option>
+                        <option value="GRCh37" style="color:black;" {% if ('GRCh37' == request.form['genome']) %} selected="selected" {% endif %}>GRCh37 (hg19)</option>
+                   </select>
+                   <div class="invalid-feedback">
+                       Please select a reference genome build.
+                   </div>
+               </div>
+                <div class="form-group sst">
+                    <label for="file" class="form-label">Select vcf file</label>
+                    <input class="form-control validationreq" type="file" id="file" name="file" accept=".vcf">
+                    <div class="invalid-feedback">
+                        Please provide a valid vcf file.
+                    </div>
+                </div>
+
+                <div class="form-group sst">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+    
+    
+    </div>
       
 </div>
 

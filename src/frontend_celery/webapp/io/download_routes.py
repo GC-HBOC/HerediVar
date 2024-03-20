@@ -281,10 +281,10 @@ def annotation_errors():
     annotation_stati, errors, warnings, total_num_variants = conn.get_annotation_statistics(exclude_sv=True)
 
     helper = io.StringIO()
-    helper.write("#" + "\t".join(["chrom", "pos", "ref", "alt", "error_msg"]))
+    helper.write("#" + "\t".join(["chrom", "pos", "ref", "alt", "error_msg"]) + '\n')
     for variant_id in errors:
         variant = conn.get_variant(variant_id)
-        new_line = "\t".join([variant.chrom, str(variant.pos), variant.alt, variant.ref, errors[variant_id]])
+        new_line = "\t".join([variant.chrom, str(variant.pos), variant.ref, variant.alt, errors[variant_id]])
         helper.write(new_line + "\n")
     
     buffer = io.BytesIO()

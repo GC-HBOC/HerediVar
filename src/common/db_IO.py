@@ -852,12 +852,20 @@ class Connection:
             else:
                 return [], 0
         if variant_strings is not None and len(variant_strings) > 0:
-            new_constraints = []
+            list_of_constraints = []
+            list_of_information = []
             for variant_string in variant_strings:
                 parts = variant_string.split('-')
-                new_constraints.append("(SELECT id FROM variant WHERE chr = %s AND pos = %s AND ref = %s AND alt = %s UNION SELECT variant.id FROM variant WHERE sv_variant_id IN (SELECT id FROM sv_variant WHERE chrom = %s AND start = %s AND end = %s AND sv_type LIKE %s))")
-                actual_information += (parts[0], parts[1], parts[2], parts[3], parts[0], parts[1], parts[2], functions.enpercent(parts[3]))
-            new_constraints = "id IN " + ' OR '.join(new_constraints)
+                list_of_constraints.append(["(chr = %s AND pos = %s AND ref = %s AND alt = %s)", "(chrom = %s AND start = %s AND end = %s AND sv_type LIKE %s)"])
+                #list_of_constraints.append("(SELECT id FROM variant WHERE chr = %s AND pos = %s AND ref = %s AND alt = %s UNION SELECT variant.id FROM variant WHERE sv_variant_id IN (SELECT id FROM sv_variant WHERE chrom = %s AND start = %s AND end = %s AND sv_type LIKE %s))")
+                list_of_information.append([[parts[0], parts[1], parts[2], parts[3]], [parts[0], parts[1], parts[2], functions.enpercent(parts[3])]])
+            restrictions1 = " OR ".join([x[0] for x in list_of_constraints])
+            restrictions2 = " OR ".join([x[0] for x in list_of_constraints])
+            for info in list_of_information:
+                actual_information += tuple(info[0])
+            for info in list_of_information:
+                actual_information += tuple(info[1])
+            new_constraints = "id IN (SELECT id FROM variant WHERE " + restrictions1 + " UNION SELECT variant.id FROM variant WHERE sv_variant_id IN (SELECT id FROM sv_variant WHERE " + restrictions2 + "))" 
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if consensus is not None and len(consensus) > 0:
             new_constraints_inner = ''
@@ -996,7 +1004,6 @@ class Connection:
                     actual_information += tuple(current_external_ids)
                 else:
                     annotation_type_id = self.get_most_recent_annotation_type_id(id_source)
-
                     placeholders = self.get_placeholders(len(current_external_ids))
                     new_constraints.append("id IN (SELECT variant_id FROM variant_ids WHERE external_id IN " + placeholders + " AND annotation_type_id = %s )")
                     actual_information += tuple(current_external_ids)

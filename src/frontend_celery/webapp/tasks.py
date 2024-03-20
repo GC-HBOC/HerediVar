@@ -282,6 +282,116 @@ def delete_variant_heredicare(self, vid, vids, user_id, user_roles, import_varia
 
 
 
+
+
+
+###########################################################
+############## START VARIANT VCF BULK IMPORT ##############
+###########################################################
+
+def start_variant_import_vcf(user_id, user_roles, conn: Connection, filename, filepath, genome_build):
+    import_request = conn.insert_import_request(user_id)
+    import_queue_id = import_request.id
+
+    task = variant_import_vcf.apply_async(args=[user_id, user_roles, import_queue_id, filepath, genome_build]) # start task
+    task_id = task.id
+
+    conn.update_import_queue_celery_task_id(import_queue_id, celery_task_id = task_id) # save the task id for status updates
+
+    return import_queue_id
+
+
+@celery.task(bind=True, retry_backoff=5, max_retries=3)
+def variant_import_vcf(self, user_id, user_roles, import_queue_id, filepath, genome_build):
+    """ Background task for importing a large number of variants from a tsv file """
+    self.update_state("PROGRESS")
+
+    try:
+        conn = Connection(user_roles)
+
+        conn.update_import_queue_status(import_queue_id, status = "progress", message = "")
+
+        with open(filepath, "r") as vcf_file:
+            vcf_file = list(vcf_file)
+            status, message = insert_variants_vcf_file(vcf_file, genome_build, user_id, import_queue_id, conn)
+
+    except InternalError as e:
+        # deadlock: code 1213
+        status = "retry"
+        message = "Attempting retry because of database error: " + str(e)  + ' ' + traceback.format_exc()
+    except Error as e:
+        status = "error"
+        message = "There was a database error: " + str(e)  + ' ' + traceback.format_exc()
+    except HTTPError as e:
+        status = "retry"
+        message = "Attempting retry because of http error: " + str(e)  + ' ' + traceback.format_exc()
+    except Exception as e:
+        status = "error"
+        message = "There was a runtime error: " + str(e) + ' ' + traceback.format_exc()
+
+    if status != "retry":
+        conn.close_import_request(import_queue_id, status, message)
+        functions.rm(filepath)
+    else:
+        conn.update_import_queue_status(import_queue_id, status = status, message = message)
+
+    conn.close()
+    
+    if status == 'error':
+        self.update_state(state="FAILURE", meta={ 
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'
+                    })
+        raise Ignore()
+    elif status == "retry":
+        self.update_state(state="RETRY", meta={
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'})
+        variant_import_vcf.retry()
+    else:
+        self.update_state(state="SUCCESS")
+
+
+
+def insert_variants_vcf_file(vcf_file, genome_build, user_id, import_queue_id, conn:Connection):
+    status = "success"
+    message = ""
+    skipped_lines = []
+    for i, line in enumerate(vcf_file, 1):
+        if isinstance(line, bytes):
+            line = line.decode('utf-8')
+        line = line.strip()
+        if line.startswith('#') or line == '':
+            continue
+        parts = line.split('\t')
+        if len(parts) < 8:
+            skipped_lines.append(i)
+            continue
+
+        chrom = parts[0]
+        pos = parts[1]
+        ref = parts[3]
+        alt = parts[4]
+
+        was_successful, variant_message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, user_id = user_id, conn = conn)
+        variant_import_queue_id = conn.insert_variant_import_request(vid=variant_id, import_queue_id=import_queue_id)
+        variant_status = "success"
+        if (not was_successful and variant_id is not None) or "already in database!" in variant_message: # variant is already in database, start a reannotation
+            variant_status = "update"
+        elif not was_successful:
+            variant_status = "error"
+        conn.update_import_variant_queue_status(variant_import_queue_id, variant_status, variant_message)
+
+    if len(skipped_lines) > 0:
+        message += "Skipped lines " + str(skipped_lines) + " because they are malformed"
+    return status, message
+
+
+
+
+
 ################################################
 ############## IMPORT THE VARIANT ##############
 ################################################

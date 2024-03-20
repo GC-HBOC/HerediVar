@@ -257,7 +257,9 @@ def curate_sequence(seq, allowed = "ACGT-"):
         is_valid = False
     return seq, is_valid
 
-
+def filename_allowed(filename, allowed_extensions = {'vcf', 'txt'}):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
 
 # infile has to be .gz
