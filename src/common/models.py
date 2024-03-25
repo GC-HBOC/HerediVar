@@ -820,7 +820,7 @@ class HeredicareCenterClassification(AbstractHeredicareClassification):
 
     def to_vcf(self, prefix = True):
         ## Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
-        comment = "" if self.comment is None else comment
+        comment = "" if self.comment is None else self.comment
         info = "~2B".join([self.center_name, str(self.zid), self.selected_class_to_num(), comment])
         if prefix:
             info = "heredicare_center_classifications~1Y" + info

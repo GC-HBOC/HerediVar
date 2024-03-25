@@ -361,7 +361,7 @@ class automatic_classification_job(Job):
         validate_input(result) # raises an error on fails
 
         result_json = json.dumps(result)
-        
+
         return result_json
 
 

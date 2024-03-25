@@ -59,17 +59,18 @@ pip install --upgrade pip
 pip install wheel
 pip install setuptools
 python3 -m pip install --upgrade setuptools wheel
-pip install pyyaml
-pip install cyvcf2
-pip install biopython
-pip install pyensembl==2.2.9
-pip install hgvs
-pip install pybedtools
-pip install openpyxl
-pip install jsonschema
-pip install pandas
-pip install fastapi
-pip install uvicorn
+pip install -r requirements.txt
+#pip install pyyaml
+#pip install cyvcf2
+#pip install biopython
+#pip install pyensembl==2.2.9
+#pip install hgvs
+#pip install pybedtools
+#pip install openpyxl
+#pip install jsonschema
+#pip install pandas
+#pip install fastapi
+#pip install uvicorn
 
 cd $variant_classification_path
 bash $variant_classification_path/install_dependencies/install_pyensembl.sh -v 110
@@ -89,7 +90,7 @@ python $variant_classification_path/install_dependencies/data_filter_clinvar.py 
 cd $variant_classification_path
 cp config.yaml config_production.yaml
 sed -r -i "s:/home/katzkean/:$variant_classification_path/:g" config_production.yaml
-sed -r -i "s:gene_specific:gene_specific_production:g" config_production.yaml
+sed -r -i "s:/gene_specific:/gene_specific_production:g" config_production.yaml
 sed -r -i "s:variant_classification/::g" config_production.yaml
 
 gene_specific_config_path=$variant_classification_path/gene_specific
