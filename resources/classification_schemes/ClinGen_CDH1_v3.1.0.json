@@ -1,0 +1,933 @@
+{
+    "name": "enigma-cdh1",
+    "version": "v3.1.0",
+    "display_name": "ClinGen ACMG CDH1 v3.1.0",
+    "type": "acmg-svi",
+    "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/poek0tvh/clingen_cdh1_v3.1.0.pdf/?format=attachment",
+    "aliases": ["ACMG CDH1"],
+    "criteria": [
+        {
+            "name": "PVS1",
+            "description": [
+
+                "Original ACMG Summary",
+                "Null variant (nonsense, frameshift, canonical +/-1 or 2 splice sites, initiation codon, single or multi-exon deletion) in a gene where loss of function (LOF) is a known mechanism of disease.",
+                "Caveats:",
+                " - Beware of genes where LOF is not a known disease mechanism (e.g. GFAP, MYH7).",
+                " - Use caution interpreting LOF variants at the extreme 3' end of a gene.",
+                " - Use caution with splice variants that are predicted to lead to exon skipping but leave the remainder of the protein intact.",
+                " - Use caution in the presence of multiple transcripts.",
+                "",
+                "Gene-specific modifications:",
+                "Very Strong:",
+                "Per modified CDH1 PVS1 decision tree.",
+                "",
+                "Strong:",
+                "Per modified CDH1 PVS1 decision tree. Other CDH1 caveats:",
+                "    - Use PVS1_Strong as the default strength of evidence for canonical splice site variants and follow the site-specific recommendations in the splicing table.",
+                "    - CDH1 Exonic deletions or tandem duplications of in-frame exons (exon 4,5,8,9,12,13,15).",
+                "",
+                "Moderate:",
+                "Per modified CDH1 PVS1 decision tree. Other CDH1 caveats:",
+                "    - G to non-G variants disrupting the last nucleotide of an exon.",
+                "    - Canonical splice sites predicted or demonstrated experimentally to result in in-frame partial skipping/insertion (e.g., Exon 3 donor site)."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                "PS1"
+            ]
+        },
+
+        {
+            "name": "PS1",
+            "description": [
+
+                "Original ACMG Summary",
+                "Same amino acid change as a previously established pathogenic variant regardless of nucleotide change.",
+                "Example: Val->Leu caused by either G>C or G>T in the same codon.",
+                "Caveat: Beware of changes that impact splicing rather than at the amino acid/protein level.",
+                "Not Applicable",
+                "Comments: Not applicable for CDH1."
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "PS2",
+            "description": [
+
+                "Original ACMG Summary",
+                "De novo (both maternity and paternity confirmed) in a patient with the disease and no family history.",
+                "Note: Confirmation of paternity only is insufficient. Egg donation, surrogate motherhood, errors in embryo transfer, etc. can contribute to non-maternity.",
+                "",
+                "Gene-specific modifications:",
+                "Very Strong",
+                ">= Two patients meet the HDGC individual phenotype criteria w/ parental confirmation.",
+                "",
+                "Strong",
+                "One patient meets the HDGC individual phenotype criteria w/ parental confirmation.",
+                "",
+                "Instructions:",
+                "Use ClinGen's de novo point system for a highly specific phenotype (see Table S2)."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "PS3",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Well-established in vitro or in vivo functional studies supportive of a damaging effect on the gene or gene product.",
+                "Note: Functional studies that have been validated and shown to be reproducible and robust in a clinical diagnostic laboratory setting are considered the most well-established.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                "RNA assay demonstrating abnormal out-of-frame transcripts.",
+                "",
+                "Moderate",
+                "RNA assay demonstrating abnormal in-frame transcript.",
+                "",
+                "Instructions:",
+                "This rule can only be applied to demonstrate splicing defects."
+                
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "PS4",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "The prevalence of the variant in affected individuals is significantly increased compared to the prevalence in controls.",
+                "Note 1: Relative risk (RR) or odds ratio (OR), as obtained from case-control studies, is >5.0 and the confidence interval around the estimate of RR or OR does not include 1.0. See manuscript for detailed guidance.",
+                "Note 2: In instances of very rare variants where case-control studies may not reach statistical significance, the prior observation of the variant in multiple unrelated patients with the same phenotype, and its absence in controls, may be used as moderate level of evidence.",
+                "",
+                "Gene-specific modifications:",
+                "Very Strong",
+                ">= Sixteen families meet HDGC criteria.",
+                "",
+                "Strong",
+                "Four - Fifteen families meet HDGC criteria.",
+                "",
+                "Moderate",
+                "Two or three families meet HDGC criteria.",
+                "",
+                "Supporting",
+                "One family meets HDGC criteria.",
+                "",
+                "Instructions:",
+                "Use the 2020 updated clinical practice guidelines (PMID: 32758476) as the HDGC phenotype criteria. PS4 cannot be applied to variants that meet BS1 or BA1, or to variants in which less than 30% of reported individuals meet HDGC criteria."
+                
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+
+        {
+            "name": "PM1",
+            "description": [
+
+                "Original ACMG Summary",
+                "Located in a mutational hot spot and/or critical and well-established functional domain (e.g. active site of an enzyme) without benign variation.",
+                "Not Applicable",
+                "Comments: Not applicable for CDH1."
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "PM2",
+            "description": [
+
+                "Original ACMG Summary",
+                "Absent from controls (or at extremely low frequency if recessive) in Exome Sequencing Project, 1000 Genomes or Exome Aggregation Consortium.",
+                "Caveat: Population data for indels may be poorly called by next generation sequencing.",
+                "",
+                "Gene-specific modifications:",
+                "Supporting",
+                "<= One out of 100,000 alleles in gnomAD cohort; if present in >=2 individuals within a subpopulation, must be present in ≤ One out of 50,000 alleles.",
+                "",
+                "Instructions:",
+                "Use gnomAD to determine allele frequency. The mean coverage of CDH1 in the population database used should be at least 30x."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "PM3",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "For recessive disorders, detected in trans with a pathogenic variant",
+                "Note: This requires testing of parents (or offspring) to determine phase.",
+                "Not Applicable",
+                "Comments: Not applicable for CDH1."
+                
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "PM4",
+            "description": [
+
+                "Original ACMG Summary",
+                "Protein length changes due to in-frame deletions/insertions in a non-repeat region or stop-loss variants.",
+                "",
+                "Gene-specific modifications:",
+                "Moderate",
+                "Only apply to stop-loss variants Variant example: CDH1 c.2647T>C (p.Ter883Glnext*29).",
+                "",
+                "Instructions:",
+                "PM4 is not applied to small in-frame indels because the impact of amino acid level changes of CDH1 variants is inconclusive."                
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "PM5",
+            "description": [
+
+                "Original ACMG Summary",
+                "Novel missense change at an amino acid residue where a different missense change determined to be pathogenic has been seen before.",
+                "Example: Arg156His is pathogenic; now you observe Arg156Cys.",
+                "Caveat: Beware of changes that impact splicing rather than at the amino acid/protein level.",
+                "",
+                "Gene-specific modifications:",
+                "Supporting",
+                "PM5_supporting is applicable to nonsense and frameshift variants that are predicted/proved to undergo NMD or located upstream of the last known pathogenic truncating variant. Site-specific recommendations for the application of PM5_Supporting for canonical splicing variants.",
+                "",
+                "Instructions:",
+                "The nonsense or frameshift variant must not impact splicing based on RNA assay or splicing predictions."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "PM6",
+            "description": [
+
+                "Original ACMG Summary",
+                "Assumed de novo, but without confirmation of paternity and maternity.",
+                "",
+                "Gene-specific modifications:",
+                "Very Strong",
+                "Four patients meet the HDGC individual phenotype criteria w/o parental confirmation.",
+                "",
+                "Strong",
+                ">= Two patients meet the HDGC individual phenotype criteria w/o parental confirmation.",
+                "",
+                "Moderate",
+                "One patient meets the HDGC individual phenotype criteria w/o parental confirmation",
+                "",
+                "Instructions:",
+                "Use ClinGen's de novo point system for a highly specific phenotype."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+
+        {
+            "name": "PP1",
+            "description": [
+
+                "Original ACMG Summary",
+                "Co-segregation with disease in multiple affected family members in a gene definitively known to cause the disease.",
+                "Note: May be used as stronger evidence with increasing segregation data.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                ">= Seven informative meioses across >=2 families.",
+                "",
+                "Moderate",
+                "Five-six informative meioses across >=1 family.",
+                "",
+                "Supporting",
+                "Three-four informative meioses across >=1 family.",
+                "",
+                "Instructions:",
+                "Based strength of rule code on number of meioses across one or more families."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "PP2",
+            "description": [
+
+                "Original ACMG Summary",
+                "Missense variant in a gene that has a low rate of benign missense variation and where missense variants are a common mechanism of disease.",
+                "Not Applicable",
+                "Comments: Not applicable for CDH1."
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "PP3",
+            "description": [
+
+                "Original ACMG Summary",
+                "Multiple lines of computational evidence support a deleterious effect on the gene or gene product (conservation, evolutionary, splicing impact, etc.).",
+                "Caveat: As many in silico algorithms use the same or very similar input for their predictions, each algorithm should not be counted as an independent criterion. PP3 can be used only once in any evaluation of a variant.",
+                "",
+                "Gene-specific modifications:",
+                "Moderate",
+                "Variants affecting the same splice site as a well-characterized variant with similar or worse in silico/ RNA predictions.",
+                "",
+                "Supporting",
+                "At least three in silico splicing predictors in agreement (SpliceAI, MaxEntScan, SSF, GeneSplicer, HSF, TraP, varSEAK).",
+                "",
+                "Instructions:",
+                "PP3 cannot be applied for canonical splice sites. PP3 code also does not apply to the last nucleotide of exon 3 (c.387G). Do not use protein-based computational prediction models for missense variants."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "PP4",
+            "description": [
+
+                "Original ACMG Summary",
+                "Patient's phenotype or family history is highly specific for a disease with a single genetic etiology.",
+                "Not Applicable",
+                "Comments: Not applicable for CDH1."
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "PP5",
+            "description": [
+
+                "Original ACMG Summary",
+                "Reputable source recently reports variant as pathogenic, but the evidence is not available to the laboratory to perform an independent evaluation.",
+                "Not Applicable",
+                "This criterion is not for use as recommended by the ClinGen Sequence Variant Interpretation VCEP Review Committee. "
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+
+        {
+            "name": "BA1",
+            "description": [
+
+                "Original ACMG Summary",
+                "Allele frequency is above 5% in Exome Sequencing Project, 1000 Genomes or Exome Aggregation Consortium.",
+                "",
+                "Gene-specific modifications:",
+                "Stand Alone",
+                "MAF cutoff of 0.2%.",
+                "",
+                "Instructions:",
+                "99.99% CI; subpopulation must >= 2,000 alleles and have a minimum of five variant alleles present."
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ba",
+                    "display_name":"alo",
+                    "description": "stand-alone benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS1",
+            "description": [
+
+                "Original ACMG Summary",
+                "Allele frequency is greater than expected for disorder.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                "MAF cutoff of 0.1%.",
+                "",
+                "Instructions:",
+                "99.99% CI; subpopulation must >= 2,000 alleles and have a minimum of five variant alleles present. We allow a variant to reach a likely benign classification based on BS1 alone."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "BS2",
+            "description": [
+
+                "Original ACMG Summary",
+                "Observed in a healthy adult individual for a recessive (homozygous), dominant (heterozygous), or X-linked (hemizygous) disorder, with full penetrance expected at an early age.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                "Variant seen in >=10 individuals w/o GC, DGC, gSRC tumors, or LBC & whose families do not suggest HDGC.",
+                "",
+                "Supporting",
+                "Variant seen in >=3 individuals w/o GC, DGC, SRC tumors, or LBC & whose families do not suggest HDGC.",
+                "",
+                "Instructions:",
+                "We allow a variant to reach a likely benign classification based on BS2 alone. BS2 cannot be applied to variants in which more than 30% of reported individuals meet HDGC criteria."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "BS3",
+            "description": [
+
+                "Original ACMG Summary",
+                "Well-established in vitro or in vivo functional studies show no damaging effect on protein function or splicing.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                "Functional RNA studies demonstrating no impact on transcript composition.",
+                "",
+                "Instructions:",
+                "This rule can only be used to demonstrate lack of splicing and can only be applied to Synonymous, Intronic or Non-coding variants. BS3 may be downgraded based on quality of data."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "BS4",
+            "description": [
+
+                "Original ACMG Summary",
+                "Lack of segregation in affected members of a family.",
+                "Caveat: The presence of phenocopies for common phenotypes (i.e. cancer, epilepsy) can mimic lack of segregation among affected individuals. Also, families may have more than one pathogenic variant contributing to an autosomal dominant disorder, further confounding an apparent lack of segregation.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                "Per original ACMG/AMP guidelines.",
+                "",
+                "Instructions:",
+                "Beware of the presence of phenocopies (e.g., breast cancer) that can mimic lack of segregation. Also, families may have more than one pathogenic variant contributing to another AD disorder."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP1",
+            "description": [
+
+                "Original ACMG Summary",
+                "Missense variant in a gene for which primarily truncating variants are known to cause disease.",
+                "Not Applicable",
+                "Comments: Not applicable for CDH1."
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "BP2",
+            "description": [
+
+                "Original ACMG Summary",
+                "Observed in trans with a pathogenic variant for a fully penetrant dominant gene/disorder or observed in cis with a pathogenic variant in any inheritance pattern.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                "Variant observed in trans w/known pathogenic variant (phase confirmed) OR observed in the homozygous state in individual w/o personal &/or family history of DGC, LBC, or SRC tumors.",
+                "",
+                "Supporting",
+                "Variant is observed in cis (or phase is unknown) w/ a pathogenic variant OR observed in the homozygous state in gnomAD.",
+                "",
+                "Instructions:",
+                "Evidence code is dependent on the strength of data. Take consideration of the quality of sequencing data when applying code."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "0"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "BP3",
+            "description": [
+
+                "Original ACMG Summary",
+                "In frame-deletions/insertions in a repetitive region without a known function.",
+                "Not Applicable",
+                "Comments: Not applicable for CDH1."
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "BP4",
+            "description": [
+
+                "Original ACMG Summary",
+                "Multiple lines of computational evidence suggest no impact on gene or gene product (conservation, evolutionary, splicing impact, etc)",
+                "Caveat: As many in silico algorithms use the same or very similar input for their predictions, each algorithm cannot be counted as an independent criterion. BP4 can be used only once in any evaluation of a variant.",
+                "",
+                "Gene-specific modifications:",
+                "Supporting",
+                "Splicing predictions only. At least three in silico splicing predictors in agreement (SpliceAI, MaxEntScan, SSF, GeneSplicer, HSF, TraP, varSEAK).",
+                "",
+                "Instructions:",
+                "Do not use protein based computational prediction models and BP4 is not applicable for missense variants."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "BP5",
+            "description": [
+
+                "Original ACMG Summary",
+                "Variant found in a case with an alternate molecular basis for disease.",
+                "",
+                "Instructions:",
+                "This applies if a P/LP variant is identified in an alternate gene known to cause HDGC (currently only CTNNA1)."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "BP6",
+            "description": [
+
+                "Original ACMG Summary",
+                "Reputable source recently reports variant as benign, but the evidence is not available to the laboratory to perform an independent evaluation.",
+                "Not Applicable",
+                "This criterion is not for use as recommended by the ClinGen Sequence Variant Interpretation VCEP Review Committee."
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+        {
+            "name": "BP7",
+            "description": [
+
+                "Original ACMG Summary",
+                "A synonymous variant for which splicing prediction algorithms predict no impact to the splice consensus sequence nor the creation of a new splice site AND the nucleotide is not highly conserved.",
+                "",
+                "Supporting",
+                "Synonymous and intronic variants at or beyond +7 to -21 locations.",
+                "",
+                "Instructions:",
+                "Note the CDH1 rule specification does not require a conservation prediction. We allow use of BP7 with BP4, as appropriate, to classify variants meeting both criteria as likely benign."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        }
+    ]
+}
