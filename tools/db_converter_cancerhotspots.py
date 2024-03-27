@@ -9,7 +9,7 @@ import json
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("-i", "--input",  default="", help="path to input file")
 parser.add_argument("-o", "--output", default="", help="output file path. If not given will default to stdout")
-parser.add_argument("--header", default=1, help="The line number which has the header (Zero centered, default: 0)")
+parser.add_argument("--header", default=1, help="The line number which has the header (Zero centered, default: 1)")
 parser.add_argument("--samples", help="The total number of samples in the maf file")
 parser.add_argument("--oncotree", help="Path to Oncotree json file: http://oncotree.mskcc.org/api/tumorTypes")
 

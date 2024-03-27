@@ -49,7 +49,7 @@ done
 IFS=$OIFS
 
 # Print helpFunction in case parameters are empty
-if [ -z "$basedir" ] || [ -z "$ngsbits" ] || [ -z "$dbconverter" ] || [ -z "$foldername" ] || [ -z "$venv" ] || [ -z "$grch38" ] || [ -z "$grch37" ] || [ -z "$chainfile" ]
+if [ -z "$basedir" ] || [ -z "$ngsbits" ] || [ -z "$dbconverter" ] || [ -z "$merge_duplicated" ] || [ -z "$foldername" ] || [ -z "$venv" ] || [ -z "$grch38" ] || [ -z "$grch37" ] || [ -z "$chainfile" ]
 then
    echo "Installation path and ngsbits, dbconverter path and filename are required.";
    helpFunction
@@ -88,23 +88,34 @@ awk -v OFS="\t" '!/##/ {$9=$10=""}1' $cancerhotspotsfile.final.vcf | sed 's/^\s\
 mv -f $cancerhotspotsfile.final.vcf.2 $cancerhotspotsfile.final.vcf
 bgzip -f $cancerhotspotsfile.final.vcf
 
-$ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $grch37
+$ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $grch37 -lines 0
 
 # crossmap to lift from GRCh37 to GRCh37
 CrossMap.py vcf $chainfile $cancerhotspotsfile.final.vcf.gz $grch38 $cancerhotspotsfile.final.vcf
-cat $cancerhotspotsfile.final.vcf | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | bgzip > $cancerhotspotsfile.final.vcf.gz
+rm -f $cancerhotspotsfile.final.vcf.gz
+cat $cancerhotspotsfile.final.vcf | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort > $cancerhotspotsfile.final.norm.vcf
+python3 $merge_duplicated -i $cancerhotspotsfile.final.norm.vcf > $cancerhotspotsfile.final.vcf
+bgzip $cancerhotspotsfile.final.vcf
+
 rm -f $cancerhotspotsfile.final.vcf
+rm -f $cancerhotspotsfile.final.norm.vcf
 rm -f $cancerhotspotsfile.vcf
 rm -f $cancerhotspotsfile.maf
 rm -f $cancerhotspotsfile.sorted.maf
 
-$ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $grch38
+$ngsbits/VcfCheck -in $cancerhotspotsfile.final.vcf.gz -ref $grch38 -lines 0
 
 tabix -p vcf $cancerhotspotsfile.final.vcf.gz
 
 
 
 
+#chr17   7676397 .       AG      A       .       .       cancertypes=chol:Cholangiocarcinoma:biliarytract:1|thpa:Papillary_Thyroid_Cancer:thyroid:1|luad:Lung_Adenocarcinoma:lung:1|prad:Prostate_Adenocarcinoma:prostate:2|soc:Serous_Ovarian_Cancer:ovaryfallopiantube:1|paad:Pancreatic_Adenocarcinoma:pancreas:1|chrcc:Chromophobe_Renal_Cell_Carcinoma:kidney:1|aca:Adrenocortical_Adenoma:adrenalgland:1|lggnos:Low-Grade_Glioma,_NOS:cnsbrain:1|coadread:Colorectal_Adenocarcinoma:bowel:1;AC=11;AF=0.0
+#chr17   7676397 .       AG      A       .       .       cancertypes=chrcc:Chromophobe_Renal_Cell_Carcinoma:kidney:1;AC=1;AF=0.0
+
+#chr17	7579717	.	G		.	.	cancertypes=chrcc:Chromophobe_Renal_Cell_Carcinoma:kidney:1;AC=1;AF=0.0
+#chr17   7579716 .       G               .       .       cancertypes=chol:Cholangiocarcinoma:biliarytract:1|thpa:Papillary_Thyroid_Cancer:thyroid:1|luad:Lung_Adenocarcinoma:lung:1|prad:Prostate_Adenocarcinoma:prostate:2|soc:Serous_Ovarian_Cancer:ovaryfallopiantube:1|paad:Pancreatic_Adenocarcinoma:pancreas:1|chrcc:Chromophobe_Renal_Cell_Carcinoma:kidney:1|aca:Adrenocortical_Adenoma:adrenalgland:1|lggnos:Low-Grade_Glioma,_NOS:cnsbrain:1|coadread:Colorectal_Adenocarcinoma:bowel:1;AC=11;AF=0.0
+#chr17   7579715 .       AG      A       .       .       cancertypes=chol:Cholangiocarcinoma:biliarytract:1|thpa:Papillary_Thyroid_Cancer:thyroid:1|luad:Lung_Adenocarcinoma:lung:1|prad:Prostate_Adenocarcinoma:prostate:2|soc:Serous_Ovarian_Cancer:ovaryfallopiantube:1|paad:Pancreatic_Adenocarcinoma:pancreas:1|chrcc:Chromophobe_Renal_Cell_Carcinoma:kidney:1|aca:Adrenocortical_Adenoma:adrenalgland:1|lggnos:Low-Grade_Glioma,_NOS:cnsbrain:1|coadread:Colorectal_Adenocarcinoma:bowel:1;AC=11;AF=0.0
 
 ## download oncotree (version: oncotree_2021_11_02, downloaded from: http://oncotree.mskcc.org/#/home?tab=api) FOR Cancerhotspots
 #cd $dbs

@@ -522,7 +522,7 @@ CANCERHOTSPOTS= $(CANCERHOTSPOTSPATH)/$(CANCERHOTSPOTSNAME)
 cancerhotspots: genomes venv ngs_bits
 	if [ ! -d "${CANCERHOTSPOTS}" ]; then \
 		printf ${_TEXTCOL_RED} "Downloading cancerhotspots ..." ; \
-		${DATA}/script/download_cancerhotspots.sh -p ${CANCERHOTSPOTSPATH} -n ${CANCERHOTSPOTSNAME} -y ${VENV} -t "dbconverter=${TOOLS}/db_converter_cancerhotspots.py ngsbits=${NGSBITS}/bin" -g "grch38=${GRCH38} grch37=${GRCH37} chainfile=$(CHAINFILE)" ; \
+		${DATA}/script/download_cancerhotspots.sh -p ${CANCERHOTSPOTSPATH} -n ${CANCERHOTSPOTSNAME} -y ${VENV} -t "dbconverter=${TOOLS}/db_converter_cancerhotspots.py merge_duplicated=${TOOLS}/db_converter_cancerhotspots_merge_duplicated.py ngsbits=${NGSBITS}/bin" -g "grch38=${GRCH38} grch37=${GRCH37} chainfile=$(CHAINFILE)" ; \
 	fi
 
 cancerhotspots_clean:

@@ -197,7 +197,7 @@ class automatic_classification_job(Job):
         variant_effects = []
         if variant.consequences is not None:
             for consequence in variant.consequences:
-                if consequence.transcript.source == "ensembl" and consequence.hgvs_c is not None and consequence.hgvs_c.startswith('c'):
+                if consequence.transcript.source == "ensembl" and consequence.hgvs_c is not None and consequence.hgvs_c.startswith('c') and consequence.transcript.gene.symbol is not None:
                     new_effect = {}
                     new_effect["transcript"] = consequence.transcript.name
                     new_effect["variant_type"] = [x.strip().replace(' ', '_') for x in consequence.consequence.split('&')]
@@ -361,6 +361,9 @@ class automatic_classification_job(Job):
         validate_input(result) # raises an error on fails
 
         result_json = json.dumps(result)
+
+        #with open("/mnt/storage2/users/ahdoebm1/HerediVar/src/annotation_service/test.json", "w") as f:
+        #    f.write(result_json)
 
         return result_json
 
