@@ -842,3 +842,9 @@ def get_sv_variant_sequence(chrom, start, end, sv_type):
 
 def get_preferred_genes():
     return set(["ATM", "BARD1", "BRCA1", "BRCA2", "BRIP1", "CDH1", "CHEK2", "PALB2", "PTEN", "RAD51C", "RAD51D", "STK11", "TP53"])
+
+
+def none_to_empty_list(obj):
+    if obj is None:
+        return []
+    return obj

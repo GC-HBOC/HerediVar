@@ -3368,3 +3368,35 @@ class Connection:
         
 
 
+    def insert_list_variant_import_request(self, list_id, user_id):
+        command = "INSERT INTO list_variant_import_queue (list_id, user_id) VALUES (%s, %s)"
+        self.cursor.execute(command, (list_id, user_id))
+        self.conn.commit()
+        return self.get_most_recent_list_variant_import_queue_id(list_id, user_id)
+
+    def get_most_recent_list_variant_import_queue_id(self, list_id, user_id):
+        command = "SELECT MAX(id) FROM list_variant_import_queue WHERE list_id = %s AND user_id = %s"
+        self.cursor.execute(command, (list_id, user_id))
+        result = self.cursor.fetchone()
+        return result[0]
+
+    def update_list_variant_queue_celery_task_id(self, list_variant_import_queue_id, celery_task_id):
+        command = "UPDATE list_variant_import_queue SET celery_task_id = %s WHERE id = %s"
+        self.cursor.execute(command, (celery_task_id, list_variant_import_queue_id))
+        self.conn.commit()
+
+    def close_list_variant_import_request(self, status, list_variant_import_queue_id, message):
+        command = "UPDATE list_variant_import_queue SET status = %s, finished_at = NOW(), message = %s WHERE id = %s"
+        self.cursor.execute(command, (status, message, list_variant_import_queue_id))
+        self.conn.commit()
+
+    def update_list_variant_import_status(self, list_variant_import_queue_id, status, message):
+        command = "UPDATE list_variant_import_queue SET status = %s, message = %s WHERE id = %s"
+        self.cursor.execute(command, (status, message, list_variant_import_queue_id))
+        self.conn.commit()
+
+    def get_most_recent_list_variant_import_queue(self, list_variant_import_queue_id):
+        command = "SELECT requested_at, status, finished_at, message FROM list_variant_import_queue WHERE list_id = %s ORDER BY id DESC LIMIT 1"
+        self.cursor.execute(command, (list_variant_import_queue_id, ))
+        result = self.cursor.fetchone()
+        return result

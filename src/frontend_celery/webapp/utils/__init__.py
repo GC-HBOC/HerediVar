@@ -40,12 +40,6 @@ def mkdir_recursive(dirpath):
     pathlib.Path(dirpath).mkdir(parents=True, exist_ok=True)
 
 
-def none_to_empty_list(obj):
-    if obj is None:
-        return []
-    return obj
-
-
 # this prevents open redirects
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)

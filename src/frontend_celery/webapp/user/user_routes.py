@@ -55,30 +55,32 @@ def modify_list_content():
 def my_lists():
     user_id = session['user']['user_id']
     conn = get_connection()
-    user_lists = conn.get_lists_for_user(user_id)
 
-    allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
-    allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
-    allowed_automatic_classes = functions.order_classes(conn.get_enumtypes('automatic_classification', 'classification_splicing'))
-    allowed_variant_types = ['small_variants', 'structural_variant']
-    annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
-    annotation_types = preprocess_annotation_types_for_search(annotation_types)
+    static_information = search_utils.get_static_search_information(user_id, conn)
+
+    #allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
+    #allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
+    #allowed_automatic_classes = functions.order_classes(conn.get_enumtypes('automatic_classification', 'classification_splicing'))
+    #allowed_variant_types = ['small_variants', 'structural_variant']
+    #annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
+    #annotation_types = preprocess_annotation_types_for_search(annotation_types)
 
     # variant view table of lists in pagination
     view_list_id = request.args.get('view', None)
-    variants = []
-    page = int(request.args.get('page', 1))
-    per_page = 20
-    total = 0
+    #variants = []
+    #page = int(request.args.get('page', 1))
+    #per_page = 20
+    #total = 0
 
     # just some dummy vars they will be dragged from search_utils.py -> extract_search_settings if needed
-    sort_bys = []
-    page_sizes = []
+    #sort_bys = []
+    #page_sizes = []
 
 
     if view_list_id == '':
         return abort(404)
 
+    list_import_status = None
     if view_list_id is not None: # the user wants to see the list
         list_permissions = conn.check_list_permission(user_id, view_list_id)
         if list_permissions is None:
@@ -86,7 +88,10 @@ def my_lists():
         if not list_permissions['read']:
             current_app.logger.error(session['user']['preferred_username'] + " attempted view list with id " + str(view_list_id) + ", but this list was neither created by him nor is it public.")
             return abort(403)
+        list_import_status = conn.get_most_recent_list_variant_import_queue(view_list_id)
 
+    variants, total, page, selected_page_size = search_utils.get_merged_variant_page(request.args, user_id, static_information, conn, flash_messages = True, empty_if_no_variants_oi = True)
+    pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
 
     if request.method == 'POST':
         request_type = request.args['type']
@@ -260,68 +265,67 @@ def my_lists():
 
             return redirect(url_for('user.my_lists', view=view_list_id))
         
-    
-
-
-    if view_list_id is not None:
-        variant_strings = extract_variants(request)
-        variant_types = extract_variant_types(request, allowed_variant_types)
-        genes = extract_genes(request)
-        ranges = extract_ranges(request)
-        consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request, allowed_consensus_classes)
-        user_classifications = extract_user_classifications(request, allowed_user_classes)
-        automatic_classifications_splicing = extract_automatic_classifications(request, allowed_automatic_classes, which="automatic_splicing")
-        automatic_classifications_protein = extract_automatic_classifications(request, allowed_automatic_classes, which="automatic_protein")
-        hgvs = extract_hgvs(request)
-        variant_ids_from_lookup_list = extract_lookup_list(request, user_id, conn)
-        variant_ids_oi = conn.get_variant_ids_from_list(view_list_id)
-        external_ids = extract_external_ids(request)
-        cdna_ranges = extract_cdna_ranges(request)
-        annotation_restrictions = extract_annotations(request, conn)
-
-        sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden = extract_search_settings(request)
-
-        if variant_ids_from_lookup_list is not None and len(variant_ids_from_lookup_list) != 0:
-            variant_ids_oi = list(set(none_to_empty_list(variant_ids_from_lookup_list)) & set(none_to_empty_list(variant_ids_oi))) # take the intersection of the two lists
-
-        if len(variant_ids_oi) > 0:
-            variants, total = conn.get_variants_page_merged(
-                page=page, page_size=selected_page_size,
-                sort_by=selected_sort_by,
-                include_hidden=include_hidden,
-                user_id=user_id, 
-                ranges=ranges, 
-                genes = genes, 
-                consensus=consensus_classifications, 
-                user=user_classifications, 
-                automatic_splicing=automatic_classifications_splicing,
-                automatic_protein=automatic_classifications_protein,
-                hgvs=hgvs, 
-                variant_ids_oi=variant_ids_oi,
-                include_heredicare_consensus = include_heredicare_consensus,
-                external_ids = external_ids,
-                cdna_ranges = cdna_ranges,
-                annotation_restrictions = annotation_restrictions,
-                variant_strings = variant_strings,
-                variant_types = variant_types
-            )
-    #print(variants)
-    pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
+    #if view_list_id is not None:
+    #    variant_strings = extract_variants(request)
+    #    variant_types = extract_variant_types(request, allowed_variant_types)
+    #    genes = extract_genes(request)
+    #    ranges = extract_ranges(request)
+    #    consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request, allowed_consensus_classes)
+    #    user_classifications = extract_user_classifications(request, allowed_user_classes)
+    #    automatic_classifications_splicing = extract_automatic_classifications(request, allowed_automatic_classes, which="automatic_splicing")
+    #    automatic_classifications_protein = extract_automatic_classifications(request, allowed_automatic_classes, which="automatic_protein")
+    #    hgvs = extract_hgvs(request)
+    #    variant_ids_from_lookup_list = extract_lookup_list(request, user_id, conn)
+    #    variant_ids_oi = conn.get_variant_ids_from_list(view_list_id)
+    #    external_ids = extract_external_ids(request)
+    #    cdna_ranges = extract_cdna_ranges(request)
+    #    annotation_restrictions = extract_annotations(request, conn)
+#
+    #    sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden = extract_search_settings(request)
+#
+    #    if variant_ids_from_lookup_list is not None and len(variant_ids_from_lookup_list) != 0:
+    #        variant_ids_oi = list(set(none_to_empty_list(variant_ids_from_lookup_list)) & set(none_to_empty_list(variant_ids_oi))) # take the intersection of the two lists
+#
+    #    if len(variant_ids_oi) > 0:
+    #        variants, total = conn.get_variants_page_merged(
+    #            page=page, page_size=selected_page_size,
+    #            sort_by=selected_sort_by,
+    #            include_hidden=include_hidden,
+    #            user_id=user_id, 
+    #            ranges=ranges, 
+    #            genes = genes, 
+    #            consensus=consensus_classifications, 
+    #            user=user_classifications, 
+    #            automatic_splicing=automatic_classifications_splicing,
+    #            automatic_protein=automatic_classifications_protein,
+    #            hgvs=hgvs, 
+    #            variant_ids_oi=variant_ids_oi,
+    #            include_heredicare_consensus = include_heredicare_consensus,
+    #            external_ids = external_ids,
+    #            cdna_ranges = cdna_ranges,
+    #            annotation_restrictions = annotation_restrictions,
+    #            variant_strings = variant_strings,
+    #            variant_types = variant_types
+    #        )
+    ##print(variants)
+    #pagination = Pagination(page=page, per_page=per_page, total=total, css_framework='bootstrap5')
 
     #conn.close()
     
     return render_template('user/my_lists.html', 
-                            user_lists = user_lists,
                             variants=variants, 
-                            page=page, 
-                            per_page=per_page, 
+                            #page=page,
                             pagination=pagination,
-                            sort_bys=sort_bys, page_sizes=page_sizes,
-                            allowed_user_classes = allowed_user_classes,
-                            allowed_consensus_classes = allowed_consensus_classes,
-                            allowed_automatic_classes = allowed_automatic_classes,
-                            annotation_types = annotation_types,
-                            allowed_variant_types = allowed_variant_types
+                            static_information = static_information,
+                            list_import_status = list_import_status
+                            #per_page=per_page, 
+                            #pagination=pagination,
+                            #sort_bys=sort_bys, page_sizes=page_sizes,
+                            #allowed_user_classes = allowed_user_classes,
+                            #allowed_consensus_classes = allowed_consensus_classes,
+                            #allowed_automatic_classes = allowed_automatic_classes,
+                            #annotation_types = annotation_types,
+                            #allowed_variant_types = allowed_variant_types
                         )
 
 

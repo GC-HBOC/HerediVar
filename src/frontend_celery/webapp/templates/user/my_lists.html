@@ -28,7 +28,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for list in user_lists %}
+                        {% for list in static_information['lists'] %}
                         {% set additional_classes_td = "" %}
                         {% set additional_classes_svg = "" %}
                         {% if list[0]|string == request.args.get('view') %}
@@ -83,8 +83,30 @@
                     <a type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="add" data-bs-id="{{ request.args.get('view') }}">
                         {{ macros.draw_add_symbol("Add variants from another list to this list") }}
                     </a>
+                    {% if list_import_status is not none %}
+                    <div class="ssb">
+                        {% if list_import_status[1] == 'pending' %} <!--requested_at, status, finished_at, message-->
+                            <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="Import requested at {{ list_import_status[0] }}">Import requested</span>
+                        {% endif %}
+                        {% if list_import_status[1] == 'success' %}
+                            <span class="badge rounded-pill bg-success" data-bs-toggle="tooltip" title="Most recent import finished at {{ list_import_status[2] }}">Import success</span>
+                        {% endif %}
+                        {% if list_import_status[1] == 'error' %}
+                            <span class="badge rounded-pill bg-danger" data-bs-toggle="tooltip" title="Most recent import finished at {{ list_import_status[1] }} with fatal error {{ list_import_status[3] }}">Import error</span>
+                        {% endif %}
+                        {% if list_import_status[1] == 'retry' %}
+                            <span class="badge rounded-pill bg-warning" data-bs-toggle="tooltip" title="Most recent import yielded an error: {{ list_import_status[3] }}. Retrying soon.">Import retry</span>
+                        {% endif %}
+                        {% if list_import_status[1] == 'aborted' %}
+                            <span class="badge rounded-pill bg-danger" data-bs-toggle="tooltip" title="The import was aborted by a superuser. It is recommended to restart the import.">Import aborted</span>
+                        {% endif %}
+                        {% if list_import_status[1] == 'progress' %}
+                            <span class="badge rounded-pill bg-primary" data-bs-toggle="tooltip" title="The variant import is processed in the background please wait until it is finished. Refresh this page to see if it is ready.">Import progress</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
                 </div>
-                {{ macros.draw_paginated_variant_table(pagination, variants, sort_bys, page_sizes, allowed_user_classes, allowed_consensus_classes, allowed_automatic_classes, annotation_types=annotation_types, allowed_variant_types = allowed_variant_types, lists=user_lists) }}
+                {{ macros.draw_paginated_variant_table(pagination, variants, static_information) }}
             {% else %}
                 <div class="display-5 text_align_center">
                     Please select a list to view its content!
@@ -159,7 +181,7 @@
 </div>
 
 <input type='hidden' id='special_flask_data' 
-    data-lists='{{user_lists | tojson | safe}}'
+    data-lists='{{ static_information["lists"] | tojson | safe}}'
     data-variant-base-url='{{ url_for("variant.display", variant_id="0") }}'
     data-page='{{ request.args.get("page", 1) }}'
     data-page-size='{{ request.args.get("page_size", 20)}}'

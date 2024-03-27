@@ -15,7 +15,6 @@ def preprocess_query(query, pattern = '.*'):
     reg = "^(%s" + seps + "*)*$"
     pattern = re.compile(reg % (pattern, ))
     result = pattern.match(query)
-    #print(result.group(0))
     if result is None:
         return None # means that there is an error!
     # split into list
@@ -76,8 +75,8 @@ def proprocess_range_worker(r):
     return r
 
 
-def extract_ranges(request_obj):
-    ranges = request_obj.args.get('ranges', '')
+def extract_ranges(request_args):
+    ranges = request_args.get('ranges', '')
     if ranges != '':
         ranges = preprocess_ranges(ranges)
         ranges = preprocess_query(ranges, pattern= r"(chr)?.+-\d+-\d+")
@@ -88,40 +87,40 @@ def extract_ranges(request_obj):
     return ranges
 
 
-def extract_genes(request_obj):
-    genes = request_obj.args.get('genes', '')
+def extract_genes(request_args):
+    genes = request_args.get('genes', '')
     genes = preprocess_query(genes)
     if genes is None:
         flash("You have an error in your genes query(s). Results are not filtered by genes.", "alert-danger")
     return genes
 
-def extract_variants(request_obj):
-    variant_strings = request_obj.args.get('variants', '')
+def extract_variants(request_args):
+    variant_strings = request_args.get('variants', '')
     variant_strings = preprocess_query(variant_strings, pattern=r"(chr)?.+-\d+-.+-.+")
     if variant_strings is None:
-        flash("You have an error in your variant query(s). This form is required: chrom-pos-ref-alt OR chrom-start-end-sv_type in case of structural variants. Results are not filtered by genes.", "alert-danger")
+        flash("You have an error in your variant query(s). This form is required: chrom-pos-ref-alt OR chrom-start-end-sv_type in case of structural variants. Results are not filtered by variant strings.", "alert-danger")
     return variant_strings
 
-def extract_variant_types(request_obj, allowed_variant_types):
-    variant_types = request_obj.args.getlist('variant_type')
-    variant_types = ';'.join(variant_types)
+def extract_variant_types(request_args, allowed_variant_types):
+    variant_types = request_args.get('variant_type', '')
+    #variant_types = ';'.join(variant_types)
     regex_inner = '|'.join(allowed_variant_types)
     regex_inner = regex_inner.replace('+', '\+')
     variant_types = preprocess_query(variant_types, r'(' + regex_inner + r')?')
     if variant_types is None:
-        flash("You have an error in your variant query(s). This form is required: chrom-pos-ref-alt OR chrom-start-end-sv_type in case of structural variants. Results are not filtered by genes.", "alert-danger")
+        flash("You have an error in your variant type query. Results are not filtered by variant types.", "alert-danger")
     return variant_types
 
 
-def extract_external_ids(request_obj):
-    external_ids = request_obj.args.get('external_ids', '')
+def extract_external_ids(request_args):
+    external_ids = request_args.get('external_ids', '')
     external_ids = preprocess_query(external_ids)
     if external_ids is None:
         flash("You have an error in your external ID query(s). Results are not filtered by external IDs.", "alert-danger")
     return external_ids
 
-def extract_cdna_ranges(request_obj):
-    data = request_obj.args.get('cdna_ranges', '')
+def extract_cdna_ranges(request_args):
+    data = request_args.get('cdna_ranges', '')
 
     data = preprocess_cdna_ranges(data)
     data = preprocess_query(data, pattern = r"[^:]*:[\*-]?\d+([-+]?\d+)?:[\*-]?\d+([-+]?\d+)?")
@@ -147,22 +146,22 @@ def preprocess_cdna_range_worker(r):
     return r
 
 
-def extract_consensus_classifications(request_obj, allowed_classes):
+def extract_consensus_classifications(request_args, allowed_classes):
     classes = allowed_classes + ['-']
-    consensus_classifications = request_obj.args.getlist('consensus')
-    consensus_classifications = ';'.join(consensus_classifications)
+    consensus_classifications = request_args.get('consensus', '')
+    #consensus_classifications = ';'.join(consensus_classifications)
     regex_inner = '|'.join(classes)
     regex_inner = regex_inner.replace('+', '\+')
     consensus_classifications = preprocess_query(consensus_classifications, r'(' + regex_inner + r')?')
     if consensus_classifications is None:
         flash("You have an error in your consensus class query(s). It must consist of a number between 1-5, 3+, 3- or M. Results are not filtered by consensus classification.", "alert-danger")
-    include_heredicare = True if request_obj.args.get('include_heredicare_consensus', 'off') == 'on' else False
+    include_heredicare = True if request_args.get('include_heredicare_consensus', 'off') == 'on' else False
     return consensus_classifications, include_heredicare
 
-def extract_user_classifications(request_obj, allowed_classes):
+def extract_user_classifications(request_args, allowed_classes):
     classes = allowed_classes + ['-']
-    user_classifications = request_obj.args.getlist('user')
-    user_classifications = ';'.join(user_classifications)
+    user_classifications = request_args.get('user', '')
+    #user_classifications = ';'.join(user_classifications)
     regex_inner = '|'.join(classes)
     regex_inner = regex_inner.replace('+', '\+')
     user_classifications = preprocess_query(user_classifications, r'(' + regex_inner + r')?')
@@ -170,10 +169,10 @@ def extract_user_classifications(request_obj, allowed_classes):
         flash("You have an error in your user class query(s). It must consist of a number between 1-5, 3+, 3- or M. Results are not filtered by consensus classification.", "alert-danger")
     return user_classifications
 
-def extract_automatic_classifications(request_obj, allowed_classes, which):
+def extract_automatic_classifications(request_args, allowed_classes, which):
     classes = allowed_classes + ['-']
-    automatic_classifications = request_obj.args.getlist(which)
-    automatic_classifications = ';'.join(automatic_classifications)
+    automatic_classifications = request_args.get(which, '')
+    #automatic_classifications = ';'.join(automatic_classifications)
     regex_inner = '|'.join(classes)
     regex_inner = regex_inner.replace('+', '\+')
     automatic_classifications = preprocess_query(automatic_classifications, r'(' + regex_inner + r')?')
@@ -182,8 +181,8 @@ def extract_automatic_classifications(request_obj, allowed_classes, which):
     return automatic_classifications
 
 
-def extract_hgvs(request_obj):
-    hgvs = request_obj.args.get('hgvs', '')
+def extract_hgvs(request_args):
+    hgvs = request_args.get('hgvs', '')
     hgvs = preprocess_query(hgvs, pattern = r".*:?c\..+") 
     if hgvs is None:
         flash("You have an error in your hgvs query(s). Please check the syntax! c.HGVS should be prefixed by this pattern: 'transcript:c.' Results are not filtered by hgvs.", "alert-danger")
@@ -191,10 +190,14 @@ def extract_hgvs(request_obj):
         flash("You are probably searching for a HGVS c-dot string without knowing its transcript. Be careful with the search results as they might not contain the variant you are looking for!", "alert-warning")
     return hgvs
 
-def extract_annotations(request_obj, conn: Connection):
-    annotation_type_ids = request_obj.args.getlist('annotation_type_id')
-    annotation_operations = request_obj.args.getlist('annotation_operation')
-    annotation_values = request_obj.args.getlist('annotation_value')
+def extract_annotations(request_args, conn: Connection):
+    annotation_type_ids = request_args.get('annotation_type_id', '')
+    annotation_operations = request_args.get('annotation_operation', '')
+    annotation_values = request_args.get('annotation_value', '')
+
+    annotation_type_ids = [x for x in annotation_type_ids.split(';') if x.strip() != '']
+    annotation_operations = [x for x in annotation_operations.split(';') if x.strip() != '']
+    annotation_values = [x for x in annotation_values.split(';') if x.strip() != '']
 
     annotation_restrictions = []
 
@@ -421,9 +424,9 @@ def sort_annotation_types(a, b):
     return 0
 
 
-def extract_lookup_list(request_obj, user_id, conn):
-    lookup_list_names = request_obj.args.getlist('lookup_list_name')
-    lookup_list_ids = request_obj.args.getlist('lookup_list_id')
+def extract_lookup_list(request_args, user_id, conn):
+    lookup_list_names = request_args.get('lookup_list_name', [])
+    lookup_list_ids = request_args.get('lookup_list_id', [])
     variant_ids_oi = []
     num_valid_lists = 0
     for list_name, list_id in zip(lookup_list_names, lookup_list_ids):
@@ -480,22 +483,115 @@ def extract_lookup_list(request_obj, user_id, conn):
     return variant_ids_oi
 
 
-def extract_search_settings(request_obj):
+#def extract_search_settings(request_args):
+#    sort_bys = ["genomic position", "recent"]
+#    page_sizes = ["5", "20", "50", "100"]
+#
+#    selected_page_size = request_args.get('page_size', page_sizes[1])
+#    selected_sort_by = request_args.get('sort_by', sort_bys[0])
+#    include_hidden = True if request_args.get('include_hidden', 'off') == 'on' else False
+#
+#
+#    if selected_page_size not in page_sizes:
+#        flash("This page size is not supported. Defaulting to 20.", "alert-warning")
+#        selected_page_size = "20"
+#    if selected_sort_by not in sort_bys:
+#        flash("The variant table can not be sorted by " + str(selected_sort_by) + ". Defaulting to genomic position sort.", "alert-warning")
+#        selected_sort_by = "genomic position"
+#
+#    return sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden
+
+
+
+def get_static_search_information(user_id, conn: Connection):
     sort_bys = ["genomic position", "recent"]
     page_sizes = ["5", "20", "50", "100"]
+    default_page_size = "20"
+    default_sort_by = "genomic position"
+    default_page = 1
+    allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
+    allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
+    allowed_automatic_classes = functions.order_classes(conn.get_enumtypes('automatic_classification', 'classification_splicing'))
+    allowed_variant_types = ['small_variants', 'structural_variant']
+    annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
+    annotation_types = preprocess_annotation_types_for_search(annotation_types)
+    lists = conn.get_lists_for_user(user_id)
+    return {'sort_bys': sort_bys, 'page_sizes': page_sizes, 'allowed_user_classes': allowed_user_classes, 'allowed_consensus_classes': allowed_consensus_classes, 'allowed_automatic_classes': allowed_automatic_classes,
+            'annotation_types': annotation_types, 'allowed_variant_types': allowed_variant_types, 'default_page_size': default_page_size, 'default_sort_by': default_sort_by, 'default_page': default_page, 'lists': lists}
 
-    selected_page_size = request_obj.args.get('page_size', page_sizes[1])
-    selected_sort_by = request_obj.args.get('sort_by', sort_bys[0])
-    include_hidden = True if request_obj.args.get('include_hidden', 'off') == 'on' else False
 
 
-    if selected_page_size not in page_sizes:
-        flash("This page size is not supported. Defaulting to 20.", "alert-warning")
-        selected_page_size = "20"
-    if selected_sort_by not in sort_bys:
-        flash("The variant table can not be sorted by " + str(selected_sort_by) + ". Defaulting to genomic position sort.", "alert-warning")
-        selected_sort_by = "genomic position"
+def get_merged_variant_page(request_args, user_id, static_information, conn:Connection, flash_messages = True, select_all = False, empty_if_no_variants_oi = False):
+    variant_strings = extract_variants(request_args)
+    variant_types = extract_variant_types(request_args, static_information['allowed_variant_types'])
+    genes = extract_genes(request_args)
+    ranges = extract_ranges(request_args)
+    consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request_args, static_information['allowed_consensus_classes'])
+    user_classifications = extract_user_classifications(request_args, static_information['allowed_user_classes'])
+    automatic_classifications_splicing = extract_automatic_classifications(request_args, static_information['allowed_automatic_classes'], which="automatic_splicing")
+    automatic_classifications_protein = extract_automatic_classifications(request_args, static_information['allowed_automatic_classes'], which="automatic_protein")
+    hgvs = extract_hgvs(request_args)
+    #variant_ids_oi = extract_lookup_list(request_args, user_id, conn)
+    external_ids = extract_external_ids(request_args)
+    cdna_ranges = extract_cdna_ranges(request_args)
+    annotation_restrictions = extract_annotations(request_args, conn)
 
-    return sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden
+    variant_ids_oi = extract_lookup_list(request_args, user_id, conn)
+    view_list_id = request_args.get('view', None)
+    if view_list_id == '':
+        return abort(404)
+    if view_list_id is not None: # the user wants to see the list
+        list_permissions = conn.check_list_permission(user_id, view_list_id)
+        if not list_permissions['read'] and flash_messages:
+            return abort(403)
+    variant_ids_from_list = conn.get_variant_ids_from_list(view_list_id)
+    if variant_ids_from_list is not None and len(variant_ids_from_list) > 0 and (variant_ids_oi is None or len(variant_ids_oi) == 0):
+        variant_ids_oi = variant_ids_from_list
+    elif variant_ids_from_list is not None and len(variant_ids_from_list) > 0 and variant_ids_oi is not None and len(variant_ids_oi) > 0:
+        variant_ids_oi = list(set(functions.none_to_empty_list(variant_ids_from_list)) & set(functions.none_to_empty_list(variant_ids_oi))) # take the intersection of the two lists
+    if empty_if_no_variants_oi and len(variant_ids_oi) == 0:
+        return [], 0, static_information['default_page'], static_information['default_page_size']
 
+    selected_page_size = request_args.get('page_size', static_information['default_page_size'])
+    selected_sort_by = request_args.get('sort_by', static_information['default_sort_by'])
+    include_hidden = request_args.get('include_hidden', 'off') == 'on'
+
+    if selected_sort_by not in static_information['sort_bys']:
+        if flash_messages:
+            flash("The variant table can not be sorted by " + str(selected_sort_by) + ". Defaulting to genomic position sort.", "alert-danger")
+        selected_sort_by = static_information['default_sort_by']
+
+    if select_all:
+        page = 1
+        selected_page_size = "unlimited"
+    else:
+        if selected_page_size not in static_information['page_sizes']:
+            if flash_messages:
+                flash("This page size is not supported. Defaulting to " + str(static_information['default_page_size']) + ".", "alert-danger")
+            selected_page_size = static_information['default_page_size']
+        selected_page_size = int(selected_page_size)
+        page = int(request_args.get('page', 1))
     
+    variants, total = conn.get_variants_page_merged(
+        page=page, 
+        page_size=selected_page_size, 
+        sort_by=selected_sort_by, 
+        include_hidden=include_hidden, 
+        user_id=user_id, 
+        ranges=ranges, 
+        genes = genes, 
+        consensus=consensus_classifications, 
+        user=user_classifications, 
+        automatic_splicing=automatic_classifications_splicing,
+        automatic_protein=automatic_classifications_protein,
+        hgvs=hgvs, 
+        variant_ids_oi=variant_ids_oi,
+        include_heredicare_consensus = include_heredicare_consensus,
+        external_ids = external_ids,
+        cdna_ranges = cdna_ranges,
+        annotation_restrictions = annotation_restrictions,
+        variant_strings = variant_strings,
+        variant_types = variant_types
+    )
+
+    return variants, total, page, selected_page_size

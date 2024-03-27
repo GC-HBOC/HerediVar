@@ -15,6 +15,7 @@ from annotation_service.heredicare_interface import Heredicare
 from mysql.connector import Error, InternalError
 from urllib.error import HTTPError
 import traceback
+from .utils import search_utils
 
 """
 @celery.task(bind=True)
@@ -976,3 +977,96 @@ def abort_annotation_task(annotation_queue_id, celery_task_id, conn:Connection):
 
     #row_id, status, error_msg
     conn.update_annotation_queue(annotation_queue_id, "aborted", "")
+
+
+
+
+
+
+
+
+##################################################
+############## ADD VARIANTS TO LIST ##############
+##################################################
+
+def start_variant_list_import(user_id, list_id, request_args, conn: Connection):
+    list_variant_import_queue_id = conn.insert_list_variant_import_request(list_id, user_id)
+
+    task = variant_list_import.apply_async(args=[user_id, list_id, list_variant_import_queue_id, request_args]) # start task
+    task_id = task.id
+
+    conn.update_list_variant_queue_celery_task_id(list_variant_import_queue_id, celery_task_id = task_id) # save the task id for status updates
+
+    return list_variant_import_queue_id
+
+
+
+@celery.task(bind=True, retry_backoff=5, max_retries=3)
+def variant_list_import(self, user_id, list_id, list_variant_import_queue_id, request_args):
+    """ Background task for importing a large number of variants from a tsv file """
+    self.update_state("PROGRESS")
+
+    message = ""
+    status = "success"
+
+    try:
+        conn = Connection()
+        conn.update_list_variant_import_status(list_variant_import_queue_id, status = "progress", message = "")
+        selected_variants = request_args.get('selected_variants', "").split(',')
+        select_all_variants = request_args.get('select_all_variants', "false") == "true"
+        if select_all_variants:
+            static_information = search_utils.get_static_search_information(user_id, conn)
+            variants, total, page, selected_page_size = search_utils.get_merged_variant_page(request_args, user_id, static_information, conn, flash_messages = False, select_all = True)
+            variant_ids = [variant.id for variant in variants]
+            for variant_id in variant_ids:
+                if str(variant_id) not in selected_variants:
+                    num_new_variants = conn.add_variant_to_list(list_id, variant_id)
+        else:
+            for variant_id in selected_variants:
+                variant = conn.get_variant(variant_id)
+                if variant is not None:
+                    num_new_variants = conn.add_variant_to_list(list_id, variant_id)
+    except InternalError as e:
+        # deadlock: code 1213
+        status = "retry"
+        message = "Attempting retry because of database error: " + str(e)  + ' ' + traceback.format_exc()
+    except Error as e:
+        status = "error"
+        message = "There was a database error: " + str(e)  + ' ' + traceback.format_exc()
+    except HTTPError as e:
+        status = "retry"
+        message = "Attempting retry because of http error: " + str(e)  + ' ' + traceback.format_exc()
+    except Exception as e:
+        status = "error"
+        message = "There was a runtime error: " + str(e) + ' ' + traceback.format_exc()
+    
+    if status != "retry":
+        conn.close_list_variant_import_request(status, list_variant_import_queue_id, message)
+    else:
+        conn.update_list_variant_import_status(list_variant_import_queue_id, status = status, message = message)
+
+    conn.close()
+    
+    if status == 'error':
+        self.update_state(state="FAILURE", meta={ 
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'
+                    })
+        raise Ignore()
+    elif status == "retry":
+        self.update_state(state="RETRY", meta={
+                        'exc_type': "Runtime error",
+                        'exc_message': message, 
+                        'custom': '...'})
+        variant_list_import.retry()
+    else:
+        self.update_state(state="SUCCESS")
+
+
+
+
+
+
+
+
