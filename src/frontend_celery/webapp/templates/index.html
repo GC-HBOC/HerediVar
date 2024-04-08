@@ -93,8 +93,7 @@
 <div class="bst bsb">
     <h4>Changelog</h4>
 
-    <div class="underline">v 1.9.1 ()</div>
-    <div class="btn-pvs">!! The automatic classification algorithm is currently under construction. HerediVar is already prepared for it. Thus, you might encounter disabled buttons or dummy data. It will be enabled in a future update</div>
+    <div class="underline">v 1.10 ()</div>
     <div class="btn-pvs">!! Scores from likelihood ratio tests are currently under construction. A simple reannotation is required to show them on HerediVar once they are ready to be downloaded from HerediCaRe.</div>
     <div>
         General changes:
@@ -103,30 +102,17 @@
                 When too many variants were added to a user defined variant list the request would previously time out. This has been resolved by adding the variants to the list in the background. A status pill is now shown when the 
                 user wants to view a variant list where variants were added from the browse variants table.
             </li>
+            <li>Updated documentation</li>
+            <li>Activated automatic classification algorithm</li>
+            <li>Added tooltip to criterion select on classify page to explain what the different states mean</li>
         </ul>
         Bugfixes:
         <ul>
             <li>Fixed a bug where the cancerhotspot annotations would be erroneous: If variants map to the same position in grch38 or are equal when left normalized their cancerhotspots annotations are now summed up</li>
+            <li>Fixed a bug that caused criteria buttons to be unchecked when mutually exclusive criteria were unselected</li>
         </ul>
     </div>
     
-
-    <div class="underline">v 1.9 (12.03.2024)</div>
-    <div>
-        General changes:
-        <ul>
-            <li>Added comments from HerediCaRe center specific classifications</li>
-            <li>Added gnomAD non-cancer scores & faf95 popmax value</li>
-        </ul>
-        Bugfixes:
-        <ul>
-            <li>Fixed a bug where the HerediCaRe center specific classifications were not shown when the HerediCaRe consensus classification was unavailable</li>
-            <li>When there were multiple rows in the HerediCaRe classifications table the center details button would always open and close details of all rows</li>
-            <li>Previously, an empty HerediCaRe table was shown on the variant details page when the variant was known to HerediCaRe, but was not classified. The empty table was removed in this case</li>
-            <li>Longer insertions were previously clogging the header line. This was fixed by cropping the reference and alternative bases if their length is large</li>
-            <li>Fixed a bug where vcfs were not downloadable when the variant had HerediCaRe annotations but no center specific classifications</li>
-        </ul>
-    </div>
 
     <a class="btn btn-outline-primary" href="{{url_for('main.changelog')}}">previous changelog</a>
 </div>

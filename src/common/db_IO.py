@@ -2745,10 +2745,6 @@ class Connection:
             source = mutually_exclusive_criterium[0]
             target = mutually_exclusive_criterium[2]
             functions.extend_dict(mutually_exclusive_criteria_dict, source, target)
-            #if source not in mutually_exclusive_criteria:
-            #    mutually_exclusive_criteria_dict[source] = [target]
-            #else:
-            #    mutually_exclusive_criteria_dict[source].append(target)
         
         command = "SELECT source,target,name FROM mutually_inclusive_criteria INNER JOIN (SELECT id as inner_id,name FROM classification_criterium)x ON x.inner_id = mutually_inclusive_criteria.target"
         self.cursor.execute(command)
@@ -2758,10 +2754,6 @@ class Connection:
             source = mutually_inclusive_criterium[0]
             target = mutually_inclusive_criterium[2]
             functions.extend_dict(mutually_inclusive_criteria_dict, source, target)
-            #if source not in mutually_inclusive_criteria_dict:
-            #    mutually_inclusive_criteria_dict[source] = [target]
-            #else:
-            #    mutually_inclusive_criteria_dict[source].append(target)
 
         result = {}
         for classification_schema in classification_schemas:

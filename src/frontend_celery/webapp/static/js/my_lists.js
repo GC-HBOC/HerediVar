@@ -173,7 +173,7 @@ create_modal.addEventListener('show.bs.modal', function (event) {
     }
 
     if (action_type == 'create') {
-        show_modal_content(show_list_name = true, show_permissions = true, show_other_list = false, show_delete_button = true, show_inplace_toggle = false)
+        show_modal_content(show_list_name = true, show_permissions = true, show_other_list = false, show_delete_button = false, show_inplace_toggle = false)
         title = 'Create a new list'
         form_action_type = '/mylists?type=create'
         submit_button_title = 'Create'
@@ -280,7 +280,6 @@ function show_modal_content(show_list_name = true, show_permissions = true, show
         hide_obj(other_list_obj)
     }
 
-    console.log(show_delete_button)
     if (show_delete_button) {
         show_obj(delete_button)
         delete_button.disabled = false

@@ -41,10 +41,10 @@
                 </div>
                 
                 <div>
-                    <button type="button" class="btn btn-sm btn-secondary ssr"  data-bs-toggle="modal" data-bs-target="#automatic_classification_options-modal" disabled>{{ macros.draw_gear(tooltip = "") }}</button>
+                    <button type="button" class="btn btn-sm btn-secondary ssr"  data-bs-toggle="modal" data-bs-target="#automatic_classification_options-modal">{{ macros.draw_gear(tooltip = "") }}</button>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-sm btn-primary" id="automatic_classification_button" disabled>Preselect criteria</button>
+                    <button type="button" class="btn btn-sm btn-primary" id="automatic_classification_button">Preselect criteria</button>
                 </div>
             </div>
 
@@ -95,29 +95,9 @@
                     <div class="card-body">
 
                         <div class="d-flex align-items-center">
-                            <!--
-                            <input class="scale_150 ssr" id="select_criterium_check" type="checkbox"
-                                data-bs-trigger="manual" data-bs-container="body" 
-                                data-bs-toggle="popover" data-bs-placement="left" 
-                                data-bs-content="you must provide evidence in order to select this criterion" hidden>
-                            -->
-                            <!--
-                            <fieldset class="light-hover ssr" id="select_criterium_check" data-bs-trigger="manual" data-bs-container="body" 
-                            data-bs-toggle="popover" data-bs-placement="left" 
-                            data-bs-content="you must provide evidence in order to select this criterion" hidden>
-                                <input id="unchecked" type="radio" name="criterium_state" value="unchecked" selectable="true" checked>
-                                <label for="unchecked">{{ macros.draw_square(width=25,height=25) }}</label>
-                                <input id="intermediate" type="radio" name="criterium_state" value="intermediate" selectable="false">
-                                <label for="intermediate">{{ macros.draw_dash_square(width=25,height=25) }}</label>
-                                <input id="selected" type="radio" name="criterium_state" value="selected" selectable="true">
-                                <label for="selected">{{ macros.draw_check_square(width=25,height=25) }}</label>
-                                <input id="unselected" type="radio" name="criterium_state" value="unselected" selectable="true">
-                                <label for="unselected">{{ macros.draw_x_square(width=25,height=25) }}</label>
-                            </fieldset>
-                            -->
-                            <select class="ssr form-select width_small" id="select_criterium_check" data-bs-trigger="manual" data-bs-container="body" 
-                            data-bs-toggle="popover" data-bs-placement="left" 
-                            data-bs-content="you must provide evidence in order to select this criterion" hidden>
+                            <select class="ssr form-select width_small cursor_pointer" id="select_criterium_check" 
+                                    data-bs-toggle="tooltip" data-bs-placement="left" 
+                                    data-bs-title="unchecked: not enough evidence available, selected: positive evidence, unselected: we KNOW this criterion is not true" hidden>
                                 <option class="criterium_option" value="unchecked">unchecked</option>
                                 <option class="criterium_option" value="selected">selected</option>
                                 <option class="criterium_option" value="unselected">unselected</option>
@@ -393,7 +373,6 @@
 </div>
 
 <!-- this extracts the flask data and makes them available to the scripts -->
-
 <input type='hidden' id='flask_data'
     data-logged-in-user-id='{{ logged_in_user_id }}'
     data-classification-schemas='{{ classification_schemas | tojson }}'

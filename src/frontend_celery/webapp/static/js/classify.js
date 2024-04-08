@@ -60,7 +60,7 @@ function update_info_panel(criterium_id, previous_evidence) {
     criteria_title.textContent = criterium_id.toUpperCase();
     document.getElementById('button_container').hidden = false;
 
-    $('#select_criterium_check').popover('hide')
+    //$('#select_criterium_check').popover('hide')
     document.getElementById('select_criterium_check').hidden = false;
 
     var criteria_description_dom = document.getElementById('criteria_description')
@@ -318,6 +318,7 @@ $(document).ready(function() {
     });
     $('#select_criterium_check').on('change', function() {
         select_criterium(this);
+        document.activeElement.blur() // clear focus so that tooltip is not shown after selecting
     });
 
     add_default_for_important_information()
@@ -1201,8 +1202,6 @@ function add_user_acmg_classification_details(criterium_id) {
                 }
             }
         }
-
-
     }
     add_functionality_to_table()
 }
@@ -1240,7 +1239,7 @@ function select_criterium(obj) {
     const criterium_id = obj.getAttribute('criterium_id') // this is the criterium which we want to select
     const criterium_button = document.getElementById(criterium_id)
 
-    $(obj).popover('hide')
+    //$(obj).popover('hide')
     const state = document.getElementById("select_criterium_check").value
     set_criterium(criterium_id, state)
     update_classification_preview()
@@ -1477,6 +1476,8 @@ function set_criterium(criterium_id, state, is_intermediate = false) {
     const state_check = document.getElementById(criterium_id + '_state')
     const strength_check = document.getElementById(criterium_id + '_strength')
 
+    const previous_state = state_check.value
+
     is_checked = false
     if (state == 'selected' || state == 'unselected') {
         is_checked = true
@@ -1497,7 +1498,10 @@ function set_criterium(criterium_id, state, is_intermediate = false) {
 
     update_criterium_button_label(criterium_id)
     update_criterium_button_background(criterium_id)
-    update_mutual_criteria(criterium_id)
+
+    if (!(['unchecked', 'unselected'].includes(previous_state) && ['unchecked', 'unselected'].includes(state))) {
+        update_mutual_criteria(criterium_id)
+    }
 }
 
 
