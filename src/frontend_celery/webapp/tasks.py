@@ -939,7 +939,7 @@ def notify_new_user(self, full_name, email, username, password):
     """Background task for sending two consecutive mails"""
     # first mail: username
     sender = "noreply@heredivar.uni-koeln.de"
-    body = render_template("auth/mail_username.html", full_name = full_name, username = username)
+    body = render_template("mail_templates/mail_username.html", full_name = full_name, username = username)
     send_mail(
         subject = "[VICC-CP] User account",
         sender = sender,
@@ -951,7 +951,7 @@ def notify_new_user(self, full_name, email, username, password):
     time.sleep(10)
     
     #second mail: password
-    body = render_template("auth/mail_password.html", full_name = full_name, password = password)
+    body = render_template("mail_templates/mail_password.html", full_name = full_name, password = password)
     send_mail(
         subject = "[VICC-CP] User account",
         sender = sender,
