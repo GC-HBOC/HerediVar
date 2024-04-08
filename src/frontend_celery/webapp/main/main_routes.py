@@ -31,13 +31,6 @@ def downloads():
 
 
 
-
-@main_blueprint.route('/help/search')
-@require_permission(['read_resources'])
-def search_help():
-    return render_template('main/search_help.html')
-
-
 @main_blueprint.route('/deleted_variant_info')
 @require_permission(['read_resources'])
 def deleted_variant():

@@ -463,10 +463,10 @@
             <table class="table table-hover" style="max-height:15em" id="cancerhotspots_table">
                 <thead>
                     <tr>
-                        <th class="width_very_small" style="background:white; padding:0;"><div class="sortable">oncotree symbol</div><input type="text" class="form-control form-control-sm column-filter sst" style="max-width:10em" placeholder="search..." autocomplete="off"></th>
-                        <th class="width_medium" id="cancerhotspots_cancertype_col" style="width: 40%; background:white; padding:0;" asc="false"><div class="sortable">cancertype</div><input type="text" class="form-control form-control-sm column-filter sst" style="max-width:10em" placeholder="search..." autocomplete="off"></th>
-                        <th class="width_small" style="background:white; padding:0;"><div class="sortable">tissue</div><input type="text" class="form-control form-control-sm column-filter sst" style="max-width:10em" placeholder="search..." autocomplete="off"></th>
-                        <th class="width_very_small" style="background:white; padding:0;"><div class="sortable"># occurances</div><input type="text" class="form-control form-control-sm column-filter sst" style="max-width:10em" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_very_small bg-light nopad"><div class="sortable">oncotree symbol</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_medium bg-light nopad" id="cancerhotspots_cancertype_col" asc="false"><div class="sortable">cancertype</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_small bg-light nopad"><div class="sortable">tissue</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_very_small bg-light nopad"><div class="sortable"># occurances</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -554,7 +554,7 @@
                         <div id="variant_type-select" class="d-flex">
                             {% for variant_type in static_information['allowed_variant_types'] %}
                                 <div class="form-check d-flex bsr align-items-center">
-                                    <input class="form-check-input ssr" type="checkbox" value="{{variant_type}}" id="variant_type_{{variant_type}}" name="variant_type" {% if variant_type in selected_variant_types %}checked{% endif %}>
+                                    <input class="form-check-input ssr" type="checkbox" value="{{variant_type}}" id="variant_type_{{variant_type}}" name="variant_type" {% if variant_type in selected_variant_types or selected_variant_types | length == 0 %}checked{% endif %}>
                                     <label class="form-check-label" for="variant_type_{{variant_type}}">{{variant_type.replace('_', ' ')}}</label>
                                 </div>
                             {% endfor %}
@@ -708,7 +708,7 @@
                     <div class="form-group d-flex sst">
                         <div class="bsr">
                             <label for="page_size" class="form-label">Page size</label>
-                            <select class="form-select" name="page_size" id="page_size" style="width:5em" required>
+                            <select class="form-select width_very_small" name="page_size" id="page_size" required>
                                 {% set selected_page_size = request.args.get('page_size', static_information['default_page_size']) %}
                                 {% for option in static_information['page_sizes'] %}
                                     <option value="{{option}}" {% if selected_page_size == option %} selected="selected" {% endif %}> {{option}} </option>
@@ -718,7 +718,7 @@
 
                         <div class="bsr">
                             <label for="sort_by" class="form-label">Sort by</label>
-                            <select class="form-select" name="sort_by" id="sort_by" style="width:11em" required>
+                            <select class="form-select width_small" name="sort_by" id="sort_by" required>
                                 {% set selected_sort_by = request.args.get('sort_by', static_information['default_search_by']) %}
                                 {% for option in static_information['sort_bys'] %}
                                     <option value="{{option}}" {% if selected_sort_by == option %} selected="selected" {% endif %}> {{option}} </option>
@@ -730,7 +730,7 @@
                             <label for="status-select" class="form-label">Status</label>
                             <div id="status-select" class="d-flex">
                                 <div class="form-check d-flex bsr align-items-center">
-                                    <input class="form-check-input"  style="margin-right:0.3rem" type="checkbox" id="include_hidden" name="include_hidden" {% if request.args.get('include_hidden') == 'on' %}checked{% endif %}>
+                                    <input class="form-check-input vssr" type="checkbox" id="include_hidden" name="include_hidden" {% if request.args.get('include_hidden') == 'on' %}checked{% endif %}>
                                     <label class="form-check-label" for="include_hidden">Include hidden</label>
                                 </div>
                             </div>
@@ -746,7 +746,7 @@
         
                     <div class="d-flex justify-content-end align-items-center">
                         <div>
-                            <a class="ssr float_right" href="{{url_for('main.search_help')}}">Help</a>
+                            <a class="ssr float_right" href="{{url_for('main.documentation')}}">Help</a>
                         </div>
                         <button class="btn btn-primary float_right" type="submit">search</button>
                     </div>
@@ -916,9 +916,6 @@
 
 
 {% macro draw_consequence_table(variant) %}
-
-
-
 <ul class="nav nav-tabs" id="tabs" role="tablist"> <!-- although this uses the styles from a tablist it is essentially not a tablist as it is not linked to the tabContent div below! Changes appear through javascript-->
     <li class="nav-item" role="presentation">
         <button id="consequence_ensembl_tab" class="nav-link active" data-bs-toggle="tab" type="button" role="tab" aria-selected="true">Ensembl</button>
@@ -1023,11 +1020,6 @@
     </div>
 
 </div>
-
-
-
-
-
 {% endmacro %}
 
 
