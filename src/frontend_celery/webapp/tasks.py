@@ -65,13 +65,10 @@ def fetch_consequence_task(self, variant_id):
 ###################################################################################
 
 def start_variant_import(user_id, user_roles, conn: Connection): # starts the celery task
-    import_request = conn.get_most_recent_import_request() # get the most recent import request
-    min_date = None
-    if import_request is not None:
-        min_date = import_request.import_variant_list_finished_at
-    #print(import_request.finished_at)
+    min_date = conn.get_min_date_heredicare_import(source = "heredicare") # returns None if there are no successful imports (or no import requests at all)
+    #print(min_date)
 
-    new_import_request = conn.insert_import_request(user_id)
+    new_import_request = conn.insert_import_request(user_id, source = "heredicare")
     import_queue_id = new_import_request.id
 
     task = heredicare_variant_import.apply_async(args=[user_id, user_roles, min_date, import_queue_id]) # start task
@@ -149,11 +146,12 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
 
             intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = compare_v_id_lists(all_vids_heredicare, vids_heredivar, vids_heredicare)
 
-            print("Total HerediCare: " + str(len(vids_heredicare)))
+            print("Total HerediCare: " + str(len(all_vids_heredicare)))
+            print("Filtered HerediCare: " + str(len(vids_heredicare)))
 
-            print("Intersection: " + str(len(intersection)))
-            print("Deleted: " + str(len(heredivar_exclusive_vids)))
-            print("New: " + str(len(heredicare_exclusive_vids)))
+            print("Intersection of filtered heredicare and heredivar vids: " + str(len(intersection)))
+            print("Deleted vids (unknown to heredicare but known to heredivar): " + str(len(heredivar_exclusive_vids)))
+            print("New vids (unknown to heredivar but known to heredicare): " + str(len(heredicare_exclusive_vids)))
 
             #intersection = []
             #heredicare_exclusive_vids = []
@@ -291,7 +289,7 @@ def delete_variant_heredicare(self, vid, vids, user_id, user_roles, import_varia
 ###########################################################
 
 def start_variant_import_vcf(user_id, user_roles, conn: Connection, filename, filepath, genome_build):
-    import_request = conn.insert_import_request(user_id)
+    import_request = conn.insert_import_request(user_id, source = "vcf")
     import_queue_id = import_request.id
 
     task = variant_import_vcf.apply_async(args=[user_id, user_roles, import_queue_id, filepath, genome_build]) # start task
@@ -474,7 +472,7 @@ def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection, insert
         variant_id = conn.get_variant_id_from_external_id(vid, annotation_type_id)
         if variant_id is not None:
             conn.delete_external_id(vid, annotation_type_id, variant_id)
-            variant_vids = conn.get_external_ids_from_variant_id(variant_id)
+            variant_vids = conn.get_external_ids_from_variant_id(variant_id, annotation_type_id)
             if len(variant_vids) == 0:
                 conn.hide_variant(variant_id, is_hidden = False)
                 status = "deleted"
@@ -979,7 +977,8 @@ def abort_annotation_task(annotation_queue_id, celery_task_id, conn:Connection):
     conn.update_annotation_queue(annotation_queue_id, "aborted", "")
 
 
-
+def purge_celery():
+    celery.control.purge()
 
 
 

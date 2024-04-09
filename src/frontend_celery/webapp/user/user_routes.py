@@ -9,7 +9,7 @@ from datetime import datetime
 from ..utils import *
 from flask_paginate import Pagination
 import annotation_service.main as annotation_service
-from ..tasks import start_annotation_service, start_variant_import, start_import_one_variant, annotate_all_variants, abort_annotation_tasks
+import frontend_celery.webapp.tasks as tasks
 import random
 
 
@@ -339,7 +339,7 @@ def admin_dashboard():
     schemes = conn.get_all_classification_schemes()
     do_redirect = False
 
-    most_recent_import_request = conn.get_most_recent_import_request()
+    most_recent_import_request = conn.get_most_recent_import_request(source = "heredicare")
     if most_recent_import_request is None:
         status = 'finished'
     else:
@@ -366,7 +366,7 @@ def admin_dashboard():
             elif reannotate_which == 'unannotated':
                 variant_ids = annotation_stati['unannotated']
 
-            annotate_all_variants.apply_async(args=[variant_ids, selected_job_config, session['user']['user_id'], session['user']['roles']])
+            tasks.annotate_all_variants.apply_async(args=[variant_ids, selected_job_config, session['user']['user_id'], session['user']['roles']])
             current_app.logger.info(session['user']['preferred_username'] + " issued a reannotation of " + reannotate_which + " variants") 
             flash('Variant reannotation of ' + reannotate_which + ' variants requested. It will be computed in the background.', 'alert-success')
             do_redirect = True
@@ -374,7 +374,7 @@ def admin_dashboard():
         elif request_type == 'abort_annotations':
             annotation_statuses_to_abort = request.form.getlist('annotation_statuses')
             annotation_requests = conn.get_annotation_queue(annotation_statuses_to_abort)
-            abort_annotation_tasks(annotation_requests, conn)
+            tasks.abort_annotation_tasks(annotation_requests, conn)
             flash("Aborted " + str(len(annotation_requests)) + " annotation requests.", "alert-success")
             do_redirect = True
 
@@ -382,7 +382,7 @@ def admin_dashboard():
             #heredicare_interface = current_app.extensions['heredicare_interface']
             #start_variant_import(conn)
             #heredicare_variant_import.apply_async(args=[session['user']['user_id'], session['user']['roles']])
-            import_queue_id = start_variant_import(session['user']['user_id'], session['user']['roles'], conn = conn)
+            import_queue_id = tasks.start_variant_import(session['user']['user_id'], session['user']['roles'], conn = conn)
             #task = import_one_variant_heredicare.apply_async(args=[12, 30, ["super_user"], 169])
             
             return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id))
@@ -397,7 +397,7 @@ def admin_dashboard():
                     abort(404)
             if vid is None:
                 abort(404)
-            start_import_one_variant(vid, import_queue_id, session['user']['user_id'], session['user']['roles'], conn)
+            tasks.start_import_one_variant(vid, import_queue_id, session['user']['user_id'], session['user']['roles'], conn)
             flash("Successfully requested variant import of HerediCare VID: " + str(vid), "alert-success")
             return redirect(url_for('user.single_vid_imports'))
 

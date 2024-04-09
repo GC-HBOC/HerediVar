@@ -128,6 +128,8 @@ for data_path in data_paths:
     insert_scheme(conn, data_path)
 
 
+conn.close()
+
 #/mnt/storage2/users/ahdoebm1/HerediVar/resources/classification_schemes/ClinGen_BRCA1_v1.0.0.json
 #/mnt/storage2/users/ahdoebm1/HerediVar/resources/classification_schemes/ClinGen_BRCA2_v1.0.0.json
 

@@ -1653,17 +1653,25 @@ class Connection:
 
 
 
-    def insert_import_request(self, user_id):
-        command = "INSERT INTO import_queue (user_id) VALUES (%s)"
-        self.cursor.execute(command, (user_id, ))
+    def insert_import_request(self, user_id, source):
+        command = "INSERT INTO import_queue (user_id, source) VALUES (%s, %s)"
+        self.cursor.execute(command, (user_id, source))
         self.conn.commit()
-        return self.get_most_recent_import_request()
+        return self.get_most_recent_import_request(source)
     
-    def get_most_recent_import_request(self):
-        self.cursor.execute("SELECT id, user_id, requested_at, status, finished_at, message FROM import_queue WHERE status != 'error' ORDER BY requested_at DESC LIMIT 1")
+    def get_most_recent_import_request(self, source):
+        self.cursor.execute("SELECT id, user_id, requested_at, status, finished_at, message FROM import_queue WHERE status != 'error' AND source = %s ORDER BY requested_at DESC LIMIT 1", (source, ))
         import_request_raw = self.cursor.fetchone()
         import_request = self.convert_raw_import_request(import_request_raw)
         return import_request
+
+    def get_min_date_heredicare_import(self, source):
+        # get the requested date where the last successful import happened. If there are none it will return None 
+        # continue importing variants starting from this date
+        command = "SELECT MAX(requested_at) FROM import_queue WHERE status != 'error' AND finished_at is not null AND source = %s"
+        self.cursor.execute(command, (source, ))
+        min_date = self.cursor.fetchone()[0]
+        return min_date
     
     def get_import_request(self, import_queue_id):
         command = "SELECT id, user_id, requested_at, status, finished_at, message FROM import_queue WHERE id = %s"

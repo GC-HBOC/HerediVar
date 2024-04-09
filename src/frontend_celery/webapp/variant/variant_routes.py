@@ -351,7 +351,8 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
         else:
             abort(404)  
     
-    vids = conn.get_external_ids_from_variant_id(variant_id, 'heredicare')
+    heredicare_annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
+    vids = conn.get_external_ids_from_variant_id(variant_id, heredicare_annotation_type_id)
     if len(vids) > 1:
         has_multiple_vids = True
     else:
