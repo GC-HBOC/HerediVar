@@ -61,6 +61,8 @@ extension=env_
 source $ROOT/.$extension$WEBAPP_ENV
 set +o allexport
 
+# load venv
+source $ROOT/.venv/bin/activate
 
 # setup paths
 path_to_structure=$SCRIPTPATH/data/db_structure
@@ -70,13 +72,22 @@ path_to_data=$SCRIPTPATH/data/db_seeds
 mkdir -p $path_to_data
 path_to_data=$path_to_data/static.sql
 
+update_truncate_sql_script=$SCRIPTPATH/update_truncate_sql.py
+path_to_truncate=$SCRIPTPATH/data/truncate.sql
+
 echo $path_to_structure
 echo $path_to_data
+
+
+static_data_tables="annotation_type classification_scheme classification_criterium classification_criterium_strength classification_scheme_alias mutually_exclusive_criteria mutually_inclusive_criteria user"
 
 # dump structure
 mysqldump --quick --column-statistics=0 $DB_NAME -P $DB_PORT -h $DB_HOST -u $DB_ADMIN -p$DB_ADMIN_PW --no-tablespaces --no-data -r $path_to_structure
 #gzip --force $path_to_structure
 
 # dump static data
-mysqldump --quick --column-statistics=0 $DB_NAME -P $DB_PORT -h $DB_HOST -u $DB_ADMIN -p$DB_ADMIN_PW --no-tablespaces --no-create-info -r $path_to_data annotation_type classification_scheme classification_criterium classification_criterium_strength classification_scheme_alias mutually_exclusive_criteria mutually_inclusive_criteria user
+mysqldump --quick --column-statistics=0 $DB_NAME -P $DB_PORT -h $DB_HOST -u $DB_ADMIN -p$DB_ADMIN_PW --no-tablespaces --no-create-info -r $path_to_data $static_data_tables
 #gzip $path_to_data
+
+
+python3 $update_truncate_sql_script -e $static_data_tables -o $path_to_truncate

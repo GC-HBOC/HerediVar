@@ -29,3 +29,9 @@ class Test_Connection(Connection):
         r = self.cursor.execute(command, multi=True)
         #self.conn.commit()
         assert False
+
+    def get_tables(self):
+        command = "SHOW TABLES"
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]

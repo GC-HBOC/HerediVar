@@ -12,8 +12,7 @@ import requests
 
 
 def test_index(page):
-    resp = page.goto(url_for("main.index", _external=True))
-    assert resp.status == 200
+    utils.nav(page.goto, utils.GOOD_STATI, url_for("main.index", _external=True))
 
     base_url = utils.get_base_url(page)
     link_handles = page.locator("[href]")

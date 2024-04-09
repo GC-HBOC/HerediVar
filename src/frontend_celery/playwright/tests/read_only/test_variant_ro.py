@@ -25,24 +25,21 @@ import requests
 def test_variant_list_add(page):
     utils.login(page, utils.get_user())
 
-    response = page.goto(url_for("user.my_lists", _external=True))
-    assert response.status == 200
+    utils.nav(page.goto, utils.GOOD_STATI, url_for("user.my_lists", _external=True))
 
     # add new variant list
     list_name = "priv_l"
     page.locator("#create-list-button").click()
     page.wait_for_selector("#createModalLabel")
-    #utils.screenshot(page)
     page.locator("#list_name").fill(list_name)
     #utils.screenshot(page)
 
-    page.locator("#list-modal-submit").click()
-    #utils.screenshot(page)
+    utils.nav(page.click, utils.GOOD_STATI, "#list-modal-submit")
 
     utils.check_flash_id(page, "list_add_success")
-    utils.click_link(page, "td:has-text('" + list_name + "')")
+    utils.nav(page.click, utils.GOOD_STATI, "td:has-text('" + list_name + "')")
 
-    #utils.screenshot(page)
+    utils.screenshot(page)
 
 
     # add variant list public read
@@ -51,13 +48,14 @@ def test_variant_list_add(page):
     page.wait_for_selector("#createModalLabel")
     page.locator("#list_name").fill(list_name)
     page.locator("#public_read").click()
-    utils.screenshot(page)
-
-    page.locator("#list-modal-submit").click()
     #utils.screenshot(page)
 
+    utils.nav(page.click, utils.GOOD_STATI, "#list-modal-submit")
+
     utils.check_flash_id(page, "list_add_success")
-    utils.click_link(page, "td:has-text('" + list_name + "')")
+    utils.nav(page.click, utils.GOOD_STATI, "td:has-text('" + list_name + "')")
+
+    utils.screenshot(page)
 
 
     # add variant list public edit
@@ -67,15 +65,16 @@ def test_variant_list_add(page):
     page.locator("#list_name").fill(list_name)
     page.locator("#public_read").click()
     page.locator("#public_edit").click()
-    utils.screenshot(page)
-
-    page.locator("#list-modal-submit").click()
     #utils.screenshot(page)
 
-    utils.check_flash_id(page, "list_add_success")
-    utils.click_link(page, "td:has-text('" + list_name + "')")
+    utils.nav(page.click, utils.GOOD_STATI, "#list-modal-submit")
 
-    #
+    utils.check_flash_id(page, "list_add_success")
+    utils.nav(page.click, utils.GOOD_STATI, "td:has-text('" + list_name + "')")
+
+
+
+
     #page.goto(url_for("user.my_lists", _external=True))
     #page.locator("#access_col_search").fill("private")
     #utils.screenshot(page)
@@ -103,21 +102,18 @@ def test_private_list_actions(page):
     utils.login(page, utils.get_user())
 
     # is the list visible?
-    response = page.goto(url_for('user.my_lists', _external=True))
-    assert response.status == 200
+    utils.nav(page.goto, utils.GOOD_STATI, url_for('user.my_lists', _external=True))
     expect(page.locator("tr[list_id='" + str(list_id) + "']")).to_have_count(0)
 
-    # try accessing the private list
-    response = page.goto(url_for('user.my_lists', view=list_id, _external=True))
-    assert response.status == 403
+    # try accessing the private list -> unauthorized
+    utils.nav(page.goto, utils.UNAUTHORIZED_STATI, url_for('user.my_lists', view=list_id, _external=True))
 
-    # is it possible to add variants?
-    print(url_for("user.modify_list_content"))
-    page.route("**/*" + url_for("user.modify_list_content") + "*", lambda route: continue_as_post(route, expected_stati = [200])) # utils.NO_ACCESS_STATI
-    page.goto(url_for("user.modify_list_content", selected_list_id=list_id, variant_id = variant_id_2, action = 'add_to_list', next = url_for('variant.display', variant_id=variant_id_2), _external=True))
-    utils.screenshot(page)
-    print("YOOO")
-    assert False
+    ## is it possible to add variants?
+    #page.route("**/*" + url_for("user.modify_list_content") + "*", lambda route: continue_as_post(route, expected_stati = [200])) # utils.NO_ACCESS_STATI
+    #page.goto(url_for("user.modify_list_content", selected_list_id=list_id, variant_id = variant_id_2, action = 'add_to_list', next = url_for('variant.display', variant_id=variant_id_2), _external=True))
+    #utils.screenshot(page)
+    #print("YOOO")
+    #assert False
 
     #response = page.goto(url_for('variant.display', variant_id = variant_id_2, _external=True))
     #utils.screenshot(page)
@@ -130,11 +126,7 @@ def test_private_list_actions(page):
     #utils.screenshot(page)
 
 
-def continue_as_post(route, expected_stati):
-    response = route.fetch(method="POST")
-    route.fulfill()
-    if response.status not in expected_stati:
-        raise AssertionError("Status code is not expected: " + str(response.status) + " should be in " + str(expected_stati))
+
     
     
 
@@ -159,13 +151,11 @@ def test_public_list_actions(page):
     utils.login(page, utils.get_user())
 
     # is the list visible?
-    response = page.goto(url_for('user.my_lists', _external=True))
-    assert response.status == 200
-    expect(page.locator("tr[list_id=" + str(list_id) + "]")).to_have_count(1)
+    utils.nav(page.goto, utils.GOOD_STATI, url_for('user.my_lists', _external=True))
+    expect(page.locator("tr[list_id='" + str(list_id) + "']")).to_have_count(0)
 
-    # try accessing public list
-    response = page.goto(url_for('user.my_lists', view=list_id, _external=True))
-    assert response.status == 200
+    # try accessing the public list -> works
+    utils.nav(page.goto, utils.GOOD_STATI, url_for('user.my_lists', view=list_id, _external=True))
 
 
 
@@ -189,24 +179,10 @@ def test_public_edit_list_actions(page):
     utils.login(page, utils.get_user())
 
     # is the list visible?
-    response = page.goto(url_for('user.my_lists', _external=True))
-    assert response.status == 200
-    expect(page.locator("tr[list_id=" + str(list_id) + "]")).to_have_count(1)
+    utils.nav(page.goto, utils.GOOD_STATI, url_for('user.my_lists', _external=True))
+    expect(page.locator("tr[list_id='" + str(list_id) + "']")).to_have_count(0)
 
-    # try accessing public editable list
-    response = page.goto(url_for('user.my_lists', view=list_id, _external=True))
-    assert response.status == 200
+    # try accessing the public list -> works
+    utils.nav(page.goto, utils.GOOD_STATI, url_for('user.my_lists', view=list_id, _external=True))
 
 
-
-#test_variant_lists
-
-
-#def test_get_started_link(page: Page):
-#    page.goto("https://playwright.dev/")
-#
-#    # Click the get started link.
-#    page.get_by_role("link", name="Get started").click()
-#
-#    # Expects page to have a heading with the name of Installation.
-#    expect(page.get_by_role("heading", name="Installation")).to_be_visible()

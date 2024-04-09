@@ -36,18 +36,26 @@ def _push_request_context(request, app):
 
     request.addfinalizer(teardown)
 
-    
-@pytest.fixture(autouse=True)
-def _seed_db():
-    utils.execute_sql_script("/mnt/storage2/users/ahdoebm1/HerediVar/src/frontend_celery/playwright/data/db_structure/structure.sql")
-    utils.execute_sql_script("/mnt/storage2/users/ahdoebm1/HerediVar/src/frontend_celery/playwright/data/db_seeds/static.sql")
-
 @pytest.fixture
 def page(browser):
     context = utils.get_context(browser)
     page = utils.get_page(context)
     yield page
     utils.save_browser_state(context)
+    utils.screenshot(page)
+
+
+@pytest.fixture(autouse=True)
+def _rollback():
+    yield
+    utils.execute_sql_script("/mnt/storage2/users/ahdoebm1/HerediVar/src/frontend_celery/playwright/data/truncate.sql")
+
+
+
+#@pytest.fixture(autouse=True)
+#def _seed_db():
+#    utils.execute_sql_script("/mnt/storage2/users/ahdoebm1/HerediVar/src/frontend_celery/playwright/data/db_structure/structure.sql")
+#    utils.execute_sql_script("/mnt/storage2/users/ahdoebm1/HerediVar/src/frontend_celery/playwright/data/db_seeds/static.sql")
 
 #@pytest.fixture()
 #def page2(playwright):
@@ -59,20 +67,3 @@ def page(browser):
 #    page = context.new_page()
 #    return page
     
-
-#---TRANSACTION 421342131045816, ACTIVE 1583 sec
-#0 lock struct(s), heap size 1128, 0 row lock(s)
-#MySQL thread id 477340, OS thread handle 139793800128256, query id 10062648333 SRV018.img.med.uni-tuebingen.de 10.203.68.22 ahdoebm1 
-#Trx read view will not see trx with id >= 422169676, sees < 422169676
-#---TRANSACTION 421342130999880, ACTIVE 1584 sec
-#0 lock struct(s), heap size 1128, 0 row lock(s)
-#MySQL thread id 477338, OS thread handle 139794766124800, query id 10062647631 SRV018.img.med.uni-tuebingen.de 10.203.68.22 ahdoebm1 
-#Trx read view will not see trx with id >= 422169676, sees < 422169676
-#---TRANSACTION 421342131083400, ACTIVE 1584 sec
-#0 lock struct(s), heap size 1128, 0 row lock(s)
-#MySQL thread id 477336, OS thread handle 139794767046400, query id 10062645909 SRV018.img.med.uni-tuebingen.de 10.203.68.22 ahdoebm1 
-#Trx read view will not see trx with id >= 422169674, sees < 422169674
-#---TRANSACTION 421342131016584, ACTIVE 1590 sec
-#0 lock struct(s), heap size 1128, 0 row lock(s)
-#MySQL thread id 477328, OS thread handle 139794744006400, query id 10062633565 SRV018.img.med.uni-tuebingen.de 10.203.68.22 ahdoebm1 
-#Trx read view will not see trx with id >= 422169670, sees < 422169670
