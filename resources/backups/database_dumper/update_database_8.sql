@@ -27,3 +27,7 @@ GRANT SELECT,INSERT,UPDATE ON HerediVar_ahdoebm1.list_variant_import_queue TO 'H
 
 ALTER TABLE `HerediVar_ahdoebm1`.`list_variant_import_queue` 
 CHANGE COLUMN `status` `status` ENUM('progress', 'pending', 'success', 'error', 'retry', 'aborted') NOT NULL DEFAULT 'pending' ;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`import_queue` 
+ADD COLUMN `source` ENUM('heredicare', 'vcf') NOT NULL DEFAULT 'heredicare' AFTER `celery_task_id`;
