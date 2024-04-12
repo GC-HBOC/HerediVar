@@ -81,6 +81,7 @@ echo $path_to_data
 
 static_data_tables="annotation_type classification_scheme classification_criterium classification_criterium_strength classification_scheme_alias mutually_exclusive_criteria mutually_inclusive_criteria user"
 
+
 # dump structure
 mysqldump --quick --column-statistics=0 $DB_NAME -P $DB_PORT -h $DB_HOST -u $DB_ADMIN -p$DB_ADMIN_PW --no-tablespaces --no-data -r $path_to_structure
 #gzip --force $path_to_structure
@@ -91,3 +92,13 @@ mysqldump --quick --column-statistics=0 $DB_NAME -P $DB_PORT -h $DB_HOST -u $DB_
 
 
 python3 $update_truncate_sql_script -e $static_data_tables -o $path_to_truncate
+
+
+# dump keycloak config
+path_to_keycloak_config=$SCRIPTPATH/data/keycloak_config
+mkdir -p $path_to_keycloak_config
+$ROOT/tools/keycloak/bin/kc.sh export --dir $path_to_keycloak_config --realm HerediVar --users skip
+sed 's/srv018.img.med.uni-tuebingen.de/localhost/g' $path_to_keycloak_config/HerediVar-realm.json > $path_to_keycloak_config/HerediVar-realm-test.json
+mv $path_to_keycloak_config/HerediVar-realm-test.json $path_to_keycloak_config/HerediVar-realm.json
+sed 's/localhost:5000/localhost:4000/g' $path_to_keycloak_config/HerediVar-realm.json > $path_to_keycloak_config/HerediVar-realm-test.json
+rm $path_to_keycloak_config/HerediVar-realm.json
