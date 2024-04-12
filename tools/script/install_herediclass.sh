@@ -34,50 +34,50 @@ echo "Downloading the automatic classification algorithm to $path."
 mkdir -p $path
 cd $path
 
-git clone https://github.com/akatzke/variant_classification.git $foldername
+#git clone https://github.com/akatzke/variant_classification.git $foldername
 
 variant_classification_path=$path/$foldername
 
 cd $variant_classification_path
-wget https://www.python.org/ftp/python/3.10.13/Python-3.10.13.tgz
-tar -zxvf Python-3.10.13.tgz
-cd Python-3.10.13
-mkdir -p .localpython
-./configure --prefix=$variant_classification_path/.localpython
-make
-make install
+#wget https://www.python.org/ftp/python/3.10.13/Python-3.10.13.tgz
+#tar -zxvf Python-3.10.13.tgz
+#cd Python-3.10.13
+#mkdir -p .localpython
+#./configure --prefix=$variant_classification_path/.localpython
+#make
+#make install
 
-cd ..
-cd .localpython/bin
-./pip3 install virtualenv
+#cd ..
+#cd .localpython/bin
+#./pip3 install virtualenv
 
 
-cd ../..
-.localpython/bin/python3.10 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install wheel
-pip install setuptools
-python3 -m pip install --upgrade setuptools wheel
-pip install -r requirements.txt
-#pip install pyyaml
-#pip install cyvcf2
-#pip install biopython
-#pip install pyensembl==2.2.9
-#pip install hgvs
-#pip install pybedtools
-#pip install openpyxl
-#pip install jsonschema
-#pip install pandas
-#pip install fastapi
-#pip install uvicorn
+#cd ../..
+#.localpython/bin/python3.10 -m venv .venv
+#source .venv/bin/activate
+#pip install --upgrade pip
+#pip install wheel
+#pip install setuptools
+#python3 -m pip install --upgrade setuptools wheel
+#pip install -r requirements.txt
+##pip install pyyaml
+##pip install cyvcf2
+##pip install biopython
+##pip install pyensembl==2.2.9
+##pip install hgvs
+##pip install pybedtools
+##pip install openpyxl
+##pip install jsonschema
+##pip install pandas
+##pip install fastapi
+##pip install uvicorn
 
-cd $variant_classification_path
-bash $variant_classification_path/install_dependencies/install_pyensembl.sh -v 110
+#cd $variant_classification_path
+#bash $variant_classification_path/install_dependencies/install_pyensembl.sh -v 110
 
-sed -r -i "s:/variant_classification::g" $variant_classification_path/install_dependencies/download_data.sh
+#sed -r -i "s:/variant_classification::g" $variant_classification_path/install_dependencies/download_data.sh
 
-bash $variant_classification_path/install_dependencies/download_data.sh -p $variant_classification_path
+#bash $variant_classification_path/install_dependencies/download_data.sh -p $variant_classification_path
 
 
 cd databases/Clinvar
