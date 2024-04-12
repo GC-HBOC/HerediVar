@@ -235,7 +235,7 @@ elif webapp_env == 'prod':
     ngs_bits_path = joinpaths(toolsdir, "ngs-bits/bin")
     htslib_path = joinpaths(toolsdir, "htslib-1.16")
     samtools_path = joinpaths(toolsdir, "samtools/samtools")
-
+    automatic_classification_path = joinpaths(toolsdir, "herediclass")
 
 
     # data
