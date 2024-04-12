@@ -25,6 +25,7 @@ sudo apt-get install -y mariadb-server
 sudo apt-get install default-jdk -y
 sudo apt install genometools
 sudo apt install libdb-dev
+sudo apt-get install libpq-dev libffi-dev libsqlite3-dev
 
 
 # prepare python venv & install packages

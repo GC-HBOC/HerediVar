@@ -41,4 +41,7 @@ rm keycloak-$version.zip
 mv keycloak-$version $foldername
 
 # init keycloak
+#KEYCLOAK_ADMIN=xxx
+#KEYCLOAK_ADMIN_PASSWORD=xxx
 #keycloak-18.0.0/bin/kc.sh import --file /mnt/storage2/users/ahdoebm1/HerediVar/src/frontend_celery/keycloak_export/Heredivar-realm.json
+#keycloak-18.0.0/bin/kc.sh build --http-relative-path /kc
