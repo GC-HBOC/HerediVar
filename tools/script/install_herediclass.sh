@@ -77,13 +77,21 @@ bash $variant_classification_path/install_dependencies/install_pyensembl.sh -v 1
 
 sed -r -i "s:/variant_classification::g" $variant_classification_path/install_dependencies/download_data.sh
 
-bash $variant_classification_path/install_dependencies/download_data.sh -p $variant_classification_path
 
+# download data
+bash $variant_classification_path/install_dependencies/download_data.sh -p $variant_classification_path
 
 cd databases/Clinvar
 wget --no-check-certificate https://download.imgag.de/ahdoebm1/extern/clinvar_spliceai_all_sorted.vcf.gz
 in_path_spliceai_clinvar=$variant_classification_path/databases/Clinvar/clinvar_spliceai_all_sorted.vcf.gz
 python $variant_classification_path/install_dependencies/data_filter_clinvar.py -i $in_path_spliceai_clinvar
+
+# install bedtools
+cd $variant_classification_path
+mkdir -p tools
+cd tools
+chmod 755 $variant_classification_path/install_dependencies/install_bedtools.sh
+$variant_classification_path/install_dependencies/install_bedtools.sh -p $variant_classification_path/tools -v 2.29.1
 
 
 # adjust configuration

@@ -57,6 +57,12 @@ autoclass_path=$ROOT/tools/herediclass
 cd $autoclass_path
 
 source .venv/bin/activate
+export PATH="$autoclass_path/tools/bedtools2/bin:$PATH"
+export PATH="$ROOT/tools/samtools:$PATH"
+export PATH="$ROOT/tools/htslib:$PATH"
+
+#which sortBed
+#which samtools
 
 if [ "${WEBAPP_ENV}" == "dev" ]
 then
