@@ -13,9 +13,11 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="hgvs-tab" data-bs-toggle="tab" data-bs-target="#hgvs" type="button" role="tab" aria-controls="hgvs" aria-selected="false">HGVS import</button>
         </li>
+        {% if vcf_file_import_active %}
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="vcf_file-tab" data-bs-toggle="tab" data-bs-target="#vcf_file" type="button" role="tab" aria-controls="vcf_file" aria-selected="false">from VCF file</button>
         </li>
+        {% endif %}
     </ul>
 
 
