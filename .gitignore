@@ -186,3 +186,5 @@ classified_structural_variants
 /Python-*
 /data_makefile
 /.localpython
+
+resources/backups/keycloak_export/backups/*/*-users*.json
