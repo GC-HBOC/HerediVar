@@ -187,4 +187,5 @@ classified_structural_variants
 /data_makefile
 /.localpython
 
-resources/backups/keycloak_export/backups/*/*-users*.json
+resources/backups/keycloak_export/dev/*/*-users*.json
+/resources/backups/database_dumper/dev/data
