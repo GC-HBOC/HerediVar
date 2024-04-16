@@ -96,12 +96,9 @@ then
     mkdir -p $dump_path
     dump_name=production-dump-$DATE.sql
 
-    mysqldump --quick -h $DB_HOST -P $DB_PORT -u $DB_ADMIN -p $DB_ADMIN_PW --no-tablespaces -r $dump_path/$dump_name $DB_NAME
+    mysqldump --quick -h$DB_HOST -P$DB_PORT -u$DB_ADMIN -p$DB_ADMIN_PW --no-tablespaces -r$dump_path/$dump_name $DB_NAME
     gzip -f $dump_path/$dump_name
 fi
-
-
-
 
 
 # information after init_db.py
