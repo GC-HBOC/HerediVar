@@ -1,6 +1,6 @@
 from ..utils import *
 import io
-from ..io.download_routes import calculate_class
+from ..download.download_routes import calculate_class
 from functools import cmp_to_key
 from flask import render_template
 

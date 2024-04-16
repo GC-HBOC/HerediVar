@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 import json
 import uuid
 from functools import cmp_to_key
+import pathlib
 
 
 def basedir():
@@ -657,6 +658,20 @@ def get_random_temp_file(fileending, filename_ext = ""):
 def rm(path):
     if os.path.exists(path): 
         os.remove(path)
+
+
+def remove_oldest_file(folder, maxfiles=10):
+    if os.path.exists(folder):
+        list_of_files = os.listdir(folder)
+        full_paths = [os.path.abspath(os.path.join(folder, x)) for x in list_of_files if not os.path.basename(x).startswith('.')]
+
+        if len(list_of_files) >= maxfiles:
+            oldest_file = min(full_paths, key=os.path.getctime)
+            os.remove(oldest_file)
+
+
+def mkdir_recursive(dirpath):
+    pathlib.Path(dirpath).mkdir(parents=True, exist_ok=True)
 
 def str2datetime(datetime_str, fmt):
     if datetime_str is None:

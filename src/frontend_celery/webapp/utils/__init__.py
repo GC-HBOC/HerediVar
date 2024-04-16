@@ -11,33 +11,7 @@ from .decorators import *
 from .search_utils import *
 from .clinvar_utils import *
 from urllib.parse import urlparse, urljoin
-import pathlib
 
-#import celery_module
-
-
-#def get_variant(conn, variant_id):
-#    if variant_id is None:
-#        abort(404)
-#    variant = conn.get_one_variant(variant_id)
-#    if variant is None:
-#        abort(404)
-#    return variant
-
-
-
-def remove_oldest_file(folder, maxfiles=10):
-    if os.path.exists(folder):
-        list_of_files = os.listdir(folder)
-        full_paths = [os.path.abspath(os.path.join(folder, x)) for x in list_of_files if not os.path.basename(x).startswith('.')]
-
-        if len(list_of_files) >= maxfiles:
-            oldest_file = min(full_paths, key=os.path.getctime)
-            os.remove(oldest_file)
-
-
-def mkdir_recursive(dirpath):
-    pathlib.Path(dirpath).mkdir(parents=True, exist_ok=True)
 
 
 # this prevents open redirects

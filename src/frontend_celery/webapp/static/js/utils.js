@@ -508,10 +508,12 @@ function get_amino_acids(three_to_one = true){
 //    return base_color
 //}
 
+
+
 function get_consensus_classification_css(classification) {
-    if (classification == "3-") {
+    if (classification == "3-" || classification == "3%2D" ) {
         classification = "3minus"
-    } else if (classification == "3+") {
+    } else if (classification == "3+" || classification == "3%2B") {
         classification = "3plus"
     }
     return "classification_" + classification + "_col"
