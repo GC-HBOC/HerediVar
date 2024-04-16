@@ -117,8 +117,6 @@ class Heredicare(metaclass=Singleton):
         header = {"Authorization": "Bearer " + Heredicare.bearer}
 
         resp = requests.get(url, headers=header)
-        with open("/mnt/storage2/users/ahdoebm1/HerediVar/src/annotation_service/test.json", "w") as f:
-            f.write(str(resp.json()))
         if resp.status_code == 401: # unauthorized
             message = "ERROR: HerediCare API get vid list endpoint returned an HTTP 401, unauthorized error. Attempting retry."
             status = "retry"
