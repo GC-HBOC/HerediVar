@@ -96,7 +96,7 @@ then
     mkdir -p $dump_path
     dump_name=production-dump-$DATE.sql
 
-    mysqldump --quick -P$DB_PORT -h$DB_HOST -u$DB_ADMIN -p$DB_ADMIN_PW --no-tablespaces -r$dump_path/$dump_name $DB_NAME
+    mysqldump --quick -h $DB_HOST -P $DB_PORT -u$DB_ADMIN -p$DB_ADMIN_PW --no-tablespaces -r$dump_path/$dump_name $DB_NAME
     gzip -f $dump_path/$dump_name
 fi
 
