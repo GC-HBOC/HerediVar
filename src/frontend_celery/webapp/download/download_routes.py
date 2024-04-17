@@ -137,6 +137,42 @@ def classified_variants():
         return send_file(path_to_download, download_name="HerediVar-classified-" + '-'.join(variant_types) + "-" + functions.get_today(), as_attachment=True, mimetype="text/vcf")
 
 
+@download_blueprint.route('/download/vcf/heredivar/current')
+@require_permission(['read_resources'])
+def heredivar_current():
+    all_variants_folder = download_functions.get_all_variants_folder()
+    last_dump_path = path.join(all_variants_folder, ".last_dump.txt")
+
+    if not path.exists(last_dump_path):
+        return abort(404)
+    
+    with open(last_dump_path, "r") as last_dump_file:
+        last_dump = last_dump_file.read().strip()
+
+    path_to_download = path.join(all_variants_folder, last_dump+".vcf")
+
+    if not path.exists(path_to_download):
+        return abort(404)
+    
+    return send_file(path_to_download, download_name="HerediVar-"+last_dump+".vcf", as_attachment=True, mimetype="text/vcf")
+
+
+@download_blueprint.route('/download/vcf/heredivar/<string:version>')
+@require_permission(['read_resources'])
+def heredivar_version(version): # version is a date
+    all_variants_folder = download_functions.get_all_variants_folder()
+
+    available_versions = download_functions.get_available_heredivar_versions(all_variants_folder)
+    if version not in available_versions:
+        return abort(404)
+
+
+    path_to_download = path.join(all_variants_folder, version+".vcf")
+
+    if not path.exists(path_to_download):
+        return abort(404)
+    
+    return send_file(path_to_download, download_name="HerediVar-"+version+".vcf", as_attachment=True, mimetype="text/vcf")
 
 
 ##################################

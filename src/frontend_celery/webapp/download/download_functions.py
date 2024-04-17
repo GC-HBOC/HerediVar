@@ -9,13 +9,14 @@ from common.db_IO import Connection
 import common.paths as paths
 import io
 import tempfile
-from shutil import copyfileobj
+import shutil
 import re
 import os
 import uuid
 from pathlib import Path
 from flask import render_template
-
+from os import listdir
+from os.path import isfile, join
 
 
 
@@ -30,10 +31,18 @@ def validate_variant_types(variant_types, allowed_variant_types):
 
 
 def get_classified_variants_folder(variant_types):
-    classified_variants_folder = path.join(paths.workdir, "classified_variants_" + '_'.join(variant_types))
+    classified_variants_folder = path.join(paths.downloads_dir, "classified_variants_" + '_'.join(variant_types))
     Path(classified_variants_folder).mkdir(parents=True, exist_ok=True)
     return classified_variants_folder
 
+def get_all_variants_folder():
+    all_variants_folder = path.join(paths.downloads_dir, "all_variants")
+    Path(all_variants_folder).mkdir(parents=True, exist_ok=True)
+    return all_variants_folder
+
+def get_available_heredivar_versions(folder):
+    versions = [f.strip('.vcf') for f in listdir(folder) if isfile(join(folder, f)) and not f.startswith('.')]
+    return versions
 
 def generate_consensus_only_vcf(variant_types):
     classified_variants_folder = get_classified_variants_folder(variant_types)
@@ -72,8 +81,56 @@ def get_variant_vcf_line(variant_id, conn: Connection):
     return headers, info
 
 
-def get_vcf(variants_oi, conn, worker=get_variant_vcf_line):
+
+
+
+
+#def get_vcf(variants_oi, conn, worker=get_variant_vcf_line):
+#    status = 'success'
+#
+#    final_info_headers = {}
+#    all_variant_vcf_lines = []
+#    for id in variants_oi:
+#        info_headers, variant_vcf = worker(id, conn)
+#        all_variant_vcf_lines.append(variant_vcf)
+#        final_info_headers = merge_info_headers(final_info_headers, info_headers)
+#    
+#    helper = io.StringIO()
+#    printable_info_headers = list(final_info_headers.values())
+#    printable_info_headers.sort()
+#    functions.write_vcf_header(printable_info_headers, helper.write, tail='\n')
+#    for line in all_variant_vcf_lines:
+#        helper.write(line + '\n')
+#
+#    buffer = io.BytesIO()
+#    buffer.write(helper.getvalue().encode())
+#    buffer.seek(0)
+#
+#    temp_file_path = tempfile.gettempdir() + "/variant_download_" + str(uuid.uuid4()) + ".vcf"
+#    with open(temp_file_path, 'w') as tf:
+#        helper.seek(0)
+#        copyfileobj(helper, tf)
+#    helper.close()
+#
+#    returncode, err_msg, vcf_errors = functions.check_vcf(temp_file_path)
+#
+#    os.remove(temp_file_path)
+#
+#    if returncode != 0:
+#        if request.args.get('force') is None:
+#            status = "redirect"
+#            return None, status, vcf_errors, err_msg
+#
+#    return buffer, status, "", ""
+
+
+def get_vcf(variants_oi, conn, worker=get_variant_vcf_line, check_vcf=True):
     status = 'success'
+    buffer = io.BytesIO()
+
+    if variants_oi is None:
+        buffer.seek(0)
+        return buffer, status, "", ""
 
     final_info_headers = {}
     all_variant_vcf_lines = []
@@ -82,36 +139,28 @@ def get_vcf(variants_oi, conn, worker=get_variant_vcf_line):
         all_variant_vcf_lines.append(variant_vcf)
         final_info_headers = merge_info_headers(final_info_headers, info_headers)
     
-    helper = io.StringIO()
     printable_info_headers = list(final_info_headers.values())
     printable_info_headers.sort()
-    functions.write_vcf_header(printable_info_headers, helper.write, tail='\n')
+    functions.write_vcf_header(printable_info_headers, lambda l: buffer.write(l.encode()), tail='\n')
     for line in all_variant_vcf_lines:
-        helper.write(line + '\n')
-
-    buffer = io.BytesIO()
-    buffer.write(helper.getvalue().encode())
+        line += '\n'
+        buffer.write(line.encode())
     buffer.seek(0)
 
-    temp_file_path = tempfile.gettempdir() + "/variant_download_" + str(uuid.uuid4()) + ".vcf"
-    with open(temp_file_path, 'w') as tf:
-        helper.seek(0)
-        copyfileobj(helper, tf)
-    helper.close()
+    # check vcf
+    if check_vcf:
+        temp_file_path = functions.get_random_temp_file(fileending = ".vcf", filename_ext = "variant_download") #tempfile.gettempdir() + "/variant_download_" + str(uuid.uuid4()) + ".vcf"
+        with open(temp_file_path, 'wb') as tf:
+            shutil.copyfileobj(buffer, tf)
+        returncode, err_msg, vcf_errors = functions.check_vcf(temp_file_path)
+        os.remove(temp_file_path)
 
-    returncode, err_msg, vcf_errors = functions.check_vcf(temp_file_path)
-
-    os.remove(temp_file_path)
-
-    if returncode != 0:
-        if request.args.get('force') is None:
-            status = "redirect"
+        if returncode != 0:
+            status = "error"
             return None, status, vcf_errors, err_msg
 
+        buffer.seek(0)
     return buffer, status, "", ""
-
-
-
 
 
 

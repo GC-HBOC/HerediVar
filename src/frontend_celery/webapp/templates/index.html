@@ -93,46 +93,20 @@
 <div class="bst bsb">
     <h4>Changelog</h4>
 
-    <div class="underline">v 1.10.2 (15.04.2024)</div>
+    <div class="underline">v 1.11 ()</div>
     <div class="btn-pvs">!! Scores from likelihood ratio tests are currently under construction. A simple reannotation is required to show them on HerediVar once they are ready to be downloaded from HerediCaRe.</div>
-    <div>
-        Bugfixes:
-        <ul>
-            <li>When selecting two or more very strong criteria the resulting class was 3 previously. Now it is 5. Similar with stand-alone criteria.</li>
-            <li>The color of classified variants which only have a consensus classification in HerediCaRe of 3+ or 3- were previously shown in black in IGV. This is fixed now and they are shown with their proper color.</li>
-            <li>Fixed some wording.</li>
-        </ul>
-    </div>
-
-    <div class="underline">v 1.10.1 (12.04.2024)</div>
-    <div>
-        Bugfixes:
-        <ul>
-            <li>Removed empty tab from small variant upload</li>
-        </ul>
-    </div>
-
-    <div class="underline">v 1.10 (12.04.2024)</div>
     <div>
         General changes:
         <ul>
-            <li>
-                When too many variants were added to a user defined variant list the request would previously time out. This has been resolved by adding the variants to the list in the background. A status pill is now shown when the 
-                user wants to view a variant list where variants were added from the browse variants table.
-            </li>
-            <li>Updated documentation</li>
-            <li>Activated automatic classification algorithm</li>
-            <li>Added tooltip to criterion select on classify page to explain what the different states mean</li>
-            <li>Added CDH1 ACMG classification scheme</li>
+            <li>Update downloads page. Added full data download and database versioning. A new HerediVar full VCF version is calculated every month.</li>
+            <li>Added download archive for previous full VCF downloads</li>
         </ul>
         Bugfixes:
         <ul>
-            <li>Fixed a bug where the cancerhotspot annotations would be erroneous: If variants map to the same position in grch38 or are equal when left normalized their cancerhotspots annotations are now summed up</li>
-            <li>Fixed a bug that caused criteria buttons to be unchecked when mutually exclusive criteria were unselected</li>
-            <li>If a variant had multiple HerediCaRe VIDs it would not show the warning in the n_fam and n_pat annotations that the counts might be inaccurate</li>
+            <li></li>
         </ul>
     </div>
-    
+
 
     <a class="btn btn-outline-primary" href="{{url_for('main.changelog')}}">previous changelog</a>
 </div>

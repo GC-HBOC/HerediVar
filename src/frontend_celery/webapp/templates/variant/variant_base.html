@@ -27,9 +27,6 @@
                 </div>
             </h1>
 
-            <!-- save some data for js -->
-            <meta id="variant_id_container" data-variant-id="{{ variant.id }}">
-
             {% block status_bar %} {% endblock %}
 
         </div>
@@ -526,18 +523,12 @@
 
 </div>
 
-
-<input type='hidden' id='flask_data' 
-    data-variant-page-url='{{ url_for("variant.display", variant_id = "-1", _external=True) }}'
-    data-delete-classification-url='{{ url_for("variant.delete_classification") }}'
-/>
-
 {% endblock %}
 
 
 
 {% block special_scripts %}
-    <script type="module" src="/static/js/variant.js"></script>
+    <script src="/static/js/variant.js"></script>
     {% block additional_scripts %} {% endblock %}
 {% endblock%}
 

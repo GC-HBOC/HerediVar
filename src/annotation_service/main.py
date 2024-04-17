@@ -119,6 +119,7 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
     all_jobs = get_jobs(job_config)
 
     conn = Connection(roles=["annotation"])
+    conn.set_annotation_queue_status(annotation_queue_id, status="progress")
     vcf_path, vcf_path_annotated = get_temp_vcf_path(annotation_queue_id)
     runtime_error = ""
 
@@ -213,7 +214,7 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         ############################################################
         ############## 5: update the annotation queue ##############
         ############################################################
-        conn.update_annotation_queue(row_id=annotation_queue_id, status=status, error_msg=err_msgs)
+        conn.update_annotation_queue(annotation_queue_id, status=status, error_msg=err_msgs)
 
 
     except HTTPError as e: # we want to catch http errors to be able to retry later again (eg. 429)
@@ -222,7 +223,7 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         print(traceback.format_exc())
 
         status = "retry"
-        conn.update_annotation_queue(row_id=annotation_queue_id, status=status, error_msg=str(e))
+        conn.update_annotation_queue(annotation_queue_id, status=status, error_msg=str(e))
         
         runtime_error = str(e)
 
@@ -230,13 +231,13 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
     except InternalError as e:
         # deadlock: code 1213
         status = "retry"
-        conn.update_annotation_queue(row_id=annotation_queue_id, status=status, error_msg=str(e))
+        conn.update_annotation_queue(annotation_queue_id, status=status, error_msg=str(e))
         runtime_error = "Attempting retry because of database error: " + str(e)  + ' ' + traceback.format_exc()
 
     except Exception as e:
         print("An exception occured: " + str(e))
         print(traceback.format_exc())
-        conn.update_annotation_queue(row_id = annotation_queue_id, status="error", error_msg = "Annotation service runtime error: " + str(e) + ' ' + traceback.format_exc())
+        conn.update_annotation_queue(annotation_queue_id, status="error", error_msg = "Annotation service runtime error: " + str(e) + ' ' + traceback.format_exc())
         status = "error"
         runtime_error = str(e)
 

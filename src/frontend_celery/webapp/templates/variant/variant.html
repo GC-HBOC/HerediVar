@@ -2,53 +2,42 @@
 
 
 {% block status_bar %}
-<meta id="annotation_status" data-annotation-status="{{ current_annotation_status[4] }}" data-celery-task-id="{{ current_annotation_status[7] }}">
-
 <div class="d-flex align-items-center">
-    <!-- status badges -->
-    <div id="annotation_status_pills">
-        {% if current_annotation_status is not none %}
-
-            {% if current_annotation_status[4] == 'pending' %}
-                <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="Annotation requested at {{ current_annotation_status[3] }}">Annotation requested</span>
-            {% endif %}
-            {% if current_annotation_status[4] == 'success' %}
-                <span class="badge rounded-pill bg-success" data-bs-toggle="tooltip" title="Most recent annotation finished at {{ current_annotation_status[5] }}">Annotation done</span>
-            {% endif %}
-            {% if current_annotation_status[4] == 'error' %}
-                <span class="badge rounded-pill bg-danger" data-bs-toggle="tooltip" title="Most recent annotation finished at {{ current_annotation_status[5] }} with fatal error {{ current_annotation_status[6] }}">Annotation error</span>
-            {% endif %}
-            {% if current_annotation_status[4] == 'retry' %}
-                <span class="badge rounded-pill bg-warning" data-bs-toggle="tooltip" title="Most recent annotation yielded an error: {{ current_annotation_status[6] }}. Retrying soon.">Retrying annotation</span>
-            {% endif %}
-            {% if current_annotation_status[4] == 'aborted' %}
-                <span class="badge rounded-pill bg-danger" data-bs-toggle="tooltip" title="The annotation was aborted by a superuser. It is recommended to restart the annotation.">Annotation aborted</span>
-            {% endif %}
-
-            {% else %}
-                <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="This variant was not annotated, yet.">No annotation</span>
-            {% endif %}
-
+    <div id="status_pills" class="d-flex align-items-center margin_between_list_very_small">
+        <!-- annotation status (handled by js) -->
+        <div id="annotation_status_pill_holder">
+            <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="Fetching annotation status">
+                loading annotation status <div class="spinner-border spinner_text_height" role="status"></div>
+            </span>
+        </div>
+        
+        <!-- hidden variant pill -->
+        <div id="hidden_status_pill_holder">
             {% if variant.is_hidden %}
                 <span class="badge rounded-pill bg-danger" id="hidden_pill" data-bs-toggle="tooltip" title="This variant is hidden. To unhide use the gear button.">HIDDEN</span>
             {% endif %}
+        </div>
+
+        <!-- ClinVar submission status pills -->
+        <div id="clinvar_status_pill_holder">
+            {% if clinvar_submission is none %}
+                <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="This variant was not yet submitted to ClinVar">no ClinVar submission</span>
+            {% else %}
+                {% set status = clinvar_submission[4] %}
+                {% if status in ['processed'] %}
+                    <span class="badge rounded-pill bg-success" data-bs-toggle="tooltip" title="Most recent ClinVar submission finished at {{ clinvar_submission[6] }}">ClinVar success</span>
+                {% endif %}
+                {% if status in ['error'] %}
+                    <span class="badge rounded-pill bg-danger" data-bs-toggle="tooltip" title="Most recent ClinVar submission yielded an error at {{ clinvar_submission[6] }} with error message: {{ clinvar_submission[5] }}">ClinVar error</span>
+                {% endif %}
+                {% if status in ['submitted', 'processing'] %}
+                    <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="Most recent ClinVar submission last updated at {{ clinvar_submission[6] }}. Refresh page to see if it is ready.">ClinVar {{ status }}</span>
+                {% endif %}
+            {% endif %}
+        </div>
+
     </div>
-    <div class="ssl">
-        {% if clinvar_submission is none %}
-            <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="This variant was not yet submitted to ClinVar">no ClinVar submission</span>
-        {% else %}
-            {% set status = clinvar_submission[4] %}
-            {% if status in ['processed'] %}
-                <span class="badge rounded-pill bg-success" data-bs-toggle="tooltip" title="Most recent ClinVar submission finished at {{ clinvar_submission[6] }}">ClinVar success</span>
-            {% endif %}
-            {% if status in ['error'] %}
-                <span class="badge rounded-pill bg-danger" data-bs-toggle="tooltip" title="Most recent ClinVar submission yielded an error at {{ clinvar_submission[6] }} with error message: {{ clinvar_submission[5] }}">ClinVar error</span>
-            {% endif %}
-            {% if status in ['submitted', 'processing'] %}
-                <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="Most recent ClinVar submission last updated at {{ clinvar_submission[6] }}. Refresh page to see if it is ready.">ClinVar {{ status }}</span>
-            {% endif %}
-        {% endif %}
-    </div>
+
 
     <!-- options dropdown -->
     <div class="dropdown ssl">
@@ -222,11 +211,20 @@
         </div>
     </div>
 </div>
+
+<input type='hidden' id='flask_data' 
+    data-variant-page-url='{{ url_for("variant.display", variant_id = "-1", _external=True) }}'
+    data-delete-classification-url='{{ url_for("variant.delete_classification") }}'
+    data-annotation-status-url='{{ url_for("variant.annotation_status") }}'
+    data-variant-id="{{ variant.id }}"
+    data-run-annotation-service-url='{{ url_for("variant.run_annotation_service") }}'
+/>
+
 {% endblock %}
 
 
 {% block additional_scripts %}
-    <script src="/static/js/variant_addition.js"></script>
+    <script type="module"  src="/static/js/variant_addition.js"></script>
 {% endblock %}
 <!--
     - variant consequences nach preferred transcripts sortieren und badges (mane select, ....) anzeigen

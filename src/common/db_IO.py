@@ -104,16 +104,21 @@ class Connection:
 
 
 
-    def update_annotation_queue(self, row_id, status, error_msg):
+    def update_annotation_queue(self, annotation_queue_id, status, error_msg):
         error_msg = error_msg.replace("\n", " ")
         #print("UPDATE annotation_queue SET status = " + status + ", finished_at = " + time.strftime('%Y-%m-%d %H:%M:%S') + ", error_message = " + error_msg + " WHERE id = " + str(row_id))
         command = "UPDATE annotation_queue SET status = %s, finished_at = NOW(), error_message = %s WHERE id = %s"
-        self.cursor.execute(command, (status, error_msg, row_id))
+        self.cursor.execute(command, (status, error_msg, annotation_queue_id))
+        self.conn.commit()
+
+    def set_annotation_queue_status(self, annotation_queue_id, status):
+        command = "UPDATE annotation_queue SET status = %s WHERE id = %s"
+        self.cursor.execute(command, (status, annotation_queue_id))
         self.conn.commit()
 
     def get_current_annotation_status(self, variant_id):
         # return the most recent annotation queue entry for the variant 
-        command = "SELECT * FROM annotation_queue WHERE variant_id = %s ORDER BY requested DESC LIMIT 1"
+        command = "SELECT id, variant_id, user_id, requested, status, finished_at, error_message, celery_task_id FROM annotation_queue WHERE variant_id = %s ORDER BY requested DESC LIMIT 1"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchone()
         return result

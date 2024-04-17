@@ -26,14 +26,6 @@ variant_blueprint = Blueprint(
 @require_permission(['read_resources'])
 def search():
     conn = get_connection()
-
-    #modal_args = {}
-    #for arg in request.args:
-    #    nargs = len(request.args.getlist(arg))
-    #    if nargs > 1:
-    #        modal_args[arg] = request.args.getlist(arg)
-    #    elif nargs == 1:
-    #        modal_args[arg] = request.args.get(arg)
     
     user_id = session['user']['user_id']
     request_args = request.args.to_dict(flat=False)
@@ -42,30 +34,6 @@ def search():
     static_information = search_utils.get_static_search_information(user_id, conn)
     variants, total, page, selected_page_size = search_utils.get_merged_variant_page(request_args, user_id, static_information, conn, flash_messages = True)
     pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
-
-    #allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
-    #allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
-    #allowed_automatic_classes = functions.order_classes(conn.get_enumtypes('automatic_classification', 'classification_splicing'))
-    #allowed_variant_types = ['small_variants', 'structural_variant']
-    #annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
-    #annotation_types = preprocess_annotation_types_for_search(annotation_types)
-
-    #variant_strings = extract_variants(request)
-    #variant_types = extract_variant_types(request, allowed_variant_types)
-    #genes = extract_genes(request)
-    #ranges = extract_ranges(request)
-    #consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request, allowed_consensus_classes)
-    #user_classifications = extract_user_classifications(request, allowed_user_classes)
-    #automatic_classifications_splicing = extract_automatic_classifications(request, allowed_automatic_classes, which="automatic_splicing")
-    #automatic_classifications_protein = extract_automatic_classifications(request, allowed_automatic_classes, which="automatic_protein")
-    #hgvs = extract_hgvs(request)
-    #variant_ids_oi = extract_lookup_list(request, user_id, conn)
-    #external_ids = extract_external_ids(request)
-    #cdna_ranges = extract_cdna_ranges(request)
-    #annotation_restrictions = extract_annotations(request, conn)
-    #page = int(request.args.get('page', 1))
-
-    #sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden = extract_search_settings(request)
     
     # insert variants to list 
     if request.method == 'POST':
@@ -79,90 +47,11 @@ def search():
                 flash("You attempted to insert variants to a list which you do not have access to.", "alert-danger")
                 current_app.logger.info(session['user']['preferred_username'] + " attempted to insert variants from the browse variants page to list: " + str(list_id) + ", but he did not have access to it.")
             else:
-                #num_inserted = 0
-
                 list_variant_import_queue_id = start_variant_list_import(user_id, list_id, request_args, conn)
-                
-                
-                #selected_variants = request.args.get('selected_variants', "").split(',')
-                #select_all_variants = True if request.args.get('select_all_variants', "false") == "true" else False
-                #if select_all_variants:
-                #    variants_for_list, _ = conn.get_variants_page_merged(1, "unlimited", sort_by=selected_sort_by, 
-                #                                include_hidden=include_hidden, 
-                #                                user_id=user_id, 
-                #                                ranges=ranges, 
-                #                                genes = genes, 
-                #                                consensus=consensus_classifications, 
-                #                                user=user_classifications, 
-                #                                automatic_splicing=automatic_classifications_splicing,
-                #                                automatic_protein=automatic_classifications_protein,
-                #                                hgvs=hgvs, 
-                #                                variant_ids_oi=variant_ids_oi,
-                #                                include_heredicare_consensus = include_heredicare_consensus,
-                #                                external_ids = external_ids,
-                #                                cdna_ranges = cdna_ranges,
-                #                                annotation_restrictions = annotation_restrictions,
-                #                                variant_strings = variant_strings,
-                #                                variant_types = variant_types
-                #                            )
-                #    variant_ids = [variant.id for variant in variants_for_list]
-                #    for variant_id in variant_ids:
-                #        if str(variant_id) not in selected_variants:
-                #            num_new_variants = conn.add_variant_to_list(list_id, variant_id)
-                #            num_inserted = num_inserted + num_new_variants
-                #else:
-                #    for variant_id in selected_variants:
-                #        variant = conn.get_variant(variant_id)
-                #        if variant is not None:
-                #            num_new_variants = conn.add_variant_to_list(list_id, variant_id)
-                #            num_inserted = num_inserted + num_new_variants
+
                 flash(Markup("Successfully requested insertion of variants to list from the current search. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
                 del request_args["selected_list_id"]
-                return redirect(url_for('variant.search', **request_args)
-                                        #genes = request.args.get('genes'), 
-                                        #ranges = request.args.get('ranges'), 
-                                        #consensus = request.args.getlist('consensus'), 
-                                        #user = request.args.getlist('user'), 
-                                        #automatic = request.args.getlist('automatic'),
-                                        #hgvs = request.args.get('hgvs'),
-                                        #cdna_ranges = request.args.get('cdna_ranges'),
-                                        #external_ids = request.args.get('external_ids'),
-                                        #annotation_type_id = request.args.getlist("annotation_type_id"),
-                                        #annotation_operation = request.args.getlist("annotation_operation"),
-                                        #annotation_value = request.args.getlist("annotation_value"),
-                                        #select_all_variants = request.args.get("select_all_variants", "false"),
-                                        #selected_variants = request.args.get("selected_variants", ""),
-                                        #lookup_list_id = request.args.getlist("lookup_list_id"),
-                                        #lookup_list_name = request.args.getlist("lookup_list_name"),
-                                        #page_size = request.args.get('page_size', page_sizes[1]),
-                                        #sort_by = request.args.get('sort_by', sort_bys[0]),
-                                        #include_hidden = request.args.get('include_hidden'),
-                                        #variant_types = request.args.getlist('variant_type')
-                                    #)
-                                )
-            
-    #variants, total = conn.get_variants_page_merged(
-    #    page=page, 
-    #    page_size=selected_page_size, 
-    #    sort_by=selected_sort_by, 
-    #    include_hidden=include_hidden, 
-    #    user_id=user_id, 
-    #    ranges=ranges, 
-    #    genes = genes, 
-    #    consensus=consensus_classifications, 
-    #    user=user_classifications, 
-    #    automatic_splicing=automatic_classifications_splicing,
-    #    automatic_protein=automatic_classifications_protein,
-    #    hgvs=hgvs, 
-    #    variant_ids_oi=variant_ids_oi,
-    #    include_heredicare_consensus = include_heredicare_consensus,
-    #    external_ids = external_ids,
-    #    cdna_ranges = cdna_ranges,
-    #    annotation_restrictions = annotation_restrictions,
-    #    variant_strings = variant_strings,
-    #    variant_types = variant_types
-    #)
-
+                return redirect(url_for('variant.search', **request_args))
 
     return render_template('variant/search.html',
                            variants=variants, page=page, 
@@ -170,15 +59,6 @@ def search():
                            pagination=pagination,
                            static_information = static_information,
                            request_args = request_args
-                           #lists=lists, 
-                           #sort_bys=sort_bys, 
-                           #page_sizes=page_sizes,
-                           #allowed_user_classes = allowed_user_classes,
-                           #allowed_consensus_classes = allowed_consensus_classes,
-                           #allowed_automatic_classes = allowed_automatic_classes,
-                           #allowed_variant_types = allowed_variant_types,
-                           #annotation_types = annotation_types,
-                           #modal_args = modal_args # for add all to list
                         )
 
 
@@ -337,11 +217,11 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
             abort(404)
         variant_id = conn.get_variant_id(chr, pos, ref, alt)
 
-    current_annotation_status = conn.get_current_annotation_status(variant_id)
-    if current_annotation_status is not None:
-        if current_annotation_status[4] == 'pending' and current_annotation_status[7] is None:
-            celery_task_id = start_annotation_service(variant_id = variant_id, conn = conn, user_id = session['user']['user_id'])
-            current_annotation_status = current_annotation_status[0:7] + (celery_task_id, )
+    #current_annotation_status = conn.get_current_annotation_status(variant_id)
+    #if current_annotation_status is not None:
+    #    if current_annotation_status[4] == 'pending' and current_annotation_status[7] is None:
+    #        celery_task_id = start_annotation_service(variant_id = variant_id, conn = conn, user_id = session['user']['user_id'])
+    #        current_annotation_status = current_annotation_status[0:7] + (celery_task_id, )
 
     variant = conn.get_variant(variant_id)
     if variant is None:
@@ -363,13 +243,56 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     clinvar_submission = check_update_clinvar_status(variant_id, conn)
 
     return render_template('variant/variant.html',
-                            current_annotation_status=current_annotation_status,
                             clinvar_submission = clinvar_submission,
                             has_multiple_vids=has_multiple_vids,
                             lists = lists,
                             variant = variant,
                             is_classification_report = False
                         )
+
+
+
+# this route listens on the GET parameter: annotation_queue_id or variant_id
+@variant_blueprint.route('/run_annotation_service', methods=['POST'])
+@require_permission(['edit_resources'])
+def run_annotation_service():
+    annotation_queue_id = request.form.get('annotation_queue_id')
+    variant_id = request.form.get('variant_id')
+    if (annotation_queue_id is None and variant_id is None) or (annotation_queue_id is not None and variant_id is not None):
+        abort(404)
+    conn = get_connection()
+    celery_task_id = start_annotation_service(variant_id=variant_id, user_id = session['user']['user_id'],  annotation_queue_id=annotation_queue_id, conn = conn)
+    return jsonify({}), 202
+
+
+@variant_blueprint.route('/annotation_status')
+@require_permission(['read_resources'])
+def annotation_status():
+    conn = get_connection()
+
+    variant_id = request.args.get('variant_id')
+    annotation_status = conn.get_current_annotation_status(variant_id) #id, variant_id, user_id, requested, status, finished_at, error_message, celery_task_id
+
+    result = None
+    if annotation_status is not None:
+        status = annotation_status[4]
+        requested_at = annotation_status[3]
+        finished_at = annotation_status[5]
+        error_message = annotation_status[6]
+
+
+        result = jsonify({
+            "status": status,
+            "requested_at": requested_at,
+            "finished_at": finished_at,
+            "error_message": error_message
+        })
+
+    return result
+
+
+
+
 
 
 @variant_blueprint.route('/hide_variant/<int:variant_id>', methods=['POST'])

@@ -71,6 +71,16 @@
     margin-top: 0em;
 }
 
+.margin_between_list_very_small > * {
+    margin-right: 0.2em;
+    margin-left: 0.2em;
+}
+
+.margin_between_list_small > * {
+    margin-right: 0.5em;
+    margin-left: 0.5em;
+}
+
 /************** sizing **************/
 .full_page {
     min-width:80rem; 
@@ -117,6 +127,11 @@
 }
 .height_zero {
     height:0;
+}
+
+.spinner_text_height {
+    width:1em;
+    height:1em
 }
 
 .scale_150 {

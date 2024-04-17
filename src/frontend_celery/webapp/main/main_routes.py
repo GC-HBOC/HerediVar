@@ -1,7 +1,10 @@
 from flask import Blueprint, render_template
 from ..utils import *
 from ..tasks import send_mail
-
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import download.download_functions as download_functions
 
 main_blueprint = Blueprint(
     'main',
@@ -26,9 +29,24 @@ def index():
 
 @main_blueprint.route('/downloads')
 @require_permission(['read_resources'])
-def downloads():    
-    return render_template("main/downloads.html")
+def downloads():
+    all_variants_folder = download_functions.get_all_variants_folder()
+    last_dump_path = os.path.join(all_variants_folder, ".last_dump.txt")
+    if not os.path.isfile(last_dump_path):
+        last_dump = None
+    else:
+        with open(last_dump_path, "r") as last_dump_file:
+            last_dump = last_dump_file.read().strip()
+    
+    return render_template("main/downloads.html", last_dump = last_dump)
 
+
+@main_blueprint.route('/download_previous_versions')
+@require_permission(['read_resources'])
+def download_previous_versions():
+    all_variants_folder = download_functions.get_all_variants_folder()
+    all_versions = download_functions.get_available_heredivar_versions(all_variants_folder)
+    return render_template("main/download_previous_versions.html", all_versions = all_versions)
 
 
 @main_blueprint.route('/deleted_variant_info')
