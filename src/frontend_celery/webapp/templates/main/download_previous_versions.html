@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1 class="bst"> {% block title %} HerediVar download archive {% endblock %} </h1>
+
+
+
+<div class="width_medium_large bsr">
+    <div class="table-responsive">
+        <table class="table table-borderless">
+            <tbody>
+                {% for version in all_versions %}
+                <tr>
+                    <td class="width_small vertical_align_middle">Version {{version}}</td>
+                    <td class="width_very_small text_align_center"><a class="btn btn-primary" href="{{url_for('download.heredivar_version', version=version)}}">download</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+
+
+
+
+{% endblock %}
+
+{% block special_scripts %}
+{% endblock %}

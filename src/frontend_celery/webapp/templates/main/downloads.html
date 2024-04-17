@@ -6,15 +6,56 @@
 <div class="container">
 
   
-<h1 class="bst"> {% block title %} Downloads {% endblock %} </h1>
+<h1 class="bst bsb"> {% block title %} Downloads {% endblock %} </h1>
 
-<div>
-    <a class="btn btn-primary" href="{{url_for('download.classified_variants', variant_type='small')}}">Download all classified small variants</a>
+<div class="bst bsb">
+    <div class="d-flex justify-content-center">
+        <div class="width_medium_large ssl ssr">
+            <div class="text_align_center stylish_purple ssb">
+                {{ macros.render_theC(width='6em', source='heredivar') }}
+            </div>
+            <div class="text_align_center li-label ssb">Clasified variants</div>
+            <div class="table-responsive">
+                <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <td class="width_small vertical_align_middle">Small variants</td>
+                            <td class="width_very_small text_align_center"><a class="btn btn-primary" href="{{url_for('download.classified_variants', variant_type='small')}}">download</a></td>
+                        </tr>
+                        <tr>
+                            <td class="width_small vertical_align_middle">Structural variants</td>
+                            <td class="width_very_small text_align_center"><a class="btn btn-primary" href="{{url_for('download.classified_variants', variant_type='sv')}}">download</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    
+        <div class="width_medium_large ssl ssr">
+            <div class="text_align_center stylish_purple ssb">
+                {{ macros.draw_db_down(tooltip="", width='6em', height='6em') }}
+            </div>
+            <div class="text_align_center li-label ssb">Complete Database</div>
+            <div class="table-responsive">
+                <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <td class="width_small vertical_align_middle">Current version ({{last_dump}})</td>
+                            <td class="width_very_small text_align_center"><a class="btn btn-primary" href="{{url_for('download.heredivar_current')}}">download</a></td>
+                        </tr>
+                        <tr>
+                            <td class="width_small vertical_align_middle"></td>
+                            <td class="width_very_small text_align_center"><a class="" href="{{url_for('main.download_previous_versions')}}">previous versions</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="bst">
-    <a class="btn btn-primary" href="{{url_for('download.classified_variants', variant_type='sv')}}">Download all classified structural variants</a>
-</div>
+
+
 
 {% endblock %}
 
