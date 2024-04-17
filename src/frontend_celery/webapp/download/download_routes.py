@@ -149,12 +149,12 @@ def heredivar_current():
     with open(last_dump_path, "r") as last_dump_file:
         last_dump = last_dump_file.read().strip()
 
-    path_to_download = path.join(all_variants_folder, last_dump+".vcf")
+    path_to_download = path.join(all_variants_folder, last_dump+".vcf.gz")
 
     if not path.exists(path_to_download):
         return abort(404)
     
-    return send_file(path_to_download, download_name="HerediVar-"+last_dump+".vcf", as_attachment=True, mimetype="text/vcf")
+    return send_file(path_to_download, download_name="HerediVar-"+last_dump+".vcf.gz", as_attachment=True, mimetype="application/gzip")
 
 
 @download_blueprint.route('/download/vcf/heredivar/<string:version>')
@@ -166,13 +166,12 @@ def heredivar_version(version): # version is a date
     if version not in available_versions:
         return abort(404)
 
-
-    path_to_download = path.join(all_variants_folder, version+".vcf")
+    path_to_download = path.join(all_variants_folder, version+".vcf.gz")
 
     if not path.exists(path_to_download):
         return abort(404)
     
-    return send_file(path_to_download, download_name="HerediVar-"+version+".vcf", as_attachment=True, mimetype="text/vcf")
+    return send_file(path_to_download, download_name="HerediVar-"+version+".vcf", as_attachment=True, mimetype="application/gzip")
 
 
 ##################################

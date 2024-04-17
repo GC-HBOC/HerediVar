@@ -10,6 +10,13 @@ import download.download_functions as download_functions
 from pathlib import Path
 
 
+parser = argparse.ArgumentParser(description="")
+parser.add_argument("-d", "--date", help="Date of today")
+
+
+args = parser.parse_args()
+today = args.date
+
 
 
 today = functions.get_today()

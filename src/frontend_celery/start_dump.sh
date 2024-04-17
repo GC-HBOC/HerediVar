@@ -47,7 +47,11 @@ DOWNLOADSDIR=$ROOT/downloads
 full_dump_path=$DOWNLOADSDIR/full_dump
 mkdir -p $full_dump_path
 
-python3 $ROOT/src/frontend_celery/webapp/utils/create_db_version.py
+
+DATE=$(date '+%F');
+
+python3 $ROOT/src/frontend_celery/webapp/utils/create_db_version.py -d $DATE
+bgzip $ROOT/downloads/all_variants/$DATE.vcf
 
 # create data dump backup
 DB_DUMP_DIR=$ROOT/resources/backups/database_dumper

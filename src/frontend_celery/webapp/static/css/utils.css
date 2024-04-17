@@ -72,13 +72,13 @@
 }
 
 .margin_between_list_very_small > * {
-    margin-right: 0.2em;
-    margin-left: 0.2em;
+    margin-right: 0.1em;
+    margin-left: 0.1em;
 }
 
 .margin_between_list_small > * {
-    margin-right: 0.5em;
-    margin-left: 0.5em;
+    margin-right: 0.25em;
+    margin-left: 0.25em;
 }
 
 /************** sizing **************/

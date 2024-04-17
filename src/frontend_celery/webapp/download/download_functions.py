@@ -41,7 +41,7 @@ def get_all_variants_folder():
     return all_variants_folder
 
 def get_available_heredivar_versions(folder):
-    versions = [f.strip('.vcf') for f in listdir(folder) if isfile(join(folder, f)) and not f.startswith('.')]
+    versions = [f.strip('.vcf.gz') for f in listdir(folder) if isfile(join(folder, f)) and not f.startswith('.')]
     return versions
 
 def generate_consensus_only_vcf(variant_types):
