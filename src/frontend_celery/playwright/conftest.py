@@ -6,7 +6,7 @@ import pytest
 import os
 sys.path.append(path.dirname(path.abspath(__file__)))
 import utils
-
+from utils import Test_Connection
 
 @pytest.fixture
 def app():
@@ -21,6 +21,14 @@ def test_client(app):
 @pytest.fixture
 def config(app):
     return app.config
+
+@pytest.fixture
+def conn():
+    conn = Test_Connection(roles = ["db_admin"])
+    yield conn
+    conn.close()
+
+
 
 #@pytest.fixture()
 #def client():

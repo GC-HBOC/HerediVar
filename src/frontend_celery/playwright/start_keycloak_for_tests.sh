@@ -44,13 +44,13 @@ if [ ! -d "${keycloak_path}" ]; then
   unzip keycloak-18.0.0.zip
   rm keycloak-18.0.0.zip
   mv keycloak-18.0.0 keycloak_for_tests
-  mkdir -p $keycloak_path/data/import
-  cp $ROOT/resources/backups/keycloak_export/test_config/HerediVar-test-users.json $keycloak_path/data/import/HerediVar-test-users.json
   sleep 5
 fi
 
-$keycloak_path/bin/kc.sh import --file $SCRIPTPATH/data/keycloak_config/HerediVar-realm-test.json
-sleep 5
+## uncomment this later. Only for quick testing commented
+#$keycloak_path/bin/kc.sh import --file $SCRIPTPATH/data/keycloak_config/HerediVar-realm-test.json
+#sleep 5
 
-$keycloak_path/bin/kc.sh start-dev --hostname $KEYCLOAK_HOST --http-port $KEYCLOAK_PORT --import-realm > keycloak.log 2>&1 & # --log-level debug
+
+$keycloak_path/bin/kc.sh start-dev --hostname $KEYCLOAK_HOST --http-port $KEYCLOAK_PORT > keycloak.log 2>&1 & # --log-level debug
 waitForServer "Keycloak"

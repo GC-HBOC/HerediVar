@@ -65,12 +65,9 @@ def logout(page: Page):
 def login(page: Page, user: dict):
     ili = is_logged_in(page, user["username"])
     #print("before: " + str(ili))
-    page.screenshot(path="screenshots/login_before.png")
     if not ili:
-        logout(page)
         print("not logged in loggin in user now!")
         nav(page.goto, GOOD_STATI, url_for("auth.login", _external=True))
-
         page.locator("#username").fill(user["username"])
         page.locator("#password").fill(user["password"])
 
@@ -78,7 +75,6 @@ def login(page: Page, user: dict):
 
         ili = is_logged_in(page, user["username"])
     #print("after: " + str(ili))
-    page.screenshot(path="screenshots/login_after.png")
     assert ili
 
 
@@ -88,6 +84,25 @@ def nav(meth, expected_stati, *args, **kwargs):
         meth(*args, **kwargs)
     response = response_info.value
     assert response.status in expected_stati, f"{response.request.method} {response.url} returned {response.status}"
+
+
+#import json
+#def test(route, post_data):
+#    post_data = json.dumps(post_data)
+#    print(post_data)
+#    route.continue_(method="POST", post_data=post_data)
+#
+#def nav_post(meth, url, post_data, expected_stati, *args, **kwargs):
+#    routing_url = "**/*" + url + "*"
+#    meth.__self__.route(routing_url, lambda route: test(route, post_data))
+#    nav(meth, expected_stati, url, *args, **kwargs)
+#    meth.__self__.unroute(routing_url)
+
+def nav_post(page, url, expected_stati, *args, **kwargs):
+    response = page.request.post(url, *args, **kwargs)
+    assert response.status in expected_stati, f"{response.url} returned {response.status}"
+
+
 
 
 def save_browser_state(context, filename = ".auth/state.json"):
@@ -130,7 +145,7 @@ screenshot_name_dict={}
 def screenshot(page, folder="screenshots"):
     if not os.path.exists(folder):
         os.makedirs(folder)
-    basename = page.url.replace("/", '_')
+    basename = page.url.split('?')[0].replace("/", '_')
     screenshot_num = screenshot_name_dict.get(basename, 0) + 1
     screenshot_name_dict[basename] = screenshot_num
     full_path = folder + "/" + basename + "_" + str(screenshot_num) + ".png"
@@ -193,8 +208,3 @@ def click_link(page, locator, expected_stati = GOOD_STATI, link_attribute = "dat
     remove_response_listeners(page)
     page.wait_for_url("**" + link_url)
 
-def continue_as_post(route, expected_stati):
-    response = route.fetch(method="POST")
-    route.fulfill()
-    if response.status not in expected_stati:
-        raise AssertionError("Status code is not expected: " + str(response.status) + " should be in " + str(expected_stati))

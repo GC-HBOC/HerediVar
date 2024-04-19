@@ -102,3 +102,9 @@ sed 's/srv018.img.med.uni-tuebingen.de/localhost/g' $path_to_keycloak_config/Her
 mv $path_to_keycloak_config/HerediVar-realm-test.json $path_to_keycloak_config/HerediVar-realm.json
 sed 's/localhost:5000/localhost:4000/g' $path_to_keycloak_config/HerediVar-realm.json > $path_to_keycloak_config/HerediVar-realm-test.json
 rm $path_to_keycloak_config/HerediVar-realm.json
+
+sed -i '$ d' $path_to_keycloak_config/HerediVar-realm-test.json
+echo , >> $path_to_keycloak_config/HerediVar-realm-test.json
+tail -n +3 /mnt/storage2/users/ahdoebm1/HerediVar/resources/backups/keycloak_export/test_config/HerediVar-test-users.json >> $path_to_keycloak_config/HerediVar-realm-test.json
+
+sed -i 's/"verifyEmail" : true,/"verifyEmail" : false,/g' $path_to_keycloak_config/HerediVar-realm-test.json

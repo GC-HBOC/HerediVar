@@ -15,11 +15,6 @@ from playwright.sync_api import expect
 import requests
 
 
-#def test_screenshot(page):
-#    response = page.goto(url_for("main.index", _external=True )) #    "http://localhost:4000" + 
-#    print(response.request.all_headers())
-#    page.screenshot(path="screenshots/index.png")
-
 
 
 def test_variant_list_add(page):
@@ -75,16 +70,8 @@ def test_variant_list_add(page):
 
 
 
-    #page.goto(url_for("user.my_lists", _external=True))
-    #page.locator("#access_col_search").fill("private")
-    #utils.screenshot(page)
-    #page.locator("#access_col_search.search-input-selected").wait_for()
-    #utils.screenshot(page)
-    #expect(page.locator("tr[list_id]")).to_have_count(1)
-
-def test_private_list_actions(page):
+def test_private_list_actions(page, conn):
     # seed database
-    conn = Test_Connection(roles = ["db_admin"])
     conn.insert_user(username = "transient_tester", first_name = "TRA", last_name = "TEST", affiliation = "AFF")
     user_id = conn.get_last_insert_id()
 
@@ -101,39 +88,167 @@ def test_private_list_actions(page):
     # perform test
     utils.login(page, utils.get_user())
 
-    # is the list visible?
+    # the list should not be visible
     utils.nav(page.goto, utils.GOOD_STATI, url_for('user.my_lists', _external=True))
     expect(page.locator("tr[list_id='" + str(list_id) + "']")).to_have_count(0)
 
     # try accessing the private list -> unauthorized
     utils.nav(page.goto, utils.UNAUTHORIZED_STATI, url_for('user.my_lists', view=list_id, _external=True))
 
-    ## is it possible to add variants?
-    #page.route("**/*" + url_for("user.modify_list_content") + "*", lambda route: continue_as_post(route, expected_stati = [200])) # utils.NO_ACCESS_STATI
-    #page.goto(url_for("user.modify_list_content", selected_list_id=list_id, variant_id = variant_id_2, action = 'add_to_list', next = url_for('variant.display', variant_id=variant_id_2), _external=True))
-    #utils.screenshot(page)
-    #print("YOOO")
-    #assert False
 
-    #response = page.goto(url_for('variant.display', variant_id = variant_id_2, _external=True))
-    #utils.screenshot(page)
-    #assert response.status == 200
-    #page.locator("#dropdownMenuButton1").click()
-    #page.locator("#list_add_button").click()
-    #page.locator("#list-add-modal-label").wait_for()
-    #utils.screenshot(page)
-    #expect(page.locator("div:has-text('" + list_name + "')")).to_have_count(0)
-    #utils.screenshot(page)
+    # try to add variants to the private list -> unauthorized
+    get_data = {
+        "selected_list_id": list_id,
+        "variant_id": variant_id_2, 
+        "action": 'add_to_list', 
+        "next": url_for('variant.display', variant_id=variant_id_2)
+    }
+    post_data = {}
+    url = url_for("user.modify_list_content", **get_data, _external=True)
+    expected_stati = utils.UNAUTHORIZED_STATI
+    utils.nav_post(page, url, expected_stati, form=post_data)
+
+    # try to delete variants from the private list -> unauthorized
+    get_data = {
+        "selected_list_id": list_id,
+        "variant_id": variant_id_1, 
+        "action": 'remove_from_list', 
+        "next": url_for('variant.display', variant_id=variant_id_1)
+    }
+    post_data = {}
+    url = url_for("user.modify_list_content", **get_data, _external=True)
+    expected_stati = utils.UNAUTHORIZED_STATI
+    utils.nav_post(page, url, expected_stati, form=post_data)
+
+
+    ################# PUT THIS IN SEPARATE TESTS ###################
+    # try to delete the list
+    get_data = {
+        "type": 'delete_list'
+    }
+    post_data = {
+        "list_id": list_id
+    }
+    url = url_for("user.my_lists", **get_data, _external=True)
+    expected_stati = utils.UNAUTHORIZED_STATI
+    utils.nav_post(page, url, expected_stati, form=post_data)
+
+    # try to duplicate the list
+    get_data = {
+        "type": 'duplicate'
+    }
+    post_data = {
+        "list_id": list_id,
+        "list_name": "DUPLICATED LIST",
+        "public_read": True,
+        "public_edit": True
+    }
+    url = url_for("user.my_lists", **get_data, _external=True)
+    expected_stati = utils.UNAUTHORIZED_STATI
+    utils.nav_post(page, url, expected_stati, form=post_data)
 
 
 
-    
-    
 
 
-def test_public_list_actions(page):
+
+def test_modify_list_permissions(page, conn):
     # seed database
-    conn = Test_Connection(roles = ["db_admin"])
+    user = utils.get_user()
+    conn.insert_user(username = "transient_tester", first_name = "TRA", last_name = "TEST", affiliation = "AFF")
+    other_user_id = conn.get_last_insert_id()
+
+    list_name = "priv_l"
+    conn.insert_user_variant_list(user_id = other_user_id, list_name = list_name, public_read = False, public_edit = False)
+    private_list_id = conn.get_last_insert_id()
+
+    list_name = "list1_allowed"
+    user_id = conn.get_user_id(username = user["username"])
+    conn.insert_user_variant_list(user_id = user_id, list_name = list_name, public_read = False, public_edit = False)
+    allowed_list_id = conn.get_last_insert_id()
+
+    # start test
+    utils.login(page, user)
+
+    # try to modify the list name -> allowed
+    new_list_name = "ALLOWEDLISTNAME"
+    utils.nav(page.goto, utils.GOOD_STATI, url_for('user.my_lists', _external=True))
+    page.locator('#edit_list_' + str(allowed_list_id)).click()
+    page.wait_for_selector("#createModalLabel")
+    page.locator('#list_name').fill(new_list_name)
+    page.locator('#list-modal-submit').click()
+    utils.check_flash_id(page, "list_edit_permissions_success")
+    expect(page.get_by_text(new_list_name)).to_be_visible()
+    utils.screenshot(page)
+
+    # try modify the list name -> unauthorized
+    get_data = {
+        "selected_list_id": private_list_id,
+        "type": 'edit'
+    }
+    post_data = {
+        "list_name": "THISISNOTALLOWED",
+        "list_id": private_list_id
+    }
+    url = url_for("user.my_lists", **get_data, _external=True)
+    expected_stati = utils.UNAUTHORIZED_STATI
+    utils.nav_post(page, url, expected_stati, form=post_data)
+
+
+    # try to select only public edit and not public read -> should not be possible
+    utils.nav(page.goto, utils.GOOD_STATI, url_for('user.my_lists', _external=True))
+    page.locator('#edit_list_' + str(allowed_list_id)).click()
+    page.wait_for_selector("#createModalLabel")
+    expect(page.locator('#public_edit')).to_be_disabled()
+    page.locator('#public_read').click()
+    page.locator('#public_edit').click()
+    expect(page.locator('#public_read')).to_be_checked()
+    expect(page.locator('#public_edit')).to_be_checked()
+    page.locator('#public_read').click()
+    expect(page.locator('#public_read')).not_to_be_checked()
+    expect(page.locator('#public_edit')).to_be_disabled()
+    expect(page.locator('#public_edit')).not_to_be_checked()
+
+    # try to modify the list permissions -> allowed
+    utils.nav(page.goto, utils.GOOD_STATI, url_for('user.my_lists', _external=True))
+    page.locator('#edit_list_' + str(allowed_list_id)).click()
+    page.wait_for_selector("#createModalLabel")
+    page.locator('#public_read').click()
+    page.locator('#public_edit').click()
+    expect(page.locator('#public_read')).to_be_checked()
+    expect(page.locator('#public_edit')).to_be_checked() # to be disabled
+    page.locator('#list-modal-submit').click()
+    utils.check_flash_id(page, "list_edit_permissions_success")
+    expect(page.locator("span[title='Public list']")).to_have_count(1)
+    utils.screenshot(page)
+
+    # try modify the list permissions -> unauthorized
+    get_data = {
+        "type": 'edit'
+    }
+    post_data = {
+        "list_name": list_name,
+        "list_id": private_list_id,
+        "public_read": True,
+        "public_edit": True
+    }
+    url = url_for("user.my_lists", **get_data, _external=True)
+    expected_stati = utils.UNAUTHORIZED_STATI
+    utils.nav_post(page, url, expected_stati, form=post_data)
+
+
+
+
+
+
+
+
+
+
+
+
+def test_public_list_actions(page, conn):
+    # seed database
     conn.insert_user(username = "transient_tester", first_name = "TRA", last_name = "TEST", affiliation = "AFF")
     user_id = conn.get_last_insert_id()
 
@@ -159,30 +274,5 @@ def test_public_list_actions(page):
 
 
 
-def test_public_edit_list_actions(page):
-    # seed database
-    conn = Test_Connection(roles = ["db_admin"])
-    conn.insert_user(username = "transient_tester", first_name = "TRA", last_name = "TEST", affiliation = "AFF")
-    user_id = conn.get_last_insert_id()
-
-    list_name = "edit_l"
-    conn.insert_user_variant_list(user_id = user_id, list_name = list_name, public_read = True, public_edit = True)
-    list_id = conn.get_last_insert_id()
-
-    variant_id_1 = conn.insert_variant(chr = "chr16", pos = "23603525", ref = "C", alt = "T", orig_chr = "chr16", orig_pos = "23603525", orig_ref = "C", orig_alt = "T", user_id = user_id) # chr16-23603525-C-T
-    variant_id_2 = conn.insert_variant(chr = "chr22", pos = "28689217", ref = "T", alt = "C", orig_chr = "chr22", orig_pos = "28689217", orig_ref = "T", orig_alt = "C", user_id = user_id) # chr22-28689217-T-C
-
-    conn.add_variant_to_list(list_id = list_id, variant_id = variant_id_1)
-
-
-    # perform test
-    utils.login(page, utils.get_user())
-
-    # is the list visible?
-    utils.nav(page.goto, utils.GOOD_STATI, url_for('user.my_lists', _external=True))
-    expect(page.locator("tr[list_id='" + str(list_id) + "']")).to_have_count(0)
-
-    # try accessing the public list -> works
-    utils.nav(page.goto, utils.GOOD_STATI, url_for('user.my_lists', view=list_id, _external=True))
 
 

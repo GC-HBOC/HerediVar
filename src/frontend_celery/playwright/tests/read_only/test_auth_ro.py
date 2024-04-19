@@ -6,6 +6,11 @@ import re
 from playwright.sync_api import Page, expect
 from flask import url_for
 
+def test_nothing(page: Page):
+    pass
+
+
+###### !!!!!! email verification is not required in TEST setting!
 
 def test_login(page: Page):
     utils.login(page, utils.get_user())
