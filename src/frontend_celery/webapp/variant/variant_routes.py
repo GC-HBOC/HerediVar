@@ -39,8 +39,6 @@ def search():
     if request.method == 'POST':
         list_id = request.args.get('selected_list_id')
         
-
-
         if list_id:
             list_permission = conn.check_list_permission(user_id, list_id)
             if not list_permission['owner'] and not list_permission['edit']:

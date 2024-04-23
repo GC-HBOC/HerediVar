@@ -69,16 +69,16 @@
         <div id="list-content" class="sst bsl overflow_x_auto">
             {% if request.args.get('view') is not none %}
                 <div class="d-flex">
-                    <a type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="duplicate" data-bs-id="{{ request.args.get('view') }}" >
+                    <a id="duplicate_list_button" type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="duplicate" data-bs-id="{{ request.args.get('view') }}" >
                         {{ macros.draw_duplicate_symbol("Duplicate this list") }}
                     </a>
-                    <a type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="intersect" data-bs-id="{{ request.args.get('view') }}">
+                    <a id="intersect_list_button" type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="intersect" data-bs-id="{{ request.args.get('view') }}">
                         {{ macros.draw_intersect_symbol("Intersect this list with another list") }}
                     </a>
-                    <a type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="subtract" data-bs-id="{{ request.args.get('view') }}">
+                    <a id="subtract_list_button" type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="subtract" data-bs-id="{{ request.args.get('view') }}">
                         {{ macros.draw_subtract_symbol("Subtract variants from another list from this list") }}
                     </a>
-                    <a type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="add" data-bs-id="{{ request.args.get('view') }}">
+                    <a id="add_list_button" type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="add" data-bs-id="{{ request.args.get('view') }}">
                         {{ macros.draw_add_symbol("Add variants from another list to this list") }}
                     </a>
                     {% if list_import_status is not none %}

@@ -96,9 +96,9 @@ def extract_genes(request_args):
 
 def extract_variants(request_args):
     variant_strings = request_args.get('variants', '')
-    variant_strings = preprocess_query(variant_strings, pattern=r"(chr)?.+-\d+-.+-.+")
+    variant_strings = preprocess_query(variant_strings, pattern=r"(chr)?.+-\d+-[a-zA-Z]+-[a-zA-Z]+")
     if variant_strings is None:
-        flash("You have an error in your variant query(s). This form is required: chrom-pos-ref-alt OR chrom-start-end-sv_type in case of structural variants. Results are not filtered by variant strings.", "alert-danger")
+        flash("You have an error in your variant query(s). This form is required: chrom-pos-ref-alt OR chrom-start-end-sv_type in case of structural variants. Results are not filtered by variant strings.", "alert-danger flash_id:search_error_variants")
     return variant_strings
 
 def extract_variant_types(request_args, allowed_variant_types):

@@ -116,7 +116,7 @@ def my_lists():
                 if not list_permissions['owner']:
                     return abort(403)
             conn.delete_user_variant_list(list_id)
-            flash("Successfully removed list", "alert-success")
+            flash("Successfully removed list", "alert-success flash_id:list_delete_success")
             current_app.logger.info(session['user']['preferred_username'] + " successfully deleted list " + str(list_id)) 
             return redirect(url_for('user.my_lists'))
         
@@ -136,7 +136,7 @@ def my_lists():
                     if not list_permissions["read"]:
                         return abort(403)
                     new_list_id = conn.duplicate_list(list_id, user_id, list_name, public_read, public_edit)
-                    flash("Successfully duplicated list", 'alert-success')
+                    flash("Successfully duplicated list", 'alert-success flash_id:duplicate_list_success')
                     current_app.logger.info(session['user']['preferred_username'] + " successfully duplicated list " + str(list_id))
                     return redirect(url_for('user.my_lists', view=list_id))
         
@@ -150,7 +150,7 @@ def my_lists():
             if list_id == "":
                 return abort(404)
             if (other_list_name.strip() != '' and other_list_id.strip() == ''):
-                flash("The other list which you tried to intersect does not exist", 'alert-danger')
+                flash("The other list which you tried to intersect does not exist", 'alert-danger flash_id:intersect_not_exist')
                 return redirect(url_for('user.my_lists', view=list_id))
             list_permissions = conn.check_list_permission(user_id, list_id)
             if not list_permissions['read']:
@@ -169,7 +169,7 @@ def my_lists():
                     return abort(403)
                 
                 conn.intersect_lists(first_list_id = list_id, second_list_id = other_list_id, target_list_id = target_list_id)
-                flash("Successfully intersected the two lists", 'alert-success')
+                flash("Successfully intersected the two lists", 'alert-success flash_id:intersect_list_success')
             return redirect(url_for('user.my_lists', view=target_list_id))
         
         if request_type == 'subtract':
@@ -182,7 +182,7 @@ def my_lists():
             if list_id == "":
                 return abort(404)
             if (other_list_name.strip() != '' and other_list_id.strip() == ''):
-                flash("The other list which you tried to subtract does not exist", 'alert-danger')
+                flash("The other list which you tried to subtract does not exist", 'alert-danger flash_id:subtract_not_exist')
                 return redirect(url_for('user.my_lists', view=list_id))
             list_permissions = conn.check_list_permission(user_id, list_id)
             if not list_permissions['read']:
@@ -200,7 +200,7 @@ def my_lists():
                     return abort(403)
                 
                 conn.subtract_lists(first_list_id = list_id, second_list_id = other_list_id, target_list_id = target_list_id)
-                flash("Successfully subtracted the two lists", 'alert-success')
+                flash("Successfully subtracted the two lists", 'alert-success flash_id:subtract_list_success')
             return redirect(url_for('user.my_lists', view=target_list_id))
         
 
@@ -214,7 +214,7 @@ def my_lists():
             if list_id == "":
                 return abort(404)
             if (other_list_name.strip() != '' and other_list_id.strip() == ''):
-                flash("The other list which you tried to add does not exist", 'alert-danger')
+                flash("The other list which you tried to add does not exist", 'alert-danger flash_id:add_not_exist')
                 return redirect(url_for('user.my_lists', view=list_id))
             list_permissions = conn.check_list_permission(user_id, list_id)
             if not list_permissions['read']:
@@ -232,7 +232,7 @@ def my_lists():
                     return abort(403)
                 
                 conn.add_lists(first_list_id = list_id, second_list_id = other_list_id, target_list_id = target_list_id)
-                flash("Successfully added the two lists", 'alert-success')
+                flash("Successfully added the two lists", 'alert-success flash_id:add_list_success')
             return redirect(url_for('user.my_lists', view=target_list_id))
 
         # actions on variant list view

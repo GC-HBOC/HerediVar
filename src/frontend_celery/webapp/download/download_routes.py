@@ -171,7 +171,7 @@ def heredivar_version(version): # version is a date
     if not path.exists(path_to_download):
         return abort(404)
     
-    return send_file(path_to_download, download_name="HerediVar-"+version+".vcf", as_attachment=True, mimetype="application/gzip")
+    return send_file(path_to_download, download_name="HerediVar-"+version+".vcf.gz", as_attachment=True, mimetype="application/gzip")
 
 
 ##################################
