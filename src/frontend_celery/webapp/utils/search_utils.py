@@ -55,17 +55,20 @@ def preprocess_ranges(ranges):
         return None
     seps = get_search_query_separators()
     ranges_split = re.split(seps, ranges)
-    ranges_split = [proprocess_range_worker(r) for r in ranges_split]
+    ranges_split = [preprocess_range_worker(r) for r in ranges_split]
     ranges_split_filtered = [r for r in ranges_split if r is not None] # filter out erroneous
     if len(ranges_split) != len(ranges_split_filtered):
-        flash("At least one of your range query(s) has an error. Please check the syntax. The erroneous range query(s) were removed. You still have " + str(len(ranges_split_filtered)) + " ranges after removing the erroneous ones.", 'alert-danger')
+        flash("At least one of your range query(s) has an error. Please check the syntax. The erroneous range query(s) were removed. You still have " + str(len(ranges_split_filtered)) + " ranges after removing the erroneous ones.", 'alert-warning')
     ranges_split = ';'.join(ranges_split_filtered)
     return ranges_split
 
-def proprocess_range_worker(r):
+def preprocess_range_worker(r):
     r = r.strip()
-    r = r.replace(':', '-').replace('\t', '-').replace(' ', '-')
+    r = re.sub(r"\s+", " ", r)
+    r = r.replace(':', '-').replace(' ', '-')
     parts = r.split('-')
+    if len(parts) != 3:
+        return None
     chrom = parts[0]
     chr_num = functions.validate_chr(chrom)
     if chr_num is None:
@@ -78,8 +81,11 @@ def proprocess_range_worker(r):
 def extract_ranges(request_args):
     ranges = request_args.get('ranges', '')
     if ranges != '':
+        print(ranges)
         ranges = preprocess_ranges(ranges)
+        print(ranges)
         ranges = preprocess_query(ranges, pattern= r"(chr)?.+-\d+-\d+")
+        print(ranges)
         if ranges is None:
             flash("You have an error in your range query(s). Please check the syntax! Results are not filtered by ranges.", "alert-danger")
     else:
@@ -424,9 +430,9 @@ def sort_annotation_types(a, b):
     return 0
 
 
-def extract_lookup_list(request_args, user_id, conn):
-    lookup_list_names = request_args.get('lookup_list_name', [])
-    lookup_list_ids = request_args.get('lookup_list_id', [])
+def extract_lookup_list(request_args, user_id, conn: Connection):
+    lookup_list_names = request_args.get('lookup_list_name', "").split(';')
+    lookup_list_ids = request_args.get('lookup_list_id', "").split(';')
     variant_ids_oi = []
     num_valid_lists = 0
     for list_name, list_id in zip(lookup_list_names, lookup_list_ids):
@@ -435,7 +441,7 @@ def extract_lookup_list(request_args, user_id, conn):
         if list_name == '' and list_id == '':
             continue
         if (list_name != '' and list_id == ''):
-            flash("The list you are trying to access does not exist. Results are not filtered by list.", 'alert-danger')
+            flash("The list " + list_name + " does not exist. Results are not filtered by this list.", 'alert-danger flash_id:unknown_list_search')
         else:
             list_ids = preprocess_query(list_id, r'\d*') # either none if there was an error or a list_id
             if list_id is None:
@@ -446,61 +452,18 @@ def extract_lookup_list(request_args, user_id, conn):
                 list_permissions = conn.check_list_permission(user_id, list_id)
                 if list_permissions is not None:
                     if not list_permissions['owner'] and not list_permissions['read']:
-                        flash("You are not allowed to access this list", 'alert-danger')
                         return abort(403)
                     else:
                         variant_ids_oi.extend(conn.get_variant_ids_from_list(list_id))
                 else:
-                    flash("The list which you are trying to access does not exist.", "alert-danger")
+                    flash("The list which you are trying to access does not exist.", "alert-danger flash_id:unknown_list_search")
     
     if num_valid_lists > 0 and len(variant_ids_oi) == 0:
         flash("All lists you are trying to access are empty.", "alert-warning")
         variant_ids_oi = [-1]
 
-    #if (lookup_list_name.strip() != '' and lookup_list_id.strip() == ''):
-    #    flash("The list you are trying to access does not exist. Results are not filtered by list.", 'alert-danger')
-    #else:
-    #    lookup_list_ids = preprocess_query(lookup_list_id, r'\d*') # either none if there was an error or a list_id
-    #    #if len(lookup_list_id) > 1: # only one list_id can be searched at a time
-    #    #    flash("You have submitted multiple lists which is not allowed. Defaulting to the first one given: " + lookup_list_id[0], "alert-warning")
-    #    if lookup_list_ids is None:
-    #        flash("You have an error in your list search.", "alert-danger")
-    #    elif len(lookup_list_ids) >= 1:
-    #        for lookup_list_id in lookup_list_ids:
-    #            list_permissions = conn.check_list_permission(user_id, lookup_list_id)
-    #            if list_permissions is not None:
-    #                if not list_permissions['owner'] and not list_permissions['read']:
-    #                    flash("You are not allowed to access this list", 'alert-danger')
-    #                else:
-    #                    variant_ids_oi.extend(conn.get_variant_ids_from_list(lookup_list_id))
-    #            else:
-    #                flash("The list which you are trying to access does not exist.", "alert-danger")
-    
-    #if len(variant_ids_oi) == 0:
-    #    flash("All lists you are trying to access are empty.", "alert-warning")
-    #    variant_ids_oi = [-1]
     variant_ids_oi = list(set(variant_ids_oi)) # make variant ids them unique
     return variant_ids_oi
-
-
-#def extract_search_settings(request_args):
-#    sort_bys = ["genomic position", "recent"]
-#    page_sizes = ["5", "20", "50", "100"]
-#
-#    selected_page_size = request_args.get('page_size', page_sizes[1])
-#    selected_sort_by = request_args.get('sort_by', sort_bys[0])
-#    include_hidden = True if request_args.get('include_hidden', 'off') == 'on' else False
-#
-#
-#    if selected_page_size not in page_sizes:
-#        flash("This page size is not supported. Defaulting to 20.", "alert-warning")
-#        selected_page_size = "20"
-#    if selected_sort_by not in sort_bys:
-#        flash("The variant table can not be sorted by " + str(selected_sort_by) + ". Defaulting to genomic position sort.", "alert-warning")
-#        selected_sort_by = "genomic position"
-#
-#    return sort_bys, page_sizes, selected_page_size, selected_sort_by, include_hidden
-
 
 
 def get_static_search_information(user_id, conn: Connection):

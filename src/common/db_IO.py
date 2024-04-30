@@ -754,7 +754,6 @@ class Connection:
         postfix = ""
         actual_information = ()
         if ranges is not None and len(ranges) > 0: # if it is None this means it was not specified or there was an error. If it has len == 0 it means that there was no error but the user did not specify any 
-            print(ranges)
             new_constraints = []
             for range_constraint in ranges:
                 chrom, start, end = self.preprocess_range(range_constraint)
@@ -1043,9 +1042,7 @@ class Connection:
             offset = (page - 1) * page_size
             command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
-        print(command)
-        print(actual_information)
-        print(command % actual_information)
+        #print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 

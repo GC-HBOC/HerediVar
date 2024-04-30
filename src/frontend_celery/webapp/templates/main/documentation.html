@@ -113,13 +113,23 @@
               </li>
               <li>A gene name or unique alias or HGVS-ID (e. g. BARD1)</li>
               <li>
-                There are two possible ways of describing a chromosomal range: <br>
-                <ol>
-                  <li>A chromosomal range of the form: chr:start-end. Start and end values are inclusive. (e. g. chr2:214767531-214780740)</li>
-                  <li>A chromosomal range in .bed style: chr   start    end    followed by optional columns. Hereby, chr, start and end must be separated with tabulators. Also note 
-                    that the start coordinate is zero based (ie. inclusive) while the end coordinate is one based (ie. exclusive). If you want to, you can also upload a bed file 
-                    which will automatically insert all relevant data-lines in the text area. (e. g. chr11	108229378	108229379	Neg4	0	-	127480532	127481699	0,0,255)</li>
-                </ol>
+                A genomic range is described by providing chromosome start position and end position. These values must be separated with ":", "-" or whitespace (except new lines). Both, adding as well as removing the "chr" prefix
+                from the chromosome is allowed and should yield the same result. Example formats that work:
+                <ul>
+                  <li>chr1:start-end</li>
+                  <li>chr1-start-end</li>
+                  <li>chr1 start  end</li>
+                  <li>chr1[tab]start[tab]end</li>
+                  <li>1:start:end</li>
+                </ul>
+                Examples that do not work:
+                <ul>
+                  <li>chr1- start-end (note the space between the first dash and the start position)</li>
+                  <li>chr1::start-end</li>
+                </ul>
+                HerediVar allows to upload a bed file in addition to providing chromosomal ranges manually through the textarea. Simply click the "upload bed..." button and choose a bed file from your local storage.
+                Keep in mind that start positions within bed files are zero based (ie. inclusive) while end coordinates are one based (ie. exclusive) within bed files. HerediVar automatically converts the endposition
+                to a zero based (ie. inclusive) position. Choosing this option will automatically append all relevant fields in a HerediVar supported format to the textarea. <br>
                 WARNING: Due to the fact that .bed files can contain any character each bed style range must reside in its own line (ie. they must be separated with newline characters)!
               </li>
               <li>cDNA ranges <br>
@@ -163,7 +173,13 @@
                 For text-like values you may choose from =, != and ~. Hereby, ~ is a case insensitive substring match. Finally, provide the value in the next textbox. <br>
                 It is always possible to add more annotation searches. But be aware that resulting variants must always satisfy all of the criteria at the same time to appear in the variant list.
               </li>
-              <li>A consensus classification</li>
+              <li>
+                A consensus classification. This filters only for consensus classifications which were made within HerediVar and excludes consensus classification which were imported from HerediCaRe.
+                However, if the "include_heredicare" checkbox is ticked, the search will also display imported consensus classifications (see section on consensus classifications in documentation for further
+                details on how to spot imported consensensus classifications). <br>
+                Be mindful though: HerediVar native consensus classifications always overshadow imported ones. So a variant which has an imported consensus classification of 1, but a HerediVar native consensus
+                classification of 2 will not be found if class 1 and include_heredicare are checked (provided class 2 is not checked).
+              </li>
               <li>Your classification</li>
               <li>A list of variants</li>
             </ul>

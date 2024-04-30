@@ -35,3 +35,10 @@ class Test_Connection(Connection):
         self.cursor.execute(command)
         result = self.cursor.fetchall()
         return [x[0] for x in result]
+    
+    def get_list_id_by_name(self, list_name):
+        command = "SELECT id FROM user_variant_lists WHERE name = %s"
+        self.cursor.execute(command, (list_name, ))
+        result = self.cursor.fetchall()
+        result = [x[0] for x in result]
+        return result

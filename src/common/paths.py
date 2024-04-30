@@ -119,6 +119,11 @@ elif webapp_env == 'localtest':
     webapp_log_dir = joinpaths(logs_dir, "test")
     webapp_log = joinpaths(webapp_log_dir, "webapp.log")
 
+    # test data paths
+    test_data_path = joinpaths(workdir, "src/frontend_celery/playwright/data/testdata")
+    search_data_path = joinpaths(test_data_path, "search")
+    range_search_bed = joinpaths(search_data_path, "test_range_search.bed")
+
     
     #tools
     #vep_path = "/mnt/storage2/GRCh38/share/opt/ensembl-vep-release-104.3"
