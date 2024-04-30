@@ -524,6 +524,7 @@ def get_static_search_information(user_id, conn: Connection):
 def get_merged_variant_page(request_args, user_id, static_information, conn:Connection, flash_messages = True, select_all = False, empty_if_no_variants_oi = False):
     variant_strings = extract_variants(request_args)
     variant_types = extract_variant_types(request_args, static_information['allowed_variant_types'])
+
     genes = extract_genes(request_args)
     ranges = extract_ranges(request_args)
     consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request_args, static_information['allowed_consensus_classes'])

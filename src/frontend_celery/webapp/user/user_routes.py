@@ -56,8 +56,6 @@ def my_lists():
     user_id = session['user']['user_id']
     conn = get_connection()
 
-    static_information = search_utils.get_static_search_information(user_id, conn)
-
     # variant view table of lists in pagination
     view_list_id = request.args.get('view', None)
 
@@ -74,7 +72,10 @@ def my_lists():
             return abort(403)
         list_import_status = conn.get_most_recent_list_variant_import_queue(view_list_id)
 
-    variants, total, page, selected_page_size = search_utils.get_merged_variant_page(request.args, user_id, static_information, conn, flash_messages = True, empty_if_no_variants_oi = True)
+    request_args = request.args.to_dict(flat=False)
+    request_args = {key: ';'.join(value) for key, value in request_args.items()}
+    static_information = search_utils.get_static_search_information(user_id, conn)
+    variants, total, page, selected_page_size = search_utils.get_merged_variant_page(request_args, user_id, static_information, conn, flash_messages = True, empty_if_no_variants_oi = True)
     pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
 
     if request.method == 'POST':

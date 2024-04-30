@@ -754,6 +754,7 @@ class Connection:
         postfix = ""
         actual_information = ()
         if ranges is not None and len(ranges) > 0: # if it is None this means it was not specified or there was an error. If it has len == 0 it means that there was no error but the user did not specify any 
+            print(ranges)
             new_constraints = []
             for range_constraint in ranges:
                 chrom, start, end = self.preprocess_range(range_constraint)
@@ -768,7 +769,7 @@ class Connection:
                     actual_information += ('small', )
                 elif 'struct' in variant_type:
                     actual_information += ('sv',)
-            placeholders = self.get_placeholders(len(actual_information))
+            placeholders = self.get_placeholders(len(variant_types))
             postfix = self.add_constraints_to_command(postfix, "variant_type IN " + placeholders)
         if cdna_ranges is not None and len(cdna_ranges) > 0:
             new_constraints = []
@@ -1042,7 +1043,9 @@ class Connection:
             offset = (page - 1) * page_size
             command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
-        #print(command % actual_information)
+        print(command)
+        print(actual_information)
+        print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 

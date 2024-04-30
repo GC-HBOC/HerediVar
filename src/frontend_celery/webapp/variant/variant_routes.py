@@ -52,7 +52,8 @@ def search():
                 return redirect(url_for('variant.search', **request_args))
 
     return render_template('variant/search.html',
-                           variants=variants, page=page, 
+                           variants=variants,
+                           page=page, 
                            per_page=selected_page_size, 
                            pagination=pagination,
                            static_information = static_information,

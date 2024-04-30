@@ -37,7 +37,7 @@ def selector_exists(page: Page, selector: str, timeout: int = 500):
         return page.wait_for_selector(selector, timeout=timeout, state='attached')
     except PlaywrightTimeoutError:
         return None
-
+    
 def is_logged_in(page: Page, username: str):
     nav(page.goto, GOOD_STATI, url_for("main.index", _external=True))
     index_url = page.url
@@ -149,7 +149,7 @@ def screenshot(page, folder="screenshots"):
     screenshot_num = screenshot_name_dict.get(basename, 0) + 1
     screenshot_name_dict[basename] = screenshot_num
     full_path = folder + "/" + basename + "_" + str(screenshot_num) + ".png"
-    page.screenshot(path = full_path)
+    page.screenshot(path = full_path, full_page=True)
 
 
 def execute_sql_script(scriptPath) :       

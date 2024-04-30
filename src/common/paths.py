@@ -128,7 +128,7 @@ elif webapp_env == 'localtest':
     #ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-70-g53bce65c/"
     ngs_bits_path = joinpaths(toolsdir, "ngs-bits/bin/")
     htslib_path = joinpaths(toolsdir, "htslib/")
-
+    samtools_path = joinpaths(toolsdir, "samtools/samtools")
 
     # data
     ref_genome_path = workdir + "data/genomes/GRCh38.fa"
