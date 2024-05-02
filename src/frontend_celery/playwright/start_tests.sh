@@ -54,7 +54,7 @@ fi
 cd $TESTDIR
 export TESTUSER=$TEST_READONLY
 export TESTUSERPW=$TEST_READONLY_PW
-pytest --screenshot=only-on-failure --browser firefox tests/read_only/ -k 'test_variant_status_adjust' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
+pytest --screenshot=only-on-failure --browser firefox tests/read_only/ -k 'test_varaint_details_access' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
 
 # stop services
 #pkill -s 0 -e java

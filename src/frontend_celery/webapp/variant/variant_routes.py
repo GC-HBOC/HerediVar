@@ -272,7 +272,7 @@ def annotation_status():
     variant_id = request.args.get('variant_id')
     annotation_status = conn.get_current_annotation_status(variant_id) #id, variant_id, user_id, requested, status, finished_at, error_message, celery_task_id
 
-    result = None
+    result = {"status": "no annotation", "requested_at": "", "finished_at": "", "error_message": ""}
     if annotation_status is not None:
         status = annotation_status[4]
         requested_at = annotation_status[3]

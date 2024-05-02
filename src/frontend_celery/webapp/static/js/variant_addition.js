@@ -129,6 +129,8 @@ function update_annotation_status(status_url, show_reload_modal=false) {
                     show_annotation_status("bg-warning", "Task yielded an error: " + data['error_message'] + ". Will try again soon.", "Retrying annotation")
                 } else if (data['status'] == 'aborted') {
                     show_annotation_status("bg-primary", "This task was manually aborted at " + data['finished_at'] + ". It is recommended to restart the annotation.", "Annotation aborted")
+                } else if (data['status'] == 'no annotation') {
+                    show_annotation_status("bg-secondary", "This variant does not have an annotation, yet. You can issue one through the gear button.", "No annotation")
                 } else {
                     show_annotation_status("bg-warning", "An unexpected status found: " + data['status'], "Unexpected status")
                     $('#reannotate_button').attr('disabled', false);
