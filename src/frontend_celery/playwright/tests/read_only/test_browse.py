@@ -638,13 +638,104 @@ def list_search_worker(page, conn, url, all_variant_ids):
 
 
 def test_page_size_adjust(page, conn):
-    pass
+    # seed database
+    user = utils.get_user()
+    user_id = conn.get_user_id(user["username"])
+
+    # insert variants
+    all_variant_ids = [
+        conn.insert_variant(chr = "chr2", pos = "214730440", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id), # chr2-214730440-G-A BARD1
+        conn.insert_variant(chr = "chr2", pos = "214730441", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id), # 
+        conn.insert_variant(chr = "chr2", pos = "214730442", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id), # 
+        conn.insert_variant(chr = "chr2", pos = "214730443", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id), # 
+        conn.insert_variant(chr = "chr2", pos = "214730445", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id), # 
+        conn.insert_variant(chr = "chr2", pos = "214730446", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id) # 
+    ]
+
+    # start the test
+    utils.login(page, user)
+
+    perform_browse_test(page, conn, page_size_adjust_worker, all_variant_ids, user_id)
+
+
+def page_size_adjust_worker(page, conn, url, all_variant_ids):
+    # adjust page size to 5
+    variants_oi = all_variant_ids[0:5]
+    utils.nav(page.goto, utils.GOOD_STATI, url)
+    open_search_options(page)
+    page.wait_for_selector("#page_size")
+    page.locator("#page_size").select_option("5")
+    utils.nav(page.click, utils.GOOD_STATI, "#submit_search")
+    check_variant_search(page, variants_oi)
+
+
 
 def test_search_order_adjust(page, conn):
-    pass
+    # seed database
+    user = utils.get_user()
+    user_id = conn.get_user_id(user["username"])
+
+    # insert variants
+    all_variant_ids = [
+        conn.insert_variant(chr = "chr2", pos = "214730440", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id), # chr2-214730440-G-A BARD1
+        conn.insert_variant(chr = "chr2", pos = "214730441", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id), # 
+        conn.insert_variant(chr = "chr2", pos = "214730442", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id), # 
+        conn.insert_variant(chr = "chr2", pos = "214730443", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id), # 
+        conn.insert_variant(chr = "chr2", pos = "214730445", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id), # 
+        conn.insert_variant(chr = "chr2", pos = "214730446", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id) # 
+    ]
+
+    # start the test
+    utils.login(page, user)
+
+    perform_browse_test(page, conn, search_order_adjust_worker, all_variant_ids, user_id)
+
+
+def search_order_adjust_worker(page, conn, url, all_variant_ids):
+    # adjust page size to 5
+    variants_oi = all_variant_ids[-5:]
+    utils.nav(page.goto, utils.GOOD_STATI, url)
+    open_search_options(page)
+    page.wait_for_selector("#sort_by")
+    page.locator("#sort_by").select_option("recent")
+    utils.nav(page.click, utils.GOOD_STATI, "#submit_search")
+    check_variant_search(page, variants_oi)
+
 
 def test_variant_status_adjust(page, conn):
-    pass
+    # seed database
+    user = utils.get_user()
+    user_id = conn.get_user_id(user["username"])
+
+    # insert variants
+    all_variant_ids = [
+        conn.insert_variant(chr = "chr2", pos = "214730440", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id), # chr2-214730440-G-A BARD1
+        conn.insert_variant(chr = "chr2", pos = "214730441", ref = "G", alt = "A", orig_chr = "chr2", orig_pos = "214730440", orig_ref = "G", orig_alt = "A", user_id = user_id) # 
+    ]
+
+    conn.hide_variant(variant_id = all_variant_ids[0], is_hidden = False)
+
+    # start the test
+    utils.login(page, user)
+
+    perform_browse_test(page, conn, variant_status_adjust_worker, all_variant_ids, user_id)
+
+
+def variant_status_adjust_worker(page, conn, url, all_variant_ids):
+    # search without hidden variants
+    variants_oi = [all_variant_ids[1]]
+    utils.nav(page.goto, utils.GOOD_STATI, url)
+    open_search_options(page)
+    utils.nav(page.click, utils.GOOD_STATI, "#submit_search")
+    check_variant_search(page, variants_oi)
+
+    # search with hidden variants
+    variants_oi = all_variant_ids
+    utils.nav(page.goto, utils.GOOD_STATI, url)
+    open_search_options(page)
+    page.locator("#include_hidden").check()
+    utils.nav(page.click, utils.GOOD_STATI, "#submit_search")
+    check_variant_search(page, variants_oi)
 
 
 
