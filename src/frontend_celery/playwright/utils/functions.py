@@ -9,7 +9,7 @@ from playwright.sync_api import ElementHandle, Frame, Page, Browser, TimeoutErro
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from subprocess import Popen, PIPE, STDOUT
-
+import requests
 
 GOOD_STATI=[200, 302, 304]
 ERROR_STATI=[500, 302, 304]
@@ -85,6 +85,29 @@ def nav(meth, expected_stati, *args, **kwargs):
     response = response_info.value
     assert response.status in expected_stati, f"{response.request.method} {response.url} returned {response.status}"
 
+
+
+
+def check_all_links(page):
+    # check external links
+    locator = page.locator(".external_link")
+    nlinks = locator.count()
+    for i in range(1, nlinks+1): # idk why it is not possible to iterate over the locator which matches multiple elements. Thus, we do this shiz
+        url = page.locator(":nth-match(.external_link, " + str(i) + ")").get_attribute("uri")
+        resp = requests.get(url)
+        assert resp.status_code in GOOD_STATI, "The external link " + url + " returned status code " + resp.status_code
+
+    # check standard href links
+    base_url = get_base_url(page)
+    link_handles = page.locator("[href]")
+    for handle in link_handles.element_handles():
+        link = handle.get_attribute('href')
+        if link == '#':
+            continue
+        if not link.startswith("http"):
+            link = base_url.strip('/') + link
+        resp = requests.get(link)
+        assert resp.status_code in GOOD_STATI, "The href powered link " + link + " returned status code " + resp.status_code
 
 #import json
 #def test(route, post_data):

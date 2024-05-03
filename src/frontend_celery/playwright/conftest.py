@@ -53,7 +53,7 @@ def page(browser):
     utils.screenshot(page)
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=False)
 def _rollback():
     yield
     utils.execute_sql_script("/mnt/storage2/users/ahdoebm1/HerediVar/src/frontend_celery/playwright/data/truncate.sql")

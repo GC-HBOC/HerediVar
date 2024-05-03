@@ -180,8 +180,9 @@
 
 {% macro draw_annotation(annot) %}
 {% if annot is not none %}
-<div class="break_text_all" annotation_id="{{ annot.id }}">
-    <abbr class="ssr" title="{{ annot.description }}"><a class="dashed_underline">{{ annot.display_title }}:</a></abbr>{{ annot.value }}
+<div class="break_text_all d-flex margin_between_list_small" annotation_id="{{ annot.id }}">
+    <div class="dashed_underline" data-bs-toggle="tooltip" data-bs-title="{{ annot.description }}">{{ annot.display_title }}:</div>
+    <div data-testid="annotation-{{annot.title}}">{{ annot.value }}</div>
 </div>
 {% endif %}
 {% endmacro %}
@@ -202,10 +203,10 @@
             {% if transcripts_sorted | length > 0 %}
             {% if annot.title == 'revel' %}
             {% set max_transcript, max_value = annot.max() %}
-            <div annotation_id="{{ annot.id }}">
-                    {% set transcript = transcripts_sorted[0] %}
-                    <abbr class="ssr" title="{{annot.description}}"><a class="dashed_underline">{{annot.display_title}}:</a></abbr> {{max_value}} ({{max_transcript}})
-                    <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" 
+            <div class="d-flex margin_between_list_small" annotation_id="{{ annot.id }}">
+                <div class="dashed_underline" data-bs-toggle="tooltip" data-bs-title="{{ annot.description }}">{{ annot.display_title }}:</div>
+                <div data-testid="annotation-{{annot.title}}">{{max_value}} ({{max_transcript}})</div>
+                <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" data-testid="revel_details"
                     data-bs-content="
                         <div>Overview number shown is the max value from the following table:</div>
                         <div class='row gx-2 border-bottom bg-light width_medium_large'>
@@ -221,16 +222,17 @@
                         </div>
                         {% endfor %}
                     ">
-                        details
-                    </a>
+                    details
+                </a>
             </div>
             {% endif %}
             {% if annot.title == 'maxentscan' %}
-            <div annotation_id="{{ annot.id }}">
-                    {% set transcript = transcripts_sorted[0] %}
-                    {% set maxent_parts = values_sorted[0].split('|') %}
-                    <abbr class="ssr" title="{{annot.description}}"><a class="dashed_underline">{{annot.display_title}}:</a></abbr>{{ maxent_parts[0] }} -> {{ maxent_parts[1] }} ({{transcript}})
-                    <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix_large" data-bs-html="true" 
+            <div class="d-flex margin_between_list_small" annotation_id="{{ annot.id }}">
+                {% set transcript = transcripts_sorted[0] %}
+                {% set maxent_parts = values_sorted[0].split('|') %}
+                <div class="dashed_underline" data-bs-toggle="tooltip" data-bs-title="{{ annot.description }}">{{ annot.display_title }}:</div>
+                <div data-testid="annotation-{{annot.title}}">{{ maxent_parts[0] }} -> {{ maxent_parts[1] }} ({{transcript}})</div>
+                <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix_large" data-bs-html="true" 
                     data-bs-content="
                         <div>Format of the overview values: ref -> alt.</div>
                         <div class='row gx-2 border-bottom bg-light width_medium'>
@@ -247,16 +249,17 @@
                         </div>
                         {% endfor %}
                     ">
-                        details
-                    </a>
+                    details
+                </a>
             </div>
             {% endif %}
             {% if annot.title == 'maxentscan_swa' %}
-            <div annotation_id="{{ annot.id }}">
-                    {% set transcript = transcripts_sorted[0] %}
-                    {% set maxent_parts = values_sorted[0].split('|') %}
-                    <abbr class="ssr" title="{{annot.description}}"><a class="dashed_underline">{{annot.display_title}}:</a></abbr>donor: {{ maxent_parts[0] }} -> {{ maxent_parts[1] }} | acceptor: {{ maxent_parts[3] }} -> {{ maxent_parts[4] }} ({{transcript}})
-                    <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix_large" data-bs-html="true" 
+            <div class="d-flex margin_between_list_small" annotation_id="{{ annot.id }}">
+                {% set transcript = transcripts_sorted[0] %}
+                {% set maxent_parts = values_sorted[0].split('|') %}
+                <div class="dashed_underline" data-bs-toggle="tooltip" data-bs-title="{{ annot.description }}">{{ annot.display_title }}:</div>
+                <div data-testid="annotation-{{annot.title}}">donor: {{ maxent_parts[0] }} -> {{ maxent_parts[1] }} | acceptor: {{ maxent_parts[3] }} -> {{ maxent_parts[4] }} ({{transcript}})</div>
+                <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix_large" data-bs-html="true" 
                     data-bs-content="
                         <div>Format of the overview values: ref -> alt.</div>
                         <div class='row gx-2 border-bottom bg-light width_large'>
@@ -281,8 +284,8 @@
                         </div>
                         {% endfor %}
                     ">
-                        details
-                    </a>
+                    details
+                </a>
             </div>
             {% endif %}
             {% endif %}
@@ -291,8 +294,10 @@
             <!-- special draw annotations -->
             {% if annot.title == 'spliceai_details' %}
                 {% set spliceai_details, max_delta_spliceai = annotations.get_spliceai() %}
-                <div class="d-flex" annotation_id="{{ spliceai_details.id }};{{ max_delta_spliceai.id }}">
-                    <abbr class="ssr" title="{{ max_delta_spliceai.description }}"><a class="dashed_underline">{{ spliceai_details.display_title }}:</a></abbr>
+                <div class="d-flex margin_between_list_small" annotation_id="{{ spliceai_details.id }};{{ max_delta_spliceai.id }}">
+                    <div class="dashed_underline" data-bs-toggle="tooltip" data-bs-title="{{ max_delta_spliceai.description }}">{{ spliceai_details.display_title }}:</div>
+                    <div class="visually_hidden" data-testid="annotation-{{spliceai_details.title}}">{{ spliceai_details.value }}</div>
+                    <div class="visually_hidden" data-testid="annotation-{{max_delta_spliceai.title}}">{{ max_delta_spliceai.value }}</div>
                     <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
                         {% set max_spliceai_scores = max_delta_spliceai.value.split(',') %}
                         {% set spliceai_detail_scores = spliceai_details.value.split(',') %}
@@ -337,122 +342,69 @@
 {% endmacro %}
 
 
+{% macro draw_hexplorer_score(delta, wt, mut) %}
+<div class="break_text_all d-flex margin_between_list_small" annotation_id="{{ delta.id }}{% if wt is not none %};{{ wt.id }}{% endif %}{% if mut is not none %};{{ mut.id }}{% endif %}">
+    {% if wt is none or mut is none %}
+        {{ draw_exclamation_mark('There is no wildtype or mutant score. Thus, one of the sequences is missing the motiv! Be careful with the interpretation of the delta score!') }}
+    {% endif %}
+    <div class="dashed_underline" data-bs-toggle="tooltip" data-bs-title="{{ delta.description }}">{{ delta.display_title }}:</div>
+    <div data-testid="annotation-{{delta.title}}">{{ delta.value }}</div>
+    <div class="visually-hidden" data-testid="annotation-{{wt.title}}">{{ wt.value }}</div>
+    <div class="visually-hidden" data-testid="annotation-{{mut.title}}">{{ mut.value }}</div>
+    <a class="link" tabindex="0" data-bs-html="true" role="button" data-bs-toggle="popover" data-bs-title="reference score: {% if wt is not none %}{{ wt.value }}{% else %}-{% endif %} <br/> mutant score: {% if mut is not none %}{{ mut.value }}{% else %}-{% endif %}">details</a>
+</div>
+{% endmacro %}
+
+
 {% macro draw_heredicare_annotations(variant) %}
 {% if variant.heredicare_annotations | length > 0 %}
 <tr>
     <td class="li-label nowrap">HerediCare</td>
     <td>
         {% set heredicare_annotations = variant.heredicare_annotations %}
-
         {% set total_n_fam, total_n_pat = variant.get_total_heredicare_counts() %}
         {% set best_lr_cooc, best_lr_coseg, best_lr_family = variant.get_best_lr_scores() %}
-        <div>
-            {% if heredicare_annotations | length > 1 %}
-                {{ draw_exclamation_mark('Multiple VIDs in HerediCare for this variant. Thus, these counts might be inaccurate!') }}
-            {% endif %}
-            <abbr class="ssr" title="The number of families in HerediCare reported to have this variant"><a class="dashed_underline">n_fam:</a></abbr>{{ total_n_fam }}
-            <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" 
-            data-bs-content="
-                <div class='row gx-2 border-bottom bg-light width_very_medium'>
-                    <div class='col-7'>HerediCare VID</div>
-                    <div class='col-4 text-center border-start'>n_fam</div>
-                </div>
-                {% for annot in heredicare_annotations %}
-                <div class='row gx-2 width_very_medium'>
-                    <div class='col-7'>{{annot.vid}}</div>
-                    <div class='col-4 text-center border-start'>{{annot.n_fam}}</div>
-                </div>
-                {% endfor %}
-            ">
-                details
-            </a>
-        </div>
-        <div>
-            {% if heredicare_annotations | length > 1 %}
-                {{ draw_exclamation_mark('Multiple VIDs in HerediCare for this variant. Thus, these counts might be inaccurate!') }}
-            {% endif %}
-            <abbr class="ssr" title="The number of cases in HerediCare reported to have this variant"><a class="dashed_underline">n_pat:</a></abbr>{{ total_n_pat }}
-            <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" 
-            data-bs-content="
-                <div class='row gx-2 border-bottom bg-light width_very_medium'>
-                    <div class='col-7'>HerediCare VID</div>
-                    <div class='col-4 text-center border-start'>n_pat</div>
-                </div>
-                {% for annot in heredicare_annotations %}
-                <div class='row gx-2 width_very_medium'>
-                    <div class='col-7'>{{annot.vid}}</div>
-                    <div class='col-4 text-center border-start'>{{annot.n_pat}}</div>
-                </div>
-                {% endfor %}
-            ">
-                details
-            </a>
-        </div>
-        {% if best_lr_cooc is not none %}
-        <div>
-            <abbr class="ssr" title="The cooccurance"><a class="dashed_underline">lr_cooc:</a></abbr>{{ best_lr_cooc }}
-            <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" 
-            data-bs-content="
-                <div class='row gx-2 border-bottom bg-light width_very_medium'>
-                    <div class='col-7'>HerediCare VID</div>
-                    <div class='col-4 text-center border-start'>lr_cooc</div>
-                </div>
-                {% for annot in heredicare_annotations %}
-                <div class='row gx-2 width_very_medium'>
-                    <div class='col-7'>{{annot.vid}}</div>
-                    <div class='col-4 text-center border-start'>{{annot.lr_cooc}}</div>
-                </div>
-                {% endfor %}
-            ">
-                details
-            </a>
-        </div>
+        {% set is_exm = False %}
+        {% if heredicare_annotations | length > 1 %}
+            {% set is_exm = True %}
         {% endif %}
-        {% if best_lr_coseg is not none %}
-        <div>
-            <abbr class="ssr" title="The cosegregation"><a class="dashed_underline">lr_coseg:</a></abbr>{{ best_lr_coseg }}
-            <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" 
-            data-bs-content="
-                <div class='row gx-2 border-bottom bg-light width_very_medium'>
-                    <div class='col-7'>HerediCare VID</div>
-                    <div class='col-4 text-center border-start'>lr_coseg</div>
-                </div>
-                {% for annot in heredicare_annotations %}
-                <div class='row gx-2 width_very_medium'>
-                    <div class='col-7'>{{annot.vid}}</div>
-                    <div class='col-4 text-center border-start'>{{annot.lr_coseg}}</div>
-                </div>
-                {% endfor %}
-            ">
-                details
-            </a>
-        </div>
-        {% endif %}
-        {% if best_lr_family is not none %}
-        <div>
-            <abbr class="ssr" title="The family"><a class="dashed_underline">lr_cooc:</a></abbr>{{ best_lr_family }}
-            <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" 
-            data-bs-content="
-                <div class='row gx-2 border-bottom bg-light width_very_medium'>
-                    <div class='col-7'>HerediCare VID</div>
-                    <div class='col-4 text-center border-start'>lr_family</div>
-                </div>
-                {% for annot in heredicare_annotations %}
-                <div class='row gx-2 width_very_medium'>
-                    <div class='col-7'>{{annot.vid}}</div>
-                    <div class='col-4 text-center border-start'>{{annot.lr_family}}</div>
-                </div>
-                {% endfor %}
-            ">
-                details
-            </a>
-        </div>
-        {% endif %}
+        {{ draw_heredicare_annotation_worker(heredicare_annotations, "n_fam", total_n_fam, "The number of families in HerediCare reported to have this variant", is_exm) }}
+        {{ draw_heredicare_annotation_worker(heredicare_annotations, "n_pat", total_n_pat, "The number of cases in HerediCare reported to have this variant", is_exm) }}
+        {{ draw_heredicare_annotation_worker(heredicare_annotations, "lr_cooc", best_lr_cooc, "The likelihood ratio imported from HerediCaRe based on co-occurance", False) }}
+        {{ draw_heredicare_annotation_worker(heredicare_annotations, "lr_coseg", best_lr_coseg, "The likelihood ratio imported from HerediCaRe based on cosegregation", False) }}
+        {{ draw_heredicare_annotation_worker(heredicare_annotations, "lr_family", best_lr_family, "The likelihood ratio imported from HerediCaRe based on family counts", False) }}
     </td>
 </tr>
 {% endif %}
 {% endmacro %}
 
+
+{% macro draw_heredicare_annotation_worker(heredicare_annotations, field_name, display_value, tooltip, is_exm) %}
+{% if display_value is not none %}
+<div class="d-flex margin_between_list_small">
+    {% if is_exm %}
+        {{ draw_exclamation_mark('Multiple VIDs in HerediCare for this variant. Thus, these counts might be inaccurate!') }}
+    {% endif %}
+    <div class="dashed_underline" data-bs-toggle="tooltip" data-bs-title="{{ tooltip }}">{{ field_name }}:</div>
+    <div data-testid="annotation-{{field_name}}">{{ display_value }}</div>
+    <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" 
+    data-bs-content="
+        <div class='row gx-2 border-bottom bg-light width_very_medium'>
+            <div class='col-7'>HerediCare VID</div>
+            <div class='col-4 text-center border-start'>{{field_name}}</div>
+        </div>
+        {% for annot in heredicare_annotations %}
+        <div class='row gx-2 width_very_medium'>
+            <div class='col-7'>{{annot.vid}}</div>
+            <div class='col-4 text-center border-start'>{{annot.__getattribute__(field_name)}}</div>
+        </div>
+        {% endfor %}
+    ">
+        details
+    </a>
+</div>
+{% endif %}
+{% endmacro %}
 
 {% macro draw_cancerhotspots_annotation(variant) %}
 {% if variant.cancerhotspots_annotations is not none and variant.cancerhotspots_annotations | length > 0 %}
@@ -474,10 +426,10 @@
                 <tbody>
                     {% for annot in variant.cancerhotspots_annotations %}
                         <tr annotation_id="{{ annot.id }}">
-                            <td>{{ annot.oncotree_symbol }}</td>
-                            <td>{{ annot.value }}</td>
-                            <td>{{ annot.tissue }}</td>
-                            <td>{{ annot.occurances }}</td>
+                            <td data-testid="cancerhotspots">{{ annot.oncotree_symbol }}</td>
+                            <td data-testid="cancerhotspots">{{ annot.value }}</td>
+                            <td data-testid="cancerhotspots">{{ annot.tissue }}</td>
+                            <td data-testid="cancerhotspots">{{ annot.occurances }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -1026,16 +978,7 @@
 
 
 
-{% macro draw_hexplorer_score(delta, wt, mut) %}
-<div annotation_id="{{ delta.id }}{% if wt is not none %};{{ wt.id }}{% endif %}{% if mut is not none %};{{ mut.id }}{% endif %}">
-    {% if wt is none or mut is none %}
-    {{ draw_exclamation_mark('There is no wildtype or mutant score. Thus, one of the sequences is missing the motiv! Be careful with the interpretation of the delta score!') }}
-   {% endif %}
-   <abbr class="ssr" title="{{ delta.description }}"><a class="dashed_underline">{{ delta.display_title }}:</a></abbr>{{ delta.value }}
-   <a class="link" tabindex="0" data-bs-html="true" role="button" data-bs-toggle="popover" data-bs-content="reference score: {% if wt is not none %}{{ wt.value }}{% else %}-{% endif %} <br/> mutant score: {% if mut is not none %}{{ mut.value }}{% else %}-{% endif %}">details</a>
-</div>
 
-{% endmacro %}
 
 
 

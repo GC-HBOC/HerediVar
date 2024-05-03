@@ -326,7 +326,7 @@
                     {% if variant.annotations.brca_exchange_clinical_significance is not none %}
                     <div class="ssb">
                         <h4 class="card-subcaption">BRCA exchange classification</h4>
-                        <div class="ssl">
+                        <div class="ssl" data-testid="annotation-{{variant.annotations.brca_exchange_clinical_significance.title}}">
                             {{variant.annotations.brca_exchange_clinical_significance.value}}
                         </div>
                     </div>
