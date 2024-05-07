@@ -10,7 +10,7 @@ from celery.exceptions import Ignore
 from flask_mail import Message
 from flask import render_template
 import time
-from annotation_service.heredicare_interface import Heredicare
+from common.heredicare_interface import Heredicare
 # errors:
 from mysql.connector import Error, InternalError
 from urllib.error import HTTPError
@@ -154,7 +154,7 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
             print("New vids (unknown to heredivar but known to heredicare): " + str(len(heredicare_exclusive_vids)))
 
             #intersection = []
-            #heredicare_exclusive_vids = []
+            #heredicare_exclusive_vids = ['22081944', '22082395']
             #heredivar_exclusive_vids = [] #917, 12453169, 18794502
 
             # spawn one task for each variant import
@@ -916,7 +916,7 @@ def annotate_variant(self, annotation_queue_id, job_config):
 @celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=60)
 def generate_consensus_only_vcf_task(self):
     """Background task for generating consensus only vcf"""
-    from webapp.io.download_routes import generate_consensus_only_vcf
+    from webapp.download.download_functions import generate_consensus_only_vcf
     conn = Connection()
     variant_types = conn.get_enumtypes("variant", "variant_type")
     for variant_type in variant_types:

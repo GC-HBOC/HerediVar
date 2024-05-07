@@ -426,6 +426,20 @@ class Classification:
             return "None"
         return self.comment
     
+    def get_extended_comment(self):
+        selected_criteria = self.scheme.criteria
+        criterium_strings = []
+        for criterium in selected_criteria:
+            criterium_strings.append(criterium.name + " (" + criterium.strength + ")" + ": " + criterium.evidence)
+
+        result = ""
+        if len(criterium_strings) == 1:
+            result = "According to the " + self.scheme.display_name + " criteria we chose this criterium: " + criterium_strings[0]
+        elif len(criterium_strings) > 1:
+            result = "According to the " + self.scheme.display_name + " criteria we chose these criteria: " + ', '.join(criterium_strings)
+    
+        return self.comment.strip('.') + ". " + result
+    
     def class_to_text(self, classification = None):
         if classification is None:
             classification = self.selected_class
@@ -945,6 +959,12 @@ class AbstractVariant(AbstractDataclass):
             if heredicare_annotation.consensus_classification.selected_class is not None:
                 result.append(heredicare_annotation.consensus_classification)
         return result
+
+    def get_heredicare_annotation_by_vid(self, vid):
+        for heredicare_annotation in self.heredicare_annotations:
+            if str(heredicare_annotation.vid) == str(vid):
+                return heredicare_annotation
+        return None
 
     def get_total_heredicare_counts(self):
         total_n_fam = 0

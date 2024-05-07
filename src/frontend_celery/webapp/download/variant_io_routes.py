@@ -164,7 +164,7 @@ def get_clinvar_submission_json(variant, selected_gene, clinvar_accession = None
     
     clinical_significance = {}
     clinical_significance['clinicalSignificanceDescription'] = mrcc.class_to_text()
-    clinical_significance['comment'] = get_extended_comment(mrcc)
+    clinical_significance['comment'] = mrcc.get_extended_comment()
     clinical_significance['dateLastEvaluated'] = mrcc.date.split(' ')[0] # only grab the date and trim the time
     clinvar_submission_properties['clinicalSignificance'] =  clinical_significance
 
@@ -224,19 +224,7 @@ def get_clinvar_submission_json(variant, selected_gene, clinvar_accession = None
     return data
 
 
-def get_extended_comment(mrcc):
-    selected_criteria = mrcc.scheme.criteria
-    criterium_strings = []
-    for criterium in selected_criteria:
-        criterium_strings.append(criterium.name + " (" + criterium.strength + ")" + ": " + criterium.evidence)
 
-    result = ""
-    if len(criterium_strings) == 1:
-        result = "According to the " + mrcc.scheme.display_name + " criteria we chose this criterium: " + criterium_strings[0]
-    elif len(criterium_strings) > 1:
-        result = "According to the " + mrcc.scheme.display_name + " criteria we chose these criteria: " + ', '.join(criterium_strings)
-    
-    return mrcc.comment.strip('.') + ". " + result
 
 
 def get_assertion_criteria(scheme_type, assertion_criteria_source):

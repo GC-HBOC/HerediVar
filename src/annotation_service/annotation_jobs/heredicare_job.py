@@ -3,7 +3,7 @@ from ._job import Job
 import common.paths as paths
 import common.functions as functions
 import os
-from annotation_service.heredicare_interface import Heredicare
+from common.heredicare_interface import Heredicare
 import time
 from datetime import datetime
 from urllib.parse import unquote

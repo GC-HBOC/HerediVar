@@ -43,11 +43,11 @@ fi
 
 
 # start keycloak - this also seeds keycloak
-#$TESTDIR/start_keycloak_for_tests.sh
+$TESTDIR/start_keycloak_for_tests.sh
 
 
 # start heredivar
-#$TESTDIR/start_heredivar_for_tests.sh
+$TESTDIR/start_heredivar_for_tests.sh
 
 
 # run tests

@@ -15,6 +15,13 @@ import uuid
 from functools import cmp_to_key
 import pathlib
 
+def prettyprint_json(json_obj, func = print):
+    pretty_json = json.dumps(json_obj, indent=2)
+    if func is not None:
+        func(pretty_json)
+    else:
+        return pretty_json
+    
 
 def basedir():
     return os.getcwd()
@@ -604,6 +611,9 @@ def get_today():
 def get_now():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
+def reformat_date(date_str, input_pattern, output_pattern):
+    datetime_obj = datetime.datetime.strptime(date_str, input_pattern)
+    return datetime_obj.strftime(output_pattern)
 
 def days_between(d1, d2):
     d1 = datetime.datetime.strptime(d1, "%Y-%m-%d")
@@ -768,20 +778,34 @@ def sort_transcripts_worker(a, b):
 
 
 # one to many mapping
-def num2heredicare(classification):
+def num2heredicare(classification, single_value = False):
     if classification is None:
         return "-"
-    mapping = {
-        "5": ["1", "15"],
-        "3": ["2", "13"],
-        "1": ["3", "11"],
-        "2": ["12"],
-        "3-": ["32"],
-        "3+": ["34"],
-        "4": ["14"],
-        "-": ["20", "21", "4", "-1"],
-        "4M": ["M"]
+    if single_value:
+        mapping = {
+            "5": "15",
+            "3": "13",
+            "1": "11",
+            "2": "12",
+            "3-": "32",
+            "3+": "34",
+            "4": "14",
+            "-": "21",
+            "4M": "M"
+        }
+    else:
+        mapping = {
+            "5": ["1", "15"],
+            "3": ["2", "13"],
+            "1": ["3", "11"],
+            "2": ["12"],
+            "3-": ["32"],
+            "3+": ["34"],
+            "4": ["14"],
+            "-": ["20", "21", "4", "-1"],
+            "4M": ["M"]
     }
+
     return mapping[str(classification)]
 
 
