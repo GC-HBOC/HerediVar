@@ -49,6 +49,7 @@ if webapp_env == 'dev':
     ref_genome_path = joinpaths(ref_genome_dir, "GRCh38.fa")
     ref_genome_path_grch37 = joinpaths(ref_genome_dir, "GRCh37.fa")
     chainfile_path = joinpaths(ref_genome_dir, "hg19ToHg38.fixed.over.chain.gz")
+    transcripts_gff_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.110.gff3")
     
     #metadata
     gnomad_path = joinpaths(datadir, "gnomAD/gnomAD_genome_GRCh38.vcf.gz")

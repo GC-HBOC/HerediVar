@@ -2,22 +2,14 @@ from flask import Blueprint, abort, current_app, send_from_directory, send_file,
 from os import path
 import sys
 
-from ..utils import require_permission, get_connection, get_preferred_username
+from ..utils import *
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from common.db_IO import Connection
 import common.paths as paths
-import io
-import tempfile
-from shutil import copyfileobj
-import re
-import os
-import uuid
-from pathlib import Path
-from flask import render_template
 
-sys.path.append(path.dirname(path.abspath(__file__)))
-import download_functions
+import io
+from . import download_functions
 
 
 download_blueprint = Blueprint(

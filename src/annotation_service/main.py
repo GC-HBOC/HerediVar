@@ -19,7 +19,7 @@ import os
 def get_default_job_config():
     job_config = {
         # heredicare annotations
-        'do_heredicare': True,
+        'do_heredicare': False,
 
         # external programs
         'do_phylop': False,
@@ -27,9 +27,10 @@ def get_default_job_config():
         'do_hexplorer': False,
         'do_maxentscan': False,
 
-        # vep dependent
+        # consequences
+        'do_consequence': True,
         'do_vep': False,
-        'insert_consequence': False,
+        'insert_consequence': False, # remove later
         'insert_literature': False,
 
         #vcf annotate from vcf
@@ -76,6 +77,7 @@ def get_jobs(job_config):
     all_jobs = [
         vep_job.vep_job(job_config, refseq=False),
         vep_job.vep_job(job_config, refseq=True),
+        consequence_job.consequence_job(job_config),
         phylop_job.phylop_job(job_config),
         hexplorer_job.hexplorer_job(job_config),
         annotate_from_vcf_job.annotate_from_vcf_job(job_config),
@@ -181,6 +183,7 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         for line in file:
             line = line.strip()
             if line.startswith('#') or line == '':
+                print(line)
                 continue
             
             info = line.split('\t')[7]

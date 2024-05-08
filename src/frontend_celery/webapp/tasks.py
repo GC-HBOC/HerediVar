@@ -1,63 +1,24 @@
-from urllib.error import HTTPError
-from . import celery, mail
+
 import sys
 from os import path
 sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
 import common.functions as functions
 from common.db_IO import Connection
+from common.heredicare_interface import Heredicare
 from annotation_service.main import process_one_request, get_default_job_config
-from celery.exceptions import Ignore
+
+from webapp.utils import search_utils
+from webapp import celery, mail
+
 from flask_mail import Message
 from flask import render_template
 import time
-from common.heredicare_interface import Heredicare
+
 # errors:
 from mysql.connector import Error, InternalError
 from urllib.error import HTTPError
+from celery.exceptions import Ignore
 import traceback
-from .utils import search_utils
-
-"""
-@celery.task(bind=True)
-def long_task(self):
-    #Background task that runs a long function with progress reports.
-    verb = ['Starting up', 'Booting', 'Repairing', 'Loading', 'Checking']
-    adjective = ['master', 'radiant', 'silent', 'harmonic', 'fast']
-    noun = ['solar array', 'particle reshaper', 'cosmic ray', 'orbiter', 'bit']
-    message = ''
-    total = random.randint(10, 20)
-    for i in range(total):
-        if not message or random.random() < 0.25:
-            message = '{0} {1} {2}...'.format(random.choice(verb),
-                                              random.choice(adjective),
-                                              random.choice(noun))
-        self.update_state(state='PROGRESS',
-                          meta={'current': i, 'total': total,
-                                'status': message})
-        #time.sleep(1)
-    return {'current': 100, 'total': 100, 'status': 'Task completed!',
-            'result': 42}
-
-
-@celery.task(bind=True)
-def fetch_consequence_task(self, variant_id):
-    #Background task for fetching the consequence from the database
-    self.update_state(state='PROGRESS')
-    
-    conn = Connection()
-
-    time.sleep(10)
-    variant_consequences = conn.get_variant_consequences(variant_id) # 0transcript_name,1hgvs_c,2hgvs_p,3consequence,4impact,5exon_nr,6intron_nr,7symbol,8transcript.gene_id,9source,10pfam_accession,11pfam_description,12length,13is_gencode_basic,14is_mane_select,15is_mane_plus_clinical,16is_ensembl_canonical,17total_flag
-    conn.close()
-    return {'status': 'COMPLETED', 'result': variant_consequences}
-"""
-
-
-
-
-
-
-
 
 
 ###################################################################################

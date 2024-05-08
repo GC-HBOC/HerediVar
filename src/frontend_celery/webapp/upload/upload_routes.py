@@ -3,24 +3,28 @@ from os import path
 import sys
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 from common.db_IO import Connection
-from werkzeug.exceptions import abort
 import common.functions as functions
 import common.paths as paths
-from datetime import datetime
-from ..utils import require_permission, get_clinvar_submission_status, get_connection, check_clinvar_status, check_update_clinvar_status
+
+from ..utils import *
 import jsonschema
 import json
 import requests
-from werkzeug.utils import secure_filename
 import io
 
-variant_io_blueprint = Blueprint(
-    'variant_io',
+from werkzeug.utils import secure_filename
+from werkzeug.exceptions import abort
+
+from . import upload_tasks
+
+
+upload_blueprint = Blueprint(
+    'upload',
     __name__
 )
 
 
-@variant_io_blueprint.route('/submit_clinvar/<int:variant_id>', methods=['GET', 'POST'])
+@upload_blueprint.route('/submit_clinvar/<int:variant_id>', methods=['GET', 'POST'])
 @require_permission(['admin_resources'])
 def submit_clinvar(variant_id):
     conn = get_connection()
@@ -38,9 +42,6 @@ def submit_clinvar(variant_id):
     if consensus_classification is None:
         flash("There is no consensus classification for this variant! Please create one before submitting to ClinVar!", "alert-danger")
         return redirect(url_for('variant.display', variant_id = variant_id))
-
-    # get orphanet codes -- this is hardcoded now
-    #orphanet_codes = get_orphanet_codes()
 
     # check for previous heredivar clinvar submissions
     clinvar_accession = None
@@ -108,26 +109,9 @@ def submit_clinvar(variant_id):
         flash("There was an error during submission to ClinVar. It ended with status code: " + str(resp.status_code), "alert-danger")
         current_app.logger.error(session['user']['preferred_username'] + " tried to upload a consensus classification for variant " + str(variant_id) + " to ClinVar, but it resulted in an error with status code: " + str(resp.status_code))
 
-    return render_template('variant_io/submit_clinvar.html', 
+    return render_template('upload/submit_clinvar.html', 
                             variant = variant,
                             genes = genes)
-
-
-#def get_orphanet_codes():
-#    # fetch orphanet entities for the autocomplete search bar
-#    orphanet_json = requests.get(current_app.config['ORPHANET_DISCOVERY_URL'], headers={'apiKey': current_app.config['ORPHANET_API_KEY']})
-#    orphanet_json = json.loads(orphanet_json.text)
-#    orphanet_codes = []
-#    for entry in orphanet_json:
-#        if entry['Status'] == 'Active':
-#            orpha_code = entry['ORPHAcode']
-#            preferred_term = entry['Preferred term']
-#            #orpha_definition = entry['Definition']
-#            orphanet_codes.append([orpha_code, preferred_term + ': ' + str(orpha_code)])
-#    return orphanet_codes
-
-
-
 
 
 
@@ -224,9 +208,6 @@ def get_clinvar_submission_json(variant, selected_gene, clinvar_accession = None
     return data
 
 
-
-
-
 def get_assertion_criteria(scheme_type, assertion_criteria_source):
     assertion_criteria = {}
     if scheme_type in ['acmg', 'enigma-brca1', 'enigma-brca2']:
@@ -241,7 +222,7 @@ def get_assertion_criteria(scheme_type, assertion_criteria_source):
 
 
 
-@variant_io_blueprint.route('/submit_assay/<int:variant_id>', methods=['GET', 'POST'])
+@upload_blueprint.route('/submit_assay/<int:variant_id>', methods=['GET', 'POST'])
 @require_permission(['edit_resources'])
 def submit_assay(variant_id):
     conn = get_connection()
@@ -327,7 +308,6 @@ def submit_assay(variant_id):
                 flash("Successfully inserted new assay for variant " + str(variant_id), "alert-success")
                 do_redirect = True
 
-
     if do_redirect :
-        return redirect(url_for('variant_io.submit_assay', variant_id = variant_id))
-    return render_template('variant_io/submit_assay.html', possible_assays = possible_assays)
+        return redirect(url_for('upload.submit_assay', variant_id = variant_id))
+    return render_template('upload/submit_assay.html', possible_assays = possible_assays)

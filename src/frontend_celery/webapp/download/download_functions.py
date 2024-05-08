@@ -1,22 +1,18 @@
-from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for, session, jsonify, Markup, make_response
-
 from os import path
+from os import listdir
+from os.path import isfile, join
 import sys
 
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from common.db_IO import Connection
 import common.paths as paths
+
 import io
-import tempfile
 import shutil
-import re
 import os
-import uuid
 from pathlib import Path
-from flask import render_template
-from os import listdir
-from os.path import isfile, join
+
 
 
 
@@ -79,49 +75,6 @@ def get_variant_vcf_line(variant_id, conn: Connection):
     # Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
     headers, info = variant.to_vcf()
     return headers, info
-
-
-
-
-
-
-#def get_vcf(variants_oi, conn, worker=get_variant_vcf_line):
-#    status = 'success'
-#
-#    final_info_headers = {}
-#    all_variant_vcf_lines = []
-#    for id in variants_oi:
-#        info_headers, variant_vcf = worker(id, conn)
-#        all_variant_vcf_lines.append(variant_vcf)
-#        final_info_headers = merge_info_headers(final_info_headers, info_headers)
-#    
-#    helper = io.StringIO()
-#    printable_info_headers = list(final_info_headers.values())
-#    printable_info_headers.sort()
-#    functions.write_vcf_header(printable_info_headers, helper.write, tail='\n')
-#    for line in all_variant_vcf_lines:
-#        helper.write(line + '\n')
-#
-#    buffer = io.BytesIO()
-#    buffer.write(helper.getvalue().encode())
-#    buffer.seek(0)
-#
-#    temp_file_path = tempfile.gettempdir() + "/variant_download_" + str(uuid.uuid4()) + ".vcf"
-#    with open(temp_file_path, 'w') as tf:
-#        helper.seek(0)
-#        copyfileobj(helper, tf)
-#    helper.close()
-#
-#    returncode, err_msg, vcf_errors = functions.check_vcf(temp_file_path)
-#
-#    os.remove(temp_file_path)
-#
-#    if returncode != 0:
-#        if request.args.get('force') is None:
-#            status = "redirect"
-#            return None, status, vcf_errors, err_msg
-#
-#    return buffer, status, "", ""
 
 
 def get_vcf(variants_oi, conn, worker=get_variant_vcf_line, check_vcf=True):

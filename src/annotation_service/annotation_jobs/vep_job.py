@@ -112,13 +112,6 @@ class vep_job(Job):
         return status_code, err_msg
 
 
-    def _fake_vep(self, variant_id, output_vcf):
-        """This function is only for testing purposes"""
-        import shutil
-        shutil.copy2(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/tests/data/" + str(variant_id) + "_vep_annotated.vcf", output_vcf)
-        return 0, "", ""
-
-
     #"/mnt/storage2/GRCh38/share/data/genomes/GRCh38.fa"
     def _annotate_vep(self, input_vcf, output_vcf):
         fields_oi_base = "Feature,HGVSc,HGVSp,Consequence,IMPACT,EXON,INTRON,HGNC_ID,SYMBOL,DOMAINS"

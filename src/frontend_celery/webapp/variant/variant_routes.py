@@ -1,14 +1,16 @@
-from calendar import c
-from flask import Blueprint, redirect, url_for, render_template, request, flash, current_app, abort, jsonify
-from flask_paginate import Pagination
-from ..utils import *
 import sys
 from os import path
-from .variant_functions import *
-from ..tasks import generate_consensus_only_vcf_task, start_annotation_service, validate_and_insert_variant, map_hg38, validate_and_insert_cnv, start_variant_import_vcf, start_variant_list_import
+
+from webapp import tasks
+from ..utils import *
+
+from flask import Blueprint, redirect, url_for, render_template, request, flash, current_app, abort, jsonify
+from flask_paginate import Pagination
 
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
+from . import variant_functions
+
 
 
 variant_blueprint = Blueprint(
@@ -45,7 +47,7 @@ def search():
                 flash("You attempted to insert variants to a list which you do not have access to.", "alert-danger")
                 current_app.logger.info(session['user']['preferred_username'] + " attempted to insert variants from the browse variants page to list: " + str(list_id) + ", but he did not have access to it.")
             else:
-                list_variant_import_queue_id = start_variant_list_import(user_id, list_id, request_args, conn)
+                list_variant_import_queue_id = tasks.start_variant_list_import(user_id, list_id, request_args, conn)
 
                 flash(Markup("Successfully requested insertion of variants to list from the current search. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
                 del request_args["selected_list_id"]
@@ -91,7 +93,7 @@ def create():
                 else:
                     genome_build = request.form['genome']
                     conn = get_connection()
-                    was_successful, message, variant_id = validate_and_insert_variant(chr, pos, ref, alt, genome_build, conn = conn, user_id = session['user']['user_id'])
+                    was_successful, message, variant_id = tasks.validate_and_insert_variant(chr, pos, ref, alt, genome_build, conn = conn, user_id = session['user']['user_id'])
                     new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
                     if 'already in database' in message:
                         flash(Markup("Variant not imported: already in database!! View it " + 
@@ -118,7 +120,7 @@ def create():
                     flash(possible_errors, "alert-danger")
                 else:
                     conn = get_connection()
-                    was_successful, message, variant_id = validate_and_insert_variant(chr, pos, ref, alt, 'GRCh38', conn = conn, user_id = session['user']['user_id'])
+                    was_successful, message, variant_id = tasks.validate_and_insert_variant(chr, pos, ref, alt, 'GRCh38', conn = conn, user_id = session['user']['user_id'])
                     new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
                     if 'already in database' in message:
                         flash(Markup("Variant not imported: already in database!! View it " + 
@@ -152,7 +154,7 @@ def create():
                     user_roles = session["user"]["roles"]
                     conn = get_connection()
                     #inserted_variants, skipped_variants = variant_functions.insert_variants_vcf_file(vcf_file, genome_build, conn)
-                    import_queue_id = start_variant_import_vcf(user_id, user_roles, conn, filename, filepath, genome_build)
+                    import_queue_id = tasks.start_variant_import_vcf(user_id, user_roles, conn, filename, filepath, genome_build)
                     flash("Successfully submitted vcf file. The import is processed in the background", "alert-success")
                     return redirect(url_for('variant.create'))
 
@@ -186,7 +188,7 @@ def create_sv():
                 flash('All fields are required!', 'alert-danger')
             else: # all valid
                 genome_build = request.form['genome']
-                was_successful, message, variant_id = validate_and_insert_cnv(chrom = chrom, start = start, end = end, sv_type = sv_type, imprecise = imprecise, hgvs_strings = hgvs_strings, conn = conn, genome_build = genome_build)
+                was_successful, message, variant_id = tasks.validate_and_insert_cnv(chrom = chrom, start = start, end = end, sv_type = sv_type, imprecise = imprecise, hgvs_strings = hgvs_strings, conn = conn, genome_build = genome_build)
                 variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
                 if 'already in database' in message:
                         flash(Markup("Variant not imported: already in database!! Missing hgvs strings were added. View it " + 
@@ -260,7 +262,7 @@ def run_annotation_service():
     if (annotation_queue_id is None and variant_id is None) or (annotation_queue_id is not None and variant_id is not None):
         abort(404)
     conn = get_connection()
-    celery_task_id = start_annotation_service(variant_id=variant_id, user_id = session['user']['user_id'],  annotation_queue_id=annotation_queue_id, conn = conn)
+    celery_task_id = tasks.start_annotation_service(variant_id=variant_id, user_id = session['user']['user_id'],  annotation_queue_id=annotation_queue_id, conn = conn)
     return jsonify({}), 202
 
 
@@ -344,11 +346,11 @@ def classify(variant_id):
         text_passages = request.form.getlist('text_passage')
 
         # test if the input is valid
-        criteria = extract_criteria_from_request(request.form, scheme_id, conn)
+        criteria = variant_functions.extract_criteria_from_request(request.form, scheme_id, conn)
         possible_states = conn.get_enumtypes("user_classification_criteria_applied", "state")
-        scheme_classification_is_valid, scheme_message = is_valid_scheme(criteria, classification_schemas.get(scheme_id), possible_states)
-        pmids, text_passages = remove_empty_literature_rows(pmids, text_passages)
-        literature_is_valid, literature_message = is_valid_literature(pmids, text_passages)
+        scheme_classification_is_valid, scheme_message = variant_functions.is_valid_scheme(criteria, classification_schemas.get(scheme_id), possible_states)
+        pmids, text_passages = variant_functions.remove_empty_literature_rows(pmids, text_passages)
+        literature_is_valid, literature_message = variant_functions.is_valid_literature(pmids, text_passages)
         
         without_scheme = scheme_id == 1
         classification_is_valid = str(classification) in allowed_classes
@@ -357,7 +359,7 @@ def classify(variant_id):
         scheme_id_is_valid = True
         if not without_scheme:
             if scheme_id in classification_schemas:
-                scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type'], classification_schemas[scheme_id]['version'])
+                scheme_class = variant_functions.get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type'], classification_schemas[scheme_id]['version'])
                 scheme_class = scheme_class.json['final_class']
             else:
                 flash("Unknown or deprecated classification scheme provided. Please provide a different one.", "alert-danger")
@@ -374,17 +376,17 @@ def classify(variant_id):
         # actually submit the data to the database
         if classification_is_valid and scheme_classification_is_valid and literature_is_valid and scheme_id_is_valid:
             # always handle the user classification & literature
-            user_classification_id, classification_received_update, is_new_classification = handle_user_classification(variant, user_id, classification, comment, scheme_id, scheme_class, conn)
+            user_classification_id, classification_received_update, is_new_classification = variant_functions.handle_user_classification(variant, user_id, classification, comment, scheme_id, scheme_class, conn)
             previous_selected_literature = [] # a new classification -> no previous sleected literature
             if user_classification_id is None: # we are processing an update -> pull the classification id from the schemes with info
                 user_classification_id = previous_classifications[user_id][scheme_id]['id']
                 previous_selected_literature = previous_classifications[user_id][scheme_id]['literature']
-            literature_received_update = handle_selected_literature(previous_selected_literature, user_classification_id, pmids, text_passages, conn)
+            literature_received_update = variant_functions.handle_selected_literature(previous_selected_literature, user_classification_id, pmids, text_passages, conn)
 
             # handle scheme classification -> insert / update criteria
             scheme_received_update = False
             if not without_scheme:
-                scheme_received_update = handle_scheme_classification(user_classification_id, criteria, conn)
+                scheme_received_update = variant_functions.handle_scheme_classification(user_classification_id, criteria, conn)
 
             if any([classification_received_update, literature_received_update, scheme_received_update]) and not is_new_classification:
                 flash(Markup("Successfully updated user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
@@ -483,16 +485,16 @@ def consensus_classify(variant_id):
             text_passages = request.form.getlist('text_passage')
 
             # test if the input is valid
-            criteria = extract_criteria_from_request(request.form, scheme_id, conn)
-            pmids, text_passages = remove_empty_literature_rows(pmids, text_passages)
-            literature_is_valid, literature_message = is_valid_literature(pmids, text_passages)
+            criteria = variant_functions.extract_criteria_from_request(request.form, scheme_id, conn)
+            pmids, text_passages = variant_functions.remove_empty_literature_rows(pmids, text_passages)
+            literature_is_valid, literature_message = variant_functions.is_valid_literature(pmids, text_passages)
             possible_states = conn.get_enumtypes("consensus_classification_criteria_applied", "state")
-            scheme_classification_is_valid, scheme_message = is_valid_scheme(criteria, classification_schemas[scheme_id], possible_states)
+            scheme_classification_is_valid, scheme_message = variant_functions.is_valid_scheme(criteria, classification_schemas[scheme_id], possible_states)
             classification_is_valid = str(classification) in allowed_classes
 
             scheme_id_is_valid = True
             if scheme_id in classification_schemas:
-                scheme_class = get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type'], classification_schemas[scheme_id]['version']) # always calculate scheme class because no scheme is not allowed here!
+                scheme_class = variant_functions.get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type'], classification_schemas[scheme_id]['version']) # always calculate scheme class because no scheme is not allowed here!
                 scheme_class = scheme_class.json['final_class']
             else:
                 flash("Unknown or deprecated classification scheme provided. Please provide a different one.", "alert-danger")
@@ -508,22 +510,22 @@ def consensus_classify(variant_id):
 
             if classification_is_valid and scheme_classification_is_valid and literature_is_valid and scheme_id_is_valid:
                 # insert consensus classification
-                classification_id = handle_consensus_classification(variant, classification, comment, scheme_id, pmids, text_passages, criteria, classification_schemas[scheme_id]['description'], scheme_class, conn)
+                classification_id = variant_functions.handle_consensus_classification(variant, classification, comment, scheme_id, pmids, text_passages, criteria, classification_schemas[scheme_id]['description'], scheme_class, conn)
 
                 # insert literature passages
                 # classification id never none because we always insert a new classification
                 previous_selected_literature = [] # always empty because we always insert a new classification
-                handle_selected_literature(previous_selected_literature, classification_id, pmids, text_passages, conn, is_user = False)
+                variant_functions.handle_selected_literature(previous_selected_literature, classification_id, pmids, text_passages, conn, is_user = False)
 
                 # insert scheme criteria
-                handle_scheme_classification(classification_id, criteria, conn, where = "consensus") # always do that because no scheme is not allowed
-                add_classification_report(variant.id, conn)
+                variant_functions.handle_scheme_classification(classification_id, criteria, conn, where = "consensus") # always do that because no scheme is not allowed
+                variant_functions.add_classification_report(variant.id, conn)
                 flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant.id) + " class='alert-link'>here</a> to view it!"), "alert-success")
                 do_redirect = True
 
     if do_redirect: # do redirect if the submission was successful
         current_app.logger.info(session['user']['preferred_username'] + " successfully consensus-classified variant " + str(variant_id) + " with class " + str(classification) + " from scheme_id " + str(scheme_id))
-        task = generate_consensus_only_vcf_task.apply_async()
+        task = tasks.generate_consensus_only_vcf_task.apply_async()
         return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
     else:
         return render_template('variant/classify.html', 
@@ -609,7 +611,7 @@ def check():
             variant["REF_HG19"] = request.form.get('ref')
             variant["ALT_HG19"] = request.form.get('alt')
 
-        status, message = map_hg38(variant, -1, conn, insert_variant = False, perform_annotation = False, external_ids = None)
+        status, message = tasks.map_hg38(variant, -1, conn, insert_variant = False, perform_annotation = False, external_ids = None)
 
     return render_template('variant/check.html',
                             chroms = chroms,

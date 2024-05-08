@@ -3405,3 +3405,49 @@ class Connection:
         self.cursor.execute(command, (list_variant_import_queue_id, ))
         result = self.cursor.fetchone()
         return result
+    
+
+
+
+
+
+
+    def insert_variant_upload_request(self, vid, variant_id, upload_queue_id, user_id):
+        print(vid)
+        print(variant_id)
+        print(upload_queue_id)
+        print(user_id)
+        command = "INSERT INTO upload_variant_queue (vid, variant_id, upload_queue_id, user_id) VALUES (%s, %s, %s ,%s)"
+        self.cursor.execute(command, (vid, variant_id, upload_queue_id, user_id))
+        self.conn.commit()
+        return self.get_most_recent_variant_upload_queue_id(vid, variant_id)
+
+    def update_upload_variant_queue_celery_id(self, upload_variant_queue_id, celery_task_id):
+        command = "UPDATE upload_variant_queue SET celery_task_id = %s WHERE id = %s"
+        self.cursor.execute(command, (celery_task_id, upload_variant_queue_id))
+        self.conn.commit()
+    
+    def update_upload_variant_queue_status(self, upload_variant_queue_id, status, message, finished_at = None, submission_id = None):
+        command = "UPDATE upload_variant_queue SET status = %s, message = %s, finished_at = %s, submission_id = %s WHERE id = %s"
+        self.cursor.execute(command, (status, message, finished_at, submission_id, upload_variant_queue_id))
+        self.conn.commit()
+
+    def update_consensus_classification_needs_heredicare_upload(self, consensus_classification_id):
+        command = "UPDATE consensus_classification SET needs_heredicare_upload = 0 WHERE id = %s"
+        self.cursor.execute(command, (consensus_classification_id, ))
+        self.conn.commit()
+
+
+
+
+    def get_most_recent_variant_upload_queue_id(self, vid, variant_id):
+        command = "SELECT MAX(id) FROM upload_variant_queue WHERE vid = %s AND variant_id = %s"
+        self.cursor.execute(command, (vid, variant_id))
+        result = self.cursor.fetchone()
+        return result[0]
+
+    #def get_most_recent_list_variant_import_queue(self, list_variant_import_queue_id):
+    #    command = "SELECT requested_at, status, finished_at, message FROM list_variant_import_queue WHERE list_id = %s ORDER BY id DESC LIMIT 1"
+    #    self.cursor.execute(command, (list_variant_import_queue_id, ))
+    #    result = self.cursor.fetchone()
+    #    return result

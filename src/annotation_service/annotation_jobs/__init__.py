@@ -7,5 +7,6 @@ __all__ = ['vep_job',
            'heredicare_job', 
            'maxentscan_job', 
            'automatic_classification_job',
-           'coldspots_job'
+           'coldspots_job',
+           'consequence_job'
         ]
