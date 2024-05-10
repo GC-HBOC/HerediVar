@@ -56,7 +56,8 @@ class Heredicare(metaclass=Singleton):
             "post_info": "vars/send/info",
             "submissionid": "submissionid/get",
             "send_data": "vars/send/",
-            "submission_status": "vars/send/result"
+            "submission_status": "vars/send/result",
+            "recordid": "recordid/get"
         }
         #print("NEW INSTANCE")
 
@@ -291,19 +292,177 @@ class Heredicare(metaclass=Singleton):
             submission_id = resp.json()["items"][0]["submission_id"]
             
         return submission_id, status, message
-
-    def get_postable_consensus_classification(self, variant, vid, submission_id, post_regexes):
+    
+    def get_new_record_id(self):
         status = "success"
         message = ""
-        result = None
+        record_id = None
+        project_type = "upload"
+
+        status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
+        if status == 'error':
+            return record_id, status, message
+
+        url = self.get_url(project_type, "recordid")
+        bearer, timestamp = self.get_saved_bearer(project_type)
+        header = {"Authorization": "Bearer " + bearer}
+
+        resp = requests.get(url, headers=header)
+        if resp.status_code == 401: # unauthorized
+            message = "ERROR: HerediCare API get submission id endpoint returned an HTTP 401, unauthorized error. Attempting retry."
+            status = "retry"
+        elif resp.status_code != 200:
+            message = "ERROR: HerediCare API getsubmission id endpoint endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
+            status = "error"
+        else: # success
+            record_id = resp.json()["items"][0]["record_id"]
+
+        return record_id, status, message
+
+
+    def get_variant_items(self, variant, vid, submission_id, post_regexes, transaction_type):
+        status = "success"
+        message = ""
+        all_items = []
+
+        heredicare_variant = {}
+        if transaction_type == 'UPDATE':
+            heredicare_variant, status, message = self.get_variant(vid)
+            if status == 'error':
+                return all_items, status, message
+
+        print(heredicare_variant)
+        #mandatory update 
+        #Item fehlt für UPDATE: CHROM
+        item_name = "CHROM"
+        item_regex = post_regexes[item_name]
+        new_value = functions.trim_chr(variant.chrom)
+        if not self.is_valid_post_data(new_value, item_regex):
+            status = "error"
+            message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
+            return all_items, status, message
+        old_value = functions.trim_chr(variant.chrom) if transaction_type == 'UPDATE' else None
+        new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
+        all_items.append(new_item)
+        #Item fehlt für UPDATE: POS_HG38
+        item_name = "POS_HG38"
+        item_regex = post_regexes[item_name]
+        new_value = str(variant.pos)
+        if not self.is_valid_post_data(new_value, item_regex):
+            status = "error"
+            message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
+            return all_items, status, message
+        old_value = str(variant.pos) if transaction_type == 'UPDATE' else None
+        new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
+        all_items.append(new_item)
+        #Item fehlt für UPDATE: REF_HG38
+        item_name = "REF_HG38"
+        item_regex = post_regexes[item_name]
+        new_value = variant.ref
+        if not self.is_valid_post_data(new_value, item_regex):
+            status = "error"
+            message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
+            return all_items, status, message
+        old_value = variant.ref if transaction_type == 'UPDATE' else None
+        new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
+        all_items.append(new_item)
+        #Item fehlt für UPDATE: ALT_HG38
+        item_name = "ALT_HG38"
+        item_regex = post_regexes[item_name]
+        new_value = variant.alt
+        if not self.is_valid_post_data(new_value, item_regex):
+            status = "error"
+            message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
+            return all_items, status, message
+        old_value = variant.alt if transaction_type == 'UPDATE' else None
+        new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
+        all_items.append(new_item)
+
+
+        preferred_consequence = None
+        if transaction_type == 'INSERT':
+            preferred_gene = variant.get_genes('best')
+            if preferred_gene is not None:
+                preferred_consequences = variant.get_preferred_transcripts()
+                if preferred_consequences is not None:
+                    for consequence in preferred_consequences:
+                        if consequence.transcript.gene.symbol == preferred_gene:
+                            preferred_consequence = consequence
+                            break
+
+        #Item fehlt für UPDATE: GEN
+        item_name = "GEN"
+        item_regex = post_regexes[item_name]
+        new_value = heredicare_variant["GEN"] if transaction_type == 'UPDATE' else preferred_consequence.transcript.gene.symbol
+        if not self.is_valid_post_data(new_value, item_regex):
+            status = "error"
+            message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
+            return all_items, status, message
+        old_value = heredicare_variant["GEN"] if transaction_type == 'UPDATE' else None
+        new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
+        all_items.append(new_item)
+        #Item fehlt für UPDATE: REFSEQ
+        item_name = "REFSEQ"
+        item_regex = post_regexes[item_name]
+        new_value = heredicare_variant["REFSEQ"]  if transaction_type == 'UPDATE' else preferred_consequence.transcript.name
+        if not self.is_valid_post_data(new_value, item_regex):
+            status = "error"
+            message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
+            return all_items, status, message
+        old_value = heredicare_variant["REFSEQ"] if transaction_type == 'UPDATE' else None
+        new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
+        all_items.append(new_item)
+
+        # mandatory insert
+        #KONS_VCF
+        if transaction_type == 'INSERT':
+            item_name = "KONS_VCF"
+            item_regex = post_regexes[item_name]
+            new_value = preferred_consequence.consequence
+            if not self.is_valid_post_data(new_value, item_regex):
+                status = "error"
+                message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
+                return all_items, status, message
+            old_value = None
+            new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
+            all_items.append(new_item)
+        #CHGVS
+            item_name = "CHGVS"
+            item_regex = post_regexes[item_name]
+            new_value = preferred_consequence.hgvs_c
+            if not self.is_valid_post_data(new_value, item_regex):
+                status = "error"
+                message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
+                return all_items, status, message
+            old_value = None
+            new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
+            all_items.append(new_item)
+        #PHGVS
+            item_name = "PHGVS"
+            item_regex = post_regexes[item_name]
+            new_value = preferred_consequence.hgvs_p
+            if not self.is_valid_post_data(new_value, item_regex):
+                status = "error"
+                message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
+                return all_items, status, message
+            old_value = None
+            new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
+            all_items.append(new_item)
+
+        return all_items, status, message
+
+
+
+    def get_consensus_classification_items(self, variant, vid, submission_id, post_regexes):
+        status = "success"
+        message = ""
+        all_items = []
         consensus_classification = variant.get_recent_consensus_classification()
 
         # some sanity checks - maybe not neccessary, but its not bad to check those beforehand
         if consensus_classification is None or consensus_classification.selected_class is None or consensus_classification.selected_class == "-":
-            return result, "error", "The variant does not have a consensus classification which can be submitted"
+            return all_items, "error", "The variant does not have a consensus classification which can be submitted"
         
-        all_items = []
-
         # add consensus classification class in HerediCare format: PATH_TF
         item_name = "PATH_TF"
         item_regex = post_regexes[item_name]
@@ -311,7 +470,7 @@ class Heredicare(metaclass=Singleton):
         if not self.is_valid_post_data(new_value, item_regex):
             status = "error"
             message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
-            return result, status, message
+            return all_items, status, message
         old_value = self.get_heredicare_consensus_attribute(variant, vid, "selected_class")
         new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
         all_items.append(new_item)
@@ -323,7 +482,7 @@ class Heredicare(metaclass=Singleton):
         if not self.is_valid_post_data(new_value, item_regex):
             status = "error"
             message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
-            return result, status, message
+            return all_items, status, message
         old_value = self.get_heredicare_consensus_attribute(variant, vid, "classification_date")
         new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
         all_items.append(new_item)
@@ -335,18 +494,14 @@ class Heredicare(metaclass=Singleton):
         if not self.is_valid_post_data(new_value, item_regex):
             status = "error"
             message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
-            return result, status, message
+            return all_items, status, message
         old_value = self.get_heredicare_consensus_attribute(variant, vid, "comment")
         new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
         all_items.append(new_item)
 
-        # terminate transaction
-        all_items.append(self.get_terminating_item(record_id = vid, submission_id = submission_id, transaction_type = "UPDATE"))
+        ##Item fehlt für UPDATE: VUSTF_16
 
-        result = {"items": all_items}
-        result = json.dumps(result)
-
-        return result, status, message
+        return all_items, status, message
 
 
     def is_valid_post_data(self, value, regex):
@@ -380,56 +535,6 @@ class Heredicare(metaclass=Singleton):
             "item_value_old": "",
             "item_value_new": transaction_type
         }
-
-    def upload_consensus_classification(self, variant, vid):
-        status = "success"
-        message = ""
-        submission_id = None
-        project_type = "upload"
-        
-        post_regexes, status, message = self.get_post_regexes()
-        if status == "error":
-            return submission_id, status, message
-
-        status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
-        if status == 'error':
-            return submission_id, status, message
-
-        submission_id, status, message = self.get_new_submission_id()
-        if status == 'error':
-            return submission_id, status, message
-
-        url = self.get_url(project_type, "send_data")
-        bearer, timestamp = self.get_saved_bearer(project_type)
-        header = {"Authorization": "Bearer " + bearer}
-        data, status, message = self.get_postable_consensus_classification(variant, vid, submission_id, post_regexes)
-        if status == "error":
-            return submission_id, status, message
-        
-        print("POST URL:" + url)
-        resp = requests.post(url, headers=header, data=data)
-
-        if resp.status_code == 401: # unauthorized
-            message = "ERROR: HerediCare API post variant data endpoint returned an HTTP 401, unauthorized error. Attempting retry."
-            status = "retry"
-        elif resp.status_code == 555:
-            message = "ERROR: HerediCare API post variant data endpoint returned an HTTP 555 error. Reason: " + urllib.parse.unquote(resp.headers.get("Error-Reason", "not provided"))
-            status = "error"
-        elif resp.status_code != 200:
-            message = "ERROR: HerediCare API post variant data endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
-            status = "error"
-        else: # success
-            print(resp.text)
-
-        #base_heredicare_debug_path = "/mnt/storage2/users/ahdoebm1/HerediVar/src/common/heredicare_interface_debug"
-        #with open(os.path.join(base_heredicare_debug_path, "sub_" + str(submission_id) + ".txt"), "w") as f:
-        #    f.write("DATA:\n")
-        #    functions.prettyprint_json(json.loads(data), f.write)
-        #    f.write("\n")
-        #    f.write("RESPONSE MESSAGE:\n")
-        #    f.write(message)
-
-        return submission_id, status, message
 
 
     def get_submission_status(self, submission_id):
@@ -481,6 +586,127 @@ class Heredicare(metaclass=Singleton):
 
         return finished_at, status, message
 
+    ######## DEPRECATED!!!! ########
+    def upload_consensus_classification(self, variant, vid):
+        status = "success"
+        message = ""
+        submission_id = None
+        project_type = "upload"
+        
+        post_regexes, status, message = self.get_post_regexes()
+        if status == "error":
+            return submission_id, status, message
+
+        status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
+        if status == 'error':
+            return submission_id, status, message
+
+        submission_id, status, message = self.get_new_submission_id()
+        if status == 'error':
+            return submission_id, status, message
+
+        url = self.get_url(project_type, "send_data")
+        bearer, timestamp = self.get_saved_bearer(project_type)
+        header = {"Authorization": "Bearer " + bearer}
+        data, status, message = self.get_postable_consensus_classification(variant, vid, submission_id, post_regexes)
+        if status == "error":
+            return submission_id, status, message
+        
+        print("POST URL:" + url)
+        resp = requests.post(url, headers=header, data=data)
+
+        if resp.status_code == 401: # unauthorized
+            message = "ERROR: HerediCare API post variant data endpoint returned an HTTP 401, unauthorized error. Attempting retry."
+            status = "retry"
+        elif resp.status_code == 555:
+            message = "ERROR: HerediCare API post variant data endpoint returned an HTTP 555 error. Reason: " + urllib.parse.unquote(resp.headers.get("Error-Reason", "not provided"))
+            status = "error"
+        elif resp.status_code != 200:
+            message = "ERROR: HerediCare API post variant data endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
+            status = "error"
+        else: # success
+            print(resp.text)
+
+        #base_heredicare_debug_path = "/mnt/storage2/users/ahdoebm1/HerediVar/src/common/heredicare_interface_debug"
+        #with open(os.path.join(base_heredicare_debug_path, "sub_" + str(submission_id) + ".txt"), "w") as f:
+        #    f.write("DATA:\n")
+        #    functions.prettyprint_json(json.loads(data), f.write)
+        #    f.write("\n")
+        #    f.write("RESPONSE MESSAGE:\n")
+        #    f.write(message)
+
+        return submission_id, status, message
+
+
+
+    def get_data(self, variant, vid, options):
+        status = "success"
+        message = ""
+        data = None
+
+        post_regexes, status, message = self.get_post_regexes()
+        if status == "error":
+            return data, status, message
+
+        transaction_type = "UPDATE"
+        if vid is None:
+            transaction_type = "INSERT"
+            vid, status, message = self.get_new_record_id()
+            if status == 'error':
+                return data, status, message
+
+        submission_id, status, message = self.get_new_submission_id()
+        if status == 'error':
+            return data, status, message
+        
+
+
+        all_items = []
+
+        all_items.extend(self.get_variant_items(variant, vid, submission_id, post_regexes, transaction_type))
+        if options['post_consensus_classification']:
+            consensus_classification_items, status, message = self.get_consensus_classification_items(variant, vid, submission_id, post_regexes)
+            if status == "error":
+                return data, status, message
+            all_items.extend(consensus_classification_items)
+        all_items.append(self.get_terminating_item(record_id = vid, submission_id = submission_id, transaction_type = transaction_type))
+            
+        data = {'items': all_items}
+        print(data)
+        data = json.dumps(data)
+
+        return data, status, message
+
+
+    def post_data(self, data):
+        status = "success"
+        message = ""
+        project_type = "upload"
+
+        status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
+        if status == 'error':
+            return status, message
+        
+
+        url = self.get_url(project_type, "send_data")
+        bearer, timestamp = self.get_saved_bearer(project_type)
+        header = {"Authorization": "Bearer " + bearer}
+        resp = requests.post(url, headers=header, data=data)
+
+        if resp.status_code == 401: # unauthorized
+            message = "ERROR: HerediCare API post variant data endpoint returned an HTTP 401, unauthorized error. Attempting retry."
+            status = "retry"
+        elif resp.status_code == 555:
+            message = "ERROR: HerediCare API post variant data endpoint returned an HTTP 555 error. Reason: " + urllib.parse.unquote(resp.headers.get("Error-Reason", "not provided"))
+            status = "error"
+        elif resp.status_code != 200:
+            message = "ERROR: HerediCare API post variant data endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
+            status = "error"
+        else: # success
+            print(resp.text)
+
+        return status, message
+
 
 if __name__ == "__main__":
     functions.read_dotenv()
@@ -518,6 +744,9 @@ if __name__ == "__main__":
     print(finished_at)
     print(status)
     print(message)
+
+    #
+    heredicare_interface.get_data(variant, vid = "8882909", options = {"post_consensus_classification": True})
 
 #if __name__ == "__main__":
 #    functions.read_dotenv()

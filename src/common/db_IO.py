@@ -1421,7 +1421,7 @@ class Connection:
 
 
     def get_consensus_classification(self, variant_id, most_recent = False, sql_modifier=None): # it is possible to have multiple consensus classifications
-        command = "SELECT id,user_id,variant_id,classification,comment,date,is_recent,classification_scheme_id,scheme_class FROM consensus_classification WHERE variant_id = %s"
+        command = "SELECT id,user_id,variant_id,classification,comment,date,is_recent,classification_scheme_id,scheme_class,needs_heredicare_upload FROM consensus_classification WHERE variant_id = %s"
         if most_recent:
             command = command  + " AND is_recent = '1'"
         else:
@@ -2273,6 +2273,7 @@ class Connection:
                     date = cl_raw[5].strftime('%Y-%m-%d %H:%M:%S')
                     classification_id = int(cl_raw[0])
                     scheme_class = cl_raw[8]
+                    needs_heredicare_upload = cl_raw[9] == 1
 
                     # get further information from database (could use join to get them as well)
                     current_userinfo = self.get_user(user_id = cl_raw[1]) # id,username,first_name,last_name,affiliation
@@ -2313,7 +2314,7 @@ class Connection:
                         literatures.append(new_literature)
 
                     # save the new classification object
-                    new_classification = models.Classification(id = classification_id, type = 'consensus classification', selected_class=selected_class, comment=comment, date=date, submitter=user, scheme=scheme, literature = literatures)
+                    new_classification = models.Classification(id = classification_id, type = 'consensus classification', selected_class=selected_class, comment=comment, date=date, submitter=user, scheme=scheme, literature = literatures, needs_heredicare_upload=needs_heredicare_upload)
                     consensus_classifications.append(new_classification)
 
 
@@ -3412,24 +3413,20 @@ class Connection:
 
 
 
-    def insert_variant_upload_request(self, vid, variant_id, upload_queue_id, user_id):
-        print(vid)
-        print(variant_id)
-        print(upload_queue_id)
-        print(user_id)
-        command = "INSERT INTO upload_variant_queue (vid, variant_id, upload_queue_id, user_id) VALUES (%s, %s, %s ,%s)"
+    def insert_publish_heredicare_request(self, vid, variant_id, upload_queue_id, user_id):
+        command = "INSERT INTO publish_heredicare_queue (vid, variant_id, upload_queue_id, user_id) VALUES (%s, %s, %s ,%s)"
         self.cursor.execute(command, (vid, variant_id, upload_queue_id, user_id))
         self.conn.commit()
         return self.get_most_recent_variant_upload_queue_id(vid, variant_id)
 
-    def update_upload_variant_queue_celery_id(self, upload_variant_queue_id, celery_task_id):
-        command = "UPDATE upload_variant_queue SET celery_task_id = %s WHERE id = %s"
-        self.cursor.execute(command, (celery_task_id, upload_variant_queue_id))
+    def update_publish_heredicare_queue_celery_task_id(self, publish_heredicare_queue_id, celery_task_id):
+        command = "UPDATE publish_heredicare_queue SET celery_task_id = %s WHERE id = %s"
+        self.cursor.execute(command, (celery_task_id, publish_heredicare_queue_id))
         self.conn.commit()
     
-    def update_upload_variant_queue_status(self, upload_variant_queue_id, status, message, finished_at = None, submission_id = None):
-        command = "UPDATE upload_variant_queue SET status = %s, message = %s, finished_at = %s, submission_id = %s WHERE id = %s"
-        self.cursor.execute(command, (status, message, finished_at, submission_id, upload_variant_queue_id))
+    def update_publish_heredicare_queue_status(self, publish_heredicare_queue_id, status, message, finished_at = None, submission_id = None):
+        command = "UPDATE publish_heredicare_queue SET status = %s, message = %s, finished_at = %s, submission_id = %s WHERE id = %s"
+        self.cursor.execute(command, (status, message, finished_at, submission_id, publish_heredicare_queue_id))
         self.conn.commit()
 
     def update_consensus_classification_needs_heredicare_upload(self, consensus_classification_id):
@@ -3437,17 +3434,34 @@ class Connection:
         self.cursor.execute(command, (consensus_classification_id, ))
         self.conn.commit()
 
-
-
-
     def get_most_recent_variant_upload_queue_id(self, vid, variant_id):
-        command = "SELECT MAX(id) FROM upload_variant_queue WHERE vid = %s AND variant_id = %s"
+        command = "SELECT MAX(id) FROM publish_heredicare_queue WHERE vid = %s AND variant_id = %s"
         self.cursor.execute(command, (vid, variant_id))
         result = self.cursor.fetchone()
         return result[0]
 
-    #def get_most_recent_list_variant_import_queue(self, list_variant_import_queue_id):
-    #    command = "SELECT requested_at, status, finished_at, message FROM list_variant_import_queue WHERE list_id = %s ORDER BY id DESC LIMIT 1"
-    #    self.cursor.execute(command, (list_variant_import_queue_id, ))
-    #    result = self.cursor.fetchone()
-    #    return result
+
+
+
+
+    def insert_publish_request(self, user_id):
+        command = "INSERT INTO publish_queue (user_id) VALUES (%s)"
+        self.cursor.execute(command, (user_id, ))
+        self.conn.commit()
+        publish_queue_id = self.get_last_insert_id()
+        return publish_queue_id
+
+    def update_publish_queue_status(self, publish_queue_id, status, message):
+        command = "UPDATE publish_queue SET status = %s, message = %s WHERE id = %s"
+        self.cursor.execute(command, (status, message, publish_queue_id))
+        self.conn.commit()
+
+    def update_publish_queue_celery_task_id(self, publish_queue_id, celery_task_id):
+        command = "UPDATE publish_queue SET celery_task_id = %s WHERE id = %s"
+        self.cursor.execute(command, (celery_task_id, publish_queue_id))
+        self.conn.commit()
+
+    def close_publish_request(self, publish_queue_id, status, message):
+        command = "UPDATE publish_queue SET status = %s, message = %s, finished_at = NOW() WHERE id = %s"
+        self.cursor.execute(command, (status, message, publish_queue_id))
+        self.conn.commit()

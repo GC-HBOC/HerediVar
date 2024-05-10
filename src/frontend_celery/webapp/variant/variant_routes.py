@@ -230,7 +230,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
         if request.args.get('from_reannotate', 'False') == 'True': 
             return redirect(url_for('main.deleted_variant'))
         else:
-            abort(404)  
+            abort(404) 
     
     heredicare_annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
     vids = conn.get_external_ids_from_variant_id(variant_id, heredicare_annotation_type_id)

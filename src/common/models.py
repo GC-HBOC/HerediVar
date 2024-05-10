@@ -416,6 +416,8 @@ class Classification:
     scheme: Scheme
     literature: Any = None # list of selected literature
 
+    needs_heredicare_upload: bool = False # only used in consensus classifications -- maybe better to create a new dataclass along with an abstract dataclass
+
     def to_json(self):
         return json.dumps(asdict(self))
     def to_dict(self):
@@ -937,12 +939,14 @@ class AbstractVariant(AbstractDataclass):
                 result = functions.extend_dict(result, assay.type_title, assay)
         return result
 
-    def get_external_ids(self, title):
+    def get_external_ids(self, title, how='object'):
         result = []
         if self.external_ids is not None:
             for external_id in self.external_ids:
                 if external_id.title == title:
                     result.append(external_id)
+        if how == 'list':
+            result = [annot.value for annot in result]
         return result
     
     def group_external_ids(self):

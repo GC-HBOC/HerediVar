@@ -1,8 +1,6 @@
-from flask import render_template, request, url_for, flash, redirect, Blueprint, current_app, session
 from os import path
 import sys
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
-from common.db_IO import Connection
 import common.functions as functions
 import common.paths as paths
 
@@ -12,10 +10,14 @@ import json
 import requests
 import io
 
+from flask import render_template, request, url_for, flash, redirect, Blueprint, current_app, session
+from flask_paginate import Pagination
+
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import abort
 
 from . import upload_tasks
+from . import upload_functions
 
 
 upload_blueprint = Blueprint(
@@ -24,7 +26,63 @@ upload_blueprint = Blueprint(
 )
 
 
-@upload_blueprint.route('/submit_clinvar/<int:variant_id>', methods=['GET', 'POST'])
+# listens on get parameter: variant_ids (+ separated list of variant ids)
+@upload_blueprint.route('/publish', methods=['GET', 'POST'])
+@require_permission(['admin_resources'])
+def publish():
+
+    conn = get_connection()
+    user_id = session['user']['user_id']
+    user_roles = session['user']['roles']
+
+    variant_ids = upload_functions.extract_variant_ids(request.args)
+
+    variants = []
+    for variant_id in variant_ids:
+        variant = conn.get_variant(variant_id, include_annotations=False,include_user_classifications=False, include_heredicare_classifications=False, include_automatic_classification=False, include_clinvar=False, include_assays=False, include_literature=False)
+        variants.append(variant)
+
+    if request.method == 'POST':
+        print(request.form)
+
+
+        upload_options = {
+            "do_clinvar": request.form.get('publish_clinvar', 'off') == 'on',
+            "clinvar_selected_genes": upload_functions.extract_clinvar_selected_genes(variant_ids, request.form),
+            "do_heredicare": request.form.get('publish_heredicare', 'off') == 'on'
+        }
+
+        upload_tasks.start_publish(variant_ids, upload_options, user_id, user_roles, conn) # (variant_ids, upload_options, user_id, user_roles, conn: Connection):
+
+    
+    return render_template("upload/publish.html",
+                           variants = variants
+                        )
+
+
+
+@upload_blueprint.route('/upload/variant/heredicare/<int:variant_id>', methods=['POST'])
+@require_permission(['admin_resources'])
+def upload_variant_heredicare(variant_id):
+    conn = get_connection()
+
+    variant = conn.get_variant(variant_id, include_annotations = False, include_user_classifications = False, include_clinvar = False, include_assays = False, include_literature = False, include_external_ids=True)
+    if variant is None:
+        return abort(404)
+
+    consensus_classification = variant.get_recent_consensus_classification()
+    if consensus_classification is None:
+        flash("There is no consensus classification for this variant! Please create one before submitting to HerediCaRe!", "alert-danger")
+        return redirect(url_for('variant.display', variant_id = variant_id))
+
+    celery_task_id = upload_tasks.start_upload_one_variant_heredicare(variant_id, upload_queue_id = None, user_id = session['user']['user_id'], user_roles = session['user']['roles'], conn = conn)
+
+
+
+
+
+
+@upload_blueprint.route('/upload/variant/clinvar/<int:variant_id>', methods=['GET', 'POST'])
 @require_permission(['admin_resources'])
 def submit_clinvar(variant_id):
     conn = get_connection()
@@ -66,7 +124,7 @@ def submit_clinvar(variant_id):
 
         # prepare json data to be submitted to ClinVar
         schema = json.loads(open(paths.clinvar_submission_schema).read())
-        data = get_clinvar_submission_json(variant, selected_gene, clinvar_accession)
+        data = upload_functions.get_clinvar_submission_json(variant, selected_gene, clinvar_accession)
         #print(data)
         #with open("/mnt/storage2/users/ahdoebm1/HerediVar/testdat.json", "w") as jfile:
         #    jfile.write(json.dumps(data, indent=4))
@@ -115,114 +173,8 @@ def submit_clinvar(variant_id):
 
 
 
-def get_clinvar_submission_json(variant, selected_gene, clinvar_accession = None):
-    # required fields: 
-    # clinvarSubmission > clinicalSignificance > clinicalSignificanceDescription (one of: "Pathogenic", "Likely pathogenic", "Uncertain significance", "Likely benign", "Benign", "Pathogenic, low penetrance", "Uncertain risk allele", "Likely pathogenic, low penetrance", "Established risk allele", "Likely risk allele", "affects", "association", "drug response", "confers sensitivity", "protective", "other", "not provided")
-    # clinvarSubmission > clinicalSignificance > comment
-    # clinvarSubmission > clinicalSignificance > customAssertionScore (ACMG) !!! requires assertion method as well
-    # clinvarSubmission > clinicalSignificance > dateLastEvaluated
 
-    # clinvarSubmission > conditionSet > condition > id (hereditary breast cancer)
-    # clinvarSubmission > conditionSet > condition > db (OMIM)
-
-    # clinvarSubmission > localID (HerediVar variant_id)
-
-    # clinvarSubmission > observedIn > affectedStatus (not provided??)
-    # clinvarSubmission > observedIn > alleleOrigin (germline)
-    # clinvarSubmission > observedIn > collectionMethod (curation: For variants that were not directly observed by the submitter, but were interpreted by curation of multiple sources, including clinical testing laboratory reports, publications, private case data, and public databases.)
-    
-    # clinvarSubmission > variantSet > variant > chromosomeCoordinates > alternateAllele (vcf alt field if up to 50nt long variant!)
-    # clinvarSubmission > variantSet > variant > assembly (GRCh38)
-    # clinvarSubmission > variantSet > variant > chromosome (Values are 1-22, X, Y, and MT)
-    # clinvarSubmission > variantSet > variant > referenceAllele (vcf ref field)
-    # clinvarSubmission > variantSet > variant > start (vcf pos field: 1-based coordinates)
-    # clinvarSubmission > variantSet > variant > stop (vcf pos field + length of variant)
-    mrcc = variant.get_recent_consensus_classification()
-
-    data = {}
-    clinvar_submission = []
-    clinvar_submission_properties = {}
-
-    assertion_criteria = get_assertion_criteria(mrcc.scheme.type, mrcc.scheme.reference)
-    data['assertionCriteria'] = assertion_criteria
-    
-    clinical_significance = {}
-    clinical_significance['clinicalSignificanceDescription'] = mrcc.class_to_text()
-    clinical_significance['comment'] = mrcc.get_extended_comment()
-    clinical_significance['dateLastEvaluated'] = mrcc.date.split(' ')[0] # only grab the date and trim the time
-    clinvar_submission_properties['clinicalSignificance'] =  clinical_significance
-
-    if clinvar_accession is not None:
-        clinvar_submission_properties['clinvarAccession'] = str(clinvar_accession)
-
-
-    condition_set = {}
-    condition = []
-    condition.append({'id': "145", 'db': 'Orphanet'}) #(https://www.omim.org/entry/114480)
-    condition_set['condition'] = condition
-    clinvar_submission_properties['conditionSet'] =  condition_set
-
-    clinvar_submission_properties['localID'] =  str(variant.id)
-
-    observed_in = []
-
-    observed_in_properties = {}
-    observed_in_properties['affectedStatus'] = 'not provided'
-    observed_in_properties['alleleOrigin'] = 'germline'
-    observed_in_properties['collectionMethod'] = 'curation'
-    observed_in.append(observed_in_properties)
-    clinvar_submission_properties['observedIn'] =  observed_in
-
-    if clinvar_accession is None:
-        clinvar_submission_properties['recordStatus'] = 'novel'
-    else:
-        clinvar_submission_properties['recordStatus'] = 'update'
-    data['clinvarSubmissionReleaseStatus'] = 'public'
-
-    variant_set = {}
-    variant_json = []
-    variant_properties = {}
-
-    # id,chr,pos,ref,alt
-    variant_properties['chromosomeCoordinates'] = {'alternateAllele': variant.alt, 
-                                                   'assembly': 'GRCh38', 
-                                                   'chromosome': variant.chrom.strip('chr'), 
-                                                   'referenceAllele': variant.ref, 
-                                                   'start': variant.pos,
-                                                   'stop': int(variant.pos) + len(variant.ref)-1}
-
-    if selected_gene is not None:
-        gene = []
-        gene_properties = {'symbol': selected_gene}
-        gene.append(gene_properties)
-        variant_properties['gene'] = gene
-    
-    variant_json.append(variant_properties)
-    variant_set['variant'] = variant_json
-    clinvar_submission_properties['variantSet'] =  variant_set
-
-    clinvar_submission.append(clinvar_submission_properties)
-
-    data['clinvarSubmission'] = clinvar_submission
-    #print(data)
-    return data
-
-
-def get_assertion_criteria(scheme_type, assertion_criteria_source):
-    assertion_criteria = {}
-    if scheme_type in ['acmg', 'enigma-brca1', 'enigma-brca2']:
-        assertion_criteria_source = assertion_criteria_source.replace('https://pubmed.ncbi.nlm.nih.gov/', '').strip('/')
-        assertion_criteria['db'] = "PubMed"
-        assertion_criteria['id'] = assertion_criteria_source
-    elif scheme_type in ['enigma-brca1', 'enigma-brca2']:
-        assertion_criteria['url'] = assertion_criteria_source
-    else:
-        assertion_criteria['url'] = assertion_criteria_source
-    return assertion_criteria
-
-
-
-@upload_blueprint.route('/submit_assay/<int:variant_id>', methods=['GET', 'POST'])
+@upload_blueprint.route('/upload/assay/<int:variant_id>', methods=['GET', 'POST'])
 @require_permission(['edit_resources'])
 def submit_assay(variant_id):
     conn = get_connection()

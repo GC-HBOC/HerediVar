@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1 class="bst"> {% block title %} Publish variants {% endblock %} </h1>
+
+<form class="bsb" method="post">
+
+    <div class="bst">
+        <h4>ClinVar</h4>
+        <div class="bsl">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="on" name="publish_clinvar" id="publish_clinvar_check" data-bs-toggle="collapse" href="#publish_clinvar_collapse" role="button" aria-expanded="false" aria-controls="publish_clinvar_collapse" autocomplete="off">
+                <label class="form-check-label" for="publish_clinvar_check">
+                    Publish to ClinVar
+                </label>
+            </div>
+            <div class="collapse" id="publish_clinvar_collapse">
+                <div class="card card-body">
+                    <div>Choose a gene for each variant which is contained in multiple genes. All variants which are missing in this table will have its gene selected automatically.</div>
+                    <div>
+
+                        <!-- Table to choose genes of variants for clinvar upload -->
+                        <div class="table-responsive tableFixHead">
+                            <table class="table table-hover" id="genes_for_clinvar_table">
+                                <thead>
+                                    <tr>
+                                        <th class="width_minimal"><div class="sortable">Variant ID</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_very_small"><div class="sortable">Chrom</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_very_small"><div class="sortable">Pos</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_small"><div class="sortable">Ref</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_small"><div class="sortable">Alt</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_small"><div class="sortable">Gene</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for variant in variants %}
+                                    {% set genes = variant.get_genes() %}
+                                    {% if genes is not none and genes | length > 1 %}
+                                    <tr>
+                                        <td><a href="{{url_for('variant.display', variant_id=variant.id)}}">{{variant.id}}</a></td>
+                                        <td>{{variant.chrom}}</td>
+                                        <td>{{variant.pos}}</td>
+                                        <td>{{variant.ref}}</td>
+                                        <td>{{variant.alt}}</td>
+                                        <td>
+                                            <select class="form-select" name="clinvar_gene_{{variant.id}}" id="clinvar_gene_{{variant.id}}">
+                                                {% for gene in genes %}
+                                                   <option value="{{ gene.id }}" {% if (gene.id == request.form['clinvar_gene_' + variant.id]) %} selected="selected" {% endif %}> {{ gene.symbol }} </option>
+                                                {% endfor %}
+                                           </select>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="bst">
+        <h4>HerediCaRe</h4>
+        <div class="form-check bsl">
+            <input class="form-check-input" type="checkbox" value="on" name="publish_heredicare" id="publish_heredicare_check" >
+            <label class="form-check-label" for="publish_heredicare_check">
+                Publish to HerediCaRe
+            </label>
+        </div>
+    </div>
+
+
+    <div class="bst">
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </div>
+</form>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+{% endblock %}
+
+{% block special_scripts %}
+    <script src="../static/js/search.js"></script>
+{% endblock%}

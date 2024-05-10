@@ -50,7 +50,7 @@
                 <button id="reannotate_button" type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#reannotate-modal" {% if variant.variant_type == 'sv' %}disabled{% endif %}>(Re-)Annotate</button>
             </li>
             <li>
-                <a type="button" class="dropdown-item" href="{{url_for('variant_io.submit_assay', variant_id = variant.id)}}" 
+                <a type="button" class="dropdown-item" href="{{url_for('upload.submit_assay', variant_id = variant.id)}}" 
                 data-bs-toggle="tooltip"  title="Submit an assay report & score for this variant.">
                     Submit assay
                 </a>
@@ -73,10 +73,16 @@
                     {% set title = 'Wait for the current ClinVar submission to finish before submitting another one.' %}
                 {% endif %}
                 <div data-bs-toggle="tooltip" title="{{ title }}"> <!-- idk why, but putting the tooltip on the button does not show it when the button is disabled -->
-                    <button data-href="{{url_for('variant_io.submit_clinvar', variant_id = variant.id)}}" type="button" class="dropdown-item" {% if disabled == 'disabled' %} disabled="disabled" {% endif %}>
+                    <button data-href="{{url_for('upload.submit_clinvar', variant_id = variant.id)}}" type="button" class="dropdown-item" {% if disabled == 'disabled' %} disabled="disabled" {% endif %}>
                         Submit to ClinVar
                     </button>
                 </div>
+            </li>
+            <li>
+                <a id="publish_button" type="button" class="dropdown-item" href="{{url_for('upload.publish', variant_ids = variant.id)}}" 
+                data-bs-toggle="tooltip"  title="Publish this variant and selected data to ClinVar or HerediCaRe">
+                    Publish
+                </a>
             </li>
             {% endif %}
             <li>
