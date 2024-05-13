@@ -242,13 +242,18 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
     clinvar_submission = check_update_clinvar_status(variant_id, conn)
+    heredicare_queue_entries, summary_status = check_update_heredicare_status(variant_id, conn)
+
+    print(heredicare_queue_entries)
 
     return render_template('variant/variant.html',
                             clinvar_submission = clinvar_submission,
                             has_multiple_vids=has_multiple_vids,
                             lists = lists,
                             variant = variant,
-                            is_classification_report = False
+                            is_classification_report = False,
+                            heredicare_queue_entries = heredicare_queue_entries,
+                            summary_status = summary_status
                         )
 
 

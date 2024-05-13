@@ -15,9 +15,7 @@
         <div class="bsl">
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="on" name="publish_clinvar" id="publish_clinvar_check" data-bs-toggle="collapse" href="#publish_clinvar_collapse" role="button" aria-expanded="false" aria-controls="publish_clinvar_collapse" autocomplete="off">
-                <label class="form-check-label" for="publish_clinvar_check">
-                    Publish to ClinVar
-                </label>
+                <label class="form-check-label" for="publish_clinvar_check">Publish to ClinVar</label>
             </div>
             <div class="collapse" id="publish_clinvar_collapse">
                 <div class="card card-body">
@@ -73,10 +71,25 @@
     <div class="bst">
         <h4>HerediCaRe</h4>
         <div class="form-check bsl">
-            <input class="form-check-input" type="checkbox" value="on" name="publish_heredicare" id="publish_heredicare_check" >
-            <label class="form-check-label" for="publish_heredicare_check">
-                Publish to HerediCaRe
-            </label>
+            <input class="form-check-input" type="checkbox" value="on" name="publish_heredicare" id="publish_heredicare_check"  data-bs-toggle="collapse" href="#publish_heredicare_collapse" role="button" aria-expanded="false" aria-controls="publish_heredicare_collapse" autocomplete="off">
+            <label class="form-check-label" for="publish_heredicare_check">Publish to HerediCaRe</label>
+        </div>
+
+        <div class="collapse" id="publish_heredicare_collapse">
+            <div class="card card-body">
+                <div>Choose which data fields should be uploaded to HerediCaRe</div>
+                <div>
+
+                    
+                    <div class="form-check bsl">
+                        <input class="form-check-input" type="checkbox" value="on" name="post_consensus_classification" id="post_consensus_classification_check" autocomplete="off" checked disabled>
+                        <input type="hidden" id="post_consensus_classification_check" name="post_consensus_classification" value="on" /> <!-- remove this if the check above is not disabled -->
+                        <label class="form-check-label" for="post_consensus_classification_check">Post consensus classification</label>
+                    </div>
+
+
+                </div>
+            </div>
         </div>
     </div>
 

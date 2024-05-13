@@ -4,6 +4,7 @@ import sys
 from os import path
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 from common.db_IO import Connection
+from common.heredicare_interface import Heredicare
 
 def get_clinvar_submission_status(clinvar_submission_id, headers): # SUB11770209
     #"https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions/%s/actions/"
@@ -72,3 +73,35 @@ def check_update_clinvar_status(variant_id, conn: Connection, force_update = Fal
         return conn.get_heredivar_clinvar_submission(variant_id)
     else:
         return previous_clinvar_submission
+
+
+
+def check_heredicare_status(submission_id):
+    heredicare_interface = Heredicare()
+    finished_at, status, message = heredicare_interface.get_submission_status(submission_id)
+    return finished_at, status, message
+    
+
+def check_update_heredicare_status(variant_id, conn: Connection):
+    heredicare_queue_entries = conn.get_most_recent_publish_heredicare_queue_entries(variant_id)
+    summary_status = "unknown"
+
+    if heredicare_queue_entries is not None:
+        for heredicare_queue_entry in heredicare_queue_entries:
+            publish_heredicare_queue_id = heredicare_queue_entry[0]
+            status = heredicare_queue_entry[1]
+            submission_id = heredicare_queue_entry[7]
+            if status in ['submitted', 'api_error']and submission_id is not None:
+                finished_at, status, message = check_heredicare_status(submission_id)
+                conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status, message, finished_at, submission_id)
+                # take the updated information and return this
+        heredicare_queue_entries = conn.get_most_recent_publish_heredicare_queue_entries(variant_id)
+        for heredicare_queue_entry in heredicare_queue_entries:
+            current_status = heredicare_queue_entry[1]
+            if summary_status == "unknown":
+                summary_status = current_status
+            elif summary_status != current_status:
+                summary_status = "multiple stati"
+                break
+
+    return heredicare_queue_entries, summary_status

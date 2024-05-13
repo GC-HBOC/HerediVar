@@ -965,9 +965,10 @@ class AbstractVariant(AbstractDataclass):
         return result
 
     def get_heredicare_annotation_by_vid(self, vid):
-        for heredicare_annotation in self.heredicare_annotations:
-            if str(heredicare_annotation.vid) == str(vid):
-                return heredicare_annotation
+        if self.heredicare_annotations is not None:
+            for heredicare_annotation in self.heredicare_annotations:
+                if str(heredicare_annotation.vid) == str(vid):
+                    return heredicare_annotation
         return None
 
     def get_total_heredicare_counts(self):

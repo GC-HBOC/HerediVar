@@ -63,8 +63,8 @@ class consequence_job(Job):
                 if '.' in transcript_name:
                     transcript_name = transcript_name[:transcript_name.find('.')] # remove transcript version if it is present
                 
-                exon_nr = parts[7][:exon_nr.find('/')] # take only number from number/total
-                intron_nr = parts[8][:intron_nr.find('/')] # take only number from number/total
+                exon_nr = parts[7][:parts[7].find('/')] # take only number from number/total
+                intron_nr = parts[8][:parts[8].find('/')] # take only number from number/total
                 hgvs_c = urllib.parse.unquote(parts[9])
                 hgvs_p = urllib.parse.unquote(parts[10])
 

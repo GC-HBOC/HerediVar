@@ -30,34 +30,39 @@ upload_blueprint = Blueprint(
 @upload_blueprint.route('/publish', methods=['GET', 'POST'])
 @require_permission(['admin_resources'])
 def publish():
-
     conn = get_connection()
     user_id = session['user']['user_id']
     user_roles = session['user']['roles']
 
     variant_ids = upload_functions.extract_variant_ids(request.args)
 
+    if request.method == 'POST':
+        options = {
+            "do_clinvar": request.form.get('publish_clinvar', 'off') == 'on',
+            "clinvar_selected_genes": upload_functions.extract_clinvar_selected_genes(variant_ids, request.form),
+            "do_heredicare": request.form.get('publish_heredicare', 'off') == 'on',
+            "post_consensus_classification": request.form.get('post_consensus_classification', 'off') == 'on'
+        }
+        print(options)
+
+        if not options['post_consensus_classification']: # might be removed if it is allowed to only post the variant to HerediCaRe without consensus classification
+            flash("You have to post the consensus classification to HerediCaRe.", "alert-danger")
+        else:
+            upload_tasks.start_publish(variant_ids, options, user_id, user_roles, conn) # (variant_ids, options, user_id, user_roles, conn: Connection):
+            flash("Successfully requested data upload. It will be processed in the background.", "alert-success")
+
+        return save_redirect(request.args.get('next', url_for('upload.publish', variant_ids = ','.join(variant_ids))))
+
     variants = []
     for variant_id in variant_ids:
         variant = conn.get_variant(variant_id, include_annotations=False,include_user_classifications=False, include_heredicare_classifications=False, include_automatic_classification=False, include_clinvar=False, include_assays=False, include_literature=False)
         variants.append(variant)
 
-    if request.method == 'POST':
-        print(request.form)
-
-
-        upload_options = {
-            "do_clinvar": request.form.get('publish_clinvar', 'off') == 'on',
-            "clinvar_selected_genes": upload_functions.extract_clinvar_selected_genes(variant_ids, request.form),
-            "do_heredicare": request.form.get('publish_heredicare', 'off') == 'on'
-        }
-
-        upload_tasks.start_publish(variant_ids, upload_options, user_id, user_roles, conn) # (variant_ids, upload_options, user_id, user_roles, conn: Connection):
-
-    
     return render_template("upload/publish.html",
                            variants = variants
                         )
+
+
 
 
 

@@ -36,6 +36,42 @@
             {% endif %}
         </div>
 
+        <!-- HerediCaRe upload status pill -->
+        <div id="heredicare_status_pill_holder">
+            {% if heredicare_queue_entries is none %}
+                <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="This variant was not yet submitted to HerediCaRe. (This does not mean that the variant is not known to HerediCaRe - it might though)">no HerediCaRe submission</span>
+            {% else %}
+                {% set pill_color = "bg-secondary" %}
+                {% if summary_status == "multiple stati" %}
+                    {% set pill_color = "bg-warning" %}
+                {% endif %}
+                {% if summary_status == "success" %}
+                    {% set pill_color = "bg-success" %}
+                {% endif %}
+                {% if summary_status == "error" or summary_status == "api_error" %}
+                    {% set pill_color = "bg-danger" %}
+                {% endif %}
+
+                <span class="badge rounded-pill {{pill_color}}" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="bottom" data-bs-custom-class="popover_fix_large" data-bs-html="true" 
+                data-bs-content="
+                    <div class='row gx-2 border-bottom bg-light width_large'>
+                        <div class='col-3'>HerediCare VID</div>
+                        <div class='col-2 text-center border-start'>status</div>
+                        <div class='col-7 text-center border-start'>message</div>
+                    </div>
+                    {% for heredicare_queue_entry in heredicare_queue_entries %}
+                    <div class='row gx-2 width_large'>
+                        <div class='col-3'>{{heredicare_queue_entry[5]}}</div>
+                        <div class='col-2 text-center border-start'>{{heredicare_queue_entry[1]}}</div>
+                        <div class='col-7 text-center border-start'>{{heredicare_queue_entry[4]}}</div>
+                    </div>
+                    {% endfor %}
+                ">
+                    HerediCaRe {{summary_status}}
+                </span>
+            {% endif %}
+        </div>
+
     </div>
 
 

@@ -1869,6 +1869,7 @@ class Connection:
     def get_external_ids_from_variant_id(self, variant_id, annotation_type_id):
         command = "SELECT external_id FROM variant_ids WHERE variant_id = %s AND annotation_type_id = %s"
         information = (variant_id, annotation_type_id)
+        print(command % information)
         self.cursor.execute(command, information)
         result = self.cursor.fetchall()
         return [x[0] for x in result]
@@ -2853,22 +2854,22 @@ class Connection:
 
     def insert_update_heredivar_clinvar_submission(self, variant_id, submission_id, accession_id, status, message, last_updated, previous_clinvar_accession):
         if previous_clinvar_accession is None:
-            command = "INSERT INTO heredivar_clinvar_submissions (variant_id, submission_id, accession_id, status, message, last_updated) VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE submission_id=VALUES(submission_id), accession_id=VALUES(accession_id), status=VALUES(status),message=VALUES(message), last_updated=VALUES(last_updated)"
+            command = "INSERT INTO publish_clinvar_queue (variant_id, submission_id, accession_id, status, message, last_updated) VALUES (%s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE submission_id=VALUES(submission_id), accession_id=VALUES(accession_id), status=VALUES(status),message=VALUES(message), last_updated=VALUES(last_updated)"
             actual_information = (variant_id, submission_id, accession_id, status, message, last_updated)
         else: # do not reset the accession id - this one is stable once it was created by clinvar
-            command = "INSERT INTO heredivar_clinvar_submissions (variant_id, submission_id, status, message, last_updated) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE submission_id=VALUES(submission_id), status=VALUES(status),message=VALUES(message), last_updated=VALUES(last_updated)"
+            command = "INSERT INTO publish_clinvar_queue (variant_id, submission_id, status, message, last_updated) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE submission_id=VALUES(submission_id), status=VALUES(status),message=VALUES(message), last_updated=VALUES(last_updated)"
             actual_information = (variant_id, submission_id, status, message, last_updated)
         self.cursor.execute(command, actual_information)
         self.conn.commit()
 
     def get_heredivar_clinvar_submission(self, variant_id):
-        command = "SELECT id,variant_id,submission_id,accession_id,status,message,last_updated FROM heredivar_clinvar_submissions WHERE variant_id = %s"
+        command = "SELECT id,variant_id,submission_id,accession_id,status,message,last_updated FROM publish_clinvar_queue WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchone()
         return result
 
     #def update_heredivar_clinvar_submission_accession_id(self, accession_id):
-    #    command = "UPDATE heredivar_clinvar_submissions SET accession_id = %s"
+    #    command = "UPDATE publish_clinvar_queue SET accession_id = %s"
     #    self.cursor.execute(command, (accession_id, ))
     #    self.conn.commit()
 
@@ -3413,11 +3414,11 @@ class Connection:
 
 
 
-    def insert_publish_heredicare_request(self, vid, variant_id, upload_queue_id, user_id):
-        command = "INSERT INTO publish_heredicare_queue (vid, variant_id, upload_queue_id, user_id) VALUES (%s, %s, %s ,%s)"
-        self.cursor.execute(command, (vid, variant_id, upload_queue_id, user_id))
+    def insert_publish_heredicare_request(self, vid, variant_id, publish_queue_id): # vid, variant_id, publish_queue_id
+        command = "INSERT INTO publish_heredicare_queue (vid, variant_id, publish_queue_id) VALUES (%s, %s ,%s)"
+        self.cursor.execute(command, (vid, variant_id, publish_queue_id))
         self.conn.commit()
-        return self.get_most_recent_variant_upload_queue_id(vid, variant_id)
+        return self.get_most_recent_publish_heredicare_queue_id(vid, variant_id)
 
     def update_publish_heredicare_queue_celery_task_id(self, publish_heredicare_queue_id, celery_task_id):
         command = "UPDATE publish_heredicare_queue SET celery_task_id = %s WHERE id = %s"
@@ -3434,12 +3435,25 @@ class Connection:
         self.cursor.execute(command, (consensus_classification_id, ))
         self.conn.commit()
 
-    def get_most_recent_variant_upload_queue_id(self, vid, variant_id):
-        command = "SELECT MAX(id) FROM publish_heredicare_queue WHERE vid = %s AND variant_id = %s"
+    def get_most_recent_publish_heredicare_queue_id(self, vid, variant_id):
+        operation = "="
+        if vid is None:
+            operation = "IS"
+        command = "SELECT MAX(id) FROM publish_heredicare_queue WHERE vid " + operation + " %s AND variant_id = %s"
         self.cursor.execute(command, (vid, variant_id))
         result = self.cursor.fetchone()
         return result[0]
 
+    def get_most_recent_publish_heredicare_queue_entries(self, variant_id):
+        command = """
+            SELECT id, status, requested_at, finished_at, message, vid, variant_id, submission_id FROM publish_heredicare_queue 
+                WHERE variant_id = %s AND publish_queue_id = (SELECT MAX(publish_queue_id) FROM publish_heredicare_queue WHERE variant_id = %s)
+            """
+        self.cursor.execute(command, (variant_id, variant_id))
+        result = self.cursor.fetchall()
+        if len(result) == 0:
+            return None
+        return result
 
 
 
