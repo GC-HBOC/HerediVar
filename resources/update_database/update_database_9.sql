@@ -48,6 +48,10 @@ GRANT SELECT,INSERT,UPDATE ON HerediVar.publish_queue TO 'HerediVar_superuser';
 GRANT SELECT ON HerediVar.publish_queue TO 'HerediVar_user';
 GRANT SELECT ON HerediVar.publish_queue TO 'HerediVar_read_only';
 
+GRANT SELECT,INSERT,UPDATE ON HerediVar.publish_heredicare_queue TO 'HerediVar_superuser';
+GRANT SELECT ON HerediVar.publish_heredicare_queue TO 'HerediVar_user';
+GRANT SELECT ON HerediVar.publish_heredicare_queue TO 'HerediVar_read_only';
+
 ALTER TABLE `HerediVar_ahdoebm1`.`upload_variant_queue` 
 DROP COLUMN `user_id`,
 CHANGE COLUMN `upload_queue_id` `publish_queue_id` INT(10) UNSIGNED NULL DEFAULT NULL , RENAME TO  `HerediVar_ahdoebm1`.`publish_heredicare_queue` ;
@@ -57,3 +61,10 @@ RENAME TO  `HerediVar_ahdoebm1`.`publish_clinvar_queue` ;
 
 ALTER TABLE `HerediVar_ahdoebm1`.`publish_heredicare_queue` 
 CHANGE COLUMN `status` `status` ENUM('pending', 'success', 'error', 'progress', 'retry', 'skipped') NOT NULL DEFAULT 'pending' ;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`publish_heredicare_queue` 
+CHANGE COLUMN `vid` `vid` TEXT NULL ;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`publish_heredicare_queue` 
+CHANGE COLUMN `status` `status` ENUM('pending', 'success', 'error', 'progress', 'retry', 'skipped', 'submitted', 'api_error') NOT NULL DEFAULT 'pending' ;
