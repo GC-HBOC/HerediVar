@@ -49,8 +49,8 @@ GRANT SELECT ON HerediVar.publish_queue TO 'HerediVar_user';
 GRANT SELECT ON HerediVar.publish_queue TO 'HerediVar_read_only';
 
 GRANT SELECT,INSERT,UPDATE ON HerediVar.publish_heredicare_queue TO 'HerediVar_superuser';
-GRANT SELECT ON HerediVar.publish_heredicare_queue TO 'HerediVar_user';
-GRANT SELECT ON HerediVar.publish_heredicare_queue TO 'HerediVar_read_only';
+GRANT SELECT,UPDATE ON HerediVar.publish_heredicare_queue TO 'HerediVar_user';
+GRANT SELECT,UPDATE ON HerediVar.publish_heredicare_queue TO 'HerediVar_read_only';
 
 ALTER TABLE `HerediVar_ahdoebm1`.`upload_variant_queue` 
 DROP COLUMN `user_id`,
@@ -68,3 +68,37 @@ CHANGE COLUMN `vid` `vid` TEXT NULL ;
 
 ALTER TABLE `HerediVar_ahdoebm1`.`publish_heredicare_queue` 
 CHANGE COLUMN `status` `status` ENUM('pending', 'success', 'error', 'progress', 'retry', 'skipped', 'submitted', 'api_error') NOT NULL DEFAULT 'pending' ;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`publish_heredicare_queue` 
+ADD COLUMN `consensus_classification_id` INT UNSIGNED NULL AFTER `submission_id`;
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`publish_clinvar_queue` 
+ADD COLUMN `publish_queue_id` INT UNSIGNED NOT NULL AFTER `id`,
+ADD COLUMN `requested_at` DATETIME NOT NULL AFTER `variant_id`,
+ADD COLUMN `celery_task_id` VARCHAR(45) NULL AFTER `last_updated`,
+ADD COLUMN `consensus_classification_id` INT UNSIGNED NULL AFTER `celery_task_id`;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`publish_clinvar_queue` 
+CHANGE COLUMN `status` `status` TEXT NOT NULL AFTER `requested_at`,
+CHANGE COLUMN `message` `message` TEXT NULL AFTER `status`,
+CHANGE COLUMN `submission_id` `submission_id` TEXT NULL ,
+CHANGE COLUMN `last_updated` `last_updated` DATETIME NULL ;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`publish_clinvar_queue` 
+CHANGE COLUMN `status` `status` TEXT NOT NULL DEFAULT 'pending' ;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`publish_clinvar_queue` 
+CHANGE COLUMN `requested_at` `requested_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP() ;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`consensus_classification` 
+ADD COLUMN `needs_clinvar_upload` TINYINT(1) NULL DEFAULT 1 AFTER `needs_heredicare_upload`;
+UPDATE `consensus_classification` SET `needs_clinvar_upload` = `is_recent` WHERE `id`=`id`;
+
+GRANT SELECT,INSERT,UPDATE ON HerediVar.publish_clinvar_queue TO 'HerediVar_superuser';
+GRANT SELECT,UPDATE ON HerediVar.publish_clinvar_queue TO 'HerediVar_user';
+GRANT SELECT,UPDATE ON HerediVar.publish_clinvar_queue TO 'HerediVar_read_only';
+
+ALTER TABLE `HerediVar_ahdoebm1`.`publish_clinvar_queue` 
+DROP INDEX `unique_heredivar_clinvar_submissions_variant_id` ;
+;
