@@ -39,11 +39,6 @@ class Config(object):
     CLIENTSECRET = os.environ.get('CLIENT_SECRET')
     DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
 
-
-    CLINVAR_API_ENDPOINT = "https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions" # test endpoint
-
-
-
     # configuration of server side session from flask-session module
     SESSION_PERMANENT = False
     SESSION_TYPE = "filesystem"
@@ -59,9 +54,6 @@ class Config(object):
     # Celery configuration
     CELERY_BROKER_URL = 'redis://localhost:6379/0'
     CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-
-    # clinvar
-    CLINVAR_API_KEY = os.environ.get('CLINVAR_API_KEY')
 
     # orphanet
     ORPHANET_DISCOVERY_URL = "https://api.orphacode.org/EN/ClinicalEntity"
@@ -87,9 +79,6 @@ class ProdConfig(Config):
     CLIENTID = os.environ.get('CLIENT_ID')
     CLIENTSECRET = os.environ.get('CLIENT_SECRET')
     DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
-
-    # clinvar
-    CLINVAR_API_ENDPOINT = "https://submit.ncbi.nlm.nih.gov/api/v1/submissions" # production endpoint
 
     
 

@@ -58,6 +58,8 @@ def my_lists():
 
     # variant view table of lists in pagination
     view_list_id = request.args.get('view', None)
+    variant_ids = conn.get_variant_ids_from_list(view_list_id) # all variant ids used for publish button
+    variant_ids = ','.join(variant_ids)
 
     if view_list_id == '':
         return abort(404)
@@ -251,10 +253,11 @@ def my_lists():
             return redirect(url_for('user.my_lists', view=view_list_id))
     
     return render_template('user/my_lists.html', 
-                            variants=variants, 
+                            variants=variants,
                             pagination=pagination,
                             static_information = static_information,
-                            list_import_status = list_import_status
+                            list_import_status = list_import_status,
+                            variant_ids = variant_ids
                         )
 
 
@@ -352,7 +355,7 @@ def single_vid_imports():
     return render_template('user/single_vid_imports.html', variant_imports = variant_imports)
 
 
-@user_blueprint.route('/variant_import_summary/<int:import_queue_id>', methods=('GET', 'POST'))
+@user_blueprint.route('/variant_import_summary/<int:import_queue_id>')
 @require_permission(['admin_resources'])
 def variant_import_summary(import_queue_id):
     conn = get_connection()
@@ -362,7 +365,7 @@ def variant_import_summary(import_queue_id):
     return render_template('user/variant_import_summary.html', import_queue_id = import_queue_id)
 
 
-@user_blueprint.route('/variant_import_summary_data/<int:import_queue_id>', methods=('GET', 'POST'))
+@user_blueprint.route('/variant_import_summary_data/<int:import_queue_id>')
 @require_permission(['admin_resources'])
 def variant_import_summary_data(import_queue_id):
     conn = get_connection()
@@ -373,15 +376,21 @@ def variant_import_summary_data(import_queue_id):
     return jsonify({'import_request': import_request, 'imported_variants': imported_variants})
 
 
-@user_blueprint.route('/variant_import_history', methods=('GET', 'POST'))
+@user_blueprint.route('/variant_import_history')
 @require_permission(['admin_resources'])
 def variant_import_history():
     conn = get_connection()
-
     overview = conn.get_import_request_overview()
-
     return render_template('user/variant_import_history.html', overview = overview)
 
 
+@user_blueprint.route('/variant_publish_history')
+def variant_publish_history():
+    conn = get_connection()
+    overview = conn.get_publish_request_overview()
+    return render_template('user/variant_publish_history.html', overview = overview)
 
-
+@user_blueprint.route('/variant_publish_summary')
+def variant_publish_summary():
+    conn = get_connection()
+    return render_template('user/variant_publish_summary.html')

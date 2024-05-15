@@ -34,7 +34,14 @@ def publish():
     user_id = session['user']['user_id']
     user_roles = session['user']['roles']
 
-    variant_ids = upload_functions.extract_variant_ids(request.args)
+    variant_ids = upload_functions.extract_variant_ids(request.args, conn)
+
+    variants = []
+    for variant_id in variant_ids:
+        variant = conn.get_variant(variant_id, include_annotations=False,include_user_classifications=False, include_heredicare_classifications=False, include_automatic_classification=False, include_clinvar=False, include_assays=False, include_literature=False)
+        if variant is None:
+            return abort(404)
+        variants.append(variant)
 
     if request.method == 'POST':
         options = {
@@ -53,10 +60,7 @@ def publish():
 
         return save_redirect(request.args.get('next', url_for('upload.publish', variant_ids = ','.join(variant_ids))))
 
-    variants = []
-    for variant_id in variant_ids:
-        variant = conn.get_variant(variant_id, include_annotations=False,include_user_classifications=False, include_heredicare_classifications=False, include_automatic_classification=False, include_clinvar=False, include_assays=False, include_literature=False)
-        variants.append(variant)
+
 
     return render_template("upload/publish.html",
                            variants = variants
@@ -66,21 +70,21 @@ def publish():
 
 
 
-@upload_blueprint.route('/upload/variant/heredicare/<int:variant_id>', methods=['POST'])
-@require_permission(['admin_resources'])
-def upload_variant_heredicare(variant_id):
-    conn = get_connection()
+#@upload_blueprint.route('/upload/variant/heredicare/<int:variant_id>', methods=['POST'])
+#@require_permission(['admin_resources'])
+#def upload_variant_heredicare(variant_id):
+#    conn = get_connection()
 
-    variant = conn.get_variant(variant_id, include_annotations = False, include_user_classifications = False, include_clinvar = False, include_assays = False, include_literature = False, include_external_ids=True)
-    if variant is None:
-        return abort(404)
+#    variant = conn.get_variant(variant_id, include_annotations = False, include_user_classifications = False, include_clinvar = False, include_assays = False, include_literature = False, include_external_ids=True)
+#    if variant is None:
+#        return abort(404)
 
-    consensus_classification = variant.get_recent_consensus_classification()
-    if consensus_classification is None:
-        flash("There is no consensus classification for this variant! Please create one before submitting to HerediCaRe!", "alert-danger")
-        return redirect(url_for('variant.display', variant_id = variant_id))
+#    consensus_classification = variant.get_recent_consensus_classification()
+#    if consensus_classification is None:
+#        flash("There is no consensus classification for this variant! Please create one before submitting to HerediCaRe!", "alert-danger")
+#        return redirect(url_for('variant.display', variant_id = variant_id))
 
-    celery_task_id = upload_tasks.start_upload_one_variant_heredicare(variant_id, upload_queue_id = None, user_id = session['user']['user_id'], user_roles = session['user']['roles'], conn = conn)
+#    celery_task_id = upload_tasks.start_upload_one_variant_heredicare(variant_id, upload_queue_id = None, user_id = session['user']['user_id'], user_roles = session['user']['roles'], conn = conn)
 
 
 

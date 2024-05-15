@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1 class="bst"> {% block title %} Variant publish summary {% endblock %} </h1>
+
+<div class="card bsb bst">
+    <div class="table-responsive bsb card-body">
+        <table class="table table-borderless" id="summary_table" style="table-layout:auto; margin-bottom:0">
+            <tbody>
+                <tr>
+                    <td class="width_small">Requesting user</td>
+                    <td id="summary_user"></td> <!-- name of the user from import -->
+                </tr>
+                <tr>
+                    <td class="width_small">Requested at</td>
+                    <td id="summary_requested_at"></td> <!-- from import -->
+                </tr>
+                <tr>
+                    <td class="width_small">Status</td>
+                    <td id="summary_status">
+                        <span id="status_badge" class="badge rounded-pill bg-secondary visually_hidden" data-bs-toggle="tooltip" title=""></span>
+                    </td> 
+                    <!-- 
+                        1. pending: from status of import
+                        2. fetching vids: status of import is processing
+                        3. fetching variants: status of import is success and there are still non finished variants
+
+                        4. error: import status is error
+
+                        5. success: all variants are processed and 
+                    -->
+                </tr>
+                <tr>
+                    <td class="width_small">Finished at</td>
+                    <td id="summary_finished_at"></td> <!-- max variant imports finished at if all are finished -->
+                </tr>
+                <tr>
+                    <td clas="width_small">Message</td>
+                    <td id="summary_message" class="break_text_all"></td>
+                </tr>
+                <tr>
+                    <td class="width_small">Total number of variants</td>
+                    <td id="summary_total_num_variants"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+
+
+<div class="w-100 bsb">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-subcaption">Status details ClinVar</h4>
+
+            <p class="card-text">
+
+                <div class="table-responsive bsb">
+                    <table class="table table-borderless" id="variant_summary_table">
+                        <tbody>
+                            <tr>
+                                <td class="width_very_small">Pending</td>
+                                <td class="width_very_small">Processing</td>
+                                <td class="width_very_small">Erroneous</td>
+                                <td class="width_very_small">Success</td>
+                                <td class="width_very_small">Deleted</td>
+                                <td class="width_very_small">Updated</td>
+                                <td class="width_very_small">Retrying</td>
+                            </tr>
+                            <tr>
+                                <td id="variant_summary_pending"></td>
+                                <td id="variant_summary_processing"></td>
+                                <td id="variant_summary_erroneous"></td>
+                                <td id="variant_summary_success"></td>
+                                <td id="variant_summary_deleted"></td>
+                                <td id="variant_summary_update"></td>
+                                <td id="variant_summary_retrying"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-responsive table-lg">
+                    <table class="table table-hover" id="variant_table">
+                        <thead>
+                            <tr>
+                                <th class="width_very_small"><div>HerediCare VID</div></th>
+                                <th class="width_very_small"><div>Status</div></th>
+                                <th class="width_small"><div>Requested at</div></th>
+                                <th class="width_small"><div>Finished at</div></th>
+                                <th class="width_large"><div>Message</div></th>
+                                <!--<th class="width_minimal"><div>Retry</div></th>-->
+                            </tr>
+                        </thead>
+                        <tbody id="variant_table_body">
+
+                        </tbody>
+                    </table>
+                </div>
+            </p>
+        </div>
+    </div>
+</div>
+
+
+<div class="w-100 bsb">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-subcaption">Status details HerediCaRe</h4>
+
+            <p class="card-text">
+
+
+                <div class="table-responsive bsb">
+                    <table class="table table-borderless" id="variant_summary_table">
+                        <tbody>
+                            <tr>
+                                <td class="width_very_small">Pending</td>
+                                <td class="width_very_small">Processing</td>
+                                <td class="width_very_small">Erroneous</td>
+                                <td class="width_very_small">Success</td>
+                                <td class="width_very_small">Deleted</td>
+                                <td class="width_very_small">Updated</td>
+                                <td class="width_very_small">Retrying</td>
+                            </tr>
+                            <tr>
+                                <td id="variant_summary_pending"></td>
+                                <td id="variant_summary_processing"></td>
+                                <td id="variant_summary_erroneous"></td>
+                                <td id="variant_summary_success"></td>
+                                <td id="variant_summary_deleted"></td>
+                                <td id="variant_summary_update"></td>
+                                <td id="variant_summary_retrying"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-responsive table-lg">
+                    <table class="table table-hover" id="variant_table">
+                        <thead>
+                            <tr>
+                                <th class="width_very_small"><div>HerediCare VID</div></th>
+                                <th class="width_very_small"><div>Status</div></th>
+                                <th class="width_small"><div>Requested at</div></th>
+                                <th class="width_small"><div>Finished at</div></th>
+                                <th class="width_large"><div>Message</div></th>
+                                <!--<th class="width_minimal"><div>Retry</div></th>-->
+                            </tr>
+                        </thead>
+                        <tbody id="variant_table_body">
+
+                        </tbody>
+                    </table>
+                </div>
+            </p>
+        </div>
+    </div>
+</div>
+
+
+
+</div>
+
+
+
+{% endblock %}
+
+{% block special_scripts %}
+{% endblock %}

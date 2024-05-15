@@ -417,6 +417,7 @@ class Classification:
     literature: Any = None # list of selected literature
 
     needs_heredicare_upload: bool = False # only used in consensus classifications -- maybe better to create a new dataclass along with an abstract dataclass
+    needs_clinvar_upload: bool = False # only used in consensus classifications -- maybe better to create a new dataclass along with an abstract dataclass
 
     def to_json(self):
         return json.dumps(asdict(self))

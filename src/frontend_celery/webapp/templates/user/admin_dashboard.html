@@ -24,6 +24,9 @@
         <button class="nav-link" id="import-tab" data-bs-toggle="tab" data-bs-target="#import" type="button" role="tab" aria-controls="import" aria-selected="false">Import variants</button>
     </li>
     <li class="nav-item" role="presentation">
+        <button class="nav-link" id="publish-tab" data-bs-toggle="tab" data-bs-target="#publish" type="button" role="tab" aria-controls="publish" aria-selected="false">Publish variants</button>
+    </li>
+    <li class="nav-item" role="presentation">
         <button class="nav-link" id="hide_schemes-tab" data-bs-toggle="tab" data-bs-target="#hide_schemes" type="button" role="tab" aria-controls="hide_schemes" aria-selected="false">Hide Schemes</button>
     </li>
 </ul>
@@ -253,6 +256,27 @@
 
     </div>
 </div>
+
+
+
+
+<!-- PUBLISH TAB -->
+<div class="tab-content" id="TabContent">
+    <div class="tab-pane fade" id="publish" role="tabpanel" aria-labelledby="publish-tab">
+
+        <div class="bst"></div>
+
+        <h4>Publish all variants with updated consensus classification</h4>
+        <div class="sst d-flex">
+            <a class="btn btn-outline-primary" href="{{url_for('upload.publish', variant_ids = 'heredicare')}}">Publish</a>
+            <div class="flex-grow-1"></div> <!-- spacer to move button to the right-->
+            <a class="btn btn-primary" href="{{url_for('user.variant_publish_history')}}">All publish requests</a>
+        </div>
+
+    </div>
+</div>
+
+
 
 
 <!-- HIDE SCHEMES TAB -->

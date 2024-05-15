@@ -1383,9 +1383,45 @@ class Connection:
         self.conn.commit()
     
     def invalidate_previous_consensus_classifications(self, variant_id):
-        command = "UPDATE consensus_classification SET is_recent = '0' WHERE variant_id = %s"
+        command = "UPDATE consensus_classification SET is_recent = 0, needs_heredicare_upload = 0, needs_clinvar_upload = 0 WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id,))
         self.conn.commit()
+
+    def update_consensus_classification_needs_heredicare_upload(self, consensus_classification_id):
+        command = "UPDATE consensus_classification SET needs_heredicare_upload = 0 WHERE id = %s"
+        self.cursor.execute(command, (consensus_classification_id, ))
+        self.conn.commit()
+
+    def update_consensus_classification_needs_clinvar_upload(self, consensus_classification_id):
+        command = "UPDATE consensus_classification SET needs_clinvar_upload = 0 WHERE id = %s"
+        self.cursor.execute(command, (consensus_classification_id, ))
+        self.conn.commit()
+
+    def get_variant_ids_which_need_heredicare_upload(self): # THIS SKIPS all structural variants and varaints which have unfinished submissions
+        command = """
+            SELECT DISTINCT variant_id FROM consensus_classification WHERE needs_heredicare_upload = 1 and variant_id NOT IN (
+	            SELECT publish_heredicare_queue.variant_id FROM publish_heredicare_queue RIGHT JOIN (
+		            SELECT variant_id, MAX(requested_at) as requested_at FROM publish_heredicare_queue WHERE status != 'skipped' GROUP BY variant_id
+	            )x ON x.requested_at = publish_heredicare_queue.requested_at AND x.variant_id = publish_heredicare_queue.variant_id
+	            WHERE status = 'submitted' or status = 'pending' or status = 'progress' or status = 'retry'
+            ) AND variant_id NOT IN (SELECT id FROM variant WHERE sv_variant_id IS NOT NULL)
+        """
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
+
+    def get_variant_ids_by_publish_heredicare_status(self, stati):
+        command = """
+            SELECT DISTINCT publish_heredicare_queue.variant_id FROM publish_heredicare_queue RIGHT JOIN (
+		        SELECT variant_id, MAX(requested_at) as requested_at FROM publish_heredicare_queue WHERE status != 'skipped' GROUP BY variant_id
+	        )x ON x.requested_at = publish_heredicare_queue.requested_at AND x.variant_id = publish_heredicare_queue.variant_id
+	        WHERE 
+        """
+        tmp = ["status = %s"]*len(stati)
+        command += ' OR '.join(tmp)
+        self.cursor.execute(command, tuple(stati))
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
     
     def insert_heredicare_center_classification(self, heredicare_annotation_id, zid, classification, comment):
         command = "INSERT INTO heredicare_center_classification (variant_heredicare_annotation_id, heredicare_ZID, classification, comment) VALUES (%s, %s, %s, %s)"
@@ -1421,7 +1457,7 @@ class Connection:
 
 
     def get_consensus_classification(self, variant_id, most_recent = False, sql_modifier=None): # it is possible to have multiple consensus classifications
-        command = "SELECT id,user_id,variant_id,classification,comment,date,is_recent,classification_scheme_id,scheme_class,needs_heredicare_upload FROM consensus_classification WHERE variant_id = %s"
+        command = "SELECT id,user_id,variant_id,classification,comment,date,is_recent,classification_scheme_id,scheme_class,needs_heredicare_upload,needs_clinvar_upload FROM consensus_classification WHERE variant_id = %s"
         if most_recent:
             command = command  + " AND is_recent = '1'"
         else:
@@ -1629,7 +1665,6 @@ class Connection:
 
     def update_user_classification(self, user_classification_id, classification, comment, date, scheme_class):
         command = "UPDATE user_classification SET classification = %s, comment = %s, date = %s, scheme_class = %s WHERE id = %s"
-        print(command % (str(classification), comment, date, str(scheme_class), user_classification_id))
         self.cursor.execute(command, (str(classification), comment, date, str(scheme_class), user_classification_id))
         self.conn.commit()
 
@@ -1869,7 +1904,6 @@ class Connection:
     def get_external_ids_from_variant_id(self, variant_id, annotation_type_id):
         command = "SELECT external_id FROM variant_ids WHERE variant_id = %s AND annotation_type_id = %s"
         information = (variant_id, annotation_type_id)
-        print(command % information)
         self.cursor.execute(command, information)
         result = self.cursor.fetchall()
         return [x[0] for x in result]
@@ -2275,6 +2309,7 @@ class Connection:
                     classification_id = int(cl_raw[0])
                     scheme_class = cl_raw[8]
                     needs_heredicare_upload = cl_raw[9] == 1
+                    needs_clinvar_upload = cl_raw[10] == 1
 
                     # get further information from database (could use join to get them as well)
                     current_userinfo = self.get_user(user_id = cl_raw[1]) # id,username,first_name,last_name,affiliation
@@ -2315,7 +2350,7 @@ class Connection:
                         literatures.append(new_literature)
 
                     # save the new classification object
-                    new_classification = models.Classification(id = classification_id, type = 'consensus classification', selected_class=selected_class, comment=comment, date=date, submitter=user, scheme=scheme, literature = literatures, needs_heredicare_upload=needs_heredicare_upload)
+                    new_classification = models.Classification(id = classification_id, type = 'consensus classification', selected_class=selected_class, comment=comment, date=date, submitter=user, scheme=scheme, literature = literatures, needs_heredicare_upload=needs_heredicare_upload, needs_clinvar_upload=needs_clinvar_upload)
                     consensus_classifications.append(new_classification)
 
 
@@ -3425,14 +3460,21 @@ class Connection:
         self.cursor.execute(command, (celery_task_id, publish_heredicare_queue_id))
         self.conn.commit()
     
-    def update_publish_heredicare_queue_status(self, publish_heredicare_queue_id, status, message, finished_at = None, submission_id = None):
-        command = "UPDATE publish_heredicare_queue SET status = %s, message = %s, finished_at = %s, submission_id = %s WHERE id = %s"
-        self.cursor.execute(command, (status, message, finished_at, submission_id, publish_heredicare_queue_id))
-        self.conn.commit()
-
-    def update_consensus_classification_needs_heredicare_upload(self, consensus_classification_id):
-        command = "UPDATE consensus_classification SET needs_heredicare_upload = 0 WHERE id = %s"
-        self.cursor.execute(command, (consensus_classification_id, ))
+    def update_publish_heredicare_queue_status(self, publish_heredicare_queue_id, status, message, finished_at = None, submission_id = None, consensus_classification_id = None):
+        command = "UPDATE publish_heredicare_queue SET status = %s, message = %s"
+        actual_information = (status, message)
+        if finished_at is not None:
+            command += ", finished_at = %s"
+            actual_information += (finished_at, )
+        if submission_id is not None:
+            command += ", submission_id = %s"
+            actual_information += (submission_id, )
+        if consensus_classification_id is not None:
+            command += ", consensus_classification_id = %s"
+            actual_information += (consensus_classification_id, )
+        command += " WHERE id = %s"
+        actual_information += (publish_heredicare_queue_id, )
+        self.cursor.execute(command, actual_information)
         self.conn.commit()
 
     def get_most_recent_publish_heredicare_queue_id(self, vid, variant_id):
@@ -3446,16 +3488,22 @@ class Connection:
 
     def get_most_recent_publish_heredicare_queue_entries(self, variant_id):
         command = """
-            SELECT id, status, requested_at, finished_at, message, vid, variant_id, submission_id FROM publish_heredicare_queue 
-                WHERE variant_id = %s AND publish_queue_id = (SELECT MAX(publish_queue_id) FROM publish_heredicare_queue WHERE variant_id = %s)
+            SELECT id, status, requested_at, finished_at, message, vid, variant_id, submission_id, consensus_classification_id FROM publish_heredicare_queue 
+                WHERE variant_id = %s AND publish_queue_id = (SELECT MAX(publish_queue_id) FROM publish_heredicare_queue WHERE variant_id = %s AND status != 'skipped')
             """
         self.cursor.execute(command, (variant_id, variant_id))
         result = self.cursor.fetchall()
         if len(result) == 0:
             return None
         return result
-
-
+    
+    def has_skipped_heredicare_publishes_before_finished_one(self, variant_id, last_finished_requested_at):
+        command = "SELECT COUNT(id) FROM publish_heredicare_queue WHERE variant_id = %s AND status = 'skipped' AND requested_at > %s"
+        self.cursor.execute(command, (variant_id, last_finished_requested_at))
+        result = self.cursor.fetchone()
+        if result[0] > 0:
+            return True
+        return False
 
 
     def insert_publish_request(self, user_id):
@@ -3479,3 +3527,53 @@ class Connection:
         command = "UPDATE publish_queue SET status = %s, message = %s, finished_at = NOW() WHERE id = %s"
         self.cursor.execute(command, (status, message, publish_queue_id))
         self.conn.commit()
+
+    def get_publish_request_overview(self):
+        command = """
+            SELECT id, (SELECT first_name FROM user WHERE user.id=publish_queue.user_id)first_name, (SELECT last_name FROM user WHERE user.id=publish_queue.user_id)last_name,
+            	requested_at, status, finished_at, message,  (SELECT DISTINCT COUNT(publish_clinvar_queue.variant_id) FROM publish_clinvar_queue WHERE publish_clinvar_queue.publish_queue_id=publish_queue.id) clinvar_subs,
+                (SELECT DISTINCT COUNT(publish_heredicare_queue.variant_id) FROM publish_heredicare_queue WHERE publish_heredicare_queue.publish_queue_id=publish_queue.id) heredicare_subs
+            FROM publish_queue
+        """
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return result
+
+
+    def insert_publish_clinvar_request(self, publish_queue_id, variant_id):
+        command = "INSERT INTO publish_clinvar_queue (publish_queue_id, variant_id) VALUES (%s, %s)"
+        self.cursor.execute(command, (publish_queue_id, variant_id))
+        self.conn.commit()
+        return self.get_last_insert_id()
+    
+    def update_publish_clinvar_queue_celery_task_id(self, publish_clinvar_queue_id, celery_task_id):
+        command = "UPDATE publish_clinvar_queue SET celery_task_id = %s WHERE id = %s"
+        self.cursor.execute(command, (celery_task_id, publish_clinvar_queue_id))
+        self.conn.commit()
+
+    def update_publish_clinvar_queue_status(self, publish_clinvar_queue_id, status, message, submission_id = None, consensus_classification_id = None, accession_id = None, last_updated = None):
+        command = "UPDATE publish_clinvar_queue SET status = %s, message = %s"
+        actual_information = (status, message)
+        if submission_id is not None:
+            command += ", submission_id = %s"
+            actual_information += (submission_id, )
+        if consensus_classification_id is not None:
+            command += ", consensus_classification_id = %s"
+            actual_information += (consensus_classification_id, )
+        if accession_id is not None:
+            command += ", accession_id = %s"
+            actual_information += (accession_id, )
+        if last_updated is not None:
+            command += ", last_updated = %s"
+            actual_information += (last_updated, )
+        command += " WHERE id = %s"
+        actual_information += (publish_clinvar_queue_id, )
+        self.cursor.execute(command, actual_information)
+        self.conn.commit()
+
+
+    def get_most_recent_publish_clinvar_queue_entry(self, variant_id):
+        command = "SELECT id, publish_queue_id, requested_at, status, message, submission_id, accession_id, last_updated, celery_task_id, consensus_classification_id FROM publish_clinvar_queue WHERE id = (SELECT MAX(id) FROM publish_clinvar_queue WHERE variant_id = %s and status != 'skipped')"
+        self.cursor.execute(command, (variant_id, ))
+        result = self.cursor.fetchone()
+        return result

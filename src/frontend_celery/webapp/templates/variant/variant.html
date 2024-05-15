@@ -20,64 +20,91 @@
 
         <!-- ClinVar submission status pills -->
         <div id="clinvar_status_pill_holder">
-            {% if clinvar_submission is none %}
-                <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="This variant was not yet submitted to ClinVar">no ClinVar submission</span>
+            {% if clinvar_queue_entry is none %}
+                <span class="badge rounded-pill bg-secondary" tabindex="0" role="button" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-custom-class="popover_fix_large"
+                data-bs-content="This variant was not yet submitted to ClinVar.">no ClinVar submission</span>
             {% else %}
-                {% set status = clinvar_submission[4] %}
+                {% set status = clinvar_queue_entry[3] %}
+                {% set pill_color = "bg-secondary" %}
                 {% if status in ['processed'] %}
-                    <span class="badge rounded-pill bg-success" data-bs-toggle="tooltip" title="Most recent ClinVar submission finished at {{ clinvar_submission[6] }}">ClinVar success</span>
+                    {% set pill_color = "bg-success" %}
                 {% endif %}
                 {% if status in ['error'] %}
-                    <span class="badge rounded-pill bg-danger" data-bs-toggle="tooltip" title="Most recent ClinVar submission yielded an error at {{ clinvar_submission[6] }} with error message: {{ clinvar_submission[5] }}">ClinVar error</span>
+                    {% set pill_color = "bg-danger" %}
                 {% endif %}
-                {% if status in ['submitted', 'processing'] %}
-                    <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="Most recent ClinVar submission last updated at {{ clinvar_submission[6] }}. Refresh page to see if it is ready.">ClinVar {{ status }}</span>
-                {% endif %}
+
+                <span class="badge rounded-pill {{pill_color}}" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="bottom" data-bs-custom-class="popover_fix_large"
+                data-bs-content="
+                    <div class='row gx-2 border-bottom bg-light width_large'>
+                        <div class='col-3'>Accession ID</div>
+                        <div class='col-3 text-center border-start'>status</div>
+                        <div class='col-6 text-center border-start'>message</div>
+                    </div>
+                    <div class='row gx-2 width_large'>
+                        <div class='col-3'>{{clinvar_queue_entry[6]}}</div>
+                        <div class='col-3 text-center border-start'>{{clinvar_queue_entry[3]}}</div>
+                        <div class='col-6 text-center border-start'>{{clinvar_queue_entry[4]}}</div>
+                    </div>
+                ">
+                    {% set mrcc = variant.get_recent_consensus_classification() %}
+                    {% if mrcc is not none %}
+                        {% if mrcc.needs_clinvar_upload and status not in ['progress', 'processing', 'submitted', 'pending'] %}
+                            {{macros.draw_exclamation_mark("The consensus classification needs to be uploaded to ClinVar!")}}
+                        {% endif %}
+                    {% endif %}
+                    ClinVar {{ clinvar_queue_entry[3] }}
+                </span>
             {% endif %}
         </div>
 
         <!-- HerediCaRe upload status pill -->
         <div id="heredicare_status_pill_holder">
             {% if heredicare_queue_entries is none %}
-                <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="This variant was not yet submitted to HerediCaRe. (This does not mean that the variant is not known to HerediCaRe - it might though)">no HerediCaRe submission</span>
+                <span class="badge rounded-pill bg-secondary" tabindex="0" role="button" data-bs-toggle="popover" data-bs-placement="bottom" data-bs-custom-class="popover_fix_large"
+                data-bs-content="This variant was not submitted to HerediCaRe, yet. This however does not mean that the variant is unknown to HerediCaRe (it might be though).">no HerediCaRe submission</span>
             {% else %}
                 {% set pill_color = "bg-secondary" %}
-                {% if summary_status == "multiple stati" %}
+                {% if heredicare_queue_entry_summary["status"] == "multiple stati" %}
                     {% set pill_color = "bg-warning" %}
                 {% endif %}
-                {% if summary_status == "success" %}
+                {% if heredicare_queue_entry_summary["status"] == "success" %}
                     {% set pill_color = "bg-success" %}
                 {% endif %}
-                {% if summary_status == "error" or summary_status == "api_error" %}
+                {% if heredicare_queue_entry_summary["status"] == "error" or heredicare_queue_entry_summary["status"] == "api_error" %}
                     {% set pill_color = "bg-danger" %}
                 {% endif %}
 
-                <span class="badge rounded-pill {{pill_color}}" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="bottom" data-bs-custom-class="popover_fix_large" data-bs-html="true" 
+                <span class="badge rounded-pill {{pill_color}}" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="bottom" data-bs-custom-class="popover_fix_large"
                 data-bs-content="
                     <div class='row gx-2 border-bottom bg-light width_large'>
                         <div class='col-3'>HerediCare VID</div>
-                        <div class='col-2 text-center border-start'>status</div>
-                        <div class='col-7 text-center border-start'>message</div>
+                        <div class='col-3 text-center border-start'>status</div>
+                        <div class='col-6 text-center border-start'>message</div>
                     </div>
                     {% for heredicare_queue_entry in heredicare_queue_entries %}
                     <div class='row gx-2 width_large'>
                         <div class='col-3'>{{heredicare_queue_entry[5]}}</div>
-                        <div class='col-2 text-center border-start'>{{heredicare_queue_entry[1]}}</div>
-                        <div class='col-7 text-center border-start'>{{heredicare_queue_entry[4]}}</div>
+                        <div class='col-3 text-center border-start'>{{heredicare_queue_entry[1]}}</div>
+                        <div class='col-6 text-center border-start'>{{heredicare_queue_entry[4]}}</div>
                     </div>
                     {% endfor %}
                 ">
-                    HerediCaRe {{summary_status}}
+                    {% set mrcc = variant.get_recent_consensus_classification() %}
+                    {% if mrcc is not none %}
+                        {% if mrcc.needs_heredicare_upload %}
+                            {{macros.draw_exclamation_mark("The consensus classification needs to be uploaded to HerediCaRe!")}}
+                        {% endif %}
+                    {% endif %}
+                    HerediCaRe {{heredicare_queue_entry_summary["status"]}}
                 </span>
             {% endif %}
         </div>
-
     </div>
 
 
     <!-- options dropdown -->
     <div class="dropdown ssl">
-        <button class="btn btn-secondary" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+        <button class="btn btn-secondary padding_small" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
             {{ macros.draw_gear(tooltip = "") }}
         </button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
@@ -86,37 +113,20 @@
                 <button id="reannotate_button" type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#reannotate-modal" {% if variant.variant_type == 'sv' %}disabled{% endif %}>(Re-)Annotate</button>
             </li>
             <li>
-                <a type="button" class="dropdown-item" href="{{url_for('upload.submit_assay', variant_id = variant.id)}}" 
+                <a id="submit_assay_button" type="button" class="dropdown-item" href="{{url_for('upload.submit_assay', variant_id = variant.id)}}" 
                 data-bs-toggle="tooltip"  title="Submit an assay report & score for this variant.">
                     Submit assay
                 </a>
             </li>
             <li>
-                <a id="classify_button" type="button" class="dropdown-item" href="{{url_for('variant.classify', variant_id = variant.id)}}" 
+                <a id="publish_button" type="button" class="dropdown-item" href="{{url_for('variant.classify', variant_id = variant.id)}}" 
                 data-bs-toggle="tooltip"  title="Submit a new variant classification or edit your previous classification(s).">
                     Classify
                 </a>
             </li>
             <li>
-                {% set disabled = '' %}
-                {% set title = 'Submit the consensus classification of this variant to ClinVar.' %}
-                {% if variant.get_recent_consensus_classification() is none %}
-                    {% set disabled = 'disabled' %}
-                    {% set title = 'Create a consensus classification before submitting to ClinVar.' %}
-                {% endif %}
-                {% if 'submitted' == clinvar_submission['status'] or 'processing' == clinvar_submission['status'] %}
-                    {% set disabled = 'disabled' %}
-                    {% set title = 'Wait for the current ClinVar submission to finish before submitting another one.' %}
-                {% endif %}
-                <div data-bs-toggle="tooltip" title="{{ title }}"> <!-- idk why, but putting the tooltip on the button does not show it when the button is disabled -->
-                    <button data-href="{{url_for('upload.submit_clinvar', variant_id = variant.id)}}" type="button" class="dropdown-item" {% if disabled == 'disabled' %} disabled="disabled" {% endif %}>
-                        Submit to ClinVar
-                    </button>
-                </div>
-            </li>
-            <li>
-                <a id="publish_button" type="button" class="dropdown-item" href="{{url_for('upload.publish', variant_ids = variant.id)}}" 
-                data-bs-toggle="tooltip"  title="Publish this variant and selected data to ClinVar or HerediCaRe">
+                <a id="publish_button" type="button" class="dropdown-item" href="{{url_for('upload.publish', variant_ids = variant.id, next = url_for('variant.display', variant_id = variant.id))}}" 
+                data-bs-toggle="tooltip"  title="Publish this variant and selected data to external databases.">
                     Publish
                 </a>
             </li>

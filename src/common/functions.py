@@ -887,3 +887,12 @@ def none_to_empty_list(obj):
     if obj is None:
         return []
     return obj
+
+
+
+def percent_to_decimal(input) -> float:
+    if input is None:
+        return None
+    input = float(input)
+    input = input / 100
+    return input

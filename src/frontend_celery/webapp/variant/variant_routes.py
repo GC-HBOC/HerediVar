@@ -241,19 +241,23 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
-    clinvar_submission = check_update_clinvar_status(variant_id, conn)
-    heredicare_queue_entries, summary_status = check_update_heredicare_status(variant_id, conn)
-
+    clinvar_queue_entry = check_update_clinvar_status(variant_id, conn)
+    heredicare_queue_entries = check_update_heredicare_status(variant_id, conn)
+    heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(variant_id, heredicare_queue_entries, conn)
+    
+    print(clinvar_queue_entry)
     print(heredicare_queue_entries)
+    print(heredicare_queue_entry_summary)
 
     return render_template('variant/variant.html',
-                            clinvar_submission = clinvar_submission,
+                            clinvar_queue_entry = clinvar_queue_entry,
                             has_multiple_vids=has_multiple_vids,
                             lists = lists,
                             variant = variant,
                             is_classification_report = False,
                             heredicare_queue_entries = heredicare_queue_entries,
-                            summary_status = summary_status
+                            heredicare_queue_entry_summary = heredicare_queue_entry_summary
+                            
                         )
 
 

@@ -287,7 +287,7 @@ class automatic_classification_job(Job):
                 minigene = assay.metadata.get("minigene", "") == "True"
                 patient_rna = assay.metadata.get("patient_rna", "") == "True"
                 allelic = assay.metadata.get("allele_specific", "False")
-                quantification = assay.metadata.get("minimal_percentage", None)
+                quantification = str(functions.percent_to_decimal(assay.metadata.get("minimal_percentage", None)))
                 all_splicing_assays.append({"minigene": minigene,
                                             "patient_rna": patient_rna,
                                             "allelic": allelic,

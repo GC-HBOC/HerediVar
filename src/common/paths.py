@@ -101,7 +101,7 @@ if webapp_env == 'dev':
     igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
 
     # clinvar submission
-    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_18_10_23.json")
+    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_15_05_24.json")
 
 
 elif webapp_env == 'localtest':

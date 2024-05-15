@@ -23,6 +23,7 @@
             <a class="nav-link ms-3 my-1" href="#item-1-3">Variant details page</a>
             <a class="nav-link ms-3 my-1" href="#item-1-4">Classify a variant</a>
             <a class="nav-link ms-3 my-1" href="#item-1-5">Automatic classification algorithm: HerediClassify</a>
+            <a class="nav-link ms-3 my-1" href="#item-1-6">Publish variants</a>
           </nav>
           <a class="nav-link" href="#item-2">User variant lists</a>
           <a class="nav-link" href="#item-svs">Structural variants</a>
@@ -330,6 +331,29 @@
             As you can see, these implement simple set operations. The website will ask some more questions about how to do each of the operations. For example, some operations allow you to do it either inplace or or not in place.
             When you choose inplace it will take the result of the operation and write it to the currently selected list. When this is not selected it will create a new list (asking you to 
             choose a new name and access rights).
+          </p>
+        </div>
+
+        <div id="item-1-6">
+          <h4>Publish variants</h4>
+          <p>
+            A superuser can upload or publish variants and their annotations or classifications to external databases. Currently, HerediVar offers to upload to ClinVar and HerediCaRe.
+            To publish one or multiple variants the user has to navigate to one of the following pages:
+            <ul>
+              <li>The variant details page: for single variant uploads</li>
+              <li>The user variant lists page: uploads all variants in that user defined variant list</li>
+              <li>The admin dashboard: automatically select all variants which got an update to their consensus classification since the last upload</li>
+            </ul>
+            The publish variants page presents a list of all variants which are about to be submitted. Simply check the database(s) below that list and fill out the required information. After the form is submitted
+            your request will be processed in the background. You can get status information about each submission from the respective variant details page. <br>
+            There is an automatic upload algorithm running in the background which will regularily (at least once a month) check for updated consensus classifications and upload them to HerediCaRe. <br>
+            <br>
+            Caveat: <br>
+              It is possible to submit the same data multiple times. Though, HerediVar will skip the upload request and show a red triangle within the respective status pill on the variant details page.
+              Consider this case: A user made a fresh consensus classification and submitted that to HerediCaRe. Right after he notices that the consensus classification needs adjustments. So he 
+              creates another consensus classification and submits that as well. In this case the updated consensus classification WILL NOT BE SUBMITTED, but skipped and the red triangle will show up. <br>
+              This however will be resolved once a user resubmits the consensus classification after the previous one is finished or once the automatic upload algorithm catches the updated consensus classification.
+              So whenever this happens consensus classifications take more time to fully update in the third party database.
           </p>
         </div>
         

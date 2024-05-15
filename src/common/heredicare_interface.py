@@ -344,6 +344,7 @@ class Heredicare(metaclass=Singleton):
         else: # success
             resp = resp.json(strict=False)
             items = resp["items"]
+            print(items)
             
             if len(items) == 0: # submission id was generated but no data was posted yet
                 status = "pending"

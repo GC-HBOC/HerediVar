@@ -68,17 +68,30 @@
 
         <div id="list-content" class="sst bsl overflow_x_auto">
             {% if request.args.get('view') is not none %}
-                <div class="d-flex">
-                    <a id="duplicate_list_button" type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="duplicate" data-bs-id="{{ request.args.get('view') }}" >
+                <div class="ssb d-flex margin_between_list_very_small">
+                    <div class="dropdown">
+                        <button class="btn btn-secondary padding_small" type="button" id="options_dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            {{ macros.draw_gear(tooltip = "options") }}
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="options_dropdown">
+                            <li>
+                                <a href="{{ url_for('download.variant_list', list_id=request.args.get('view')) }}" class="dropdown-item">Export list to VCF</a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('upload.publish', variant_ids = variant_ids, next = url_for('user.my_lists', view = request.args.get('view'))) }}" class="dropdown-item">Publish</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <a id="duplicate_list_button" type="button" class="btn btn-sm btn-secondary padding_small" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="duplicate" data-bs-id="{{ request.args.get('view') }}" >
                         {{ macros.draw_duplicate_symbol("Duplicate this list") }}
                     </a>
-                    <a id="intersect_list_button" type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="intersect" data-bs-id="{{ request.args.get('view') }}">
+                    <a id="intersect_list_button" type="button" class="btn btn-sm btn-secondary padding_small" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="intersect" data-bs-id="{{ request.args.get('view') }}">
                         {{ macros.draw_intersect_symbol("Intersect this list with another list") }}
                     </a>
-                    <a id="subtract_list_button" type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="subtract" data-bs-id="{{ request.args.get('view') }}">
+                    <a id="subtract_list_button" type="button" class="btn btn-sm btn-secondary padding_small" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="subtract" data-bs-id="{{ request.args.get('view') }}">
                         {{ macros.draw_subtract_symbol("Subtract variants from another list from this list") }}
                     </a>
-                    <a id="add_list_button" type="button" class="btn btn-sm btn-secondary vssr" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="add" data-bs-id="{{ request.args.get('view') }}">
+                    <a id="add_list_button" type="button" class="btn btn-sm btn-secondary padding_small" data-bs-toggle="modal" data-bs-target="#createModal" data-bs-type="add" data-bs-id="{{ request.args.get('view') }}">
                         {{ macros.draw_add_symbol("Add variants from another list to this list") }}
                     </a>
                     {% if list_import_status is not none %}
@@ -110,13 +123,6 @@
                     Please select a list to view its content!
                 </div>
             {% endif %}
-            
-
-            {% if request.args.get('view') is not none and variants|length > 0 %}
-            <div class="d-flex justify-content-end bsb">
-                <button data-href="{{ url_for('download.variant_list', list_id=request.args.get('view')) }}" class="btn btn-primary">Export list to VCF</button>
-            </div>
-            {% endif %}
         </div>
 
 
@@ -135,7 +141,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="list-modal-form" action="/mylists?type=create"  method="post">
+                <form id="list-modal-form" action="/mylists?type=create" method="post">
                     <div class="form-group" id="inplace_obj">
                         <input class="form-check-input" type="checkbox" id="inplace" name="inplace">
                         <label class="form-check-label" for="inplace">inplace</label>
