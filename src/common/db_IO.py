@@ -151,7 +151,7 @@ class Connection:
         else:
             return pfam_description[0], pfam_description[1]
 
-    def insert_variant_consequence(self, variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, symbol, consequence_source, pfam_acc):
+    def insert_variant_consequence(self, variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, symbol, consequence_source, pfam_acc = ''):
         columns_with_info = "variant_id, transcript_name, consequence, impact, source"
         actual_information = (variant_id, transcript_name, consequence, impact, consequence_source)
         if pfam_acc != '':
@@ -199,12 +199,13 @@ class Connection:
         self.cursor.execute(command, actual_information)
         self.conn.commit()
 
-    def delete_variant_consequences(self, variant_id, is_refseq = False):
-        command = "DELETE FROM variant_consequence WHERE variant_id = %s AND source = %s"
-        source = 'ensembl'
-        if is_refseq:
-            source = 'refseq'
-        self.cursor.execute(command, (variant_id, source))
+    def delete_variant_consequences(self, variant_id, source = None):
+        command = "DELETE FROM variant_consequence WHERE variant_id = %s"
+        actual_information = (variant_id, )
+        if source is not None:
+            command += " AND source = %s"
+            actual_information += (source, )
+        self.cursor.execute(command, actual_information)
         self.conn.commit()
 
 

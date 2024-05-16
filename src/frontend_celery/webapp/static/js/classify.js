@@ -1446,7 +1446,7 @@ function update_criterium_button_label(criterium_id) {
 }
 
 function update_mutual_criteria(criterium_id) {
-    console.log("update_mutual_criteria triggered by: " + criterium_id)
+    //console.log("update_mutual_criteria triggered by: " + criterium_id)
     is_selected = document.getElementById(criterium_id + '_state').value == 'selected'
     // mutually exclusive criteria
     const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']

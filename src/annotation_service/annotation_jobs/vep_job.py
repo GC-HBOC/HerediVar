@@ -59,7 +59,10 @@ class vep_job(Job):
             return status_code, err_msg
 
         if self.job_config['insert_consequence']:
-            conn.delete_variant_consequences(variant_id, is_refseq = self.refseq)
+            source = "ensembl"
+            if self.refseq:
+                source = "refseq"
+            conn.delete_variant_consequences(variant_id, source = source)
 
         vep_entries = csq_info.split(',')
         transcript_independent_saved = False

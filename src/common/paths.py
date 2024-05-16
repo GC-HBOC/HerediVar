@@ -49,7 +49,8 @@ if webapp_env == 'dev':
     ref_genome_path = joinpaths(ref_genome_dir, "GRCh38.fa")
     ref_genome_path_grch37 = joinpaths(ref_genome_dir, "GRCh37.fa")
     chainfile_path = joinpaths(ref_genome_dir, "hg19ToHg38.fixed.over.chain.gz")
-    transcripts_gff_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.110.gff3")
+    ensembl_transcript_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.110.gff3")
+    refseq_transcript_path = joinpaths(datadir, "RefSeq/refseq_transcripts_110.gff")
     
     #metadata
     gnomad_path = joinpaths(datadir, "gnomAD/gnomAD_genome_GRCh38.vcf.gz")
@@ -81,12 +82,10 @@ if webapp_env == 'dev':
 
     # data for init_db
     hgnc_path = joinpaths(datadir, "HGNC/hgnc_complete_set.tsv")
-    ensembl_transcript_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.110.gff3")
     MANE_path = joinpaths(datadir, "MANE/MANE.GRCh38.v1.3.ensembl_genomic.gff")
     ensembl_canonical_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.105.canonical.tsv")
     pfam_id_mapping_path = joinpaths(datadir, "PFAM/pfam_id_mapping.tsv")
     pfam_legacy_path = joinpaths(datadir, "PFAM/pfam_legacy.tsv")
-    refseq_transcript_path = joinpaths(datadir, "RefSeq/refseq_transcripts_110.gff.gz")
     omim_path = joinpaths(datadir, "OMIM/mim2gene.txt")
     orphanet_path = joinpaths(datadir, "OrphaNet/en_product6.xml")
     task_force_protein_domains_path = joinpaths(datadir, "task-force_protein_domains/domains_task_force_27_11_2023.tsv")
@@ -95,7 +94,6 @@ if webapp_env == 'dev':
     # further data
     parsing_refseq_ensembl = joinpaths(datadir, "mapping_tables/hg38_ensembl_transcript_matches.tsv")
     gene_to_ensembl_transcript_path = joinpaths(datadir, "mapping_tables/gene_to_ensembl_transcript.tsv")
-
 
     # IGV data
     igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
@@ -251,8 +249,8 @@ elif webapp_env == 'prod':
     ref_genome_path = joinpaths(ref_genome_dir, "GRCh38.fa")
     ref_genome_path_grch37 = joinpaths(ref_genome_dir, "GRCh37.fa")
     chainfile_path = joinpaths(ref_genome_dir, "hg19ToHg38.fixed.over.chain.gz")
-
     ensembl_transcript_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.110.gff3")
+    refseq_transcript_path = joinpaths(datadir, "RefSeq/refseq_transcripts_110.gff.gz")
 
     
     #metadata

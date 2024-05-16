@@ -265,6 +265,52 @@ def get_possible_classes_enigma_pten(class_counts):
 
 
 
+def get_possible_classes_enigma_pten_310(class_counts):
+    
+    possible_classes = set()
+
+    # pathogenic
+    if class_counts['pvs'] >= 2:
+        possible_classes.add(5)
+    if class_counts['pvs'] == 1:
+        if class_counts['ps'] >= 1 or class_counts['pm'] >= 2 or (class_counts['pm'] == 1 and class_counts['pp'] == 1) or class_counts['pp'] >= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] >= 2: 
+        possible_classes.add(5)
+    if class_counts['ps'] == 1:
+        if class_counts['pm'] >= 3 or (class_counts['pm'] == 2 and class_counts['pp'] >= 2) or (class_counts['pm'] == 1 and class_counts['pp'] >= 4):
+            possible_classes.add(5)
+    
+    # likely pathogenic
+    if class_counts['pvs'] == 1:
+        if class_counts['pm'] == 1 or class_counts['pp'] == 1:
+            possible_classes.add(4)
+    if class_counts['ps'] == 1:
+        if class_counts['pm'] == 1 or class_counts['pm'] == 2 or class_counts['pp'] >= 2:
+            possible_classes.add(4)
+    if class_counts['pm'] >= 3:
+        possible_classes.add(4)
+    if class_counts['pm'] == 2 and class_counts['pp'] >= 2:
+        possible_classes.add(4)
+    if class_counts['pm'] == 1 and class_counts['pp'] >= 4:
+        possible_classes.add(4)
+
+    # benign
+    if class_counts['ba'] >= 1:
+        possible_classes.add(1)
+    if class_counts['bs'] >=2:
+        possible_classes.add(1)
+    
+    # likely benign
+    if class_counts['bs'] == 1:
+        possible_classes.add(2)
+    if class_counts['bp'] >= 2:
+        possible_classes.add(2)
+
+    return possible_classes
+
+
+
 def get_possible_classes_enigma_atm(class_counts):
     
     possible_classes = set()

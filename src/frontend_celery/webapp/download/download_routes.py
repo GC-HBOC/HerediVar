@@ -232,6 +232,8 @@ def calculate_class(scheme_type = None, version = None, selected_classes = ''):
             possible_classes = download_functions.get_possible_classes_enigma_atm(class_counts) # get a set of possible classes depending on selected criteria
         elif 'pten' in scheme_type and version == "v3.0.0":
             possible_classes = download_functions.get_possible_classes_enigma_pten(class_counts) # get a set of possible classes depending on selected criteria
+        elif 'pten' in scheme_type and version == "v3.1.0":
+            possible_classes = download_functions.get_possible_classes_enigma_pten_310(class_counts) # get a set of possible classes depending on selected criteria
         else:
             raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme and version? (either "acmg" or VUS "task-force" based)')
 

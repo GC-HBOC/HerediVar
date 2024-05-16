@@ -19,43 +19,43 @@ import os
 def get_default_job_config():
     job_config = {
         # heredicare annotations
-        'do_heredicare': False,
+        'do_heredicare': True,
 
         # external programs
-        'do_phylop': False,
-        'do_spliceai': False,
-        'do_hexplorer': False,
-        'do_maxentscan': False,
+        'do_phylop': True,
+        'do_spliceai': True,
+        'do_hexplorer': True,
+        'do_maxentscan': True,
 
         # consequences
-        'do_consequence': True,
-        'do_vep': False,
-        'insert_consequence': False, # remove later
-        'insert_literature': False,
+        'do_consequence': False,
+        'do_vep': True,
+        'insert_consequence': True, # remove later
+        'insert_literature': True,
 
         #vcf annotate from vcf
-        'do_dbsnp': False,
-        'do_revel': False,
-        'do_cadd': False,
-        'do_clinvar': False,
-        'do_gnomad': False,
-        'do_brca_exchange': False,
-        'do_flossies': False,
-        'do_cancerhotspots': False,
+        'do_dbsnp': True,
+        'do_revel': True,
+        'do_cadd': True,
+        'do_clinvar': True,
+        'do_gnomad': True,
+        'do_brca_exchange': True,
+        'do_flossies': True,
+        'do_cancerhotspots': True,
         
-        'do_tp53_database': False,
-        'do_priors': False,
-        'do_bayesdel': False,
-        'do_cosmic': False,
+        'do_tp53_database': True,
+        'do_priors': True,
+        'do_bayesdel': True,
+        'do_cosmic': True,
 
         # assays
-        'do_cspec_brca_assays': False,
+        'do_cspec_brca_assays': True,
 
         # additional annotations
-        'do_taskforce_domains': False,
-        'do_coldspots': False,
-        'do_litvar': False,
-        'do_auto_class': False
+        'do_taskforce_domains': True,
+        'do_coldspots': True,
+        'do_litvar': True,
+        'do_auto_class': True
 
         # outdated
         #'do_arup': True,
@@ -137,7 +137,7 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
             status = "error"
             return status, "error: annotation queue entry not found"
         variant_id = annotation_queue_entry[1]
-        user_id = annotation_queue_entry[2]
+        #user_id = annotation_queue_entry[2]
 
         err_msgs = ""
         one_variant = conn.get_one_variant(variant_id) # 0id,1chr,2pos,3ref,4alt
@@ -183,7 +183,6 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         for line in file:
             line = line.strip()
             if line.startswith('#') or line == '':
-                print(line)
                 continue
             
             info = line.split('\t')[7]

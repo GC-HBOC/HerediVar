@@ -34,8 +34,12 @@ class consequence_job(Job):
         err_msg = ""
         status_code = 0
 
-        #if self.job_config['do_consequence']:
-        #    conn.delete_variant_consequences(variant_id, is_refseq = self.refseq)
+        info_field_prefix = "CSQ_"
+        sources = ['ensembl', 'refseq']
+
+        if self.job_config['do_consequence']:
+            print(info)
+            conn.delete_variant_consequences(variant_id)
 
         #FORMAT: Allele|Consequence|IMPACT|SYMBOL|HGNC_ID|Feature|Feature_type|EXON|INTRON|HGVSc|HGVSp
         # CSQ=
@@ -46,39 +50,58 @@ class consequence_job(Job):
         # T|non_coding_transcript_exon_variant|MODIFIER|CDH1|HGNC:1748|ENST00000562836.5|Transcript|11/15||n.1967C>T|,
         # T|upstream_gene_variant|MODIFIER|FTLP14|HGNC:37964|ENST00000562087.2|Transcript||||,
         # T|upstream_gene_variant|MODIFIER|CDH1|HGNC:1748|ENST00000562118.1|Transcript||||
-
-        for info_field in ["CSQ_ensembl"]:
+        for source in sources:
+            info_field = info_field_prefix + source
             csq_info = functions.find_between(info, info_field, '(;|$)')
+            if csq_info is None:
+                continue
             csq_entries = csq_info.split(',')
             for csq_entry in csq_entries:
                 parts = csq_entry.strip().split('|')
                 feature_type = parts[6]
                 if feature_type.lower() != "transcript":
                     continue
-                consequence = parts[1]
+                consequence = parts[1].replace('_', ' ').replace('&', ' & ')
                 impact = parts[2]
                 gene_symbol = parts[3]
-                hgnc_id = parts[4]
+                hgnc_id = parts[4].strip('HGNC:')
                 transcript_name = parts[5]
                 if '.' in transcript_name:
                     transcript_name = transcript_name[:transcript_name.find('.')] # remove transcript version if it is present
-                
-                exon_nr = parts[7][:parts[7].find('/')] # take only number from number/total
-                intron_nr = parts[8][:parts[8].find('/')] # take only number from number/total
+                exon_nr = parts[7]
+                if '/' in exon_nr:
+                    exon_nr = exon_nr[:exon_nr.find('/')] # take only number from number/total
+                intron_nr = parts[8][:parts[8].find('/')] 
+                if '/' in intron_nr:
+                    intron_nr = intron_nr[:intron_nr.find('/')] # take only number from number/total
                 hgvs_c = urllib.parse.unquote(parts[9])
                 hgvs_p = urllib.parse.unquote(parts[10])
 
-
-        
-        print(info)
+                #variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, symbol, consequence_source, pfam_acc
+                #print([variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, gene_symbol, source])
+                conn.insert_variant_consequence(variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, gene_symbol, source)
 
         return status_code, err_msg
 
 
     def annotate_consequence(self, input_vcf, output_vcf):
+        tmp_vcf = output_vcf + ".tmp"
+
+        # annotate ensembl consequences
         command = [os.path.join(paths.ngs_bits_path, "VcfAnnotateConsequence")]
-        command.extend([ "-gff", paths.transcripts_gff_path, "-ref", paths.ref_genome_path, "-all",  "-tag", "CSQ_ensembl", "-in", input_vcf, "-out", output_vcf])
-        returncode, err_msg, vcf_errors = functions.execute_command(command, 'VcfAnnotateConsequence')
+        command.extend([ "-gff", paths.ensembl_transcript_path, "-ref", paths.ref_genome_path, "-all",  "-tag", "CSQ_ensembl", "-in", input_vcf, "-out", tmp_vcf])
+        returncode, err_msg, vcf_errors = functions.execute_command(command, 'VcfAnnotateConsequenceEnsembl')
+
+        if returncode != 0:
+            functions.rm(tmp_vcf)
+            return returncode, err_msg, vcf_errors
+        
+        # annotate refseq consequences
+        command = [os.path.join(paths.ngs_bits_path, "VcfAnnotateConsequence")]
+        command.extend([ "-gff", paths.refseq_transcript_path, "-ref", paths.ref_genome_path, "-all",  "-tag", "CSQ_refseq", "-in", tmp_vcf, "-out", output_vcf])
+        returncode, err_msg, vcf_errors = functions.execute_command(command, 'VcfAnnotateConsequenceRefSeq')
+
+        functions.rm(tmp_vcf)
         return returncode, err_msg, vcf_errors
 
 
