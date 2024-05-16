@@ -1,15 +1,15 @@
 {
     "name": "enigma-pten",
-    "version": "v3.0.0",
-    "display_name": "ClinGen ACMG PTEN v3.0.0",
+    "version": "v3.1.0",
+    "display_name": "ClinGen ACMG PTEN v3.1.0",
     "type": "acmg-enigma-pten",
-    "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/luinmvak/clingen_pten_v3.0.0.pdf/?format=attachment",
-    "aliases": [],
+    "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/fbuzfo97/clingen_pten_v3.1.0.pdf/?format=attachment",
+    "aliases": ["ACMG PTEN"],
     "criteria": [
         {
             "name": "PVS1",
             "description": [
-                "ACMG Summary:",
+                "Original ACMG Summary",
                 "Null variant (nonsense, frameshift, canonical +/-1 or 2 splice sites, initiation codon, single or multi-exon deletion) in a gene where loss of function (LOF) is a known mechanism of disease.",
                 "Caveats:",
                 " - Beware of genes where LOF is not a known disease mechanism (e.g. GFAP, MYH7).",
@@ -19,6 +19,7 @@
                 "",
                 "Gene-specific modifications:",
                 "Use PTEN PVS1 decision tree.",
+                "",
                 "Instructions:",
                 "PTEN EP Specification: Follow SVI guidance, using PTEN-specific information. Per the PVS1 workflow guidance provided in Tayoun et al. 2018 (PMID 30192042), the following will apply:",
                 "",
@@ -35,6 +36,7 @@
                 "   5. Initiation codon: PVS1 applies to initiation codon variants.",
                 "",
                 "PTEN EP Commentary: No known alternative start codon in other transcripts. There are sufficient patients' data from literature and labs support the pathogenicity of initiation codon variants."
+                
             ],
             "is_selectable": "1",
             "relevant_info": "",
@@ -59,23 +61,25 @@
                 }
             ],
             "mutually_exclusive_criteria": [
-                
+                "PS1"
             ]
         },
 
         {
             "name": "PS1",
             "description": [
-                "ACMG Summary:",
+
+                "Original ACMG Summary",
                 "Same amino acid change as a previously established pathogenic variant regardless of nucleotide change.",
                 "Example: Val->Leu caused by either G>C or G>T in the same codon.",
                 "Caveat: Beware of changes that impact splicing rather than at the amino acid/protein level.",
                 "",
-                "Gene-specific modifications:",
+                "Strong",
                 "Same amino acid change as a previously established pathogenic variant regardless of nucleotide change OR different variant at same nucleotide position as a pathogenic splicing variant, where in silico models predict impact equal to or greater than the known pathogenic variant.",
-                "Modification Type: Disease-specific",
+                "",
                 "Instructions:",
                 "PTEN EP Specification: PS1 will be applied as described and expanded to include a different nucleotide substitution for an intronic splice site variant if the predicted impact is equal to or greater than the known pathogenic variant per in silico splicing tools.  Caution should be used when applying this criteria to exonic variants causing aberrant splicing."
+                
             ],
             "is_selectable": "1",
             "relevant_info": "",
@@ -99,17 +103,13 @@
                 "De novo (both maternity and paternity confirmed) in a patient with the disease and no family history.",
                 "Note: Confirmation of paternity only is insufficient. Egg donation, surrogate motherhood, errors in embryo transfer, etc. can contribute to non-maternity.",
                 "",
-                "Gene-specific modifications:",
-                "Very Strong:",
+                "Very Strong",
                 "Two proven OR four assumed OR one proven + two assumed de novo observations in a patient with the disease and no family history.",
-                "Modification Type: Strength",
+                "Instructions: Two or more occurrences of PS2 OR two or more occurrences of PM6 AND one occurrence of PS2.",
                 "",
-                "Strong:",
-                "De novo (both maternity and paternity confirmed) observation in a patient with the disease and no family history.",
-                "Modification Type: None",
-                "",
-                "Instructions:",
-                "PS2_Very Strong: Two or more occurrences of PS2 OR two or more occurrences of PM6 AND one occurrence of PS2."
+                "Strong",
+                "De novo (both maternity and paternity confirmed) observation in a patient with the disease and no family history."
+                
             ],
             "is_selectable": "1",
             "relevant_info": "",
@@ -134,34 +134,36 @@
         {
             "name": "PS3",
             "description": [
+
                 "Original ACMG Summary",
                 "Well-established in vitro or in vivo functional studies supportive of a damaging effect on the gene or gene product.",
                 "Note: Functional studies that have been validated and shown to be reproducible and robust in a clinical diagnostic laboratory setting are considered the most well-established.",
                 "",
-                "Gene-specific modifications:",
                 "Strong",
-                "Well-established in vitro or in vivo functional studies supportive of a damaging effect on the gene or gene product. -> RNA, mini-gene, or other assay shows impact on splicing",
+                "Well-established in vitro or in vivo functional studies supportive of a damaging effect on the gene or gene product.",
+                "    RNA, mini-gene, or other assay shows impact on splicing",
                 "",
                 "Moderate",
-                "Well-established in vitro or in vivo functional studies supportive of a damaging effect on the gene or gene product. -> Phosphatase activity ≤ -1.11 per Mighell et al. 2018, PMID: 29706350.",
+                "Well-established in vitro or in vivo functional studies supportive of a damaging effect on the gene or gene product.",
+                "    Phosphatase activity ≤ -1.11 per Mighell et al. 2018, PMID: 29706350.",
                 "",
                 "Supporting",
                 "Phosphatase activity <50% of wild-type or abnormal in vitro cellular assay or transgenic model with phenotype different from wild type that does not meet PS3_moderate.",
                 "",
-                "Instructions: PTEN EP Specification: ",
+                "Instructions:",
+                "PTEN EP Specification: ",
                 "PS3 may be applied to the following assays:",
                 "   - RNA, mini-gene, or other assay demonstrating an impact on splicing.",
-                "",
                 "PS3_Moderate: ",
                 "   - Mighell et al. 2018 (PMID: 29706350): Massively parallel functional assay interrogating phosphatase activity. ",
                 "       - In the supplementary material (Table S2) search for the variant in columns A or B and make sure the variant in question is listed as TRUE under column I (high confidence). If not, do not use as evidence.",
                 "       - Under column G, the cumulative score is listed. Apply PS3_moderate for all variants with scores < -1.11.",
-                "",
                 "PS3_Supporting: Other studies demonstrating lipid phosphatase activity <50% of wild-type or abnormal in vitro cellular assay or transgenic model with phenotype different from wild-type that does not meet PS3_moderate. Examples of in vitro cellular assays to be considered for PS3_supporting evidence may include:",
                 "   - In vitro assay demonstrating >50% reduction in phosphatase activity compared to wild type control. Phosphatase assays for which criteria may be applied must include a catalytic dead control, such as p.C124S, as well as at least three biological replicates: Myers et al. 1998 (PMID: 9811831), Stambolic et al. 1998 (PMID: 9778245), Han et al. 2000 (PMID: 10866302), Rodriguez-Escudero et al. 2011 (PMID: 21828076), Costa et al. 2015 (PMID: 26504226), Malek et al. 2017 (PMID: 29056325).",
                 "   - Decreased PTEN or increased pAKT expression: Tan 2011 (PMID: 21194675), Spinelli 2015 (PMID: 25527629).",
                 "   - Disruption of protein cellular localization: Lobo et al. 2009 (PMID: 19457929), He et al. 2012 (PMID: 22962422), Gil et al. 2015 (PMID: 25875300)",
                 "   - Aberrant cellular phenotypes, including defective cell migration, proliferation, and invasion: Costa et al. 2015 (PMID: 26504226), Malek et al. 2017 (PMID: 29056325)"
+                
             ],
             "is_selectable": "1",
             "relevant_info": "",
@@ -198,30 +200,29 @@
                 "Note 1: Relative risk (RR) or odds ratio (OR), as obtained from case-control studies, is >5.0 and the confidence interval around the estimate of RR or OR does not include 1.0. See manuscript for detailed guidance.",
                 "Note 2: In instances of very rare variants where case-control studies may not reach statistical significance, the prior observation of the variant in multiple unrelated patients with the same phenotype, and its absence in controls, may be used as moderate level of evidence.",
                 "",
-                "Gene-specific modifications:",
                 "Very Strong",
-                "Probands with specificity score >=16.",
+                "Probands with specificity score ≥16 (see text).",
                 "",
                 "Strong",
-                "Probands with specificity score 4-15.5 OR The prevalence of the variant in affected individuals is significantly increased compared with the prevalence in controls.",
+                "Probands with specificity score 4-15.5 (see text) OR The prevalence of the variant in affected individuals is significantly increased compared with the prevalence in controls.",
                 "",
                 "Moderate",
-                "Probands with specificity score of 2-3.5.",
+                "Probands with specificity score of 2-3.5 (see text).",
                 "",
                 "Supporting",
-                "Phenotype specific for disease with single genetic etiology. Proband(s) with specificity score of 1-1.5.",
+                "Phenotype specific for disease with single genetic etiology. Proband(s) with specificity score of 1-1.5 (see text).",
                 "",
                 "Instructions:",
                 "PTEN EP Commentary: This criterion is unlikely to be used in this manner for a condition as rare as PHTS. However, if sufficiently powered, a case-control study finding an odds ratio >2 for a PHTS component phenotype with p<0.05 and 95% confidence interval with lower limit >1.5, this criteria may be applied. However, this criterion may not be applied in combination with PP4.",
-                "   - Use 2: Patient's phenotype or family history is highly specific for a disease with a single genetic etiology.",
+                "    Use 2: Patient's phenotype or family history is highly specific for a disease with a single genetic etiology.",
                 "PTEN EP Specifications: This criterion may not be applied if BS1 applies.  Phenotype specificity scores are added across independent probands and calculated as follows:",
-                "",
                 "Adults: ",
-                "   - 1 point per proband with Cleveland Clinic (CC) score >30 (Tan 2011)",
-                "   - 0.5 points per proband with CC score of 25-29.",
+                "    1 point per proband with Cleveland Clinic (CC) score >30 (Tan 2011)",
+                "    0.5 points per proband with CC score of 25-29.",
+                "",
                 "Children:",
-                "   - 1 point per proband with pediatric phenotype score >5 (please see supplementary information in manuscript for scoring rubric).",
-                "   - 0.5 points per proband with pediatric phenotype score of 4, but autism/developmental delay/intellectual disability may not contribute to the score."
+                "    1 point per proband with pediatric phenotype score >5 (please see supplementary information in manuscript for scoring rubric).",
+                "    0.5 points per proband with pediatric phenotype score of 4, but autism/developmental delay/intellectual disability may not contribute to the score."
                 
             ],
             "is_selectable": "1",
@@ -230,13 +231,13 @@
                 {
                     "name": "pvs",
                     "display_name":"vstr",
-                    "description": "very strong pathogenic",
+                    "description": "pathogenic very strong",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
                     "display_name":"str",
-                    "description": "strong pathogenic",
+                    "description": "pathogenic strong",
                     "is_default": "1"
                 },
                 {
@@ -264,7 +265,7 @@
                 "Original ACMG Summary",
                 "Located in a mutational hot spot and/or critical and well-established functional domain (e.g. active site of an enzyme) without benign variation.",
                 "",
-                "Gene-specific modifications:",
+                "Moderate",
                 "Located in a mutational hot spot and/or critical and well-established functional domain. Defined to include residues in catalytic motifs: 90-94, 123-130, 166-168 (NP_ 000305.3)",
                 "",
                 "Instructions:",
@@ -293,12 +294,13 @@
                 "Absent from controls (or at extremely low frequency if recessive) in Exome Sequencing Project, 1000 Genomes or Exome Aggregation Consortium.",
                 "Caveat: Population data for indels may be poorly called by next generation sequencing.",
                 "",
-                "Gene-specific modifications:",
-                "Absent in population: Databases present at <0.00001 (0.001%) allele frequency in gnomAD or another large sequenced population.  If multiple alleles are present within any subpopulation, allele frequency in that subpopulation must be <0.00002 (0.002%).",
+                "Supporting",
+                "Absent in population",
+                "    Databases present at <0.00001 (0.001%) allele frequency in gnomAD or another large sequenced population.  If multiple alleles are present within any subpopulation, allele frequency in that subpopulation must be <0.00002 (0.002%).",
                 "",
                 "Instructions:",
-                "Please see supplementary information in manuscript supporting application of PM2 for ultra-rare alleles."
-                
+                "PTEN EP Specification: Criteria may be applied if a variant is present at <0.00001 (0.001%) allele frequency in gnomAD or another large sequenced population. If multiple alleles are present within a subpopulation, allele frequency in that subpopulation must be <0.00002 (0.002%).  Please see supplementary information in manuscript supporting application of PM2 for ultra-rare alleles."
+
             ],
             "is_selectable": "1",
             "relevant_info": "",
@@ -346,12 +348,12 @@
                 "Original ACMG Summary",
                 "Protein length changes due to in-frame deletions/insertions in a non-repeat region or stop-loss variants.",
                 "",
-                "Gene-specific modifications:",
+                "Moderate",
                 "Protein length changes due to in-frame deletions/insertions in a non-repeat region or stop-loss variants. Applies to in-frame insertions or deletions impacting at least one residue in a catalytic motif (see PM1), and variants causing protein extension.",
                 "",
                 "Instructions:",
                 "PTEN EP Specification: For in-frame insertions or deletions, criteria may apply only if the variant impacts at least one residue in one of the catalytic motifs specified in the PM1 criteria. Criteria will also apply for variants resulting in protein extension."
-                
+
             ],
             "is_selectable": "1",
             "relevant_info": "",
@@ -376,14 +378,14 @@
                 "Example: Arg156His is pathogenic; now you observe Arg156Cys.",
                 "Caveat: Beware of changes that impact splicing rather than at the amino acid/protein level.",
                 "",
-                "Gene-specific modifications:",
+                "Moderate",
                 "Missense change at an amino acid residue where a different missense change determined to be pathogenic or likely pathogenic has been seen before. In addition, variant being interrogated must have BLOSUM62 score equal to or less than the known variant.",
                 "",
                 "Instructions:",
                 "PTEN EP Specifications:",
                 "   - This rule may be applied when the known variant is likely pathogenic unless applying would lead to a higher (pathogenic) classification for the variant being assessed.",
                 "   - The variant in question need not be novel but must have a BLOSUM62 (Henikoff 1992) score equal to or less than the known variant."
-                
+
             ],
             "is_selectable": "1",
             "relevant_info": "",
@@ -406,7 +408,6 @@
                 "Original ACMG Summary",
                 "Assumed de novo, but without confirmation of paternity and maternity.",
                 "",
-                "Gene-specific modifications:",
                 "Very Strong",
                 "Two proven OR four assumed OR one proven + two assumed de novo observations in a patient with the disease and no family history.",
                 "",
@@ -415,13 +416,8 @@
                 "   - May also be used for a proband with presumed de novo occurrence for an individual with a highly specific phenotype (meets criteria to count towards PS4)",
                 "",
                 "Moderate",
-                "Assumed de novo, but without confirmation of paternity and maternity, in proband with the disease and no family history.",
-                "",
-                "Instructions:",
-                "PM6_Very Strong: Four or more occurrences of PM6 OR two occurrences of PM6 AND one occurrence of PS2.",
-                "PM6_Strong: Two occurrences of PM6 OR occurrence of PM6 for an individual with a highly specific phenotype (meets criteria to count towards PS4).",
-                "   - Of note, when PM6_S is applied for a single individual with phenotype specificity, the individual will not be counted towards PS4 as well."
-                
+                "Assumed de novo, but without confirmation of paternity and maternity, in proband with the disease and no family history."
+
             ],
             "is_selectable": "1",
             "relevant_info": "",
@@ -429,13 +425,13 @@
                 {
                     "name": "pvs",
                     "display_name":"vstr",
-                    "description": "very strong pathogenic",
+                    "description": "pathogenic very strong",
                     "is_default": "0"
                 },
                 {
                     "name": "ps",
                     "display_name":"str",
-                    "description": "strong pathogenic",
+                    "description": "pathogenic strong",
                     "is_default": "0"
                 },
                 {
@@ -449,8 +445,6 @@
                 
             ]
         },
-
-
         {
             "name": "PP1",
             "description": [
@@ -459,7 +453,6 @@
                 "Co-segregation with disease in multiple affected family members in a gene definitively known to cause the disease.",
                 "Note: May be used as stronger evidence with increasing segregation data.",
                 "",
-                "Gene-specific modifications:",
                 "Strong",
                 "Co-segregation with disease in multiple affected family members, with ≥7 meioses observed across at least two families.",
                 "",
@@ -476,7 +469,7 @@
                 {
                     "name": "ps",
                     "display_name":"str",
-                    "description": "strong pathogenic",
+                    "description": "pathogenic strong",
                     "is_default": "0"
                 },
                 {
@@ -503,8 +496,9 @@
                 "Original ACMG Summary",
                 "Missense variant in a gene that has a low rate of benign missense variation and where missense variants are a common mechanism of disease.",
                 "",
-                "Gene-specific modifications: None"
-
+                "Supporting",
+                "Missense variant in a gene that has a low rate of benign missense variation and where missense variants are a common mechanism of disease."
+                
             ],
             "is_selectable": "1",
             "relevant_info": "",
@@ -528,7 +522,7 @@
                 "Multiple lines of computational evidence support a deleterious effect on the gene or gene product (conservation, evolutionary, splicing impact, etc.).",
                 "Caveat: As many in silico algorithms use the same or very similar input for their predictions, each algorithm should not be counted as an independent criterion. PP3 can be used only once in any evaluation of a variant.",
                 "",
-                "Gene-specific modifications:",
+                "Supporting",
                 "Multiple lines of computational evidence support a deleterious effect on the gene or gene product.",
                 "   - Splicing variants: Concordance of SpliceAl and VarSeak",
                 "   - Missense variants: REVEL score > 0.7",
@@ -557,7 +551,7 @@
             "description": [
 
                 "Original ACMG Summary",
-                "Patient's phenotype or family history is highly specific for a disease with a single genetic etiology.",
+                "Patient’s phenotype or family history is highly specific for a disease with a single genetic etiology.",
                 "Not Applicable",
                 "Comments: PTEN EP Commentary: Phenotype specificity has been incorporated into the rule specifications for PS4 Use 2."
 
@@ -600,8 +594,6 @@
                 
             ]
         },
-
-
         {
             "name": "BA1",
             "description": [
@@ -609,9 +601,9 @@
                 "Original ACMG Summary",
                 "Allele frequency is above 5% in Exome Sequencing Project, 1000 Genomes or Exome Aggregation Consortium.",
                 "",
-                "Gene-specific modifications:",
                 "Stand Alone",
-                "gnomAD Filtering allele frequency >0.00056 (0.056%)"
+                "gnomAD Filtering allele frequency >0.00056 (0.056%)",
+                "Please see information in BS1 section for data supporting this cutoff."
                 
             ],
             "is_selectable": "1",
@@ -628,7 +620,6 @@
                 
             ]
         },
-
         {
             "name": "BS1",
             "description": [
@@ -636,7 +627,6 @@
                 "Original ACMG Summary",
                 "Allele frequency is greater than expected for disorder.",
                 "",
-                "Gene-specific modifications:",
                 "Strong",
                 "gnomAD Filtering allele frequency from 0.000043 (0.0043%) up to 0.00056 (0.056%)",
                 "",
@@ -679,7 +669,6 @@
                 "Original ACMG Summary",
                 "Observed in a healthy adult individual for a recessive (homozygous), dominant (heterozygous), or X-linked (hemizygous) disorder, with full penetrance expected at an early age.",
                 "",
-                "Gene-specific modifications:",
                 "Strong",
                 "Observed in the homozygous state in a healthy or PHTS-unaffected individual. One observation if homozygous status confirmed, two if not confirmed. To be applied at supporting evidence level if BS1 is also applied.",
                 "",
@@ -688,7 +677,7 @@
                 "",
                 "Instructions:",
                 "PTEN EP Specifications: ",
-                "BS2: Variant must be observed in the homozygous state in a healthy or PHTS-unaffected individual.  Two independent observations are required if the homozygous status is not confirmed via parental testing.  If BS1 is also applied, this criteria will be applied at the supporting evidence level to avoid a variant reaching benign status solely based on homozygous occurrences due to high population frequency (BS1+BS2).",
+                "BS2: Variant must be observed in the homozygous state in a healthy or PHTS-unaffected individual. Two independent observations are required if the homozygous status is not confirmed via parental testing.  If BS1 is also applied, this criteria will be applied at the supporting evidence level to avoid a variant reaching benign status solely based on homozygous occurrences due to high population frequency (BS1+BS2).",
                 "BS2_Supporting: Two homozygous observations with no clinical data provided, or meets criteria for BS2 but BS1 is also applied."
                 
             ],
@@ -711,7 +700,7 @@
             "mutually_exclusive_criteria": [
                 
             ]
-        }, 
+        },
         {
             "name": "BS3",
             "description": [
@@ -719,7 +708,6 @@
                 "Original ACMG Summary",
                 "Well-established in vitro or in vivo functional studies show no damaging effect on protein function or splicing.",
                 "",
-                "Gene-specific modifications:",
                 "Strong",
                 "Well-established in vitro or in vivo functional studies shows no damaging effect on protein function. To be applied to intronic or synonymous variants, RNA, mini-gene or other splicing assay demonstrating no splicing impact.",
                 "",
@@ -742,7 +730,6 @@
                 "       - Aberrant cellular phenotypes, including defective cell migration, proliferation, and invasion: Costa et al. 2015 (PMID: 26504226)",
                 "       - Malek et al. 2017 (PMID: 29056325)."
                 
-                
             ],
             "is_selectable": "1",
             "relevant_info": "",
@@ -763,7 +750,7 @@
             "mutually_exclusive_criteria": [
                 
             ]
-        }, 
+        },
         {
             "name": "BS4",
             "description": [
@@ -772,17 +759,11 @@
                 "Lack of segregation in affected members of a family.",
                 "Caveat: The presence of phenocopies for common phenotypes (i.e. cancer, epilepsy) can mimic lack of segregation among affected individuals. Also, families may have more than one pathogenic variant contributing to an autosomal dominant disorder, further confounding an apparent lack of segregation.",
                 "",
-                "Gene-specific modifications:",
                 "Strong",
                 "Lack of segregation in affected members of two or more families.",
                 "",
                 "Supporting",
-                "Lack of segregation in affected members of one family.",
-                "",
-                "Instructions:",
-                "PTEN EP Specification:",
-                "BS4: Two or more families are require for strong evidence level.",
-                "BS4_Supporting: Lack of segregation in one family."
+                "Lack of segregation in affected members of one family."
                 
             ],
             "is_selectable": "1",
@@ -805,7 +786,6 @@
                 
             ]
         },
-
         {
             "name": "BP1",
             "description": [
@@ -836,17 +816,14 @@
             "name": "BP2",
             "description": [
 
-
                 "Original ACMG Summary",
                 "Observed in trans with a pathogenic variant for a fully penetrant dominant gene/disorder or observed in cis with a pathogenic variant in any inheritance pattern.",
                 "",
-                "Gene-specific modifications:",
                 "Supporting",
                 "Observed in trans with a pathogenic or likely pathogenic PTEN variant OR at least three observations in cis and/or phase unknown with different pathogenic/likely pathogenic PTEN variants.",
                 "",
                 "Instructions:",
                 "PTEN EP Specifications: The other variant may be either pathogenic or likely pathogenic. This rule may also be applied for at least three observations of the variant in cis or unknown phase with different pathogenic or likely pathogenic PTEN variants."
-                
                 
             ],
             "is_selectable": "1",
@@ -867,12 +844,11 @@
             "name": "BP3",
             "description": [
 
-
                 "Original ACMG Summary",
                 "In frame-deletions/insertions in a repetitive region without a known function.",
                 "Not Applicable",
                 "Comments: This rule is not applicable to PTEN."
-                
+
             ],
             "is_selectable": "0",
             "relevant_info": "",
@@ -892,21 +868,18 @@
             "name": "BP4",
             "description": [
 
-
                 "Original ACMG Summary",
                 "Multiple lines of computational evidence suggest no impact on gene or gene product (conservation, evolutionary, splicing impact, etc)",
                 "Caveat: As many in silico algorithms use the same or very similar input for their predictions, each algorithm cannot be counted as an independent criterion. BP4 can be used only once in any evaluation of a variant.",
                 "",
-                "Gene-specific modifications:",
                 "Supporting",
                 "Multiple lines of computational evidence suggest no impact on gene or gene product. ",
-                "   - Splicing variants: Concordance of SpliceAl and VarSeak",
-                "   - Missense variants: REVEL scores < 0.5",
+                "    Splicing variants: Concordance of SpliceAl and VarSeak",
+                "    Missense variants: REVEL scores < 0.5",
                 "",
                 "Instructions:",
-                "PTEN EP Specification: To be applied to synonymous or intronic variants where SpliceAl and VarSeak in silico models predict no splicing impact (SpliceAl: scores 0-0.49 are considered evidence of benign. VarSeak: Class 1 and 2 are considered evidence of benign). Not to be applied for variants which may impact the intron 1 splice donor or acceptor sites, and to be used cautiously for variants which may impact the intron 6 splice acceptor. May also be applied to missense variants with REVEL score < 0.5.",
+                "PTEN EP Specification: To be applied to synonymous or intronic variants where SpliceAl and VarSeak in silico models predict no splicing impact (SpliceAl: scores 0-0.2 are considered evidence of benign. VarSeak: Class 1 and 2 are considered evidence of benign). Not to be applied for variants which may impact the intron 1 splice donor or acceptor sites, and to be used cautiously for variants which may impact the intron 6 splice acceptor. May also be applied to missense variants with REVEL score < 0.5.",
                 "PTEN EP Commentary: Per Bayesian adaptation of the ACMG/AMP variant interpretation framework (Tavtigian et al., 2018), odds of pathogenicity (OddsPath) were estimated for various numbers of previously classified controls. When REVEL scores > 0.7 were used as evidence of pathogenic and < 0.5 were used as evidence of benign, the oddsPath was equated with moderate evidence strength for benign conditions. Given that the VCEP also applies PP2 for missense variants, we decided to downgrade the evidence strength to be used at a supporting level."
-                
                 
             ],
             "is_selectable": "1",
@@ -930,9 +903,8 @@
                 "Original ACMG Summary",
                 "Variant found in a case with an alternate molecular basis for disease.",
                 "",
-                "Gene-specific modifications:",
                 "Supporting",
-                "Variant found in a case with an alternate molecular basis for disease. Other gene/disorder must be considered highly penetrant AND patient's personal/family history must demonstrate no overlap between other gene and PTEN.",
+                "Variant found in a case with an alternate molecular basis for disease. Other gene/disorder must be considered highly penetrant AND patient’s personal/family history must demonstrate no overlap between other gene and PTEN.",
                 "",
                 "Instructions:",
                 "PTEN EP Specifications: At least two such cases are required for criteria to apply.  In addition, the other gene/disorder must be considered highly penetrant AND the patient's personal/family history must demonstrate no overlap between the other gene and PTEN."
@@ -959,7 +931,7 @@
                 "Original ACMG Summary",
                 "Reputable source recently reports variant as benign, but the evidence is not available to the laboratory to perform an independent evaluation.",
                 "Not Applicable",
-                "This criterion is not for use as recommended by the ClinGen Sequence Variant Interpretation VCEP Review Committee. "
+                "This criterion is not for use as recommended by the ClinGen Sequence Variant Interpretation VCEP Review Committee."
                 
             ],
             "is_selectable": "0",
@@ -983,12 +955,8 @@
                 "Original ACMG Summary",
                 "A synonymous variant for which splicing prediction algorithms predict no impact to the splice consensus sequence nor the creation of a new splice site AND the nucleotide is not highly conserved.",
                 "",
-                "Gene-specific modifications:",
                 "Supporting",
-                "A synonymous (silent) or intronic variant at or beyond +7/-21 for which splicing prediction algorithms predict no impact to the splice consensus sequence nor the creation of a new splice.",
-                "",
-                "Instructions:",
-                "PTEN EP Specification: Intronic variants must be positioned at or beyond +7/-21."
+                "A synonymous (silent) or intronic variant at or beyond +7/-21 for which splicing prediction algorithms predict no impact to the splice consensus sequence nor the creation of a new splice."   
                 
             ],
             "is_selectable": "1",

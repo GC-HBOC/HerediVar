@@ -17,11 +17,13 @@
             "strengths": [
                 {
                     "name": "pvs",
+                    "display_name":"vstr",
                     "description": "pathogenic very strong",
                     "is_default": "1"
                 },
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "pathogenic strong",
                     "is_default": "0"
                 }
@@ -41,6 +43,7 @@
             "strengths": [
                 {
                     "name": "ps",
+                    "display_name":"str",
                     "description": "pathogenic strong",
                     "is_default": "1"
                 }
