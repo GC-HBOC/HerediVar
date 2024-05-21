@@ -342,28 +342,28 @@ def assay_report(assay_id):
 ######### INOFFICIAL DOWNLOADS #########
 ########################################
 
-## listens on get parameter: variant_id
-#@download_blueprint.route('/download/annotation_errors')
-#@require_permission(['admin_resources'])
-#def annotation_errors():
-#    conn = get_connection()
-#
-#    download_file_name = "annotation_errors_" + functions.get_today() + ".tsv"
-#
-#    annotation_stati, errors, warnings, total_num_variants = conn.get_annotation_statistics(exclude_sv=True)
-#
-#    helper = io.StringIO()
-#    helper.write("#" + "\t".join(["chrom", "pos", "ref", "alt", "error_msg"]) + '\n')
-#    for variant_id in errors:
-#        variant = conn.get_variant(variant_id)
-#        new_line = "\t".join([variant.chrom, str(variant.pos), variant.ref, variant.alt, errors[variant_id]])
-#        helper.write(new_line + "\n")
-#    
-#    buffer = io.BytesIO()
-#    buffer.write(helper.getvalue().encode())
-#    buffer.seek(0)
-#    
-#    return send_file(buffer, as_attachment=True, download_name=download_file_name, mimetype="text")
+# listens on get parameter: variant_id
+@download_blueprint.route('/download/annotation_errors')
+@require_permission(['admin_resources'])
+def annotation_errors():
+    conn = get_connection()
+
+    download_file_name = "annotation_errors_" + functions.get_today() + ".tsv"
+
+    annotation_stati, errors, warnings, total_num_variants = conn.get_annotation_statistics(exclude_sv=True)
+
+    helper = io.StringIO()
+    helper.write("#" + "\t".join(["chrom", "pos", "ref", "alt", "error_msg"]) + '\n')
+    for variant_id in errors:
+        variant = conn.get_variant(variant_id)
+        new_line = "\t".join([variant.chrom, str(variant.pos), variant.ref, variant.alt, errors[variant_id]])
+        helper.write(new_line + "\n")
+    
+    buffer = io.BytesIO()
+    buffer.write(helper.getvalue().encode())
+    buffer.seek(0)
+    
+    return send_file(buffer, as_attachment=True, download_name=download_file_name, mimetype="text")
 
 
 

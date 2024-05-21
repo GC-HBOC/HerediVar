@@ -181,6 +181,7 @@ class AllAnnotations:
 
     task_force_protein_domain: Annotation = None
     task_force_protein_domain_source: Annotation = None
+    pfam_domains: TranscriptAnnotation = None
     coldspot: Annotation = None
 
     hexplorer: Annotation = None
@@ -651,16 +652,13 @@ class Consequence:
     exon: str
     intron: str
 
-    protein_domain_title: str
-    protein_domain_id: str
-
     def get_header(self):
-        header = {'variant_consequences': '##INFO=<ID=consequences,Number=.,Type=String,Description="An & separated list of variant consequences from vep. Format:Transcript|hgvsc|hgvsp,consequence|impact|exonnr|intronnr|genesymbol|proteindomain|isgencodebasic|ismaneselect|ismaneplusclinical|isensemblcanonical|transcript_biotype|transcript_length">\n'}
+        header = {'variant_consequences': '##INFO=<ID=consequences,Number=.,Type=String,Description="An & separated list of variant consequences from vep. Format:Transcript|hgvsc|hgvsp,consequence|impact|exonnr|intronnr|genesymbol|isgencodebasic|ismaneselect|ismaneplusclinical|isensemblcanonical|transcript_biotype|transcript_length">\n'}
         return header
 
     def to_vcf(self, prefix = True):
-        #Transcript|hgvsc|hgvsp,consequence|impact|exonnr|intronnr|genesymbol|proteindomain|isgencodebasic|ismaneselect|ismaneplusclinical|isensemblcanonical
-        items = [self.transcript.name, self.hgvs_c, self.hgvs_p, self.consequence, self.impact, self.exon, self.intron, self.transcript.gene.symbol, self.protein_domain_title, self.transcript.is_gencode_basic, self.transcript.is_mane_select, self.transcript.is_mane_plus_clinical, self.transcript.is_ensembl_canonical, self.transcript.biotype, self.transcript.length]
+        #Transcript|hgvsc|hgvsp,consequence|impact|exonnr|intronnr|genesymbol|isgencodebasic|ismaneselect|ismaneplusclinical|isensemblcanonical
+        items = [self.transcript.name, self.hgvs_c, self.hgvs_p, self.consequence, self.impact, self.exon, self.intron, self.transcript.gene.symbol, self.transcript.is_gencode_basic, self.transcript.is_mane_select, self.transcript.is_mane_plus_clinical, self.transcript.is_ensembl_canonical, self.transcript.biotype, self.transcript.length]
         items = [str(x) for x in items]
         info = '~7C'.join(items)
         if prefix:

@@ -96,16 +96,14 @@ $(document).ready(function()
     var variant_consequence_table_default_sorting_columns = ['#variant_consequence_numflags_col', '#variant_consequence_length_col', '#variant_consequence_gene_symbol_col']
     var table = document.getElementById("variantConsequenceTable");
     if (table != null) {
-        filterTable_one_column("ensembl", 10, table);
-        table_sorter(variant_consequence_table_default_sorting_columns, '#variantConsequenceTable') // sort first by num of flags, at tie by length and at tie by gene symbol
-    }
-    $('#consequence_ensembl_tab').click(function() {
         filter_consequence_table('ensembl', variant_consequence_table_default_sorting_columns)
-    });
-
-    $('#consequence_refseq_tab').click(function() {
-        filter_consequence_table('refseq', variant_consequence_table_default_sorting_columns)
-    })
+        $('#consequence_ensembl_tab').click(function() {
+            filter_consequence_table('ensembl', variant_consequence_table_default_sorting_columns)
+        });
+        $('#consequence_refseq_tab').click(function() {
+            filter_consequence_table('refseq', variant_consequence_table_default_sorting_columns)
+        });
+    }
 
     $(document).click(function (e) {
         close_popovers(e)
@@ -123,7 +121,7 @@ function close_popovers(e) {
 function filter_consequence_table(source, variant_consequence_table_default_sorting_columns) {
     const table = document.getElementById('variantConsequenceTable')
     const variant_consequence_table_ascending = ['true', 'true', "false"]
-    filterTable_one_column(source, 10, table)
+    filterTable_one_column(source, 9, table)
     const sort_columns = variant_consequence_table_default_sorting_columns
     for (var i = 0; i < sort_columns.length; i++) {
         $(sort_columns[i]).attr('asc', variant_consequence_table_ascending[i])

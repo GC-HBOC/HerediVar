@@ -11,12 +11,8 @@ from ..pubmed_parser import fetch
 
 
 class vep_job(Job):
-    def __init__(self, job_config, refseq=False):
-        if refseq:
-            self.job_name = "vep refseq"
-        else:
-            self.job_name = "vep ensembl"
-        self.refseq=refseq
+    def __init__(self, job_config):
+        self.job_name = "vep ensembl"
         self.job_config = job_config
         self.err_subber = re.compile(r"Smartmatch is experimental at /.*/VEP/AnnotationSource/File.pm line 472.") 
 
@@ -27,11 +23,7 @@ class vep_job(Job):
 
         self.print_executing()
         
-        if os.environ.get("WEBAPP_ENV") == "githubtest" or os.environ.get('WEBAPP_ENV') == 'localtest':
-            one_variant = kwargs['one_variant']
-            vep_code, vep_stderr, vep_stdout = self._fake_vep(one_variant[0], annotated_inpath)
-        else:
-            vep_code, vep_stderr, vep_stdout = self._annotate_vep(inpath, annotated_inpath)
+        vep_code, vep_stderr, vep_stdout = self._annotate_vep(inpath, annotated_inpath)
 
         ## stupid workaround for this specific vep smartmatch warning:
         vep_stderr = re.sub(self.err_subber, "", vep_stderr)
@@ -45,68 +37,35 @@ class vep_job(Job):
     def save_to_db(self, info, variant_id, conn: Connection):
         status_code = 0
         err_msg = ""
+
+        transcript_specific_annotation_type_ids = conn.get_recent_annotation_type_ids(only_transcript_specific = True)
+        pfam_annotation_id = transcript_specific_annotation_type_ids["pfam_domains"]
         
-        # save variant consequences from ensembl and refseq
-        # !!!! format of refseq and ensembl annotations from vep need to be equal: 0Feature,1HGVSc,2HGVSp,3Consequence,4IMPACT,5EXON,6INTRON,7HGNC_ID,8SYMBOL,9DOMAIN,...additional info
-        if self.refseq:
-            csq_info = functions.find_between(info, "CSQ_refseq=", '(;|$)')
-            consequence_source = "refseq"
-        else:
-            csq_info = functions.find_between(info, "CSQ=", '(;|$)')
-            consequence_source = "ensembl"
+        # !!!! format of annotations from vep need to be equal: 0Feature,1HGVSc,2HGVSp,3Consequence,4IMPACT,5EXON,6INTRON,7HGNC_ID,8SYMBOL,9DOMAIN,...additional info
+        csq_info = functions.find_between(info, "CSQ=", '(;|$)')
         
         if csq_info == '' or csq_info is None:
             return status_code, err_msg
-
-        if self.job_config['insert_consequence']:
-            source = "ensembl"
-            if self.refseq:
-                source = "refseq"
-            conn.delete_variant_consequences(variant_id, source = source)
 
         vep_entries = csq_info.split(',')
         transcript_independent_saved = False
         pmids = ''
         for vep_entry in vep_entries:
-            #10MaxEntScan_ref,11MaxEntScan_alt
             vep_entry = vep_entry.split('|')
-            exon_nr = vep_entry[5]
-            exon_nr = exon_nr[:exon_nr.find('/')] # take only number from number/total
-            intron_nr = vep_entry[6]
-            intron_nr = intron_nr[:intron_nr.find('/')] # take only number from number/total
-            hgvs_c = vep_entry[1]
-            hgvs_c = urllib.parse.unquote(hgvs_c[hgvs_c.find(':')+1:]) # remove transcript name
-            hgvs_p = vep_entry[2]
-            hgvs_p = urllib.parse.unquote(hgvs_p[hgvs_p.find(':')+1:]) # remove transcript name
             transcript_name = vep_entry[0]
             if '.' in transcript_name:
                 transcript_name = transcript_name[:transcript_name.find('.')] # remove transcript version if it is present
             domains = vep_entry[9]
-            pfam_acc = ''
-            if domains.count("Pfam:") >= 1:
-                pfam_acc = re.search(r'Pfam:(PF\d+)(?:\s+|$|\&|\|)', domains).group(1) # grab only pfam accession id from all protein domains which were returned
-                if domains.count("Pfam:") > 1:
-                    err_msg += "WARNING: there were multiple PFAM domain ids in: " + str(domains) + ". defaulting to the first one."
-                    #print("WARNING: there were multiple PFAM domain ids in: " + str(domains) + ". defaulting to the first one.")
-            if self.job_config['insert_consequence']:
-                conn.insert_variant_consequence(variant_id, 
-                                                transcript_name, 
-                                                hgvs_c, 
-                                                hgvs_p, 
-                                                vep_entry[3].replace('_', ' ').replace('&', ' & '), 
-                                                vep_entry[4], 
-                                                exon_nr, 
-                                                intron_nr, 
-                                                vep_entry[7],
-                                                vep_entry[8],
-                                                consequence_source,
-                                                pfam_acc)
+            if domains.find('Pfam:') >= 0:
+                pfam_acc = ','.join(re.findall(r'Pfam:(PF\d+)(?:\s+|$|\&|\|)', domains)) # grab only pfam accession id from all protein domains which were returned
+                conn.insert_variant_transcript_annotation(variant_id, transcript = transcript_name, annotation_type_id = pfam_annotation_id, value = pfam_acc)
+
             num_vep_basic_entries = 10
             if not transcript_independent_saved and len(vep_entry) > num_vep_basic_entries:
                 pmids = functions.collect_info(pmids, '', vep_entry[num_vep_basic_entries], sep = '&')
 
         # insert literature
-        if self.job_config['insert_literature'] and pmids != '':
+        if pmids != '':
             literature_entries = fetch(pmids) # defined in pubmed_parser.py
             for paper in literature_entries: #[pmid, article_title, authors, journal, year]
                 #print(paper[0])
@@ -130,20 +89,13 @@ class vep_job(Job):
                    #"--sift", "b", "--polyphen", "b", "--af","--pubmed"
                    ]
 
-        if not self.refseq: #use ensembl
-            #gnomAD_AF,gnomAD_AFR_AF,gnomAD_AMR_AF,gnomAD_EAS_AF,gnomAD_NFE_AF,gnomAD_SAS_AF, "--af_gnomad",
-            #DOMAINS,SIFT,PolyPhen,PUBMED,AF
-            fields_oi = fields_oi_base + ",PUBMED" # ,MaxEntScan_ref,MaxEntScan_alt
-            command = command + [#"--plugin", "MaxEntScan," + os.path.join(paths.vep_path, "MaxEntScan"),
-                                 "--regulatory",
-                                 "--pubmed",
-                                 "--fields", fields_oi]
-
-        if self.refseq:
-            fields_oi = fields_oi_base
-            command = command + ["--refseq",
-                                 "--vcf_info_field", "CSQ_refseq",
-                                 "--fields", fields_oi]
+        #gnomAD_AF,gnomAD_AFR_AF,gnomAD_AMR_AF,gnomAD_EAS_AF,gnomAD_NFE_AF,gnomAD_SAS_AF, "--af_gnomad",
+        #DOMAINS,SIFT,PolyPhen,PUBMED,AF
+        fields_oi = fields_oi_base + ",PUBMED" # ,MaxEntScan_ref,MaxEntScan_alt
+        command = command + [#"--plugin", "MaxEntScan," + os.path.join(paths.vep_path, "MaxEntScan"),
+                             "--regulatory",
+                             "--pubmed",
+                             "--fields", fields_oi]
         
 
 

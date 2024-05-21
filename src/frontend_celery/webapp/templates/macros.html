@@ -201,6 +201,41 @@
             {% if annot.is_transcript_specific %}
             {% set transcripts_sorted, values_sorted = annot.sort() %}
             {% if transcripts_sorted | length > 0 %}
+
+            {% if annot.title == 'pfam_domains' %}
+            <div class="d-flex margin_between_list_small" annotation_id="{{ annot.id }}">
+                {% set display_transcript = transcripts_sorted[0] %}
+                {% set display_parts = values_sorted[0].split(',') %}
+                <div class="dashed_underline" data-bs-toggle="tooltip" data-bs-title="{{ annot.description }}">{{ annot.display_title }}:</div>
+                <div class="d-flex margin_between_list_small" data-testid="annotation-{{annot.title}}">
+                    {% for part in display_parts %}
+                        <div>{{ external_link(part, "https://pfam.xfam.org/family/" + part) }}</div>
+                    {% endfor %}
+                    <div>({{display_transcript}})</div>
+                </div>
+                <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix_large" data-bs-html="true" 
+                    data-bs-content="
+                        <div class='row gx-2 border-bottom bg-light width_medium'>
+                            <div class='col-6'>Transcript</div>
+                            <div class='col-6 text-center border-start'>Pfam Acc. IDs</div>
+                        </div>
+                        {% for transcript in annot.value %}
+                        {% set pfam_accs = annot.value[transcript].split(',') %}
+                        <div class='row gx-2 width_medium'>
+                            <div class='col-6'>{{transcript}}</div>
+                            <div class='col-6 text-center border-start'>
+                                {% for pfam_acc in pfam_accs %}
+                                    <div><a class='external_link' href='{{'https://pfam.xfam.org/family/' + pfam_acc}}'>{{pfam_acc}}</a></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    ">
+                    details
+                </a>
+            </div>
+            {% endif %}
+
             {% if annot.title == 'revel' %}
             {% set max_transcript, max_value = annot.max() %}
             <div class="d-flex margin_between_list_small" annotation_id="{{ annot.id }}">
@@ -891,9 +926,8 @@
                     <th class="width_small"><div class="sortable">Impact</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                     <th class="width_very_small"><div class="sortable">Exon Nr.</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
                     <th class="width_very_small"><div class="sortable">Int. Nr.</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th class="width_small" id="variant_consequence_gene_symbol_col" asc="false"><div class="sortable">Gene Symbol</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th class="width_small"><div class="sortable">Protein Domain</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th class="width_small"><div class="sortable">Flags</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th class="width_very_small" id="variant_consequence_gene_symbol_col" asc="false"><div class="sortable">Gene</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th class="width_very_medium"><div class="sortable">Flags</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
 
                     <th class="visually_hidden" id="variant_consequence_source_col">Source</th>
                     <th class="width_very_small" id="variant_consequence_length_col" asc="true"><div class="sortable">Length</div></th>
@@ -919,13 +953,6 @@
                             {{ consequence.transcript.gene.symbol }}
                         {% endif %}
                     </td>
-                    {% if consequence.protein_domain_id is not none %}
-                    <td>
-                        {{ external_link(consequence.protein_domain_title, "https://pfam.xfam.org/family/" + consequence.protein_domain_id) }}
-                    </td>
-                    {% else %}
-                    <td>{{ consequence.protein_domain_title }}</td>
-                    {% endif %}
                     <td>
                         {% if consequence.transcript.is_gencode_basic %}
                             <span class="badge bg-secondary"><abbr title="This flag describes a subset of representative transcripts of the GENCODE set of genes.">GENCODE basic</abbr></span>

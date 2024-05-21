@@ -130,10 +130,9 @@ class annotate_from_vcf_job(Job):
         self.insert_annotation(variant_id, info, "tp53db_transactivation_class=", recent_annotation_ids['tp53db_transactivation_class'], conn)
         pmids = functions.find_between(info, 'tp53db_pubmed=', '(;|$)')
         if pmids is not None and pmids != '':
-            if self.job_config['insert_literature']:
-                literature_entries = fetch(pmids) # defined in pubmed_parser.py
-                for paper in literature_entries: #[pmid, article_title, authors, journal, year]
-                    conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4], "TP53_db")
+            literature_entries = fetch(pmids) # defined in pubmed_parser.py
+            for paper in literature_entries: #[pmid, article_title, authors, journal, year]
+                conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4], "TP53_db")
 
 
         # CLINVAR

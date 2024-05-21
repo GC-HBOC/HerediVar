@@ -89,6 +89,10 @@
 .container {
     min-width:80rem;
 }
+.width_gigantic {
+    min-width:80em;
+    width:80em;
+}
 .width_very_large {
     min-width:40em;
     width:40em;

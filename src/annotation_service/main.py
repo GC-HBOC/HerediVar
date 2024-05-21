@@ -28,10 +28,8 @@ def get_default_job_config():
         'do_maxentscan': True,
 
         # consequences
-        'do_consequence': False,
+        'do_consequence': True,
         'do_vep': True,
-        'insert_consequence': True, # remove later
-        'insert_literature': True,
 
         #vcf annotate from vcf
         'do_dbsnp': True,
@@ -75,8 +73,8 @@ def get_job_config(items_to_select):
 # annotation job definitions
 def get_jobs(job_config):
     all_jobs = [
-        vep_job.vep_job(job_config, refseq=False),
-        vep_job.vep_job(job_config, refseq=True),
+        vep_job.vep_job(job_config),
+        #vep_job.vep_job(job_config, refseq=True),
         consequence_job.consequence_job(job_config),
         phylop_job.phylop_job(job_config),
         hexplorer_job.hexplorer_job(job_config),

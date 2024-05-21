@@ -151,14 +151,14 @@ class Connection:
         else:
             return pfam_description[0], pfam_description[1]
 
-    def insert_variant_consequence(self, variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, symbol, consequence_source, pfam_acc = ''):
+    def insert_variant_consequence(self, variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, symbol, consequence_source):
         columns_with_info = "variant_id, transcript_name, consequence, impact, source"
         actual_information = (variant_id, transcript_name, consequence, impact, consequence_source)
-        if pfam_acc != '':
-            pfam_acc, domain_description = self.get_pfam_description_by_pfam_acc(pfam_acc)
-            if domain_description is not None and pfam_acc is not None and domain_description != 'removed':
-                columns_with_info = columns_with_info + ", pfam_accession, pfam_description"
-                actual_information = actual_information + (pfam_acc, domain_description)
+        #if pfam_acc != '':
+        #    pfam_acc, domain_description = self.get_pfam_description_by_pfam_acc(pfam_acc)
+        #    if domain_description is not None and pfam_acc is not None and domain_description != 'removed':
+        #        columns_with_info = columns_with_info + ", pfam_accession, pfam_description"
+        #        actual_information = actual_information + (pfam_acc, domain_description)
         if hgvs_c != '':
             columns_with_info = columns_with_info + ", hgvs_c"
             actual_information = actual_information + (hgvs_c,)
@@ -1262,8 +1262,8 @@ class Connection:
         return submission_condition
     
     def get_variant_consequences(self, variant_id):
-        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,x.gene_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype,transcript.id,start,end,transcript.chrom,orientation FROM transcript RIGHT JOIN ( \
-	                    SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,gene.id gene_id,exon_nr,intron_nr,source,pfam_accession,pfam_description FROM gene RIGHT JOIN ( \
+        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,x.gene_id,source,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype,transcript.id,start,end,transcript.chrom,orientation FROM transcript RIGHT JOIN ( \
+	                    SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,gene.id gene_id,exon_nr,intron_nr,source FROM gene RIGHT JOIN ( \
 		                    SELECT * FROM variant_consequence WHERE variant_id=%s \
 	                    ) y \
 	                    ON gene.hgnc_id = y.hgnc_id \
@@ -2513,30 +2513,30 @@ class Connection:
             if consequences_raw is not None:
                 consequences = []
                 for consequence in consequences_raw:
+                    #transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,x.gene_id,source,length,
+                    #is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype,transcript.id,start,end,transcript.chrom,orientation
                     new_consequence = models.Consequence(transcript = models.Transcript(
-                                                            id = consequence[19],
+                                                            id = consequence[17],
                                                             gene = models.Gene(symbol = consequence[7], id = consequence[8]),
                                                             name = consequence[0],
-                                                            biotype = consequence[18],
-                                                            length = consequence[12],
+                                                            biotype = consequence[16],
+                                                            length = consequence[10],
                                                             source = consequence[9],
-                                                            chrom = consequence[21],
-                                                            start = consequence[19],
-                                                            end = consequence[20],
-                                                            orientation = consequence[22],
-                                                            is_gencode_basic = True if consequence[13] == 1 else False,
-                                                            is_mane_select = True if consequence[14] == 1 else False,
-                                                            is_mane_plus_clinical = True if consequence[15] == 1 else False,
-                                                            is_ensembl_canonical = True if consequence[16] == 1 else False
+                                                            chrom = consequence[20],
+                                                            start = consequence[18],
+                                                            end = consequence[19],
+                                                            orientation = consequence[21],
+                                                            is_gencode_basic = True if consequence[11] == 1 else False,
+                                                            is_mane_select = True if consequence[12] == 1 else False,
+                                                            is_mane_plus_clinical = True if consequence[13] == 1 else False,
+                                                            is_ensembl_canonical = True if consequence[14] == 1 else False
                                                          ), 
                                                          hgvs_c = consequence[1], 
                                                          hgvs_p = consequence[2], 
                                                          consequence = consequence[3], 
                                                          impact = consequence[4], 
                                                          exon = consequence[5], 
-                                                         intron = consequence[6],
-                                                         protein_domain_title = consequence[10], 
-                                                         protein_domain_id = consequence[11],
+                                                         intron = consequence[6]
                                                     )
                     consequences.append(new_consequence)
        
