@@ -88,3 +88,7 @@ pip install pytest-flask
 
 
 pip install xlsx2csv
+
+
+pip install gffutils
+

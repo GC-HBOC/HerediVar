@@ -130,6 +130,10 @@ redis_update: redis_clean redis
 
 
 ## VEP
+VEPPATH := $(TOOLS)
+NGSBITSNAME := ensembl-vep
+VEP := $(VEPPATH)/$(NGSBITSNAME)
+VEPVERSION := 110
 vep:
 	if [ ! -d "${VEP}" ]; then \
 		printf ${_TEXTCOL_RED} "Installing vep ${VEPVERSION}" ; \
@@ -347,7 +351,7 @@ REFSEQ= $(REFSEQPATH)/$(REFSEQNAME)
 refseq: 
 	if [ ! -d "${REFSEQ}" ]; then \
 		printf ${_TEXTCOL_RED} "Downloading refseq ${REFSEQVERSION}..." ; \
-		${DATA}/script/download_refseq.sh -p ${REFSEQPATH} -n ${REFSEQNAME} -v ${REFSEQVERSION} ; \
+		${DATA}/script/download_refseq.sh -p ${REFSEQPATH} -n ${REFSEQNAME} -v ${REFSEQVERSION} -y ${VENV} -t "refseq2ensemblaccession=${TOOLS}/vcf_refseq_to_chrnum.py tools=${TOOLS} refseq2ensemblgff=${TOOLS}/refseq2ensemblgff.py"; \
 	fi
 
 refseq_clean:
