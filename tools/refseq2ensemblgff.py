@@ -26,7 +26,6 @@ else:
     input_file = sys.stdin
 
 
-
 for line in input_file:
     line = line.strip('\n')
     if line.startswith('#'):
@@ -53,9 +52,15 @@ for line in input_file:
             description = part
         if part.startswith('gene='):
             info_parts.append('gene_id=' + part[5:])
-        if part.startswith('ID=transcript:'):
-            if part.find('.') == -1:
+        if part.startswith('transcript_id='):
+            dot_index =  part.find('.')
+            if dot_index == -1:
                 functions.eprint(part)
+            else:
+                info_parts.append('version=' + part[dot_index+1])
+                info_parts[i] = part.split('.')[0]
+            info_parts.append('biotype=misc_rna')
+
 
     if hgnc is not None:
         hgnc_str = "[Source:HGNC Symbol%3BAcc:" + hgnc + "]"
@@ -63,6 +68,7 @@ for line in input_file:
             info_parts[description_id] = description + hgnc_str
         if description is None:
             info_parts.append("description=" + hgnc_str)
+
 
     parts[8] = ';'.join(info_parts)
     print('\t'.join(parts))

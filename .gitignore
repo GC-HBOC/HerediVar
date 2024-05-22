@@ -191,3 +191,5 @@ resources/backups/keycloak_export/dev/*/*-users*.json
 /resources/backups/database_dumper/dev/data
 
 src/common/heredicare_interface_debug/
+
+tools/add_utrs_to_gff.py

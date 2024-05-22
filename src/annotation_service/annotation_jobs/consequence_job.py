@@ -98,7 +98,7 @@ class consequence_job(Job):
         
         # annotate refseq consequences
         command = [os.path.join(paths.ngs_bits_path, "VcfAnnotateConsequence")]
-        command.extend([ "-gff", paths.refseq_transcript_path, "-ref", paths.ref_genome_path, "-all",  "-tag", "CSQ_refseq", "-in", tmp_vcf, "-out", output_vcf])
+        command.extend([ "-gff", paths.refseq_transcript_4_consequence_path, "-ref", paths.ref_genome_path, "-all",  "-tag", "CSQ_refseq", "-in", tmp_vcf, "-out", output_vcf])
         returncode, err_msg, vcf_errors = functions.execute_command(command, 'VcfAnnotateConsequenceRefSeq')
 
         functions.rm(tmp_vcf)

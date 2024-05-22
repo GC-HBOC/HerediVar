@@ -95,14 +95,14 @@ sed -i 's/ID=exon-/ID=exon:/g' $basename.converted.gff
 sed -i 's/ID=cds-/ID=CDS:/g' $basename.converted.gff
 sed -i 's/ID=id-/ID=id:/g' $basename.converted.gff
 
-# delete mi-rna entries
+
+# delete mi-rna entries (primary transcripts are kept but deleted ones were transcripts whose parents are transcripts...?)
 sed -i '/ID=transcript:MIR/d' $basename.converted.gff
 sed -i '/Parent=transcript:MIR/d' $basename.converted.gff
 sed -i '/ID=transcript:TR/d' $basename.converted.gff
 sed -i '/Parent=transcript:TR/d' $basename.converted.gff
 
-sed -i '/ID=transcript:(RNR1|RNR2|ND1|ND2|COX1|COX2|ATP8|ATP6|COX3|ND3|ND4L|ND4|ND5|ND6|CYTB)/d' $basename.converted.gff
-sed -i '/Parent=transcript:(RNR1|RNR2|ND1|ND2|COX1|COX2|ATP8|ATP6|COX3|ND3|ND4L|ND4|ND5|ND6|CYTB)/d' $basename.converted.gff
+sed -i '/chrMT/d' $basename.converted.gff
 
 
 
@@ -110,5 +110,9 @@ sed -i '/Parent=transcript:(RNR1|RNR2|ND1|ND2|COX1|COX2|ATP8|ATP6|COX3|ND3|ND4L|
 sed -i '/ID=gene:/i \
 ###' $basename.converted.gff
 
-python3 $refseq2ensemblgff -i $basename.converted.gff -o $basename.final.gff
+python3 $refseq2ensemblgff -i $basename.converted.gff -o $basename.4consequence.gff
 
+
+rm $basename.utrs.gff
+rm $basename.converted.gff
+rm $basename.filtered.gff
