@@ -38,7 +38,7 @@ class consequence_job(Job):
         sources = ['ensembl', 'refseq']
 
         if self.job_config['do_consequence']:
-            print(info)
+            #print(info)
             conn.delete_variant_consequences(variant_id)
 
         #FORMAT: Allele|Consequence|IMPACT|SYMBOL|HGNC_ID|Feature|Feature_type|EXON|INTRON|HGVSc|HGVSp

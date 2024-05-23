@@ -224,13 +224,16 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     #        celery_task_id = start_annotation_service(variant_id = variant_id, conn = conn, user_id = session['user']['user_id'])
     #        current_annotation_status = current_annotation_status[0:7] + (celery_task_id, )
 
-    variant = conn.get_variant(variant_id)
-    if variant is None:
-        # show another error message if the variant was deleted vs the variant does not exist anyway
-        if request.args.get('from_reannotate', 'False') == 'True': 
-            return redirect(url_for('main.deleted_variant'))
-        else:
-            abort(404) 
+    #variant = conn.get_variant(variant_id)
+    #if variant is None:
+    #    # show another error message if the variant was deleted vs the variant does not exist anyway
+    #    if request.args.get('from_reannotate', 'False') == 'True': # DEPRECATED!
+    #        return redirect(url_for('main.deleted_variant'))
+    #    else:
+    #        abort(404) 
+
+    if not conn.valid_variant_id(variant_id):
+        abort(404)
     
     heredicare_annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
     vids = conn.get_external_ids_from_variant_id(variant_id, heredicare_annotation_type_id)
@@ -244,10 +247,12 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     clinvar_queue_entry = check_update_clinvar_status(variant_id, conn)
     heredicare_queue_entries = check_update_heredicare_status(variant_id, conn)
     heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(variant_id, heredicare_queue_entries, conn)
+
+    variant = conn.get_variant(variant_id)
     
-    print(clinvar_queue_entry)
-    print(heredicare_queue_entries)
-    print(heredicare_queue_entry_summary)
+    #print(clinvar_queue_entry)
+    #print(heredicare_queue_entries)
+    #print(heredicare_queue_entry_summary)
 
     return render_template('variant/variant.html',
                             clinvar_queue_entry = clinvar_queue_entry,

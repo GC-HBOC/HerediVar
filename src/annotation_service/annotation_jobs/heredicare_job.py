@@ -67,11 +67,11 @@ class heredicare_job(Job):
                 conn.delete_external_id(vid, heredicare_vid_annotation_type_id, variant_id)
                 conn.delete_unknown_heredicare_annotations()
             else:
-                #print(heredicare_variant)
+                print(heredicare_variant)
                 n_fam = heredicare_variant["N_FAM"]
                 n_pat = heredicare_variant["N_PAT"]
                 consensus_class = heredicare_variant["PATH_TF"] if heredicare_variant["PATH_TF"] != "-1" else None
-                comment = heredicare_variant["VUSTF_15"] if heredicare_variant["VUSTF_15"] is not None else ''
+                comment = heredicare_variant["VUSTF_21"] if heredicare_variant["VUSTF_21"] is not None else ''
                 comment = comment.strip()
                 comment = comment if comment != '' else None
                 classification_date = heredicare_variant["VUSTF_DATUM"] if heredicare_variant["VUSTF_DATUM"] != '' else None

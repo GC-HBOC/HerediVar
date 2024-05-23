@@ -36,12 +36,19 @@ def publish():
 
     variant_ids = upload_functions.extract_variant_ids(request.args, conn)
 
-    variants = []
+    small_variants = []
+    structural_variants = []
     for variant_id in variant_ids:
         variant = conn.get_variant(variant_id, include_annotations=False,include_user_classifications=False, include_heredicare_classifications=False, include_automatic_classification=False, include_clinvar=False, include_assays=False, include_literature=False)
         if variant is None:
             return abort(404)
-        variants.append(variant)
+        if variant.variant_type == 'sv':
+            structural_variants.append(variant)
+        else:
+            small_variants.append(variant)
+
+    if len(structural_variants) > 0:
+        flash("There are " + str(len(structural_variants)) + " structural variants in your request. These are currently not supported for upload. These variants will not be part of your submission.", "alert-danger")
 
     if request.method == 'POST':
         options = {
@@ -63,7 +70,7 @@ def publish():
 
 
     return render_template("upload/publish.html",
-                           variants = variants
+                           variants = small_variants
                         )
 
 

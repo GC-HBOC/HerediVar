@@ -188,31 +188,41 @@ class Heredicare(metaclass=Singleton):
         variant = None
         project_type = "download"
 
-        status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
-        if status == 'error':
-            return variant, status, message
-
         url = self.get_url(project_type, "variant", path_args = [str(vid)])
-        bearer, timestamp = self.get_saved_bearer(project_type)
-        header = {"Authorization": "Bearer " + bearer}
+        has_next = True
+        all_items = []
+        while has_next:
+            status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
+            if status == 'error':
+                return [], status, message
+            bearer, timestamp = self.get_saved_bearer(project_type)
+            header = {"Authorization": "Bearer " + bearer}
+            resp = requests.get(url, headers=header)
+            if resp.status_code == 401: # unauthorized
+                message = "ERROR: HerediCare API get variant info endpoint returned an HTTP 401, unauthorized error. Attempting retry."
+                status = "retry"
+                break
+            elif resp.status_code != 200: # any other kind of error
+                message = "ERROR: HerediCare API get variant info endpoint returned an HTTP " + str(resp.status_code) + " error: " + + self.extract_error_message(resp.text)
+                status = "error"
+                break
+            else: # request was successful
+                resp = resp.json()
+                new_items = resp["items"]
+                all_items.extend(new_items)
+                has_next = resp["hasMore"]
+                for link in resp["links"]:
+                    if link["rel"] == "next":
+                        url = link["href"]
 
-        resp = requests.get(url, headers=header)
-        if resp.status_code == 401: # unauthorized
-            message = "ERROR: HerediCare API get variant endpoint returned an HTTP 401, unauthorized error. Attempting retry."
-            status = "retry"
-        elif resp.status_code != 200:
-            message = "ERROR: HerediCare API get variant endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
-            status = "error"
-        else: # success
-            raw_variant = resp.json()
-            variant = self.convert_heredicare_variant_raw(raw_variant)
-        
+        variant = self.convert_heredicare_variant_raw(all_items)
+
         return variant, status, message
 
     
-    def convert_heredicare_variant_raw(self, raw_variant):
+    def convert_heredicare_variant_raw(self, variant_items):
         variant = {}
-        for item in raw_variant['items']:
+        for item in variant_items:
             item_name = item['item_name']
             item_value = item['item_value']
             variant[item_name] = item_value
@@ -252,7 +262,7 @@ class Heredicare(metaclass=Singleton):
                     if link["rel"] == "next":
                         url = link["href"]
 
-        #with open("/mnt/storage2/users/ahdoebm1/HerediVar/src/common/test.json", "w") as f:
+        #with open("/mnt/storage2/users/ahdoebm1/HerediVar/src/common/heredicare_interface_debug/post_fields.json", "w") as f:
         #    functions.prettyprint_json(all_items, func = f.write)
 
         result = {}
@@ -538,12 +548,12 @@ class Heredicare(metaclass=Singleton):
             status = "error"
             message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
             return all_items, status, message
-        old_value = self.get_heredicare_consensus_attribute(variant, vid, "classification_date")
+        old_value = self.get_heredicare_consensus_attribute(variant, vid, "classification_date").strftime('%d.%m.%Y')
         new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
         all_items.append(new_item)
 
-        # add comment of consensus classification: VUSTF_17
-        item_name = "VUSTF_17"
+        # add comment of consensus classification: VUSTF_21
+        item_name = "VUSTF_21"
         item_regex = post_regexes[item_name]
         new_value = mrcc.get_extended_comment()
         if not self.is_valid_post_data(new_value, item_regex):
@@ -553,8 +563,6 @@ class Heredicare(metaclass=Singleton):
         old_value = self.get_heredicare_consensus_attribute(variant, vid, "comment")
         new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
         all_items.append(new_item)
-
-        ##Item fehlt für UPDATE: VUSTF_16
 
         return all_items, status, message
 
@@ -640,8 +648,8 @@ class Heredicare(metaclass=Singleton):
         
         # tinker all items together
         data = {'items': all_items}
-        #with open('/mnt/storage2/users/ahdoebm1/HerediVar/src/common/heredicare_interface_debug/test.json', "w") as f:
-        #    functions.prettyprint_json(data, f.write)
+        with open('/mnt/storage2/users/ahdoebm1/HerediVar/src/common/heredicare_interface_debug/sub' + str(submission_id) + '.json', "w") as f:
+            functions.prettyprint_json(data, f.write)
         data = json.dumps(data)
 
         return data, vid, submission_id, status, message
@@ -687,48 +695,56 @@ class Heredicare(metaclass=Singleton):
 
         return vid, submission_id, status, message
 
-        
+
 
 
 if __name__ == "__main__":
     functions.read_dotenv()
     heredicare_interface = Heredicare()
-
-    variant_id_oi = "55"
-
-    from common.db_IO import Connection
-    conn = Connection(roles = ["db_admin"])
-    variant = conn.get_variant(variant_id_oi)
-    conn.close()
-
-    #submission_id, status, message = heredicare_interface.upload_consensus_classification(variant)
-    #print(submission_id)
-    #print(status)
-    #print(message)
-
-    #finished_at, status, message = heredicare_interface.get_submission_status(submission_id)
-    #print(finished_at)
-    #print(status)
-    #print(message)
+    heredicare_interface.get_post_regexes()
 
 
-    #submission_id, status, message = heredicare_interface.get_new_submission_id()
-    #print(submission_id)
-    #print(status)
-    #print(message)
-    #finished_at, status, message = heredicare_interface.get_submission_status(submission_id)
-    #print(finished_at)
-    #print(status)
-    #print(message)
 
-    # 122: first success!
-    finished_at, status, message = heredicare_interface.get_submission_status(122)
-    print(finished_at)
-    print(status)
-    print(message)
 
-    #
-    heredicare_interface.get_data(variant, vid = "8882909", options = {"post_consensus_classification": True})
+#if __name__ == "__main__":
+#    functions.read_dotenv()
+#    heredicare_interface = Heredicare()
+#
+#    variant_id_oi = "55"
+#
+#    from common.db_IO import Connection
+#    conn = Connection(roles = ["db_admin"])
+#    variant = conn.get_variant(variant_id_oi)
+#    conn.close()
+#
+#    #submission_id, status, message = heredicare_interface.upload_consensus_classification(variant)
+#    #print(submission_id)
+#    #print(status)
+#    #print(message)
+#
+#    #finished_at, status, message = heredicare_interface.get_submission_status(submission_id)
+#    #print(finished_at)
+#    #print(status)
+#    #print(message)
+#
+#
+#    #submission_id, status, message = heredicare_interface.get_new_submission_id()
+#    #print(submission_id)
+#    #print(status)
+#    #print(message)
+#    #finished_at, status, message = heredicare_interface.get_submission_status(submission_id)
+#    #print(finished_at)
+#    #print(status)
+#    #print(message)
+#
+#    # 122: first success!
+#    finished_at, status, message = heredicare_interface.get_submission_status(122)
+#    print(finished_at)
+#    print(status)
+#    print(message)
+#
+#    #
+#    heredicare_interface.get_data(variant, vid = "8882909", options = {"post_consensus_classification": True})
 
 #if __name__ == "__main__":
 #    functions.read_dotenv()

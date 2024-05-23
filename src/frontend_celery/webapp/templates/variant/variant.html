@@ -91,7 +91,7 @@
                 ">
                     {% set mrcc = variant.get_recent_consensus_classification() %}
                     {% if mrcc is not none %}
-                        {% if mrcc.needs_heredicare_upload %}
+                        {% if mrcc.needs_heredicare_upload and heredicare_queue_entry_summary["status"] in ["error", "api_error", "success"] %}
                             {{macros.draw_exclamation_mark("The consensus classification needs to be uploaded to HerediCaRe!")}}
                         {% endif %}
                     {% endif %}

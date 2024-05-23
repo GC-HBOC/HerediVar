@@ -862,6 +862,7 @@ class Connection:
             list_of_information = []
             for variant_string in variant_strings:
                 parts = variant_string.split('-')
+                parts[0] = 'chr' + parts[0] if not parts[0].startswith('chr') else parts[0]
                 list_of_constraints.append(["(chr = %s AND pos = %s AND ref = %s AND alt = %s)", "(chrom = %s AND start = %s AND end = %s AND sv_type LIKE %s)"])
                 #list_of_constraints.append("(SELECT id FROM variant WHERE chr = %s AND pos = %s AND ref = %s AND alt = %s UNION SELECT variant.id FROM variant WHERE sv_variant_id IN (SELECT id FROM sv_variant WHERE chrom = %s AND start = %s AND end = %s AND sv_type LIKE %s))")
                 list_of_information.append([[parts[0], parts[1], parts[2], parts[3]], [parts[0], parts[1], parts[2], functions.enpercent(parts[3])]])

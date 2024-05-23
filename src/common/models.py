@@ -432,17 +432,41 @@ class Classification:
     
     def get_extended_comment(self):
         selected_criteria = self.scheme.criteria
-        criterium_strings = []
-        for criterium in selected_criteria:
-            criterium_strings.append(criterium.name + " (" + criterium.strength + ")" + ": " + criterium.evidence)
+        selected_criterium_strings = []
+        unselected_criterium_strings = []
+        if selected_criteria is not None:
+            for criterium in selected_criteria:
+                if criterium.state == "selected":
+                    selected_criterium_strings.append(criterium.name + " (" + criterium.strength + ")" + ": " + criterium.evidence)
+                if criterium.state == "unselected":
+                    unselected_criterium_strings.append(criterium.name + " (" + criterium.strength + ")" + ": " + criterium.evidence)
 
-        result = ""
-        if len(criterium_strings) == 1:
-            result = "According to the " + self.scheme.display_name + " criteria we chose this criterium: " + criterium_strings[0]
-        elif len(criterium_strings) > 1:
-            result = "According to the " + self.scheme.display_name + " criteria we chose these criteria: " + ', '.join(criterium_strings)
-    
-        return self.comment.strip('.') + ". " + result
+        # 1.: total comment
+        result = [self.comment.strip('.')]
+
+        # 2.: comment about selected criteria
+        if len(selected_criterium_strings) == 1:
+            result.append("According to the " + self.scheme.display_name + " criteria we chose this criterion: " + selected_criterium_strings[0])
+        elif len(selected_criterium_strings) > 1:
+            result.append("According to the " + self.scheme.display_name + " criteria we chose these criteria: " + ', '.join(selected_criterium_strings))
+
+        # 3.: comment about not selected criteria (based on evidence)
+        if len(unselected_criterium_strings) == 1:
+            result.append("Based on evidence we decided that this criterion can not be selected: " + unselected_criterium_strings[0])
+        elif len(unselected_criterium_strings) > 1:
+            result.append("Based on evidence we decided that these criteria can not be selected: " + ', '.join(unselected_criterium_strings))
+
+        # 4.: comment about selected literature
+        selected_literature_strings = []
+        if self.literature is not None:
+            for literature_passage in self.literature:
+                selected_literature_strings.append("pmid: " + str(literature_passage.pmid) + " relevant evidence: " + literature_passage.text_passage)
+        if len(selected_literature_strings) == 1:
+            result.append("The following article is relevant for the classification: " + selected_literature_strings[0])
+        elif len(selected_literature_strings) > 1:
+            result.append("The following articles are relevant for the classification: " + ", ".join(selected_literature_strings))
+
+        return "; ".join(result)
     
     def class_to_text(self, classification = None):
         if classification is None:

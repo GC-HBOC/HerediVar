@@ -47,9 +47,12 @@ def publish(self, publish_queue_id, variant_ids, options, user_roles):
         conn.update_publish_queue_status(publish_queue_id, status = "progress", message = "")
 
         for variant_id in variant_ids:
+            variant = conn.get_variant(variant_id)
+            if variant.variant_type == 'sv': # skip svs
+                continue
+            
             # start the task to upload the consensus classification to clinvar
             if options['do_clinvar']:
-                # TODO: start upload to clinvar TASK
                 ccid = start_upload_one_variant_clinvar(variant_id, publish_queue_id, options, user_roles, conn)
             
             # start the task to upload the variant/consensus_classification/whatever to HerediCaRe
@@ -140,9 +143,16 @@ def clinvar_upload_one_variant(self, variant_id, user_roles, options, clinvar_ac
         conn.update_publish_clinvar_queue_status(publish_clinvar_queue_id, status = "progress", message = "")
 
         variant = conn.get_variant(variant_id, include_annotations = False, include_assays=False, include_automatic_classification=False, include_clinvar=False, include_literature=False, include_user_classifications=False)
-        selected_gene = options["clinvar_selected_genes"][variant_id]
+        selected_gene = options.get("clinvar_selected_genes", {}).get(variant_id)
+        if selected_gene is None:
+            selected_gene = variant.get_genes(how = "list")
+            if len(selected_gene) > 1 or len(selected_gene) == 0:
+                status = "error"
+                message = "Please select a gene for submitting to ClinVar! Either one of these: " + str(selected_gene)
+            else:
+                selected_gene = selected_gene[0]
 
-        if status != "skipped":
+        if status not in ["skipped", "error"]:
             submission_id, status, message = clinvar_interface.post_consensus_classification(variant, selected_gene, clinvar_accession)
             if status == "success":
                 status = "submitted"
