@@ -352,6 +352,7 @@ class Heredicare(metaclass=Singleton):
             message = "ERROR: HerediCare API getsubmission id endpoint endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
             status = "api_error"
         else: # success
+            print(resp.text)
             resp = resp.json(strict=False)
             items = resp["items"]
             print(items)
@@ -697,11 +698,6 @@ class Heredicare(metaclass=Singleton):
 
 
 
-
-if __name__ == "__main__":
-    functions.read_dotenv()
-    heredicare_interface = Heredicare()
-    heredicare_interface.get_post_regexes()
 
 
 

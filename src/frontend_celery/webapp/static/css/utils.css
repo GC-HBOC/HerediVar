@@ -262,6 +262,16 @@
     max-width: 50em !important;
 }
 
+.popover_collapse {
+    position: absolute;
+    z-index: 1000;
+    width: fit-content !important;
+}
+
+.popover_collapse > * {
+    font-size: 0.8rem;
+}
+
 /************** multicheck **************/
 .multicheck {
     display: inline-grid;

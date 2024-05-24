@@ -108,12 +108,19 @@ $(document).ready(function()
     $(document).click(function (e) {
         close_popovers(e)
     });
+
 });
 
 function close_popovers(e) {
     if (($('.popover').has(e.target).length == 0) || $(e.target).is('.close')) {
         $('[data-bs-toggle="popover"]').popover('hide');
     }
+
+    if (($('.popover_collapse').has(e.target).length == 0) || $(e.target).is('.close')) {
+        $(".popover_collapse").collapse('hide')
+    }
+    
+    //
 }
 
 

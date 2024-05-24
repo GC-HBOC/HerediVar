@@ -91,6 +91,8 @@ def my_lists():
 
             if not public_read and public_edit:
                 flash("You can not add a public list which is not publicly readable but publicly editable. List was not created.", 'alert-danger')
+            elif ';' in list_name:
+                flash("List names can not contain a semicolon ';' character.", 'alert-danger')
             else:
                 conn.insert_user_variant_list(user_id, list_name, public_read, public_edit)
                 flash("Successfully created new list: \"" + list_name + "\"", "alert-success flash_id:list_add_success")
@@ -106,10 +108,13 @@ def my_lists():
                 list_permissions = conn.check_list_permission(user_id, list_id)
                 if not list_permissions['owner']:
                     return abort(403)
-            conn.update_user_variant_list(list_id, list_name, public_read, public_edit)
-            flash("Successfully changed list settings.", "alert-success flash_id:list_edit_permissions_success")
-            current_app.logger.info(session['user']['preferred_username'] + " successfully adopted settings for list: " + str(list_id))
-            return redirect(url_for('user.my_lists', view=list_id))
+            if ';' in list_name:
+                flash("List names can not contain a semicolon ';' character.", 'alert-danger')
+            else:
+                conn.update_user_variant_list(list_id, list_name, public_read, public_edit)
+                flash("Successfully changed list settings.", "alert-success flash_id:list_edit_permissions_success")
+                current_app.logger.info(session['user']['preferred_username'] + " successfully adopted settings for list: " + str(list_id))
+                return redirect(url_for('user.my_lists', view=list_id))
         if request_type == 'delete_list':
             list_id = request.form['list_id']
             if list_id == "":

@@ -11,6 +11,7 @@ import datetime
 import re
 from functools import cmp_to_key
 import os
+import html # html.escape(s)
 
 
 def get_db_connection(roles):
@@ -26,6 +27,7 @@ def get_db_connection(roles):
         user, pw = get_db_user(roles)
         conn = mysql.connector.connect(user=user, password=pw,
                                host=host,
+                               port=os.environ.get("DB_PORT"),
                                database=os.environ.get("DB_NAME"), 
                                charset = 'utf8', buffered = True) # 
     except Error as e:

@@ -147,33 +147,36 @@
     {% if criteria | length == 0 %}
     <div>None</div>
     {% endif %}
-    {% for criterium in criteria %}
-    <span class="d-inline-block ssr criterium-display" data-bs-toggle="popover" 
-       data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" 
-       {% if source=="user" %} user_criterium_applied_id="{{ criterium.id }}" {% else %} consensus_criterium_applied_id="{{ criterium.id }}" {% endif %} 
-       data-bs-content="
-            <div class='width_large'></div>
-            <div class='row gx-2 border-bottom bg-light'>
-                <div class='col-3 text-center'>Type</div>
-                <div class='col-8 text-center border-start'>Info</div>
+    <div class="d-flex margin_between_list_small">
+        {% for criterium in criteria %}
+        <div >
+            <button class="btn-{{ criterium.type }} light-hover acmg-button acmg-button-small {% if criterium.state == 'unselected' %}crossed{% endif %} text_align_center popover_collapse_toggle"
+                    type="button" data-bs-toggle="collapse" data-bs-target=".popover_collapse_toggle:hover + .popover_collapse" aria-expanded="false">
+                {{ criterium.display_name() }}
+            </button>
+            <div class="popover_collapse collapse collapse-horizontal">
+                <div class="card card-body width_large">
+                    <div class='row gx-2 border-bottom bg-light'>
+                        <div class='col-3 text-center'>Type</div>
+                        <div class='col-8 text-center border-start'>Info</div>
+                    </div>
+                    <div class='row gx-2'>
+                        <div class='col-3'>State</div>
+                        <div class='col-8 text-center border-start'>{{ criterium.state }}</div>
+                    </div>
+                    <div class='row gx-2'>
+                        <div class='col-3'>Strength</div>
+                        <div class='col-8 text-center border-start'>{{ criterium.strength }}</div>
+                    </div>
+                    <div class='row gx-2'>
+                        <div class='col-3'>Evidence</div>
+                        <div class='col-8 text-center border-start'>{{ criterium.evidence }}</div>
+                    </div>
+                </div>
             </div>
-            <div class='row gx-2'>
-                <div class='col-3'>State</div>
-                <div class='col-8 text-center border-start'>{{ criterium.state }}</div>
-            </div>
-            <div class='row gx-2'>
-                <div class='col-3'>Strength</div>
-                <div class='col-8 text-center border-start'>{{ criterium.strength }}</div>
-            </div>
-            <div class='row gx-2'>
-                <div class='col-3'>Evidence</div>
-                <div class='col-8 text-center border-start'>{{ criterium.evidence }}</div>
-            </div>
-            "
-    >
-        <div class="btn-{{ criterium.type }} light-hover acmg-button acmg-button-small {% if criterium.state == 'unselected' %}crossed{% endif %}">{{ criterium.display_name() }}</div>
-    </span>
-    {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
 {% endmacro %}
 
 
