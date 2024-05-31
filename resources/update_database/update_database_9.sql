@@ -58,7 +58,7 @@
 
 ALTER TABLE `HerediVar`.`publish_heredicare_queue` 
 DROP COLUMN `user_id`,
-CHANGE COLUMN `upload_queue_id` `publish_queue_id` INT(10) UNSIGNED NULL DEFAULT NULL , RENAME TO  `HerediVar`.`publish_heredicare_queue` ;
+CHANGE COLUMN `upload_queue_id` `publish_queue_id` INT(10) UNSIGNED NULL DEFAULT NULL;
 
 
 
