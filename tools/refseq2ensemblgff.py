@@ -3,7 +3,6 @@ import os
 import argparse
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")  )
 import common.functions as functions
-import gffutils
 
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("-i", "--input", help="Path to input GFF3 file downloaded from RefSeq")
