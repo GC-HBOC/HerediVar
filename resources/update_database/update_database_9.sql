@@ -109,3 +109,50 @@ INSERT INTO `HerediVar_ahdoebm1`.`annotation_type` (`title`, `display_title`, `d
 ALTER TABLE `HerediVar_ahdoebm1`.`variant_consequence` 
 DROP COLUMN `pfam_description`,
 DROP COLUMN `pfam_accession`;
+
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`publish_queue` 
+ADD COLUMN `upload_clinvar` TINYINT(1) NOT NULL AFTER `celery_task_id`,
+ADD COLUMN `upload_heredicare` TINYINT(1) NOT NULL AFTER `upload_clinvar`,
+ADD COLUMN `variant_ids` TEXT NOT NULL AFTER `upload_heredicare`;
+
+
+
+CREATE TABLE `HerediVar_ahdoebm1`.`classification_final_class` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `classification_scheme_id` INT UNSIGNED NOT NULL,
+  `classification` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`id`));
+
+ALTER TABLE `HerediVar_ahdoebm1`.`classification_final_class` 
+ADD INDEX `FK_classification_final_class_classification_scheme_idx` (`classification_scheme_id` ASC);
+;
+ALTER TABLE `HerediVar_ahdoebm1`.`classification_final_class` 
+ADD CONSTRAINT `FK_classification_final_class_classification_scheme`
+  FOREIGN KEY (`classification_scheme_id`)
+  REFERENCES `HerediVar_ahdoebm1`.`classification_scheme` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+
+GRANT SELECT ON HerediVar.classification_final_class TO 'HerediVar_superuser';
+GRANT SELECT ON HerediVar.classification_final_class TO 'HerediVar_user';
+GRANT SELECT ON HerediVar.classification_final_class TO 'HerediVar_read_only';
+
+
+ALTER TABLE `HerediVar_ahdoebm1`.`consensus_classification` 
+CHANGE COLUMN `classification` `classification` ENUM('1', '2', '3', '4', '5', '3+', '3-', '4M', 'R') NOT NULL ;
+ALTER TABLE `HerediVar_ahdoebm1`.`user_classification` 
+CHANGE COLUMN `classification` `classification` ENUM('1', '2', '3', '4', '5', '3-', '3+', '4M', 'R') NOT NULL ;
+ALTER TABLE `HerediVar_ahdoebm1`.`consensus_classification` 
+CHANGE COLUMN `scheme_class` `scheme_class` ENUM('1', '2', '3', '4', '5', '-') NOT NULL ;
+
+ALTER TABLE `HerediVar_ahdoebm1`.`publish_clinvar_queue` 
+DROP FOREIGN KEY `FK_heredivar_clinvar_submissions_variant`;
+ALTER TABLE `HerediVar_ahdoebm1`.`publish_clinvar_queue` 
+ADD CONSTRAINT `FK_publish_clinvar_queue_variant`
+  FOREIGN KEY (`variant_id`)
+  REFERENCES `HerediVar_ahdoebm1`.`variant` (`id`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
