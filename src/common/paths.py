@@ -251,7 +251,9 @@ elif webapp_env == 'prod':
     ref_genome_path_grch37 = joinpaths(ref_genome_dir, "GRCh37.fa")
     chainfile_path = joinpaths(ref_genome_dir, "hg19ToHg38.fixed.over.chain.gz")
     ensembl_transcript_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.110.gff3")
-    refseq_transcript_path = joinpaths(datadir, "RefSeq/refseq_transcripts_110.gff.gz")
+    #refseq_transcript_path = joinpaths(datadir, "RefSeq/refseq_transcripts_110.gff.gz")
+    refseq_transcript_path = joinpaths(datadir, "RefSeq/refseq_transcripts_110.gff")
+    refseq_transcript_4_consequence_path = joinpaths(datadir, "RefSeq/refseq_transcripts_110.4consequence.gff")
 
     
     #metadata
@@ -284,4 +286,4 @@ elif webapp_env == 'prod':
     igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
 
     # clinvar submission
-    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_18_10_23.json")
+    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_15_05_24.json")
