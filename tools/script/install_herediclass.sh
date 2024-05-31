@@ -38,6 +38,8 @@ cd $path
 
 variant_classification_path=$path/$foldername
 
+mkdir -p $variant_classification_path
+
 cd $variant_classification_path
 wget https://www.python.org/ftp/python/3.10.13/Python-3.10.13.tgz
 tar -zxvf Python-3.10.13.tgz
