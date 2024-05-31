@@ -44,19 +44,19 @@
 -- ALTER TABLE `HerediVar`.`upload_queue` 
 -- RENAME TO  `HerediVar`.`publish_queue` ;
 
-ALTER TABLE `HerediVar`.`upload_variant_queue` 
-RENAME TO  `HerediVar`.`publish_heredicare_queue` ;
+-- ALTER TABLE `HerediVar`.`upload_variant_queue` 
+-- RENAME TO  `HerediVar`.`publish_heredicare_queue` ;
+-- 
+-- GRANT SELECT,INSERT,UPDATE ON HerediVar.publish_queue TO 'HerediVar_superuser';
+-- GRANT SELECT ON HerediVar.publish_queue TO 'HerediVar_user';
+-- GRANT SELECT ON HerediVar.publish_queue TO 'HerediVar_read_only';
+-- 
+-- GRANT SELECT,INSERT,UPDATE ON HerediVar.publish_heredicare_queue TO 'HerediVar_superuser';
+-- GRANT SELECT,UPDATE ON HerediVar.publish_heredicare_queue TO 'HerediVar_user';
+-- GRANT SELECT,UPDATE ON HerediVar.publish_heredicare_queue TO 'HerediVar_read_only';
 
-GRANT SELECT,INSERT,UPDATE ON HerediVar.publish_queue TO 'HerediVar_superuser';
-GRANT SELECT ON HerediVar.publish_queue TO 'HerediVar_user';
-GRANT SELECT ON HerediVar.publish_queue TO 'HerediVar_read_only';
 
-GRANT SELECT,INSERT,UPDATE ON HerediVar.publish_heredicare_queue TO 'HerediVar_superuser';
-GRANT SELECT,UPDATE ON HerediVar.publish_heredicare_queue TO 'HerediVar_user';
-GRANT SELECT,UPDATE ON HerediVar.publish_heredicare_queue TO 'HerediVar_read_only';
-
-
-ALTER TABLE `HerediVar`.`upload_variant_queue` 
+ALTER TABLE `HerediVar`.`publish_heredicare_queue` 
 DROP COLUMN `user_id`,
 CHANGE COLUMN `upload_queue_id` `publish_queue_id` INT(10) UNSIGNED NULL DEFAULT NULL , RENAME TO  `HerediVar`.`publish_heredicare_queue` ;
 
