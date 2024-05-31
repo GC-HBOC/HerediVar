@@ -5,6 +5,7 @@
     "type": "acmg-enigma-atm",
     "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/fa00ysyq/clingen_atm_v1.1.0.pdf/?format=attachment",
     "aliases": ["ACMG ATM"],
+    "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
     "criteria": [
         {
             "name": "PVS1",
@@ -326,9 +327,9 @@
             "relevant_info": "",
             "strengths": [
                 {
-                    "name": "pm",
-                    "display_name":"mod",
-                    "description": "medium pathogenic",
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
                     "is_default": "1"
                 }
             ],

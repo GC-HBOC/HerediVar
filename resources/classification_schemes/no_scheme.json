@@ -1,0 +1,10 @@
+{
+    "name": "none",
+    "version": "v1.0.0",
+    "display_name": "No scheme",
+    "type": "none",
+    "reference": "#",
+    "aliases": [],
+    "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5", "R"],
+    "criteria": [ ]
+}

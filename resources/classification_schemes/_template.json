@@ -5,6 +5,7 @@
     "type": "",
     "reference": "#",
     "aliases": [],
+    "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
     "criteria": [
         {
             "name": "PVS1",

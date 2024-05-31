@@ -19,6 +19,14 @@ def insert_criterium_scheme(conn: Connection, data):
     conn.clear_classification_scheme_aliases(classification_scheme_id)
     for alias in aliases:
         conn.insert_classification_scheme_alias(classification_scheme_id, alias)
+    new_final_classes = data["final_classes"]
+    old_final_classes = conn.get_classification_final_classes(classification_scheme_id)
+    final_classes_to_delete = list(set(old_final_classes) - set(new_final_classes))
+    for final_class in final_classes_to_delete:
+        conn.delete_classification_final_class(classification_scheme_id, final_class) # delete old
+    for final_class in new_final_classes:
+        conn.insert_classification_final_class(classification_scheme_id, final_class) # insert or skip if exists
+    
     return classification_scheme_id
 
 
@@ -115,7 +123,7 @@ parser.add_argument("-p", "--paths",  nargs="+", help="one or more paths to sche
 
 args = parser.parse_args()
 
-conn = Connection(roles = ['super_user'])
+conn = Connection(roles = ['db_admin'])
 data_paths = args.paths
 
 print(data_paths)

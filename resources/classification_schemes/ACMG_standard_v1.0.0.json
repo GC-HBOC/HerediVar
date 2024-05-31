@@ -5,6 +5,7 @@
     "type": "acmg",
     "reference": "https://pubmed.ncbi.nlm.nih.gov/25741868/",
     "aliases": ["ACMG standard"],
+    "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
     "criteria": [
         {
             "name": "PVS1",

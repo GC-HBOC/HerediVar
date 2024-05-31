@@ -5,6 +5,7 @@
     "type": "acmg-enigma-tp53",
     "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/kc3grqd4/clingen_tp53_v1.4.0.pdf/?format=attachment",
     "aliases": ["ACMG TP53"],
+    "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
     "criteria": [
         {
             "name": "PVS1",

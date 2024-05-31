@@ -5,6 +5,7 @@
     "type": "acmg-svi",
     "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/poek0tvh/clingen_cdh1_v3.1.0.pdf/?format=attachment",
     "aliases": ["ACMG CDH1"],
+    "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
     "criteria": [
         {
             "name": "PVS1",

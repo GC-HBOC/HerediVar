@@ -5,6 +5,7 @@
     "type": "acmg-enigma-palb2",
     "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/wru0e6pu/clingen_palb2_v1.0.0.pdf/?format=attachment",
     "aliases": ["ACMG PALB2"],
+    "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
     "criteria": [
         {
             "name": "PVS1",
