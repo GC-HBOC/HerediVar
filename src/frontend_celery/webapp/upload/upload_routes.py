@@ -36,19 +36,15 @@ def publish():
 
     variant_ids = upload_functions.extract_variant_ids(request.args, conn)
 
-    small_variants = []
-    structural_variants = []
+    print(variant_ids)
+
+    variants = []
     for variant_id in variant_ids:
         variant = conn.get_variant(variant_id, include_annotations=False,include_user_classifications=False, include_heredicare_classifications=False, include_automatic_classification=False, include_clinvar=False, include_assays=False, include_literature=False)
         if variant is None:
             return abort(404)
-        if variant.variant_type == 'sv':
-            structural_variants.append(variant)
         else:
-            small_variants.append(variant)
-
-    if len(structural_variants) > 0:
-        flash("There are " + str(len(structural_variants)) + " structural variants in your request. These are currently not supported for upload. These variants will not be part of your submission.", "alert-danger")
+            variants.append(variant)
 
     if request.method == 'POST':
         options = {
@@ -63,14 +59,14 @@ def publish():
             flash("You have to post the consensus classification to HerediCaRe.", "alert-danger")
         else:
             upload_tasks.start_publish(variant_ids, options, user_id, user_roles, conn) # (variant_ids, options, user_id, user_roles, conn: Connection):
-            flash("Successfully requested data upload. It will be processed in the background.", "alert-success")
+            flash("Successfully requested data upload. It will be processed in the background. Refresh this page to view its status.", "alert-success")
 
-        return save_redirect(request.args.get('next', url_for('upload.publish', variant_ids = ','.join(variant_ids))))
+        return save_redirect(request.args.get('next', url_for('main.index')))
 
 
 
     return render_template("upload/publish.html",
-                           variants = small_variants
+                           variants = variants
                         )
 
 
@@ -98,94 +94,95 @@ def publish():
 
 
 
-@upload_blueprint.route('/upload/variant/clinvar/<int:variant_id>', methods=['GET', 'POST'])
-@require_permission(['admin_resources'])
-def submit_clinvar(variant_id):
-    conn = get_connection()
-
-    # get variant information & abort if the variant does not exist
-    variant = conn.get_variant(variant_id, include_annotations = True, include_user_classifications=False, include_heredicare_classifications=False,include_clinvar=True, include_assays=False)
-    if variant is None:
-        return abort(404)
-    genes = variant.get_genes()
-    if genes is None:
-        genes = []
-
-    # get current consensus classification & abort if the variant does not have a consensus classification
-    consensus_classification = variant.get_recent_consensus_classification()
-    if consensus_classification is None:
-        flash("There is no consensus classification for this variant! Please create one before submitting to ClinVar!", "alert-danger")
-        return redirect(url_for('variant.display', variant_id = variant_id))
-
-    # check for previous heredivar clinvar submissions
-    clinvar_accession = None
-    previous_clinvar_submission = check_update_clinvar_status(variant_id, conn) # is None if there is no previous clinvar accession
-    if previous_clinvar_submission is not None:
-        clinvar_accession = previous_clinvar_submission[3]
-        if previous_clinvar_submission[4] not in ['processed', 'error', 'deleted']:
-            flash("This variant still has an unfinished ClinVar submission. Please wait for ClinVar to finish processing it before submitting making changes to it.", 'alert-danger')
-            return redirect(url_for('variant.display', variant_id=variant_id))
-
-
-    if request.method == 'POST':
-        # extract submitted information
-        selected_gene = request.form.get('gene', "")
-        if selected_gene.strip() == "":
-            selected_gene = None
-        
-        # submit to clinvar api
-        #base_url = 'https://submit.ncbi.nlm.nih.gov/api/v1/submissions/?dry-run=true'
-        #base_url = 'https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions'
-        base_url = current_app.config['CLINVAR_API_ENDPOINT']
-
-        # prepare json data to be submitted to ClinVar
-        schema = json.loads(open(paths.clinvar_submission_schema).read())
-        data = upload_functions.get_clinvar_submission_json(variant, selected_gene, clinvar_accession)
-        #print(data)
-        #with open("/mnt/storage2/users/ahdoebm1/HerediVar/testdat.json", "w") as jfile:
-        #    jfile.write(json.dumps(data, indent=4))
-
-        # check that the generated data is valid by checking against json schema
-        try:
-            jsonschema.validate(instance = data, schema = schema)
-        except jsonschema.exceptions.ValidationError as ex:
-            current_app.logger.error('There is an error in the JSON for ClinVar api submission!' + str(ex) + " For variant " + str(variant_id))
-            abort(500, 'There is an error in the JSON for ClinVar api submission! ' + str(ex))
-
-        # post to ClinVar
-        api_key = current_app.config['CLINVAR_API_KEY']
-        headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
-        postable_data = {
-            "actions": [{
-                "type": "AddData",
-                "targetDb": "clinvar",
-                "data": {"content": data}
-            }]
-        }
-        #print(json.dumps(postable_data))
-        resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
-        #print(resp.json())
-        if str(resp.status_code) not in ['200', '201']:
-            abort(500, 'Status code of ClinVar submission API endpoint was: ' + str(resp.status_code) + ': ' + str(resp.json()))
-            
-        submission_id = resp.json()['id']
-        clinvar_status = check_clinvar_status(submission_id)
-        #print("Clinvar status: " + str(clinvar_status))
-
-        # insert a new heredivar_clinvar_submission if the variant was not submitted previously or update if it was there previously
-        conn.insert_update_heredivar_clinvar_submission(variant_id, submission_id, clinvar_status['accession_id'], clinvar_status['status'], clinvar_status['message'], clinvar_status['last_updated'], previous_clinvar_accession = clinvar_accession)
-            
-        # some user feedback that the submission was successful or not
-        if resp.status_code == 200 or resp.status_code == 201:
-            flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
-            current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded variant " + str(variant_id) + " to ClinVar.")
-            return redirect(url_for('variant.display', variant_id=variant_id))
-        flash("There was an error during submission to ClinVar. It ended with status code: " + str(resp.status_code), "alert-danger")
-        current_app.logger.error(session['user']['preferred_username'] + " tried to upload a consensus classification for variant " + str(variant_id) + " to ClinVar, but it resulted in an error with status code: " + str(resp.status_code))
-
-    return render_template('upload/submit_clinvar.html', 
-                            variant = variant,
-                            genes = genes)
+#@upload_blueprint.route('/upload/variant/clinvar/<int:variant_id>', methods=['GET', 'POST'])
+#@require_permission(['admin_resources'])
+#def submit_clinvar(variant_id):
+#    conn = get_connection()
+#
+#    # get variant information & abort if the variant does not exist
+#    variant = conn.get_variant(variant_id, include_annotations = True, include_user_classifications=False, include_heredicare_classifications=False,include_clinvar=True, include_assays=False)
+#    if variant is None:
+#        return abort(404)
+#    genes = variant.get_genes()
+#    if genes is None:
+#        genes = []
+#
+#    # get current consensus classification & abort if the variant does not have a consensus classification
+#    consensus_classification = variant.get_recent_consensus_classification()
+#    if consensus_classification is None:
+#        flash("There is no consensus classification for this variant! Please create one before submitting to ClinVar!", "alert-danger")
+#        return redirect(url_for('variant.display', variant_id = variant_id))
+#
+#    # check for previous heredivar clinvar submissions
+#    clinvar_accession = None
+#    publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_clinvar(variant_id)
+#    previous_clinvar_submission = check_update_clinvar_status(variant_id, conn) # is None if there is no previous clinvar accession
+#    if previous_clinvar_submission is not None:
+#        clinvar_accession = previous_clinvar_submission[3]
+#        if previous_clinvar_submission[4] not in ['processed', 'error', 'deleted']:
+#            flash("This variant still has an unfinished ClinVar submission. Please wait for ClinVar to finish processing it before submitting making changes to it.", 'alert-danger')
+#            return redirect(url_for('variant.display', variant_id=variant_id))
+#
+#
+#    if request.method == 'POST':
+#        # extract submitted information
+#        selected_gene = request.form.get('gene', "")
+#        if selected_gene.strip() == "":
+#            selected_gene = None
+#        
+#        # submit to clinvar api
+#        #base_url = 'https://submit.ncbi.nlm.nih.gov/api/v1/submissions/?dry-run=true'
+#        #base_url = 'https://submit.ncbi.nlm.nih.gov/apitest/v1/submissions'
+#        base_url = current_app.config['CLINVAR_API_ENDPOINT']
+#
+#        # prepare json data to be submitted to ClinVar
+#        schema = json.loads(open(paths.clinvar_submission_schema).read())
+#        data = upload_functions.get_clinvar_submission_json(variant, selected_gene, clinvar_accession)
+#        #print(data)
+#        #with open("/mnt/storage2/users/ahdoebm1/HerediVar/testdat.json", "w") as jfile:
+#        #    jfile.write(json.dumps(data, indent=4))
+#
+#        # check that the generated data is valid by checking against json schema
+#        try:
+#            jsonschema.validate(instance = data, schema = schema)
+#        except jsonschema.exceptions.ValidationError as ex:
+#            current_app.logger.error('There is an error in the JSON for ClinVar api submission!' + str(ex) + " For variant " + str(variant_id))
+#            abort(500, 'There is an error in the JSON for ClinVar api submission! ' + str(ex))
+#
+#        # post to ClinVar
+#        api_key = current_app.config['CLINVAR_API_KEY']
+#        headers = {'SP-API-KEY': api_key, 'Content-type': 'application/json'}
+#        postable_data = {
+#            "actions": [{
+#                "type": "AddData",
+#                "targetDb": "clinvar",
+#                "data": {"content": data}
+#            }]
+#        }
+#        #print(json.dumps(postable_data))
+#        resp = requests.post(base_url, headers = headers, data=json.dumps(postable_data))
+#        #print(resp.json())
+#        if str(resp.status_code) not in ['200', '201']:
+#            abort(500, 'Status code of ClinVar submission API endpoint was: ' + str(resp.status_code) + ': ' + str(resp.json()))
+#            
+#        submission_id = resp.json()['id']
+#        clinvar_status = check_clinvar_status(submission_id)
+#        #print("Clinvar status: " + str(clinvar_status))
+#
+#        # insert a new heredivar_clinvar_submission if the variant was not submitted previously or update if it was there previously
+#        conn.insert_update_heredivar_clinvar_submission(variant_id, submission_id, clinvar_status['accession_id'], clinvar_status['status'], clinvar_status['message'], clinvar_status['last_updated'], previous_clinvar_accession = clinvar_accession)
+#            
+#        # some user feedback that the submission was successful or not
+#        if resp.status_code == 200 or resp.status_code == 201:
+#            flash("Successfully uploaded consensus classification to ClinVar.", "alert-success")
+#            current_app.logger.info(session['user']['preferred_username'] + " successfully uploaded variant " + str(variant_id) + " to ClinVar.")
+#            return redirect(url_for('variant.display', variant_id=variant_id))
+#        flash("There was an error during submission to ClinVar. It ended with status code: " + str(resp.status_code), "alert-danger")
+#        current_app.logger.error(session['user']['preferred_username'] + " tried to upload a consensus classification for variant " + str(variant_id) + " to ClinVar, but it resulted in an error with status code: " + str(resp.status_code))
+#
+#    return render_template('upload/submit_clinvar.html', 
+#                            variant = variant,
+#                            genes = genes)
 
 
 

@@ -1116,8 +1116,8 @@ class Connection:
     def get_variant_ids_from_gene_and_hgvs(self, gene, hgvs_c, source = 'ensembl'):
         hgnc_id = self.convert_to_hgnc_id(gene)
 
-        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,z.hgnc_id,source,pfam_accession,pfam_description,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype,variant_id  FROM transcript RIGHT JOIN ( \
-                        SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,y.hgnc_id,exon_nr,intron_nr,source,pfam_accession,pfam_description,variant_id FROM gene RIGHT JOIN ( \
+        command = "SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,exon_nr,intron_nr,symbol,z.hgnc_id,source,length,is_gencode_basic,is_mane_select,is_mane_plus_clinical,is_ensembl_canonical,is_gencode_basic+is_mane_select+is_mane_plus_clinical+is_ensembl_canonical total_flags,biotype,variant_id  FROM transcript RIGHT JOIN ( \
+                        SELECT transcript_name,hgvs_c,hgvs_p,consequence,impact,symbol,y.hgnc_id,exon_nr,intron_nr,source,variant_id FROM gene RIGHT JOIN ( \
                             SELECT * FROM variant_consequence INNER JOIN ( \
 	                            SELECT DISTINCT variant_id as variant_id_trash FROM variant_consequence WHERE source = %s AND hgnc_id = %s AND hgvs_c = %s \
                             ) x ON x.variant_id_trash = variant_consequence.variant_id  \
@@ -1137,10 +1137,10 @@ class Connection:
         current_batch = []
         batches = []
         for consequence in possible_consequences:
-            if len(current_batch) == 0 or consequence[19] == current_batch[0][19]:
+            if len(current_batch) == 0 or consequence[17] == current_batch[0][17]:
                 # (1)
                 current_batch.append(consequence)
-            elif consequence[19] != current_batch[0][19]:
+            elif consequence[17] != current_batch[0][17]:
                 batches.append(current_batch)
                 current_batch = [consequence]
         if len(current_batch) > 0:
@@ -1148,66 +1148,68 @@ class Connection:
 
         for current_batch in batches:
             # (2)
-            current_batch = self.order_consequences(current_batch)
+            sortable_dict = {}
+            for c in current_batch:
+                sortable_dict[c[0]] = c
+            #current_batch = self.order_consequences(current_batch)
             # THIS SHOULD BE REPLACED WITH SOMETHING LIKE THIS:
-            #transcripts, current_batch = functions.order_transcripts(sortable_dict)
+            transcripts, current_batch = functions.sort_transcript_dict(sortable_dict)
             best_consequence = current_batch[0]
 
             # (3)
             if best_consequence[1] == hgvs_c:
-                matching_variant_ids.append(best_consequence[19])
+                matching_variant_ids.append(best_consequence[17])
             
-            if best_consequence[14] == 1: # is mane select
+            if best_consequence[12] == 1: # is mane select
                 for c in current_batch:
-                    if c[14] == 1 and c[1] == hgvs_c:
-                        
-                        matching_variant_ids.append(c[19]) # this can lead to duplicated variant ids
-                    elif c[14] == 0:
+                    if c[12] == 1 and c[1] == hgvs_c:
+                        matching_variant_ids.append(c[17]) # this can lead to duplicated variant ids
+                    elif c[12] == 0:
                         break
 
         matching_variant_ids = list(set(matching_variant_ids)) # removes duplicates
 
         return matching_variant_ids
 
-    # DEPRECATED
-    def order_consequences(self, consequences):
-        keyfunc = cmp_to_key(mycmp = self.sort_consequences)
-                
-        consequences.sort(key = keyfunc) # sort by preferred transcript
-        return consequences
+    ## DEPRECATED
+    #def order_consequences(self, consequences):
+    #    keyfunc = cmp_to_key(mycmp = self.sort_consequences)
+    #            
+    #    consequences.sort(key = keyfunc) # sort by preferred transcript
+    #    return consequences
     
-    # DEPRECATED
-    def sort_consequences(self, a, b):
-        # sort by ensembl/refseq
-        if a[9] == 'ensembl' and b[9] == 'refseq':
-            return -1
-        elif a[9] == 'refseq' and b[9] == 'ensembl':
-            return 1
-        elif a[9] == b[9]:
-    
-            # sort by mane select
-            if a[14] is None or b[14] is None:
-                return 1
-            elif a[14] == 1 and b[14] == 0:
-                return -1
-            elif a[14] == 0 and b[14] == 1:
-                return 1
-            elif a[14] == b[14]:
-    
-                # sort by biotype
-                if a[18] == 'protein coding' and b[18] != 'protein coding':
-                    return -1
-                elif a[18] != 'protein coding' and b[18] == 'protein coding':
-                    return 1
-                elif (a[18] != 'protein coding' and b[18] != 'protein coding') or (a[18] == 'protein coding' and b[18] == 'protein coding'):
-    
-                    # sort by length
-                    if a[12] > b[12]:
-                        return -1
-                    elif a[12] < b[12]:
-                        return 1
-                    else:
-                        return 0
+    ## DEPRECATED
+    #def sort_consequences(self, a, b):
+    #    # sort by ensembl/refseq
+    #    if a[9] == 'ensembl' and b[9] == 'refseq':
+    #        return -1
+    #    elif a[9] == 'refseq' and b[9] == 'ensembl':
+    #        return 1
+    #    elif a[9] == b[9]:
+    #
+    #        # sort by mane select
+    #        if a[14] is None or b[14] is None:
+    #            return 1
+    #        elif a[14] == 1 and b[14] == 0:
+    #            return -1
+    #        elif a[14] == 0 and b[14] == 1:
+    #            return 1
+    #        elif a[14] == b[14]:
+    #
+    #            # sort by biotype
+    #            if a[18] == 'protein coding' and b[18] != 'protein coding':
+    #                return -1
+    #            elif a[18] != 'protein coding' and b[18] == 'protein coding':
+    #                return 1
+    #            elif (a[18] != 'protein coding' and b[18] != 'protein coding') or (a[18] == 'protein coding' and b[18] == 'protein coding'):
+    #
+    #                # sort by length
+    #                if a[12] > b[12]:
+    #                    return -1
+    #                elif a[12] < b[12]:
+    #                    return 1
+    #                else:
+    #                    return 0
 
 
 
@@ -1401,12 +1403,28 @@ class Connection:
         self.cursor.execute(command, (consensus_classification_id, ))
         self.conn.commit()
 
-    def get_variant_ids_which_need_heredicare_upload(self): # THIS SKIPS all structural variants and varaints which have unfinished submissions
+    def get_variant_ids_which_need_heredicare_upload(self):
+        # excludes structural variants and intergenic variants and variants of unfinished submissions
         command = """
-            SELECT DISTINCT variant_id FROM consensus_classification WHERE needs_heredicare_upload = 1 and variant_id NOT IN (
+            SELECT DISTINCT variant_id FROM consensus_classification WHERE needs_heredicare_upload = 1  AND is_recent = 1 and variant_id NOT IN (
 	            SELECT publish_heredicare_queue.variant_id FROM publish_heredicare_queue RIGHT JOIN (
 		            SELECT variant_id, MAX(requested_at) as requested_at FROM publish_heredicare_queue WHERE status != 'skipped' GROUP BY variant_id
 	            )x ON x.requested_at = publish_heredicare_queue.requested_at AND x.variant_id = publish_heredicare_queue.variant_id
+	            WHERE status = 'submitted' or status = 'pending' or status = 'progress' or status = 'retry'
+            ) AND variant_id NOT IN (SELECT id FROM variant WHERE sv_variant_id IS NOT NULL) AND variant_id NOT IN (SELECT variant_id FROM (SELECT * FROM variant_consequence WHERE source = 'ensembl')y
+                GROUP BY variant_id 
+            HAVING COUNT(exon_nr is not null or intron_nr is not null OR NULL) = 0)
+        """
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
+    
+    def get_variant_ids_which_need_clinvar_upload(self):
+        command = """
+            SELECT DISTINCT variant_id FROM consensus_classification WHERE needs_clinvar_upload = 1  AND is_recent = 1 and variant_id NOT IN (
+	            SELECT publish_clinvar_queue.variant_id FROM publish_clinvar_queue RIGHT JOIN (
+		            SELECT variant_id, MAX(requested_at) as requested_at FROM publish_clinvar_queue WHERE status != 'skipped' GROUP BY variant_id
+	            )x ON x.requested_at = publish_clinvar_queue.requested_at AND x.variant_id = publish_clinvar_queue.variant_id
 	            WHERE status = 'submitted' or status = 'pending' or status = 'progress' or status = 'retry'
             ) AND variant_id NOT IN (SELECT id FROM variant WHERE sv_variant_id IS NOT NULL)
         """
@@ -1419,6 +1437,19 @@ class Connection:
             SELECT DISTINCT publish_heredicare_queue.variant_id FROM publish_heredicare_queue RIGHT JOIN (
 		        SELECT variant_id, MAX(requested_at) as requested_at FROM publish_heredicare_queue WHERE status != 'skipped' GROUP BY variant_id
 	        )x ON x.requested_at = publish_heredicare_queue.requested_at AND x.variant_id = publish_heredicare_queue.variant_id
+	        WHERE 
+        """
+        tmp = ["status = %s"]*len(stati)
+        command += ' OR '.join(tmp)
+        self.cursor.execute(command, tuple(stati))
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
+
+    def get_variant_ids_by_publish_clinvar_status(self, stati):
+        command = """
+            SELECT DISTINCT publish_clinvar_queue.variant_id FROM publish_clinvar_queue RIGHT JOIN (
+		        SELECT variant_id, MAX(requested_at) as requested_at FROM publish_clinvar_queue WHERE status != 'skipped' GROUP BY variant_id
+	        )x ON x.requested_at = publish_clinvar_queue.requested_at AND x.variant_id = publish_clinvar_queue.variant_id
 	        WHERE 
         """
         tmp = ["status = %s"]*len(stati)
@@ -1731,8 +1762,6 @@ class Connection:
         import_requests = [self.get_import_request(import_queue_id[0]) for import_queue_id in import_queue_ids]
         return import_requests
 
-
-    
     def get_max_finished_at_import_variant(self, import_queue_id):
         command = "SELECT MAX(finished_at) FROM import_variant_queue WHERE import_queue_id = %s"
         self.cursor.execute(command, (import_queue_id, ))
@@ -2818,6 +2847,8 @@ class Connection:
             online_reference = classification_schema[4]
             is_scheme_default = classification_schema[5]
             version = classification_schema[6]
+            final_classes = self.get_classification_final_classes(classification_schema_id)
+            final_classes = functions.order_classes(final_classes)
 
             command = "SELECT * FROM classification_criterium WHERE classification_scheme_id = %s"
             self.cursor.execute(command, (classification_schema_id, ))
@@ -2858,7 +2889,7 @@ class Connection:
 
                 classification_criteria_dict[classification_criterium_name] = new_criterium_dict
 
-            result[classification_schema_id] = {"description": description, "scheme_type": scheme_type, "version": version, "reference": online_reference, 'is_default': is_scheme_default, 'criteria': classification_criteria_dict}
+            result[classification_schema_id] = {"description": description, "scheme_type": scheme_type, "version": version, "reference": online_reference, 'is_default': is_scheme_default, 'final_classes': final_classes, 'criteria': classification_criteria_dict}
 
         return result
 
@@ -3490,15 +3521,35 @@ class Connection:
         result = self.cursor.fetchone()
         return result[0]
 
-    def get_most_recent_publish_heredicare_queue_entries(self, variant_id):
-        command = """
-            SELECT id, status, requested_at, finished_at, message, vid, variant_id, submission_id, consensus_classification_id FROM publish_heredicare_queue 
-                WHERE variant_id = %s AND publish_queue_id = (SELECT MAX(publish_queue_id) FROM publish_heredicare_queue WHERE variant_id = %s AND status != 'skipped')
-            """
+    #def get_most_recent_publish_heredicare_queue_entries(self, variant_id):
+    #    command = """
+    #        SELECT id, status, requested_at, finished_at, message, vid, variant_id, submission_id, consensus_classification_id FROM publish_heredicare_queue 
+	#	        WHERE variant_id = %s AND id >= (SELECT MAX(id) FROM publish_heredicare_queue WHERE variant_id = %s AND status != "skipped") ORDER BY vid
+    #    """
+    #    self.cursor.execute(command, (variant_id, variant_id))
+    #    result = self.cursor.fetchall()
+    #    if len(result) == 0:
+    #        return None
+    #    return result
+
+    def get_most_recent_publish_queue_ids_heredicare(self, variant_id):
+        command = "SELECT DISTINCT publish_queue_id FROM publish_heredicare_queue WHERE variant_id = %s AND id >= (SELECT MAX(id) FROM publish_heredicare_queue WHERE variant_id = %s AND status != 'skipped')"
         self.cursor.execute(command, (variant_id, variant_id))
         result = self.cursor.fetchall()
         if len(result) == 0:
-            return None
+            command = "SELECT DISTINCT publish_queue_id from publish_heredicare_queue WHERE variant_id = %s AND status = 'skipped'"
+            self.cursor.execute(command, (variant_id, ))
+            result = self.cursor.fetchall()
+        return [x[0] for x in result]
+    
+    def get_heredicare_queue_entries(self, publish_queue_ids: list, variant_id):
+        if len(publish_queue_ids) == 0:
+            return []
+        placeholders = self.get_placeholders(len(publish_queue_ids))
+        command = "SELECT id, status, requested_at, finished_at, message, vid, variant_id, submission_id, consensus_classification_id from publish_heredicare_queue WHERE publish_queue_id IN " + placeholders + " AND variant_id = %s"
+        actual_information = tuple(publish_queue_ids) + (variant_id, )
+        self.cursor.execute(command, actual_information)
+        result = self.cursor.fetchall()
         return result
     
     def has_skipped_heredicare_publishes_before_finished_one(self, variant_id, last_finished_requested_at):
@@ -3510,9 +3561,9 @@ class Connection:
         return False
 
 
-    def insert_publish_request(self, user_id):
-        command = "INSERT INTO publish_queue (user_id) VALUES (%s)"
-        self.cursor.execute(command, (user_id, ))
+    def insert_publish_request(self, user_id: int, upload_heredicare: bool, upload_clinvar: bool, variant_ids: list):
+        command = "INSERT INTO publish_queue (user_id, upload_clinvar, upload_heredicare, variant_ids) VALUES (%s, %s, %s, %s)"
+        self.cursor.execute(command, (user_id, upload_clinvar, upload_heredicare, ";".join(variant_ids)))
         self.conn.commit()
         publish_queue_id = self.get_last_insert_id()
         return publish_queue_id
@@ -3535,7 +3586,7 @@ class Connection:
     def get_publish_request_overview(self):
         command = """
             SELECT id, (SELECT first_name FROM user WHERE user.id=publish_queue.user_id)first_name, (SELECT last_name FROM user WHERE user.id=publish_queue.user_id)last_name,
-            	requested_at, status, finished_at, message,  (SELECT DISTINCT COUNT(publish_clinvar_queue.variant_id) FROM publish_clinvar_queue WHERE publish_clinvar_queue.publish_queue_id=publish_queue.id) clinvar_subs,
+            	requested_at, status, finished_at, message, (SELECT DISTINCT COUNT(publish_clinvar_queue.variant_id) FROM publish_clinvar_queue WHERE publish_clinvar_queue.publish_queue_id=publish_queue.id) clinvar_subs,
                 (SELECT DISTINCT COUNT(publish_heredicare_queue.variant_id) FROM publish_heredicare_queue WHERE publish_heredicare_queue.publish_queue_id=publish_queue.id) heredicare_subs
             FROM publish_queue
         """
@@ -3576,8 +3627,203 @@ class Connection:
         self.conn.commit()
 
 
-    def get_most_recent_publish_clinvar_queue_entry(self, variant_id):
-        command = "SELECT id, publish_queue_id, requested_at, status, message, submission_id, accession_id, last_updated, celery_task_id, consensus_classification_id FROM publish_clinvar_queue WHERE id = (SELECT MAX(id) FROM publish_clinvar_queue WHERE variant_id = %s and status != 'skipped')"
-        self.cursor.execute(command, (variant_id, ))
-        result = self.cursor.fetchone()
+    #def get_most_recent_publish_clinvar_queue_entry(self, variant_id):
+    #    command = """
+    #        SELECT id, publish_queue_id, requested_at, status, message, submission_id, accession_id, last_updated, celery_task_id, consensus_classification_id FROM publish_clinvar_queue 
+    #            WHERE id = (SELECT MAX(id) FROM publish_clinvar_queue WHERE variant_id = %s and status != 'skipped')
+    #    """
+    #    self.cursor.execute(command, (variant_id, ))
+    #    result = self.cursor.fetchone()
+    #    return result
+
+
+    def get_most_recent_publish_queue_ids_clinvar(self, variant_id):
+        command = "SELECT DISTINCT publish_queue_id FROM publish_clinvar_queue WHERE variant_id = %s AND id >= (SELECT MAX(id) FROM publish_clinvar_queue WHERE variant_id = %s AND status != 'skipped')"
+        self.cursor.execute(command, (variant_id, variant_id))
+        result = self.cursor.fetchall()
+        if len(result) == 0:
+            command = "SELECT DISTINCT publish_queue_id from publish_clinvar_queue WHERE variant_id = %s AND status = 'skipped'"
+            self.cursor.execute(command, (variant_id, ))
+            result = self.cursor.fetchall()
+        return [x[0] for x in result]
+    
+    def get_clinvar_queue_entries(self, publish_queue_ids: list, variant_id):
+        if len(publish_queue_ids) == 0:
+            return []
+        placeholders = self.get_placeholders(len(publish_queue_ids))
+        command = "SELECT id, publish_queue_id, requested_at, status, message, submission_id, accession_id, last_updated, celery_task_id, consensus_classification_id FROM publish_clinvar_queue WHERE publish_queue_id IN " + placeholders + " AND variant_id = %s"
+        actual_information = tuple(publish_queue_ids) + (variant_id, )
+        self.cursor.execute(command, actual_information)
+        result = self.cursor.fetchall()
         return result
+
+    
+    def check_publish_queue_id(self, publish_queue_id):
+        command = "SELECT id FROM publish_queue WHERE id = %s"
+        self.cursor.execute(command, (publish_queue_id, ))
+        result = self.cursor.fetchone()
+        if result is None:
+            return False
+        return True
+    
+
+
+    def get_publish_request(self, publish_queue_id):
+        command = "SELECT id, user_id, requested_at, finished_at, status, message, upload_clinvar, upload_heredicare, variant_ids FROM publish_queue WHERE id = %s"
+        self.cursor.execute(command, (publish_queue_id, ))
+        result = self.cursor.fetchone()
+        return self.convert_raw_publish_request(result)
+    
+    def get_publish_heredicare_variant_summary(self, publish_queue_id):
+        command = "SELECT count(*) as count, status from publish_heredicare_queue WHERE publish_queue_id = %s GROUP BY status"
+        self.cursor.execute(command, (publish_queue_id, ))
+        result_raw = self.cursor.fetchall()
+        result = {}
+        for elem in result_raw:
+            result[elem[1]] = elem[0]
+        return result
+    
+    def get_publish_clinvar_variant_summary(self, publish_queue_id):
+        command = "SELECT count(*) as count, status from publish_clinvar_queue WHERE publish_queue_id = %s GROUP BY status"
+        self.cursor.execute(command, (publish_queue_id, ))
+        result_raw = self.cursor.fetchall()
+        result = {}
+        for elem in result_raw:
+            result[elem[1]] = elem[0]
+        return result
+    
+    def get_max_finished_at_publish_variant(self, publish_queue_id):
+        command = "SELECT MAX(m) FROM (SELECT MAX(last_updated)m FROM publish_clinvar_queue WHERE publish_queue_id = %s UNION SELECT MAX(finished_at)m FROM publish_heredicare_queue WHERE publish_queue_id = %s)x"
+        self.cursor.execute(command, (publish_queue_id, publish_queue_id ))
+        result = self.cursor.fetchone()
+        if result is None:
+            return None
+        return result[0]
+
+    def get_number_of_publish_clinvar_variants(self, publish_queue_id):
+        command = "SELECT COUNT(variant_id) FROM (SELECT DISTINCT variant_id FROM publish_clinvar_queue WHERE publish_queue_id = %s)x"
+        self.cursor.execute(command, (publish_queue_id, ))
+        result = self.cursor.fetchone()
+        if result is None:
+            return None
+        return result[0]
+    
+    def get_number_of_publish_heredicare_variants(self, publish_queue_id):
+        command = "SELECT COUNT(variant_id) FROM (SELECT DISTINCT variant_id FROM publish_heredicare_queue WHERE publish_queue_id = %s)x"
+        self.cursor.execute(command, (publish_queue_id, ))
+        result = self.cursor.fetchone()
+        if result is None:
+            return None
+        return result[0]
+
+    def convert_raw_publish_request(self, raw_publish_request):
+        if raw_publish_request is None:
+            return None
+        
+        publish_queue_id = raw_publish_request[0]
+        user = self.parse_raw_user(self.get_user(raw_publish_request[1]))
+        requested_at = raw_publish_request[2]
+        insert_tasks_finished_at = raw_publish_request[3]
+        insert_tasks_status = raw_publish_request[4]
+        insert_tasks_message = raw_publish_request[5]
+        upload_clinvar = raw_publish_request[6] == 1
+        upload_heredicare = raw_publish_request[7] == 1
+        variant_ids = [int(x) for x in raw_publish_request[8].split(';') if x.strip() != '']
+
+        heredicare_summary = self.get_publish_heredicare_variant_summary(publish_queue_id)
+        num_heredicare = self.get_number_of_publish_heredicare_variants(publish_queue_id)
+        clinvar_summary = self.get_publish_clinvar_variant_summary(publish_queue_id)
+        num_clinvar = self.get_number_of_publish_clinvar_variants(publish_queue_id)
+
+        status = "unknown"
+        finished_at = None
+        #'pending', 'progress', 'success', 'error', 'retry'
+        if insert_tasks_status == "retry":
+            status = "retry"
+        elif insert_tasks_status == "pending":
+            status = "pending"
+        elif insert_tasks_status == "progress":
+            status = "requesting upload"
+        elif insert_tasks_status == "success" and (any([key_oi in heredicare_summary for key_oi in ["pending", "progress"]]) or any([key_oi in clinvar_summary for key_oi in ["pending", "progress"]])):
+            status = "uploading variants"
+        elif insert_tasks_status == "success" and any([key_oi in heredicare_summary for key_oi in ["submitted"]]) or any([key_oi in clinvar_summary for key_oi in ["submitted"]]):
+            status = "waiting for 3rd party DB"
+        elif insert_tasks_status  == "error":
+            status = "error"
+            finished_at = insert_tasks_finished_at
+        elif insert_tasks_status == "success":
+            status = "success"
+            finished_at = self.get_max_finished_at_publish_variant(publish_queue_id)
+            if finished_at is None: # there are no variants 
+                finished_at = insert_tasks_finished_at
+
+        result = models.publish_request(id = publish_queue_id, 
+                                       user = user, 
+                                       requested_at = requested_at, 
+                                       status = status, 
+                                       finished_at = finished_at,
+                                       insert_tasks_status = insert_tasks_status,
+                                       insert_tasks_finished_at = insert_tasks_finished_at,
+                                       insert_tasks_message = insert_tasks_message,
+
+                                       num_clinvar = num_clinvar,
+                                       num_heredicare = num_heredicare,
+                                       heredicare_summary = heredicare_summary,
+                                       clinvar_summary = clinvar_summary,
+
+                                       upload_clinvar = upload_clinvar,
+                                       upload_heredicare = upload_heredicare,
+                                       variant_ids = variant_ids
+                                    )
+        return result
+    
+    def get_published_variants_heredicare(self, publish_queue_id, status):
+        placeholders = self.get_placeholders(len(status))
+        command = "SELECT id, status, requested_at, finished_at, message, vid, variant_id, submission_id, consensus_classification_id FROM publish_heredicare_queue WHERE publish_queue_id = %s and status IN " + placeholders
+        actual_information = (publish_queue_id, ) + tuple(status)
+        self.cursor.execute(command, actual_information)
+        result = self.cursor.fetchall()
+        return result
+    
+    def get_published_variants_clinvar(self, publish_queue_id, status):
+        placeholders = self.get_placeholders(len(status))
+        command = "SELECT id, variant_id, requested_at, last_updated, status, message, submission_id, accession_id, consensus_classification_id FROM publish_clinvar_queue WHERE publish_queue_id = %s and status IN " + placeholders
+        actual_information = (publish_queue_id, ) + tuple(status)
+        self.cursor.execute(command, actual_information)
+        result = self.cursor.fetchall()
+        return result
+    
+
+    def get_variant_ids_from_publish_request(self, publish_queue_id):
+        command = "SELECT variant_id FROM publish_heredicare_queue WHERE publish_queue_id = %s UNION SELECT variant_id FROM publish_clinvar_queue WHERE publish_queue_id = %s"
+        self.cursor.execute(command, (publish_queue_id, publish_queue_id))
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
+    
+
+    def get_most_recent_publish_queue(self):
+        command = "SELECT MAX(id) FROM publish_queue"
+        self.cursor.execute(command)
+        result = self.cursor.fetchone()
+        publish_queue_id = result[0]
+        return self.get_publish_request(publish_queue_id)
+    
+
+
+    def get_classification_final_classes(self, classification_scheme_id):
+        command = "SELECT classification FROM classification_final_class WHERE classification_scheme_id = %s"
+        self.cursor.execute(command, (classification_scheme_id, ))
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
+    
+    def delete_classification_final_class(self, classification_scheme_id, final_class):
+        command = "DELETE FROM classification_final_class WHERE classification_scheme_id = %s AND classification = %s"
+        self.cursor.execute(command, (classification_scheme_id, final_class))
+        self.conn.commit()
+
+    def insert_classification_final_class(self, classification_scheme_id, final_class):
+        command = """INSERT INTO classification_final_class (classification_scheme_id, classification) 
+                    SELECT %s, %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM classification_final_class 
+	                    WHERE `classification_scheme_id`=%s AND `classification`=%s LIMIT 1)"""
+        self.cursor.execute(command, (classification_scheme_id, final_class, classification_scheme_id, final_class))
+        self.conn.commit()

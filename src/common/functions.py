@@ -699,7 +699,7 @@ def order_classes( classes):
  
 def sort_classes(a, b):
     # sort by ensembl/refseq
-    class_sequence = ['1', '2', '3-', '3', '3+', '4M', '4', '5']
+    class_sequence = ['1', '2', '3-', '3', '3+', '4M', '4', '5', 'R']
 
     a_importance = class_sequence.index(a)
     b_importance = class_sequence.index(b)
@@ -791,7 +791,7 @@ def num2heredicare(classification, single_value = False):
             "3+": "34",
             "4": "14",
             "-": "21",
-            "4M": "M"
+            "4M": "14"
         }
     else:
         mapping = {
@@ -803,7 +803,7 @@ def num2heredicare(classification, single_value = False):
             "3+": ["34"],
             "4": ["14"],
             "-": ["20", "21", "4", "-1"],
-            "4M": ["M"]
+            "4M": ["14"]
     }
 
     return mapping[str(classification)]
@@ -888,7 +888,10 @@ def none_to_empty_list(obj):
         return []
     return obj
 
-
+def none2default(obj, default):
+    if obj is None:
+        return default
+    return obj
 
 def percent_to_decimal(input) -> float:
     if input is None:

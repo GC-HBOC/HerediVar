@@ -13,13 +13,13 @@
     <table class="table table-hover" id="variant_import_history_table">
         <thead>
             <tr>
-                <th class="width_small" id="assayTableAssayTypeCol" asc="false"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                <th class="width_small" id="assayTableAssayTypeCol" asc="false"><div class="sortable">Requested at</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                <th class="width_small" id="assayTableAssayTypeCol" asc="false"><div class="sortable">Finished at</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                <th class="width_minimal" id="assayTableAssayTypeCol" asc="false"><div class="sortable">#ClinVar</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                <th class="width_minimal" id="assayTableAssayTypeCol" asc="false"><div class="sortable">#HerediCaRe</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                <th class="width_minimal" id="assayTableAssayTypeCol" asc="false"><div class="sortable">Status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                <th class="width_medium" id="assayTableAssayTypeCol" asc="false"><div class="sortable">Message</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                <th class="width_small"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                <th class="width_small" id="requestedatcol"><div class="sortable">Requested at</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                <th class="width_small"><div class="sortable">Finished at</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                <th class="width_minimal"><div class="sortable">#ClinVar</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                <th class="width_minimal"><div class="sortable">#HerediCaRe</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                <th class="width_minimal"><div class="sortable">Status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                <th class="width_medium"><div class="sortable">Message</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
             </tr>
         </thead>
         <tbody>
@@ -48,4 +48,5 @@
 {% endblock %}
 
 {% block special_scripts %}
+<script src="/static/js/variant_publish_history.js"></script>
 {% endblock %}

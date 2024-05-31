@@ -438,17 +438,30 @@ class Heredicare(metaclass=Singleton):
 
         preferred_consequence = None
         if transaction_type == 'INSERT':
-            preferred_gene = variant.get_genes('best')
-            if preferred_gene is not None:
-                preferred_consequences = variant.get_preferred_transcripts()
-                if preferred_consequences is not None:
-                    for consequence in preferred_consequences:
-                        if consequence.transcript.gene.symbol == preferred_gene:
-                            preferred_consequence = consequence
-                            break
+            preferred_consequences = variant.get_preferred_transcripts(within_gene = True)
+            if preferred_consequences is not None:
+                preferred_genes = functions.get_preferred_genes()
+                for consequence in preferred_consequences:
+                    if consequence.transcript.gene.symbol in preferred_genes:
+                        preferred_consequence = consequence
+                        break
+                    elif preferred_consequence is None:
+                        preferred_consequence = consequence
+                    elif preferred_consequence.length < consequence.length:
+                        preferred_consequence = consequence
 
-        preferred_gene = preferred_consequence.transcript.gene.symbol if preferred_consequence is not None else None
+            if preferred_consequence is None:
+                status = "skipped"
+                message = "Intergenic variants are not supported for upload to HerediCaRe"
+                return all_items, status, message
+
         preferred_transcript = preferred_consequence.transcript.name if preferred_consequence is not None else None
+        preferred_gene = preferred_consequence.transcript.gene.symbol if preferred_consequence is not None else None
+
+        #print(preferred_gene)
+        #print(preferred_consequences)
+        #print(preferred_consequence)
+        #print(preferred_transcript)
 
         #Item fehlt für UPDATE: GEN
         item_name = "GEN"
@@ -479,7 +492,7 @@ class Heredicare(metaclass=Singleton):
             item_name = "KONS_VCF"
             item_regex = post_regexes[item_name]
             new_value = preferred_consequence.consequence if preferred_consequence is not None else None
-            if not self.is_valid_post_data(new_value, item_regex):
+            if not self.is_valid_post_data(new_value, item_regex, none_allowed = True):
                 status = "error"
                 message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
                 return all_items, status, message
@@ -501,7 +514,7 @@ class Heredicare(metaclass=Singleton):
             item_name = "PHGVS"
             item_regex = post_regexes[item_name]
             new_value = preferred_consequence.hgvs_p if preferred_consequence is not None else None
-            if not self.is_valid_post_data(new_value, item_regex):
+            if not self.is_valid_post_data(new_value, item_regex, none_allowed = True):
                 status = "error"
                 message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
                 return all_items, status, message
@@ -549,7 +562,8 @@ class Heredicare(metaclass=Singleton):
             status = "error"
             message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
             return all_items, status, message
-        old_value = self.get_heredicare_consensus_attribute(variant, vid, "classification_date").strftime('%d.%m.%Y')
+        old_consensus_classification_date = self.get_heredicare_consensus_attribute(variant, vid, "classification_date")
+        old_value = old_consensus_classification_date if old_consensus_classification_date is None else old_consensus_classification_date.strftime('%d.%m.%Y')
         new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
         all_items.append(new_item)
 
@@ -568,7 +582,11 @@ class Heredicare(metaclass=Singleton):
         return all_items, status, message
 
 
-    def is_valid_post_data(self, value, regex):
+    def is_valid_post_data(self, value, regex, none_allowed = False):
+        if value is None:
+            if none_allowed:
+                return True
+            return False
         pattern = re.compile(regex)
         result = pattern.match(value)
         if result is None:
@@ -646,6 +664,8 @@ class Heredicare(metaclass=Singleton):
         for i in range(len(all_items)):
             all_items[i]["record_id"] = vid
             all_items[i]["submission_id"] = submission_id
+            all_items[i]["item_value_old"] = functions.none2default(all_items[i]["item_value_old"], "")
+            all_items[i]["item_value_new"] = functions.none2default(all_items[i]["item_value_new"], "")
         
         # tinker all items together
         data = {'items': all_items}
@@ -692,12 +712,10 @@ class Heredicare(metaclass=Singleton):
         if status in ["error", "skipped"]:
             return vid, submission_id, status, message
         
+        print(data)
         status, message = self._post_data(data)
 
         return vid, submission_id, status, message
-
-
-
 
 
 

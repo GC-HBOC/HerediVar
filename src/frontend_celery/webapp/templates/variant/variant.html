@@ -19,29 +19,30 @@
         </div>
 
         <!-- ClinVar submission status -->
-
-
-
         <div id="clinvar_status_pill_holder">
-            {% set status = clinvar_queue_entry[3] %}
             {% set pill_color = "bg-secondary" %}
-            {% if status in ['processed'] %}
-                {% set pill_color = "bg-success" %}
-            {% endif %}
-            {% if status in ['error'] %}
-                {% set pill_color = "bg-danger" %}
+            {% if clinvar_queue_entries is not none %}
+                {% if clinvar_queue_entry_summary["status"] == "multiple stati" %}
+                    {% set pill_color = "bg-warning" %}
+                {% endif %}
+                {% if clinvar_queue_entry_summary["status"] in ['processed'] %}
+                    {% set pill_color = "bg-success" %}
+                {% endif %}
+                {% if clinvar_queue_entry_summary["status"] in ['error'] %}
+                    {% set pill_color = "bg-danger" %}
+                {% endif %}
             {% endif %}
 
             <span class="badge rounded-pill {{pill_color}} popover_collapse_toggle" tabindex="0" role="button" 
             data-bs-toggle="collapse" data-bs-target=".popover_collapse_toggle:hover + .popover_collapse" aria-expanded="false">
-                {% if clinvar_queue_entry is not none %}
+                {% if clinvar_queue_entries is not none and clinvar_queue_entry_summary["status"] != 'skipped' %}
                     {% set mrcc = variant.get_recent_consensus_classification() %}
                     {% if mrcc is not none %}
-                        {% if mrcc.needs_clinvar_upload and status not in ['progress', 'processing', 'submitted', 'pending'] %}
+                        {% if mrcc.needs_clinvar_upload and clinvar_queue_entry_summary["status"] not in ['progress', 'processing', 'submitted', 'pending', 'waiting', 'requesting'] %}
                             {{macros.draw_exclamation_mark("The consensus classification needs to be uploaded to ClinVar!")}}
                         {% endif %}
                     {% endif %}
-                    ClinVar {{ clinvar_queue_entry[3] }}
+                    ClinVar {{clinvar_queue_entry_summary["status"]}}
                 {% else %}
                     no ClinVar submission
                 {% endif %}
@@ -54,12 +55,14 @@
                         <div class='col-3 text-center border-start'>status</div>
                         <div class='col-6 text-center border-start'>message</div>
                     </div>
-                    {% if clinvar_queue_entry is not none %}
-                    <div class='row gx-2'>
-                        <div class='col-3'>{{clinvar_queue_entry[6]}}</div>
-                        <div class='col-3 text-center border-start'>{{clinvar_queue_entry[3]}}</div>
-                        <div class='col-6 text-center border-start'>{{clinvar_queue_entry[4]}}</div>
-                    </div>
+                    {% if clinvar_queue_entries is not none and clinvar_queue_entry_summary["status"] not in ['waiting', 'requesting'] %}
+                        {% for clinvar_queue_entry in clinvar_queue_entries %}
+                            <div class='row gx-2'>
+                                <div class='col-3'>{{clinvar_queue_entry[6]}}</div>
+                                <div class='col-3 text-center border-start'>{{clinvar_queue_entry[3]}}</div>
+                                <div class='col-6 text-center border-start'>{{clinvar_queue_entry[4]}}</div>
+                            </div>
+                        {% endfor %}
                     {% endif %}
                 </div>
             </div>
@@ -81,10 +84,10 @@
             {% endif %}
             <span class="badge rounded-pill {{pill_color}} popover_collapse_toggle" tabindex="0" role="button" data-bs-toggle="collapse" 
                   data-bs-target=".popover_collapse_toggle:hover + .popover_collapse" aria-expanded="false">
-                {% if heredicare_queue_entries is not none %}
+                {% if heredicare_queue_entries is not none and heredicare_queue_entry_summary["status"] != 'skipped' %}
                     {% set mrcc = variant.get_recent_consensus_classification() %}
                     {% if mrcc is not none %}
-                        {% if mrcc.needs_heredicare_upload and heredicare_queue_entry_summary["status"] in ["error", "api_error", "success"] %}
+                        {% if mrcc.needs_heredicare_upload and heredicare_queue_entry_summary["status"] in ["error", "api_error", "success", 'waiting', 'requesting'] %}
                             {{macros.draw_exclamation_mark("The consensus classification needs to be uploaded to HerediCaRe!")}}
                         {% endif %}
                     {% endif %}
@@ -100,7 +103,7 @@
                         <div class='col-3 text-center border-start'>status</div>
                         <div class='col-6 text-center border-start'>message</div>
                     </div>
-                    {% if heredicare_queue_entries is not none %}
+                    {% if heredicare_queue_entries is not none and clinvar_queue_entry_summary["status"] not in ['waiting', 'requesting']  %}
                         {% for heredicare_queue_entry in heredicare_queue_entries %}
                         <div class='row gx-2'>
                             <div class='col-3'>{{heredicare_queue_entry[5]}}</div>
@@ -142,10 +145,11 @@
                 </a>
             </li>
             <li>
-                <a id="publish_button" type="button" class="dropdown-item" href="{{url_for('upload.publish', variant_ids = variant.id, next = url_for('variant.display', variant_id = variant.id))}}" 
-                data-bs-toggle="tooltip"  title="Publish this variant and selected data to external databases.">
+                {% set mrcc = variant.get_recent_consensus_classification() %}
+                <button id="publish_button" type="button" class="dropdown-item" data-href="{{url_for('upload.publish', variant_ids = variant.id, next = url_for('variant.display', variant_id = variant.id))}}" 
+                data-bs-toggle="tooltip" title="Publish this variant and selected data to external databases." {% if mrcc is none or (not mrcc.needs_heredicare_upload and not mrcc.needs_clinvar_upload) %}disabled="disabled"{% endif %}>
                     Publish
-                </a>
+            </button>
             </li>
             {% endif %}
             <li>

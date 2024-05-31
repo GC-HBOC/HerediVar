@@ -210,7 +210,7 @@ function preselect_final_classification() {
 
 function preselect_scheme() {
     var scheme_select = document.getElementById('scheme')
-    const lower_case_variant_genes = variant_genes.toLowerCase().split(';') // convert all genes to lower case
+    const lower_case_variant_genes = variant_genes.toLowerCase().split('~3b') // convert all genes to lower case
 
     console.log(classification_schemas)
 
@@ -344,6 +344,25 @@ function update_scheme_field_variable() {
     scheme_type = $("#scheme :selected").attr('scheme_type')
 }
 
+function update_final_class_select() {
+    const final_classes = classification_schemas[scheme]["final_classes"];
+    var final_class_select = document.getElementById("final_class");
+    final_class_select.innerHTML = "";
+    final_classes.forEach(final_class => {
+        create_final_class_option(final_class_select, final_class)
+    });
+}
+
+function create_final_class_option(parent, final_class) {
+    var new_option = document.createElement('option')
+    new_option.setAttribute('value', final_class)
+    new_option.innerText = final_class
+    parent.appendChild(new_option)
+}
+
+
+
+
 // call the function once to preselect on page load
 // we need to wait until the document is ready to call the function because there is some jquery
 // which will not be loaded if this function is called without the document ready!
@@ -351,8 +370,10 @@ function scheme_select_action(do_revert=true) {
     if (do_revert) {
         revert_all()
     }
-    
+
     update_scheme_field_variable()
+
+    update_final_class_select()
 
     revert_automatic_classification_button()
 
@@ -469,8 +490,13 @@ function preselect_criteria_automatic_classification(){
             console.log(returnval)
 
             var scheme_id_automatic_classification = returnval['scheme_id']
-            console.log(scheme)
-            if (scheme_id_automatic_classification != scheme){
+            console.log(scheme_id_automatic_classification)
+            if (scheme_id_automatic_classification == null) {
+                update_status(preselect_button, "failure")
+                preselect_button.classList.add("btn-warning")
+                add_tooltip(preselect_button, "This variant does not have an automatic classification. Please run a reannotation to calculate one. If it does not show up it might not be possible to automatically classify this variant.")
+            }
+            else if (scheme_id_automatic_classification != scheme){
                 update_status(preselect_button, "failure")
                 preselect_button.classList.add("btn-warning")
                 add_tooltip(preselect_button, "You have selected the wrong scheme. This variant only has an automatic classification for " + returnval['scheme_display_title'])

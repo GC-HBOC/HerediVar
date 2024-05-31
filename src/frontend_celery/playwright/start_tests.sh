@@ -54,8 +54,8 @@ $TESTDIR/start_heredivar_for_tests.sh
 cd $TESTDIR
 export TESTUSER=$TEST_READONLY
 export TESTUSERPW=$TEST_READONLY_PW
-pytest --screenshot=only-on-failure --browser firefox tests/read_only/ -k 'test_variant_details_consequences' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
+pytest --screenshot=only-on-failure --browser firefox tests/read_only/ #-k 'test_private_list_actions or test_variant_list_add' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
 
 # stop services
-#pkill -s 0 -e java
-#pkill -s 0 -e python3
+pkill -s 0 -e java
+pkill -s 0 -e python3

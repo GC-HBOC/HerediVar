@@ -390,12 +390,29 @@ def variant_import_history():
 
 
 @user_blueprint.route('/variant_publish_history')
+@require_permission(['admin_resources'])
 def variant_publish_history():
     conn = get_connection()
     overview = conn.get_publish_request_overview()
     return render_template('user/variant_publish_history.html', overview = overview)
 
 @user_blueprint.route('/variant_publish_summary')
+@require_permission(['admin_resources'])
 def variant_publish_summary():
     conn = get_connection()
-    return render_template('user/variant_publish_summary.html')
+
+    publish_queue_id = request.args.get('publish_queue_id')
+    if publish_queue_id is None:
+        abort(404)
+    if not conn.check_publish_queue_id(publish_queue_id):
+        abort(404)
+
+    variant_ids = conn.get_variant_ids_from_publish_request(publish_queue_id)
+    publish_queue_ids_oi = [publish_queue_id]
+    check_update_all(variant_ids, publish_queue_ids_oi, conn)
+
+    publish_request = conn.get_publish_request(publish_queue_id)
+    heredicare_uploads = conn.get_published_variants_heredicare(publish_queue_id, status = ["error", "api_error", "skipped"])
+    clinvar_uploads = conn.get_published_variants_clinvar(publish_queue_id, status = ["error", "skipped"])
+
+    return render_template('user/variant_publish_summary.html', publish_request = publish_request, heredicare_uploads = heredicare_uploads, clinvar_uploads = clinvar_uploads)

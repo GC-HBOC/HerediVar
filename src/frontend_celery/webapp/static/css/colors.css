@@ -204,6 +204,10 @@ input[type=checkbox]:checked + label.btn-ba {
     color:rgba(240,73,53,1);
 }
 
+.classification_R_col {
+    color:rgba(240,73,53,1);
+}
+
 .classification_none_col {
     color:rgb(164, 164, 164);
 }

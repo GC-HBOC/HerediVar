@@ -281,10 +281,10 @@ def test_variant_details_consequences(page, conn):
     # add some consequences
     consequences = [
         # ensembl
-        {"transcript_name": "ENST11111111111", "hgvs_c": "c.100C>A", "hgvs_p": "p.5G>T", "consequence": "missense variant1", "impact": "high", "exon_nr": "exon1", "intron_nr": "intron2", "hgnc_id": "", "symbol": "GENE1", "consequence_source": "ensembl", "pfam_acc": ""},
-        {"transcript_name": "ENST22222222222", "hgvs_c": "c.101C>A", "hgvs_p": "p.6U>I", "consequence": "missense variant2", "impact": "moderate", "exon_nr": "exon3", "intron_nr": "intron4", "hgnc_id": "", "symbol": "GENE2", "consequence_source": "ensembl", "pfam_acc": ""},
+        {"transcript_name": "ENST11111111111", "hgvs_c": "c.100C>A", "hgvs_p": "p.5G>T", "consequence": "missense variant1", "impact": "high", "exon_nr": "exon1", "intron_nr": "intron2", "hgnc_id": "", "symbol": "GENE1", "consequence_source": "ensembl"},
+        {"transcript_name": "ENST22222222222", "hgvs_c": "c.101C>A", "hgvs_p": "p.6U>I", "consequence": "missense variant2", "impact": "moderate", "exon_nr": "exon3", "intron_nr": "intron4", "hgnc_id": "", "symbol": "GENE2", "consequence_source": "ensembl"},
         # refseq
-        {"transcript_name": "NM_1111111", "hgvs_c": "c.103C>A", "hgvs_p": "p.7A>G", "consequence": "missense variant3", "impact": "low", "exon_nr": "exon5", "intron_nr": "intron6", "hgnc_id": "", "symbol": "GENE3", "consequence_source": "refseq", "pfam_acc": ""}
+        {"transcript_name": "NM_1111111", "hgvs_c": "c.103C>A", "hgvs_p": "p.7A>G", "consequence": "missense variant3", "impact": "low", "exon_nr": "exon5", "intron_nr": "intron6", "hgnc_id": "", "symbol": "GENE3", "consequence_source": "refseq"}
     ]
     for consequence in consequences:
         conn.insert_variant_consequence(variant_id = all_variant_ids[0], **consequence)
@@ -306,7 +306,7 @@ def test_variant_details_consequences(page, conn):
 
 
 def check_visible_consequence(page, consequence):
-    for key_to_check in ["transcript_name", "hgvs_c", "hgvs_p", "consequence", "impact", "exon_nr", "intron_nr", "symbol", "pfam_acc"]:
+    for key_to_check in ["transcript_name", "hgvs_c", "hgvs_p", "consequence", "impact", "exon_nr", "intron_nr", "symbol"]:
         value_oi = consequence[key_to_check]
         if value_oi != "" and value_oi is not None:
             expect(page.locator("#variantConsequenceTable").locator("td").get_by_text(value_oi)).to_be_visible()

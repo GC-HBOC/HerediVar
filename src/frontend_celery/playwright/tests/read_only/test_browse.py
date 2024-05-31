@@ -63,12 +63,12 @@ def test_hgvs_search(page, conn):
     ]
     
     # insert consequences
-    conn.insert_variant_consequence(variant_id = all_variant_ids[1], transcript_name = "ENST11111111111", hgvs_c = "c.100C>A", hgvs_p = "", consequence = "missense variant", impact = "moderate", exon_nr = "", intron_nr  = "", hgnc_id = "", symbol = "GENE1", consequence_source = "ensembl", pfam_acc = "")
-    conn.insert_variant_consequence(variant_id = all_variant_ids[1], transcript_name = "ENST22222222222", hgvs_c = "c.101C>A", hgvs_p = "", consequence = "missense variant", impact = "moderate", exon_nr = "", intron_nr  = "", hgnc_id = "", symbol = "GENE1", consequence_source = "ensembl", pfam_acc = "")
+    conn.insert_variant_consequence(variant_id = all_variant_ids[1], transcript_name = "ENST11111111111", hgvs_c = "c.100C>A", hgvs_p = "", consequence = "missense variant", impact = "moderate", exon_nr = "", intron_nr  = "", hgnc_id = "", symbol = "GENE1", consequence_source = "ensembl")
+    conn.insert_variant_consequence(variant_id = all_variant_ids[1], transcript_name = "ENST22222222222", hgvs_c = "c.101C>A", hgvs_p = "", consequence = "missense variant", impact = "moderate", exon_nr = "", intron_nr  = "", hgnc_id = "", symbol = "GENE1", consequence_source = "ensembl")
     
-    conn.insert_variant_consequence(variant_id = all_variant_ids[2], transcript_name = "ENST44444444444", hgvs_c = "c.200C>T", hgvs_p = "", consequence = "missense variant", impact = "moderate", exon_nr = "", intron_nr  = "", hgnc_id = "", symbol = "GENE2", consequence_source = "ensembl", pfam_acc = "")
-    conn.insert_variant_consequence(variant_id = all_variant_ids[2], transcript_name = "ENST55555555555", hgvs_c = "c.201C>T", hgvs_p = "", consequence = "missense variant", impact = "moderate", exon_nr = "", intron_nr  = "", hgnc_id = "", symbol = "GENE2", consequence_source = "ensembl", pfam_acc = "")
-    conn.insert_variant_consequence(variant_id = all_variant_ids[2], transcript_name = "ENST66666666666", hgvs_c = "c.202C>T", hgvs_p = "", consequence = "missense variant", impact = "moderate", exon_nr = "", intron_nr  = "", hgnc_id = "", symbol = "GENE2", consequence_source = "ensembl", pfam_acc = "")
+    conn.insert_variant_consequence(variant_id = all_variant_ids[2], transcript_name = "ENST44444444444", hgvs_c = "c.200C>T", hgvs_p = "", consequence = "missense variant", impact = "moderate", exon_nr = "", intron_nr  = "", hgnc_id = "", symbol = "GENE2", consequence_source = "ensembl")
+    conn.insert_variant_consequence(variant_id = all_variant_ids[2], transcript_name = "ENST55555555555", hgvs_c = "c.201C>T", hgvs_p = "", consequence = "missense variant", impact = "moderate", exon_nr = "", intron_nr  = "", hgnc_id = "", symbol = "GENE2", consequence_source = "ensembl")
+    conn.insert_variant_consequence(variant_id = all_variant_ids[2], transcript_name = "ENST66666666666", hgvs_c = "c.202C>T", hgvs_p = "", consequence = "missense variant", impact = "moderate", exon_nr = "", intron_nr  = "", hgnc_id = "", symbol = "GENE2", consequence_source = "ensembl")
 
 
     # start the test
@@ -693,7 +693,7 @@ def test_search_order_adjust(page, conn):
 
 def search_order_adjust_worker(page, conn, url, all_variant_ids):
     # adjust page size to 5
-    variants_oi = all_variant_ids[-5:]
+    variants_oi = all_variant_ids[-6:]
     utils.nav(page.goto, utils.GOOD_STATI, url)
     open_search_options(page)
     page.wait_for_selector("#sort_by")
@@ -830,9 +830,9 @@ def test_gene_search(page, conn):
     ]
 
     # insert consequences
-    conn.insert_variant_consequence(variant_id = all_variant_ids[0], transcript_name = "ENST11111111111", hgvs_c = "c.1973G>A", hgvs_p = "p.Arg658His", consequence = "missense variant", impact = "moderate", exon_nr = "10", intron_nr  = "", hgnc_id = "", symbol = "GENE1", consequence_source = "ensembl", pfam_acc = "")
-    conn.insert_variant_consequence(variant_id = all_variant_ids[1], transcript_name = "ENST22222222222", hgvs_c = "c.5518G>T", hgvs_p = "p.Asp1840Tyr", consequence = "missense variant", impact = "moderate", exon_nr = "10", intron_nr  = "", hgnc_id = "", symbol = "GENE2", consequence_source = "ensembl", pfam_acc = "")
-    conn.insert_variant_consequence(variant_id = all_variant_ids[2], transcript_name = "ENST33333333333", hgvs_c = "", hgvs_p = "", consequence = "missense variant", impact = "moderate", exon_nr = "", intron_nr  = "", hgnc_id = "", symbol = "GENE3", consequence_source = "ensembl", pfam_acc = "")
+    conn.insert_variant_consequence(variant_id = all_variant_ids[0], transcript_name = "ENST11111111111", hgvs_c = "c.1973G>A", hgvs_p = "p.Arg658His", consequence = "missense variant", impact = "moderate", exon_nr = "10", intron_nr  = "", hgnc_id = "", symbol = "GENE1", consequence_source = "ensembl")
+    conn.insert_variant_consequence(variant_id = all_variant_ids[1], transcript_name = "ENST22222222222", hgvs_c = "c.5518G>T", hgvs_p = "p.Asp1840Tyr", consequence = "missense variant", impact = "moderate", exon_nr = "10", intron_nr  = "", hgnc_id = "", symbol = "GENE2", consequence_source = "ensembl")
+    conn.insert_variant_consequence(variant_id = all_variant_ids[2], transcript_name = "ENST33333333333", hgvs_c = "", hgvs_p = "", consequence = "missense variant", impact = "moderate", exon_nr = "", intron_nr  = "", hgnc_id = "", symbol = "GENE3", consequence_source = "ensembl")
 
     # start the test
     utils.login(page, user)

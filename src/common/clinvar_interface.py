@@ -64,8 +64,9 @@ class ClinVar(metaclass=Singleton):
         clinvar_submission = []
         clinvar_submission_properties = {}
 
-        assertion_criteria = self.get_assertion_criteria(mrcc.scheme.reference)
-        data['assertionCriteria'] = assertion_criteria
+        assertion_criteria = self.get_assertion_criteria(mrcc.scheme.reference, mrcc.selected_class)
+        if assertion_criteria is not None:
+            data['assertionCriteria'] = assertion_criteria
     
         germline_classification = {}
         germline_classification['germlineClassificationDescription'] = mrcc.class_to_text()
@@ -131,8 +132,12 @@ class ClinVar(metaclass=Singleton):
         return data
 
 
-    def get_assertion_criteria(self, assertion_criteria_source):
+    def get_assertion_criteria(self, assertion_criteria_source, selected_class):
         assertion_criteria = {}
+        if assertion_criteria_source == '#' or assertion_criteria_source is None:
+            return None
+        if selected_class == "4M": # uploaded schemes do not contain information about how to choose 4M class -> do not use the scheme
+            return None
         if assertion_criteria_source.startswith("https://pubmed.ncbi.nlm.nih.gov/"):
             assertion_criteria_source = assertion_criteria_source.replace('https://pubmed.ncbi.nlm.nih.gov/', '').strip('/')
             assertion_criteria['db'] = "PubMed"
@@ -169,16 +174,14 @@ class ClinVar(metaclass=Singleton):
             status = "skipped"
             message = "The consensus classification is already submitted to ClinVar"
             return submission_id, status, message
-        elif mrcc.scheme.type in ['none', 'task-force']:
-            status = "skipped"
-            message = "The consensus classification does not follow a scheme. This type of classification can not be submitted to ClinVar. Please use a proper scheme."
+        elif mrcc.scheme.type in ['task-force']:
+            status = "error"
+            message = "The consensus classification does not follow a scheme supported for upload to ClinVar."
             return submission_id, status, message
         
         postable_data = self.get_postable_consensus_classification(variant, selected_gene, clinvar_accession)
         url = self.get_url(endpoint = "submit")
-        print(url)
         headers = self.get_header()
-
         resp = requests.post(url, headers = headers, data=json.dumps(postable_data))
 
         if resp.status_code not in [200, 201]:

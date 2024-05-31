@@ -442,7 +442,10 @@ class Classification:
                     unselected_criterium_strings.append(criterium.name + " (" + criterium.strength + ")" + ": " + criterium.evidence)
 
         # 1.: total comment
-        result = [self.comment.strip('.')]
+        comment = self.comment.strip('. ')
+        result = []
+        if len(comment) > 0:
+            result.append(comment)
 
         # 2.: comment about selected criteria
         if len(selected_criterium_strings) == 1:
@@ -482,12 +485,10 @@ class Classification:
             return 'Likely pathogenic'
         if classification == '5':
             return 'Pathogenic'
-        if classification == '3-':
-            return 'Uncertain significance'
-        if classification == '3+':
-            return 'Uncertain significance'
         if classification == '4M':
             return 'Likely pathogenic, low penetrance'
+        if classification == 'R':
+            return 'Established risk allele'
 
     def to_vcf(self, prefix = True, simple = False):
         if not simple:
@@ -675,6 +676,9 @@ class Consequence:
     impact: str
     exon: str
     intron: str
+
+    def is_within_gene(self):
+        return self.exon is not None or self.intron is not None
 
     def get_header(self):
         header = {'variant_consequences': '##INFO=<ID=consequences,Number=.,Type=String,Description="An & separated list of variant consequences from vep. Format:Transcript|hgvsc|hgvsp,consequence|impact|exonnr|intronnr|genesymbol|isgencodebasic|ismaneselect|ismaneplusclinical|isensemblcanonical|transcript_biotype|transcript_length">\n'}
@@ -1151,7 +1155,7 @@ class AbstractVariant(AbstractDataclass):
     # this function returns a list of consequence objects of the preferred transcripts 
     # (can be multiple if there are eg. 2 mane select transcripts for this variant)
     # this should be renamed to get_preferred_consequences
-    def get_preferred_transcripts(self) -> list:
+    def get_preferred_transcripts(self, within_gene = False) -> list:
         result = []
         consequences = self.consequences
 
@@ -1160,7 +1164,7 @@ class AbstractVariant(AbstractDataclass):
         
         sortable_dict = {}
         for consequence in consequences:
-            if consequence.transcript.source == 'ensembl':
+            if consequence.transcript.source == 'ensembl' and (consequence.is_within_gene() or not within_gene):
                 sortable_dict[consequence.transcript.name] = consequence
 
         if len(sortable_dict) == 0:
@@ -1448,6 +1452,28 @@ class Import_variant_request:
     finished_at: datetime.datetime
     message: str
     vid: str
+
+
+@dataclass
+class publish_request:
+    id: int
+    user: User
+    requested_at: datetime.datetime
+    status: str
+    finished_at: datetime.datetime
+    insert_tasks_status: str
+    insert_tasks_finished_at: datetime.datetime
+    insert_tasks_message: str
+
+    num_clinvar: int
+    num_heredicare: int
+    heredicare_summary: dict
+    clinvar_summary: dict
+
+    upload_clinvar: bool
+    upload_heredicare: bool
+    variant_ids: list
+
 
 @dataclass
 class Annotation_type:

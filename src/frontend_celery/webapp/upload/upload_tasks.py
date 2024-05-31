@@ -19,7 +19,9 @@ import traceback
 
 
 def start_publish(variant_ids, options, user_id, user_roles, conn: Connection):
-    publish_queue_id = conn.insert_publish_request(user_id)
+    upload_heredicare = options["do_heredicare"]
+    upload_clinvar = options["do_clinvar"]
+    publish_queue_id = conn.insert_publish_request(user_id, upload_heredicare, upload_clinvar, variant_ids)
 
     task = publish.apply_async(args = [publish_queue_id, variant_ids, options, user_roles])
     task_id = task.id
@@ -48,9 +50,7 @@ def publish(self, publish_queue_id, variant_ids, options, user_roles):
 
         for variant_id in variant_ids:
             variant = conn.get_variant(variant_id)
-            if variant.variant_type == 'sv': # skip svs
-                continue
-            
+
             # start the task to upload the consensus classification to clinvar
             if options['do_clinvar']:
                 ccid = start_upload_one_variant_clinvar(variant_id, publish_queue_id, options, user_roles, conn)
@@ -104,16 +104,20 @@ def start_upload_one_variant_clinvar(variant_id, publish_queue_id, options, user
     # check previous submissions
     has_unfinished_job = False
     clinvar_accession = None
-    previous_clinvar_submission = check_update_clinvar_status(variant_id, conn) # is None if there is no previous clinvar accession
-    if previous_clinvar_submission is not None:
-        clinvar_accession = previous_clinvar_submission[6] # while we are at it also grab the accession_id if there is one (in case this is an update)
-        if previous_clinvar_submission[3] not in ['processed', 'error', 'deleted', 'success']:
-            has_unfinished_job = True
+    publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_clinvar(variant_id)
+    previous_clinvar_submissions = check_update_clinvar_status(variant_id, publish_queue_ids_oi, conn) # is None if there is no previous clinvar accession
+    if previous_clinvar_submissions is not None:
+        for previous_clinvar_submission in previous_clinvar_submissions:
+            clinvar_accession = previous_clinvar_submission[6] # while we are at it also grab the accession_id if there is one (in case this is an update)
+            if previous_clinvar_submission[3] not in ['processed', 'error', 'deleted', 'success']:
+                has_unfinished_job = True
 
     publish_clinvar_queue_id = conn.insert_publish_clinvar_request(publish_queue_id, variant_id)
 
     task_id = None
-    if not has_unfinished_job:
+    if conn.get_variant(variant_id, include_annotations = False, include_consensus=False, include_user_classifications=False, include_heredicare_classifications=False, include_automatic_classification=False, include_clinvar=False, include_assays=False, include_literature=False, include_external_ids=False, include_consequences=False).variant_type == "sv":
+        conn.update_publish_clinvar_queue_status(publish_clinvar_queue_id, status = "skipped", message = "Structural variants are not supported for upload to ClinVar.")
+    elif not has_unfinished_job:
         task = clinvar_upload_one_variant.apply_async(args = [variant_id, user_roles, options, clinvar_accession, publish_clinvar_queue_id])
         task_id = task.id
         conn.update_publish_clinvar_queue_celery_task_id(publish_queue_id, celery_task_id = task_id)
@@ -206,14 +210,30 @@ def clinvar_upload_one_variant(self, variant_id, user_roles, options, clinvar_ac
 
 
 def start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, user_roles, conn: Connection): # starts the celery task # upload queue id can be None if it is not linked to a complete uploadlinvar
-    heredicare_queue_entries = utils.check_update_heredicare_status(variant_id, conn)
+    publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_heredicare(variant_id)
+    heredicare_queue_entries = utils.check_update_heredicare_status(variant_id, publish_queue_ids_oi, conn)
 
     has_unfinished_job = False
+    max_finished_at = None
     if heredicare_queue_entries is not None:
-        for heredicare_queue_entry in heredicare_queue_entries:
+        for heredicare_queue_entry in heredicare_queue_entries: # id, status, requested_at, finished_at, message, vid, variant_id, submission_id, consensus_classification_id
             current_status = heredicare_queue_entry[1]
+            current_finished_at = heredicare_queue_entry[3]
             if current_status in ['pending', 'progress', 'submitted', 'retry']:
                 has_unfinished_job = True
+            elif current_status in ['success']:
+                if max_finished_at is None:
+                    max_finished_at = current_finished_at
+                elif max_finished_at < current_finished_at:
+                    max_finished_at = current_finished_at
+
+    annotation_status = conn.get_current_annotation_status(variant_id) # id, variant_id, user_id, requested, status, finished_at, error_message, celery_task_id
+    requires_reannotation = False
+    if annotation_status is not None:
+        last_annotation_finished_at = annotation_status[5]
+        if max_finished_at is not None:
+            if last_annotation_finished_at is None or max_finished_at > last_annotation_finished_at:
+                requires_reannotation = True
 
     heredicare_vid_annotation_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
     vids = conn.get_external_ids_from_variant_id(variant_id, heredicare_vid_annotation_id)
@@ -223,12 +243,17 @@ def start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, u
         publish_heredicare_queue_id = conn.insert_publish_heredicare_request(vid, variant_id, publish_queue_id)
 
         task_id = None
-        if not has_unfinished_job: # if the variant still has unfinished jobs running do not insert a new task
+        if conn.get_variant(variant_id, include_annotations = False, include_consensus=False, include_user_classifications=False, include_heredicare_classifications=False, include_automatic_classification=False, include_clinvar=False, include_assays=False, include_literature=False, include_external_ids=False, include_consequences=False).variant_type == "sv":
+            conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "skipped", message = "Structural variants are not supported for upload to HerediCaRe.")
+        elif has_unfinished_job:  # if the variant still has unfinished jobs running do not insert a new task
+            conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "skipped", message = "Has unfinished job. Wait for completion and try again.")
+        elif requires_reannotation: # if the variant was reannotated before the last heredicare upload skip the new upload: reason: heredivar might not know that the variant was already inserted and would want to insert it again.
+            conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "skipped", message = "The annotation is older than the last upload to heredicare. Please reannotate first and then upload to HerediCaRe.")
+        else:
             task = heredicare_upload_one_variant.apply_async(args=[variant_id, vid, user_roles, options, publish_heredicare_queue_id])
             task_id = task.id
             conn.update_publish_heredicare_queue_celery_task_id(publish_heredicare_queue_id, celery_task_id = task_id)
-        else:
-            conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "skipped", message = "")
+            
     return task_id
 
 

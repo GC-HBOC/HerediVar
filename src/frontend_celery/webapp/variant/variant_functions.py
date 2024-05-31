@@ -319,20 +319,55 @@ def handle_selected_literature(previous_selected_literature, classification_id, 
 
 
 
-def summarize_heredicare_status(variant_id, heredicare_queue_entries, conn: Connection):
+def summarize_heredicare_status(variant_id, heredicare_queue_entries, conn: Connection, publish_queue):
     summary = {"status": "unknown", "max_requested_at": "unknown"}
-    if heredicare_queue_entries is not None:
-        for heredicare_queue_entry in heredicare_queue_entries:
-            current_status = heredicare_queue_entry[1]
-            current_requested_at = heredicare_queue_entry[2]
-            if summary["status"] == "unknown":
-                summary["status"] = current_status
-            elif summary["status"] != current_status:
-                summary["status"] = "multiple stati"
-            
-            if summary["max_requested_at"] == "unknown":
-                summary["max_requested_at"] = current_requested_at
-            elif summary["max_requested_at"] < current_requested_at:
-                summary["max_requested_at"] = current_requested_at
+    if publish_queue is not None:
+        if publish_queue.insert_tasks_status == 'pending' and variant_id in publish_queue.variant_ids and publish_queue.upload_heredicare:
+            summary["status"] = "waiting"
+        elif publish_queue.insert_tasks_status == 'progress' and variant_id in publish_queue.variant_ids and publish_queue.upload_heredicare:
+            summary["status"] = "requesting"
+        elif heredicare_queue_entries is not None:
+            all_skipped = True
+            for heredicare_queue_entry in heredicare_queue_entries:
+                current_status = heredicare_queue_entry[1]
+                current_requested_at = heredicare_queue_entry[2]
+                if current_status == 'skipped':
+                    continue
+                all_skipped = False
+                if summary["status"] == "unknown":
+                    summary["status"] = current_status
+                elif summary["status"] != current_status:
+                    summary["status"] = "multiple stati"
+                
+                if summary["max_requested_at"] == "unknown":
+                    summary["max_requested_at"] = current_requested_at
+                elif summary["max_requested_at"] < current_requested_at:
+                    summary["max_requested_at"] = current_requested_at
+            if all_skipped:
+                summary["status"] = "skipped"
     summary["has_skipped"] = conn.has_skipped_heredicare_publishes_before_finished_one(variant_id, summary["max_requested_at"])
+    return summary
+
+
+
+def summarize_clinvar_status(variant_id, clinvar_queue_entries, publish_queue):
+    summary = {"status": "unknown"}
+    if publish_queue is not None:
+        if publish_queue.insert_tasks_status == 'pending' and variant_id in publish_queue.variant_ids and publish_queue.upload_clinvar:
+            summary["status"] = "waiting"
+        elif publish_queue.insert_tasks_status == 'progress' and variant_id in publish_queue.variant_ids and publish_queue.upload_clinvar:
+            summary["status"] = "requesting"
+        elif clinvar_queue_entries is not None:
+            all_skipped = True
+            for heredicare_queue_entry in clinvar_queue_entries:
+                current_status = heredicare_queue_entry[3]
+                if current_status == 'skipped':
+                    continue
+                all_skipped = False
+                if summary["status"] == "unknown":
+                    summary["status"] = current_status
+                elif summary["status"] != current_status:
+                    summary["status"] = "multiple stati"
+            if all_skipped:
+                summary["status"] = "skipped"
     return summary

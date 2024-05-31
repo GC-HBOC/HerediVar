@@ -244,25 +244,30 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
-    clinvar_queue_entry = check_update_clinvar_status(variant_id, conn)
-    heredicare_queue_entries = check_update_heredicare_status(variant_id, conn)
-    heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(variant_id, heredicare_queue_entries, conn)
+    most_recent_publish_queue = conn.get_most_recent_publish_queue()
+
+    publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_clinvar(variant_id)
+    clinvar_queue_entries = check_update_clinvar_status(variant_id, publish_queue_ids_oi, conn)
+    clinvar_queue_entry_summary = variant_functions.summarize_clinvar_status(variant_id, clinvar_queue_entries, most_recent_publish_queue)
+    publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_heredicare(variant_id)
+    heredicare_queue_entries = check_update_heredicare_status(variant_id, publish_queue_ids_oi, conn)
+    heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(variant_id, heredicare_queue_entries, conn, most_recent_publish_queue)
 
     variant = conn.get_variant(variant_id)
     
-    #print(clinvar_queue_entry)
+    #print(clinvar_queue_entries)
     #print(heredicare_queue_entries)
     #print(heredicare_queue_entry_summary)
 
     return render_template('variant/variant.html',
-                            clinvar_queue_entry = clinvar_queue_entry,
                             has_multiple_vids=has_multiple_vids,
                             lists = lists,
                             variant = variant,
                             is_classification_report = False,
+                            clinvar_queue_entries = clinvar_queue_entries,
+                            clinvar_queue_entry_summary = clinvar_queue_entry_summary,
                             heredicare_queue_entries = heredicare_queue_entries,
                             heredicare_queue_entry_summary = heredicare_queue_entry_summary
-                            
                         )
 
 
@@ -339,8 +344,8 @@ def classify(variant_id):
     if variant is None:
         return abort(404)
 
-    allowed_classes = conn.get_enumtypes('user_classification', 'classification')
-    allowed_classes = functions.order_classes(allowed_classes)
+    #allowed_classes = conn.get_enumtypes('user_classification', 'classification')
+    #allowed_classes = functions.order_classes(allowed_classes)
 
     user_id = session['user']['user_id']
     previous_classifications = {user_id: functions.list_of_objects_to_dict(variant.get_user_classifications(user_id), key_func = lambda a : a.scheme.id, val_func = lambda a : a.to_dict())}
@@ -366,8 +371,8 @@ def classify(variant_id):
         pmids, text_passages = variant_functions.remove_empty_literature_rows(pmids, text_passages)
         literature_is_valid, literature_message = variant_functions.is_valid_literature(pmids, text_passages)
         
-        without_scheme = scheme_id == 1
-        classification_is_valid = str(classification) in allowed_classes
+        without_scheme = classification_schemas[scheme_id]["scheme_type"] == "none"
+        classification_is_valid = str(classification) in classification_schemas[scheme_id]["final_classes"]
 
         scheme_class = '-'
         scheme_id_is_valid = True
@@ -418,8 +423,7 @@ def classify(variant_id):
                                 variant=variant, 
                                 logged_in_user_id = user_id,
                                 classification_schemas=classification_schemas,
-                                previous_classifications=previous_classifications,
-                                allowed_classes = allowed_classes
+                                previous_classifications=previous_classifications
                             )
 
 
@@ -464,11 +468,11 @@ def delete_classification():
 def consensus_classify(variant_id):
     conn = get_connection()
 
-    allowed_classes = conn.get_enumtypes('consensus_classification', 'classification')
+    #allowed_classes = conn.get_enumtypes('consensus_classification', 'classification')
 
     #literature = conn.get_variant_literature(variant_id)
     classification_schemas = conn.get_classification_schemas()
-    classification_schemas = {schema_id: classification_schemas[schema_id] for schema_id in classification_schemas if classification_schemas[schema_id]['scheme_type'] != "none"} # remove no-scheme classification as this can not be submitted to clinvar
+    classification_schemas = {schema_id: classification_schemas[schema_id] for schema_id in classification_schemas} # remove no-scheme classification as this can not be submitted to clinvar
     variant = conn.get_variant(variant_id)
     if variant is None:
         return abort(404)
@@ -490,23 +494,24 @@ def consensus_classify(variant_id):
     if request.method == 'POST':
         scheme_id = int(request.form['scheme'])
 
-        if scheme_id == 1:
-            flash("No consensus classifications without scheme allowed!")
-        else:
-            classification = request.form['final_class']
-            comment = request.form.get('comment', '').strip()
-            pmids = request.form.getlist('pmid')
-            text_passages = request.form.getlist('text_passage')
 
-            # test if the input is valid
-            criteria = variant_functions.extract_criteria_from_request(request.form, scheme_id, conn)
-            pmids, text_passages = variant_functions.remove_empty_literature_rows(pmids, text_passages)
-            literature_is_valid, literature_message = variant_functions.is_valid_literature(pmids, text_passages)
-            possible_states = conn.get_enumtypes("consensus_classification_criteria_applied", "state")
-            scheme_classification_is_valid, scheme_message = variant_functions.is_valid_scheme(criteria, classification_schemas[scheme_id], possible_states)
-            classification_is_valid = str(classification) in allowed_classes
+        classification = request.form['final_class']
+        comment = request.form.get('comment', '').strip()
+        pmids = request.form.getlist('pmid')
+        text_passages = request.form.getlist('text_passage')
 
-            scheme_id_is_valid = True
+        # test if the input is valid
+        criteria = variant_functions.extract_criteria_from_request(request.form, scheme_id, conn)
+        pmids, text_passages = variant_functions.remove_empty_literature_rows(pmids, text_passages)
+        literature_is_valid, literature_message = variant_functions.is_valid_literature(pmids, text_passages)
+        possible_states = conn.get_enumtypes("consensus_classification_criteria_applied", "state")
+        scheme_classification_is_valid, scheme_message = variant_functions.is_valid_scheme(criteria, classification_schemas[scheme_id], possible_states)
+        classification_is_valid = str(classification) in classification_schemas[scheme_id]["final_classes"]
+        without_scheme = classification_schemas[scheme_id]["scheme_type"] == "none"
+
+        scheme_class = '-'
+        scheme_id_is_valid = True
+        if not without_scheme:
             if scheme_id in classification_schemas:
                 scheme_class = variant_functions.get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type'], classification_schemas[scheme_id]['version']) # always calculate scheme class because no scheme is not allowed here!
                 scheme_class = scheme_class.json['final_class']
@@ -514,28 +519,29 @@ def consensus_classify(variant_id):
                 flash("Unknown or deprecated classification scheme provided. Please provide a different one.", "alert-danger")
                 scheme_id_is_valid = False
 
-            # actually submit the data to the database
-            if not scheme_classification_is_valid: # error in scheme
-                flash(scheme_message, "alert-danger")
-            if not classification_is_valid: # error in user classification
-                flash("Please provide a final classification and a comment to submit the consensus classification. The classification was not submitted.", "alert-danger")
-            if not literature_is_valid:
-                flash(literature_message, "alert-danger")
+        # actually submit the data to the database
+        if not scheme_classification_is_valid: # error in scheme
+            flash(scheme_message, "alert-danger")
+        if not classification_is_valid: # error in user classification
+            flash("Please provide a final classification and a comment to submit the consensus classification. The classification was not submitted.", "alert-danger")
+        if not literature_is_valid:
+            flash(literature_message, "alert-danger")
 
-            if classification_is_valid and scheme_classification_is_valid and literature_is_valid and scheme_id_is_valid:
-                # insert consensus classification
-                classification_id = variant_functions.handle_consensus_classification(variant, classification, comment, scheme_id, pmids, text_passages, criteria, classification_schemas[scheme_id]['description'], scheme_class, conn)
+        if classification_is_valid and scheme_classification_is_valid and literature_is_valid and scheme_id_is_valid:
+            # insert consensus classification
+            classification_id = variant_functions.handle_consensus_classification(variant, classification, comment, scheme_id, pmids, text_passages, criteria, classification_schemas[scheme_id]['description'], scheme_class, conn)
 
-                # insert literature passages
-                # classification id never none because we always insert a new classification
-                previous_selected_literature = [] # always empty because we always insert a new classification
-                variant_functions.handle_selected_literature(previous_selected_literature, classification_id, pmids, text_passages, conn, is_user = False)
+            # insert literature passages
+            # classification id never none because we always insert a new classification
+            previous_selected_literature = [] # always empty because we always insert a new classification
+            variant_functions.handle_selected_literature(previous_selected_literature, classification_id, pmids, text_passages, conn, is_user = False)
 
-                # insert scheme criteria
-                variant_functions.handle_scheme_classification(classification_id, criteria, conn, where = "consensus") # always do that because no scheme is not allowed
-                variant_functions.add_classification_report(variant.id, conn)
-                flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant.id) + " class='alert-link'>here</a> to view it!"), "alert-success")
-                do_redirect = True
+            # insert scheme criteria
+            if not without_scheme:
+                _ = variant_functions.handle_scheme_classification(classification_id, criteria, conn, where = "consensus") # always do that because no scheme is not allowed
+            variant_functions.add_classification_report(variant.id, conn)
+            flash(Markup("Successfully inserted new consensus classification return <a href=/display/" + str(variant.id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+            do_redirect = True
 
     if do_redirect: # do redirect if the submission was successful
         current_app.logger.info(session['user']['preferred_username'] + " successfully consensus-classified variant " + str(variant_id) + " with class " + str(classification) + " from scheme_id " + str(scheme_id))
@@ -547,8 +553,7 @@ def consensus_classify(variant_id):
                                 variant=variant,
                                 #logged_in_user_id = session['user']['user_id'],
                                 classification_schemas=classification_schemas,
-                                previous_classifications=previous_classifications,
-                                allowed_classes = allowed_classes
+                                previous_classifications=previous_classifications
                             )
 
 
@@ -565,8 +570,11 @@ def automatic_classification(variant_id):
     if evidence_type is None:
         abort(404)
     
-    variant.automatic_classification.criteria = variant.automatic_classification.filter_criteria(evidence_type)
-    result = variant.automatic_classification.to_dict()
+    if variant.automatic_classification is None:
+        result = {"scheme_id": None}
+    else:
+        variant.automatic_classification.criteria = variant.automatic_classification.filter_criteria(evidence_type)
+        result = variant.automatic_classification.to_dict()
     return result
 
 

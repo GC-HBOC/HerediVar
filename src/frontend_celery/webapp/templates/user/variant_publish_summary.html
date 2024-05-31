@@ -14,16 +14,23 @@
             <tbody>
                 <tr>
                     <td class="width_small">Requesting user</td>
-                    <td id="summary_user"></td> <!-- name of the user from import -->
+                    <td id="summary_user">{{ publish_request.user.full_name }}</td> <!-- name of the user from import -->
                 </tr>
                 <tr>
                     <td class="width_small">Requested at</td>
-                    <td id="summary_requested_at"></td> <!-- from import -->
+                    <td id="summary_requested_at">{{ publish_request.requested_at }}</td> <!-- from import -->
                 </tr>
                 <tr>
                     <td class="width_small">Status</td>
                     <td id="summary_status">
-                        <span id="status_badge" class="badge rounded-pill bg-secondary visually_hidden" data-bs-toggle="tooltip" title=""></span>
+                        {% set status_bg = "bg-secondary" %}
+                        {% if publish_request.status == 'success' %}
+                            {% set status_bg = "bg-success" %}
+                        {% endif %}
+                        {% if publish_request.status == 'error' %}
+                            {% set status_bg = "bg-danger" %}
+                        {% endif %}
+                        <span id="status_badge" class="badge rounded-pill {{ status_bg }}">{{ publish_request.status }}</span>
                     </td> 
                     <!-- 
                         1. pending: from status of import
@@ -37,15 +44,15 @@
                 </tr>
                 <tr>
                     <td class="width_small">Finished at</td>
-                    <td id="summary_finished_at"></td> <!-- max variant imports finished at if all are finished -->
+                    <td id="summary_finished_at">{{ publish_request.finished_at }}</td> <!-- max variant imports finished at if all are finished -->
                 </tr>
                 <tr>
                     <td clas="width_small">Message</td>
-                    <td id="summary_message" class="break_text_all"></td>
+                    <td id="summary_message" class="break_text_all">{{ publish_request.insert_tasks_message }}</td>
                 </tr>
                 <tr>
                     <td class="width_small">Total number of variants</td>
-                    <td id="summary_total_num_variants"></td>
+                    <td id="summary_total_num_variants">Upload ClinVar: {{ publish_request.num_clinvar }}, Upload HerediCaRe: {{ publish_request.num_heredicare }}</td>
                 </tr>
             </tbody>
         </table>
@@ -69,19 +76,19 @@
                                 <td class="width_very_small">Pending</td>
                                 <td class="width_very_small">Processing</td>
                                 <td class="width_very_small">Erroneous</td>
+                                <td class="width_very_small">Submitted</td>
                                 <td class="width_very_small">Success</td>
-                                <td class="width_very_small">Deleted</td>
-                                <td class="width_very_small">Updated</td>
                                 <td class="width_very_small">Retrying</td>
+                                <td class="width_very_small">Skipped</td>
                             </tr>
                             <tr>
-                                <td id="variant_summary_pending"></td>
-                                <td id="variant_summary_processing"></td>
-                                <td id="variant_summary_erroneous"></td>
-                                <td id="variant_summary_success"></td>
-                                <td id="variant_summary_deleted"></td>
-                                <td id="variant_summary_update"></td>
-                                <td id="variant_summary_retrying"></td>
+                                <td>{{publish_request.clinvar_summary.get('pending', 0)}}</td>
+                                <td>{{publish_request.clinvar_summary.get('processing', 0)}}</td>
+                                <td>{{publish_request.clinvar_summary.get('error', 0)}}</td>
+                                <td>{{publish_request.clinvar_summary.get('submitted', 0)}}</td>
+                                <td>{{publish_request.clinvar_summary.get('success', 0) + publish_request.clinvar_summary.get('processed', 0)}}</td>
+                                <td>{{publish_request.clinvar_summary.get('retry', 0)}}</td>
+                                <td>{{publish_request.clinvar_summary.get('skipped', 0)}}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -91,16 +98,34 @@
                     <table class="table table-hover" id="variant_table">
                         <thead>
                             <tr>
-                                <th class="width_very_small"><div>HerediCare VID</div></th>
+                                <th class="width_very_small"><div>Variant ID</div></th>
+                                <th class="width_very_small"><div>Accession ID</div></th>
                                 <th class="width_very_small"><div>Status</div></th>
                                 <th class="width_small"><div>Requested at</div></th>
                                 <th class="width_small"><div>Finished at</div></th>
                                 <th class="width_large"><div>Message</div></th>
+                                <th class="width_very_small"><div>CC Doc</div></th>
                                 <!--<th class="width_minimal"><div>Retry</div></th>-->
                             </tr>
                         </thead>
                         <tbody id="variant_table_body">
-
+                            {% for upload in clinvar_uploads %} <!--id, variant_id, requested_at, last_updated, status, message, submission_id, accession_id, consensus_classification_id-->
+                                <tr>
+                                    <td><a href="{{url_for('variant.display', variant_id = upload[1])}}">{{ upload[1] }}</a></td>
+                                    <td>{{ upload[7] }}</td>
+                                    <td>{{ upload[4] }}</td>
+                                    <td>{{ upload[2] }}</td>
+                                    <td>{{ upload[3] }}</td>
+                                    <td>{{ upload[5] }}</td>
+                                    <td>
+                                        {% if upload[8] is not none %}
+                                            <a href="{{url_for('download.evidence_document', consensus_classification_id=upload[8] ) }}">download</a>
+                                        {% else %}
+                                            None
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
@@ -125,19 +150,19 @@
                                 <td class="width_very_small">Pending</td>
                                 <td class="width_very_small">Processing</td>
                                 <td class="width_very_small">Erroneous</td>
+                                <td class="width_very_small">Submitted</td>
                                 <td class="width_very_small">Success</td>
-                                <td class="width_very_small">Deleted</td>
-                                <td class="width_very_small">Updated</td>
                                 <td class="width_very_small">Retrying</td>
+                                <td class="width_very_small">Skipped</td>
                             </tr>
                             <tr>
-                                <td id="variant_summary_pending"></td>
-                                <td id="variant_summary_processing"></td>
-                                <td id="variant_summary_erroneous"></td>
-                                <td id="variant_summary_success"></td>
-                                <td id="variant_summary_deleted"></td>
-                                <td id="variant_summary_update"></td>
-                                <td id="variant_summary_retrying"></td>
+                                <td>{{publish_request.heredicare_summary.get('pending', 0)}}</td>
+                                <td>{{publish_request.heredicare_summary.get('processing', 0)}}</td>
+                                <td>{{publish_request.heredicare_summary.get('error', 0) + publish_request.heredicare_summary.get('api_error', 0)}}</td>
+                                <td>{{publish_request.heredicare_summary.get('submitted', 0)}}</td>
+                                <td>{{publish_request.heredicare_summary.get('success', 0)}}</td>
+                                <td>{{publish_request.heredicare_summary.get('retry', 0)}}</td>
+                                <td>{{publish_request.heredicare_summary.get('skipped', 0)}}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -147,16 +172,33 @@
                     <table class="table table-hover" id="variant_table">
                         <thead>
                             <tr>
-                                <th class="width_very_small"><div>HerediCare VID</div></th>
+                                <th class="width_very_small"><div>Variant ID</div></th>
+                                <th class="width_very_small"><div>VID</div></th>
                                 <th class="width_very_small"><div>Status</div></th>
                                 <th class="width_small"><div>Requested at</div></th>
                                 <th class="width_small"><div>Finished at</div></th>
                                 <th class="width_large"><div>Message</div></th>
-                                <!--<th class="width_minimal"><div>Retry</div></th>-->
+                                <th class="width_very_small"><div>CC Doc</div></th>
                             </tr>
                         </thead>
                         <tbody id="variant_table_body">
-
+                            {% for upload in heredicare_uploads %} <!--id, status, requested_at, finished_at, message, vid, variant_id, submission_id, consensus_classification_id-->
+                                <tr>
+                                    <td><a href="{{url_for('variant.display', variant_id = upload[6])}}">{{ upload[6] }}</a></td>
+                                    <td>{{ upload[5] }}</td>
+                                    <td>{{ upload[1] }}</td>
+                                    <td>{{ upload[2] }}</td>
+                                    <td>{{ upload[3] }}</td>
+                                    <td>{{ upload[4] }}</td>
+                                    <td>
+                                        {% if upload[8] is not none %}
+                                            <a href="{{url_for('download.evidence_document', consensus_classification_id=upload[8] ) }}">download</a>
+                                        {% else %}
+                                            None
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
