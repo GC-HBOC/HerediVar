@@ -327,10 +327,16 @@
             "relevant_info": "",
             "strengths": [
                 {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                },
+                {
                     "name": "pp",
                     "display_name":"sup",
                     "description": "supporting pathogenic",
-                    "is_default": "1"
+                    "is_default": "0"
                 }
             ],
             "mutually_exclusive_criteria": [
