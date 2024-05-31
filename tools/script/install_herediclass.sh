@@ -34,11 +34,10 @@ echo "Downloading the automatic classification algorithm to $path."
 mkdir -p $path
 cd $path
 
-#git clone https://github.com/akatzke/variant_classification.git $foldername
+git clone https://github.com/akatzke/variant_classification.git $foldername
 
 variant_classification_path=$path/$foldername
 
-mkdir -p $variant_classification_path
 
 cd $variant_classification_path
 wget https://www.python.org/ftp/python/3.10.13/Python-3.10.13.tgz
