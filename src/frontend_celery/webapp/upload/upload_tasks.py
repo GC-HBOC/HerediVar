@@ -57,7 +57,8 @@ def publish(self, publish_queue_id, variant_ids, options, user_roles):
             
             # start the task to upload the variant/consensus_classification/whatever to HerediCaRe
             if options['do_heredicare']:
-                hcid = start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, user_roles, conn)
+                pass
+                #hcid = start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, user_roles, conn)
 
     except InternalError as e:
         # deadlock: code 1213
