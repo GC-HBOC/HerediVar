@@ -168,7 +168,7 @@
             <form action="{{ url_for('user.admin_dashboard', type = 'abort_annotations') }}" id="abort_annotations-form" name="abort_annotations-form" method="post">
                 
                 <div class="d-flex flex-wrap">
-                    {% for annotation_status in ['pending', 'retry', 'aborted'] %}
+                    {% for annotation_status in ['pending', 'retry', 'progress'] %}
                     <div class="mb-3 form-check bsr width_very_medium">
                         <input type="checkbox" class="form-check-input ssr" id="{{annotation_status}}" name="annotation_statuses" value="{{annotation_status}}">
                         <label class="form-check-label" for="{{ annotation_status }}">{{ annotation_status }}</label>
