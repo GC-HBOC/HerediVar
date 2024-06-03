@@ -69,7 +69,7 @@ fi
 
 if [ "${WEBAPP_ENV}" == "prod" ]
 then
-    $keycloak_path/bin/kc.sh start --auto-build --http-relative-path=/kc --db mysql --proxy=edge --hostname-strict=false --log-level INFO --http-host=localhost --db-url "jdbc:mysql://$KEYCLOAK_DB_HOST:$KEYCLOAK_DB_PORT/$KEYCLOAK_DB_SCHEME?allowPublicKeyRetrieval=true\&useSSL=false" --db-url-host $KEYCLOAK_DB_HOST --db-url-port $KEYCLOAK_DB_PORT --db-schema $KEYCLOAK_DB_SCHEME --http-port=$KEYCLOAK_PORT --db-username $KEYCLOAK_DB_USERNAME --db-password $KEYCLOAK_DB_PW --log console,file --log-file $logs/keycloak.log
+    $KEYCLOAK_PATH/bin/kc.sh start --auto-build --http-relative-path=/kc --db mysql --proxy=edge --hostname-strict=false --log-level INFO --http-host=localhost --db-url "jdbc:mysql://$KEYCLOAK_DB_HOST:$KEYCLOAK_DB_PORT/$KEYCLOAK_DB_SCHEME?allowPublicKeyRetrieval=true\&useSSL=false" --db-url-host $KEYCLOAK_DB_HOST --db-url-port $KEYCLOAK_DB_PORT --db-schema $KEYCLOAK_DB_SCHEME --http-port=$KEYCLOAK_PORT --db-username $KEYCLOAK_DB_USERNAME --db-password $KEYCLOAK_DB_PW --log console,file --log-file $logs/keycloak.log
 
     #$KEYCLOAK_PATH/bin/kc.sh start --proxy=edge --hostname-strict=false --hostname=$KEYCLOAK_HOST #heredivar.uni-koeln.de --log-level INFO
 fi
