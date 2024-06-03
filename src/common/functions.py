@@ -669,7 +669,6 @@ def rm(path):
     if os.path.exists(path): 
         os.remove(path)
 
-
 def remove_oldest_file(folder, maxfiles=10):
     if os.path.exists(folder):
         list_of_files = os.listdir(folder)

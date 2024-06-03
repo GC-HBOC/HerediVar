@@ -98,12 +98,28 @@ class consequence_job(Job):
             functions.rm(tmp_vcf)
             return returncode, err_msg, vcf_errors
         
+
+        with open(tmp_vcf, "r") as tmp_file:
+            tmp_text = tmp_file.read()
+            new_annotation = functions.find_between(tmp_text, "CSQ_ensembl=", '(;|$)')
+            if new_annotation is not None and new_annotation == '':
+                functions.rm(tmp_vcf)
+                os.rename(input_vcf, tmp_vcf)
+        
         # annotate refseq consequences
         command = [os.path.join(paths.ngs_bits_path, "VcfAnnotateConsequence")]
         command.extend([ "-gff", paths.refseq_transcript_4_consequence_path, "-ref", paths.ref_genome_path, "-all",  "-tag", "CSQ_refseq", "-in", tmp_vcf, "-out", output_vcf])
         returncode, err_msg, vcf_errors = functions.execute_command(command, 'VcfAnnotateConsequenceRefSeq')
 
+        with open(output_vcf, "r") as tmp_file:
+            tmp_text = tmp_file.read()
+            new_annotation = functions.find_between(tmp_text, "CSQ_refseq=", '(;|$)')
+            if new_annotation is not None and new_annotation == '':
+                functions.rm(output_vcf)
+                os.rename(tmp_vcf, output_vcf)
+        
         functions.rm(tmp_vcf)
+
         return returncode, err_msg, vcf_errors
 
 
