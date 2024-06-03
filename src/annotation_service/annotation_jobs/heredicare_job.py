@@ -71,9 +71,8 @@ class heredicare_job(Job):
                 n_fam = heredicare_variant["N_FAM"]
                 n_pat = heredicare_variant["N_PAT"]
                 consensus_class = heredicare_variant["PATH_TF"] if heredicare_variant["PATH_TF"] != "-1" else None
-                comment = heredicare_variant["VUSTF_21"] if heredicare_variant["VUSTF_21"] is not None else ''
-                comment = comment.strip()
-                comment = comment if comment != '' else None
+                comment = heredicare_variant.get("VUSTF_21", heredicare_variant["VUSTF_15"])
+                comment = comment.strip() if comment is not None else None
                 classification_date = heredicare_variant["VUSTF_DATUM"] if heredicare_variant["VUSTF_DATUM"] != '' else None
                 lr_cooc = heredicare_variant["LR_COOC"]
                 lr_coseg = heredicare_variant["LR_COSEG"]
