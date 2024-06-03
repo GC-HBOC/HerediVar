@@ -29,7 +29,7 @@ def get_default_job_config():
 
         # consequences
         'do_consequence': True,
-        'do_vep': False,
+        'do_vep': True,
 
         #vcf annotate from vcf
         'do_dbsnp': True,
