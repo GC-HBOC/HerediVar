@@ -131,13 +131,14 @@ redis_update: redis_clean redis
 
 ## VEP
 VEPPATH := $(TOOLS)
-NGSBITSNAME := ensembl-vep
-VEP := $(VEPPATH)/$(NGSBITSNAME)
+VEPNAME := ensembl-vep
+VEP := $(VEPPATH)/$(VEPNAME)
 VEPVERSION := 110
+VEPMINORVERSION := 0
 vep:
 	if [ ! -d "${VEP}" ]; then \
-		printf ${_TEXTCOL_RED} "Installing vep ${VEPVERSION}" ; \
-		${TOOLS}/script/install_vep.sh -p ${VEPPATH} -n ${VEPNAME} -v ${VEPVERSION} -m ${VEPMINORVERSION} ; \
+		printf ${_TEXTCOL_RED} "Installing vep ${VEPVERSION}.${VEPMINORVERSION}" ; \
+		${TOOLS}/script/install_vep.sh -p ${VEPPATH} -v ${VEPVERSION} -m ${VEPMINORVERSION} -n ${VEPNAME} ; \
 	fi
 
 vep_clean:
@@ -157,7 +158,7 @@ ngs_bits:
 	fi
 
 ngs_bits_clean:
-	rm -rf ${VEP}
+	rm -rf ${NGSBITS}
 
 ngs_bits_update: ngs_bits_clean ngs_bits
 

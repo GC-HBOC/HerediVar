@@ -34,11 +34,8 @@ fi
 echo "Setting up python $version in $basedir/$foldername..."
 
 
-
-
 cd $basedir
-git clone --recursive https://github.com/imgag/ngs-bits.git
+git clone --recursive https://github.com/imgag/ngs-bits.git $foldername
 #git checkout $version && git submodule update --recursive --init ## select stable version once project is finished!
-mv ngs-bits $foldername
 cd $foldername
 make build_3rdparty build_libs_release build_tools_release
