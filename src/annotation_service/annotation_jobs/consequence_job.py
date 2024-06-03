@@ -51,12 +51,14 @@ class consequence_job(Job):
         # T|upstream_gene_variant|MODIFIER|FTLP14|HGNC:37964|ENST00000562087.2|Transcript||||,
         # T|upstream_gene_variant|MODIFIER|CDH1|HGNC:1748|ENST00000562118.1|Transcript||||
         for source in sources:
-            info_field = info_field_prefix + source
+            info_field = info_field_prefix + source + "="
             csq_info = functions.find_between(info, info_field, '(;|$)')
             if csq_info is None:
                 continue
             csq_entries = csq_info.split(',')
             for csq_entry in csq_entries:
+                if csq_entry.strip() == '':
+                    continue
                 parts = csq_entry.strip().split('|')
                 feature_type = parts[6]
                 if feature_type.lower() != "transcript":
