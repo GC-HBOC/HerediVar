@@ -55,11 +55,13 @@ fi
 
 if [ "${WEBAPP_ENV}" == "prod" ]
 then
-    backups_folder=$SCRIPTPATH/prod/$DATE
-    mkdir -p $backups_folder
-    $KEYCLOAK/kc.sh export --dir $backups_folder --realm HerediVar --users same_file
-fi
+    dump_path=$SCRIPTPATH/prod
+    mkdir -p $dump_path
+    dump_name=production-dump-$DATE.sql
 
+    mysqldump --quick -h$KEYCLOAK_DB_HOST -P$KEYCLOAK_DB_PORT -u$KEYCLOAK_DB_USERNAME -p$KEYCLOAK_DB_PW --no-tablespaces -r$dump_path/$dump_name $KEYCLOAK_DB_SCHEME
+    gzip -f $dump_path/$dump_name
+fi
 
 
 #sed 's/"directAccessGrantsEnabled" : false,/"directAccessGrantsEnabled" : true,/g' Heredivar-realm.json > test_config/Heredivar-realm-test.json
