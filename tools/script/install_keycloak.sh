@@ -51,5 +51,5 @@ mv keycloak-$version $foldername
 # follow this tutorial: https://gist.github.com/matissime/f9c6e72826862d5fd8a582289b2a2d5f
 #mkdir -p keycloak/data/import/
 #cp $basedir/tools/data/init_keycloak.json keycloak/data/import/
-#keycloak/bin/kc.sh --verbose start --auto-build --import-realm --http-relative-path=/kc --db mysql --proxy=edge --hostname-strict=false --log-level INFO --http-host=localhost --db-url "jdbc:mysql://$KEYCLOAK_DB_HOST:$KEYCLOAK_DB_PORT/$KEYCLOAK_DB_SCHEME?allowPublicKeyRetrieval=true\&useSSL=false" --db-url-host $KEYCLOAK_DB_HOST --db-url-port $KEYCLOAK_DB_PORT --db-schema $KEYCLOAK_DB_SCHEME --http-port=$KEYCLOAK_PORT --db-username $KEYCLOAK_DB_USERNAME --db-password $KEYCLOAK_DB_PW
+#keycloak/bin/kc.sh --verbose start --auto-build --import-realm --http-relative-path=/kc --db mysql --proxy=edge --hostname-strict=false --log-level INFO --http-host=$KEYCLOAK_HOST --http-port=$KEYCLOAK_PORT --db-url "jdbc:mysql://$KEYCLOAK_DB_HOST:$KEYCLOAK_DB_PORT/$KEYCLOAK_DB_SCHEME?allowPublicKeyRetrieval=true\&useSSL=false" --db-url-host $KEYCLOAK_DB_HOST --db-url-port $KEYCLOAK_DB_PORT --db-schema $KEYCLOAK_DB_SCHEME --db-username $KEYCLOAK_DB_USERNAME --db-password $KEYCLOAK_DB_PW
 #rm keycloak/data/import/init_keycloak.json
