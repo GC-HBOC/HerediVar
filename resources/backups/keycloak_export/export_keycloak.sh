@@ -55,6 +55,11 @@ fi
 
 if [ "${WEBAPP_ENV}" == "prod" ]
 then
+    set -o allexport
+    extension=env_
+    source $ROOT/.$extension$WEBAPP_ENV
+    set +o allexport
+
     dump_path=$SCRIPTPATH/prod
     mkdir -p $dump_path
     dump_name=production-dump-$DATE.sql
