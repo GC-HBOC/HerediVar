@@ -1,0 +1,2 @@
+issue "crontab -e" and insert:
+* * 1 * * /path/to/HerediVar/src/frontend_celery/start_dump.sh -w prod
