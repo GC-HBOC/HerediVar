@@ -1279,7 +1279,7 @@ function get_checked_criteria_strengths() {
         var current_criterium_state = document.getElementById(current_button.id + '_state').value
         if (current_button.checked && current_criterium_state == 'selected') {
             var new_value = document.getElementById(current_button.id + '_strength').value
-            if (scheme_type == 'acmg-enigma-atm' && current_button.id == 'PM2') {
+            if (scheme_type == 'acmg-enigma-atm' && (current_button.id == 'PM2' || current_button.id == 'PVS1')) {
                 result.push(current_button.id + "_" + new_value)
             } else if ((scheme_type == 'acmg-enigma-brca1' || scheme_type == 'acmg-enigma-brca2') && current_button.id == "BP1") {
                 result.push(current_button.id + "_" + new_value)

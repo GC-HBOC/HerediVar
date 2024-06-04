@@ -311,7 +311,7 @@ def get_possible_classes_enigma_pten_310(class_counts):
 
 
 
-def get_possible_classes_enigma_atm(class_counts):
+def get_possible_classes_enigma_atm_1_1_0(class_counts):
     
     possible_classes = set()
 
@@ -362,6 +362,57 @@ def get_possible_classes_enigma_atm(class_counts):
 
     return possible_classes
 
+
+def get_possible_classes_enigma_atm_1_3_0(class_counts):
+    
+    possible_classes = set()
+
+    # pathogenic
+    if class_counts['pvs'] >= 2:
+        possible_classes.add(5)
+    if class_counts['pvs'] == 1:
+        if class_counts['ps'] >= 1 or class_counts['pm'] >= 2 or (class_counts['pm'] == 1 and class_counts['pp'] == 1) or class_counts['pp'] >= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] >= 2:
+        possible_classes.add(5)
+    if class_counts['ps'] == 1:
+        if class_counts['pm'] >= 3 or (class_counts['pm'] == 2 and class_counts['pp'] >= 2) or (class_counts['pm'] == 1 and class_counts['pp'] >= 4):
+            possible_classes.add(5)
+    
+    # likely pathogenic
+    if class_counts['pvs'] == 1 and class_counts['pm'] == 1:
+        possible_classes.add(4)
+    if class_counts['pvs'] == 1 and class_counts['pp'] == 1 and class_counts['pvs1_pp'] == 0: #  (PS3_Supporting, PM2_Supporting, PM3_Supporting, PM5_Supporting, PP3)
+        possible_classes.add(4)
+    if class_counts['ps'] == 1:
+        if class_counts['pp'] >= 2 or (class_counts['pm'] >= 1 and class_counts['pm'] <=2):
+            possible_classes.add(4)
+    if class_counts['pm'] >= 3:
+        possible_classes.add(4)
+    if class_counts['pm'] == 2 and class_counts['pp'] >= 2:
+        possible_classes.add(4)
+    if class_counts['pm'] == 1 and class_counts['pp'] >= 4:
+        possible_classes.add(4)
+
+    # benign
+    if class_counts['ba'] >= 1:
+        possible_classes.add(1)
+    if class_counts['bs'] >= 2:
+        possible_classes.add(1)
+
+    # likely benign
+    if class_counts['bs'] == 1:
+        possible_classes.add(2)
+    if class_counts['bs'] == 1: 
+        if class_counts['bp'] == 1:
+            possible_classes.add(2)
+    if class_counts['bp'] >= 2 or class_counts['bm'] >= 1:
+        possible_classes.add(2)
+
+    #print(class_counts)
+    #print(possible_classes)
+
+    return possible_classes
 
 
 
@@ -617,12 +668,25 @@ def decide_for_class_task_force(selected_classes):
     return 3
 
 def get_class_counts(data):
-    result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'bm':0, 'ba':0, 'pm2_pp':0, 'bp1_bs': 0} # pm2_pp is special case for ATM scheme and bp1_bs is special case for brca1/2
+    result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'bm':0, 'ba':0, 'pm2_pp':0, 'bp1_bs': 0, 'pvs1_pp': 0} 
+    # special cases:
+    # - pm2_pp: ATM 1.1.0 scheme
+    # - pvs1_pp: ATM 1.3.0 scheme
+    # - bp1_bs: brca1/2 1.1.0 scheme
     data = [x.lower().strip('0123456789') for x in data]
     for key in result:
         key = key.lower()
-        result[key] = sum(key == x for x in data)
+        result[key] = sum(class_comparer(key, x) for x in data)
     return result
+
+def class_comparer(key: str, value: str):
+    if key == value:
+        return True
+    # key: pp
+    # value: pm2_pp
+    if value.endswith(key):
+        return True
+    return False
 
 def decide_for_class_acmg(possible_classes):
     # uncertain significance if criteria for benign and pathogenic are contradictory

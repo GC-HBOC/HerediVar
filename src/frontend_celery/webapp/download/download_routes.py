@@ -224,12 +224,14 @@ def calculate_class(scheme_type = None, version = None, selected_classes = ''):
             possible_classes = download_functions.get_possible_classes_enigma_brca1(class_counts) # get a set of possible classes depending on selected criteria
         elif 'brca2' in scheme_type and version == "v1.0.0":
             possible_classes = download_functions.get_possible_classes_enigma_brca2(class_counts) # get a set of possible classes depending on selected criteria
-        elif 'palb2' in scheme_type and version == "v1.0.0":
+        elif 'palb2' in scheme_type and (version == "v1.0.0" or version == "v1.1.0"):
             possible_classes = download_functions.get_possible_classes_enigma_palb2(class_counts) # get a set of possible classes depending on selected criteria
         elif 'tp53' in scheme_type and version == "v1.4.0":
             possible_classes = download_functions.get_possible_classes_enigma_tp53(class_counts) # get a set of possible classes depending on selected criteria
         elif 'atm' in scheme_type and version == "v1.1.0":
-            possible_classes = download_functions.get_possible_classes_enigma_atm(class_counts) # get a set of possible classes depending on selected criteria
+            possible_classes = download_functions.get_possible_classes_enigma_atm_1_1_0(class_counts) # get a set of possible classes depending on selected criteria
+        elif 'atm' in scheme_type and version == "v1.3.0":
+            possible_classes = download_functions.get_possible_classes_enigma_atm_1_3_0(class_counts) # get a set of possible classes depending on selected criteria
         elif 'pten' in scheme_type and version == "v3.0.0":
             possible_classes = download_functions.get_possible_classes_enigma_pten(class_counts) # get a set of possible classes depending on selected criteria
         elif 'pten' in scheme_type and version == "v3.1.0":
