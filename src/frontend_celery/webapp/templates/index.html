@@ -105,12 +105,17 @@
                 <ul>
                     <li>PALB2: v1.0.0 -> v1.1.0</li>
                     <li>ATM: v1.1.0 -> v1.3.0</li>
+                    <li>BRCA1: v1.0.0 -> v1.1.0</li>
+                    <li>BRCA2: v1.0.0 -> v1.1.0</li>
                 </ul>
             </li>
+            <li>Previously, moderate benign criteria were colored in pink. Now, very strong benign criteria are shown in this color.</li>
         </ul>
         Bugfixes:
         <ul>
             <li>Selecting pm2_sup in ATM gene specific scheme or bp1_str in BRCA1/2 schemes caused wrong calculated class when selecting another supporting or strong criterium.</li>
+            <li>The force download url for erroneous vcfs was broken</li>
+            <li>Fixed a bug where the header line for annotated literature was incorrectly called 'pubmed' instead of 'literature'</li>
         </ul>
     </div>
 

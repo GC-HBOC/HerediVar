@@ -545,7 +545,6 @@ def consensus_classify(variant_id):
 
     if do_redirect: # do redirect if the submission was successful
         current_app.logger.info(session['user']['preferred_username'] + " successfully consensus-classified variant " + str(variant_id) + " with class " + str(classification) + " from scheme_id " + str(scheme_id))
-        task = tasks.generate_consensus_only_vcf_task.apply_async()
         return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
     else:
         return render_template('variant/classify.html', 

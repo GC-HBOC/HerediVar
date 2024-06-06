@@ -58,7 +58,7 @@ class CancerhotspotsAnnotation(Abstract_Annotation):
         return data
     
     def get_header(self): # TODO
-        header = {self.title: '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + '. An & separated list of cancerhotspots annotations. Each annotation has the FORMAT: oncotree_symbol|cancertype|tissue|num_occurances. (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'}
+        header = {self.title: '##INFO=<ID=' + self.title + ',Number=.,Type=String,Description="' + self.description + '. An & separated list of cancerhotspots annotations. Each annotation has the FORMAT: oncotree_symbol|cancertype|tissue|num_occurances. (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'}
         return header 
 
 
@@ -81,7 +81,7 @@ class Annotation(Abstract_Annotation):
         return data
     
     def get_header(self):
-        header = {self.title: '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + ' (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'}
+        header = {self.title: '##INFO=<ID=' + self.title + ',Number=.,Type=String,Description="' + self.description + ' (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'}
         return header
 
 
@@ -109,7 +109,7 @@ class TranscriptAnnotation(Abstract_Annotation):
         return data
     
     def get_header(self):
-        header = {self.title: '##INFO=<ID=' + self.title + ',Number=1,Type=String,Description="' + self.description + '. A | separated list of transcript$value pairs. (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'}
+        header = {self.title: '##INFO=<ID=' + self.title + ',Number=.,Type=String,Description="' + self.description + '. A | separated list of transcript$value pairs. (version: ' + str(self.version) +  ', version date: ' + str(self.version_date) + ' )">\n'}
         return header
 
     def sort(self):
@@ -516,9 +516,9 @@ class Classification:
     def get_header(self, simple = False):
         if not simple:
             key = functions.encode_vcf(self.type)
-            header = {key: '##INFO=<ID=' + key + ',Number=1,Type=String,Description="The recent consensus classification by the VUS-task-force. Format: consensus_class|consensus_comment|submission_date|consensus_scheme|consensus_scheme_class|consensus_criteria_string. The consensus criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence+state ">\n'}
+            header = {key: '##INFO=<ID=' + key + ',Number=.,Type=String,Description="The recent consensus classification by the VUS-task-force. Format: consensus_class|consensus_comment|submission_date|consensus_scheme|consensus_scheme_class|consensus_criteria_string. The consensus criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence+state ">\n'}
         else:
-            header = {'classification': '##INFO=<ID=classification,Number=1,Type=Integer,Description="The consensus classification from the VUS-task-force. Either 1 (benign), 2 (likely benign), 3 (uncertain), 4 (likely pathogenic) or 5 (pathogenic)">\n',
+            header = {'classification': '##INFO=<ID=classification,Number=1,Type=String,Description="The consensus classification from the VUS-task-force. Either 1 (benign), 2 (likely benign), 3 (uncertain), 4 (likely pathogenic) or 5 (pathogenic)">\n',
                       'comment': '##INFO=<ID=comment,Number=1,Type=String,Description="The comment of the VUS-task-force for the consensus classification">\n',
                       'date': '##INFO=<ID=date,Number=1,Type=String,Description="The date when the consensus classification was submitted. FORMAT: %Y-%m-%d %H:%M:%S">\n',
                       'scheme': '##INFO=<ID=scheme,Number=1,Type=String,Description="The classification scheme which was used to classify the variant.">\n',
@@ -591,7 +591,7 @@ class AutomaticClassification:
     def get_header(self):
         #consensus_class|consensus_comment|submission_date|consensus_scheme|consensus_scheme_class|consensus_criteria_string. The consensus criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence
         header = {
-            'automatic_classification': '##INFO=<ID=automatic_classification,Number=1,Type=String,Description="The automatic classification for this variant. FORMAT: classification_protein|classification_splicing|date|scheme|criteria. criteria is a $ separated list with the FORMAT: criterium_name+criterium_strength+criterium_evidence+state+rule_type">\n',
+            'automatic_classification': '##INFO=<ID=automatic_classification,Number=.,Type=String,Description="The automatic classification for this variant. FORMAT: classification_protein|classification_splicing|date|scheme|criteria. criteria is a $ separated list with the FORMAT: criterium_name+criterium_strength+criterium_evidence+state+rule_type">\n',
         }
         return header
 
@@ -754,7 +754,7 @@ class Paper:
     source: str
 
     def get_header(self):
-        header = {'literature': '##INFO=<ID=pubmed,Number=.,Type=String,Description="An & separated list of pubmed ids relevant for this variant.">\n'}
+        header = {'literature': '##INFO=<ID=literature,Number=.,Type=String,Description="An & separated list of pubmed ids relevant for this variant.">\n'}
         return header
 
     def to_vcf(self, prefix = True):

@@ -871,18 +871,6 @@ def annotate_variant(self, annotation_queue_id, job_config):
 
 
 
-# this uses exponential backoff in case there is a http error
-# this will retry 3 times before giving up
-# first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
-@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
-def generate_consensus_only_vcf_task(self):
-    """Background task for generating consensus only vcf"""
-    from webapp.download.download_functions import generate_consensus_only_vcf
-    conn = Connection()
-    variant_types = conn.get_enumtypes("variant", "variant_type")
-    for variant_type in variant_types:
-        generate_consensus_only_vcf([variant_type])
-    conn.close()
 
 
 def send_mail(subject, sender, recipient, text_body):
