@@ -18,7 +18,7 @@ def insert_criterium_scheme(conn: Connection, data):
     aliases = data["aliases"]
     conn.clear_classification_scheme_aliases(classification_scheme_id)
     for alias in aliases:
-        conn.insert_classification_scheme_alias(classification_scheme_id, alias)
+        conn.insert_classification_scheme_alias(classification_scheme_id, alias, data["version"])
     new_final_classes = data["final_classes"]
     old_final_classes = conn.get_classification_final_classes(classification_scheme_id)
     final_classes_to_delete = list(set(old_final_classes) - set(new_final_classes))
@@ -82,7 +82,7 @@ def delete_criteria(conn: Connection, data, classification_scheme_id):
     criteria = data["criteria"]
     new_criteria_names = [x['name'] for x in criteria]
 
-    schemas = conn.get_classification_schemas()
+    schemas = conn.get_classification_schemas(only_active = False)
     scheme_oi = schemas[int(classification_scheme_id)]
 
     for db_criterium_name in scheme_oi["criteria"]:

@@ -1561,13 +1561,15 @@ class Connection:
         classification_scheme_id = self.cursor.fetchone()[0]
         return classification_scheme_id
     
-    def get_classification_scheme_id_from_alias(self, scheme_name):
-        command = "SELECT id FROM classification_scheme WHERE name = %s"
-        self.cursor.execute(command, (scheme_name, ))
+    def get_classification_scheme_id_from_alias(self, scheme_name, scheme_version):
+        if not scheme_version.startswith('v'):
+            scheme_version = 'v' + scheme_version
+        command = "SELECT id FROM classification_scheme WHERE name = %s AND version = %s"
+        self.cursor.execute(command, (scheme_name, scheme_version))
         classification_scheme_id = self.cursor.fetchone()
         if classification_scheme_id is None:
-            command = "SELECT classification_scheme_id FROM classification_scheme_alias WHERE alias = %s"
-            self.cursor.execute(command, (scheme_name, ))
+            command = "SELECT classification_scheme_id FROM classification_scheme_alias WHERE alias = %s AND version = %s"
+            self.cursor.execute(command, (scheme_name, scheme_version))
             classification_scheme_id = self.cursor.fetchone()
         if classification_scheme_id is not None:
             return classification_scheme_id[0]
@@ -2812,11 +2814,13 @@ class Connection:
         return result
 
 
-    def get_classification_schemas(self):
+    def get_classification_schemas(self, only_active = True):
         # it should look like this:
         # {schema_id -> display_name(description), scheme_type, reference, criteria}
         #                                         -> {name,description,default_strength,possible_strengths,selectable,disable_group,mutually_exclusive_buttons,mutually_inclusive_buttons}
-        command = "SELECT id,name,display_name,type,reference,is_default,version FROM classification_scheme WHERE is_active = 1"
+        command = "SELECT id,name,display_name,type,reference,is_default,version FROM classification_scheme"
+        if only_active:
+            command += " WHERE is_active = 1"
         self.cursor.execute(command)
         classification_schemas = self.cursor.fetchall()
 
@@ -3243,9 +3247,9 @@ class Connection:
         classification_scheme_id = self.get_classification_scheme_id(name, version)
         return classification_scheme_id
     
-    def insert_classification_scheme_alias(self, classification_scheme_id, alias):
-        command = "INSERT INTO classification_scheme_alias (classification_scheme_id, alias) VALUES (%s, %s)"
-        self.cursor.execute(command, (classification_scheme_id, alias))
+    def insert_classification_scheme_alias(self, classification_scheme_id, alias, version):
+        command = "INSERT INTO classification_scheme_alias (classification_scheme_id, alias, version) VALUES (%s, %s, %s)"
+        self.cursor.execute(command, (classification_scheme_id, alias, version))
         self.conn.commit()
 
     def clear_classification_scheme_aliases(self, classification_scheme_id):

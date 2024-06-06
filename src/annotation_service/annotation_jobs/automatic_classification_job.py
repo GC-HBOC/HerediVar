@@ -49,18 +49,19 @@ class automatic_classification_job(Job):
         if returncode != 0:
             raise RuntimeError(err_msg)
 
-        #print(classification)
+        print(classification)
         
         classification_result = json.loads(classification["result"])
-        scheme_alias = classification.get("config_name", "acmg_svi")
-        classification_scheme_id = conn.get_classification_scheme_id_from_alias(scheme_alias)
+        scheme_alias = classification.get("scheme_name", "acmg_svi")
+        scheme_version = classification["scheme_version"]
+        classification_scheme_id = conn.get_classification_scheme_id_from_alias(scheme_alias, scheme_version)
         if classification_scheme_id is None:
             raise ValueError("The scheme provided by the config: " + str(scheme_alias) + " is not in HerediVar. Please adjust config, insert scheme or add scheme alias.")
         scheme = conn.get_classification_scheme(classification_scheme_id)
         scheme_id = scheme[0]
         scheme_type = scheme[3]
         scheme_version = scheme[7]
-        tool_version = classification["version"]
+        tool_version = classification["tool_version"]
 
         selected_criteria = {} # protein, splicing, general
         for criterium_name in classification_result:
