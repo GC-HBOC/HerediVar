@@ -35,9 +35,9 @@ def variant():
     redirect_url = url_for('variant.display', variant_id = variant_id)
     download_file_name = "variant_" + str(variant_id) + ".vcf"
 
-    vcf_file_buffer, status, vcf_errors, err_msg = download_functions.get_vcf([variant_id], conn)
+    vcf_file_buffer, status, vcf_errors, err_msg = download_functions.get_vcf([variant_id], conn, check_vcf=not request.args.get('force', False))
 
-    if status == 'redirect':
+    if status in ['redirect', 'error']:
         flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
         current_app.logger.error(get_preferred_username() + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant ids: " + str(variant_id))
         return redirect(redirect_url)
@@ -84,32 +84,29 @@ def variant_list():
     return send_file(vcf_file_buffer, as_attachment=True, download_name=download_file_name, mimetype="text/vcf")
 
 
+
+
+
+
+
 # listens on get parameter: raw
 @download_blueprint.route('/download/vcf/classified')
 @require_permission(['read_resources'])
 def classified_variants():
-    conn = get_connection()
-    allowed_variant_types = conn.get_enumtypes("variant", "variant_type")
-
     return_raw = request.args.get('raw')
-    variant_types = request.args.getlist('variant_type')
     
-    variant_types_status, variant_types_err_message = download_functions.validate_variant_types(variant_types, allowed_variant_types)
-    if variant_types_status != 'success':
-        return variant_types_err_message
-    classified_variants_folder = download_functions.get_classified_variants_folder(variant_types) #current_app.static_folder + "/files/classified_variants"
+    classified_variants_folder = download_functions.get_classified_variants_folder() #current_app.static_folder + "/files/classified_variants"
     last_dump_path = classified_variants_folder + "/.last_dump.txt"
-    force_url = url_for("download.classified_variants", variant_type=variant_types, raw=return_raw, force = True)
-    redirect_url = url_for("main.index")
+    force_url = url_for("download.classified_variants", raw=return_raw, force = True)
+    redirect_url = url_for("main.downloads")
 
-    if os.path.isfile(last_dump_path):
-        with open(last_dump_path, 'r') as last_dump_file:
-            last_dump_date = last_dump_file.read()
-    else: # generate a new file if it is missing...
-        download_functions.generate_consensus_only_vcf(variant_types)
-        with open(last_dump_path, 'r') as last_dump_file:
-            last_dump_date = last_dump_file.read()
+    if not os.path.isfile(last_dump_path): # generate a new file if it is missing...
+        conn = get_connection()
+        variant_types = conn.get_enumtypes("variant", "variant_type")
+        download_functions.generate_consensus_only_vcf(variant_types, dummy = True)
     
+    with open(last_dump_path, 'r') as last_dump_file:
+        last_dump_date = last_dump_file.read()
     path_to_download = classified_variants_folder + "/" + last_dump_date + ".vcf"
     returncode, err_msg, vcf_errors = functions.check_vcf(path_to_download)
 
@@ -126,7 +123,7 @@ def classified_variants():
             resp.mimetype = "text/plain"
             return resp
     else:
-        return send_file(path_to_download, download_name="HerediVar-classified-" + '-'.join(variant_types) + "-" + functions.get_today(), as_attachment=True, mimetype="text/vcf")
+        return send_file(path_to_download, download_name="HerediVar-classified" + "-" + last_dump_date, as_attachment=True, mimetype="text/vcf")
 
 
 @download_blueprint.route('/download/vcf/heredivar/current')
@@ -221,9 +218,13 @@ def calculate_class(scheme_type = None, version = None, selected_classes = ''):
         #print(class_counts)
 
         if 'brca1' in scheme_type and version == "v1.0.0":
-            possible_classes = download_functions.get_possible_classes_enigma_brca1(class_counts) # get a set of possible classes depending on selected criteria
+            possible_classes = download_functions.get_possible_classes_enigma_brca1_1_0_0(class_counts) # get a set of possible classes depending on selected criteria
+        elif 'brca1' in scheme_type and version == "v1.1.0":
+            possible_classes = download_functions.get_possible_classes_enigma_brca12_1_1_0(class_counts) # get a set of possible classes depending on selected criteria
         elif 'brca2' in scheme_type and version == "v1.0.0":
-            possible_classes = download_functions.get_possible_classes_enigma_brca2(class_counts) # get a set of possible classes depending on selected criteria
+            possible_classes = download_functions.get_possible_classes_enigma_brca2_1_0_0(class_counts) # get a set of possible classes depending on selected criteria
+        elif 'brca2' in scheme_type and version == "v1.1.0":
+            possible_classes = download_functions.get_possible_classes_enigma_brca12_1_1_0(class_counts) # get a set of possible classes depending on selected criteria
         elif 'palb2' in scheme_type and (version == "v1.0.0" or version == "v1.1.0"):
             possible_classes = download_functions.get_possible_classes_enigma_palb2(class_counts) # get a set of possible classes depending on selected criteria
         elif 'tp53' in scheme_type and version == "v1.4.0":

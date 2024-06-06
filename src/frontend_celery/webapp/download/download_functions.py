@@ -26,8 +26,8 @@ def validate_variant_types(variant_types, allowed_variant_types):
     return status, message
 
 
-def get_classified_variants_folder(variant_types):
-    classified_variants_folder = path.join(paths.downloads_dir, "classified_variants_" + '_'.join(variant_types))
+def get_classified_variants_folder():
+    classified_variants_folder = path.join(paths.downloads_dir, "classified_variants")
     Path(classified_variants_folder).mkdir(parents=True, exist_ok=True)
     return classified_variants_folder
 
@@ -37,11 +37,11 @@ def get_all_variants_folder():
     return all_variants_folder
 
 def get_available_heredivar_versions(folder):
-    versions = [f.strip('.vcf.gz') for f in listdir(folder) if isfile(join(folder, f)) and not f.startswith('.')]
+    versions = [f.strip('.vcf.gz') for f in listdir(folder) if isfile(join(folder, f)) and not f.startswith('.') and not f.startswith('errors_')]
     return versions
 
-def generate_consensus_only_vcf(variant_types):
-    classified_variants_folder = get_classified_variants_folder(variant_types)
+def generate_consensus_only_vcf(variant_types, dummy = False):
+    classified_variants_folder = get_classified_variants_folder()
 
     last_dump_path = classified_variants_folder + "/.last_dump.txt"
     last_dump_date = functions.get_today()
@@ -50,13 +50,17 @@ def generate_consensus_only_vcf(variant_types):
     functions.remove_oldest_file(classified_variants_folder, maxfiles=10)
 
     conn = Connection(['read_only'])
-    variant_ids_oi = conn.get_variant_ids_with_consensus_classification(variant_types = variant_types)
-    vcf_file_buffer, x, xx, xxx = get_vcf(variant_ids_oi, conn, get_variant_vcf_line_only_consensus)
+    variant_ids_oi = []
+    if not dummy:
+        variant_ids_oi = conn.get_variant_ids_with_consensus_classification(variant_types = variant_types)
+    vcf_file_buffer, status, vcf_errors, err_msg = get_vcf(variant_ids_oi, conn, get_variant_vcf_line_only_consensus, check_vcf=False)
+    if status == "error":
+        raise IOError("There was an error during vcf generation: " + str(vcf_errors) + "; " + err_msg)
     functions.buffer_to_file_system(vcf_file_buffer, path_to_download)
     conn.close()
 
     with open(last_dump_path, 'w') as last_dump_file:
-        last_dump_file.write(functions.get_today())
+        last_dump_file.write(last_dump_date)
 
 
 def get_variant_vcf_line_only_consensus(variant_id, conn: Connection):
@@ -110,9 +114,8 @@ def get_vcf(variants_oi, conn, worker=get_variant_vcf_line, check_vcf=True):
 
         if returncode != 0:
             status = "error"
-            return None, status, vcf_errors, err_msg
-
-        buffer.seek(0)
+        
+        return buffer, status, vcf_errors, err_msg
     return buffer, status, "", ""
 
 
@@ -516,7 +519,7 @@ def get_possible_classes_enigma_palb2(class_counts):
     return possible_classes
 
 
-def get_possible_classes_enigma_brca2(class_counts):
+def get_possible_classes_enigma_brca2_1_0_0(class_counts):
     
     possible_classes = set()
 
@@ -576,7 +579,9 @@ def get_possible_classes_enigma_brca2(class_counts):
 
 
 
-def get_possible_classes_enigma_brca1(class_counts):
+
+
+def get_possible_classes_enigma_brca1_1_0_0(class_counts):
 
     possible_classes = set()
 
@@ -639,6 +644,68 @@ def get_possible_classes_enigma_brca1(class_counts):
     return possible_classes
 
 
+def get_possible_classes_enigma_brca12_1_1_0(class_counts):
+
+    possible_classes = set()
+
+    # pathogenic
+    if class_counts['pvs'] >= 2:
+        possible_classes.add(5)
+    if class_counts['pvs'] == 1:
+        if class_counts['ps'] >= 1 or class_counts['pm'] >= 1 or class_counts['pp'] >= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] >= 3:
+        possible_classes.add(5)
+    if class_counts['ps'] == 2:
+        if class_counts['pm'] >= 1 or class_counts['pp'] >= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] == 1:
+        if class_counts['pm'] >= 3 or (class_counts['pm'] == 2 and class_counts['pp'] >= 2) or (class_counts['pm'] == 1 and class_counts['pp'] >= 4):
+            possible_classes.add(5)
+    
+    # likely pathogenic
+    if class_counts['pvs'] == 1 and class_counts['pp'] == 1:
+        possible_classes.add(4)
+    if class_counts['ps'] == 2:
+        possible_classes.add(4)
+    if class_counts['ps'] == 1:
+        if (class_counts['pm'] >= 1 and class_counts['pm'] <= 2) or class_counts['pp'] >= 2:
+            possible_classes.add(4)
+    if class_counts['pm'] >= 3:
+        possible_classes.add(4)
+    if class_counts['pm'] == 2 and class_counts['pp'] >= 2:
+        possible_classes.add(4)
+    if class_counts['pm'] == 1 and class_counts['pp'] >= 4:
+        possible_classes.add(4)
+
+    # benign
+    if class_counts['ba'] >= 1:
+        possible_classes.add(1)
+    if class_counts['bvs'] == 1:
+        if class_counts['bs'] == 1 or class_counts['bm'] == 1 or class_counts['bp'] == 1:
+            possible_classes.add(1)
+    if class_counts['bs'] >= 2:
+        possible_classes.add(1)
+    if class_counts['bs'] == 1:
+        if class_counts['bm'] >= 2 or (class_counts['bm'] == 1 and class_counts['bp'] >= 1) or class_counts['bp'] >= 3:
+            possible_classes.add(1)
+
+    # likely benign
+    if class_counts['bs'] == 1:
+        if class_counts['bm'] == 1 or class_counts['bp'] == 1:
+            possible_classes.add(2)
+    if class_counts['bp'] >= 2:
+        possible_classes.add(2)
+    if class_counts['bp1_bs'] == 1:
+        possible_classes.add(2)
+
+    if class_counts['bm'] == 1 and class_counts['bp'] >= 1:
+        possible_classes.add(2)
+
+    #print(class_counts)
+    #print(possible_classes)
+
+    return possible_classes
 
 
 
@@ -668,7 +735,7 @@ def decide_for_class_task_force(selected_classes):
     return 3
 
 def get_class_counts(data):
-    result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'bm':0, 'ba':0, 'pm2_pp':0, 'bp1_bs': 0, 'pvs1_pp': 0} 
+    result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'bm':0, 'bvs':0, 'ba':0, 'pm2_pp':0, 'bp1_bs': 0, 'pvs1_pp': 0} 
     # special cases:
     # - pm2_pp: ATM 1.1.0 scheme
     # - pvs1_pp: ATM 1.3.0 scheme

@@ -132,7 +132,7 @@ input[type=checkbox]:checked + label.btn-bs {
     background-color: #6f15a3;
 }
 .btn-bm {
-    color: #d32d88;
+    color: #4200db;
     background-color: #ffffff;
 }
 /*.btn-bm:hover {
@@ -141,6 +141,19 @@ input[type=checkbox]:checked + label.btn-bs {
     border-color: #d8d8d8;
 }*/
 input[type=checkbox]:checked + label.btn-bm {
+    color: rgb(255, 255, 255);
+    background-color: #4200db;
+}
+.btn-bvs {
+    color: #d32d88;
+    background-color: #ffffff;
+}
+/*.btn-ba:hover {
+    color: rgb(255, 255, 255);
+    background-color: #000f64;
+    border-color: #d8d8d8;
+}*/
+input[type=checkbox]:checked + label.btn-bvs {
     color: rgb(255, 255, 255);
     background-color: #d32d88;
 }

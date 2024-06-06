@@ -141,9 +141,13 @@ function criterium_strength_to_description(criterium_strength) {
     if (criterium_strength == 'bs') {
         return 'strong'
     }
+    if (criterium_strength == 'bvs') {
+        return 'very strong'
+    }
     if (criterium_strength == 'ba') {
         return 'stand-alone'
     }
+
 }
 
 
@@ -1043,7 +1047,7 @@ function add_strength_selection(criterium_id, possible_strengths) {
     additional_content.appendChild(new_subcaption)
     var container = document.createElement('div')
     for (var i in possible_strengths) {
-        container.appendChild(create_strength_ratio(criterium_id, possible_strengths[i]))
+        container.appendChild(create_strength_radio(criterium_id, possible_strengths[i]))
     }
     additional_content.appendChild(container)
 
@@ -1053,7 +1057,7 @@ function add_strength_selection(criterium_id, possible_strengths) {
 }
 
 
-function create_strength_ratio(criterium_id, criterium_strength) {
+function create_strength_radio(criterium_id, criterium_strength) {
     var container = document.createElement('div')
     container.classList.add('form-check')
     container.classList.add('form-check-inline')
