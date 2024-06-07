@@ -437,18 +437,30 @@ class Heredicare(metaclass=Singleton):
 
 
         preferred_consequence = None
+        preferred_gene = None
+        preferred_transcript = None
         if transaction_type == 'INSERT':
-            preferred_consequences = variant.get_preferred_transcripts(within_gene = True)
-            if preferred_consequences is not None:
-                preferred_genes = functions.get_preferred_genes()
-                for consequence in preferred_consequences:
-                    if consequence.transcript.gene.symbol in preferred_genes:
+            preferred_gene = variant.get_genes(how = "best", within_gene = True)
+            if preferred_gene is not None:
+                consequences = variant.get_sorted_consequences()
+                for consequence in consequences:
+                    if consequence.transcript.gene is None:
+                        continue
+                    if consequence.transcript.gene == preferred_gene:
                         preferred_consequence = consequence
+                        preferred_transcript = consequence.transcript.name
                         break
-                    elif preferred_consequence is None:
-                        preferred_consequence = consequence
-                    elif preferred_consequence.length < consequence.length:
-                        preferred_consequence = consequence
+            #preferred_consequences = variant.get_preferred_transcripts(within_gene = True)
+            #if preferred_consequences is not None:
+            #    preferred_genes = functions.get_preferred_genes()
+            #    for consequence in preferred_consequences:
+            #        if consequence.transcript.gene.symbol in preferred_genes:
+            #            preferred_consequence = consequence
+            #            break
+            #        elif preferred_consequence is None:
+            #            preferred_consequence = consequence
+            #        elif preferred_consequence.length < consequence.length:
+            #            preferred_consequence = consequence
 
             if preferred_consequence is None:
                 status = "skipped"

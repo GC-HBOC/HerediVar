@@ -1116,13 +1116,16 @@ class AbstractVariant(AbstractDataclass):
                             result = classification
         return result
 
-    def get_genes(self, how = "object"):
+    def get_genes(self, how = "object", within_gene = False):
         result = None
         if self.consequences is not None:
             result = []
             gene_ids = []
             gene2count = {}
             for consequence in self.consequences:
+                if within_gene: # skip consequences that are in close proximity to the gene but not within the acutal range of it!
+                    if not consequence.is_within_gene():
+                        continue
                 current_gene = consequence.transcript.gene
                 if current_gene is not None:
                     if current_gene.id is not None:
