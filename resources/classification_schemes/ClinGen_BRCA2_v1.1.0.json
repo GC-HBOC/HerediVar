@@ -4,7 +4,7 @@
     "display_name": "ClinGen ENIGMA BRCA2 v1.1.0",
     "type": "acmg-enigma-brca2",
     "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/7uaiggqr/clingen_brca2_v1.1.0.pdf/?format=attachment",
-    "aliases": [],
+    "aliases": ["ACMG BRCA2"],
     "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
     "criteria": [
         {

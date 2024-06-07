@@ -4,7 +4,7 @@
     "display_name": "ClinGen ACMG ATM v1.3.0",
     "type": "acmg-enigma-atm",
     "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/4alhc9co/clingen_atm_v1.3.0.pdf/?format=attachment",
-    "aliases": [],
+    "aliases": ["ACMG ATM"],
     "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
     "criteria": [
         {

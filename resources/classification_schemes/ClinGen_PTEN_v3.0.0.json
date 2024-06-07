@@ -4,7 +4,7 @@
     "display_name": "ClinGen ACMG PTEN v3.0.0",
     "type": "acmg-enigma-pten",
     "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/luinmvak/clingen_pten_v3.0.0.pdf/?format=attachment",
-    "aliases": [],
+    "aliases": ["ACMG PTEN"],
     "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
     "criteria": [
         {
