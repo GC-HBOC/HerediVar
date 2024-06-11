@@ -285,6 +285,8 @@ class automatic_classification_job(Job):
         all_splicing_assays = []
         if splicing_assays is not None:
             for assay in all_splicing_assays:
+                if assay.metadata.get("minigene") is None or assay.metadata.get("patient_rna") is None or assay.metadata.get("allele_specific") is None: # skip legacy assays
+                    continue
                 minigene = assay.metadata.get("minigene", "") == "True"
                 patient_rna = assay.metadata.get("patient_rna", "") == "True"
                 allelic = assay.metadata.get("allele_specific", "False")
@@ -311,6 +313,8 @@ class automatic_classification_job(Job):
         all_functional_assays = []
         if functional_assays is not None:
             for assay in functional_assays:
+                if assay.metadata.get("functional_category") is None or assay.metadata.get("functional_category") is None: # skip legacy assays
+                    continue
                 is_pathogenic = assay.metadata.get("functional_category", "") == "pathogenic"
                 is_benign =  assay.metadata.get("functional_category", "") == "benign"
                 all_functional_assays.append({"pathogenic": is_pathogenic,
