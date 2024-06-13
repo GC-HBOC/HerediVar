@@ -1998,6 +1998,19 @@ class Connection:
         result = self.cursor.fetchone()
         return result
     
+    def set_api_key(self, username, api_key):
+        command = "UPDATE user SET api_key = %s WHERE username = %s"
+        self.cursor.execute(command, (api_key, username))
+        self.conn.commit()
+
+    def check_api_key(self, api_key: str, username: str) -> bool:
+        command = "SELECT EXISTS (SELECT * FROM user WHERE api_key = %s AND username = %s)"
+        self.cursor.execute(command, (api_key, username))
+        result = self.cursor.fetchone()[0]
+        if result == 1:
+            return True
+        return False
+
     def parse_raw_user(self, raw_user):
         return models.User(id = raw_user[0], 
                    full_name = raw_user[2] + ' ' + raw_user[3], 

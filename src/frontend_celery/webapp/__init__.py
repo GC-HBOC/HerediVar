@@ -70,6 +70,7 @@ def create_app():
     from .user import create_module as user_create_module
     from .errorhandlers import create_module as errorhandlers_create_module
     from .upload import create_module as upload_create_module
+    from .api import create_module as api_create_module
 
     main_create_module(app)
     variant_create_module(app)
@@ -79,6 +80,7 @@ def create_app():
     user_create_module(app)
     errorhandlers_create_module(app)
     upload_create_module(app)
+    api_create_module(app)
 
 
     configure_logging(app)

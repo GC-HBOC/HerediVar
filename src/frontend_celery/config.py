@@ -3,7 +3,15 @@ from os import path
 import sys
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 import common.functions as functions
-
+from redis import Redis
+from redis.backoff import ExponentialBackoff
+from redis.retry import Retry
+from redis.client import Redis
+from redis.exceptions import (
+    BusyLoadingError,
+    ConnectionError,
+    TimeoutError
+)
 
 functions.read_dotenv()
 
@@ -40,11 +48,17 @@ class Config(object):
     DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
 
     # configuration of server side session from flask-session module
-    SESSION_PERMANENT = False
-    SESSION_TYPE = "filesystem"
-    #SESSION_COOKIE_SECURE = True
-    SESSION_USE_SIGNER = True
-    SESSION_FILE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/flask_sessions"
+    SESSION_PERMANENT = True
+    
+    SESSION_TYPE = 'redis'
+    retry = Retry(ExponentialBackoff(), 3)
+    SESSION_REDIS = Redis.from_url('redis://localhost:6379/0', retry=retry, retry_on_error=[BusyLoadingError, ConnectionError, TimeoutError]) # use exponential backoff with 3 tries on specific redis errors
+    
+    #SESSION_USE_SIGNER = True # deprecated
+    #SESSION_TYPE = "filesystem"
+    #SESSION_FILE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/flask_sessions"
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_HTTPONLY = True
 
     # other folders
     #RESOURCES_FOLDER = 'resources/'
@@ -71,8 +85,8 @@ class Config(object):
 
 
 class ProdConfig(Config):
-    KEYCLOAK_HOST = os.environ.get('KEYCLOAK_HOST', 'localhost')
     # keycloak
+    KEYCLOAK_HOST = os.environ.get('KEYCLOAK_HOST', 'localhost')
     KEYCLOAK_PORT = '8080'
     KEYCLOAK_BASEPATH = "https://"+KEYCLOAK_HOST+"/kc"
     ISSUER = os.environ.get('ISSUER', KEYCLOAK_BASEPATH + "/realms/HerediVar")
@@ -80,6 +94,9 @@ class ProdConfig(Config):
     CLIENTSECRET = os.environ.get('CLIENT_SECRET')
     DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
 
+    # sesssion
+    SESSION_COOKIE_SECURE = True
+    #SESSION_COOKIE_NAME = "__Host-"
     
 
 class DevConfig(Config):

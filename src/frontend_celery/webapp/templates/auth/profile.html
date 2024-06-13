@@ -29,10 +29,20 @@
                     <td class="width_small vertical_align_middle">Affiliation</td>
                     <td><input class="form-control" type="text" value="{{ user.get('attributes', {}).get('affiliation', [''])[0] }}" name="affiliation"></td>
                 </tr>
+                <tr>
+                    <td class="width_small vertical_align_middle">API key</td>
+                    <td>
+                        <div class="d-flex">
+                            <input class="form-control width_very_large" type="text"value="" name="" disabled>
+                            <div class="flex-grow-1"></div>
+                            <a href="{{url_for('auth.generate_api_key')}}" class="btn btn-primary" role="button">(re-) generate</a>
+                        </div>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
-    <button class="btn btn-primary">Submit</button>
+    <button class="btn btn-primary" role="submit">Submit</button>
 </form>
 
 

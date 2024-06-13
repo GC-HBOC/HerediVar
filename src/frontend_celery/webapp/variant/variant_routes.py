@@ -257,7 +257,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     
     #print(clinvar_queue_entries)
     #print(heredicare_queue_entries)
-    #print(heredicare_queue_entry_summary)
+    print(heredicare_queue_entry_summary)
 
     return render_template('variant/variant.html',
                             has_multiple_vids=has_multiple_vids,

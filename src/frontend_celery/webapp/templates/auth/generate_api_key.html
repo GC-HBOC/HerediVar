@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1> {% block title %} Edit your personal information {% endblock %} </h1>
+
+
+<div class="alert alert-danger">
+    Copy the key somewhere safe it is only shown <strong>once on this page</strong>! <br>
+    If you lose your API key you have to generate a new one.
+</div>
+<div class="d-flex justify-content-center">
+    <div class="width_very_large alert alert-secondary text_align_center">
+        {{api_key}}
+    </div>
+</div>
+    
+<div>
+    Documentation on how to access the HerediVar API can be found <a href="{{url_for('main.documentation')}}">here</a>
+</div>
+
+
+</div>
+
+
+{% endblock %}
+
+{% block special_scripts %}
+{% endblock %}

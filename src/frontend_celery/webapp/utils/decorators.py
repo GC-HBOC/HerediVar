@@ -10,6 +10,53 @@ from authlib.integrations.flask_oauth2 import ResourceProtector
 from functools import wraps
 from authlib.oauth2.rfc7636 import create_s256_code_challenge
 
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+import common.functions as functions
+from common.db_IO import Connection
+
+# used for api endpoints to check the bearer token header
+# similar to require login, but for api endpoints
+def accept_token(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+
+        authorization_header = parse_authorization_header(request.headers.get('Authorization'))
+
+        conn = Connection()
+        api_key_ok = conn.check_api_key(authorization_header['apikey'], authorization_header['username'])
+        conn.close()
+
+        if not api_key_ok:
+            abort(403, "Invalid credentials")
+
+        return f(*args, **kwargs)
+    return decorated_function
+
+def parse_authorization_header(authorization_header: str):
+    authorization_header = authorization_header.split(' ')
+
+    result = {}
+    next_keyword = True
+    current_keyword = None
+    for h in authorization_header:
+        if h.strip() == '':
+            continue
+        if next_keyword:
+            current_keyword = h
+            next_keyword = False
+            continue
+        if not next_keyword:
+            result[current_keyword] = h
+            next_keyword = True
+
+    keywords_oi = ['apikey', 'username']
+    for kw in keywords_oi:
+        if result.get(kw) is None:
+            abort(403, "Incomplete authorization header. Missing keyword: " + kw)
+        
+    return result
+            
 
 
 # a decorator which redirects to the login page if the user is not logged in. 

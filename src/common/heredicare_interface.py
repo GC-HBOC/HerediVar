@@ -352,10 +352,8 @@ class Heredicare(metaclass=Singleton):
             message = "ERROR: HerediCare API getsubmission id endpoint endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
             status = "api_error"
         else: # success
-            print(resp.text)
             resp = resp.json(strict=False)
             items = resp["items"]
-            print(items)
             
             if len(items) == 0: # submission id was generated but no data was posted yet
                 status = "pending"
@@ -446,21 +444,10 @@ class Heredicare(metaclass=Singleton):
                 for consequence in consequences:
                     if consequence.transcript.gene is None:
                         continue
-                    if consequence.transcript.gene == preferred_gene:
+                    if consequence.transcript.gene.symbol == preferred_gene:
                         preferred_consequence = consequence
                         preferred_transcript = consequence.transcript.name
                         break
-            #preferred_consequences = variant.get_preferred_transcripts(within_gene = True)
-            #if preferred_consequences is not None:
-            #    preferred_genes = functions.get_preferred_genes()
-            #    for consequence in preferred_consequences:
-            #        if consequence.transcript.gene.symbol in preferred_genes:
-            #            preferred_consequence = consequence
-            #            break
-            #        elif preferred_consequence is None:
-            #            preferred_consequence = consequence
-            #        elif preferred_consequence.length < consequence.length:
-            #            preferred_consequence = consequence
 
             if preferred_consequence is None:
                 status = "skipped"
@@ -681,8 +668,9 @@ class Heredicare(metaclass=Singleton):
         
         # tinker all items together
         data = {'items': all_items}
-        with open('/mnt/storage2/users/ahdoebm1/HerediVar/src/common/heredicare_interface_debug/sub' + str(submission_id) + '.json', "w") as f:
-            functions.prettyprint_json(data, f.write)
+        if os.environ.get('WEBAPP_ENV', '') == 'dev':
+            with open('/mnt/storage2/users/ahdoebm1/HerediVar/src/common/heredicare_interface_debug/sub' + str(submission_id) + '.json', "w") as f:
+                functions.prettyprint_json(data, f.write)
         data = json.dumps(data)
 
         return data, vid, submission_id, status, message
