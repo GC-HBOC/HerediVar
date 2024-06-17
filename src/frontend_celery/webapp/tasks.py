@@ -42,7 +42,6 @@ def start_variant_import(user_id, user_roles, conn: Connection): # starts the ce
 @celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
 def heredicare_variant_import(self, user_id, user_roles, min_date, import_queue_id):
     """Background task for fetching variants from HerediCare"""
-    #from frontend_celery.webapp.utils.variant_importer import import_variants
     self.update_state(state='PROGRESS')
 
     try:
@@ -96,6 +95,7 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
 
     heredicare_interface = Heredicare()
     vids_heredicare, status, message = heredicare_interface.get_vid_list()
+    print(len(vids_heredicare))
     if status == "success":
         vids_heredicare, all_vids_heredicare, status, message = heredicare_interface.filter_vid_list(vids_heredicare, min_date)
         #all_vids_heredicare, status, message = heredicare_interface.get_vid_list()
@@ -109,6 +109,7 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
 
             print("Total HerediCare: " + str(len(all_vids_heredicare)))
             print("Filtered HerediCare: " + str(len(vids_heredicare)))
+            print("Total vids HerediVar: " + str(len(vids_heredivar)))
 
             print("Intersection of filtered heredicare and heredivar vids: " + str(len(intersection)))
             print("Deleted vids (unknown to heredicare but known to heredivar): " + str(len(heredivar_exclusive_vids)))
@@ -922,8 +923,8 @@ def abort_annotation_task(annotation_queue_id, celery_task_id, conn:Connection):
     if annotation_queue_id is not None:
         celery.control.revoke(celery_task_id, terminate = True)
 
-    #row_id, status, error_msg
-    conn.update_annotation_queue(annotation_queue_id, "aborted", "")
+        #row_id, status, error_msg
+        conn.update_annotation_queue(annotation_queue_id, "aborted", "")
 
 
 def purge_celery():

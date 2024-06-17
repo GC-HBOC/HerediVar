@@ -3512,7 +3512,7 @@ class Connection:
         self.cursor.execute(command, (celery_task_id, publish_heredicare_queue_id))
         self.conn.commit()
     
-    def update_publish_heredicare_queue_status(self, publish_heredicare_queue_id, status, message, finished_at = None, submission_id = None, consensus_classification_id = None):
+    def update_publish_heredicare_queue_status(self, publish_heredicare_queue_id, status, message, finished_at = None, submission_id = None, consensus_classification_id = None, vid = None):
         command = "UPDATE publish_heredicare_queue SET status = %s, message = %s"
         actual_information = (status, message)
         if finished_at is not None:
@@ -3524,6 +3524,9 @@ class Connection:
         if consensus_classification_id is not None:
             command += ", consensus_classification_id = %s"
             actual_information += (consensus_classification_id, )
+        if vid is not None:
+            command += ", vid = %s"
+            actual_information += (vid, )
         command += " WHERE id = %s"
         actual_information += (publish_heredicare_queue_id, )
         self.cursor.execute(command, actual_information)

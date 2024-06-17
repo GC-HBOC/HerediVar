@@ -57,8 +57,8 @@ def publish(self, publish_queue_id, variant_ids, options, user_roles):
             
             # start the task to upload the variant/consensus_classification/whatever to HerediCaRe
             if options['do_heredicare']:
-                #pass
-                hcid = start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, user_roles, conn)
+                pass
+                #hcid = start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, user_roles, conn)
 
     except InternalError as e:
         # deadlock: code 1213
@@ -235,6 +235,8 @@ def start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, u
         if max_finished_at is not None:
             if last_annotation_finished_at is None or max_finished_at > last_annotation_finished_at:
                 requires_reannotation = True
+    else:
+        requires_reannotation = True
 
     heredicare_vid_annotation_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
     vids = conn.get_external_ids_from_variant_id(variant_id, heredicare_vid_annotation_id)
@@ -277,6 +279,9 @@ def heredicare_upload_one_variant(self, variant_id, vid, user_roles, options, pu
         conn = Connection(user_roles)
         conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "progress", message = "")
 
+        is_insert = False
+        if vid is None:
+            is_insert = True
         variant = conn.get_variant(variant_id, include_annotations = False, include_assays=False, include_automatic_classification=False, include_clinvar=False, include_literature=False, include_user_classifications=False)
         vid, submission_id, status, message = heredicare_interface.post(variant, vid, options)
         if status == "success":
@@ -302,8 +307,11 @@ def heredicare_upload_one_variant(self, variant_id, vid, user_roles, options, pu
     print("status: " + status)
     print("message: " + message)
 
-    conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = status, message = message[:10000], submission_id = submission_id, consensus_classification_id = consensus_classification_id)
-    
+    conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = status, message = message[:10000], submission_id = submission_id, consensus_classification_id = consensus_classification_id, vid = vid)
+
+    if is_insert and vid is not None: # prepopulate the vid such that it is not required to do a new import from heredicare after every insert!
+        conn.insert_external_variant_id(variant_id, vid, conn.get_most_recent_annotation_type_id('heredicare_vid'))
+
     conn.close()
 
     if status == 'error':

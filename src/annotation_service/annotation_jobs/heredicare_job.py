@@ -66,12 +66,17 @@ class heredicare_job(Job):
                 err_msg += str(message)
                 conn.delete_external_id(vid, heredicare_vid_annotation_type_id, variant_id)
                 conn.delete_unknown_heredicare_annotations()
-            else:
+            # we need to check the length of the heredicare variant
+            # if it is 0 the variant is unknown to heredicare
+            # this might happen when a variant was just submitted to heredicare and it is not processed yet. Then, the vid is already known by heredivar but heredicare doesnt have information about this variant
+            # In this case we simply skip the heredicare annotation
+            # It is however good have the vid in heredivar right after insert because then we do not need a reimport after every heredicare insert
+            elif len(heredicare_variant) > 0: 
                 #print(heredicare_variant)
                 n_fam = heredicare_variant["N_FAM"]
                 n_pat = heredicare_variant["N_PAT"]
                 consensus_class = heredicare_variant["PATH_TF"] if heredicare_variant["PATH_TF"] != "-1" else None
-                comment = heredicare_variant.get("VUSTF_21", heredicare_variant["VUSTF_15"])
+                comment = heredicare_variant.get("VUSTF_21", heredicare_variant["VUSTF_15"]) # use vustf21, but if it is missing fallback to vustf15 - fallback can be removed later once the production heredicare api has the vustf21 field
                 comment = comment.strip() if comment is not None else None
                 classification_date = heredicare_variant["VUSTF_DATUM"] if heredicare_variant["VUSTF_DATUM"] != '' else None
                 lr_cooc = heredicare_variant["LR_COOC"]

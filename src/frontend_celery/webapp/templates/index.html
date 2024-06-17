@@ -94,7 +94,7 @@
     <h4>Changelog</h4>
 
     
-    <div class="underline">v 1.11.1 ()</div>
+    <div class="underline">v 1.12 (17.06.2024)</div>
     <div class="btn-pvs">!! Scores from likelihood ratio tests are currently not available from HerediCaRe.</div>
     <div class="btn-pvs">!! HerediCaRe upload is currently disabled.</div>
     <div>
@@ -123,46 +123,6 @@
         </ul>
     </div>
 
-
-    <div class="underline">v 1.11 (31.05.2024)</div>
-    <div class="btn-pvs">!! Scores from likelihood ratio tests are currently not available from HerediCaRe.</div>
-    <div class="btn-pvs">!! HerediCaRe upload is currently disabled.</div>
-    <div>
-        General changes:
-        <ul>
-            <li>Update downloads page. Added full data download and database versioning. A new HerediVar full VCF version is calculated every month.</li>
-            <li>Added download archive for previous full VCF downloads</li>
-            <li>
-                Added HerediCaRe upload and improved CliVar upload:
-                <ul>
-                    <li>Single variants from variant details page</li>
-                    <li>Multiple variants from user variant lists page</li>
-                    <li>All variants which recieved an update since the last upload from the admin dashboard</li>
-                </ul>
-            </li>
-            <li>Updated gene specific PTEN ACMG scheme to v3.1.0</li>
-            <li>The consequences in downloaded vcf files and the variant details page does not contain the pfam protein domain anymore. Instead it was moved to a transcript specific variant annotation field (pfam_domains= in vcf downloads).</li>
-            <li>Moved consequence calculation from VEP to VcfAnnotateConsequence tool from the ngs-bits library <a href="https://github.com/imgag/ngs-bits/tree/master">GitHub</a>. VcfAnnotateConsequence improves the quality of consequences.</li>
-            <li>Improved the comment that is uploaded to external databases. It now also includes unselected criteria and selected literature.</li>
-            <li>4M classifications are now uploaded to ClinVar without scheme. Reason: 4M classification is not specified in ACMG spec.</li>
-            <li>Enabled consensus classifications without scheme and their upload to ClinVar.</li>
-            <li>Implemented variant upload to HerediCaRe.</li>
-            <li>Increased security by hardening Keycloak Database and removing popovers with enabled HTML content</li>
-            <li>Added class R (established risk allele) for selection in classifications without scheme</li>
-        </ul>
-        Bugfixes:
-        <ul>
-            <li>The variant type search would only show small variants even though both, small and structural variants are selected after querying the second search within a user defined list. This issue was resolved.</li>
-            <li>Previously, the variant search would result in an error when searching for genomic ranges and ticking at least one variant type.</li>
-            <li>Improved genomic range search and its documentation</li>
-            <li>The variant list search was not working properly. This issue was resolved.</li>
-            <li>When a variant did not have an annotation, fetching the annotation status would result in an error.</li>
-            <li>Fixed a bug where the assay quantification was inserted to HerediClassify as a percentage instead of a decimal number.</li>
-            <li>Fixed a bug that caused a variant to not be found when the 'chr' prefix was omitted in the variant string search</li>
-            <li>Fixed a bug that caused variants with multiple genes to not automatically select the best classification scheme</li>
-            <li>Criterium PM5 was previously only moderate strength although the specifications suggest only supporting strength for this criterium in ATM gene specific ACMG scheme. This issue was resolved.</li>
-        </ul>
-    </div>
 
 
     <a class="btn btn-outline-primary" href="{{url_for('main.changelog')}}">previous changelog</a>

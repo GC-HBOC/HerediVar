@@ -136,28 +136,12 @@ class Heredicare(metaclass=Singleton):
     def get_vid_list(self):
         status = "success"
         message = ""
-        vids = []
         project_type = "download"
 
-        status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
-        if status == 'error':
-            return vids, status, message
-
         url = self.get_url(project_type, "vid_list")
-        bearer, timestamp = self.get_saved_bearer(project_type)
-        header = {"Authorization": "Bearer " + bearer}
+        status, message, all_vids = self.iterate_pagination(url, project_type)
 
-        resp = requests.get(url, headers=header)
-        if resp.status_code == 401: # unauthorized
-            message = "ERROR: HerediCare API get vid list endpoint returned an HTTP 401, unauthorized error. Attempting retry."
-            status = "retry"
-        elif resp.status_code != 200: # any other kind of error
-            message = "ERROR: HerediCare API get vid list endpoint returned an HTTP " + str(resp.status_code) + " error: " + + self.extract_error_message(resp.text)
-            status = "error"
-        else: # request was successful
-            vids = resp.json()['items']
-
-        return vids, status, message
+        return all_vids, status, message
     
     def filter_vid_list(self, vids, min_date):
         all_vids = []
@@ -189,32 +173,7 @@ class Heredicare(metaclass=Singleton):
         project_type = "download"
 
         url = self.get_url(project_type, "variant", path_args = [str(vid)])
-        has_next = True
-        all_items = []
-        while has_next:
-            status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
-            if status == 'error':
-                return [], status, message
-            bearer, timestamp = self.get_saved_bearer(project_type)
-            header = {"Authorization": "Bearer " + bearer}
-            resp = requests.get(url, headers=header)
-            if resp.status_code == 401: # unauthorized
-                message = "ERROR: HerediCare API get variant info endpoint returned an HTTP 401, unauthorized error. Attempting retry."
-                status = "retry"
-                break
-            elif resp.status_code != 200: # any other kind of error
-                message = "ERROR: HerediCare API get variant info endpoint returned an HTTP " + str(resp.status_code) + " error: " + + self.extract_error_message(resp.text)
-                status = "error"
-                break
-            else: # request was successful
-                resp = resp.json()
-                new_items = resp["items"]
-                all_items.extend(new_items)
-                has_next = resp["hasMore"]
-                for link in resp["links"]:
-                    if link["rel"] == "next":
-                        url = link["href"]
-
+        status, message, all_items = self.iterate_pagination(url, project_type)
         variant = self.convert_heredicare_variant_raw(all_items)
 
         return variant, status, message
@@ -228,20 +187,16 @@ class Heredicare(metaclass=Singleton):
             variant[item_name] = item_value
         return variant
 
-
-    def get_post_regexes(self):
+    def iterate_pagination(self, start_url, project_type, items_key = "items"):
         status = "success"
         message = ""
-        all_items = []
-        project_type = "upload"
-
-        url = self.get_url(project_type, "post_info") # first url
+        result = []
+        url = start_url
         has_next = True
-        
         while has_next:
             status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
             if status == 'error':
-                return [], status, message
+                break
             bearer, timestamp = self.get_saved_bearer(project_type)
             header = {"Authorization": "Bearer " + bearer}
             resp = requests.get(url, headers=header)
@@ -255,12 +210,30 @@ class Heredicare(metaclass=Singleton):
                 break
             else: # request was successful
                 resp = resp.json()
-                new_items = resp["items"]
-                all_items.extend(new_items)
+                new_items = resp[items_key]
+                result.extend(new_items)
                 has_next = resp["hasMore"]
-                for link in resp["links"]:
-                    if link["rel"] == "next":
-                        url = link["href"]
+                if has_next:
+                    found_next = False
+                    for link in resp["links"]:
+                        if link["rel"] == "next":
+                            url = link["href"]
+                            found_next = True
+                    if not found_next:
+                        message = "ERROR: response 'hasMore' attribute is true but no 'next' url found."
+                        status = "error"
+                        has_next = False # prevent infinite loop in case the next url is missing for some reason
+                        break
+        return status, message, result
+
+    def get_post_regexes(self):
+        status = "success"
+        message = ""
+        all_items = []
+        project_type = "upload"
+
+        url = self.get_url(project_type, "post_info") # first url
+        status, message, all_items = self.iterate_pagination(url, project_type)
 
         #with open("/mnt/storage2/users/ahdoebm1/HerediVar/src/common/heredicare_interface_debug/post_fields.json", "w") as f:
         #    functions.prettyprint_json(all_items, func = f.write)
@@ -269,10 +242,6 @@ class Heredicare(metaclass=Singleton):
         for item in all_items:
             item_name = item["item_name"]
             regex = item["item_regex_format"]
-            #if item_name == "PATH_TF":
-            #    regex = r"^(-1|[1-4]|1[1-5]|2[01]|32|34)$"
-            #elif item_name == "VUSTF_DATUM":
-            #    regex = r"^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[012])\.20\d\d$"
             result[item_name] = regex
 
         return result, status, message
