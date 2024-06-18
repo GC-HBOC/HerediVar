@@ -38,7 +38,7 @@
                 {% if clinvar_queue_entries is not none and clinvar_queue_entry_summary["status"] != 'skipped' %}
                     {% set mrcc = variant.get_recent_consensus_classification() %}
                     {% if mrcc is not none %}
-                        {% if mrcc.needs_clinvar_upload and clinvar_queue_entry_summary["status"] not in ['progress', 'processing', 'submitted', 'pending', 'waiting', 'requesting'] %}
+                        {% if mrcc.needs_clinvar_upload and clinvar_queue_entry_summary["status"] not in ['progress', 'processing', 'submitted', 'pending', 'waiting', 'requested'] %}
                             {{macros.draw_exclamation_mark("The consensus classification needs to be uploaded to ClinVar!")}}
                         {% endif %}
                     {% endif %}
@@ -55,7 +55,7 @@
                         <div class='col-3 text-center border-start'>status</div>
                         <div class='col-6 text-center border-start'>message</div>
                     </div>
-                    {% if clinvar_queue_entries is not none and clinvar_queue_entry_summary["status"] not in ['waiting', 'requesting'] %}
+                    {% if clinvar_queue_entries is not none and clinvar_queue_entry_summary["status"] not in ['waiting', 'requested'] %}
                         {% for clinvar_queue_entry in clinvar_queue_entries %}
                             <div class='row gx-2'>
                                 <div class='col-3'>{{clinvar_queue_entry[6]}}</div>
@@ -87,7 +87,7 @@
                 {% if heredicare_queue_entries is not none and heredicare_queue_entry_summary["status"] != 'skipped' %}
                     {% set mrcc = variant.get_recent_consensus_classification() %}
                     {% if mrcc is not none %}
-                        {% if mrcc.needs_heredicare_upload and heredicare_queue_entry_summary["status"] in ["error", "api_error", "success", "waiting", "requesting"] %}
+                        {% if mrcc.needs_heredicare_upload and heredicare_queue_entry_summary["status"] in ["error", "api_error", "success", "waiting", "requested"] %}
                             {{macros.draw_exclamation_mark("The consensus classification needs to be uploaded to HerediCaRe!")}}
                         {% endif %}
                     {% endif %}
@@ -103,7 +103,7 @@
                         <div class='col-3 text-center border-start'>status</div>
                         <div class='col-6 text-center border-start'>message</div>
                     </div>
-                    {% if heredicare_queue_entries is not none and clinvar_queue_entry_summary["status"] not in ["waiting", "requesting"]  %}
+                    {% if heredicare_queue_entries is not none and clinvar_queue_entry_summary["status"] not in ["waiting", "requested"]  %}
                         {% for heredicare_queue_entry in heredicare_queue_entries %}
                         <div class='row gx-2'>
                             <div class='col-3'>{{heredicare_queue_entry[5]}}</div>

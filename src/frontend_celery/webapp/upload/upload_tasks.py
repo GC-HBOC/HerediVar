@@ -57,8 +57,8 @@ def publish(self, publish_queue_id, variant_ids, options, user_roles):
             
             # start the task to upload the variant/consensus_classification/whatever to HerediCaRe
             if options['do_heredicare']:
-                pass
-                #hcid = start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, user_roles, conn)
+                #pass
+                hcid = start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, user_roles, conn)
 
     except InternalError as e:
         # deadlock: code 1213
@@ -222,7 +222,7 @@ def start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, u
             current_finished_at = heredicare_queue_entry[3]
             if current_status in ['pending', 'progress', 'submitted', 'retry']:
                 has_unfinished_job = True
-            elif current_status in ['success']:
+            elif current_status in ['success', 'error']:
                 if max_finished_at is None:
                     max_finished_at = current_finished_at
                 elif max_finished_at < current_finished_at:
@@ -233,7 +233,7 @@ def start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, u
     if annotation_status is not None:
         last_annotation_finished_at = annotation_status[5]
         if max_finished_at is not None:
-            if last_annotation_finished_at is None or max_finished_at > last_annotation_finished_at:
+            if (last_annotation_finished_at is None) or (max_finished_at > last_annotation_finished_at):
                 requires_reannotation = True
     else:
         requires_reannotation = True
@@ -250,8 +250,8 @@ def start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, u
             conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "skipped", message = "Structural variants are not supported for upload to HerediCaRe.")
         elif has_unfinished_job:  # if the variant still has unfinished jobs running do not insert a new task
             conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "skipped", message = "Has unfinished job. Wait for completion and try again.")
-        elif requires_reannotation: # if the variant was reannotated before the last heredicare upload skip the new upload: reason: heredivar might not know that the variant was already inserted and would want to insert it again.
-            conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "skipped", message = "The annotation is older than the last upload to heredicare. Please reannotate first and then upload to HerediCaRe.")
+        elif requires_reannotation: # if the variant was reannotated before the last heredicare upload skip the new upload: reason: heredivar might not know that the variant was already inserted and would want to insert it again. or have outdated old data
+            conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "error", message = "The annotation is older than the last upload to heredicare. Please reannotate first and then upload to HerediCaRe.")
         else:
             task = heredicare_upload_one_variant.apply_async(args=[variant_id, vid, user_roles, options, publish_heredicare_queue_id])
             task_id = task.id
