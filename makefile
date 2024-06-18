@@ -117,6 +117,9 @@ keycloak_update: keycloak_clean keycloak
 
 
 ## REDIS
+REDISPATH := $(TOOLS)
+REDISNAME := redis-stable
+REDIS := $(REDISPATH)/$(REDISNAME)
 redis:
 	if [ ! -d "${REDIS}" ]; then \
 		printf ${_TEXTCOL_RED} "Installing redis" ; \
@@ -203,7 +206,12 @@ herediclass_update_soft:
 
 #### INSTALL JS LIBRARIES
 js_libs: bootstrap igv jquery datatables
+
 ## BOOTSTRAP
+BOOTSTRAPPATH := $(TOOLS)
+BOOTSTRAPNAME := bootstrap
+BOOTSTRAP := $(BOOTSTRAPPATH)/$(BOOTSTRAPNAME)
+BOOTSTRAPVERSION := 5.2.3
 bootstrap:
 	if [ ! -f "${BOOTSTRAP}" ]; then \
 		printf ${_TEXTCOL_RED} "Installing the automatic classification algorithm" ; \
@@ -217,6 +225,10 @@ bootstrap_update: bootstrap_clean bootstrap
 
 ## IGV
 # download csp conform version from: https://download.imgag.de/ahdoebm1/igv/
+IGVPATH := $(TOOLS)
+IGVNAME := igv
+IGV := $(IGVPATH)/$(IGVNAME)
+IGVVERSION := 2.15.0
 igv:
 	if [ ! -d "${IGV}" ]; then \
 		printf ${_TEXTCOL_RED} "Installing the automatic classification algorithm" ; \
@@ -229,6 +241,10 @@ igv_clean:
 igv_update: igv_clean igv
 
 ## JQUERY
+JQUERYNAME := $(TOOLS)
+JQUERYPATH := jquery
+JQUERY := $(JQUERYPATH)/$(JQUERYNAME)
+JQUERYVERSION := 3.6.3
 jquery:
 	if [ ! -f "${JQUERY}" ]; then \
 		printf ${_TEXTCOL_RED} "Installing the automatic classification algorithm" ; \
@@ -241,6 +257,10 @@ jquery_clean:
 jquery_update: jquery_clean jquery
 
 ## DATATABLES
+DATATABLESNAME := $(TOOLS)
+DATATABLESPATH := datatables
+DATATABLES := $(DATATABLESPATH)/$(DATATABLESNAME)
+DATATABLESVERSION := 1.13.4
 datatables:
 	if [ ! -f "${DATATABLES}" ]; then \
 		printf ${_TEXTCOL_RED} "Installing the automatic classification algorithm" ; \
