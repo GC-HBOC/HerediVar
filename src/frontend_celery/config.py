@@ -47,12 +47,17 @@ class Config(object):
     CLIENTSECRET = os.environ.get('CLIENT_SECRET')
     DISCOVERYURL = f'{ISSUER}/.well-known/openid-configuration'
 
+    # redis
+    REDIS_PORT = os.environ.get('REDIS_PORT')
+    REDIS_HOST = 'localhost'
+    REDIS_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+
     # configuration of server side session from flask-session module
     SESSION_PERMANENT = True
     
     SESSION_TYPE = 'redis'
     retry = Retry(ExponentialBackoff(), 3)
-    SESSION_REDIS = Redis.from_url('redis://localhost:6379/0', retry=retry, retry_on_error=[BusyLoadingError, ConnectionError, TimeoutError]) # use exponential backoff with 3 tries on specific redis errors
+    SESSION_REDIS = Redis.from_url(REDIS_URL, retry=retry, retry_on_error=[BusyLoadingError, ConnectionError, TimeoutError]) # use exponential backoff with 3 tries on specific redis errors
     
     #SESSION_USE_SIGNER = True # deprecated
     #SESSION_TYPE = "filesystem"
@@ -66,8 +71,8 @@ class Config(object):
     #CONSENSUS_CLASSIFICATION_REPORT_FOLDER = 'downloads/consensus_classification_reports/'
 
     # Celery configuration
-    CELERY_BROKER_URL = 'redis://localhost:6379/0'
-    CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+    CELERY_BROKER_URL = REDIS_URL
+    CELERY_RESULT_BACKEND = REDIS_URL
 
     # orphanet
     ORPHANET_DISCOVERY_URL = "https://api.orphacode.org/EN/ClinicalEntity"

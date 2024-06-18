@@ -52,6 +52,10 @@ then
     exit 1
 fi
 
+set -o allexport
+extension=env_
+source $ROOT/.$extension$WEBAPP_ENV
+set +o allexport
 
 cd tools/redis-stable
-src/redis-server
+src/redis-server --port $REDIS_PORT

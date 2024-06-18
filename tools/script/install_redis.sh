@@ -16,26 +16,27 @@ helpFunction()
 while getopts "p:n:" opt
 do
    case "$opt" in
-      p ) path="$OPTARG" ;;
+      p ) basepath="$OPTARG" ;;
       n ) foldername="$OPTARG" ;;
       ? ) helpFunction ;; # Print helpFunction in case parameter is non-existent
    esac
 done
 
 # Print helpFunction in case parameters are empty
-if [ -z "$path" ] || [ -z "$foldername" ]
+if [ -z "$basepath" ] || [ -z "$foldername" ]
 then
    echo "Some or all of the parameters are empty";
    helpFunction
 fi
 
-echo "Installing VEP to $path"
+echo "Installing redis to $basepath/$foldername"
 
-
-cd $path
+mkdir -p $basepath
+cd $basepath
 wget http://download.redis.io/redis-stable.tar.gz
 tar xvzf redis-stable.tar.gz
 rm redis-stable.tar.gz
 cd redis-stable
 make
+cd ..
 mv redis-stable $foldername
