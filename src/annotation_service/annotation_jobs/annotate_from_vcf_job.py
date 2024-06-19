@@ -163,7 +163,6 @@ class annotate_from_vcf_job(Job):
 
 
 
-        assay_type_dict = conn.get_assay_type_id_dict()
         conn.delete_assays(variant_id = variant_id,user_id = None) # delete only automatically annotated assays
         # CSpec splicing assays
         cspec_splicing_assays = functions.find_between(info, "cspec_splicing_assay=", '(;|$)')
@@ -172,7 +171,7 @@ class annotate_from_vcf_job(Job):
         else:
             cspec_splicing_assays = cspec_splicing_assays.split('&')
         
-        assay_type_id = assay_type_dict["splicing"]
+        assay_type_id = conn.get_assay_id("splicing")
         assay_metadata_types = conn.get_assay_metadata_types(assay_type_id, format = "dict")
         for assay in cspec_splicing_assays:
             assay_parts = assay.split('|')
@@ -197,7 +196,7 @@ class annotate_from_vcf_job(Job):
         else:
             cspec_functional_assays = cspec_functional_assays.split('&')
         
-        assay_type_id = assay_type_dict["functional"]
+        assay_type_id = conn.get_assay_id("functional")
         assay_metadata_types = conn.get_assay_metadata_types(assay_type_id, format = "dict")
         for assay in cspec_functional_assays:
             assay_parts = assay.split('|')

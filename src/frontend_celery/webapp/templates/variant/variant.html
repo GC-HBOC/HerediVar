@@ -21,24 +21,21 @@
         <!-- ClinVar submission status -->
         <div id="clinvar_status_pill_holder">
             {% set pill_color = "bg-secondary" %}
-            {% if clinvar_queue_entries is not none %}
-                {% if clinvar_queue_entry_summary["status"] == "multiple stati" %}
-                    {% set pill_color = "bg-warning" %}
-                {% endif %}
-                {% if clinvar_queue_entry_summary["status"] in ['processed'] %}
-                    {% set pill_color = "bg-success" %}
-                {% endif %}
-                {% if clinvar_queue_entry_summary["status"] in ['error'] %}
-                    {% set pill_color = "bg-danger" %}
-                {% endif %}
+            {% if clinvar_queue_entry_summary["status"] == "multiple stati" %}
+                {% set pill_color = "bg-warning" %}
             {% endif %}
-
+            {% if clinvar_queue_entry_summary["status"] in ["processed"] %}
+                {% set pill_color = "bg-success" %}
+            {% endif %}
+            {% if clinvar_queue_entry_summary["status"] in ["error"] %}
+                {% set pill_color = "bg-danger" %}
+            {% endif %}
             <span class="badge rounded-pill {{pill_color}} popover_collapse_toggle" tabindex="0" role="button" 
             data-bs-toggle="collapse" data-bs-target=".popover_collapse_toggle:hover + .popover_collapse" aria-expanded="false">
-                {% if clinvar_queue_entries is not none and clinvar_queue_entry_summary["status"] != 'skipped' %}
+                {% if clinvar_queue_entry_summary["status"] not in ["skipped", "unknown"] %}
                     {% set mrcc = variant.get_recent_consensus_classification() %}
                     {% if mrcc is not none %}
-                        {% if mrcc.needs_clinvar_upload and clinvar_queue_entry_summary["status"] not in ['progress', 'processing', 'submitted', 'pending', 'waiting', 'requested'] %}
+                        {% if mrcc.needs_clinvar_upload and clinvar_queue_entry_summary["status"] not in ["progress", "processing", "submitted", "pending", "waiting", "requested"] %}
                             {{macros.draw_exclamation_mark("The consensus classification needs to be uploaded to ClinVar!")}}
                         {% endif %}
                     {% endif %}
@@ -50,19 +47,24 @@
 
             <div class="popover_collapse collapse collapse-horizontal">
                 <div class="card card-body width_very_large">
+                    {% if clinvar_queue_entries is not none and clinvar_queue_entry_summary["status"] not in ["waiting", "requested"] %}
                     <div class='row gx-2 border-bottom bg-light'>
                         <div class='col-3'>Accession ID</div>
                         <div class='col-3 text-center border-start'>status</div>
                         <div class='col-6 text-center border-start'>message</div>
                     </div>
-                    {% if clinvar_queue_entries is not none and clinvar_queue_entry_summary["status"] not in ['waiting', 'requested'] %}
-                        {% for clinvar_queue_entry in clinvar_queue_entries %}
-                            <div class='row gx-2'>
-                                <div class='col-3'>{{clinvar_queue_entry[6]}}</div>
-                                <div class='col-3 text-center border-start'>{{clinvar_queue_entry[3]}}</div>
-                                <div class='col-6 text-center border-start'>{{clinvar_queue_entry[4]}}</div>
-                            </div>
-                        {% endfor %}
+                    {% for clinvar_queue_entry in clinvar_queue_entries %}
+                        <div class='row gx-2'>
+                            <div class='col-3'>{{clinvar_queue_entry[6]}}</div>
+                            <div class='col-3 text-center border-start'>{{clinvar_queue_entry[3]}}</div>
+                            <div class='col-6 text-center border-start'>{{clinvar_queue_entry[4]}}</div>
+                        </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% if clinvar_queue_entry_summary["insert_tasks_message"] != "" %}
+                    <div>
+                        Upload error: {{clinvar_queue_entry_summary["insert_tasks_message"]}}
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -71,20 +73,18 @@
         <!-- HerediCaRe upload status pill -->
         <div id="heredicare_status_pill_holder">
             {% set pill_color = "bg-secondary" %}
-            {% if heredicare_queue_entries is not none %}
-                {% if heredicare_queue_entry_summary["status"] == "multiple stati" %}
-                    {% set pill_color = "bg-warning" %}
-                {% endif %}
-                {% if heredicare_queue_entry_summary["status"] == "success" %}
-                    {% set pill_color = "bg-success" %}
-                {% endif %}
-                {% if heredicare_queue_entry_summary["status"] == "error" or heredicare_queue_entry_summary["status"] == "api_error" %}
-                    {% set pill_color = "bg-danger" %}
-                {% endif %}
+            {% if heredicare_queue_entry_summary["status"] == "multiple stati" %}
+                {% set pill_color = "bg-warning" %}
+            {% endif %}
+            {% if heredicare_queue_entry_summary["status"] == "success" %}
+                {% set pill_color = "bg-success" %}
+            {% endif %}
+            {% if heredicare_queue_entry_summary["status"] == "error" or heredicare_queue_entry_summary["status"] == "api_error" %}
+                {% set pill_color = "bg-danger" %}
             {% endif %}
             <span class="badge rounded-pill {{pill_color}} popover_collapse_toggle" tabindex="0" role="button" data-bs-toggle="collapse" 
                   data-bs-target=".popover_collapse_toggle:hover + .popover_collapse" aria-expanded="false">
-                {% if heredicare_queue_entries is not none and heredicare_queue_entry_summary["status"] != 'skipped' %}
+                {% if heredicare_queue_entry_summary["status"] not in ["skipped", "unknown"] %}
                     {% set mrcc = variant.get_recent_consensus_classification() %}
                     {% if mrcc is not none %}
                         {% if mrcc.needs_heredicare_upload and heredicare_queue_entry_summary["status"] in ["error", "api_error", "success", "waiting", "requested"] %}
@@ -98,19 +98,24 @@
             </span>
             <div class="popover_collapse collapse collapse-horizontal">
                 <div class="card card-body width_very_large">
+                    {% if heredicare_queue_entries is not none and heredicare_queue_entry_summary["status"] not in ["waiting", "requested"]  %}
                     <div class='row gx-2 border-bottom bg-light'>
                         <div class='col-3'>HerediCare VID</div>
                         <div class='col-3 text-center border-start'>status</div>
                         <div class='col-6 text-center border-start'>message</div>
                     </div>
-                    {% if heredicare_queue_entries is not none and clinvar_queue_entry_summary["status"] not in ["waiting", "requested"]  %}
-                        {% for heredicare_queue_entry in heredicare_queue_entries %}
-                        <div class='row gx-2'>
-                            <div class='col-3'>{{heredicare_queue_entry[5]}}</div>
-                            <div class='col-3 text-center border-start'>{{heredicare_queue_entry[1]}}</div>
-                            <div class='col-6 text-center border-start'>{{heredicare_queue_entry[4]}}</div>
-                        </div>
-                        {% endfor %}
+                    {% for heredicare_queue_entry in heredicare_queue_entries %}
+                    <div class='row gx-2'>
+                        <div class='col-3'>{{heredicare_queue_entry[5]}}</div>
+                        <div class='col-3 text-center border-start'>{{heredicare_queue_entry[1]}}</div>
+                        <div class='col-6 text-center border-start'>{{heredicare_queue_entry[4]}}</div>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% if heredicare_queue_entry_summary["insert_tasks_message"] != "" %}
+                    <div>
+                        Upload error: {{heredicare_queue_entry_summary["insert_tasks_message"]}}
+                    </div>
                     {% endif %}
                 </div>
             </div>

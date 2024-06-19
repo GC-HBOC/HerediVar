@@ -7,6 +7,7 @@ $(document).ready(function()
     var variant_base_url = flask_data.dataset.variantBaseUrl
     const page = flask_data.dataset.page
     const page_size = flask_data.dataset.pageSize 
+    const base_delete_action_url = flask_data.dataset.deleteAction
 
     // edit / create button functionality
     $('#list-modal-submit').click(function(){
@@ -37,7 +38,7 @@ $(document).ready(function()
         var variant_url = variant_base_url.replace('0', variant_id)
         prepend_number_td(trow, variant_url, number)
         if (can_edit) {
-            create_delete_button(trow, list_id, variant_id)
+            create_delete_button(trow, base_delete_action_url, variant_id)
         } else {
             create_xlg(trow, "You can not delete this variant from the list because you do not have edit rights on the list.")
         }
@@ -81,7 +82,7 @@ $(document).ready(function()
 
 
 
-function create_delete_button(parent, list_id, variant_id) {
+function create_delete_button(parent, base_delete_action_url, variant_id) {
     /*
     This is what the following should look like in html:
     <td style="text-align:center;"> 
@@ -100,7 +101,7 @@ function create_delete_button(parent, list_id, variant_id) {
     parent[0].appendChild(td)
 
     var form = document.createElement("form")
-    form.setAttribute("action", "/mylists?view=" + list_id + "&type=delete_variant&variant_id=" + variant_id)
+    form.setAttribute("action", base_delete_action_url + "&variant_id=" + variant_id)
     form.setAttribute("method", "post")
     td.appendChild(form)
 

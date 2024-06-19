@@ -209,7 +209,7 @@ class Heredicare(metaclass=Singleton):
                 status = "error"
                 break
             else: # request was successful
-                resp = resp.json()
+                resp = resp.json(strict=False)
                 new_items = resp[items_key]
                 result.extend(new_items)
                 has_next = resp["hasMore"]
@@ -494,7 +494,7 @@ class Heredicare(metaclass=Singleton):
 
 
 
-    def get_consensus_classification_items(self, variant, vid, submission_id, post_regexes):
+    def get_consensus_classification_items(self, variant, vid, submission_id, post_regexes, transaction_type):
         status = "success"
         message = ""
         all_items = []
@@ -509,6 +509,10 @@ class Heredicare(metaclass=Singleton):
             status = "skipped"
             message = "The consensus classification is already uploaded to HerediCaRe."
             return all_items, status, message
+
+        heredicare_variant, status, message = self.get_variant(vid)
+        if status == 'error':
+            return all_items, status, message
         
         # add consensus classification class in HerediCare format: PATH_TF
         item_name = "PATH_TF"
@@ -518,7 +522,7 @@ class Heredicare(metaclass=Singleton):
             status = "error"
             message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
             return all_items, status, message
-        old_value = self.get_heredicare_consensus_attribute(variant, vid, "selected_class")
+        old_value = heredicare_variant["PATH_TF"] if transaction_type == 'UPDATE' else None #self.get_heredicare_consensus_attribute(variant, vid, "selected_class")
         new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
         all_items.append(new_item)
 
@@ -530,8 +534,9 @@ class Heredicare(metaclass=Singleton):
             status = "error"
             message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
             return all_items, status, message
-        old_consensus_classification_date = self.get_heredicare_consensus_attribute(variant, vid, "classification_date")
-        old_value = old_consensus_classification_date if old_consensus_classification_date is None else old_consensus_classification_date.strftime('%d.%m.%Y')
+        #old_consensus_classification_date = self.get_heredicare_consensus_attribute(variant, vid, "classification_date")
+        #old_value = old_consensus_classification_date if old_consensus_classification_date is None else old_consensus_classification_date.strftime('%d.%m.%Y')
+        old_value = heredicare_variant["VUSTF_DATUM"] if transaction_type == 'UPDATE' else None
         new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
         all_items.append(new_item)
 
@@ -543,7 +548,7 @@ class Heredicare(metaclass=Singleton):
             status = "error"
             message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
             return all_items, status, message
-        old_value = self.get_heredicare_consensus_attribute(variant, vid, "comment")
+        old_value = old_value = heredicare_variant["VUSTF_21"] if transaction_type == 'UPDATE' else None #self.get_heredicare_consensus_attribute(variant, vid, "comment")
         new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
         all_items.append(new_item)
 
@@ -612,7 +617,7 @@ class Heredicare(metaclass=Singleton):
 
         # add the consensus classification
         if options['post_consensus_classification']:
-            consensus_classification_items, status, message = self.get_consensus_classification_items(variant, vid, submission_id, post_regexes)
+            consensus_classification_items, status, message = self.get_consensus_classification_items(variant, vid, submission_id, post_regexes, transaction_type)
             if status in ["error", "skipped"]:
                 return data, vid, submission_id, status, message
             all_items.extend(consensus_classification_items)

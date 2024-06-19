@@ -1757,12 +1757,32 @@ class Connection:
         import_request = self.convert_raw_import_request(import_request_raw)
         return import_request
 
-    def get_import_request_overview(self):
-        command = "SELECT id FROM import_queue ORDER BY requested_at DESC"
-        self.cursor.execute(command)
+    #def get_import_request_overview(self):
+    #    command = "SELECT id FROM import_queue ORDER BY requested_at DESC"
+    #    self.cursor.execute(command)
+    #    import_queue_ids = self.cursor.fetchall()
+    #    import_requests = [self.get_import_request(import_queue_id[0]) for import_queue_id in import_queue_ids]
+    #    return import_requests
+
+    def get_import_requests_page(self, page, page_size):
+        # get one page of import requests determined by offset & pagesize
+        command = "SELECT id FROM import_queue ORDER BY requested_at DESC LIMIT %s, %s"
+        page_size = int(page_size)
+        page = int(page)
+        offset = (page - 1) * page_size
+        actual_information = (offset, page_size)
+        self.cursor.execute(command, actual_information)
         import_queue_ids = self.cursor.fetchall()
         import_requests = [self.get_import_request(import_queue_id[0]) for import_queue_id in import_queue_ids]
-        return import_requests
+
+        # get total number
+        command = "SELECT COUNT(id) FROM import_queue"
+        self.cursor.execute(command)
+        num_items = self.cursor.fetchone()
+        if num_items is None:
+            return [], 0
+        return import_requests, num_items[0]
+    
 
     def get_max_finished_at_import_variant(self, import_queue_id):
         command = "SELECT MAX(finished_at) FROM import_variant_queue WHERE import_queue_id = %s"
@@ -2134,6 +2154,13 @@ class Connection:
             return res[0]
         return None
 
+    def valid_list_id(self, list_id):
+        command = "SELECT EXISTS (SELECT id FROM user_variant_lists WHERE id = %s)"
+        self.cursor.execute(command, (list_id, ))
+        res = self.cursor.fetchone()[0]
+        if res == 0:
+            return False
+        return True
 
     def delete_variant_from_list(self, list_id, variant_id):
         command = "DELETE FROM list_variants WHERE list_id=%s AND variant_id=%s"
@@ -2754,6 +2781,44 @@ class Connection:
                 result[assay_metadata_type.title] = assay_metadata_type
         return result
     
+    #def get_assay_type_id_dict(self):
+    #    command = "SELECT id, title FROM assay_type"
+    #    self.cursor.execute(command)
+    #    res = self.cursor.fetchall()
+    #    d = {}
+    #    for elem in res:
+    #        d[elem[1]] = elem[0]
+    #    return d
+    def get_assay_id(self, assay_title):
+        command = "SELECT id FROM assay_type WHERE title = %s"
+        self.cursor.execute(command, (assay_title, ))
+        result = self.cursor.fetchone()
+        if result is not None:
+            return result[0]
+        return result
+
+    def get_assay_types(self) -> dict:
+        command = "SELECT id, title FROM assay_type"
+        self.cursor.execute(command)
+        assay_types_raw = self.cursor.fetchall()
+
+        result = {} # key: assay_type_id
+        for assay_type_raw in assay_types_raw:
+            assay_type_id = assay_type_raw[0]
+            assay_title = assay_type_raw[1]
+            assay_metadata_types = self.get_assay_metadata_types(assay_type_id, format = "dict")
+            result[assay_type_id] = {"title": assay_title, "metadata_types": assay_metadata_types}
+        return result
+
+    def valid_assay_type_id(self, assay_type_id):
+        command = "SELECT EXISTS (SELECT id FROM assay_type WHERE id = %s)"
+        self.cursor.execute(command, (assay_type_id, ))
+        result = self.cursor.fetchone()[0] # get the first element as result is always a tuple
+        if result == 0:
+            return False
+        return True
+        
+
     def insert_assay_metadata(self, assay_id, assay_metadata_type_id, value):
         if value is not None:
             command = "INSERT INTO assay_metadata (assay_id, assay_metadata_type_id, value) VALUES (%s, %s, %s)"
@@ -2767,14 +2832,7 @@ class Connection:
                                                          value_type = assay_metadata_type_raw[4], is_deleted = is_deleted, is_required = is_required)
         return assay_metadata_type
 
-    def get_assay_type_id_dict(self):
-        command = "SELECT id, title FROM assay_type"
-        self.cursor.execute(command)
-        res = self.cursor.fetchall()
-        d = {}
-        for elem in res:
-            d[elem[1]] = elem[0]
-        return d
+
 
 
     def get_last_insert_id(self):
@@ -3572,13 +3630,13 @@ class Connection:
         result = self.cursor.fetchall()
         return result
     
-    def has_skipped_heredicare_publishes_before_finished_one(self, variant_id, last_finished_requested_at):
-        command = "SELECT COUNT(id) FROM publish_heredicare_queue WHERE variant_id = %s AND status = 'skipped' AND requested_at > %s"
-        self.cursor.execute(command, (variant_id, last_finished_requested_at))
-        result = self.cursor.fetchone()
-        if result[0] > 0:
-            return True
-        return False
+    #def has_skipped_heredicare_publishes_before_finished_one(self, variant_id, last_finished_requested_at):
+    #    command = "SELECT COUNT(id) FROM publish_heredicare_queue WHERE variant_id = %s AND status = 'skipped' AND requested_at > %s"
+    #    self.cursor.execute(command, (variant_id, last_finished_requested_at))
+    #    result = self.cursor.fetchone()
+    #    if result[0] > 0:
+    #        return True
+    #    return False
 
 
     def insert_publish_request(self, user_id: int, upload_heredicare: bool, upload_clinvar: bool, variant_ids: list):
@@ -3603,16 +3661,36 @@ class Connection:
         self.cursor.execute(command, (status, message, publish_queue_id))
         self.conn.commit()
 
-    def get_publish_request_overview(self):
-        command = """
-            SELECT id, (SELECT first_name FROM user WHERE user.id=publish_queue.user_id)first_name, (SELECT last_name FROM user WHERE user.id=publish_queue.user_id)last_name,
-            	requested_at, status, finished_at, message, (SELECT DISTINCT COUNT(publish_clinvar_queue.variant_id) FROM publish_clinvar_queue WHERE publish_clinvar_queue.publish_queue_id=publish_queue.id) clinvar_subs,
-                (SELECT DISTINCT COUNT(publish_heredicare_queue.variant_id) FROM publish_heredicare_queue WHERE publish_heredicare_queue.publish_queue_id=publish_queue.id) heredicare_subs
-            FROM publish_queue
-        """
+    #def get_publish_request_overview(self):
+    #    command = """
+    #        SELECT id, (SELECT first_name FROM user WHERE user.id=publish_queue.user_id)first_name, (SELECT last_name FROM user WHERE user.id=publish_queue.user_id)last_name,
+    #        	requested_at, status, finished_at, message, (SELECT DISTINCT COUNT(publish_clinvar_queue.variant_id) FROM publish_clinvar_queue WHERE publish_clinvar_queue.publish_queue_id=publish_queue.id) clinvar_subs,
+    #            (SELECT DISTINCT COUNT(publish_heredicare_queue.variant_id) FROM publish_heredicare_queue WHERE publish_heredicare_queue.publish_queue_id=publish_queue.id) heredicare_subs
+    #        FROM publish_queue
+    #    """
+    #    self.cursor.execute(command)
+    #    result = self.cursor.fetchall()
+    #    return result
+
+    def get_publish_requests_page(self, page, page_size):
+        # get one page of import requests determined by offset & pagesize
+        command = "SELECT id FROM publish_queue ORDER BY requested_at DESC LIMIT %s, %s"
+        page_size = int(page_size)
+        page = int(page)
+        offset = (page - 1) * page_size
+        actual_information = (offset, page_size)
+        self.cursor.execute(command, actual_information)
+        publish_queue_ids = self.cursor.fetchall()
+        publish_requests = [self.get_publish_request(publish_queue_id[0]) for publish_queue_id in publish_queue_ids]
+
+        # get total number
+        command = "SELECT COUNT(id) FROM publish_queue"
         self.cursor.execute(command)
-        result = self.cursor.fetchall()
-        return result
+        num_items = self.cursor.fetchone()
+        if num_items is None:
+            return [], 0
+        return publish_requests, num_items[0]
+
 
 
     def insert_publish_clinvar_request(self, publish_queue_id, variant_id):
@@ -3821,9 +3899,17 @@ class Connection:
         return [x[0] for x in result]
     
 
-    def get_most_recent_publish_queue(self):
+    def get_most_recent_publish_queue(self, variant_id = None, upload_clinvar = None, upload_heredicare = None):
         command = "SELECT MAX(id) FROM publish_queue"
-        self.cursor.execute(command)
+        actual_information = ()
+        if variant_id is not None:
+            command = self.add_constraints_to_command(command, "variant_ids LIKE %s")
+            actual_information += (functions.enpercent(variant_id), )
+        if upload_clinvar:
+            command = self.add_constraints_to_command(command, "upload_clinvar = 1")
+        if upload_heredicare:
+            command = self.add_constraints_to_command(command, "upload_heredicare = 1")
+        self.cursor.execute(command, actual_information)
         result = self.cursor.fetchone()
         publish_queue_id = result[0]
         return self.get_publish_request(publish_queue_id)

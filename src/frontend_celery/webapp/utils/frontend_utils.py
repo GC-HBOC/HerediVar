@@ -1,4 +1,4 @@
-from flask import flash, Markup, g, request, current_app, redirect, url_for, session
+from flask import flash, Markup, g, request, current_app, redirect, url_for, session, abort
 import sys
 from os import path
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
@@ -7,6 +7,53 @@ import common.functions as functions
 
 from urllib.parse import urlparse, urljoin
 
+
+
+# require-* functions
+# they take some data, check the database and abort if conditions are not met
+# these functions are ment to unify error responses
+# do not use for user input data from form in eg POST requests, because we do not want to abort in these cases
+# use only for data that is set by the programm (but could be modified by a user with malicious intentions...)
+
+# data set
+# 404: at least one of the items in data is not set
+def require_set(*args):
+    if not all(args):
+        flash('Missing data. Required ' + str(len(args)) + " items", 'alert-danger')
+        abort(404)
+
+# variant_id
+# 404: unknown variant_id
+def require_valid_variant_id(variant_id, conn: Connection):
+    if not conn.valid_variant_id(variant_id):
+        flash('Unknown variant_id', 'alert-danger')
+        abort(404)
+
+# list id
+# 404: unknown list id
+def require_valid_list_id(list_id, conn: Connection):
+    if not conn.valid_list_id(list_id):
+        flash("Unknown list_id", 'alert-danger')
+        abort(404)
+
+# list permission
+# 404: unknown data
+# 403: list permissions are not sufficient
+def require_list_permission(list_id, required_permissions: list, conn: Connection):
+    list_permissions = conn.check_list_permission(session['user']['user_id'], list_id)
+    if list_permissions is None:
+        abort(404)
+    for required_permission in required_permissions:
+        if not list_permissions[required_permission]:
+            current_app.logger.error(session['user']['preferred_username'] + " attempted view list with id " + str(list_id) + ", but this list was neither created by him nor is it public.")
+            abort(403)
+
+# assay type id
+# 404: assay_type_id is not known
+def require_valid_assay_type_id(assay_type_id, conn: Connection):
+    if not conn.valid_assay_type_id(assay_type_id):
+        flash('Unknown assay type', 'alert-danger')
+        abort(404)
 
 # this prevents open redirects
 def is_safe_url(target):
@@ -19,7 +66,6 @@ def is_safe_url(target):
     is_same_netloc = ref_url.netloc == test_url.netloc
     return is_same_scheme and is_same_netloc
            
-
 def save_redirect(target):
     if not target or not is_safe_url(target):
         current_app.logger.error("Unsafe redirect url detected: " + str(target))
@@ -28,7 +74,7 @@ def save_redirect(target):
 
 
 
-
+# some user utils for frontend stuff
 def is_user_logged_in():
     resp = session.get('tokenResponse', None)
     if resp is None:
@@ -41,9 +87,10 @@ def get_preferred_username():
         return user_obj['preferred_username']
     return "Anonymous user"
 
+
+# some db connection utils
 def request_has_connection():
     return hasattr(g, 'dbconn')
-
 
 def get_connection():
     user = session.get('user')

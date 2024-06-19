@@ -244,20 +244,21 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
-    most_recent_publish_queue = conn.get_most_recent_publish_queue()
-
+    most_recent_publish_queue = conn.get_most_recent_publish_queue(variant_id = variant_id, upload_clinvar = True)
     publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_clinvar(variant_id)
     clinvar_queue_entries = check_update_clinvar_status(variant_id, publish_queue_ids_oi, conn)
-    clinvar_queue_entry_summary = variant_functions.summarize_clinvar_status(variant_id, clinvar_queue_entries, most_recent_publish_queue)
+    clinvar_queue_entry_summary = variant_functions.summarize_clinvar_status(clinvar_queue_entries, most_recent_publish_queue)
+
+    most_recent_publish_queue = conn.get_most_recent_publish_queue(variant_id = variant_id, upload_heredicare = True)
     publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_heredicare(variant_id)
     heredicare_queue_entries = check_update_heredicare_status(variant_id, publish_queue_ids_oi, conn)
-    heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(variant_id, heredicare_queue_entries, conn, most_recent_publish_queue)
+    heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(heredicare_queue_entries, most_recent_publish_queue)
 
     variant = conn.get_variant(variant_id)
     
     #print(clinvar_queue_entries)
     #print(heredicare_queue_entries)
-    print(heredicare_queue_entry_summary)
+    #print(heredicare_queue_entry_summary)
 
     return render_template('variant/variant.html',
                             has_multiple_vids=has_multiple_vids,
@@ -408,7 +409,7 @@ def classify(variant_id):
                 scheme_received_update = variant_functions.handle_scheme_classification(user_classification_id, criteria, conn)
 
             if any([classification_received_update, literature_received_update, scheme_received_update]) and not is_new_classification:
-                flash(Markup("Successfully updated user classification return <a href=/display/" + str(variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+                flash(Markup("Successfully updated user classification return <a href=" + url_for("variant.display", variant_id = variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
 
             do_redirect = True
 

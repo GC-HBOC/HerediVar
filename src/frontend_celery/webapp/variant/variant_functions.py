@@ -319,12 +319,15 @@ def handle_selected_literature(previous_selected_literature, classification_id, 
 
 
 
-def summarize_heredicare_status(variant_id, heredicare_queue_entries, conn: Connection, publish_queue):
-    summary = {"status": "unknown", "max_requested_at": "unknown"}
+def summarize_heredicare_status(heredicare_queue_entries, publish_queue):
+    summary = {"status": "unknown", "max_requested_at": "unknown", "insert_tasks_message": ""}
     if publish_queue is not None:
-        if publish_queue.insert_tasks_status == 'pending' and variant_id in publish_queue.variant_ids and publish_queue.upload_heredicare:
+        if publish_queue.status == 'error':
+            summary["status"] = "error"
+            summary["insert_tasks_message"] = publish_queue.insert_tasks_message
+        elif publish_queue.insert_tasks_status == 'pending':
             summary["status"] = "waiting"
-        elif publish_queue.insert_tasks_status == 'progress' and variant_id in publish_queue.variant_ids and publish_queue.upload_heredicare:
+        elif publish_queue.insert_tasks_status == 'progress':
             summary["status"] = "requesting"
         elif heredicare_queue_entries is not None:
             all_skipped = True
@@ -345,17 +348,19 @@ def summarize_heredicare_status(variant_id, heredicare_queue_entries, conn: Conn
                     summary["max_requested_at"] = current_requested_at
             if all_skipped:
                 summary["status"] = "skipped"
-    summary["has_skipped"] = conn.has_skipped_heredicare_publishes_before_finished_one(variant_id, summary["max_requested_at"])
     return summary
 
 
 
-def summarize_clinvar_status(variant_id, clinvar_queue_entries, publish_queue):
-    summary = {"status": "unknown"}
+def summarize_clinvar_status(clinvar_queue_entries, publish_queue):
+    summary = {"status": "unknown", "insert_tasks_message": ""}
     if publish_queue is not None:
-        if publish_queue.insert_tasks_status == 'pending' and variant_id in publish_queue.variant_ids and publish_queue.upload_clinvar:
+        if publish_queue.status == 'error':
+            summary["status"] = "error"
+            summary["insert_tasks_message"] = publish_queue.insert_tasks_message
+        if publish_queue.insert_tasks_status == 'pending':
             summary["status"] = "waiting"
-        elif publish_queue.insert_tasks_status == 'progress' and variant_id in publish_queue.variant_ids and publish_queue.upload_clinvar:
+        elif publish_queue.insert_tasks_status == 'progress':
             summary["status"] = "requesting"
         elif clinvar_queue_entries is not None:
             all_skipped = True

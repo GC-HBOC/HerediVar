@@ -10,11 +10,11 @@
 
 
 <div class="form-group sst">
-    <label for="assay_type" class="form-label">Assay type</label>
-    <select class="form-select" name="assay_type" id="assay_type" initvalue="{{ request.form['assay_type'] }}" required>
+    <label for="assay_type_id" class="form-label">Assay type</label>
+    <select class="form-select" name="assay_type_id" id="assay_type_id" initvalue="{{ request.form['assay_type_id'] }}" required>
         <option value="" selected="selected" disabled hidden>Choose assay type</option>
-        {% for assay_type in possible_assays %}
-        <option value="{{assay_type}}" class="color_black">{{assay_type}} assay</option>
+        {% for assay_type_id in assay_types %}
+        <option value="{{assay_type_id}}" class="color_black">{{assay_types[assay_type_id]['title']}} assay</option>
         {% endfor %}
     </select>
    <div class="invalid-feedback">
@@ -23,16 +23,13 @@
 </div>
 
 
-{% for assay_type in possible_assays %}
+{% for assay_type_id in assay_types %}
 
-<form method="post" class="needs-validation" enctype=multipart/form-data id="{{assay_type}}_assay" novalidate hidden>
-    <input type="text" name="assay_type" id="assay_type" value="{{assay_type}}" hidden>
+<form method="post" class="needs-validation" enctype=multipart/form-data id="{{assay_type_id}}_assay" novalidate hidden>
+    <input type="text" name="assay_type_id" id="assay_type_id" value="{{assay_type_id}}" hidden>
 
-    {% set assay_metadata_types = possible_assays[assay_type]["metadata_types"] %}
+    {% set assay_metadata_types = assay_types[assay_type_id]["metadata_types"] %}
     {% for assay_metadata_type_name in assay_metadata_types %}
-
-
-    
         {% set current_metadata_type = assay_metadata_types[assay_metadata_type_name] %}
 
         <div id="report_form_group" class="form-group sst">

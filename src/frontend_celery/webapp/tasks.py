@@ -26,13 +26,10 @@ import traceback
 ###################################################################################
 
 def start_variant_import(user_id, user_roles, conn: Connection): # starts the celery task
-    min_date = conn.get_min_date_heredicare_import(source = "heredicare") # returns None if there are no successful imports (or no import requests at all)
-    #print(min_date)
-
     new_import_request = conn.insert_import_request(user_id, source = "heredicare")
     import_queue_id = new_import_request.id
 
-    task = heredicare_variant_import.apply_async(args=[user_id, user_roles, min_date, import_queue_id]) # start task
+    task = heredicare_variant_import.apply_async(args=[user_id, user_roles, import_queue_id]) # start task
     task_id = task.id
 
     conn.update_import_queue_celery_task_id(import_queue_id, celery_task_id = task_id) # save the task id for status updates
@@ -40,7 +37,7 @@ def start_variant_import(user_id, user_roles, conn: Connection): # starts the ce
     return import_queue_id
 
 @celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
-def heredicare_variant_import(self, user_id, user_roles, min_date, import_queue_id):
+def heredicare_variant_import(self, user_id, user_roles, import_queue_id):
     """Background task for fetching variants from HerediCare"""
     self.update_state(state='PROGRESS')
 
@@ -49,7 +46,7 @@ def heredicare_variant_import(self, user_id, user_roles, min_date, import_queue_
 
         conn.update_import_queue_status(import_queue_id, status = "progress", message = "")
 
-        status, message = import_variants(conn, user_id, user_roles, functions.str2datetime(min_date, fmt = '%Y-%m-%dT%H:%M:%S'), import_queue_id)
+        status, message = import_variants(conn, user_id, user_roles, import_queue_id)
     except InternalError as e:
         # deadlock: code 1213
         status = "retry"
@@ -90,20 +87,40 @@ def heredicare_variant_import(self, user_id, user_roles, min_date, import_queue_
         self.update_state(state="SUCCESS")
 
 
-def import_variants(conn: Connection, user_id, user_roles, min_date, import_queue_id): # the task worker
+def import_variants(conn: Connection, user_id, user_roles, import_queue_id): # the task worker
     status = "success"
 
+    status, message, intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = get_vid_sets(conn)
+    if status == "success":
+        #intersection = []
+        #heredicare_exclusive_vids = ['22081944', '22082395']
+        #heredivar_exclusive_vids = [] #917, 12453169, 18794502
+
+        # spawn one task for each variant import
+        process_new_vids(heredicare_exclusive_vids, import_queue_id, user_id, user_roles, conn)
+        process_new_vids(intersection, import_queue_id, user_id, user_roles, conn)
+        process_deleted_vids(heredivar_exclusive_vids, import_queue_id, user_id, user_roles, conn)
+
+    return status, message
+
+
+def get_vid_sets(conn: Connection):
+    intersection = []
+    heredivar_exclusive_vids = []
+    heredicare_exclusive_vids = []
     heredicare_interface = Heredicare()
+
     vids_heredicare, status, message = heredicare_interface.get_vid_list()
     print(len(vids_heredicare))
     if status == "success":
+        min_date = conn.get_min_date_heredicare_import(source = "heredicare") # returns None if there are no successful imports (or no import requests at all)
+        #min_date = functions.str2datetime(min_date, fmt = '%Y-%m-%dT%H:%M:%S')
         vids_heredicare, all_vids_heredicare, status, message = heredicare_interface.filter_vid_list(vids_heredicare, min_date)
         #all_vids_heredicare, status, message = heredicare_interface.get_vid_list()
 
         if status == "success":
             annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
             vids_heredivar = conn.get_all_external_ids_from_annotation_type(annotation_type_id)
-
 
             intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = compare_v_id_lists(all_vids_heredicare, vids_heredivar, vids_heredicare)
 
@@ -114,18 +131,7 @@ def import_variants(conn: Connection, user_id, user_roles, min_date, import_queu
             print("Intersection of filtered heredicare and heredivar vids: " + str(len(intersection)))
             print("Deleted vids (unknown to heredicare but known to heredivar): " + str(len(heredivar_exclusive_vids)))
             print("New vids (unknown to heredivar but known to heredicare): " + str(len(heredicare_exclusive_vids)))
-
-            #intersection = []
-            #heredicare_exclusive_vids = ['22081944', '22082395']
-            #heredivar_exclusive_vids = [] #917, 12453169, 18794502
-
-            # spawn one task for each variant import
-            process_new_vids(heredicare_exclusive_vids, import_queue_id, user_id, user_roles, conn)
-            process_new_vids(intersection, import_queue_id, user_id, user_roles, conn)
-            process_deleted_vids(heredivar_exclusive_vids, import_queue_id, user_id, user_roles, conn)
-
-    return status, message
-
+    return status, message, intersection, heredivar_exclusive_vids, heredicare_exclusive_vids
 
 
 def process_deleted_vids(vids, import_queue_id, user_id, user_roles, conn: Connection):

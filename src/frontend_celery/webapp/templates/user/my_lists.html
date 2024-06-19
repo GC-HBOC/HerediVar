@@ -78,7 +78,7 @@
                                 <a href="{{ url_for('download.variant_list', list_id=request.args.get('view')) }}" class="dropdown-item">Export list to VCF</a>
                             </li>
                             <li>
-                                <a href="{{ url_for('upload.publish', variant_ids = variant_ids, next = url_for('user.my_lists', view = request.args.get('view'))) }}" class="dropdown-item">Publish</a>
+                                <a href="{{ url_for('upload.publish', list_id = request.args.get('view', ''), next = url_for('user.my_lists', view = request.args.get('view'))) }}" class="dropdown-item">Publish</a>
                             </li>
                         </ul>
                     </div>
@@ -189,6 +189,7 @@
     data-variant-base-url='{{ url_for("variant.display", variant_id="0") }}'
     data-page='{{ request.args.get("page", 1) }}'
     data-page-size='{{ request.args.get("page_size", 20)}}'
+    data-delete-action='{{url_for("user.modify_list_content", selected_list_id=request.args.get("view", ""), action="remove_from_list", next=url_for("user.my_lists", view=request.args.get("view", "")))}}'
 />
 
 

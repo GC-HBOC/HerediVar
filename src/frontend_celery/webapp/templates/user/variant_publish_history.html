@@ -9,35 +9,49 @@
 <h1 class="bst"> {% block title %} Variant publish history {% endblock %} </h1>
 
 
-<div class="table-responsive tableFixHead table-lg">
-    <table class="table table-hover" id="variant_import_history_table">
-        <thead>
-            <tr>
-                <th class="width_small"><div class="sortable">Submitter</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                <th class="width_small" id="requestedatcol"><div class="sortable">Requested at</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                <th class="width_small"><div class="sortable">Finished at</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                <th class="width_minimal"><div class="sortable">#ClinVar</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                <th class="width_minimal"><div class="sortable">#HerediCaRe</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                <th class="width_minimal"><div class="sortable">Status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                <th class="width_medium"><div class="sortable">Message</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for entry in overview %}
-            <!--id, first_name, last_name, requested_at, status, finished_at, message, clinvar_subs, heredicare_subs-->
-            <tr class="clickable" data-href="{{ url_for('user.variant_publish_summary', publish_queue_id = entry[0]) }}">
-                <td>{{entry[1] + " " + entry[2]}}</td>
-                <td>{{entry[3]}}</td>
-                <td>{{entry[5]}}</td>
-                <td>{{entry[7]}}</td>
-                <td>{{entry[8]}}</td>
-                <td>{{entry[4]}}</td>
-                <td><div class="Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ entry[6] }}">{{ entry[6] }}</div></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+
+<div>
+
+    <div id="tabnav-head" class="row align-items-end nsl nsr">
+        <div class="col nopad">{{ pagination.links }}</div>
+    </div>
+    
+    <div class="table-responsive tableFixHead table-100 ">
+        <table class="table table-hover ssb" id="publish_queue_table">
+            <thead id="variantTableHead">
+                <tr>
+                    <th class="width_small">Submitter</th>
+                    <th class="width_small">Requested at</th>
+                    <th class="width_small">Finished at</th>
+                    <th class="width_minimal">#ClinVar</th>
+                    <th class="width_minimal">#HerediCaRe</th>
+                    <th class="width_minimal">Status</th>
+                    <th class="width_medium">Message</th>
+                </tr>
+            </thead>
+            <tbody id="variantTableBody">
+                {% for entry in publish_queue_requests %}
+                <tr class="clickable" data-href="{{ url_for('user.variant_publish_summary', publish_queue_id = entry[0]) }}">
+                    <td>{{ entry.user.full_name }}</td>
+                    <td>{{ entry.requested_at }}</td>
+                    <td>{{ entry.finished_at }}</td>
+                    <td>{{ entry.num_clinvar }}</td>
+                    <td>{{ entry.num_heredicare }}</td>
+                    <td>{{ entry.status }}</td>
+                    <td><div class="Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ entry.message }}">{{ entry.message }}</div></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+      
+    <div id="tabnav-bottom" class="ssb">{{ pagination.links }}</div>
+    
+    
 </div>
+
+
+
 
 
 
