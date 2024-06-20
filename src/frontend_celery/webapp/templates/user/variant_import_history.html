@@ -22,10 +22,12 @@
             <thead id="variantTableHead">
                 <tr>
                     <th class="width_very_small">Submitter</th>
-                    <th class="width_small">Requested at</th>
-                    <th class="width_small">Finished at</th>
+                    <th class="width_very_small">Requested at</th>
+                    <th class="width_very_small">Finished at</th>
+                    <th class="width_very_minimal">#var</th>
                     <th class="width_minimal">Status</th>
                     <th class="width_medium">Message</th>
+                    <th class="width_small">Type</th>
                 </tr>
             </thead>
             <tbody id="variantTableBody">
@@ -34,8 +36,10 @@
                     <td>{{entry.user.full_name}}</td>
                     <td>{{entry.requested_at}}</td>
                     <td>{{entry.finished_at}}</td>
+                    <td>{{entry.total_variants}}</td>
                     <td>{{entry.status}}</td>
                     <td><div class="Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ entry.import_variant_list_message }}">{{ entry.import_variant_list_message }}</div></td>
+                    <td>{{entry.source}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

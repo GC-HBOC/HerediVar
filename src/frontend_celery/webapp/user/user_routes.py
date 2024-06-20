@@ -33,8 +33,9 @@ def modify_list_content():
         user_action = request.args.get('action')
         list_id = request.args.get('selected_list_id')
         variant_id = request.args.get('variant_id')
-        require_set(user_action, list_id, variant_id)
-        require_valid_variant_id(variant_id, conn)
+        require_set(user_action)
+        require_valid(list_id, conn.valid_list_id, identifier_name = "list id")
+        require_valid(variant_id, conn.valid_variant_id, identifier_name = "variant id")
         require_list_permission(list_id, required_permissions = ['owner', 'edit'], conn = conn)
 
         # perform the action -> either add or remove
@@ -59,7 +60,7 @@ def my_lists():
     view_list_id = request.args.get('view', None)
     list_import_status = None
     if view_list_id is not None: # the user wants to view a list
-        require_valid_list_id(view_list_id, conn)
+        require_valid(view_list_id, conn.valid_list_id, identifier_name = "list id")
         require_list_permission(view_list_id, required_permissions = ['read'], conn = conn)
         list_import_status = conn.get_most_recent_list_variant_import_queue(view_list_id)
 
@@ -108,8 +109,7 @@ def my_lists():
             
         if request_type == 'delete_list':
             list_id = request.form['list_id']
-            if list_id == "":
-                return abort(404)
+            require_valid(list_id, conn.valid_list_id, identifier_name = "list id")
             if list_id is not None:
                 list_permissions = conn.check_list_permission(user_id, list_id)
                 if not list_permissions['owner']:
@@ -127,8 +127,7 @@ def my_lists():
             if not public_read and public_edit:
                 flash("You can not add a public list which is not publicly readable but publicly editable. List was not created.", 'alert-danger')
             else:
-                if list_id == "":
-                    return abort(404)
+                require_valid(list_id, conn.valid_list_id, identifier_name = "list id")
                 if list_id is not None:
                     list_permissions = conn.check_list_permission(user_id, list_id)
                     if not list_permissions["read"]:
@@ -144,8 +143,7 @@ def my_lists():
             inplace = True if request.form.get('inplace') else False
             other_list_id = request.form['other_list_id']
             other_list_name = request.form['other_list_name']
-            if list_id == "":
-                return abort(404)
+            require_valid(list_id, conn.valid_list_id, identifier_name = "list id")
             if (other_list_name.strip() != '' and other_list_id.strip() == ''):
                 flash("The other list which you tried to intersect does not exist", 'alert-danger flash_id:intersect_not_exist')
                 return redirect(url_for('user.my_lists', view=list_id))
@@ -172,8 +170,7 @@ def my_lists():
             inplace = True if request.form.get('inplace') else False
             other_list_id = request.form['other_list_id']
             other_list_name = request.form['other_list_name']
-            if list_id == "":
-                return abort(404)
+            require_valid(list_id, conn.valid_list_id, identifier_name = "list id")
             if (other_list_name.strip() != '' and other_list_id.strip() == ''):
                 flash("The other list which you tried to subtract does not exist", 'alert-danger flash_id:subtract_not_exist')
                 return redirect(url_for('user.my_lists', view=list_id))
@@ -199,8 +196,7 @@ def my_lists():
             inplace = True if request.form.get('inplace') else False
             other_list_id = request.form['other_list_id']
             other_list_name = request.form['other_list_name']
-            if list_id == "":
-                return abort(404)
+            require_valid(list_id, conn.valid_list_id, identifier_name = "list id")
             if (other_list_name.strip() != '' and other_list_id.strip() == ''):
                 flash("The other list which you tried to add does not exist", 'alert-danger flash_id:add_not_exist')
                 return redirect(url_for('user.my_lists', view=list_id))
@@ -242,18 +238,16 @@ def admin_dashboard():
 
     if request.method == 'POST':
         request_type = request.args.get("type")
+
+        # mass reannotation based on current annotation status
         if request_type == 'reannotate':
             selected_jobs = request.form.getlist('job')
             reannotate_which = request.form.get('reannotate_which')
-            if reannotate_which is None:
-                abort(404)
+            require_set(reannotate_which)
             selected_job_config = annotation_service.get_job_config(selected_jobs)
 
             if reannotate_which == 'all':
                 variant_ids = conn.get_all_valid_variant_ids(exclude_sv=True)
-                #variant_ids = conn.get_variant_ids_from_list(77)
-                #variant_ids = conn.get_variant_ids_without_automatic_classification()
-                #variant_ids = random.sample(variant_ids, 50)
             elif reannotate_which == 'erroneous':
                 variant_ids = annotation_stati['error']
             elif reannotate_which == 'aborted':
@@ -266,6 +260,7 @@ def admin_dashboard():
             flash('Variant reannotation of ' + reannotate_which + ' variants requested. It will be computed in the background.', 'alert-success')
             do_redirect = True
 
+        # abort annotations based on annotation status
         elif request_type == 'abort_annotations':
             annotation_statuses_to_abort = request.form.getlist('annotation_statuses')
             annotation_requests = conn.get_annotation_queue(annotation_statuses_to_abort)
@@ -273,28 +268,20 @@ def admin_dashboard():
             flash("Aborted " + str(len(annotation_requests)) + " annotation requests.", "alert-success")
             do_redirect = True
 
-        elif request_type == 'import_variants': # mass import from heredicare
-            #heredicare_interface = current_app.extensions['heredicare_interface']
-            #start_variant_import(conn)
-            #heredicare_variant_import.apply_async(args=[session['user']['user_id'], session['user']['roles']])
-            import_queue_id = tasks.start_variant_import(session['user']['user_id'], session['user']['roles'], conn = conn)
-            #task = import_one_variant_heredicare.apply_async(args=[12, 30, ["super_user"], 169])
-            
+        # mass import from heredicare: only imports updated heredicare vids based on the last mass import
+        elif request_type == 'import_variants':
+            vids = [] # start task importing all updated heredicare vids
+            import_queue_id = tasks.start_variant_import(vids, session['user']['user_id'], session['user']['roles'], conn)
             return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id))
 
-        elif request_type == 'import_one_variant':
-            import_queue_id = request.form.get('import_queue_id')
-            vid = request.form.get('vid')
+        # single vid import from heredicare
+        elif request_type == 'import_specific_vids':
+            vids = request.form.getlist('vid')
+            require_set(vids)
             
-            if import_queue_id is not None: # if import queue id is None we are inserting one by hand without import request if it is not none we are retrying the import!
-                import_request = conn.get_import_request(import_queue_id)
-                if import_request is None:
-                    abort(404)
-            if vid is None:
-                abort(404)
-            tasks.start_import_one_variant(vid, import_queue_id, session['user']['user_id'], session['user']['roles'], conn)
-            flash("Successfully requested variant import of HerediCare VID: " + str(vid), "alert-success")
-            return redirect(url_for('user.single_vid_imports'))
+            import_queue_id = tasks.start_variant_import(vids, session['user']['user_id'], session['user']['roles'], conn)
+            flash("Successfully requested variant import of HerediCare VID: " + str(vids), "alert-success")
+            return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id))
 
     if do_redirect:
         return redirect(url_for('user.admin_dashboard'))
@@ -310,21 +297,12 @@ def admin_dashboard():
 
 
 
-@user_blueprint.route('/get_single_vid_imports/')
-@require_permission(['admin_resources'])
-def single_vid_imports():
-    conn = get_connection()
-    variant_imports = conn.get_single_vid_imports()
-    return render_template('user/single_vid_imports.html', variant_imports = variant_imports)
-
-
 @user_blueprint.route('/variant_import_summary/<int:import_queue_id>')
 @require_permission(['admin_resources'])
 def variant_import_summary(import_queue_id):
     conn = get_connection()
     import_request = conn.get_import_request(import_queue_id)
-    if import_request is None:
-        abort(404)
+    require_set(import_request)
     return render_template('user/variant_import_summary.html', import_queue_id = import_queue_id)
 
 
@@ -332,10 +310,9 @@ def variant_import_summary(import_queue_id):
 @require_permission(['admin_resources'])
 def variant_import_summary_data(import_queue_id):
     conn = get_connection()
-
     import_request = conn.get_import_request(import_queue_id)
+    require_set(import_request)
     imported_variants = conn.get_imported_variants(import_queue_id, status = ["error"])
-
     return jsonify({'import_request': import_request, 'imported_variants': imported_variants})
 
 
@@ -359,7 +336,6 @@ def variant_import_history():
 @user_blueprint.route('/variant_publish_history')
 @require_permission(['admin_resources'])
 def variant_publish_history():
-
     page = request.args.get('page', 1)
     page_size = 10
 
@@ -380,10 +356,7 @@ def variant_publish_summary():
     conn = get_connection()
 
     publish_queue_id = request.args.get('publish_queue_id')
-    if publish_queue_id is None:
-        abort(404)
-    if not conn.check_publish_queue_id(publish_queue_id):
-        abort(404)
+    require_valid(publish_queue_id, conn.check_publish_queue_id, 'publish_queue_id')
 
     variant_ids = conn.get_variant_ids_from_publish_request(publish_queue_id)
     publish_queue_ids_oi = [publish_queue_id]

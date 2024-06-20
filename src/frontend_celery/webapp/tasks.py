@@ -25,19 +25,22 @@ import traceback
 ############## IMPORT VARIANT LIST THAT GOT UPDATE SINCE LAST IMPORT ##############
 ###################################################################################
 
-def start_variant_import(user_id, user_roles, conn: Connection): # starts the celery task
-    new_import_request = conn.insert_import_request(user_id, source = "heredicare")
+def start_variant_import(vids, user_id, user_roles, conn: Connection): # starts the celery task
+    source = "heredicare_specific"
+    if not vids: # we are not processing specific vids
+        source = "heredicare_complete"
+    new_import_request = conn.insert_import_request(user_id, source)
     import_queue_id = new_import_request.id
 
-    task = heredicare_variant_import.apply_async(args=[user_id, user_roles, import_queue_id]) # start task
+    task = heredicare_variant_import.apply_async(args=[vids, user_id, user_roles, import_queue_id]) # start task
     task_id = task.id
 
     conn.update_import_queue_celery_task_id(import_queue_id, celery_task_id = task_id) # save the task id for status updates
 
     return import_queue_id
 
-@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
-def heredicare_variant_import(self, user_id, user_roles, import_queue_id):
+@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=6000)
+def heredicare_variant_import(self, vids, user_id, user_roles, import_queue_id):
     """Background task for fetching variants from HerediCare"""
     self.update_state(state='PROGRESS')
 
@@ -46,7 +49,8 @@ def heredicare_variant_import(self, user_id, user_roles, import_queue_id):
 
         conn.update_import_queue_status(import_queue_id, status = "progress", message = "")
 
-        status, message = import_variants(conn, user_id, user_roles, import_queue_id)
+        status, message = import_variants(vids, conn, user_id, user_roles, import_queue_id)
+
     except InternalError as e:
         # deadlock: code 1213
         status = "retry"
@@ -87,19 +91,27 @@ def heredicare_variant_import(self, user_id, user_roles, import_queue_id):
         self.update_state(state="SUCCESS")
 
 
-def import_variants(conn: Connection, user_id, user_roles, import_queue_id): # the task worker
+def import_variants(vids: list, conn: Connection, user_id, user_roles, import_queue_id): # the task worker
     status = "success"
+    message = ""
 
-    status, message, intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = get_vid_sets(conn)
-    if status == "success":
+    if not vids: # we do not have any specific vid(s) to to import -> search for updated / new vids in heredicare
+        #vids, all_vids_heredicare, status, message = get_filtered_vid_list(conn)
+        status, message, intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = get_vid_sets(conn)
+        vids = []
+
         #intersection = []
         #heredicare_exclusive_vids = ['22081944', '22082395']
         #heredivar_exclusive_vids = [] #917, 12453169, 18794502
 
+        vids.extend(intersection)
+        vids.extend(heredivar_exclusive_vids)
+        vids.extend(heredicare_exclusive_vids)
+    
+    if status == "success":
         # spawn one task for each variant import
-        process_new_vids(heredicare_exclusive_vids, import_queue_id, user_id, user_roles, conn)
-        process_new_vids(intersection, import_queue_id, user_id, user_roles, conn)
-        process_deleted_vids(heredivar_exclusive_vids, import_queue_id, user_id, user_roles, conn)
+        for vid in vids:
+            _ = start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn)
 
     return status, message
 
@@ -110,71 +122,53 @@ def get_vid_sets(conn: Connection):
     heredicare_exclusive_vids = []
     heredicare_interface = Heredicare()
 
-    vids_heredicare, status, message = heredicare_interface.get_vid_list()
-    print(len(vids_heredicare))
+    all_vids_heredicare_raw, status, message = heredicare_interface.get_vid_list()
     if status == "success":
-        min_date = conn.get_min_date_heredicare_import(source = "heredicare") # returns None if there are no successful imports (or no import requests at all)
+        min_date = conn.get_min_date_heredicare_import(source = "heredicare_complete") # returns None if there are no successful imports (or no import requests at all)
         #min_date = functions.str2datetime(min_date, fmt = '%Y-%m-%dT%H:%M:%S')
-        vids_heredicare, all_vids_heredicare, status, message = heredicare_interface.filter_vid_list(vids_heredicare, min_date)
-        #all_vids_heredicare, status, message = heredicare_interface.get_vid_list()
+        filtered_vids_heredicare, all_vids_heredicare, status, message = heredicare_interface.filter_vid_list(all_vids_heredicare_raw, min_date)
 
         if status == "success":
             annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
-            vids_heredivar = conn.get_all_external_ids_from_annotation_type(annotation_type_id)
+            all_vids_heredivar = conn.get_all_external_ids_from_annotation_type(annotation_type_id)
 
-            intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = compare_v_id_lists(all_vids_heredicare, vids_heredivar, vids_heredicare)
+            #intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = compare_v_id_lists(all_vids_heredicare, vids_heredivar, filtered_vids_heredicare)
 
-            print("Total HerediCare: " + str(len(all_vids_heredicare)))
-            print("Filtered HerediCare: " + str(len(vids_heredicare)))
-            print("Total vids HerediVar: " + str(len(vids_heredivar)))
+            filtered_vids_heredicare = set(filtered_vids_heredicare)
+            all_vids_heredivar = set(all_vids_heredivar)
+            all_vids_heredicare = set(all_vids_heredicare)
 
+            intersection = all_vids_heredicare & all_vids_heredivar # known vids
+            heredivar_exclusive_vids = all_vids_heredivar - all_vids_heredicare # this contains variants which only have a vid in heredivar!!!!
+            heredicare_exclusive_vids = all_vids_heredicare - all_vids_heredivar # new vids
+
+            # filter for vids of interest
+            # do not filter deleted vids because they are not returned by the heredicare api
+            intersection = list(intersection & filtered_vids_heredicare)
+            heredivar_exclusive_vids = list(heredivar_exclusive_vids)
+            heredicare_exclusive_vids = list(heredicare_exclusive_vids & filtered_vids_heredicare)
+
+            print("Total vids HerediCaRe: " + str(len(all_vids_heredicare)))
+            print("Total vids HerediVar: " + str(len(all_vids_heredivar)))
+            print("Total filtered vids HerediCaRe: " + str(len(filtered_vids_heredicare)))
             print("Intersection of filtered heredicare and heredivar vids: " + str(len(intersection)))
             print("Deleted vids (unknown to heredicare but known to heredivar): " + str(len(heredivar_exclusive_vids)))
             print("New vids (unknown to heredivar but known to heredicare): " + str(len(heredicare_exclusive_vids)))
+
     return status, message, intersection, heredivar_exclusive_vids, heredicare_exclusive_vids
 
 
-def process_deleted_vids(vids, import_queue_id, user_id, user_roles, conn: Connection):
-    for vid in vids:
-        _ = start_delete_variant(vid, vids, import_queue_id, user_id, user_roles, conn)
-
-
-
-def process_new_vids(vids, import_queue_id, user_id, user_roles, conn: Connection):
-    for vid in vids:
-        _ = start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn)
-
-
-
-
-def compare_v_id_lists(all_vids_heredicare, vids_heredivar, vids_oi):
-    vids_oi = set(vids_oi)
-    vids_heredivar = set(vids_heredivar)
-    all_vids_heredicare = set(all_vids_heredicare)
-
-    intersection = all_vids_heredicare & vids_heredivar # known vids
-    heredivar_exclusive_variants = vids_heredivar - all_vids_heredicare # this contains variants which only have a vid in heredivar!!!!
-    heredicare_exclusive_variants = all_vids_heredicare - vids_heredivar # new vids
-
-    # filter for vids of interest
-    # do not filter deleted vids because they are not returned by the heredicare api
-    intersection = list(intersection & vids_oi)
-    heredivar_exclusive_variants = list(heredivar_exclusive_variants)
-    heredicare_exclusive_variants = list(heredicare_exclusive_variants & vids_oi)
-
-
-    return intersection, heredivar_exclusive_variants, heredicare_exclusive_variants
 
 
 
 ################################################
-############## DELETE THE VARIANT ##############
+############## IMPORT THE VARIANT ##############
 ################################################
 
-def start_delete_variant(vid, vids, import_queue_id, user_id, user_roles, conn: Connection): # starts the celery task
+def start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn: Connection): # starts the celery task
     import_variant_queue_id = conn.insert_variant_import_request(vid, import_queue_id)
 
-    task = delete_variant_heredicare.apply_async(args=[vid, vids, user_id, user_roles, import_variant_queue_id])
+    task = import_one_variant_heredicare.apply_async(args=[vid, user_id, user_roles, import_variant_queue_id])
     task_id = task.id
 
     conn.update_import_variant_queue_celery_id(import_variant_queue_id, celery_task_id = task_id)
@@ -186,30 +180,15 @@ def start_delete_variant(vid, vids, import_queue_id, user_id, user_roles, conn: 
 # this will retry 3 times before giving up
 # first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
 @celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
-def delete_variant_heredicare(self, vid, vids, user_id, user_roles, import_variant_queue_id):
+def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant_queue_id):
     """Background task for fetching variants from HerediCare"""
     #from frontend_celery.webapp.utils.variant_importer import fetch_heredicare
     self.update_state(state='PROGRESS')
     
     try:
         conn = Connection(user_roles)
-
         conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
-
-        message = "Removed heredicare vid"
-        status = "update"
-        annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
-        variant_id = conn.get_variant_id_from_external_id(vid, annotation_type_id)
-        if variant_id is not None:
-            all_vids_for_variant = conn.get_external_ids_from_variant_id(variant_id, annotation_type_id)
-            conn.delete_external_id(vid, annotation_type_id = annotation_type_id, variant_id = variant_id)
-            status = "deleted"
-            if all([v in vids for v in all_vids_for_variant]):
-                message = "Variant was hidden because it does not have any vids in heredicare anymore"
-                conn.hide_variant(variant_id, False)
-        else:
-            status = "error"
-            message = "VID " + str(vid) + " is not known by HerediVar, but was reported to be known by HerediVar and deleted by HerediCare."
+        status, message = fetch_heredicare(vid, user_id, conn, insert_variant = True, perform_annotation = True)
     except InternalError as e:
         # deadlock: code 1213
         status = "retry"
@@ -223,11 +202,13 @@ def delete_variant_heredicare(self, vid, vids, user_id, user_roles, import_varia
     except Exception as e:
         status = "error"
         message = "There was a runtime error: " + str(e) + ' ' + traceback.format_exc()
-        
+    
+    #print(status)
+
     if status != "retry":
-        conn.close_import_variant_request(import_variant_queue_id, status = status, message = message)
+        conn.close_import_variant_request(import_variant_queue_id, status = status, message = message[:10000])
     else:
-        conn.update_import_variant_queue_status(import_variant_queue_id, status = status, message = message)
+        conn.update_import_variant_queue_status(import_variant_queue_id, status = status, message = message[:10000])
     
     conn.close()
 
@@ -246,6 +227,36 @@ def delete_variant_heredicare(self, vid, vids, user_id, user_roles, import_varia
         import_one_variant_heredicare.retry()
     else:
         self.update_state(state="SUCCESS")
+
+
+
+
+def fetch_heredicare(vid, user_id, conn:Connection, insert_variant = True, perform_annotation = True):
+    heredicare_interface = Heredicare()
+    variant, status, message = heredicare_interface.get_variant(vid)
+
+    if status != 'success': # error in variant retrieval from heredicare
+        return status, message
+
+    if str(variant.get("VISIBLE", "0")) == "0" or len(variant) == 0: # skip invisible vid or vid that is unknown by heredicare
+        annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
+        variant_id = conn.get_variant_id_from_external_id(vid, annotation_type_id) # check if heredivar knows the vid
+        if variant_id is not None: # heredivar knows the vid, but heredicare doesnt OR vid is now invisible
+            conn.delete_external_id(vid, annotation_type_id, variant_id)
+            status = "deleted"
+            all_vids_for_variant = conn.get_external_ids_from_variant_id(variant_id, annotation_type_id) # check if the variant still has heredicare vids
+            if len(all_vids_for_variant) == 0: # hide variant in heredivar if not
+                conn.hide_variant(variant_id, is_hidden = False)
+                message = "Variant is already in database, but is hidden in HerediCare. It is now also hidden in HerediVar. If another VID points to this variant which is processed later this variant will get visible again."
+            else:
+                message = "Deleted VID because this vid is now hidden in HerediCare"
+        else:
+            status = "error"
+            message = "HerediCaRe VID is invisible or unknown by HerediCaRe and HerediVar does not know this VID"
+    else: # import variant
+        status, message = map_hg38(variant, user_id, conn, insert_variant = insert_variant, perform_annotation = perform_annotation, external_ids = [vid])
+
+    return status, message
 
 
 
@@ -359,104 +370,7 @@ def insert_variants_vcf_file(vcf_file, genome_build, user_id, import_queue_id, c
 
 
 
-################################################
-############## IMPORT THE VARIANT ##############
-################################################
-
-def start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn: Connection): # starts the celery task
-    import_variant_queue_id = conn.insert_variant_import_request(vid, import_queue_id)
-
-    task = import_one_variant_heredicare.apply_async(args=[vid, user_id, user_roles, import_variant_queue_id])
-    task_id = task.id
-
-    conn.update_import_variant_queue_celery_id(import_variant_queue_id, celery_task_id = task_id)
-
-    return task_id
-
-
-# this uses exponential backoff in case there is a http error
-# this will retry 3 times before giving up
-# first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
-@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
-def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant_queue_id):
-    """Background task for fetching variants from HerediCare"""
-    #from frontend_celery.webapp.utils.variant_importer import fetch_heredicare
-    self.update_state(state='PROGRESS')
-    
-    try:
-        conn = Connection(user_roles)
-        heredicare_interface = Heredicare()
-        conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
-        status, message = fetch_heredicare(vid, heredicare_interface, user_id, conn, insert_variant = True, perform_annotation = True)
-    except InternalError as e:
-        # deadlock: code 1213
-        status = "retry"
-        message = "Attempting retry because of database error: " + str(e)  + ' ' + traceback.format_exc()
-    except Error as e:
-        status = "error"
-        message = "There was a database error: " + str(e)  + ' ' + traceback.format_exc()
-    except HTTPError as e:
-        status = "retry"
-        message = "Attempting retry because of http error: " + str(e)  + ' ' + traceback.format_exc()
-    except Exception as e:
-        status = "error"
-        message = "There was a runtime error: " + str(e) + ' ' + traceback.format_exc()
-    
-    #print(status)
-
-    if status != "retry":
-        conn.close_import_variant_request(import_variant_queue_id, status = status, message = message[:10000])
-    else:
-        conn.update_import_variant_queue_status(import_variant_queue_id, status = status, message = message[:10000])
-    
-    conn.close()
-
-    if status == 'error':
-        self.update_state(state='FAILURE', meta={ 
-                        'exc_type': "Runtime error",
-                        'exc_message': message, 
-                        'custom': '...'
-                    })
-        raise Ignore()
-    elif status == "retry":
-        self.update_state(state="RETRY", meta={
-                        'exc_type': "Runtime error",
-                        'exc_message': message, 
-                        'custom': '...'})
-        import_one_variant_heredicare.retry()
-    else:
-        self.update_state(state="SUCCESS")
-
-
-
-def fetch_heredicare(vid, heredicare_interface, user_id, conn:Connection, insert_variant = True, perform_annotation = True):
-    variant, status, message = heredicare_interface.get_variant(vid)
-    
-    if status != 'success':
-        return status, message
-    
-    if str(variant.get("VISIBLE", "0")) == "0":
-        annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
-        variant_id = conn.get_variant_id_from_external_id(vid, annotation_type_id)
-        if variant_id is not None:
-            conn.delete_external_id(vid, annotation_type_id, variant_id)
-            variant_vids = conn.get_external_ids_from_variant_id(variant_id, annotation_type_id)
-            if len(variant_vids) == 0:
-                conn.hide_variant(variant_id, is_hidden = False)
-                status = "deleted"
-                message = "Variant is already in database, but is hidden in HerediCare. It is now also hidden in HerediVar. If another VID points to this variant which is processed later this variant will get visible again."
-            else:
-                status = "deleted"
-                message = "Deleted VID because this vid is now hidden in HerediCare"
-        else:
-            message = "Skipped because variant is invisible in HerediCare"
-        return status, message
-    
-    status, message = map_hg38(variant, user_id, conn, insert_variant = insert_variant, perform_annotation = perform_annotation, external_ids = [vid])
-
-    return status, message
-
-
+# this is the main add variant from heredicare function! -> sanitizes and inserts variant
 def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_annotation = True, external_ids = None): # the task worker
     message = ""
     status = "success"

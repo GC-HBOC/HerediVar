@@ -1737,7 +1737,7 @@ class Connection:
         return self.get_most_recent_import_request(source)
     
     def get_most_recent_import_request(self, source):
-        self.cursor.execute("SELECT id, user_id, requested_at, status, finished_at, message FROM import_queue WHERE status != 'error' AND source = %s ORDER BY requested_at DESC LIMIT 1", (source, ))
+        self.cursor.execute("SELECT id, user_id, requested_at, status, finished_at, message, source FROM import_queue WHERE status != 'error' AND source = %s ORDER BY requested_at DESC LIMIT 1", (source, ))
         import_request_raw = self.cursor.fetchone()
         import_request = self.convert_raw_import_request(import_request_raw)
         return import_request
@@ -1751,7 +1751,7 @@ class Connection:
         return min_date
     
     def get_import_request(self, import_queue_id):
-        command = "SELECT id, user_id, requested_at, status, finished_at, message FROM import_queue WHERE id = %s"
+        command = "SELECT id, user_id, requested_at, status, finished_at, message, source FROM import_queue WHERE id = %s"
         self.cursor.execute(command, (import_queue_id, ))
         import_request_raw = self.cursor.fetchone()
         import_request = self.convert_raw_import_request(import_request_raw)
@@ -1805,6 +1805,7 @@ class Connection:
         num_var = self.get_number_of_import_variants(import_queue_id)
         requested_at = import_request_raw[2] # datetime object
         import_variant_list_finished_at = import_request_raw[4] # datetime object
+        source = import_request_raw[6]
 
         import_variant_list_status = import_request_raw[3]
 
@@ -1841,7 +1842,8 @@ class Connection:
                                        import_variant_list_status = import_variant_list_status,
                                        import_variant_list_finished_at = import_variant_list_finished_at,
                                        import_variant_list_message = import_request_raw[5],
-                                       variant_summary = variant_summary
+                                       variant_summary = variant_summary,
+                                       source = source
                                     )
         return result
     

@@ -22,18 +22,11 @@ def require_set(*args):
         flash('Missing data. Required ' + str(len(args)) + " items", 'alert-danger')
         abort(404)
 
-# variant_id
-# 404: unknown variant_id
-def require_valid_variant_id(variant_id, conn: Connection):
-    if not conn.valid_variant_id(variant_id):
-        flash('Unknown variant_id', 'alert-danger')
-        abort(404)
-
-# list id
-# 404: unknown list id
-def require_valid_list_id(list_id, conn: Connection):
-    if not conn.valid_list_id(list_id):
-        flash("Unknown list_id", 'alert-danger')
+# validates that the db_id is known and valid by the database
+# func should be a conn.xxx function returning a boolean
+def require_valid(db_id, func, identifier_name = 'identifier'):
+    if not func(db_id):
+        flash('Unknown' + identifier_name)
         abort(404)
 
 # list permission
@@ -48,12 +41,7 @@ def require_list_permission(list_id, required_permissions: list, conn: Connectio
             current_app.logger.error(session['user']['preferred_username'] + " attempted view list with id " + str(list_id) + ", but this list was neither created by him nor is it public.")
             abort(403)
 
-# assay type id
-# 404: assay_type_id is not known
-def require_valid_assay_type_id(assay_type_id, conn: Connection):
-    if not conn.valid_assay_type_id(assay_type_id):
-        flash('Unknown assay type', 'alert-danger')
-        abort(404)
+
 
 # this prevents open redirects
 def is_safe_url(target):

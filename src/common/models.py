@@ -1447,6 +1447,8 @@ class import_request:
     import_variant_list_message: str
     variant_summary: dict
 
+    source: str
+
 @dataclass
 class Import_variant_request:
     id: int
