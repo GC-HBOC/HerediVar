@@ -30,7 +30,7 @@ def extract_variant_ids(request_args, conn: Connection) -> list:
 
     list_ids_strs = request.args.getlist('list_id')
     for list_id in list_ids_strs:
-        require_valid_list_id(list_id, conn)
+        require_valid(list_id, conn.valid_list_id, "list id")
         require_list_permission(list_id, required_permissions = ['read'], conn = conn)
         result.extend(conn.get_variant_ids_from_list(list_id))
     return result

@@ -112,6 +112,8 @@ def get_vcf(variants_oi, conn, worker=get_variant_vcf_line, check_vcf=True):
         returncode, err_msg, vcf_errors = functions.check_vcf(temp_file_path)
         os.remove(temp_file_path)
 
+        buffer.seek(0) # reset the buffer to be able to read from it again
+
         if returncode != 0:
             status = "error"
         
