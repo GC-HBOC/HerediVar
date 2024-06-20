@@ -99,7 +99,9 @@ def my_lists():
                 list_permissions = conn.check_list_permission(user_id, list_id)
                 if not list_permissions['owner']:
                     return abort(403)
-            if ';' in list_name:
+            if not public_read and public_edit:
+                flash("You can not add a public list which is not publicly readable but publicly editable. List was not created.", 'alert-danger')
+            elif ';' in list_name:
                 flash("List names can not contain a semicolon ';' character.", 'alert-danger')
             else:
                 conn.update_user_variant_list(list_id, list_name, public_read, public_edit)

@@ -591,28 +591,10 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
             message = "Variant not imported: already in database!!"
             conn.hide_variant(variant_id, True) # unhide variant
         if insert_variant and perform_annotation:
-            celery_task_id = start_annotation_service(conn, user_id, variant_id) # starts the celery background task
+            celery_task_id = start_annotation_service(variant_id, user_id, conn = conn) # starts the celery background task
 
         if not insert_variant:
             message += "HG38 variant would be: " + '-'.join([str(new_chr), str(new_pos), str(new_ref), str(new_alt)])
-
-        #if not is_duplicate:
-        #    # insert it & capture the annotation_queue_id of the newly inserted variant to start the annotation service in celery
-        #    if insert_variant:
-        #        variant_id = conn.insert_variant(new_chr, new_pos, new_ref, new_alt, chrom, pos, ref, alt, user_id)
-        #        if perform_annotation:
-        #            celery_task_id = start_annotation_service(conn, user_id, variant_id) # starts the celery background task
-        #    else:
-        #        message += "HG38 variant would be: " + '-'.join([str(new_chr), str(new_pos), str(new_ref), str(new_alt)])
-        #else:
-        #    if insert_variant:
-        #        variant_id = conn.get_variant_id(new_chr, new_pos, new_ref, new_alt)
-        #        message = "Variant not imported: already in database!!"
-        #        conn.hide_variant(variant_id, True) # unhide variant
-        #        if perform_annotation:
-        #            celery_task_id = start_annotation_service(conn, user_id, variant_id) # starts the celery background task
-        #    else:
-        #        message += "HG38 variant would be: " + '-'.join([str(new_chr), str(new_pos), str(new_ref), str(new_alt)])
 
 
     functions.rm(tmp_file_path)
@@ -735,27 +717,22 @@ def annotate_all_variants(self, variant_ids, selected_job_config, user_id, roles
     """Background task for running the annotation service"""
     conn = Connection(roles)
     for variant_id in variant_ids:
-        _ = start_annotation_service(variant_id = variant_id, user_id = user_id, job_config = selected_job_config, conn = conn) # inserts a new annotation queue entry before submitting the task to celery
+        _ = start_annotation_service(variant_id, user_id, conn = conn, job_config = selected_job_config) # inserts a new annotation queue entry before submitting the task to celery
         #conn.insert_annotation_request(variant_id, user_id = session['user']['user_id'])
     conn.close()
     self.update_state(state="SUCCESS", meta={})
 
 
-def start_annotation_service(conn: Connection, user_id, variant_id = None, annotation_queue_id = None, job_config = get_default_job_config()): # start the celery task
-    if variant_id is not None:
-        annotation_queue_id = conn.insert_annotation_request(variant_id, user_id) # only inserts a new row if there is none with this variant_id & pending
-        log_postfix = " for variant " + str(variant_id)
-    else:
-        log_postfix = " for annotation queue entry " + str(annotation_queue_id)
-    if annotation_queue_id is not None:
-        task = annotate_variant.apply_async(args=[annotation_queue_id, job_config])
-        print("Issued annotation for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task.id) + log_postfix)
-        #current_app.logger.info(session['user']['preferred_username'] + " started the annotation service for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task.id) + log_postfix)
-        conn.insert_celery_task_id(annotation_queue_id, task.id)
-        return task.id
-    return None
+def start_annotation_service(variant_id, user_id, conn: Connection, job_config = get_default_job_config()): # start the celery task
+    annotation_queue_id = conn.insert_annotation_request(variant_id, user_id) # only inserts a new row if there is none with this variant_id & pending
 
-# the worker is the annotation service itself!
+    task = annotate_variant.apply_async(args=[annotation_queue_id, job_config])
+    task_id = task.id
+    print("Issued annotation for annotation queue id: " + str(annotation_queue_id) + " with celery task id: " + str(task_id) + " for variant_id: " + str(variant_id))
+
+    conn.update_annotation_queue_celery_task_id(annotation_queue_id, task_id)
+    
+    return task_id
 
 
 # this uses exponential backoff in case there is a http error
@@ -764,12 +741,12 @@ def start_annotation_service(conn: Connection, user_id, variant_id = None, annot
 @celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
 def annotate_variant(self, annotation_queue_id, job_config):
     """Background task for running the annotation service"""
-    self.update_state(state='PROGRESS', meta={'annotation_queue_id':annotation_queue_id})
+    self.update_state(state='PROGRESS')
     status, runtime_error = process_one_request(annotation_queue_id, job_config=job_config)
     celery_status = 'success'
     if status == 'error':
         celery_status = 'FAILURE'
-        self.update_state(state=celery_status, meta={'annotation_queue_id':annotation_queue_id, 
+        self.update_state(state=celery_status, meta={ 
                         'exc_type': "Runtime error",
                         'exc_message': "The annotation service yielded a runtime error: " + runtime_error, 
                         'custom': '...'
@@ -777,12 +754,12 @@ def annotate_variant(self, annotation_queue_id, job_config):
         raise Ignore()
     if status == "retry":
         celery_status = "RETRY"
-        self.update_state(state=celery_status, meta={'annotation_queue_id':annotation_queue_id,
+        self.update_state(state=celery_status, meta={
                         'exc_type': "Runtime error",
                         'exc_message': "The annotation service yielded " + runtime_error + "! Will attempt retry.", 
                         'custom': '...'})
         annotate_variant.retry()
-    self.update_state(state=celery_status, meta={'annotation_queue_id':annotation_queue_id})
+    self.update_state(state=celery_status)
 
 
 

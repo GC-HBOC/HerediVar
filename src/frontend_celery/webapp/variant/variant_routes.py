@@ -67,60 +67,55 @@ def search():
 @variant_blueprint.route('/create', methods=('GET', 'POST'))
 @require_permission(['edit_resources'])
 def create():
-    chrs = ['chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8', 'chr9', 'chr10', 'chr11', 'chr12', 'chr13',
-            'chr14', 'chr15', 'chr16', 'chr17', 'chr18', 'chr19', 'chr20', 'chr21', 'chr22', 'chrX', 'chrY', 'chrMT']
+    conn = get_connection()
+    chroms = conn.get_enumtypes("variant", "chr")
     vcf_file_import_active = False
+    do_redirect = False
     
     if request.method == 'POST':
         create_variant_from = request.args.get("type")
         
         if create_variant_from == 'vcf':
-            chr = request.form.get('chr', '')
-            pos = ''.join(request.form['pos'].split())
+            chrom = request.form.get('chr', '')
+            pos = ''.join(request.form.get('pos', '').split())
             ref = request.form.get('ref', '').upper().strip()
             alt = request.form.get('alt', '').upper().strip()
+            genome_build = request.form.get('genome')
 
-            if not chr or not pos or not ref or not alt or 'genome' not in request.form:
+            # we do not have to check the input parameters in depth here because 
+            # they are checked by the validate_and_insert_variant function anyway
+            # here we just make sure that the user submitted **something**
+            # -> better understanding/readability of the error message
+            if not chrom or not pos or not ref or not alt or 'genome' not in request.form:
                 flash('All fields are required!', 'alert-danger')
             else:
-                #try:
-                #    pos = int(pos)
-                #except:
-                #    flash('ERROR: Genomic position is not a valid integer.', 'alert-danger')
-                    
-                if int(pos) < 0:
-                    flash('ERROR: Negative genomic position given, but must be positive.', 'alert-danger')
-                else:
-                    genome_build = request.form['genome']
-                    conn = get_connection()
-                    was_successful, message, variant_id = tasks.validate_and_insert_variant(chr, pos, ref, alt, genome_build, conn = conn, user_id = session['user']['user_id'])
-                    new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
-                    if 'already in database' in message:
-                        flash(Markup("Variant not imported: already in database!! View it " + 
-                                     "<a href=" + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
-                                     " class=\"alert-link\">here</a>"), "alert-danger")
-                    elif was_successful:
-                        flash(Markup("Successfully inserted variant: " + str(new_variant.chrom) + ' ' + str(new_variant.pos) + ' ' + new_variant.ref + ' ' + new_variant.alt + 
-                                     ' (view your variant <a href="' + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
-                                     '" class="alert-link">here</a>)'), "alert-success")
-                        current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from vcf which resulted in this vcf-style variant: " + ' '.join([str(new_variant.chrom), str(new_variant.pos), new_variant.ref, new_variant.alt, "GRCh38"]))
-                        return redirect(url_for('variant.create'))
-
-                    else:
-                        flash(message, 'alert-danger')
+                was_successful, message, variant_id = tasks.validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn = conn, user_id = session['user']['user_id'])
+                new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_automatic_classification=False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False, include_external_ids=False)
+                if 'already in database' in message:
+                    flash(Markup("Variant not imported: already in database!! View it " + 
+                                 "<a href=" + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
+                                 " class=\"alert-link\">here</a>"), "alert-danger")
+                elif was_successful:
+                    flash(Markup("Successfully inserted variant: " + str(new_variant.chrom) + ' ' + str(new_variant.pos) + ' ' + new_variant.ref + ' ' + new_variant.alt + 
+                                 ' (view your variant <a href="' + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
+                                 '" class="alert-link">here</a>)'), "alert-success")
+                    current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from vcf which resulted in this vcf-style variant: " + ' '.join([str(new_variant.chrom), str(new_variant.pos), new_variant.ref, new_variant.alt, "GRCh38"]))
+                    do_redirect = True
+                else: # import had an error
+                    flash(message, 'alert-danger')
 
         if create_variant_from == 'hgvsc':
             reference_transcript = request.form.get('transcript')
             hgvsc = request.form.get('hgvsc')
+
             if not hgvsc or not reference_transcript:
                 flash('All fields are required!', 'alert-danger')
             else:
-                chr, pos, ref, alt, possible_errors = functions.hgvsc_to_vcf(reference_transcript + ':' + hgvsc)
+                chrom, pos, ref, alt, possible_errors = functions.hgvsc_to_vcf(reference_transcript + ':' + hgvsc)
                 if possible_errors != '':
                     flash(possible_errors, "alert-danger")
                 else:
-                    conn = get_connection()
-                    was_successful, message, variant_id = tasks.validate_and_insert_variant(chr, pos, ref, alt, 'GRCh38', conn = conn, user_id = session['user']['user_id'])
+                    was_successful, message, variant_id = tasks.validate_and_insert_variant(chrom, pos, ref, alt, 'GRCh38', conn = conn, user_id = session['user']['user_id'])
                     new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
                     if 'already in database' in message:
                         flash(Markup("Variant not imported: already in database!! View it " + 
@@ -131,8 +126,7 @@ def create():
                                      ' (view your variant <a href="' + url_for("variant.display", variant_id = variant_id) + 
                                      '" class="alert-link">here</a>)'), "alert-success")
                         current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([str(new_variant.chrom), str(new_variant.pos), new_variant.ref, new_variant.alt, "GRCh38"]))
-                        return redirect(url_for('variant.create'))
-
+                        do_redirect = True
                     else:
                         flash(message, 'alert-danger')
 
@@ -152,14 +146,14 @@ def create():
                         f.write(file.read().decode("utf-8"))
                     user_id = session["user"]["user_id"]
                     user_roles = session["user"]["roles"]
-                    conn = get_connection()
                     #inserted_variants, skipped_variants = variant_functions.insert_variants_vcf_file(vcf_file, genome_build, conn)
                     import_queue_id = tasks.start_variant_import_vcf(user_id, user_roles, conn, filename, filepath, genome_build)
                     flash("Successfully submitted vcf file. The import is processed in the background", "alert-success")
-                    return redirect(url_for('variant.create'))
+                    do_redirect = True
 
-
-    return render_template('variant/create.html', chrs=chrs, vcf_file_import_active=vcf_file_import_active)
+    if do_redirect:
+        return redirect(url_for('variant.create'))
+    return render_template('variant/create.html', chrs=chroms, vcf_file_import_active=vcf_file_import_active)
 
 
 
@@ -206,62 +200,38 @@ def create_sv():
 
 
 
-@variant_blueprint.route('/display/<int:variant_id>', methods=['GET', 'POST'])
-@variant_blueprint.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>', methods=['GET', 'POST']) # alternative url using vcf information
+@variant_blueprint.route('/display/<int:variant_id>', methods=['GET'])
+@variant_blueprint.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>', methods=['GET']) # alternative url using vcf information
 # example: http:#srv018.img.med.uni-tuebingen.de:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http:#srv018.img.med.uni-tuebingen.de:5000/display/17
 @require_permission(['read_resources'])
 def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     conn = get_connection()
 
+    # get variant id from parameters or pull from genomic coordinates
     if variant_id is None:
-        if chr is None or pos is None or ref is None or alt is None:
-            abort(404)
+        require_set(chr, pos, ref, alt)
         variant_id = conn.get_variant_id(chr, pos, ref, alt)
-
-    #current_annotation_status = conn.get_current_annotation_status(variant_id)
-    #if current_annotation_status is not None:
-    #    if current_annotation_status[4] == 'pending' and current_annotation_status[7] is None:
-    #        celery_task_id = start_annotation_service(variant_id = variant_id, conn = conn, user_id = session['user']['user_id'])
-    #        current_annotation_status = current_annotation_status[0:7] + (celery_task_id, )
-
-    #variant = conn.get_variant(variant_id)
-    #if variant is None:
-    #    # show another error message if the variant was deleted vs the variant does not exist anyway
-    #    if request.args.get('from_reannotate', 'False') == 'True': # DEPRECATED!
-    #        return redirect(url_for('main.deleted_variant'))
-    #    else:
-    #        abort(404) 
-
-    if not conn.valid_variant_id(variant_id):
-        abort(404)
+    require_valid(variant_id, conn.valid_variant_id, "variant id")
     
-    heredicare_annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
-    vids = conn.get_external_ids_from_variant_id(variant_id, heredicare_annotation_type_id)
-    if len(vids) > 1:
-        has_multiple_vids = True
-    else:
-        has_multiple_vids = False
-    
+    # get the variant and all its annotations
+    variant = conn.get_variant(variant_id)
+
+    # get available lists for user
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
+    # get current status of clinvar submission
     most_recent_publish_queue = conn.get_most_recent_publish_queue(variant_id = variant_id, upload_clinvar = True)
     publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_clinvar(variant_id)
     clinvar_queue_entries = check_update_clinvar_status(variant_id, publish_queue_ids_oi, conn)
     clinvar_queue_entry_summary = variant_functions.summarize_clinvar_status(clinvar_queue_entries, most_recent_publish_queue)
 
+    # get current status of heredicare submission
     most_recent_publish_queue = conn.get_most_recent_publish_queue(variant_id = variant_id, upload_heredicare = True)
     publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_heredicare(variant_id)
     heredicare_queue_entries = check_update_heredicare_status(variant_id, publish_queue_ids_oi, conn)
     heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(heredicare_queue_entries, most_recent_publish_queue)
 
-    variant = conn.get_variant(variant_id)
-    
-    #print(clinvar_queue_entries)
-    #print(heredicare_queue_entries)
-    #print(heredicare_queue_entry_summary)
-
     return render_template('variant/variant.html',
-                            has_multiple_vids=has_multiple_vids,
                             lists = lists,
                             variant = variant,
                             is_classification_report = False,
@@ -272,17 +242,14 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                         )
 
 
-
-# this route listens on the GET parameter: annotation_queue_id or variant_id
-@variant_blueprint.route('/run_annotation_service', methods=['POST'])
+@variant_blueprint.route('/start_annotation_service', methods=['POST'])
 @require_permission(['edit_resources'])
-def run_annotation_service():
-    annotation_queue_id = request.form.get('annotation_queue_id')
-    variant_id = request.form.get('variant_id')
-    if (annotation_queue_id is None and variant_id is None) or (annotation_queue_id is not None and variant_id is not None):
-        abort(404)
+def start_annotation_service():
     conn = get_connection()
-    celery_task_id = tasks.start_annotation_service(variant_id=variant_id, user_id = session['user']['user_id'],  annotation_queue_id=annotation_queue_id, conn = conn)
+    variant_id = request.form.get('variant_id')
+    require_valid(variant_id, conn.valid_variant_id, identifier_name = "variant id")
+
+    celery_task_id = tasks.start_annotation_service(variant_id, user_id = session['user']['user_id'], conn = conn)
     return jsonify({}), 202
 
 
@@ -292,6 +259,7 @@ def annotation_status():
     conn = get_connection()
 
     variant_id = request.args.get('variant_id')
+    require_valid(variant_id, conn.valid_variant_id, identifier_name = "variant id")
     annotation_status = conn.get_current_annotation_status(variant_id) #id, variant_id, user_id, requested, status, finished_at, error_message, celery_task_id
 
     result = {"status": "no annotation", "requested_at": "", "finished_at": "", "error_message": ""}
@@ -300,7 +268,6 @@ def annotation_status():
         requested_at = annotation_status[3]
         finished_at = annotation_status[5]
         error_message = annotation_status[6]
-
 
         result = jsonify({
             "status": status,

@@ -366,7 +366,7 @@ class Connection:
             return annotation_queue_id[0]
         return None
 
-    def insert_celery_task_id(self, annotation_queue_id, celery_task_id):
+    def update_annotation_queue_celery_task_id(self, annotation_queue_id, celery_task_id):
         command = "UPDATE annotation_queue SET celery_task_id = %s WHERE id = %s"
         self.cursor.execute(command, (celery_task_id, annotation_queue_id))
         self.conn.commit()
@@ -3192,8 +3192,8 @@ class Connection:
         self.conn.commit()
     
     def get_enumtypes(self, tablename, columnname):
-        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue", "automatic_classification", "sv_variant", "user_classification_criteria_applied", "consensus_classification_criteria_applied"]
-        if tablename in allowed_tablenames:
+        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue", "automatic_classification", "sv_variant", "user_classification_criteria_applied", "consensus_classification_criteria_applied", "variant"]
+        if tablename in allowed_tablenames: # prevent sql injection
             command = "SHOW COLUMNS FROM " + tablename + " WHERE FIELD = %s"
         else:
             raise IOError("Table " + tablename + " is not allowed in get_enumtypes!")
