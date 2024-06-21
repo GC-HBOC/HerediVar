@@ -61,14 +61,14 @@ def publish():
 def submit_assay(variant_id):
     conn = get_connection()
 
-    require_valid(variant_id, conn.valid_variant_id, "variant id")
+    require_valid(variant_id, "variant", conn)
 
     assay_types = conn.get_assay_types()
 
     do_redirect = False
     if request.method == 'POST':
         assay_type_id = request.form.get('assay_type_id')
-        require_valid(assay_type_id, conn.valid_assay_type_id, "assay type id")
+        require_valid(assay_type_id, "assay_type", conn)
         
         # extract selected data from request and make sure that only valid data is submitted
         status, assay_metadata = upload_functions.extract_assay_metadata(assay_types[int(assay_type_id)]["metadata_types"], request)

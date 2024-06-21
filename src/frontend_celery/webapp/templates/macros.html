@@ -153,7 +153,7 @@
     {% if criteria | length == 0 %}
     <div>None</div>
     {% endif %}
-    <div class="d-flex margin_between_list_small">
+    <div class="d-flex flex-wrap margin_between_list_small">
         {% for criterium in criteria %}
         <div >
             <button class="btn-{{ criterium.type }} light-hover acmg-button acmg-button-small {% if criterium.state == 'unselected' %}crossed{% endif %} text_align_center popover_collapse_toggle"

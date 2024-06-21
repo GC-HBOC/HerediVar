@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
 import common.functions as functions
 from common.db_IO import Connection
 from ..utils import *
-
+from . import api_functions
 
 api_blueprint = Blueprint(
     'api',
@@ -39,10 +39,9 @@ def consensus_classification():
     variant = conn.get_variant(variant_id, include_annotations = False, include_consensus = True, include_user_classifications = False, include_heredicare_classifications=False, include_automatic_classification=False, include_clinvar=False, include_consequences=False, include_assays=False, include_literature=False, include_external_ids=False)
     conn.close()
 
-    
-    v_res = prepare_variant(variant)
+    v_res = api_functions.prepare_variant(variant)
     mrcc = variant.get_recent_consensus_classification()
-    mrcc_res = prepare_classification(mrcc)
+    mrcc_res = api_functions.prepare_classification(mrcc)
 
     result = {
         "variant": v_res,
@@ -52,30 +51,7 @@ def consensus_classification():
     return jsonify(result)
 
 
-def prepare_variant(variant):
-    result = {
-        "id": variant.id,
-        "chrom": variant.chrom,
-        "pos": variant.pos,
-        "ref": variant.ref,
-        "alt": variant.alt,
-        "variant_type": variant.variant_type,
-        "hidden": variant.is_hidden
-    }
-    return result
 
-def prepare_classification(classification):
-    result = {
-        "comment": classification.comment,
-        "date": classification.date,
-        "literature": classification.literature,
-        "scheme": {"name": classification.scheme.display_name, "reference": classification.scheme.reference},
-        "criteria": classification.scheme.criteria,
-        "class_by_scheme": classification.scheme.selected_class,
-        "selected_class": classification.selected_class,
-        "classification_type": classification.type
-    }
-    return result
 
 
 

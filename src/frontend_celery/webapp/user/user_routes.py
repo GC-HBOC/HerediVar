@@ -34,8 +34,7 @@ def modify_list_content():
         list_id = request.args.get('selected_list_id')
         variant_id = request.args.get('variant_id')
         require_set(user_action)
-        require_valid(list_id, conn.valid_list_id, identifier_name = "list id")
-        require_valid(variant_id, conn.valid_variant_id, identifier_name = "variant id")
+        require_valid(list_id, "user_variant_lists", conn)
         require_list_permission(list_id, required_permissions = ['owner', 'edit'], conn = conn)
 
         # perform the action -> either add or remove
@@ -60,7 +59,7 @@ def my_lists():
     view_list_id = request.args.get('view', None)
     list_import_status = None
     if view_list_id is not None: # the user wants to view a list
-        require_valid(view_list_id, conn.valid_list_id, identifier_name = "list id")
+        require_valid(view_list_id, "user_variant_lists", conn)
         require_list_permission(view_list_id, required_permissions = ['read'], conn = conn)
         list_import_status = conn.get_most_recent_list_variant_import_queue(view_list_id)
 
@@ -111,7 +110,7 @@ def my_lists():
             
         if request_type == 'delete_list':
             list_id = request.form['list_id']
-            require_valid(list_id, conn.valid_list_id, identifier_name = "list id")
+            require_valid(list_id, "user_variant_lists", conn)
             if list_id is not None:
                 list_permissions = conn.check_list_permission(user_id, list_id)
                 if not list_permissions['owner']:
@@ -129,7 +128,7 @@ def my_lists():
             if not public_read and public_edit:
                 flash("You can not add a public list which is not publicly readable but publicly editable. List was not created.", 'alert-danger')
             else:
-                require_valid(list_id, conn.valid_list_id, identifier_name = "list id")
+                require_valid(list_id, "user_variant_lists", conn)
                 if list_id is not None:
                     list_permissions = conn.check_list_permission(user_id, list_id)
                     if not list_permissions["read"]:
@@ -145,7 +144,7 @@ def my_lists():
             inplace = True if request.form.get('inplace') else False
             other_list_id = request.form['other_list_id']
             other_list_name = request.form['other_list_name']
-            require_valid(list_id, conn.valid_list_id, identifier_name = "list id")
+            require_valid(list_id, "user_variant_lists", conn)
             if (other_list_name.strip() != '' and other_list_id.strip() == ''):
                 flash("The other list which you tried to intersect does not exist", 'alert-danger flash_id:intersect_not_exist')
                 return redirect(url_for('user.my_lists', view=list_id))
@@ -172,7 +171,7 @@ def my_lists():
             inplace = True if request.form.get('inplace') else False
             other_list_id = request.form['other_list_id']
             other_list_name = request.form['other_list_name']
-            require_valid(list_id, conn.valid_list_id, identifier_name = "list id")
+            require_valid(list_id, "user_variant_lists", conn)
             if (other_list_name.strip() != '' and other_list_id.strip() == ''):
                 flash("The other list which you tried to subtract does not exist", 'alert-danger flash_id:subtract_not_exist')
                 return redirect(url_for('user.my_lists', view=list_id))
@@ -198,7 +197,7 @@ def my_lists():
             inplace = True if request.form.get('inplace') else False
             other_list_id = request.form['other_list_id']
             other_list_name = request.form['other_list_name']
-            require_valid(list_id, conn.valid_list_id, identifier_name = "list id")
+            require_valid(list_id, "user_variant_lists", conn)
             if (other_list_name.strip() != '' and other_list_id.strip() == ''):
                 flash("The other list which you tried to add does not exist", 'alert-danger flash_id:add_not_exist')
                 return redirect(url_for('user.my_lists', view=list_id))
@@ -298,7 +297,39 @@ def admin_dashboard():
                         )
 
 
+# api endpoint for hiding schemes
+# not to be redirected to directly
+@user_blueprint.route('/hide_scheme', methods=['POST'])
+@require_permission(['admin_resources'])
+def hide_scheme():
+    conn = get_connection()
 
+    scheme_id = request.form.get('scheme_id')
+    is_active = request.form.get('is_active', "false") == "true"
+
+    require_valid(scheme_id, "classification_scheme", conn)
+
+    conn.update_active_state_classification_scheme(scheme_id, is_active)
+
+    return "success"
+
+
+# api endpoint for setting the default scheme
+# the default scheme will be selected if none of the gene specific ones match
+@user_blueprint.route('/set_default_scheme', methods=['POST'])
+@require_permission(['admin_resources'])
+def set_default_scheme():
+    conn = get_connection()
+
+    scheme_id = request.form.get('scheme_id')
+    require_valid(scheme_id, "classification_scheme", conn)
+
+    conn.set_default_scheme(scheme_id)
+
+    return "success"
+
+
+# shows all data of an import - is used for both bulk and single vid imports from heredicare
 @user_blueprint.route('/variant_import_summary/<int:import_queue_id>')
 @require_permission(['admin_resources'])
 def variant_import_summary(import_queue_id):
@@ -308,6 +339,8 @@ def variant_import_summary(import_queue_id):
     return render_template('user/variant_import_summary.html', import_queue_id = import_queue_id)
 
 
+# api endpoint for fetching the data for the import summary
+# the import summary endpoint uses ajax to get information from this endpoint
 @user_blueprint.route('/variant_import_summary_data/<int:import_queue_id>')
 @require_permission(['admin_resources'])
 def variant_import_summary_data(import_queue_id):
@@ -318,6 +351,7 @@ def variant_import_summary_data(import_queue_id):
     return jsonify({'import_request': import_request, 'imported_variants': imported_variants})
 
 
+# shows all variant import requests from heredicare in server sided pagination
 @user_blueprint.route('/variant_import_history')
 @require_permission(['admin_resources'])
 def variant_import_history():
@@ -335,6 +369,8 @@ def variant_import_history():
                         )
 
 
+# shows asll variant publish requests in server sided pagination
+# for both, clinvar and heredicare
 @user_blueprint.route('/variant_publish_history')
 @require_permission(['admin_resources'])
 def variant_publish_history():
@@ -352,13 +388,15 @@ def variant_publish_history():
                         )
 
 
+# shows information about a variant publish request to clinvar/heredicare
+# does not update automatically -- maybe should be changed to dynamic updates like the import summary page...?
 @user_blueprint.route('/variant_publish_summary')
 @require_permission(['admin_resources'])
 def variant_publish_summary():
     conn = get_connection()
 
     publish_queue_id = request.args.get('publish_queue_id')
-    require_valid(publish_queue_id, conn.check_publish_queue_id, 'publish_queue_id')
+    require_valid(publish_queue_id, "publish_queue", conn)
 
     variant_ids = conn.get_variant_ids_from_publish_request(publish_queue_id)
     publish_queue_ids_oi = [publish_queue_id]

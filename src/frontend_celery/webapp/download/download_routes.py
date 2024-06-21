@@ -1,14 +1,13 @@
-from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for, session, jsonify, Markup, make_response
+import io
 from os import path
 import sys
+from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for, session, jsonify, Markup, make_response
 
-from ..utils import *
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
 from common.db_IO import Connection
 import common.paths as paths
-
-import io
+from ..utils import *
 from . import download_functions
 
 
@@ -28,8 +27,7 @@ def variant():
     conn = get_connection()
 
     variant_id = request.args.get('variant_id')
-    if variant_id is None:
-        return abort(404)
+    require_valid(variant_id, "variant", conn)
 
     force_url = url_for("download.variant", variant_id = variant_id, force=True)
     redirect_url = url_for('variant.display', variant_id = variant_id)
@@ -54,19 +52,11 @@ def variant_list():
     conn = get_connection()
 
     list_id = request.args.get('list_id')
-    if list_id is None:
-        return abort(404)
-    variant_ids_oi = None
+    require_valid(list_id, "user_variant_lists", conn)
+
     # check that the logged in user is the owner of this list
-    if list_id is not None:
-        user_id = session['user']['user_id']
-        list_permissions = conn.check_list_permission(user_id, list_id)
-        if not list_permissions['read']:
-            current_app.logger.error(session['user']['preferred_username'] + " attempted download of list with id " + str(list_id) + ", but the user had no permission to do so.")
-            return abort(403)
-        variant_ids_oi = conn.get_variant_ids_from_list(list_id)    
-    if variant_ids_oi is None:
-        abort(505, "No variants were found for download. Remember to put arguments list_id in url get parameters.")
+    require_list_permission(list_id, ['read'], conn)
+    variant_ids_oi = conn.get_variant_ids_from_list(list_id)
 
     force_url = url_for("download.variant_list", list_id = list_id, force = True)
     redirect_url = url_for("user.my_lists", view = list_id)
@@ -76,17 +66,12 @@ def variant_list():
 
     if status == "redirect":
         flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
-        current_app.logger.error(session['user']['preferred_username'] + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant list " + str(list_id))
+        current_app.logger.error(get_preferred_username() + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant list " + str(list_id))
         return redirect(redirect_url)
 
-    current_app.logger.info(session['user']['preferred_username'] + " downloaded vcf of variant list: " + str(list_id))
+    current_app.logger.info(get_preferred_username() + " downloaded vcf of variant list: " + str(list_id))
     
     return send_file(vcf_file_buffer, as_attachment=True, download_name=download_file_name, mimetype="text/vcf")
-
-
-
-
-
 
 
 # listens on get parameter: raw
@@ -197,9 +182,7 @@ def calculate_class(scheme_type = None, version = None, selected_classes = ''):
 
     final_class = None
     if scheme_type == 'acmg':
-        #selected_classes = [re.sub(r'[0-9]+', '', x) for x in selected_classes] # remove numbers from critera if there are any
         class_counts = download_functions.get_class_counts(selected_classes) # count how often we have each strength
-        #print(class_counts)
         possible_classes = download_functions.get_possible_classes_acmg(class_counts) # get a set of possible classes depending on selected criteria following PMC4544753
         final_class = download_functions.decide_for_class_acmg(possible_classes) # decide for class follwing the original publicatoin of ACMG (PMC4544753)
     
@@ -212,10 +195,7 @@ def calculate_class(scheme_type = None, version = None, selected_classes = ''):
         final_class = download_functions.decide_for_class_acmg(possible_classes)
 
     elif 'acmg' in scheme_type:
-        #selected_classes = [x.strip('0123456789') for x in selected_classes] # remove numbers from critera if there are any
         class_counts = download_functions.get_class_counts(selected_classes) # count how often we have each strength
-
-        #print(class_counts)
 
         if 'brca1' in scheme_type and version == "v1.0.0":
             possible_classes = download_functions.get_possible_classes_enigma_brca1_1_0_0(class_counts) # get a set of possible classes depending on selected criteria
@@ -249,6 +229,7 @@ def calculate_class(scheme_type = None, version = None, selected_classes = ''):
     return jsonify(result)
 
 
+
 ###############################
 ######## FILES FOR IGV ########
 ###############################
@@ -266,31 +247,12 @@ def refgene_ngsd_tabix():
 @download_blueprint.route('/download/hg38.fa')
 def ref_genome():
     filename = "GRCh38.fa"
-    # reg_genome_dir: /mnt/storage2/users/ahdoebm1/HerediVar/data/genomes/GRCh38.fa
     return send_from_directory(directory=paths.ref_genome_dir, path=filename, download_name="GRCh38.fa", as_attachment=True, mimetype="text")
 
 @download_blueprint.route('/download/hg38.fa.fai')
 def ref_genome_index():
     filename = "GRCh38.fa.fai"
     return send_from_directory(directory=paths.ref_genome_dir, path=filename, download_name="GRCh38.fa.fai", as_attachment=True, mimetype="text")
-
-
-#@download_blueprint.route('/download/refgene_ngsd.gff3')
-#def refgene_ngsd_unzip():
-#    filename = "refgene_ngsd.gff3"
-#    return send_from_directory(directory=paths.igv_data_path, path=filename, download_name="refgene_ngsd.gff3", as_attachment=True, mimetype="text")
-
-#@download_blueprint.route('/download/gnomad.vcf.gz')
-#def gnomad():
-#    filename = "gnomAD_genome_v3.1.2_GRCh38.vcf.gz"
-#    flash(paths.datadir + 'gnomAD/')
-#    return send_from_directory(directory=paths.datadir + '/gnomAD/', path=filename, download_name="gnomAD_genome_v3.1.2_GRCh38.vcf.gz", as_attachment=True, mimetype="text")
-
-#@download_blueprint.route('/download/gnomad_m.vcf.gz')
-#def gnomad_m():
-#    filename = "gnomAD_genome_v3.1.mito_GRCh38.vcf.gz"
-#    return send_from_directory(directory=paths.datadir + '/gnomAD/', path=filename, download_name="gnomAD_genome_v3.1.mito_GRCh38.vcf.gz", as_attachment=True, mimetype="text")
-
 
 
 #####################################
@@ -301,22 +263,18 @@ def ref_genome_index():
 @require_permission(['read_resources'])
 def evidence_document(consensus_classification_id):
     conn = get_connection()
-    consensus_classification = conn.get_evidence_document(consensus_classification_id)
-    if consensus_classification is None:
-        abort(404)
-    binary_report = consensus_classification[0]
-    #report = binary_report.decode("utf-8")
+    
+    require_valid(consensus_classification_id, "consensus_classification", conn)
 
-    #report_folder = path.join(path.dirname(current_app.root_path), current_app.config['CONSENSUS_CLASSIFICATION_REPORT_FOLDER'])
+    consensus_classification = conn.get_evidence_document(consensus_classification_id)
+    binary_report = consensus_classification[0] # file in base 64 format -> use functions.base64_to_file to write to file
     report_filename = 'consensus_classification_report_' + str(consensus_classification_id) + '.html'
-    #report_path = path.join(report_folder, report_filename)
-    #functions.base64_to_file(base64_string = b_64_report, path = report_path)
 
     buffer = io.BytesIO()
     buffer.write(binary_report)
     buffer.seek(0)
 
-    current_app.logger.info(session['user']['preferred_username'] + " downloaded consensus classification evidence document for consensus classification " + str(consensus_classification_id))
+    current_app.logger.info(get_preferred_username() + " downloaded consensus classification evidence document for consensus classification " + str(consensus_classification_id))
     
     return send_file(buffer, as_attachment=True, download_name=report_filename, mimetype='text/html')
 
@@ -324,19 +282,18 @@ def evidence_document(consensus_classification_id):
 @require_permission(['read_resources'])
 def assay_report(assay_id):
     conn = get_connection()
-    assay = conn.get_assay_report(assay_id)
-    if assay is None:
-        abort(404)
 
-    b_64_assay = assay[0]
-    print(b_64_assay)
-    filename = assay[1]
+    require_valid(assay_id, "assay", conn)
+
+    # the assay report is not part of the assay object [defined in models.py] 
+    # -> this way we do not have to transmit it every time we access a variant
+    b_64_assay, filename = conn.get_assay_report(assay_id) 
 
     buffer = io.BytesIO()
-    buffer.write(functions.decode_base64(b_64_assay))
+    buffer.write(b_64_assay) # decode_b64 is not required because bytes are converted automatically by send_file
     buffer.seek(0)
 
-    current_app.logger.info(session['user']['preferred_username'] + " downloaded assay " + str(assay_id))
+    current_app.logger.info(get_preferred_username() + " downloaded assay " + str(assay_id))
     
     return send_file(buffer, as_attachment=True, download_name=filename, mimetype='application')
 
@@ -344,30 +301,29 @@ def assay_report(assay_id):
 ########################################
 ######### INOFFICIAL DOWNLOADS #########
 ########################################
+# these can be used for debugging
 
-# listens on get parameter: variant_id
-@download_blueprint.route('/download/annotation_errors')
-@require_permission(['admin_resources'])
-def annotation_errors():
-    conn = get_connection()
-
-    download_file_name = "annotation_errors_" + functions.get_today() + ".tsv"
-
-    annotation_stati, errors, warnings, total_num_variants = conn.get_annotation_statistics(exclude_sv=True)
-
-    helper = io.StringIO()
-    helper.write("#" + "\t".join(["chrom", "pos", "ref", "alt", "error_msg"]) + '\n')
-    for variant_id in errors:
-        variant = conn.get_variant(variant_id)
-        new_line = "\t".join([variant.chrom, str(variant.pos), variant.ref, variant.alt, errors[variant_id]])
-        helper.write(new_line + "\n")
-    
-    buffer = io.BytesIO()
-    buffer.write(helper.getvalue().encode())
-    buffer.seek(0)
-    
-    return send_file(buffer, as_attachment=True, download_name=download_file_name, mimetype="text")
-
+#@download_blueprint.route('/download/annotation_errors')
+#@require_permission(['admin_resources'])
+#def annotation_errors():
+#    conn = get_connection()
+#
+#    download_file_name = "annotation_errors_" + functions.get_today() + ".tsv"
+#
+#    annotation_stati, errors, warnings, total_num_variants = conn.get_annotation_statistics(exclude_sv=True)
+#
+#    helper = io.StringIO()
+#    helper.write("#" + "\t".join(["chrom", "pos", "ref", "alt", "error_msg"]) + '\n')
+#    for variant_id in errors:
+#        variant = conn.get_variant(variant_id)
+#        new_line = "\t".join([variant.chrom, str(variant.pos), variant.ref, variant.alt, errors[variant_id]])
+#        helper.write(new_line + "\n")
+#    
+#    buffer = io.BytesIO()
+#    buffer.write(helper.getvalue().encode())
+#    buffer.seek(0)
+#    
+#    return send_file(buffer, as_attachment=True, download_name=download_file_name, mimetype="text")
 
 
 #@download_blueprint.route('/recalculate_automatic_classes')
@@ -399,5 +355,4 @@ def annotation_errors():
 #        classification_protein = calculate_class('acmg-svi', '+'.join(selected_protein)).json['final_class']
 #
 #        conn.update_automatic_classification(automatic_classification_id, classification_splicing, classification_protein)
-#
 

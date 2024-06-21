@@ -143,6 +143,7 @@ class Heredicare(metaclass=Singleton):
 
         return all_vids, status, message
     
+    
     def filter_vid_list(self, vids, min_date):
         filtered_vids = []
         duplicate_vids = []

@@ -12,6 +12,7 @@ def convert_scheme_criteria_to_dict(criteria):
         criteria_dict[criterium_id] = {'id':entry[0], 'strength_id':entry[3], 'evidence':entry[4], 'state':entry[9]}
     return criteria_dict
 
+
 def handle_scheme_classification(classification_id, criteria, conn: Connection, where = "user"):
     previous_criteria = conn.get_scheme_criteria_applied(classification_id, where = where)
     previous_criteria_dict = convert_scheme_criteria_to_dict(previous_criteria)
@@ -76,14 +77,12 @@ def handle_consensus_classification(variant, classification, comment, scheme_id,
     return conn.get_last_insert_id() # returns the consensus_classification_id
 
 
-def add_classification_report(variant_id, conn):
-
+def add_classification_report(variant_id, conn: Connection):
     variant = conn.get_variant(variant_id)
     consensus_classification_id = variant.get_recent_consensus_classification().id
     
     evidence_document_str = render_template("variant/classification_report.html", variant = variant, is_classification_report = True)
     
-
     static_folder = current_app.static_folder
     # add local scripts
     script_folder = os.path.join(static_folder, "js")
@@ -106,14 +105,12 @@ def add_classification_report(variant_id, conn):
         filename = os.path.basename(path)
         matches = re.finditer(r"<script.*src=['\"].*" + filename + r"['\"]>\s*</script>", evidence_document_str)
         
-        
         for match in matches:
             str_match = match.group(0)
             print(str_match)
             evidence_document_str = evidence_document_str.replace(str_match, str_replace)
             str_replace = "" # delete all further occurances...
     
-
     # add local css
     css_folder = os.path.join(static_folder, "css")
     insert_css = [os.path.join(css_folder, "styles.css"),
@@ -145,9 +142,6 @@ def add_classification_report(variant_id, conn):
         str_match = match.group(0)
         evidence_document_str = evidence_document_str.replace(str_match, "")
 
-
-
-    
     evidence_document_bytes = bytes(evidence_document_str, 'utf-8')
     print(len(evidence_document_bytes))
     conn.update_consensus_classification_report(consensus_classification_id, evidence_document_bytes)

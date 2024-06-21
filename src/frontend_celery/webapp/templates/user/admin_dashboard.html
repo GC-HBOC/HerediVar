@@ -234,7 +234,6 @@
                     <input type="text" name="vid" pattern="[0-9 ]+" id="vid"
                            placeholder="vid" class="form-control validationreq"
                            value="{{ request.form['vid'] }}" required>
-                    </input>
                     <div class="invalid-feedback">
                         Please provide a HerediCare VID!
                     </div>
@@ -392,8 +391,8 @@
 
 
 <input type='hidden' id='flask_data' 
-    data-hide-scheme-url='{{ url_for("variant.hide_scheme") }}'
-    data-set-default-scheme-url='{{ url_for("variant.set_default_scheme") }}'
+    data-hide-scheme-url='{{ url_for("user.hide_scheme") }}'
+    data-set-default-scheme-url='{{ url_for("user.set_default_scheme") }}'
 />
 
 

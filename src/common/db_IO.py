@@ -2156,13 +2156,6 @@ class Connection:
             return res[0]
         return None
 
-    def valid_list_id(self, list_id):
-        command = "SELECT EXISTS (SELECT id FROM user_variant_lists WHERE id = %s)"
-        self.cursor.execute(command, (list_id, ))
-        res = self.cursor.fetchone()[0]
-        if res == 0:
-            return False
-        return True
 
     def delete_variant_from_list(self, list_id, variant_id):
         command = "DELETE FROM list_variants WHERE list_id=%s AND variant_id=%s"
@@ -2285,9 +2278,29 @@ class Connection:
         res = self.cursor.fetchall()
         return res
 
+
+    # deprecated: use valid_db_id instead
     def valid_variant_id(self, variant_id):
         command = "SELECT id from variant WHERE id = %s"
         self.cursor.execute(command, (variant_id, ))
+        res = self.cursor.fetchone()
+        if res is None:
+            return False
+        return True
+
+    def get_all_table_names(self):
+        command = "SELECT table_name FROM information_schema.tables WHERE table_schema = %s"
+        self.cursor.execute(command, (os.environ.get("DB_NAME"), ))
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
+    
+
+    def valid_db_id(self, db_id, tablename):
+        tablenames = self.get_all_table_names()
+        if tablename not in tablenames:
+            raise IOError("Unknown tablename: " + str(tablename))
+        command = "SELECT id from " + tablename + " WHERE id = %s"
+        self.cursor.execute(command, (db_id, ))
         res = self.cursor.fetchone()
         if res is None:
             return False
@@ -2812,13 +2825,14 @@ class Connection:
             result[assay_type_id] = {"title": assay_title, "metadata_types": assay_metadata_types}
         return result
 
-    def valid_assay_type_id(self, assay_type_id):
-        command = "SELECT EXISTS (SELECT id FROM assay_type WHERE id = %s)"
-        self.cursor.execute(command, (assay_type_id, ))
-        result = self.cursor.fetchone()[0] # get the first element as result is always a tuple
-        if result == 0:
-            return False
-        return True
+    # DEPRECATED: delete later
+    #def valid_assay_type_id(self, assay_type_id):
+    #    command = "SELECT EXISTS (SELECT id FROM assay_type WHERE id = %s)"
+    #    self.cursor.execute(command, (assay_type_id, ))
+    #    result = self.cursor.fetchone()[0] # get the first element as result is always a tuple
+    #    if result == 0:
+    #        return False
+    #    return True
         
 
     def insert_assay_metadata(self, assay_id, assay_metadata_type_id, value):
@@ -2874,11 +2888,14 @@ class Connection:
         self.cursor.execute(command, actual_information)
         self.conn.commit()
 
+    # returns the report in base 64 format and the filename
     def get_assay_report(self, assay_id):
         command = "SELECT report,filename FROM assay WHERE id = %s"
         self.cursor.execute(command, (assay_id, ))
         result = self.cursor.fetchone()
-        return result
+        if result is not None:
+            return result[0], result[1]
+        return None, None
 
     def get_annotation_queue_entry(self, annotation_queue_id):
         command = "SELECT * FROM annotation_queue WHERE id = %s"
@@ -3192,7 +3209,7 @@ class Connection:
         self.conn.commit()
     
     def get_enumtypes(self, tablename, columnname):
-        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue", "automatic_classification", "sv_variant", "user_classification_criteria_applied", "consensus_classification_criteria_applied", "variant"]
+        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue", "automatic_classification", "sv_variant", "user_classification_criteria_applied", "consensus_classification_criteria_applied"]
         if tablename in allowed_tablenames: # prevent sql injection
             command = "SHOW COLUMNS FROM " + tablename + " WHERE FIELD = %s"
         else:
@@ -3757,14 +3774,14 @@ class Connection:
         result = self.cursor.fetchall()
         return result
 
-    
-    def check_publish_queue_id(self, publish_queue_id):
-        command = "SELECT id FROM publish_queue WHERE id = %s"
-        self.cursor.execute(command, (publish_queue_id, ))
-        result = self.cursor.fetchone()
-        if result is None:
-            return False
-        return True
+    # DEPRECATED: delete later
+    #def check_publish_queue_id(self, publish_queue_id):
+    #    command = "SELECT id FROM publish_queue WHERE id = %s"
+    #    self.cursor.execute(command, (publish_queue_id, ))
+    #    result = self.cursor.fetchone()
+    #    if result is None:
+    #        return False
+    #    return True
     
 
 

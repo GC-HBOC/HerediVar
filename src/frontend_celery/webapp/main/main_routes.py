@@ -16,7 +16,7 @@ main_blueprint = Blueprint(
 
 
 
-
+# the landing page
 @main_blueprint.route('/')
 def index():
     conn = get_connection()
@@ -26,7 +26,7 @@ def index():
     return render_template('index.html', total_num_variants = total_num_variants, annotation_types = annotation_types, total_num_classified_variants = total_num_classified_variants)
 
 
-
+# user access of versioned downloads
 @main_blueprint.route('/downloads')
 @require_permission(['read_resources'])
 def downloads():
@@ -41,6 +41,7 @@ def downloads():
     return render_template("main/downloads.html", last_dump = last_dump)
 
 
+# user access of versioned downloads
 @main_blueprint.route('/download_previous_versions')
 @require_permission(['read_resources'])
 def download_previous_versions():
@@ -48,11 +49,6 @@ def download_previous_versions():
     all_versions = download_functions.get_available_heredivar_versions(all_variants_folder)
     return render_template("main/download_previous_versions.html", all_versions = all_versions)
 
-
-@main_blueprint.route('/deleted_variant_info')
-@require_permission(['read_resources'])
-def deleted_variant():
-    return render_template('main/deleted_variant.html')
 
 @main_blueprint.route('/impressum')
 def impressum():
@@ -67,6 +63,7 @@ def about():
 @main_blueprint.route('/documentation')
 def documentation():
     return render_template('main/documentation.html')
+
 
 @main_blueprint.route('/changelog')
 def changelog():
@@ -88,7 +85,6 @@ def contact():
         core_gene_transcripts[core_gene_symbol] = current_transcripts
 
     do_redirect = False
-
     #flash("The contact form is currently under maintenance. Enquiries will not be sent", 'alert-danger')
 
     if request.method == "POST":
@@ -122,7 +118,7 @@ def contact():
                                         comment = comment)
             recipient = "jan.hauke@uk-koeln.de"
             send_mail(subject = "HerediVar: enquiry for variant " + hgvs_for_subject, sender = sender, recipient = recipient, text_body = text_body)
-            flash("Success! Thanks for reaching out to us! You will hear from us soon.", "alert-success")
+            flash("Thanks for reaching out to us! You will hear from us soon.", "alert-success")
             do_redirect = True
     
     if do_redirect:

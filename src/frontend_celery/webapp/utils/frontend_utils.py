@@ -24,9 +24,9 @@ def require_set(*args):
 
 # validates that the db_id is known and valid by the database
 # func should be a conn.xxx function returning a boolean
-def require_valid(db_id, func, identifier_name = 'identifier'):
-    if not func(db_id):
-        flash('Unknown' + identifier_name)
+def require_valid(db_id, tablename, conn):
+    if not conn.valid_db_id(db_id, tablename):
+        flash('Unknown identifier in table ' + tablename, 'alert-danger')
         abort(404)
 
 # list permission

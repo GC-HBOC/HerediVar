@@ -4,22 +4,6 @@
 <div class="container">
     <h1 class="bst">{% block title %} Check variant {% endblock %}</h1>
 
-    {% if status != '' %}
-    <div>
-        <h4>Check results</h4>
-        <div {% if status == "error" %} class="alert alert-danger" {% else %} class="alert alert-success" {% endif %}>
-            <div >
-                Status: {{status}}!
-            </div>
-            <div>
-                Message: {{message}}
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
-
-
     <ul class="nav nav-tabs bst" id="tabs" role="tablist">
         <li class="nav-item" role="presentation">
           <button class="nav-link active" id="vcf-tab" data-bs-toggle="tab" data-bs-target="#vcf" type="button" role="tab" aria-controls="home" aria-selected="true">VCF check</button>
@@ -34,10 +18,9 @@
                 <div class="form-group">
                      <label for="Chromosome" class="form-label">Chromosome</label>
                      <select class="form-select" name="chrom" id="Chromosome" required>
-                         {% for chr in chroms %}
-                            <option value="{{chr}}" {% if (chr == request.form['chrom']) %} selected="selected" {% endif %}> {{chr}} </option>
+                         {% for chrom in chroms %}
+                            <option value="{{chrom}}" {% if (chrom == request.form.get('chrom')) %} selected="selected" {% endif %}> {{chrom}} </option>
                          {% endfor %}
-                            <option value="CHR2" {% if (chr == request.form['chrom']) %} selected="selected" {% endif %}> chrL </option>
                     </select>
                     <div class="invalid-feedback">
                         Please provide a chromosome!
