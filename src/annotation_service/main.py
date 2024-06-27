@@ -7,8 +7,8 @@ import tempfile
 import traceback
 from urllib.error import HTTPError
 from os.path import exists
-from .annotation_jobs import *
-from .annotation_jobs import litvar2_job
+from .annotation_queue import Annotation_Queue
+from .annotation_data import Annotation_Data
 import random
 from mysql.connector import Error, InternalError
 
@@ -70,45 +70,12 @@ def get_job_config(items_to_select):
     return job_config
 
 
-# annotation job definitions
-def get_jobs(job_config):
-    all_jobs = [
-        vep_job.vep_job(job_config),
-        #vep_job.vep_job(job_config, refseq=True),
-        consequence_job.consequence_job(job_config),
-        phylop_job.phylop_job(job_config),
-        hexplorer_job.hexplorer_job(job_config),
-        annotate_from_vcf_job.annotate_from_vcf_job(job_config),
-        spliceai_job.spliceai_job(job_config),
-        task_force_protein_domain_job.task_force_protein_domain_job(job_config),
-        litvar2_job.litvar2_job(job_config), # must be called after vep_jobs & annotate from vcf job
-        heredicare_job.heredicare_job(job_config),
-        maxentscan_job.maxentscan_job(job_config),
-        coldspots_job.coldspots_job(job_config)
-    ]
-    return all_jobs
-
-
-
-
-
-def collect_error_msgs(msg1, msg2):
-    res = msg1
-    if msg2 not in msg1:
-        if len(msg1) > 0 and len(msg2) > 0:
-            res = msg1 + "\n~~\n" + msg2.strip()
-        elif len(msg2) > 0:
-            res = msg2.strip()
-        else:
-            res = msg1
-    return res
-
-
 def get_temp_vcf_path(annotation_queue_id):
     vcf_path = functions.get_random_temp_file(fileending = '', filename_ext = str(annotation_queue_id))
-    vcf_path_annotated = vcf_path + "_annotated"
-    #vcf_path = temp_file_path + "/" + str(annotation_queue_id) + ".vcf"
-    return vcf_path + '.vcf', vcf_path_annotated + '.vcf'
+    #vcf_path_annotated = vcf_path + "_annotated"
+    return vcf_path + '.vcf'
+
+
 
 
 def process_one_request(annotation_queue_id, job_config = get_default_job_config()):
@@ -116,104 +83,53 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
 
     print(job_config)
 
-    all_jobs = get_jobs(job_config)
-
-    conn = Connection(roles=["annotation"])
-    conn.set_annotation_queue_status(annotation_queue_id, status="progress")
-    vcf_path, vcf_path_annotated = get_temp_vcf_path(annotation_queue_id)
     runtime_error = ""
+    vcf_path = ""
 
     try:
-
         #if random.randint(1,10) > 5:
         #    raise HTTPError(url = "srv18", code=429, msg="Too many requests", hdrs = {}, fp = None)
 
-        status = "success"
 
+        # initialize the connection
+        conn = Connection(roles=["annotation"])
+
+
+        # get the variant_id from the annotation queue id & check that the annotation_queue_id is valid
         annotation_queue_entry = conn.get_annotation_queue_entry(annotation_queue_id)
         if annotation_queue_entry is None:
             status = "error"
-            return status, "error: annotation queue entry not found"
+            return status, "Annotation queue entry not found"
         variant_id = annotation_queue_entry[1]
-        #user_id = annotation_queue_entry[2]
 
-        err_msgs = ""
-        one_variant = conn.get_one_variant(variant_id) # 0id,1chr,2pos,3ref,4alt
-        variant_type = one_variant[6]
-        if variant_type in ['sv']:
-            print("Request" + str(annotation_queue_id) + " can not be processed because the variant type is not supported by the annotation algorithm: " + str(variant_type))
+
+        # check the variant type
+        variant = conn.get_variant(variant_id, include_annotations = False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_automatic_classification = False, include_clinvar = False, include_assays = False, include_literature = False, include_external_ids = False) # 0id,1chr,2pos,3ref,4alt
+        if variant.variant_type in ['sv']:
             status = "error"
-            return "error: variant type " + str(variant_type) + " is not supported by the annotation algorithm."
+            return "Variant type " + str(variant.variant_type) + " is not supported by the annotation algorithm."
         
-        print("processing request " + str(annotation_queue_id)  + " annotating variant: " + " ".join([str(x) for x in one_variant[1:5]]) + " with id: " + str(one_variant[0]) )
-
-        functions.variant_to_vcf(one_variant[1], one_variant[2], one_variant[3], one_variant[4], vcf_path)
-
-        ############################################################
-        ############ 1: execute jobs (ie. annotate vcf) ############
-        ############################################################
-        for job in all_jobs:
-            current_code, current_stderr, current_stdout = job.execute(vcf_path, vcf_path_annotated, one_variant=one_variant) # this one_variant thing is kinda ugly as it is only used in annotate_from_vcf_job..
-            if current_code > 0:
-                status = "error"
-            err_msgs = collect_error_msgs(err_msgs, current_stderr)
+        # update the annotation queue status
+        conn.set_annotation_queue_status(annotation_queue_id, status="progress")
+        print("processing request " + str(annotation_queue_id)  + " annotating variant: " + "-".join([variant.chrom, str(variant.pos), variant.ref, variant.alt]) + " with id: " + str(variant.id) )
 
 
-        ############################################################
-        ############ 2: check validity of annotated vcf ############
-        ############################################################
-        #print("checking validity of annotated vcf file...")
-        execution_code_vcfcheck, err_msg_vcfcheck, vcf_errors = functions.check_vcf(vcf_path)
-        if execution_code_vcfcheck != 0:
-            status = "error"
-            err_msgs = collect_error_msgs(err_msgs, "VCFCheck errors: " + vcf_errors)
-        else:
-            print("VCF OK")
-        
+        # write a vcf with the current variant to disc
+        vcf_path = get_temp_vcf_path(annotation_queue_id)
+        functions.variant_to_vcf(variant.chrom, variant.pos, variant.ref, variant.alt, vcf_path)
 
 
-        ############################################################
-        ########### 3: save the collected data to the db ###########
-        ############################################################
-        print("saving to database...")
-
-        file = open(vcf_path, "r")
-        for line in file:
-            line = line.strip()
-            if line.startswith('#') or line == '':
-                continue
-            
-            info = line.split('\t')[7]
-            for job in all_jobs:
-                status_code, err_msg = job.save_to_db(info, variant_id, conn=conn)
-                if status_code > 0:
-                    status = "error"
-                err_msgs = collect_error_msgs(err_msgs, err_msg)
-        file.close()
-
+        # execute the annotation jobs sequentially
+        annotation_data = Annotation_Data(job_config = job_config, variant = variant, vcf_path = vcf_path)
+        annotation_queue = Annotation_Queue(annotation_data)
+        status, err_msgs = annotation_queue.execute(conn)
 
         print("~~~")
         print("Annotation done!")
         print("Status: " + status)
         print(err_msgs)
 
-        ############################################################
-        ############## 4: run automatic classification #############
-        ############################################################
-        if any(job_config[x] for x in ['do_auto_class']):
-            print("Executing automatic classification...")
-            autoclass_job = automatic_classification_job.automatic_classification_job(job_config)
-            status_code, err_msg = autoclass_job.save_to_db("", variant_id, conn=conn)
-            if status_code > 0:
-                status = "error"
-            err_msgs = collect_error_msgs(err_msgs, err_msg)
-
-
-
-
-        ############################################################
-        ############## 5: update the annotation queue ##############
-        ############################################################
+        # update the annotation queue status and error messages if any
         conn.update_annotation_queue(annotation_queue_id, status=status, error_msg=err_msgs)
 
 
@@ -244,8 +160,6 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
 
     if exists(vcf_path): 
         os.remove(vcf_path)
-    if exists(vcf_path_annotated):
-        os.remove(vcf_path_annotated)
 
 
     conn.close()

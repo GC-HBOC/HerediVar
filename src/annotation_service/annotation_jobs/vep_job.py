@@ -11,27 +11,49 @@ from ..pubmed_parser import fetch
 
 
 class vep_job(Job):
-    def __init__(self, job_config):
-        self.job_name = "vep ensembl"
-        self.job_config = job_config
+    def __init__(self, annotation_data):
+        self.job_name = "VEP: protein domains"
+        self.status = "pending"
+        self.err_msg = ""
+        self.annotation_data = annotation_data
+        self.generated_paths = []
         self.err_subber = re.compile(r"Smartmatch is experimental at /.*/VEP/AnnotationSource/File.pm line 472.") 
 
 
-    def execute(self, inpath, annotated_inpath, **kwargs):
-        if not self.job_config['do_vep']:
-            return 0, '', ''
+    def do_execution(self, *args, **kwargs):
+        result = True
+        job_config = kwargs['job_config']
+        if not any(job_config[x] for x in ['do_vep']):
+            result = False
+            self.status = "skipped"
+        return result
 
+
+    def execute(self, conn):
+        # update state
+        self.status = "progress"
         self.print_executing()
-        
-        vep_code, vep_stderr, vep_stdout = self._annotate_vep(inpath, annotated_inpath)
-
-        ## stupid workaround for this specific vep smartmatch warning:
-        vep_stderr = re.sub(self.err_subber, "", vep_stderr)
-        if vep_stderr.strip() == "VEP runtime WARNING:" or vep_stderr.strip() == "VEP runtime ERROR:":
-            vep_stderr = ""
-
-        self.handle_result(inpath, annotated_inpath, vep_code)
-        return vep_code, vep_stderr, vep_stdout
+    
+        # get arguments
+        vcf_path = self.annotation_data.vcf_path
+        annotated_path = vcf_path + ".ann.vcffromvcf"
+        variant_id = self.annotation_data.variant.id
+    
+        self.generated_paths.append(annotated_path)
+    
+        # execute the annotation
+        status_code, vep_stderr, vep_stdout = self._annotate_vep(vcf_path, annotated_path)
+        if status_code != 0:
+            self.status = "error"
+            self.err_msg = vep_stderr
+            return # abort execution
+    
+        # save to db
+        info = self.get_info(annotated_path)
+        self.save_to_db(info, variant_id, conn)
+    
+        # update state
+        self.status = "success"
 
 
     def save_to_db(self, info, variant_id, conn: Connection):
@@ -100,5 +122,10 @@ class vep_job(Job):
 
 
         return_code, err_msg, command_output = functions.execute_command(command, process_name="VEP")
+
+        ## stupid workaround for this specific vep smartmatch warning:
+        err_msg = re.sub(self.err_subber, "", err_msg)
+        if err_msg.strip() == "VEP runtime WARNING:" or err_msg.strip() == "VEP runtime ERROR:":
+            err_msg = ""
 
         return return_code, err_msg, command_output

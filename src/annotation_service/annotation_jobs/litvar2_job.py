@@ -7,49 +7,48 @@ import os
 import requests
 import urllib.parse
 from ..pubmed_parser import fetch
+from .consequence_job import consequence_job
+from common.db_IO import Connection
 
 ## annotate variant with literature from litvar2: https://www.ncbi.nlm.nih.gov/research/litvar2/
 class litvar2_job(Job):
-    def __init__(self, job_config):
-        self.job_name = "litvar2 annotation"
-        self.job_config = job_config
+    def __init__(self, annotation_data):
+        self.job_name = "litvar2"
+        self.status = "pending"
+        self.err_msg = ""
+        self.annotation_data = annotation_data
+        self.generated_paths = []
 
 
-    def execute(self, inpath, annotated_inpath, **kwargs):
-        litvar_code = 0
-        litvar_stderr = ""
-        litvar_stdout = ""
+    def do_execution(self, *args, **kwargs):
+        result = True
+        job_config = kwargs['job_config']
+        if not any(job_config[x] for x in ["do_litvar"]):
+            result = False
+            self.status = "skipped"
 
-        if self.job_config['do_litvar']:
-            self.print_executing()
+        queue = kwargs['queue']
+        self.require_job(consequence_job(None), queue)
+        return result
+    
 
+    def execute(self, conn: Connection):
+        # update state
+        self.status = "progress"
+        self.print_executing()
+    
+        # get arguments
+        variant_id = self.annotation_data.variant.id
+        variant = conn.get_variant(variant_id, include_consequences=True, include_annotations=False, include_assays=False, include_automatic_classification=False, include_clinvar=False, include_consensus=False, include_external_ids=False, include_heredicare_classifications=False, include_literature=False, include_user_classifications=False)
         
-        #litvar_code, litvar_stderr, litvar_stdout = self.annotate_litvar(inpath, annotated_inpath)
+        # execute and save to db
+        self.save_to_db(variant, conn)
+    
+        # update state
+        self.status = "success"
 
 
-        #self.handle_result(inpath, annotated_inpath, litvar_code)
-        return litvar_code, litvar_stderr, litvar_stdout
-
-
-    def save_to_db(self, info, variant_id, conn):
-        status_code = 0
-        err_msg = ""
-        if not self.job_config['do_litvar']:
-            return status_code, err_msg
-        
-        variant = conn.get_variant(variant_id, 
-                    include_annotations = False, 
-                    include_consensus = False, 
-                    include_user_classifications = False, 
-                    include_heredicare_classifications = False, 
-                    include_automatic_classification = False,
-                    include_clinvar = False, 
-                    include_consequences = True, 
-                    include_assays = False, 
-                    include_literature = False,
-                    include_external_ids = True
-                )
-        
+    def save_to_db(self, variant, conn):
         litvar_pmids = None
 
         rsids = variant.get_external_ids('rsid')
@@ -59,7 +58,6 @@ class litvar2_job(Job):
                 litvar_pmids = self.query_litvar(rsid)
                 if litvar_pmids is not None:
                     break
-
 
         if litvar_pmids is None:
             consequences = variant.get_sorted_consequences()
@@ -78,9 +76,8 @@ class litvar2_job(Job):
         if litvar_pmids is not None:
             literature_entries = fetch(litvar_pmids) # defined in pubmed_parser.py
             for paper in literature_entries: #[pmid, article_title, authors, journal, year]
-                conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4], "litvar")
+                conn.insert_variant_literature(variant.id, paper[0], paper[1], paper[2], paper[3], paper[4], "litvar")
 
-        return status_code, err_msg
     
     def query_litvar(self, query):
         # get litvar id from data

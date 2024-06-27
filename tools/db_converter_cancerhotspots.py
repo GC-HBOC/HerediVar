@@ -7,10 +7,10 @@ import json
 
 
 parser = argparse.ArgumentParser(description="")
-parser.add_argument("-i", "--input",  default="", help="path to input file")
+parser.add_argument("-i", "--input",  default="", help="path to input maf file")
+parser.add_argument("-s", "--significant",  default="", help="path to input file")
 parser.add_argument("-o", "--output", default="", help="output file path. If not given will default to stdout")
 parser.add_argument("--header", default=1, help="The line number which has the header (Zero centered, default: 1)")
-parser.add_argument("--samples", help="The total number of samples in the maf file")
 parser.add_argument("--oncotree", help="Path to Oncotree json file: http://oncotree.mskcc.org/api/tumorTypes")
 
 
@@ -25,11 +25,42 @@ else:
     input_file = sys.stdin
 
 i_header_line = args.header
-tot_samples = int(args.samples)
 oncotree_path = args.oncotree
+significant_path = args.significant
 
+
+
+## extract significant cancerhotspots from xls file (converted to tsv)
+functions.eprint("parsing significant hotspots")
+significant_file = open(significant_path, 'r')
+
+significant_hotspots = []
+for line in significant_file:
+    parts = line.split('\t')
+    if line.startswith('Hugo_Symbol'):
+        for i, part in enumerate(parts):
+            if part == "Amino_Acid_Position":
+                i_amino_acid_pos = i
+            if part == "Reference_Amino_Acid":
+                i_reference_aa = i
+            if part == "Variant_Amino_Acid":
+                i_alternative_aa = i
+            if part == "Hugo_Symbol":
+                i_gene_symbol = i
+        continue
+
+    current_gene_symbol = parts[i_gene_symbol]
+    current_amino_acid_pos = parts[i_amino_acid_pos]
+    current_reference_aa = parts[i_reference_aa].split(':')[0]
+    current_alternative_aa = parts[i_alternative_aa].split(':')[0]
+    
+
+    significant_hotspots.append('-'.join([current_gene_symbol, current_amino_acid_pos, current_reference_aa, current_alternative_aa]))
+
+significant_file.close()
 
 ## extract 1:1 mapping of oncotree identifiers and names
+functions.eprint("parsing oncotree")
 oncotree_file = open(oncotree_path, 'r')
 json_array = oncotree_file.read()
 
@@ -104,46 +135,20 @@ def prepare_cancertype(cancertype, ac):
     oncotree_name = oncotree_name.replace(' ', '_')
     return ':'.join([parts[0], oncotree_name, parts[1], str(ac)])
 
-
+def print_line(cancerhotspots_barcode, all_cancer_types, ac, tot_samples):
+    cancertypes = '|'.join([prepare_cancertype(x, all_cancer_types[x]) for x in all_cancer_types])
+    af = round(ac/tot_samples, 3)
+    print('\t'.join([cancerhotspots_barcode, cancertypes, str(ac), str(af)]))
 
 
 # contig header lines are required for crossmap lifting of genomic positions
-info_header = [
-    "##contig=<ID=chr1>",
-    "##contig=<ID=chr2>",
-    "##contig=<ID=chr3>",
-    "##contig=<ID=chr4>",
-    "##contig=<ID=chr5>",
-    "##contig=<ID=chr6>",
-    "##contig=<ID=chr7>",
-    "##contig=<ID=chr8>",
-    "##contig=<ID=chr9>",
-    "##contig=<ID=chr10>",
-    "##contig=<ID=chr11>",
-    "##contig=<ID=chr12>",
-    "##contig=<ID=chr13>",
-    "##contig=<ID=chr14>",
-    "##contig=<ID=chr15>",
-    "##contig=<ID=chr16>",
-    "##contig=<ID=chr17>",
-    "##contig=<ID=chr18>",
-    "##contig=<ID=chr19>",
-    "##contig=<ID=chr20>",
-    "##contig=<ID=chr21>",
-    "##contig=<ID=chr22>",
-    "##contig=<ID=chrX>",
-    "##contig=<ID=chrY>",
-    "##contig=<ID=chrMT>",
-    "##INFO=<ID=cancertypes,Number=.,Type=String,Description=\"A | delimited list of all cancertypes associated to this variant according to cancerhotspots. FORMAT: tumortype:tissue\">",
-    "##INFO=<ID=AC,Number=1,Type=Integer,Description=\"Number of samples showing the variant from cancerhotspots\">",
-    "##INFO=<ID=AF,Number=1,Type=Float,Description=\"Allele Frequency of the variant (AC / num samples cancerhotspots)\">",
-    "##INFO=<ID=tissue,Number=1,Type=String,Description=\"Oncotree tissue type according to the cancertype. \">"]
-functions.write_vcf_header(info_header)
-
+functions.eprint("parsing maf")
 
 i_current_line = -1
 
-
+#found_hotspots = []
+all_data = {} # cancerhotspotbarcode -> info
+all_samples = []
 is_first_variant = True
 for line in input_file:
     line = line.strip()
@@ -164,14 +169,22 @@ for line in input_file:
                 i_ref = i
             elif part == 'Tumor_Seq_Allele2': # this is the alt allele
                 i_alt = i
-            #elif part == 'Tumor_Seq_Allele1': # this is the alt allele
-            #    i_alt_1 = i
-            #elif part == 'TUMORTYPE':
-            #    i_cancertype = i
             elif part == 'oncotree_detailed':
                 i_barcode = i
             elif part == "oncotree_organtype":
                 i_tissue = i
+            elif part == "Amino_Acid_Position":
+                i_pos_aa = i
+            elif part == "Reference_Amino_Acid":
+                i_ref_aa = i
+            elif part == "Variant_Amino_Acid":
+                i_alt_aa = i
+            elif part == "Hugo_Symbol":
+                i_gene_symbol = i
+            elif part == "Transcript_ID":
+                i_transcript = i
+            elif part == "Tumor_Sample_Barcode":
+                i_sample = i
             header_len = len(parts)
         continue
 
@@ -180,69 +193,41 @@ for line in input_file:
         #functions.eprint("WARNING: skipping variant because it did not have the correct number of fields. line number in input file: " + str(i_current_line))
         continue
 
-    chr = parts[i_chr]
-    pos = parts[i_start]
-    ref = parts[i_ref]
-    alt = parts[i_alt]
-    #alt_1 = parts[i_alt_1]
-    barcode = parts[i_barcode]
+    gene_symbol = parts[i_gene_symbol]
+    transcript = parts[i_transcript]
+    pos_aa = parts[i_pos_aa]
+    ref_aa = parts[i_ref_aa]
+    alt_aa = parts[i_alt_aa]
+    current_hotspot = '-'.join([gene_symbol, pos_aa, ref_aa, alt_aa])
+    if current_hotspot not in significant_hotspots: # skip non significant variants
+        continue
+    
+    all_samples.append(parts[i_sample])
+    #found_hotspots.append(current_hotspot)
+    cancerhotspots_barcode = '-'.join([transcript, pos_aa, ref_aa, alt_aa])
 
-    if is_first_variant:
-        previous_chr = chr
-        previous_pos = pos
-        previous_ref = ref
-        previous_alt = alt
-        previous_barcode = barcode
-        all_cancer_types = {}
-        ac = 1
-        is_first_variant = False
-    
-    
-    
-    # test if previous variant is equal to the current one
-    if chr != previous_chr or pos != previous_pos or ref != previous_ref or alt != previous_alt:
-        info = ''
-        info = functions.collect_info(info, 'cancertypes=', '|'.join([prepare_cancertype(x, all_cancer_types[x]) for x in all_cancer_types]))
-        info = functions.collect_info(info, 'AC=', ac)
-        info = functions.collect_info(info, 'AF=', round(ac/tot_samples, 3))
-        print_variant(previous_chr, previous_pos, previous_ref, previous_alt, info)
+    if cancerhotspots_barcode not in all_data:
+        all_data[cancerhotspots_barcode] = {"cancertypes": {}, "ac": 0}
 
-        previous_chr = chr
-        previous_pos = pos
-        previous_ref = ref
-        previous_alt = alt
-        previous_barcode = barcode
-        all_cancer_types = {}
-        if parts[i_barcode] != '':
-            current_key = parts[i_barcode] + ':' + parts[i_tissue]
-            if current_key in all_cancer_types:
-                all_cancer_types[current_key] += 1
-            else:
-                all_cancer_types[current_key] = 1
-        ac = 1
+    # update cancertypes
+    current_key = parts[i_barcode] + ':' + parts[i_tissue]
+    if current_key not in all_data[cancerhotspots_barcode]["cancertypes"]:
+        all_data[cancerhotspots_barcode]["cancertypes"][current_key] = 1
     else:
-        if parts[i_barcode] != '':
-            current_key = parts[i_barcode] + ':' + parts[i_tissue]
-            if current_key in all_cancer_types:
-                all_cancer_types[current_key] += 1
-            else:
-                all_cancer_types[current_key] = 1
-        if previous_barcode != barcode:
-            ac += 1
+        all_data[cancerhotspots_barcode]["cancertypes"][current_key] += 1
 
-
-
-# dont forget to print the last variant which is not captured in the loop
-info = ''
-info = functions.collect_info(info, 'cancertypes=', '|'.join([convert_oncotree_symbol(x) for x in set(all_cancer_types)]))
-info = functions.collect_info(info, 'AC=', ac)
-info = functions.collect_info(info, 'AF=', ac/tot_samples)
-print_variant(previous_chr, previous_pos, previous_ref, previous_alt, info)
+    all_data[cancerhotspots_barcode]["ac"] += 1
+    
+tot_samples = len(list(set(all_samples)))
+for cancerhotspots_barcode in all_data:
+    data = all_data[cancerhotspots_barcode]
+    print_line(cancerhotspots_barcode, data['cancertypes'], data["ac"], tot_samples)
 
     
 
-    
-    
+#found_hotspots = list(set(found_hotspots))
+#functions.eprint(found_hotspots)
+#functions.eprint(len(found_hotspots))
     
 
 

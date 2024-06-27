@@ -6,25 +6,50 @@ import common.functions as functions
 
 ## annotate vus task force protein domains
 class task_force_protein_domain_job(Job):
-    def __init__(self, job_config):
-        self.job_name = "task_force_protein_domain"
-        self.job_config = job_config
+
+    def __init__(self, annotation_data):
+        self.job_name = "task force protein domains"
+        self.status = "pending"
+        self.err_msg = ""
+        self.annotation_data = annotation_data
+        self.generated_paths = []
+
+    def do_execution(self, *args, **kwargs):
+        result = True
+        job_config = kwargs['job_config']
+        if not any(job_config[x] for x in ["do_taskforce_domains"]):
+            result = False
+            self.status = "skipped"
+        return result
+    
+    def execute(self, conn):
+        # update state
+        self.status = "progress"
+        self.print_executing()
+    
+        # get arguments
+        variant = self.annotation_data.variant
+    
+        # execute and save to db
+        status_code, err_msg = self.save_to_db(variant, conn)
+        if status_code != 0:
+            self.status = "error"
+            self.err_msg = err_msg
+            return # abort execution
+    
+        # update state
+        self.status = "success"
 
 
-    def execute(self, inpath, annotated_inpath, **kwargs):
-            return 0, '', ''
-
-
-    def save_to_db(self, info, variant_id, conn):
+    def save_to_db(self, variant, conn):
         status_code = 0
         err_msg = ""
-        if self.job_config['do_taskforce_domains']:
-            one_variant = conn.get_one_variant(variant_id) # 0id,1chr,2pos,3ref,4alt
-            task_force_protein_domains = conn.get_task_force_protein_domains(one_variant[1], one_variant[2], int(one_variant[2]) + len(one_variant[4]))
-            recent_annotation_ids = conn.get_recent_annotation_type_ids()
-            for domain in task_force_protein_domains:
-                conn.insert_variant_annotation(variant_id, recent_annotation_ids["task_force_protein_domain"], domain[5])
-                conn.insert_variant_annotation(variant_id, recent_annotation_ids["task_force_protein_domain_source"], domain[6])
+
+        task_force_protein_domains = conn.get_task_force_protein_domains(variant.chrom, variant.pos, variant.pos + max(len(variant.ref), len(variant.alt)))
+        recent_annotation_ids = conn.get_recent_annotation_type_ids()
+        for domain in task_force_protein_domains:
+            conn.insert_variant_annotation(variant.id, recent_annotation_ids["task_force_protein_domain"], domain[5])
+            conn.insert_variant_annotation(variant.id, recent_annotation_ids["task_force_protein_domain_source"], domain[6])
         
         return status_code, err_msg
 

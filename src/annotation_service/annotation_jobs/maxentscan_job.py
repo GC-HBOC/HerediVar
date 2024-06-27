@@ -7,31 +7,58 @@ import os
 
 ## annotate variant with hexplorer splicing scores (Hexplorer score + HBond score)
 class maxentscan_job(Job):
-    def __init__(self, job_config):
+    def __init__(self, annotation_data):
         self.job_name = "maxentscan"
-        self.job_config = job_config
+        self.status = "pending"
+        self.err_msg = ""
+        self.annotation_data = annotation_data
+        self.generated_paths = []
 
+    def do_execution(self, *args, **kwargs):
+        result = True
+        job_config = kwargs['job_config']
+        if not any(job_config[x] for x in ["do_maxentscan"]):
+            result = False
+            self.status = "skipped"
+        return result
+    
 
-    def execute(self, inpath, annotated_inpath, **kwargs):
-        if not self.job_config['do_maxentscan']:
-            return 0, '', ''
-
+    def execute(self, conn):
+        # update state
+        self.status = "progress"
         self.print_executing()
+    
+        # get arguments
+        vcf_path = self.annotation_data.vcf_path
+        annotated_path = vcf_path + ".ann.maxentscan"
+        variant_id = self.annotation_data.variant.id
+
+        self.generated_paths.append(annotated_path)
+    
+        # execute the annotation
+        status_code, hexplorer_stderr, hexplorer_stdout = self.annotate_maxentscan(vcf_path, annotated_path)
+        if status_code != 0:
+            self.status = "error"
+            self.err_msg = hexplorer_stderr
+            return # abort execution
+    
+        # save to db
+        info = self.get_info(annotated_path)
+        self.save_to_db(info, variant_id, conn)
+    
+        # update state
+        self.status = "success"
 
 
-        hexplorer_code, hexplorer_stderr, hexplorer_stdout = self.annotate_maxentscan(inpath, annotated_inpath)
-
-
-        self.handle_result(inpath, annotated_inpath, hexplorer_code)
-        return hexplorer_code, hexplorer_stderr, hexplorer_stdout
 
 
     def save_to_db(self, info, variant_id, conn):
         status_code = 0
         err_msg = ""
 
-        mes_annotation_id = 53
-        mes_swa_annotation_id = 54
+        recent_annotation_ids = conn.get_recent_annotation_type_ids()
+        mes_annotation_id = recent_annotation_ids["maxentscan"]
+        mes_swa_annotation_id = recent_annotation_ids["maxentscan_swa"]
 
         #print(info)
 

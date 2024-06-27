@@ -11,35 +11,44 @@ from urllib.parse import unquote
 
 ## annotate variant with hexplorer splicing scores (Hexplorer score + HBond score)
 class heredicare_job(Job):
-    def __init__(self, job_config):
+    def __init__(self, annotation_data):
         self.job_name = "heredicare"
-        self.job_config = job_config
+        self.status = "pending"
+        self.err_msg = ""
+        self.annotation_data = annotation_data
+        self.generated_paths = []
+
+    def do_execution(self, *args, **kwargs):
+        result = True
+        job_config = kwargs['job_config']
+        if not any(job_config[x] for x in ["do_heredicare"]):
+            result = False
+            self.status = "skipped"
+        return result
 
 
-    def execute(self, inpath, annotated_inpath, **kwargs):
-        execution_code = 0
-        stderr = ""
-        stdout = ""
-        
-        if not self.job_config['do_heredicare']:
-            return execution_code, stderr, stdout
-
+    def execute(self, conn):
+        # update state
+        self.status = "progress"
         self.print_executing()
+    
+        # get arguments
+        variant_id = self.annotation_data.variant.id
+    
+        # execute and save to db
+        status_code, err_msg = self.annotate_heredicare(variant_id, conn)
+        if status_code != 0:
+            self.status = "error"
+            self.err_msg = err_msg
+            return # abort execution
+    
+        # update state
+        self.status = "success"
 
 
-        #hexplorer_code, hexplorer_stderr, hexplorer_stdout = self.annotate_hexplorer(inpath, annotated_inpath)
-
-
-        #self.handle_result(inpath, annotated_inpath, hexplorer_code)
-        return execution_code, stderr, stdout
-
-
-    def save_to_db(self, info, variant_id, conn):
+    def annotate_heredicare(self, variant_id, conn):
         status_code = 0
         err_msg = ""
-
-        if not self.job_config['do_heredicare']:
-            return status_code, err_msg
 
         heredicare_interface = Heredicare()
         #conn.clear_heredicare_annotation(variant_id)

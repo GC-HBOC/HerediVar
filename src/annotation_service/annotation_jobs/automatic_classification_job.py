@@ -14,28 +14,50 @@ import jsonschema
 
 ## this annotates various information from different vcf files
 class automatic_classification_job(Job):
-    def __init__(self, job_config):
-        self.job_name = "vcf annotate from vcf"
-        self.job_config = job_config
+    def __init__(self, annotation_data):
+        self.job_name = "automatic classification"
+        self.status = "pending"
+        self.err_msg = ""
+        self.annotation_data = annotation_data
+        self.generated_paths = []
 
 
-    def execute(self, inpath, annotated_inpath, **kwargs):
-        if not any(self.job_config[x] for x in ['do_auto_class']):
-            return 0, '', ''
+    def do_execution(self, *args, **kwargs):
+        result = True
+        job_config = kwargs['job_config']
+        if not any(job_config[x] for x in ["do_auto_class"]):
+            result = False
+            self.status = "skipped"
+            return result
 
+        # require all jobs to be successful or skipped
+        queue = kwargs['queue']
+        for job in queue: 
+            if job.job_name != self.job_name:
+                successful_job = self.require_job(job, queue)
+                if not successful_job:
+                    result = False
+                    self.status = "skipped"
+        return result
+    
+
+    def execute(self, conn):
+        # update state
+        self.status = "progress"
         self.print_executing()
+    
+        # get arguments
+        variant_id = self.annotation_data.variant.id
+    
+        # execute and save to db
+        self.save_to_db(variant_id, conn) # raises runtime error when autoclass service yields error
+    
+        # update state
+        self.status = "success"
 
-        return 0, "", ""
 
 
-
-    def save_to_db(self, info, variant_id, conn: Connection):
-        err_msg = ""
-        status_code = 0
-
-        if not any(self.job_config[x] for x in ['do_auto_class']):
-            return status_code, err_msg
-        
+    def save_to_db(self, variant_id, conn: Connection):
         conn.clear_automatic_classification(variant_id)
 
         autoclass_input = self.get_autoclass_json(variant_id, conn)
@@ -98,8 +120,7 @@ class automatic_classification_job(Job):
                 comment = current_criterium["comment"],
                 state = "selected" if current_criterium["status"] else "unselected"
             )
-
-        return status_code, err_msg
+        
     
     def get_classification(self, selected_criteria: str, scheme: str, version: str):
         host = os.environ.get("HOST", "localhost") + ":" + os.environ.get("PORT", "5000")

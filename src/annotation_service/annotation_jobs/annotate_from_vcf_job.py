@@ -10,45 +10,89 @@ from ..pubmed_parser import fetch
 
 ## this annotates various information from different vcf files
 class annotate_from_vcf_job(Job):
-    def __init__(self, job_config):
+    def __init__(self, annotation_data):
         self.job_name = "vcf annotate from vcf"
-        self.job_config = job_config
+        self.status = "pending"
+        self.err_msg = ""
+        self.annotation_data = annotation_data
+        self.generated_paths = []
 
+    def do_execution(self, *args, **kwargs):
+        result = True
+        job_config = kwargs['job_config']
+        if not any(job_config[x] for x in ['do_dbsnp', 'do_revel', 
+                                            'do_cadd', 
+                                            'do_clinvar', 'do_gnomad', 
+                                            'do_brca_exchange', 
+                                            'do_flossies',
+                                            'do_tp53_database', 'do_priors', 
+                                            'do_bayesdel', 'do_cosmic',
+                                            'do_cspec_brca_assays'
+                                        ]):
+            result = False
+            self.status = "skipped"
+        return result
+    
+    #def execute(self, conn):
+    #    # update state
+    #    self.status = "progress"
+    #    self.print_executing()
+    #
+    #    # get arguments
+    #    vcf_path = self.annotation_data.vcf_path
+    #    annotated_path = vcf_path + ".ann.vcffromvcf"
+    #    variant_id = self.annotation_data.variant.id
+    #
+    #    self.generated_paths.append(annotated_path)
+    #
+    #    # execute the annotation
+    #
+    #    # save to db
+    #    info = self.get_info(annotated_path)
+    #    self.save_to_db(info, variant_id, conn)
+    #
+    #    # update state
+    #    self.status = "success"
 
-    def execute(self, inpath, annotated_inpath, **kwargs):
-        if not any(self.job_config[x] for x in ['do_dbsnp', 'do_revel', 
-                                                'do_spliceai', 'do_cadd', 
-                                                'do_clinvar', 'do_gnomad', 
-                                                'do_brca_exchange', 
-                                                'do_flossies', 
-                                                'do_cancerhotspots', #'do_arup',
-                                                'do_tp53_database', 'do_priors', 
-                                                'do_bayesdel', 'do_cosmic',
-                                                'do_cspec_brca_assays']):
-            return 0, '', ''
-
+    def execute(self, conn):
+        # update state
+        self.status = "progress"
         self.print_executing()
 
+        # get arguments
+        vcf_path = self.annotation_data.vcf_path
+        annotated_path = vcf_path + ".ann.vcffromvcf"
+        variant = self.annotation_data.variant
+        variant_id = variant.id
 
-        config_file_path = self.write_vcf_annoate_config(one_variant = kwargs['one_variant'])
-        vcf_annotate_code, vcf_annotate_stderr, vcf_annotate_stdout = self.annotate_from_vcf(config_file_path, inpath, annotated_inpath)
+        self.generated_paths.append(annotated_path)
+        self.generated_paths.append(annotated_path + "_warnings.txt")
 
+        # annotate the vcf
+        config_file_path = self.write_vcf_annoate_config()
+        self.generated_paths.append(config_file_path)
+        status_code, vcf_annotate_stderr, vcf_annotate_stdout = self.annotate_from_vcf(config_file_path, vcf_path, annotated_path)
+        if status_code != 0:
+            self.status = "error"
+            self.err_msg = vcf_annotate_stderr
+            return # abort execution
 
+        # check that the annotated vcf is valid
+        status_code, err_msg_vcfcheck, vcf_errors = functions.check_vcf(vcf_path)
+        if status_code != 0:
+            self.status = "error"
+            self.err_msg = vcf_errors
+            return
 
+        # save to db
+        info = self.get_info(annotated_path)
+        self.save_to_db(info, variant_id, conn)
 
-        self.handle_result(inpath, annotated_inpath, vcf_annotate_code)
-
-        warnings_path = annotated_inpath + "_warnings.txt"
-        if exists(warnings_path):
-            os.remove(warnings_path)
-
-        return vcf_annotate_code, vcf_annotate_stderr, vcf_annotate_stdout
-
+        # update state
+        self.status = "success"
 
 
     def save_to_db(self, info, variant_id, conn):
-        err_msg = ""
-        status_code = 0
         recent_annotation_ids = conn.get_recent_annotation_type_ids()
 
         self.insert_external_id(variant_id, info, "dbSNP_RS=", recent_annotation_ids['rsid'], conn)
@@ -86,29 +130,6 @@ class annotate_from_vcf_job(Job):
         self.insert_annotation(variant_id, info, "BayesDEL_noAF=", recent_annotation_ids['bayesdel'], conn)
 
         self.insert_multiple_ids(variant_id, info, "COSMIC_COSV=", recent_annotation_ids['cosmic'], conn, sep = '&')
-
-
-        # cancerhotspots
-        #self.insert_annotation(variant_id, info, "cancerhotspots_cancertypes=", recent_annotation_ids['cancerhotspots_cancertypes'], conn)
-        cancerhotspots = functions.find_between(info, "cancerhotspots_cancertypes=", '(;|$)')
-        if cancerhotspots is not None and cancerhotspots != '':
-            cancerhotspots = cancerhotspots.split('|')
-            for cancerhotspot in cancerhotspots:
-                cancerhotspot_parts = cancerhotspot.split(':')
-                oncotree_symbol = functions.decode_vcf(cancerhotspot_parts[0])
-                cancertype = functions.decode_vcf(cancerhotspot_parts[1])
-                tissue = functions.decode_vcf(cancerhotspot_parts[2])
-                occurances = functions.decode_vcf(cancerhotspot_parts[3])
-                conn.insert_cancerhotspots_annotation(variant_id, recent_annotation_ids['cancerhotspots'], oncotree_symbol, cancertype, tissue, occurances)
-
-        
-        self.insert_annotation(variant_id, info, "cancerhotspots_AC=", recent_annotation_ids['cancerhotspots_ac'], conn)
-        self.insert_annotation(variant_id, info, "cancerhotspots_AF=", recent_annotation_ids['cancerhotspots_af'], conn)
-
-
-        # spliceai is saved to the database in the dedicated spliceai job (which must be called after this job anyway)
-        #self.insert_annotation(variant_id, info, 'SpliceAI=', 7, conn, value_modifier_function= lambda value : ','.join(['|'.join(x.split('|')[1:]) for x in value.split(',')]) )
-        #self.insert_annotation(variant_id, info, 'SpliceAI=', 8, conn, value_modifier_function= lambda value : ','.join([str(max([float(x) for x in x.split('|')[2:6]])) for x in value.split(',')]) )
 
         # REVEL
         revel_scores = functions.find_between(info, "REVEL=", '(;|$)')
@@ -205,8 +226,6 @@ class annotate_from_vcf_job(Job):
 
             functional_category = self.convert_assay_dat(assay_parts[0])
             conn.insert_assay_metadata(assay_id, assay_metadata_types["functional_category"].id, functional_category)
-        
-        return status_code, err_msg
 
     def convert_assay_dat(self, value):
         value = value.strip()
@@ -224,72 +243,70 @@ class annotate_from_vcf_job(Job):
 
 
     
-    def write_vcf_annoate_config(self, one_variant):
-        config_file_path = tempfile.gettempdir() + "/.heredivar_vcf_annotate_config"
+    def write_vcf_annoate_config(self):
+        variant = self.annotation_data.variant
+        job_config = self.annotation_data.job_config
+
+        config_file_path = functions.get_random_temp_file(".conf", filename_ext = "vcf_annoate")
         config_file = open(config_file_path, 'w')
 
         ## add rs-num from dbsnp
-        if self.job_config['do_dbsnp']:
+        if job_config['do_dbsnp']:
             config_file.write(paths.dbsnp_path + "\tdbSNP\tRS\t\n")
 
         ## add revel score
-        if self.job_config['do_revel']:
+        if job_config['do_revel']:
             config_file.write(paths.revel_path + "\t\tREVEL\t\n")
 
-        ## add spliceai precomputed scores
-        if self.job_config['do_spliceai']:
-            config_file.write(paths.spliceai_snv_path + "\tsnv\tSpliceAI\t\n")
-            config_file.write(paths.spliceai_indel_path + "\tindel\tSpliceAI\t\n")
-
         ## add cadd precomputed scores
-        if functions.is_snv(one_variant) and self.job_config['do_cadd']:
+        if variant.is_snv() and job_config['do_cadd']:
             config_file.write(paths.cadd_snvs_path + "\t\tCADD\t\n")
-        elif self.job_config['do_cadd']:
+        elif job_config['do_cadd']:
             config_file.write(paths.cadd_indels_path + "\t\tCADD\t\n")
 
         ## add clinvar annotation
-        if self.job_config['do_clinvar']:
+        if job_config['do_clinvar']:
             config_file.write(paths.clinvar_path + "\tClinVar\tinpret,revstat,varid,submissions\t\n")
 
         ## add gnomAD annotation
-        if self.job_config['do_gnomad']:
+        if job_config['do_gnomad']:
             config_file.write(paths.gnomad_path + "\tGnomAD\tAF,AC,hom,hemi,het,AF_NC,AC_NC,hom_NC,hemi_NC,het_NC,popmax,AF_popmax,AC_popmax,faf95_popmax\t\n")
             config_file.write(paths.gnomad_m_path + "\tGnomADm\tAC_hom\t\n")
 
         ## add BRCA_exchange clinical significance
-        if self.job_config['do_brca_exchange']:
+        if job_config['do_brca_exchange']:
             config_file.write(paths.BRCA_exchange_path + "\tBRCA_exchange\tclin_sig_short\t\n")
 
         ## add FLOSSIES annotation
-        if self.job_config['do_flossies']:
+        if job_config['do_flossies']:
             config_file.write(paths.FLOSSIES_path + "\tFLOSSIES\tnum_eur,num_afr\t\n")
 
-        ## add cancerhotspots annotations
-        if self.job_config['do_cancerhotspots']:
-            config_file.write(paths.cancerhotspots_path + "\tcancerhotspots\tcancertypes,AC,AF\t\n")
+        ### add cancerhotspots annotations
+        #if job_config['do_cancerhotspots']:
+        #    config_file.write(paths.cancerhotspots_path + "\tcancerhotspots\tcancertypes,AC,AF\t\n")
 
         ### add arup brca classification
-        #if self.job_config['do_arup']:
+        #if job_config['do_arup']:
         #    config_file.write(paths.arup_brca_path + "\tARUP\tclassification\t\n")
 
         ## add TP53 database information
-        if self.job_config['do_tp53_database']:
+        if job_config['do_tp53_database']:
             config_file.write(paths.tp53_db + "\ttp53db\tclass,transactivation_class,DNE_LOF_class,DNE_class,domain_function,pubmed\t\n")
 
         ## add priors
-        if self.job_config['do_priors']:
+        if job_config['do_priors']:
             config_file.write(paths.hci_priors + "\t\tHCI_prior\t\n")
 
         ## add bayesdel
-        if self.job_config['do_bayesdel']:
+        if job_config['do_bayesdel']:
             config_file.write(paths.bayesdel + "\t\tBayesDEL_noAF\t\n")
 
         ## add COSMIC database CMC significance tier
-        if self.job_config['do_cosmic']:
+        if job_config['do_cosmic']:
             config_file.write(paths.cosmic + "\t\tCOSMIC_CMC,COSMIC_COSV\t\n")
 
         ## add cspec brca assays
-        if self.job_config['do_cspec_brca_assays']:
+        if job_config['do_cspec_brca_assays']:
             config_file.write(paths.cspec_brca_assays_functional + "\tcspec\tfunctional_assay\t\n")
             config_file.write(paths.cspec_brca_assays_splicing + "\tcspec\tsplicing_assay\t\n")
 

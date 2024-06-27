@@ -7,23 +7,49 @@ import os
 
 ## annotate variant with hexplorer splicing scores (Hexplorer score + HBond score)
 class hexplorer_job(Job):
-    def __init__(self, job_config):
+
+    def __init__(self, annotation_data):
         self.job_name = "hexplorer"
-        self.job_config = job_config
+        self.status = "pending"
+        self.err_msg = ""
+        self.annotation_data = annotation_data
+        self.generated_paths = []
+        
 
+    def do_execution(self, *args, **kwargs):
+        result = True
+        job_config = kwargs['job_config']
+        if not any(job_config[x] for x in ['do_hexplorer']):
+            result = False
+            self.status = "skipped"
+        return result
 
-    def execute(self, inpath, annotated_inpath, **kwargs):
-        if not self.job_config['do_hexplorer']:
-            return 0, '', ''
-
+    
+    def execute(self, conn):
+        # update state
+        self.status = "progress"
         self.print_executing()
+    
+        # get arguments
+        vcf_path = self.annotation_data.vcf_path
+        annotated_path = vcf_path + ".ann.hexplorer"
+        variant_id = self.annotation_data.variant.id
 
-
-        hexplorer_code, hexplorer_stderr, hexplorer_stdout = self.annotate_hexplorer(inpath, annotated_inpath)
-
-
-        self.handle_result(inpath, annotated_inpath, hexplorer_code)
-        return hexplorer_code, hexplorer_stderr, hexplorer_stdout
+        self.generated_paths.append(annotated_path)
+    
+        # execute the annotation
+        status_code, hexplorer_stderr, hexplorer_stdout = self.annotate_hexplorer(vcf_path, annotated_path)
+        if status_code != 0:
+            self.status = "error"
+            self.err_msg = "Hexplorer error: " + hexplorer_stderr
+            return # abort execution
+    
+        # save to db
+        info = self.get_info(annotated_path)
+        self.save_to_db(info, variant_id, conn)
+    
+        # update state
+        self.status = "success"
 
 
     def save_to_db(self, info, variant_id, conn):

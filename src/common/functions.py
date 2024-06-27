@@ -184,6 +184,11 @@ def execute_command(command, process_name, use_prefix_error_log = True):
         err_msg = err_msg + std_err
     return completed_process.returncode, err_msg, command_output
 
+def grep(regex, filepath):
+    command = ["grep", "-e", regex, filepath]
+    status_code, err_msg, result = execute_command(command, "grep")
+    return status_code, err_msg, result
+
 
 def preprocess_variant(infile, do_liftover=False):
     final_returncode = 0
@@ -669,6 +674,10 @@ def rm(path):
     if os.path.exists(path): 
         os.remove(path)
 
+def cleanup_files(*args):
+    for path in args:
+        rm(path)
+
 def remove_oldest_file(folder, maxfiles=10):
     if os.path.exists(folder):
         list_of_files = os.listdir(folder)
@@ -898,3 +907,59 @@ def percent_to_decimal(input) -> float:
     input = float(input)
     input = input / 100
     return input
+
+
+
+def three_to_one_letter(s):
+    s = s.lower()
+    if s == "ala": return "A"
+    if s == "arg": return "R"
+    if s == "asn": return "N"
+    if s == "asp": return "D"
+    if s == "asx": return "B"
+    if s == "cys": return "C"
+    if s == "glu": return "E"
+    if s == "gln": return "Q"
+    if s == "glx": return "Z"
+    if s == "gly": return "G"
+    if s == "his": return "H"
+    if s == "ile": return "I"
+    if s == "leu": return "L"
+    if s == "lys": return "K"
+    if s == "met": return "M"
+    if s == "phe": return "F"
+    if s == "pro": return "P"
+    if s == "ser": return "S"
+    if s == "thr": return "T"
+    if s == "trp": return "W"
+    if s == "tyr": return "Y"
+    if s == "val": return "V"
+    if s == "ter": return "X"
+    return "-"
+
+def one_to_three_letter(s):
+    s = s.upper()
+    if s == "A": return "Ala"
+    if s == "R": return "Arg"
+    if s == "N": return "Asn"
+    if s == "D": return "Asp"
+    if s == "B": return "Asx"
+    if s == "C": return "Cys"
+    if s == "E": return "Glu"
+    if s == "Q": return "Gln"
+    if s == "Z": return "Glx"
+    if s == "G": return "Gly"
+    if s == "H": return "His"
+    if s == "I": return "Ile"
+    if s == "L": return "Leu"
+    if s == "K": return "Lys"
+    if s == "M": return "Met"
+    if s == "F": return "Phe"
+    if s == "P": return "Pro"
+    if s == "S": return "Ser"
+    if s == "T": return "Thr"
+    if s == "W": return "Trp"
+    if s == "Y": return "Tyr"
+    if s == "V": return "Val"
+    if s == "X": return "Ter"
+    return "-"

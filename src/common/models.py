@@ -945,6 +945,13 @@ class AbstractVariant(AbstractDataclass):
 
     external_ids: Any = None # list of Annotations
 
+    def is_snv(self) -> bool:
+        if self.variant_type != 'small':
+            return False
+        if len(self.ref) > 1 or len(self.alt) > 1:
+            return False
+        return True
+
     def has_heredicare_classifications(self) -> bool:
         result = False
         if self.heredicare_annotations is not None:
