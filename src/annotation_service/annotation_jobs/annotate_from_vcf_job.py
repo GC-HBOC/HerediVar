@@ -32,27 +32,6 @@ class annotate_from_vcf_job(Job):
             result = False
             self.status = "skipped"
         return result
-    
-    #def execute(self, conn):
-    #    # update state
-    #    self.status = "progress"
-    #    self.print_executing()
-    #
-    #    # get arguments
-    #    vcf_path = self.annotation_data.vcf_path
-    #    annotated_path = vcf_path + ".ann.vcffromvcf"
-    #    variant_id = self.annotation_data.variant.id
-    #
-    #    self.generated_paths.append(annotated_path)
-    #
-    #    # execute the annotation
-    #
-    #    # save to db
-    #    info = self.get_info(annotated_path)
-    #    self.save_to_db(info, variant_id, conn)
-    #
-    #    # update state
-    #    self.status = "success"
 
     def execute(self, conn):
         # update state
@@ -95,10 +74,13 @@ class annotate_from_vcf_job(Job):
     def save_to_db(self, info, variant_id, conn):
         recent_annotation_ids = conn.get_recent_annotation_type_ids()
 
+        # dbsnp rs number
         self.insert_external_id(variant_id, info, "dbSNP_RS=", recent_annotation_ids['rsid'], conn)
 
+        # CADD scaled
         self.insert_annotation(variant_id, info, "CADD=", recent_annotation_ids['cadd_scaled'], conn)
 
+        # gnomad
         self.insert_annotation(variant_id, info, "GnomAD_AC=", recent_annotation_ids['gnomad_ac'], conn)
         self.insert_annotation(variant_id, info, "GnomAD_AF=", recent_annotation_ids['gnomad_af'], conn)
         self.insert_annotation(variant_id, info, "GnomAD_hom=", recent_annotation_ids['gnomad_hom'], conn)
@@ -117,18 +99,20 @@ class annotate_from_vcf_job(Job):
         self.insert_annotation(variant_id, info, "GnomAD_AC_popmax=", recent_annotation_ids['gnomad_popmax_AC'], conn)
         self.insert_annotation(variant_id, info, "faf95_popmax=", recent_annotation_ids['faf95_popmax'], conn)
 
-
+        # brca exchange
         self.insert_annotation(variant_id, info, "BRCA_exchange_clin_sig_short=", recent_annotation_ids['brca_exchange_clinical_significance'], conn, value_modifier_function = lambda value : value.replace('_', ' ').replace(',', ';'))
 
+        # flossies
         self.insert_annotation(variant_id, info, "FLOSSIES_num_afr=", recent_annotation_ids['flossies_num_afr'], conn)
         self.insert_annotation(variant_id, info, "FLOSSIES_num_eur=", recent_annotation_ids['flossies_num_eur'], conn)
 
-        #self.insert_annotation(variant_id, info, "ARUP_classification=", recent_annotation_ids['arup_classification'], conn)
-
+        # priors
         self.insert_annotation(variant_id, info, "HCI_prior=", recent_annotation_ids['hci_prior'], conn)
 
+        # bayesdel
         self.insert_annotation(variant_id, info, "BayesDEL_noAF=", recent_annotation_ids['bayesdel'], conn)
 
+        # cosmic id
         self.insert_multiple_ids(variant_id, info, "COSMIC_COSV=", recent_annotation_ids['cosmic'], conn, sep = '&')
 
         # REVEL
@@ -142,9 +126,8 @@ class annotate_from_vcf_job(Job):
                 for transcript in transcripts:
                     conn.insert_variant_transcript_annotation(variant_id, transcript, recent_annotation_ids['revel'], revel_score)
 
-
+        # TP53 DB
         self.insert_annotation(variant_id, info, "tp53db_class=", recent_annotation_ids['tp53db_class'], conn)
-        #self.insert_annotation(variant_id, info, "tp53db_bayes_del=", recent_annotation_ids['tp53db_bayes_del'], conn)
         self.insert_annotation(variant_id, info, "tp53db_DNE_LOF_class=", recent_annotation_ids['tp53db_DNE_LOF_class'], conn)
         self.insert_annotation(variant_id, info, "tp53db_DNE_class=", recent_annotation_ids['tp53db_DNE_class'], conn)
         self.insert_annotation(variant_id, info, "tp53db_domain_function=", recent_annotation_ids['tp53db_domain_function'], conn)
@@ -154,7 +137,6 @@ class annotate_from_vcf_job(Job):
             literature_entries = fetch(pmids) # defined in pubmed_parser.py
             for paper in literature_entries: #[pmid, article_title, authors, journal, year]
                 conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4], "TP53_db")
-
 
         # CLINVAR
         clinvar_submissions = functions.find_between(info, 'ClinVar_submissions=', '(;|$)')
@@ -182,10 +164,9 @@ class annotate_from_vcf_job(Job):
                 #submissions = functions.decode_vcf(submission)#.replace('\\', ',').replace('_', ' ').replace(',', ', ').replace('  ', ' ').replace('&', ';').split('|')
                 conn.insert_clinvar_submission(clinvar_variant_annotation_id, submissions[1], submissions[2], submissions[3], submissions[4], submissions[5], submissions[6])
 
-
-
-        conn.delete_assays(variant_id = variant_id,user_id = None) # delete only automatically annotated assays
-        # CSpec splicing assays
+        # CSpec assays
+        conn.delete_assays(variant_id = variant_id, user_id = None) # delete only automatically annotated assays
+        # splicing
         cspec_splicing_assays = functions.find_between(info, "cspec_splicing_assay=", '(;|$)')
         if cspec_splicing_assays == '' or cspec_splicing_assays is None:
             cspec_splicing_assays = []
@@ -210,7 +191,7 @@ class annotate_from_vcf_job(Job):
             conn.insert_assay_metadata(assay_id, assay_metadata_types["allele_specific"].id, allele_specific)
             conn.insert_assay_metadata(assay_id, assay_metadata_types["comment"].id, comment)
 
-        # CSpec functional assays
+        # functional
         cspec_functional_assays = functions.find_between(info, "cspec_functional_assay=", "(;|$)")
         if cspec_functional_assays == '' or cspec_functional_assays is None:
             cspec_functional_assays = []
@@ -226,6 +207,7 @@ class annotate_from_vcf_job(Job):
 
             functional_category = self.convert_assay_dat(assay_parts[0])
             conn.insert_assay_metadata(assay_id, assay_metadata_types["functional_category"].id, functional_category)
+
 
     def convert_assay_dat(self, value):
         value = value.strip()

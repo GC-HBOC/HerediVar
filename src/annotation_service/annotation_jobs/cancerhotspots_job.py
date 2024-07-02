@@ -72,13 +72,13 @@ class cancerhotspots_job(Job):
         # amino acids are in one letter code
         all_barcodes = []
         for consequence in consequences:
-            transcript_name = consequence.transcript.name
+            gene_name = consequence.transcript.gene.symbol
             hgvs_p = consequence.hgvs_p
 
             if not self.hgvs_p_useful(hgvs_p):
                 continue
 
-            cancerhotspots_barcode = self.get_cancerhotspots_barcode(transcript_name, hgvs_p)
+            cancerhotspots_barcode = self.get_cancerhotspots_barcode(gene_name, hgvs_p)
             all_barcodes.append(cancerhotspots_barcode)
         
         for barcode in all_barcodes:
@@ -90,7 +90,7 @@ class cancerhotspots_job(Job):
         return status_code, err_msg, result
             
 
-    def get_cancerhotspots_barcode(self, transcript_name, hgvs_p):
+    def get_cancerhotspots_barcode(self, gene_name, hgvs_p):
         # remove p. prefix
         hgvs_p = hgvs_p[2:]
         # split between numbers and letters
@@ -98,7 +98,7 @@ class cancerhotspots_job(Job):
         ref_aa = functions.three_to_one_letter(parts[0])
         aa_pos = parts[1]
         alt_aa = functions.three_to_one_letter(parts[2])
-        return '-'.join([transcript_name, aa_pos, ref_aa, alt_aa])
+        return '-'.join([gene_name, aa_pos, ref_aa, alt_aa])
 
 
 

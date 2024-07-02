@@ -3,12 +3,6 @@ import tempfile
 import os
 import common.functions as functions
 
-
-# this is a static dictionary which all jobs have access to
-# use this to collect data from multiple jobs or info-entries
-# and insert them later to the db
-#saved_data = {}
-
 ########## This class is an abstract class which needs to be implemented by
 ########## each annotation job used by the annotation service
 class Job(metaclass=abc.ABCMeta):
@@ -17,15 +11,39 @@ class Job(metaclass=abc.ABCMeta):
     def __init__(self):
         pass
 
-    ## execute the job -> this should return the status code, stderr & stdout
+    # this function should return if we can execute the job
+    @abc.abstractmethod
+    def do_execution(self, job_config, queue: list) -> bool:
+        pass
+
+    # execute the job: this is the worker function
     @abc.abstractmethod
     def execute(self, conn):
        pass
+    
+    ## this is a template execute function:
+    #def execute(self, conn):
+    #    # update state
+    #    self.status = "progress"
+    #    self.print_executing()
+    #
+    #    # get arguments
+    #    vcf_path = self.annotation_data.vcf_path
+    #    annotated_path = vcf_path + ".ann.vcffromvcf"
+    #    variant_id = self.annotation_data.variant.id
+    #
+    #    self.generated_paths.append(annotated_path)
+    #
+    #    # execute the annotation
+    #
+    #    # save to db
+    #    info = self.get_info(annotated_path)
+    #    self.save_to_db(info, variant_id, conn)
+    #
+    #    # update state
+    #    self.status = "success"
 
-    @abc.abstractmethod
-    def do_execution(self, job_config, queue: list):
-        pass
-
+    # requires that another job in the queue was already executed successfully
     def require_job(self, required_job, queue: list):
         for job in queue:
             if required_job.job_name == job.job_name:
@@ -34,6 +52,7 @@ class Job(metaclass=abc.ABCMeta):
                 break
         return False
 
+    # takes a vcf file and extracts the info column [it is expected that the vcf file has only one variant]
     def get_info(self, vcf_path: str):
         info = ""
         with open(vcf_path, "r") as file:
@@ -44,31 +63,12 @@ class Job(metaclass=abc.ABCMeta):
                 info = line.split('\t')[7]
         return info
 
-
-
-    #def save_data(self, key, value):
-    #    saved_data[key] = value
-    
-    #def update_saved_data(self, key, value, operation = lambda x, y : x + y):
-    #    saved_data[key] = operation(saved_data[key], value)
-    
-    #def get_saved_data(self):
-    #    return saved_data
-
     def print_executing(self):
         print("executing " + self.job_name + "...")
 
     def cleanup(self):
         for path in self.generated_paths:
             functions.rm(path)
-    
-    #def handle_result(self, inpath, annotated_inpath, code):
-    #    self.update_output(inpath, annotated_inpath, code)
-    #
-    #def update_output(self, not_annotated_file_path, annotated_file_path, error_code):
-    #    if error_code == 0: # execution worked and we want to keep the info
-    #        returncode, err, out = functions.execute_command(["mv", annotated_file_path, not_annotated_file_path], "mv")
-    #        #os.replace(annotated_file_path, not_annotated_file_path)
 
     def insert_annotation(self, variant_id, info, info_name, annotation_type_id, conn, value_modifier_function = None):
         value = functions.find_between(info, info_name, '(;|$)')

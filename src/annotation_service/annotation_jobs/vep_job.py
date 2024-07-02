@@ -80,7 +80,9 @@ class vep_job(Job):
             domains = vep_entry[9]
             if domains.find('Pfam:') >= 0:
                 pfam_acc = ','.join(re.findall(r'Pfam:(PF\d+)(?:\s+|$|\&|\|)', domains)) # grab only pfam accession id from all protein domains which were returned
-                conn.insert_variant_transcript_annotation(variant_id, transcript = transcript_name, annotation_type_id = pfam_annotation_id, value = pfam_acc)
+                pfam_acc, domain_description = conn.get_pfam_description_by_pfam_acc(pfam_acc)
+                if domain_description is not None and pfam_acc is not None and domain_description != 'removed':
+                    conn.insert_variant_transcript_annotation(variant_id, transcript = transcript_name, annotation_type_id = pfam_annotation_id, value = pfam_acc)
 
             num_vep_basic_entries = 10
             if not transcript_independent_saved and len(vep_entry) > num_vep_basic_entries:
