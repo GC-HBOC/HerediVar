@@ -3,7 +3,6 @@ import os
 import sys
 sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
 import utils
-from utils import Test_Connection
 import re
 #from playwright.sync_api import Page, expect, sync_playwright
 from flask import url_for
@@ -93,11 +92,16 @@ def get_default_annotation_values():
         'faf95_popmax': "0.0174378", # 69
         'brca_exchange_clinical_significance': "Not Yet Reviewed" # 18
     }
+
+
+
+
     # transcript specific annotations
     transcript_specific_annotation_values = {
         "revel": [{"transcript": "ENST11111111111", "value": "0.198"}, {"transcript": "ENST22222222222", "value": "0.199"}], # 6
         "maxentscan": [{"transcript": "ENST11111111111", "value": "9.42|10.56"}, {"transcript": "ENST22222222222", "value": "7.86|7.47"}], # 53
         "maxentscan_swa": [{"transcript": "ENST11111111111", "value": "-4.50|-4.13|-4.50|-5.03|-5.72|-5.03"}, {"transcript": "ENST22222222222", "value": "-2.66|-1.95|-2.66|3.62|4.78|-3.82"}], # 54
+        "pfam_domains": [{"transcript": "ENST11111111111", "value": "PF07728"}, {"transcript": "ENST22222222222", "value": "PF12774"}] # 70
     }
 
     # ID annotations
@@ -129,7 +133,7 @@ def add_variant_all_annotations(chrom, pos, ref, alt, conn, annotation_values = 
 
     # add annotations -> this variant should have ALL annotations which can be possibly available
     annotation_type_ids = conn.get_recent_annotation_type_ids()
-    print(annotation_type_ids)
+    #print(annotation_type_ids)
 
     annotations_with_values = []
     for annotation_type in annotation_values:

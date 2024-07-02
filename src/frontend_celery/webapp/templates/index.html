@@ -102,6 +102,7 @@
         <ul>
             <li>Publish and insert queue history pages are now paginated for better scalability</li>
             <li>Improved single HerediCaRe VID import</li>
+            <li>Updated PFAM protein domain external links to link to InterPro</li>
         </ul>
         Bugfixes:
         <ul>
@@ -112,6 +113,8 @@
             <li>Removed wrong chromosome from check variants page</li>
             <li>Classification criteria were not wrapping properly on the variant history page</li>
             <li>In specific cases the cancerhotspots annotations were incorrect</li>
+            <li>Fixed an issue when two criteria had the same mutually exclusive criterion target and both were selected. If the use would unselect one of them the mutually exclusive criterion would be enabled for selection even though it shouldn't</li>
+            <li>When a variant was not annotated or did not have any consequences the "no scheme" would be preselected on the variant classify page. Now, the correct selected default classification scheme is selected</li>
         </ul>
     </div>
     

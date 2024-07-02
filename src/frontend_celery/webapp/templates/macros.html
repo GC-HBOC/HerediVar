@@ -218,7 +218,7 @@
                 <div class="dashed_underline" data-bs-toggle="tooltip" data-bs-title="{{ annot.description }}">{{ annot.display_title }}:</div>
                 <div class="d-flex margin_between_list_small" data-testid="annotation-{{annot.title}}">
                     {% for part in display_parts %}
-                        <div>{{ external_link(part, "https://pfam.xfam.org/family/" + part) }}</div>
+                        <div>{{ external_link(part, "https://www.ebi.ac.uk/interpro/entry/pfam/" + part) }}</div> <!-- old link: https://pfam.xfam.org/family/PFXXXX -->
                     {% endfor %}
                     <div>({{display_transcript}})</div>
                 </div>
@@ -234,7 +234,7 @@
                             <div class='col-6'>{{transcript}}</div>
                             <div class='col-6 text-center border-start'>
                                 {% for pfam_acc in pfam_accs %}
-                                    <div><a class='external_link' href='{{'https://pfam.xfam.org/family/' + pfam_acc}}'>{{pfam_acc}}</a></div>
+                                    <div><a class='external_link' href='{{'https://www.ebi.ac.uk/interpro/entry/pfam/' + pfam_acc}}'>{{pfam_acc}}</a></div>
                                 {% endfor %}
                             </div>
                         </div>

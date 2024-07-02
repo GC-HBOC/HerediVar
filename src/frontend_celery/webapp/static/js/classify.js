@@ -8,7 +8,7 @@ const logged_in_user_id = flask_data.dataset.loggedInUserId
 const classification_schemas = JSON.parse(flask_data.dataset.classificationSchemas)
 
 const previous_classifications = JSON.parse(flask_data.dataset.previousClassifications)
-const variant_genes = flask_data.dataset.variantGenes;
+const variant_genes = ((flask_data.dataset.variantGenes == "None") ? "" : flask_data.dataset.variantGenes) ;
 const classification_type = flask_data.dataset.classificationType;
 const request_form = JSON.parse(flask_data.dataset.requestForm)
 
@@ -214,24 +214,26 @@ function preselect_final_classification() {
 
 function preselect_scheme() {
     var scheme_select = document.getElementById('scheme')
-    const lower_case_variant_genes = variant_genes.toLowerCase().split('~3b') // convert all genes to lower case
+    var lower_case_variant_genes = variant_genes.toLowerCase().split('~3b') // convert all genes to lower case
 
     console.log(classification_schemas)
 
     var found_one = false;
-    var default_scheme_id = undefined;
+    var default_scheme_id = Object.keys(classification_schemas)[0];
     for (var classification_scheme_id in classification_schemas) {
         var current_classification_scheme = classification_schemas[classification_scheme_id]
         var scheme_type = current_classification_scheme["scheme_type"]
         for (var i = 0; i < lower_case_variant_genes.length; i++) {
             var current_gene = lower_case_variant_genes[i]
-            if (scheme_type.includes(current_gene)){
+            if (current_gene != "" && scheme_type.includes(current_gene)){
+                console.log(scheme_type)
+                console.log(current_gene)
                 scheme_select.value = classification_scheme_id;
                 found_one = true;
                 break;
             }
         }
-        if (current_classification_scheme['is_default']) {
+        if (current_classification_scheme['is_default'] == 1) {
             default_scheme_id = classification_scheme_id;
         }
     }
@@ -660,6 +662,7 @@ function remove_buttons() {
 }
 
 function revert_all() {
+    disabled_criteria = []
     //revert_strength_selects()
     revert_criteria_container()
     remove_buttons()
@@ -1475,17 +1478,58 @@ function update_criterium_button_label(criterium_id) {
     }
 }
 
+
+
+
+var disabled_criteria = []
 function update_mutual_criteria(criterium_id) {
-    //console.log("update_mutual_criteria triggered by: " + criterium_id)
-    is_selected = document.getElementById(criterium_id + '_state').value == 'selected'
+    selected_state = document.getElementById(criterium_id + '_state').value
+    is_selected = selected_state == 'selected'
+
     // mutually exclusive criteria
     const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
-    enable_disable_buttons(current_disable_group, is_selected)
+    
+    // we must do this bs down here to  prevent enabling criteria which are still disabled by another selected criterium
+    var change_state_criteria = []
+    if (is_selected) {
+        current_disable_group.forEach(crit_id => {
+            if (!disabled_criteria.includes(crit_id)) {
+                change_state_criteria.push(crit_id)
+            }
+            disabled_criteria.push(crit_id)
+        });
+    } else {
+        current_disable_group.forEach(crit_id => {
+            var i = disabled_criteria.indexOf(crit_id)
+            if (i > -1) { // item found
+                disabled_criteria.splice(i, 1) // remove the element
+            }
+            i = disabled_criteria.indexOf(crit_id)
+            if (i == -1) { // item is not in disabled criteria anymore
+                change_state_criteria.push(crit_id)
+            }
+        });
+    }
+
+    enable_disable_buttons(change_state_criteria, is_selected)
 
     // mutually inclusive criteria
     const current_enable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_inclusive_criteria']
     enable_disable_buttons(current_enable_group, !is_selected)
 }
+
+
+//function update_mutual_criteria(criterium_id) {
+//    //console.log("update_mutual_criteria triggered by: " + criterium_id)
+//    is_selected = document.getElementById(criterium_id + '_state').value == 'selected'
+//    // mutually exclusive criteria
+//    const current_disable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_exclusive_criteria']
+//    enable_disable_buttons(current_disable_group, is_selected)
+//
+//    // mutually inclusive criteria
+//    const current_enable_group = classification_schemas[scheme]['criteria'][criterium_id]['mutually_inclusive_criteria']
+//    enable_disable_buttons(current_enable_group, !is_selected)
+//}
 
 // select and unselect the criterium itself + its associated strength input check which holds information about its user-assigned strenght
 //function toggle_criterium(criterium_id) {

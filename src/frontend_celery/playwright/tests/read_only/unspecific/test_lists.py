@@ -3,7 +3,6 @@ import os
 import sys
 sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
 import utils
-from utils import Test_Connection
 import re
 #from playwright.sync_api import Page, expect, sync_playwright
 from flask import url_for
@@ -73,7 +72,7 @@ def test_variant_list_add(page):
 def test_private_list_actions(page, conn):
     # seed database
     conn.insert_user(username = "transient_tester", first_name = "TRA", last_name = "TEST", affiliation = "AFF")
-    user_id = conn.get_last_insert_id()
+    user_id = conn.get_user_id("transient_tester")
 
     list_name = "priv_l"
     conn.insert_user_variant_list(user_id = user_id, list_name = list_name, public_read = False, public_edit = False)
@@ -94,7 +93,6 @@ def test_private_list_actions(page, conn):
 
     # try accessing the private list -> unauthorized
     utils.nav(page.goto, utils.UNAUTHORIZED_STATI, url_for('user.my_lists', view=list_id, _external=True))
-
 
     # try to add variants to the private list -> unauthorized
     get_data = {
@@ -127,7 +125,7 @@ def test_add_list(page, conn):
     # seed database
     user = utils.get_user()
     conn.insert_user(username = "transient_tester", first_name = "TRA", last_name = "TEST", affiliation = "AFF")
-    other_user_id = conn.get_last_insert_id()
+    other_user_id = conn.get_user_id("transient_tester")
 
     private_list_name = "priv_l"
     conn.insert_user_variant_list(user_id = other_user_id, list_name = private_list_name, public_read = False, public_edit = False)
@@ -206,7 +204,7 @@ def test_subtract_list(page, conn):
     # seed database
     user = utils.get_user()
     conn.insert_user(username = "transient_tester", first_name = "TRA", last_name = "TEST", affiliation = "AFF")
-    other_user_id = conn.get_last_insert_id()
+    other_user_id = conn.get_user_id("transient_tester")
 
     private_list_name = "priv_l"
     conn.insert_user_variant_list(user_id = other_user_id, list_name = private_list_name, public_read = False, public_edit = False)
@@ -294,7 +292,7 @@ def test_intersect_list(page, conn):
     # seed database
     user = utils.get_user()
     conn.insert_user(username = "transient_tester", first_name = "TRA", last_name = "TEST", affiliation = "AFF")
-    other_user_id = conn.get_last_insert_id()
+    other_user_id = conn.get_user_id("transient_tester")
 
     private_list_name = "priv_l"
     conn.insert_user_variant_list(user_id = other_user_id, list_name = private_list_name, public_read = False, public_edit = False)
@@ -380,7 +378,7 @@ def test_duplicate_list(page, conn):
     # seed database
     user = utils.get_user()
     conn.insert_user(username = "transient_tester", first_name = "TRA", last_name = "TEST", affiliation = "AFF")
-    other_user_id = conn.get_last_insert_id()
+    other_user_id = conn.get_user_id("transient_tester")
 
     list_name = "priv_l"
     conn.insert_user_variant_list(user_id = other_user_id, list_name = list_name, public_read = False, public_edit = False)
@@ -422,7 +420,7 @@ def test_delete_list(page, conn):
     # seed database
     user = utils.get_user()
     conn.insert_user(username = "transient_tester", first_name = "TRA", last_name = "TEST", affiliation = "AFF")
-    other_user_id = conn.get_last_insert_id()
+    other_user_id = conn.get_user_id("transient_tester")
 
     list_name = "priv_l"
     conn.insert_user_variant_list(user_id = other_user_id, list_name = list_name, public_read = False, public_edit = False)
@@ -460,7 +458,7 @@ def test_modify_list_permissions(page, conn):
     # seed database
     user = utils.get_user()
     conn.insert_user(username = "transient_tester", first_name = "TRA", last_name = "TEST", affiliation = "AFF")
-    other_user_id = conn.get_last_insert_id()
+    other_user_id = conn.get_user_id("transient_tester")
 
     list_name = "priv_l"
     conn.insert_user_variant_list(user_id = other_user_id, list_name = list_name, public_read = False, public_edit = False)
@@ -554,7 +552,7 @@ def test_modify_list_permissions(page, conn):
 def test_public_list_actions(page, conn):
     # seed database
     conn.insert_user(username = "transient_tester", first_name = "TRA", last_name = "TEST", affiliation = "AFF")
-    user_id = conn.get_last_insert_id()
+    user_id = conn.get_user_id("transient_tester")
 
     list_name = "publ_l"
     conn.insert_user_variant_list(user_id = user_id, list_name = list_name, public_read = True, public_edit = False)
@@ -571,7 +569,7 @@ def test_public_list_actions(page, conn):
 
     # is the list visible?
     utils.nav(page.goto, utils.GOOD_STATI, url_for('user.my_lists', _external=True))
-    expect(page.locator("tr[list_id='" + str(list_id) + "']")).to_have_count(0)
+    expect(page.locator("tr[list_id='" + str(list_id) + "']")).to_have_count(1)
 
     # try accessing the public list -> works
     utils.nav(page.goto, utils.GOOD_STATI, url_for('user.my_lists', view=list_id, _external=True))

@@ -3,7 +3,6 @@ import os
 import sys
 sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
 import utils
-from utils import Test_Connection
 import re
 #from playwright.sync_api import Page, expect, sync_playwright
 from flask import url_for
@@ -263,7 +262,7 @@ def test_consensus_classification_search(page, conn):
     ]
 
     # insert consensus classifications
-    classification_scheme_id = conn.get_classification_scheme_id_from_alias("ACMG standard + SVI")
+    classification_scheme_id = conn.get_classification_scheme_id_from_alias("ACMG standard + SVI", 'v1.0.0')
     conn.insert_consensus_classification(user_id = user_id, variant_id = all_variant_ids[0], consensus_classification = "1", comment = "TEST1", evidence_document = bytes("TESTEXAMPLE", 'utf-8'), date = functions.get_now(), scheme_id = classification_scheme_id, scheme_class = "1")
     conn.insert_consensus_classification(user_id = user_id, variant_id = all_variant_ids[1], consensus_classification = "2", comment = "TEST2", evidence_document = bytes("TESTEXAMPLE", 'utf-8'), date = functions.get_now(), scheme_id = classification_scheme_id, scheme_class = "2")
     conn.insert_consensus_classification(user_id = user_id, variant_id = all_variant_ids[2], consensus_classification = "3-", comment = "TEST3", evidence_document = bytes("TESTEXAMPLE", 'utf-8'), date = functions.get_now(), scheme_id = classification_scheme_id, scheme_class = "3")
@@ -359,7 +358,7 @@ def test_user_classification_search(page, conn):
     ]
 
     # insert consensus classifications
-    classification_scheme_id = conn.get_classification_scheme_id_from_alias("ACMG standard + SVI")
+    classification_scheme_id = conn.get_classification_scheme_id_from_alias("ACMG standard + SVI", 'v1.0.0')
     conn.insert_user_classification(variant_id = all_variant_ids[0], classification = "1", user_id = user_id, comment = "", date = functions.get_now(), scheme_id = classification_scheme_id, scheme_class = "1")
     conn.insert_user_classification(variant_id = all_variant_ids[1], classification = "2", user_id = user_id, comment = "", date = functions.get_now(), scheme_id = classification_scheme_id, scheme_class = "2")
     conn.insert_user_classification(variant_id = all_variant_ids[2], classification = "3-", user_id = user_id, comment = "", date = functions.get_now(), scheme_id = classification_scheme_id, scheme_class = "3")
@@ -429,7 +428,7 @@ def test_automatic_classification_splicing_search(page, conn):
     ]
 
     # insert consensus classifications
-    classification_scheme_id = conn.get_classification_scheme_id_from_alias("ACMG standard + SVI")
+    classification_scheme_id = conn.get_classification_scheme_id_from_alias("ACMG standard + SVI", 'v1.0.0')
     conn.insert_automatic_classification(variant_id = all_variant_ids[0], classification_scheme_id = classification_scheme_id, classification_splicing = "1", classification_protein = "2", tool_version = "1.0.0")
     conn.insert_automatic_classification(variant_id = all_variant_ids[1], classification_scheme_id = classification_scheme_id, classification_splicing = "2", classification_protein = "1", tool_version = "1.0.0")
     conn.insert_automatic_classification(variant_id = all_variant_ids[2], classification_scheme_id = classification_scheme_id, classification_splicing = "3", classification_protein = "1", tool_version = "1.0.0")
@@ -490,7 +489,7 @@ def test_automatic_classification_protein_search(page, conn):
     ]
 
     # insert consensus classifications
-    classification_scheme_id = conn.get_classification_scheme_id_from_alias("ACMG standard + SVI")
+    classification_scheme_id = conn.get_classification_scheme_id_from_alias("ACMG standard + SVI", 'v1.0.0')
     conn.insert_automatic_classification(variant_id = all_variant_ids[0], classification_scheme_id = classification_scheme_id, classification_splicing = "2", classification_protein = "1", tool_version = "1.0.0")
     conn.insert_automatic_classification(variant_id = all_variant_ids[1], classification_scheme_id = classification_scheme_id, classification_splicing = "1", classification_protein = "2", tool_version = "1.0.0")
     conn.insert_automatic_classification(variant_id = all_variant_ids[2], classification_scheme_id = classification_scheme_id, classification_splicing = "1", classification_protein = "3", tool_version = "1.0.0")
