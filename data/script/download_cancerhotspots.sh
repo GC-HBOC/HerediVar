@@ -82,7 +82,7 @@ significantfile=$significantfile.tsv.0
 
 
 cancerhotspotsfile=cancerhotspots.v2
-wget -O $cancerhotspotsfile.maf.gz https://cbioportal-download.s3.amazonaws.com/cancerhotspots.v2.maf.gz #http://download.cbioportal.org/cancerhotspots/cancerhotspots.v2.maf.gz
+wget -O $cancerhotspotsfile.maf.gz https://cbioportal-download.s3.amazonaws.com/cancerhotspots.v2.maf.gz
 gunzip $cancerhotspotsfile.maf.gz
 
 #(head -n 2  $cancerhotspotsfile.maf && tail -n +3  $cancerhotspotsfile.maf | sort -t$'\t' -f -k5,5V -k6,6n -k11,11 -k13,13) >  $cancerhotspotsfile.sorted.maf
