@@ -183,6 +183,7 @@ classified_structural_variants
 /src/frontend_celery/playwright/.auth
 /src/frontend_celery/playwright/.pytest_cache
 /src/frontend_celery/playwright/data
+/src/frontend_celery/playwright/redis*
 /Python-*
 /data_makefile
 /.localpython
