@@ -166,14 +166,11 @@
         <!-- final classification -->
         <div class="form-group bst">
             <label for="final_class" class="form-label">Final classification</label>
-            <select class="form-select" name="final_class" id="final_class" required>
-                {% for c in allowed_classes %}
-                    <option value="{{c}}">{{c}}</option>
-                {% endfor %}
-           </select>
-           <div class="invalid-feedback">
-               Please select a classification
-           </div>
+            <select class="form-select" name="final_class" id="final_class" required> <!-- options are filled by javascript -->
+            </select>
+            <div class="invalid-feedback">
+                Please select a classification
+            </div>
         </div>
 
 

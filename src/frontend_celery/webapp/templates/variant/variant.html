@@ -35,7 +35,7 @@
                 {% if clinvar_queue_entry_summary["status"] not in ["skipped", "unknown"] %}
                     {% set mrcc = variant.get_recent_consensus_classification() %}
                     {% if mrcc is not none %}
-                        {% if mrcc.needs_clinvar_upload and clinvar_queue_entry_summary["status"] not in ["progress", "processing", "submitted", "pending", "waiting", "requested"] %}
+                        {% if mrcc.needs_clinvar_upload and clinvar_queue_entry_summary["status"] not in ["progress", "processing", "submitted", "pending", "waiting", "requesting"] %}
                             {{macros.draw_exclamation_mark("The consensus classification needs to be uploaded to ClinVar!")}}
                         {% endif %}
                     {% endif %}
@@ -47,7 +47,7 @@
 
             <div class="popover_collapse collapse collapse-horizontal">
                 <div class="card card-body width_very_large">
-                    {% if clinvar_queue_entries is not none and clinvar_queue_entry_summary["status"] not in ["waiting", "requested"] %}
+                    {% if clinvar_queue_entries is not none and clinvar_queue_entry_summary["status"] not in ["waiting", "requesting"] %}
                     <div class='row gx-2 border-bottom bg-light'>
                         <div class='col-3'>Accession ID</div>
                         <div class='col-3 text-center border-start'>status</div>

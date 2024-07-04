@@ -79,7 +79,7 @@ echo $path_to_structure
 echo $path_to_data
 
 
-static_data_tables="annotation_type classification_scheme classification_criterium classification_criterium_strength classification_scheme_alias mutually_exclusive_criteria mutually_inclusive_criteria user heredicare_ZID"
+static_data_tables="annotation_type classification_scheme classification_criterium classification_criterium_strength classification_scheme_alias mutually_exclusive_criteria mutually_inclusive_criteria user heredicare_ZID classification_final_class assay_metadata_type assay_type"
 
 
 # dump structure

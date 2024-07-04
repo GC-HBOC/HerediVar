@@ -156,7 +156,7 @@ def get_user():
 def check_flash_id(page, flash_id):
     if flash_id.startswith('flash_id:'):
         flash_id = flash_id.split(':')[1]
-    element_handle = page.locator(".alert")
+    element_handle = page.locator(".alert_msg")
     try:
         expect(element_handle).to_have_class(re.compile(r"flash_id:" + flash_id))
     except AssertionError as e:

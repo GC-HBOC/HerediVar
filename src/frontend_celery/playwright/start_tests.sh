@@ -63,7 +63,7 @@ cd $TESTDIR
 # test default user
 export TESTUSER=$TEST_USER
 export TESTUSERPW=$TEST_USER_PW
-pytest --screenshot=only-on-failure --browser firefox tests/default_user/ -k 'test_user_select_all_schemes' #-k 'test_private_list_actions or test_variant_list_add' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
+pytest --screenshot=only-on-failure --browser firefox tests/default_user/ -k 'test_user_classify' #-k 'test_private_list_actions or test_variant_list_add' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
 
 # test superuser
 #export TESTUSER=$TEST_SUPERUSER
