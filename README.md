@@ -96,6 +96,7 @@ Now create five database users:
 - HerediVar_annotation
 - HerediVar_read_only
 - HerediVar_admin
+
 Note: You can again use whatever database usernames you want. Simply change the config according to your choice (see subsequent sections).
 
 Provide the HerediVar_admin user with all privileges on the new database
@@ -126,6 +127,7 @@ mysql -p -u HerediVar_admin HerediVar < HerediVar/resources/backups/database_dum
 source HerediVar/.venv/bin/activate
 python3 HerediVar/tools/init_db.py
 ```
+
 ### 6 Initialize Keycloak
 Run the following commands from a terminal and replace "xxx" with a username and **STRONG** password. 
 ```
@@ -147,6 +149,7 @@ The commands to start the services are:
 - Celery: ```HerediVar/src/frontend_celery/start_celery.sh -w $WEBAPP_ENV```
 - Keycloak: ```HerediVar/src/frontend_celery/start_keycloak.sh -w $WEBAPP_ENV```
 - HerediClassify: ```HerediVar/src/frontend_celery/start_herediclass.sh -w $WEBAPP_ENV```
+
 Note: I recommend to start Redis before HerediVar and Celery because both of them connect to Redis to store data
 
 Note: In a production environment you should use systemd to always keep these services alive
