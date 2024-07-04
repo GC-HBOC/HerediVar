@@ -123,12 +123,37 @@ Initialize static table data
 ```
 gunzip HerediVar/resources/backups/database_dumper/dev/static/static-$mrd.sql.gz
 mysql -p -u HerediVar_admin HerediVar < HerediVar/resources/backups/database_dumper/dev/static/static-$mrd.sql
-cd /path/to/HerediVar
-source .venv/bin/activate
-python3 tools/init_db.py
+source HerediVar/.venv/bin/activate
+python3 HerediVar/tools/init_db.py
+```
+### 6 Initialize Keycloak
+Run the following commands from a terminal and replace "xxx" with a username and **STRONG** password. 
+```
+KEYCLOAK_ADMIN=xxx
+KEYCLOAK_ADMIN_PASSWORD=xxx
+mrd=$(cat HerediVar/resources/backups/keycloak_export/most_recent_dump.txt)
+HerediVar/tools/keycloak-18.0.0/bin/kc.sh import --file HerediVar/resources/backups/keycloak_export/dev/$mrd/HerediVar-realm.json
 ```
 
+
 ## Start HerediVar
+You have to start five services which must run any time. You can start them using the commands below. Each start script requires you to specify the environment (-w option). Set this variable to
+- "dev" if you are developing HerediVar
+- "prod" in a production installation
+
+The commands to start the services are:
+- Redis: ```HerediVar/src/frontend_celery/start_redis.sh -w $WEBAPP_ENV```
+- HerediVar Flask server: ```HerediVar/src/frontend_celery/start_webapp.sh -w $WEBAPP_ENV```
+- Celery: ```HerediVar/src/frontend_celery/start_celery.sh -w $WEBAPP_ENV```
+- Keycloak: ```HerediVar/src/frontend_celery/start_keycloak.sh -w $WEBAPP_ENV```
+- HerediClassify: ```HerediVar/src/frontend_celery/start_herediclass.sh -w $WEBAPP_ENV```
+Note: I recommend to start Redis before HerediVar and Celery because both of them connect to Redis to store data
+
+Note: In a production environment you should use systemd to always keep these services alive
+
+## Configure HerediVar
+
+
 
 
 ## Run tests
