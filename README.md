@@ -28,6 +28,8 @@ Note: the HerediVar installation is mostly self-contained. This means it will in
 
 Note: If you want to use another version of a tool, package or database you can modify the makefile. There are variables for each tool and database which have a versioned download.
 
+Note: Every package or tool has utility functions to update or remove. For example: to update gnomAD ```make gnomad_update``` (remove and install again) and to remove gnomAD ```make gnomad_clean```
+
 ### 1. install system requirements
 First ensure that all system requirements are met. This requires administrator priviegles and the whole step can be skipped if you already have the packages mentioned below.
 
@@ -82,25 +84,55 @@ make annotation_data
 Note: Although HerediVar only annotates the variant identifier from COSMIC it requires a license. Once you have the data you can take a look two conversion scripts that were used: [https://github.com/imgag/megSAP/blob/master/src/Tools/db_converter_cosmic.php](https://github.com/imgag/megSAP/blob/master/src/Tools/db_converter_cosmic.php) and [https://github.com/GC-HBOC/HerediVar/blob/main/data/script/download_cosmic.sh](https://github.com/GC-HBOC/HerediVar/blob/main/data/script/download_cosmic.sh)
 
 ### 5. initialize HerediVar database
+First connect to the mariadb (or mysql) console and create a new scheme:
 ```
+CREATE DATABASE HerediVar;
+```
+Note: You can use whatever name you want. Simply change the config according to your choice (see subsequent sections).
+
+Now create five database users:
+- HerediVar_user
+- HerediVar_superuser
+- HerediVar_annotation
+- HerediVar_read_only
+- HerediVar_admin
+Note: You can again use whatever database usernames you want. Simply change the config according to your choice (see subsequent sections).
+
+Provide the HerediVar_admin user with all privileges on the new database
+```
+GRANT ALL PRIVILEGES ON HerediVar.* TO 'HerediVar_admin'@'localhost' WITH GRANT OPTION;
+```
+Disconnect from the mariadb console and verify that login works with HerediVar_admin and that you see the database.
+
+Create the database structure. Use the most recent dump
+```
+mrd=$(cat HerediVar/resources/backups/database_dumper/most_recent_dump.txt)
+gunzip HerediVar/resources/backups/database_dumper/dev/structure/structure-$mrd.sql.gz
+mysql -p -u HerediVar_admin HerediVar < HerediVar/resources/backups/database_dumper/dev/structure/structure-$mrd.sql
+```
+
+Initialize user privileges
+
+Note: If you changed the database name / database users you have to adjust the names in the users-$mrd.sql file. 
+```
+gunzip HerediVar/resources/backups/database_dumper/dev/users/users-$mrd.sql.gz
+mysql -p -u HerediVar_admin HerediVar < HerediVar/resources/backups/database_dumper/dev/users/users-$mrd.sql
+```
+
+Initialize static table data
+```
+gunzip HerediVar/resources/backups/database_dumper/dev/static/static-$mrd.sql.gz
+mysql -p -u HerediVar_admin HerediVar < HerediVar/resources/backups/database_dumper/dev/static/static-$mrd.sql
 cd /path/to/HerediVar
 source .venv/bin/activate
 python3 tools/init_db.py
 ```
 
-You can also choose to install all dependencies separately. Every database and tool has its own entrypoint in the makefile. We also provide an update and clean endpoint.
-For example to download gnomAD (it will skip the download if it was already downloaded ie if it finds the gnomAD folder in HerediVar/data/dbs/)
-```
-make gnomad
-```
-To update gnomAD
-```
-make gnomad_update
-```
-To remove gnomAD
-```
-make gnomad_clean
-```
+## Start HerediVar
+
+
+## Run tests
+
 
 ## Contribute and Questions
 If you are interested in contributing classifications to HerediVar please reach out to Jan Hauke ().
