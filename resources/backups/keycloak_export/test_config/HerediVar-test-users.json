@@ -1,28 +1,95 @@
 {
   "realm" : "HerediVar",
   "users" : [ {
-    "id" : "7bcb76a3-e5bb-4a60-8814-47c9d5e90153",
-    "createdTimestamp" : 1652186757808,
-    "username" : "norights",
+    "id" : "cfc303df-915f-49cd-b2cb-c3f0bd5be8c9",
+    "createdTimestamp" : 1669284323135,
+    "username" : "readonly",
     "enabled" : true,
     "totp" : false,
     "emailVerified" : true,
-    "firstName" : "Mirco",
-    "lastName" : "testtest",
-    "email" : "norights@test.abc",
+    "firstName" : "Ava-Rose",
+    "lastName" : "Cresswell",
+    "email" : "readonly@sth.com",
     "attributes" : {
-      "affiliation" : [ "sometest" ]
+      "affiliation" : [ "affiliation1" ]
     },
     "credentials" : [ {
-      "id" : "13ff637d-f142-4ff9-8e9a-b87550900fac",
+      "id" : "4cfd9231-3cbe-42a4-8811-99e5a849e6bd",
       "type" : "password",
-      "createdDate" : 1652186778185,
-      "secretData" : "{\"value\":\"tDDfuGveHnMPXhKFwyFR7gfUr4DBSmWWyWsc6Gs3jDlB5qgleAOV3AQoB/ACDJPL+UVUWNUGMqKMYbYEI9hwpQ==\",\"salt\":\"bgKFt00gZGYQHTR+dmS8+w==\",\"additionalParameters\":{}}",
+      "createdDate" : 1669299138239,
+      "secretData" : "{\"value\":\"9r7mfgdibd/dRu+JsKp1Er3dtMBfjCOG3z4/8H1/KmPbtgXXFM+lti4l6SnCy3JTtIbHkg/RW6YvYn0/grmzcw==\",\"salt\":\"qrwNCAydUGeeD3XlanrMww==\",\"additionalParameters\":{}}",
       "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
     } ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
+    "realmRoles" : [ "read_only", "default-roles-heredivar" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "3fab0e7f-0a56-4982-83e4-de6145b0238f",
+    "createdTimestamp" : 1669298932134,
+    "username" : "superuser",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Testnameupdate",
+    "lastName" : "Todd",
+    "email" : "testmail@testmail.testmail",
+    "attributes" : {
+      "affiliation" : [ "testaffiliation" ]
+    },
+    "credentials" : [ {
+      "id" : "52a52942-a829-4606-9155-a4f20c0cef49",
+      "type" : "password",
+      "createdDate" : 1683631269203,
+      "secretData" : "{\"value\":\"QsKNxZFdE1lgpFgHRaFKHUb+AiyU3O6XtM7dsNBCYqtEgMIVQxczrRT5SfLG0yRTvKp2FOmH0r9KwKqDmBffLw==\",\"salt\":\"SzQvwQeanB0YhKdUhU5+Qw==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-heredivar", "account_manager", "super_user" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "455ccea8-1a50-4ffb-a567-5bb92dfd7155",
+    "createdTimestamp" : 1669299015815,
+    "username" : "user",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : true,
+    "firstName" : "Manon",
+    "lastName" : "Oconnor",
+    "email" : "stduser@testmail.com",
+    "attributes" : {
+      "affiliation" : [ "affiliation2" ]
+    },
+    "credentials" : [ {
+      "id" : "68df3efd-4d28-4428-93fe-8f5a767901cf",
+      "type" : "password",
+      "createdDate" : 1669299025765,
+      "secretData" : "{\"value\":\"6kyxtHb4QdIdJgWM0cxph/0u66geD5erFuQRPufG4dNtMWp8NrCIMZ2KSoFVZAWI6TrCChxeNHzhFNHYCfRg6g==\",\"salt\":\"Be0mp1Ni9x90K3oy9MG9dA==\",\"additionalParameters\":{}}",
+      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
+    } ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
+    "realmRoles" : [ "default-roles-heredivar", "user" ],
+    "notBefore" : 0,
+    "groups" : [ ]
+  }, {
+    "id" : "a4154970-47f5-4c99-9705-8216f1f30f8b",
+    "createdTimestamp" : 1683280220765,
+    "username" : "service-account-admin-cli",
+    "enabled" : true,
+    "totp" : false,
+    "emailVerified" : false,
+    "serviceAccountClientId" : "admin-cli",
+    "credentials" : [ ],
+    "disableableCredentialTypes" : [ ],
+    "requiredActions" : [ ],
     "realmRoles" : [ "default-roles-heredivar" ],
+    "clientRoles" : {
+      "admin-cli" : [ "uma_protection" ]
+    },
     "notBefore" : 0,
     "groups" : [ ]
   }, {
@@ -43,30 +110,19 @@
     "notBefore" : 0,
     "groups" : [ ]
   }, {
-    "id" : "34be7e1a-5031-4dc6-9359-0ab25cf21bce",
-    "createdTimestamp" : 1651737520045,
-    "username" : "testuser",
+    "id" : "834c93dd-6c0d-4b49-b0e3-10882a44bc75",
+    "createdTimestamp" : 1681824432946,
+    "username" : "service-account-realm-management",
     "enabled" : true,
     "totp" : false,
-    "emailVerified" : true,
-    "firstName" : "Max",
-    "lastName" : "Mustermann",
-    "email" : "test@abc.com",
-    "attributes" : {
-      "affiliation" : [ "testaffiliation" ]
-    },
-    "credentials" : [ {
-      "id" : "8c248b22-9904-49c0-988a-7564137bf05e",
-      "type" : "password",
-      "createdDate" : 1651737533985,
-      "secretData" : "{\"value\":\"GRMZkLwt60ZBKEUxci0MEPv+m+sHlDQnZdX6JSa5ALEHkGgfPz6pS1T+s7bj1GdAeXOxy2aKse421zWA59o+9Q==\",\"salt\":\"QGvCO8LxdYu72wOC0H3kng==\",\"additionalParameters\":{}}",
-      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
-    } ],
+    "emailVerified" : false,
+    "serviceAccountClientId" : "realm-management",
+    "credentials" : [ ],
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-heredivar", "visitor" ],
+    "realmRoles" : [ "default-roles-heredivar" ],
     "clientRoles" : {
-      "realm-management" : [ "manage-users", "view-users" ]
+      "realm-management" : [ "uma_protection" ]
     },
     "notBefore" : 0,
     "groups" : [ ]

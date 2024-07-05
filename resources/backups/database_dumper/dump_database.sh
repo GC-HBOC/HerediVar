@@ -72,10 +72,10 @@ then
     users_path=$SCRIPTPATH/dev/users
     mkdir -p $users_path
     users_name=users-$DATE.sql
-    mysql --host $DB_HOST --port $DB_PORT -u$DB_READ_ONLY -p$DB_READ_ONLY_PW -e "SHOW GRANTS FOR CURRENT_USER();" $DB_NAME | grep $DB_NAME > $users_path/$users_name
-    mysql --host $DB_HOST --port $DB_PORT -u$DB_USER -p$DB_USER_PW -e "SHOW GRANTS FOR CURRENT_USER();" $DB_NAME | grep $DB_NAME >> $users_path/$users_name
-    mysql --host $DB_HOST --port $DB_PORT -u$DB_SUPER_USER -p$DB_SUPER_USER_PW -e "SHOW GRANTS FOR CURRENT_USER();" $DB_NAME | grep $DB_NAME >> $users_path/$users_name
-    mysql --host $DB_HOST --port $DB_PORT -u$DB_ANNOTATION_USER -p$DB_ANNOTATION_USER_PW -e "SHOW GRANTS FOR CURRENT_USER();" $DB_NAME | grep $DB_NAME >> $users_path/$users_name
+    mysql --host $DB_HOST --port $DB_PORT -u$DB_READ_ONLY -p$DB_READ_ONLY_PW -e "SHOW GRANTS FOR CURRENT_USER();" $DB_NAME | grep $DB_NAME | tr 'HerediVar_ahdoebm1' 'HerediVar' > $users_path/$users_name
+    mysql --host $DB_HOST --port $DB_PORT -u$DB_USER -p$DB_USER_PW -e "SHOW GRANTS FOR CURRENT_USER();" $DB_NAME | grep $DB_NAME | tr 'HerediVar_ahdoebm1' 'HerediVar' >> $users_path/$users_name
+    mysql --host $DB_HOST --port $DB_PORT -u$DB_SUPER_USER -p$DB_SUPER_USER_PW -e "SHOW GRANTS FOR CURRENT_USER();" $DB_NAME | grep $DB_NAME | tr 'HerediVar_ahdoebm1' 'HerediVar' >> $users_path/$users_name
+    mysql --host $DB_HOST --port $DB_PORT -u$DB_ANNOTATION_USER -p$DB_ANNOTATION_USER_PW -e "SHOW GRANTS FOR CURRENT_USER();" $DB_NAME | grep $DB_NAME | tr 'HerediVar_ahdoebm1' 'HerediVar' >> $users_path/$users_name
     gzip -f $users_path/$users_name
 
 

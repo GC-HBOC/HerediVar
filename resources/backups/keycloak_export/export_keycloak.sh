@@ -51,6 +51,7 @@ then
     backups_folder=$SCRIPTPATH/dev/$DATE
     mkdir -p $backups_folder
     $KEYCLOAK/kc.sh export --dir $backups_folder --realm HerediVar --users same_file
+    echo $DATE > $SCRIPTPATH/most_recent_dump.txt
 fi
 
 if [ "${WEBAPP_ENV}" == "prod" ]
