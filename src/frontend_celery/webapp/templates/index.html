@@ -94,9 +94,8 @@
     <h4>Changelog</h4>
 
 
-    <div class="underline">v 1.12.1 ()</div>
+    <div class="underline">v 1.13 (05.07.2024)</div>
     <div class="btn-pvs">!! Scores from likelihood ratio tests are currently not available from HerediCaRe.</div>
-    <div class="btn-pvs">!! HerediCaRe upload is currently disabled.</div>
     <div>
         General changes:
         <ul>
@@ -105,6 +104,7 @@
             <li>Updated PFAM protein domain external links to link to InterPro</li>
             <li>Increased login idle timer</li>
             <li>Now the REVEL score of the best transcript is shown first</li>
+            <li>Enabled HerediCaRe uploads</li>
         </ul>
         Bugfixes:
         <ul>
@@ -122,32 +122,6 @@
         </ul>
     </div>
     
-    <div class="underline">v 1.12 (17.06.2024)</div>
-    <div>
-        General changes:
-        <ul>
-            <li>
-                Added updated classification schemes:
-                <ul>
-                    <li>PALB2: v1.0.0 -> v1.1.0</li>
-                    <li>ATM: v1.1.0 -> v1.3.0</li>
-                    <li>BRCA1: v1.0.0 -> v1.1.0</li>
-                    <li>BRCA2: v1.0.0 -> v1.1.0</li>
-                </ul>
-            </li>
-            <li>Previously, moderate benign criteria were colored in pink. Now, very strong benign criteria are shown in this color.</li>
-            <li>Removed extra download for structural variants. Instead they are now combined in one file with small variants. Also, IGV now shows one track for all classified variants.</li>
-            <li>Improved session security</li>
-            <li>Added an API endpoint for access of consensus classifications programmatically</li>
-            <li>Added API documentation</li>
-        </ul>
-        Bugfixes:
-        <ul>
-            <li>Selecting pm2_sup in ATM gene specific scheme or bp1_str in BRCA1/2 schemes caused wrong calculated class when selecting another supporting or strong criterium.</li>
-            <li>The force download url for erroneous vcfs was broken</li>
-            <li>Fixed a bug where the header line for annotated literature was incorrectly called 'pubmed' instead of 'literature'</li>
-        </ul>
-    </div>
 
 
 
