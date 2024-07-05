@@ -59,7 +59,7 @@ fi
 
 
 # Begin script in case all parameters are correct
-echo "Installing BRCA exchange to $basedir..."
+echo "Installing CSPEC assays to $basedir..."
 
 
 source $venv/bin/activate

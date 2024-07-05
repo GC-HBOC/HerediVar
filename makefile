@@ -318,6 +318,8 @@ chainfile:
 
 
 #### DOWNLOAD DATA FOR INITIALIZATION OF HEREDIVAR
+initialization_data: omim mapping_tables pfam mane refseq ensembl orphanet hgnc
+
 ## hgnc
 HGNCPATH := $(DBS)
 HGNCNAME := HGNC
@@ -445,6 +447,8 @@ omim_update: omim_clean omim
 
 
 #### DOWNLOAD ANNOTATION DATABASES
+annotation_data: brca_exchange flossies dbsnp phylop cadd revel cancerhotspots tp53 gnomad hci_priors spliceai bayesdel clinvar coldspot cspecassays 
+
 ## brca exchange
 BRCAEXCHANGEPATH = $(DBS)
 BRCAEXCHANGENAME = BRCA_exchange
@@ -556,20 +560,20 @@ cancerhotspots_clean:
 cancerhotspots_update: cancerhotspots_clean cancerhotspots
 
 
-## arup brca
-ARUPPATH = $(DBS)
-ARUPNAME = ARUP
-ARUP= $(ARUPPATH)/$(ARUPNAME)
-arup: genomes venv ngs_bits
-	if [ ! -d "${ARUP}" ]; then \
-		printf ${_TEXTCOL_RED} "Downloading arup brca $(ARUPVERSION)..." ; \
-		${DATA}/script/download_arup.sh -p ${ARUPPATH} -n ${ARUPNAME} -y ${VENV} -t "dbconverter=${TOOLS}/db_converter_arup.py ngsbits=${NGSBITS}/bin" -g "grch38=${GRCH38} grch37=${GRCH37} chainfile=$(CHAINFILE)" ; \
-	fi
-
-arup_clean:
-	rm -rf ${ARUP}
-
-arup_update: arup_clean arup
+### arup brca
+#ARUPPATH = $(DBS)
+#ARUPNAME = ARUP
+#ARUP= $(ARUPPATH)/$(ARUPNAME)
+#arup: genomes venv ngs_bits
+#	if [ ! -d "${ARUP}" ]; then \
+#		printf ${_TEXTCOL_RED} "Downloading arup brca $(ARUPVERSION)..." ; \
+#		${DATA}/script/download_arup.sh -p ${ARUPPATH} -n ${ARUPNAME} -y ${VENV} -t "dbconverter=${TOOLS}/db_converter_arup.py ngsbits=${NGSBITS}/bin" -g "grch38=${GRCH38} grch37=${GRCH37} chainfile=$(CHAINFILE)" ; \
+#	fi
+#
+#arup_clean:
+#	rm -rf ${ARUP}
+#
+#arup_update: arup_clean arup
 
 
 
