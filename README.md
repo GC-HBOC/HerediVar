@@ -134,8 +134,15 @@ Run the following commands from a terminal and replace "xxx" with a username and
 KEYCLOAK_ADMIN=xxx
 KEYCLOAK_ADMIN_PASSWORD=xxx
 mrd=$(cat HerediVar/resources/backups/keycloak_export/most_recent_dump.txt)
-HerediVar/tools/keycloak-18.0.0/bin/kc.sh import --file HerediVar/resources/backups/keycloak_export/dev/$mrd/HerediVar-realm.json
+HerediVar/tools/keycloak/bin/kc.sh import --file HerediVar/resources/backups/keycloak_export/dev/$mrd/HerediVar-realm.json
 ```
+
+## Configure HerediVar
+Make your own .env file. Depending on the environment you should change xxx to one of prod, dev or localtest.
+```
+cp HerediVar/.env_example HerediVar/.env_xxx
+```
+Then edit your .env file. HerediVar will use the information in this file to start the server.
 
 
 ## Start HerediVar
@@ -152,17 +159,24 @@ The commands to start the services are:
 
 Note: I recommend to start Redis before HerediVar and Celery because both of them connect to Redis to store data
 
-Note: In a production environment you should use systemd to always keep these services alive
-
-## Configure HerediVar
-
-
+Note: Use systemd in a production environment to always keep these services alive
 
 
 ## Run tests
+HerediVar uses Playwright for testing.
+
+First initialize static data:
+```
+HerediVar/src/frontend_celery/playwright/update_static_data.sh -w $WEBAPP_ENV
+```
+Then, start the tests:
+```
+HerediVar/src/frontend_celery/playwright/start_tests.sh
+```
+Note: Starting the tests for the first time will take quite a long time, because it downloads some tools, but will be faster from the second start onwards.
 
 
 ## Contribute and Questions
 If you are interested in contributing classifications to HerediVar please reach out to Jan Hauke ().
 
-If you have questions about classifications on HerediVar please use the online form on our website: [https://heredivar.uni-koeln.de/contact](https://heredivar.uni-koeln.de/contact)
+If you have questions about variant classifications on HerediVar please use the online form on our website: [https://heredivar.uni-koeln.de/contact](https://heredivar.uni-koeln.de/contact)
