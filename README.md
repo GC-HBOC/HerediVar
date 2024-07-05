@@ -50,7 +50,7 @@ sudo apt install genometools
 sudo apt install libdb-dev
 sudo apt-get install libpq-dev libffi-dev libsqlite3-dev
 ```
-### 3. install tools
+### 2. install tools
 Next, install the following tools: python, venv, htslib, keycloak, redis, vep, ngs_bits, samtools and herediclass. You may choose to install every tool on its own (eg. ```make python```) or install all at once using
 ```
 make tools
@@ -63,7 +63,7 @@ Again, they can be installed on its own (eg. ```make bootstrap```) or all togeth
 ```
 make js_libs
 ```
-### 4. download annotation databases
+### 3. download annotation databases
 This step takes the longest time since a lot of data needs to be downloaded and prepared to be digestable by HerediVar.
 
 First install the reference genomes: grch37, grch38 and chainfile or install all at once using
@@ -83,7 +83,7 @@ make annotation_data
 
 Note: Although HerediVar only annotates the variant identifier from COSMIC it requires a license. Once you have the data you can take a look two conversion scripts that were used: [https://github.com/imgag/megSAP/blob/master/src/Tools/db_converter_cosmic.php](https://github.com/imgag/megSAP/blob/master/src/Tools/db_converter_cosmic.php) and [https://github.com/GC-HBOC/HerediVar/blob/main/data/script/download_cosmic.sh](https://github.com/GC-HBOC/HerediVar/blob/main/data/script/download_cosmic.sh)
 
-### 5. initialize HerediVar database
+### 4. initialize HerediVar database
 First connect to the mariadb (or mysql) console and create a new scheme:
 ```
 CREATE DATABASE HerediVar;
@@ -128,7 +128,7 @@ source HerediVar/.venv/bin/activate
 python3 HerediVar/tools/init_db.py
 ```
 
-### 6 Initialize Keycloak
+### 5. Initialize Keycloak
 Run the following commands from a terminal and replace "xxx" with a username and **STRONG** password. 
 ```
 KEYCLOAK_ADMIN=xxx
