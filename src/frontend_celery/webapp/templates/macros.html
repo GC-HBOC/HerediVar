@@ -249,7 +249,7 @@
             {% set max_transcript, max_value = annot.max() %}
             <div class="d-flex margin_between_list_small" annotation_id="{{ annot.id }}">
                 <div class="dashed_underline" data-bs-toggle="tooltip" data-bs-title="{{ annot.description }}">{{ annot.display_title }}:</div>
-                <div data-testid="annotation-{{annot.title}}">{{max_value}} ({{max_transcript}})</div>
+                <div data-testid="annotation-{{annot.title}}">{{transcripts_sorted[0]}} ({{values_sorted[0]}})</div>
                 <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true" data-bs-placement="top" data-bs-custom-class="popover_fix" data-bs-html="true" data-testid="revel_details"
                     data-bs-content="
                         <div>Overview number shown is the max value from the following table:</div>
@@ -484,27 +484,6 @@
 {% endif %}
 {% endmacro %}
 
-
-{% macro draw_transcript_annotation(annot) %}
-{% if annot is not none %}
-<div class="d-flex">
-    <abbr class="ssr" title="{{ annot.display_title }}"><a class="dashed_underline">{{ annot.display_title }}:</a></abbr>
-    <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
-        {% for transcript in annot.value %}
-        <li class="list-group-item noboarder-td" >
-            <div class="d-flex">
-                <div class="ssr">{{ annot.value[transcript] }}</div>
-                <a class="link" tabindex="0" role="button" data-bs-toggle="popover" data-bs-html="true"
-                    data-bs-content="Transcript: {{ transcript }}">
-                        details
-                </a>
-            </div>
-        </li>
-        {% endfor %}
-    </ul>
-</div>
-{% endif %}
-{% endmacro %}
 
 
 {% macro draw_paginated_variant_table(pagination, variants, static_information) %} <!--sort_bys, page_sizes, allowed_user_classes, allowed_consensus_classes, allowed_automatic_classes, annotation_types, allowed_variant_types, lists=none-->

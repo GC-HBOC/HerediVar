@@ -24,6 +24,7 @@ if webapp_env == 'dev':
     # general paths
     workdir = "/mnt/storage2/users/ahdoebm1/HerediVar/"
     datadir = joinpaths(workdir, "data/dbs")
+    hardcoded_datadir = joinpaths(workdir, "data/dbs_hardcoded")
     toolsdir = joinpaths(workdir, "tools")
     resources_dir = joinpaths(workdir, 'resources')
     logs_dir = joinpaths(workdir, 'logs')
@@ -89,8 +90,8 @@ if webapp_env == 'dev':
     pfam_legacy_path = joinpaths(datadir, "PFAM/pfam_legacy.tsv")
     omim_path = joinpaths(datadir, "OMIM/mim2gene.txt")
     orphanet_path = joinpaths(datadir, "OrphaNet/en_product6.xml")
-    task_force_protein_domains_path = joinpaths(datadir, "task-force_protein_domains/domains_task_force_27_11_2023.tsv")
-    coldspots_path = joinpaths(datadir, "coldspots/coldspots_12_01_2024.bed")
+    task_force_protein_domains_path = joinpaths(hardcoded_datadir, "task-force_protein_domains/domains_task_force_27_11_2023.tsv")
+    coldspots_path = joinpaths(hardcoded_datadir, "coldspots/coldspots_12_01_2024.bed")
 
     # further data
     parsing_refseq_ensembl = joinpaths(datadir, "mapping_tables/hg38_ensembl_transcript_matches.tsv")
@@ -222,6 +223,7 @@ elif webapp_env == 'prod':
     # general paths
     workdir = "/mnt/storage1/HerediVar"
     datadir = joinpaths(workdir, "data/dbs")
+    hardcoded_datadir = joinpaths(workdir, "data/dbs_hardcoded")
     toolsdir = joinpaths(workdir, "tools")
     resources_dir = joinpaths(workdir, 'resources')
     logs_dir = joinpaths(workdir, 'logs')

@@ -129,6 +129,12 @@ class TranscriptAnnotation(Abstract_Annotation):
                 max_transcript = current_transcript
         return max_transcript, max_val
 
+    def best(self):
+        transcripts_sorted, values_sorted = self.sort()
+        best_transcript = transcripts_sorted[0]
+        best_value = values_sorted[0]
+        return best_transcript, best_value
+
 
 @dataclass
 class AllAnnotations:

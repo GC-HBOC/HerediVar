@@ -285,7 +285,7 @@ class annotate_from_vcf_job(Job):
 
         ## add COSMIC database CMC significance tier
         if job_config['do_cosmic']:
-            config_file.write(paths.cosmic + "\t\tCOSMIC_CMC,COSMIC_COSV\t\n")
+            config_file.write(paths.cosmic + "\t\tCOSMIC_COSV\t\n") # COSMIC_CMC
 
         ## add cspec brca assays
         if job_config['do_cspec_brca_assays']:

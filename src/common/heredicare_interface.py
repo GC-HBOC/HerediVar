@@ -510,6 +510,10 @@ class Heredicare(metaclass=Singleton):
             status = "skipped"
             message = "The consensus classification is already uploaded to HerediCaRe."
             return all_items, status, message
+        elif mrcc.selected_class in ["R", "4M"]:
+            status = "error"
+            message = "Currently, R and 4M classifications cannot be uploaded to HerediCaRe."
+            return all_items, status, message
 
         heredicare_variant, status, message = self.get_variant(vid)
         if status == 'error':

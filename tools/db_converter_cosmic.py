@@ -1,7 +1,7 @@
 from urllib.request import urlopen
 from os import path
 import sys
-sys.path.append(  path.join(path.dirname(path.dirname(path.abspath(__file__))), "src")  )
+sys.path.append(path.join(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))), "src"))
 import argparse
 import common.functions as functions
 import os
@@ -84,11 +84,7 @@ def cmc_class_2_num(cmc_class):
     functions.eprint(cmc_class)
 
 
-previous_variant = {'chrom': "", 'pos': "", 'ref': "", 'alt': ""}
-all_cmc = {}
-all_cosv = []
-first_iteration = True
-prev_line = ""
+all_variants = {}
 
 for line in input_file:
     line = line.strip()
@@ -96,37 +92,32 @@ for line in input_file:
         continue
 
     parts = line.split('\t')
+    variant_barcode = '-'.join([parts[0], parts[1], parts[3], parts[4]])
+
     info_parts = parts[7].split('|')
-    current_variant = {'chrom': parts[0], 'pos': parts[1], 'ref': parts[3], 'alt': parts[4]}
-    all_cosv.append(info_parts[16])
-    current_transcript = info_parts[1]
-    current_cmc = info_parts[31]
+    cosv = info_parts[16]
+    transcript_name = info_parts[1]
+    cmc = info_parts[31]
 
-    if first_iteration:
-        previous_variant = current_variant
-    elif current_variant['chrom'] != previous_variant['chrom'] or current_variant['pos'] != previous_variant['pos'] or current_variant['ref'] != previous_variant['ref'] or current_variant['alt'] != previous_variant['alt']:
-        print_variant(previous_variant, all_cmc, all_cosv)
-
-        # reset
-        previous_variant = current_variant
-        all_cmc = {}
-        all_cosv = []
-
-    if current_transcript not in all_cmc:
-        all_cmc[current_transcript] = current_cmc
+    if variant_barcode not in all_variants:
+        all_variants[variant_barcode] = {'cosv': [cosv], 'cmc': {transcript_name: cmc}}
     else:
-        functions.eprint("Transcript was found multiple times for one variant: " + current_transcript)
-        functions.eprint(line)
-        functions.eprint(prev_line)
-        if current_cmc != all_cmc[current_transcript]:
-            if cmc_class_2_num(current_cmc) > cmc_class_2_num(all_cmc[current_transcript]):
-                functions.eprint("Switched from" + all_cmc[current_transcript] + ' to ' + current_cmc)
-                all_cmc[current_transcript] = current_cmc
-            functions.eprint("Transcript found multiple times for one variant and they have different cmc values " + "(" + current_cmc + "/" + all_cmc[current_transcript] + ") " + current_transcript + " variant position: " + str(current_variant['pos']))
+        all_variants[variant_barcode]['cosv'].append(cosv)
+        if transcript_name not in all_variants[variant_barcode]['cmc']:
+            all_variants[variant_barcode]['cmc'][transcript_name] = cmc
+        else:
+            functions.eprint("Transcript was found multiple times for one variant: " + transcript_name)
+            functions.eprint(line)
+            previous_cmc = all_variants[variant_barcode]['cmc'][transcript_name]
+            if cmc != previous_cmc:
+                if cmc_class_2_num(cmc) > cmc_class_2_num(previous_cmc):
+                    functions.eprint("Switched from" + previous_cmc + ' to ' + cmc)
+                    all_variants[variant_barcode]['cmc'][transcript_name] = cmc
+                functions.eprint("Transcript found multiple times for one variant and they have different cmc values " + "(" + cmc + "/" + previous_cmc + ") " + transcript_name + " variant position: " + parts[1])
 
-    first_iteration = False
-    prev_line = line
-
-# SAVE THE LAST VARIANT!
-print_variant(current_variant, all_cmc, all_cosv)
-
+for barcode in all_variants:
+    variant_parts = barcode.split('-')
+    variant = {'chrom': variant_parts[0], 'pos': variant_parts[1], 'ref': variant_parts[2], 'alt': variant_parts[3]}
+    print_variant(variant, all_variants[barcode]['cmc'], all_variants[barcode]['cosv'])
+    
+    

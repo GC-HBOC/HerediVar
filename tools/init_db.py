@@ -18,7 +18,7 @@ if __name__ == '__main__':
     #sql = file.read()
     #conn.cursor.execute(sql, multi=True)
 
-    """
+    
     print("parsing OMIM ids...")
     omim = open(paths.omim_path, "r")
     symbol_to_omim = {}
@@ -33,9 +33,9 @@ if __name__ == '__main__':
             symbol_to_omim[gene_symbol] = omim_id
 
     omim.close()
-    """
+    
 
-    """
+    
     print("parsing orphanet ids...")
     orphanet = ET.parse(paths.orphanet_path)
     root = orphanet.getroot()
@@ -58,9 +58,9 @@ if __name__ == '__main__':
         
     for symbol in set(duplicates):
         del symbol_to_orphanet[symbol]
-    """
     
-    """
+    
+    
     ## init gene table with info from HGNC tab
     print("initializing gene table...")
     hgnc = open(paths.hgnc_path, "r")
@@ -86,12 +86,12 @@ if __name__ == '__main__':
     
     hgnc.close()
     conn.remove_duplicates("gene_alias", "alt_symbol")
-    """
+    
 
 
 
 
-    """
+    
     ## init transcripts table
     # format info:
     #The 'type' of gene features in gff3 is:
@@ -420,9 +420,9 @@ if __name__ == '__main__':
         #pass
 
     refseq_transcript.close()
-    """
+    
 
-    """
+    
     ## init pfam auxiliaries tables (pfam_id_mapping and pfam_legacy)
     print("initializing PFAM id mapping table...")
     pfam_id_mapping_file = open(paths.pfam_id_mapping_path, 'r')
@@ -447,15 +447,15 @@ if __name__ == '__main__':
         conn.insert_pfam_legacy(parts[0], parts[1])
     
     pfam_legacy_file.close()
-    """
+    
     
     
     # init annotation_type table
     #conn.insert_annotation_type("gnomad_af", "Frequency of the alternate allele in samples", "float", "v3.1.2_GRCh38", "2021-10-22") 
     
 
-    """
-    ## init VUS task force protein domains table (no download for this one, it was sent by mail)
+    
+    ## init VUS task force protein domains table (no download for this one)
     print("initializing VUS-Task-Force protein domain table")
     task_force_protein_domains_file = open(paths.task_force_protein_domains_path, 'r')
     for line in task_force_protein_domains_file:
@@ -483,7 +483,7 @@ if __name__ == '__main__':
         gene_id = conn.get_gene_id_by_symbol(parts[0])
 
         conn.insert_task_force_protein_domain(gene_id, chromosome, start, end, description, source)
-    """
+    
 
     ## init coldspots
     print("initializing coldspot table")
