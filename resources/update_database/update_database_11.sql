@@ -14,3 +14,5 @@ SET FOREIGN_KEY_CHECKS = 1;
 DELETE FROM variant_annotation WHERE annotation_type_id IN (
 SELECT id FROM annotation_type WHERE title IN ("cancerhotspots", "cancerhotspots_ac", "cancerhotspots_af")
 );
+
+DELETE FROM variant_ids WHERE annotation_type_id = (SELECT id FROM annotation_type WHERE display_title = 'cosmic-id')
