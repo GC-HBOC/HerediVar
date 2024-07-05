@@ -161,6 +161,13 @@ Note: I recommend to start Redis before HerediVar and Celery because both of the
 
 Note: Use systemd in a production environment to always keep these services alive
 
+## Configure Keycloak
+In your browser navigate to $KEYCLOAK_HOST:$KEYCLOAK_PORT (as specified in the .env file). This will bring you to the Keycloak administrator console. Use the KEYCLOAK_ADMIN and KEYCLOAK_ADMIN_PASSWORD you chose in "6 initialize Keycloak" to login. Then, select the HerediVar realm and navigate to clients>flask-webapp>credentials and regenerate the secret. Navigate to clients>flask-webapp>settings and update the root url, redirect uris, base url and admin url. These values must start with the HerediVar host.
+
+Once your are done update your .env file with the new secret and restart the HerediVar Flask server.
+
+## TLS
+HerediVar was set up such that it runs behind an http-server (like Apache or NGINX) in reverse proxy mode. Thus, HerediVar itself does not consider TLS and should only run on localhost without direct access to the public domain. TLS should be implemented in a production environment by the public facing http-server.
 
 ## Run tests
 HerediVar uses Playwright for testing.
