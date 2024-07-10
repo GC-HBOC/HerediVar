@@ -60,7 +60,7 @@ fi
 
 
 # Begin script in case all parameters are correct
-echo "Installing BRCA exchange to $basedir..."
+echo "Installing gnomAD to $basedir..."
 
 
 # activate virtual environment

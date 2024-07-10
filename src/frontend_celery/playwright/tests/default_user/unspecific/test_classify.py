@@ -52,20 +52,40 @@ def test_user_classify(page, conn):
     # start the test
     utils.login(page, user)
 
-    utils.nav(page.goto, utils.GOOD_STATI, url_for('variant.classify', variant_id = variant_id, _external = True))
+    classification = {
+        "variant_id": variant_id,
+        "scheme_oi": "ACMG SVI adaptation",
+        "criteria": [
+            {"name": "PVS1", "comment": "comment pvs1", "state": "selected", "strength": "very strong"},
+            {"name": "PS1", "comment": "comment ps1", "state": "selected", "strength": "strong"},
+            {"name": "PM4", "comment": "comment pm4", "state": "selected", "strength": "very strong"},
+            {"name": "PM1", "comment": "comment pm1", "state": "unselected", "strength": "medium"}
+        ],
+        "expected_scheme_class": "5",
+        "final_class": "5",
+        "final_comment": "THIS IS THE FINAL COMMENT!!",
+        "papers": [
+            {"pmid": "123456", "passage": "passage for 123456"}
+        ],
+        "user": conn.get_user(user_id) # id,username,first_name,last_name,affiliation
+    }
 
-    scheme_oi = "ACMG SVI adaptation"
-    criteria = [
-        {"name": "PVS1", "comment": "comment pvs1", "state": "selected"},
-        {"name": "PS1", "comment": "comment ps1", "state": "selected"},
-        {"name": "PM1", "comment": "comment pm1", "state": "unselected"},
-    ]
-    expected_scheme_class = "5"
-    final_class = "5"
-    final_comment = "THIS IS THE FINAL COMMENT!!"
-    papers = [
-        {"pmid": "123456", "passage": "passage for 123456"}
-    ]
+    test_classification(page, classification)
+
+
+
+
+def test_classification(page, classification):
+    variant_id = classification["variant_id"]
+    scheme_oi = classification["scheme_oi"]
+    criteria = classification["criteria"]
+    expected_scheme_class = classification["expected_scheme_class"]
+    final_class = classification["final_class"]
+    final_comment = classification["final_comment"]
+    papers = classification["papers"]
+    user_from_db = classification["user"]
+
+    utils.nav(page.goto, utils.GOOD_STATI, url_for('variant.classify', variant_id = variant_id, _external = True))
 
     page.select_option('select#scheme', label=scheme_oi)
 
@@ -74,10 +94,12 @@ def test_user_classify(page, conn):
         criterium_name = criterium["name"]
         criterium_comment = criterium["comment"]
         criterium_state = criterium["state"]
+        criterium_strength = criterium["strength"]
         page.locator("#" + criterium_name + "_label").click()
         expect(page.locator("#select_criterium_check")).to_have_count(1)
         page.select_option('select#select_criterium_check', label=criterium_state)
         page.locator("#criteria_evidence").fill(criterium_comment)
+        page.locator("#additional_content").get_by_label(criterium_strength, exact=True).check()
 
     # select final classification
     expect(page.locator("#classification_preview")).to_have_text(expected_scheme_class)
@@ -96,3 +118,33 @@ def test_user_classify(page, conn):
     
     utils.nav(page.click, utils.GOOD_STATI, "#submit-acmg-form")
     utils.check_flash_id(page, "successful_user_classification")
+
+    utils.check_all_links(page)
+
+    # go back to the variant display page and assert that the classification is visible and correct
+    utils.nav(page.goto, utils.GOOD_STATI, url_for('variant.display', variant_id = variant_id, _external=True))
+
+    expect(page.locator("table#userClassificationsTable > tbody > tr")).to_have_count(1)
+    table_data = page.locator("table#userClassificationsTable > tbody > tr > td")
+    
+    expect(table_data.nth(0)).to_have_text(final_class)
+    expect(table_data.nth(1)).to_have_text(scheme_oi)
+    #expect(table_data[2]) # criteria
+    for criterium in criteria:
+        criterium_locator = table_data.nth(2).locator("button").get_by_text(criterium["name"])
+        expect(criterium_locator).to_have_count(1) # criterium is there
+        criterium_locator.click() # open popover to view details
+
+        parent = criterium_locator.locator("..")
+        expect(parent.get_by_text(criterium["state"])).to_be_visible()
+        expect(parent.get_by_text(criterium["state"])).to_have_count(1)
+        expect(parent.get_by_text(criterium["comment"])).to_be_visible()
+        expect(parent.get_by_text(criterium["comment"])).to_have_count(1)
+        expect(parent.get_by_text(criterium["strength"])).to_be_visible()
+        expect(parent.get_by_text(criterium["strength"])).to_have_count(1)
+    expect(table_data.nth(3)).to_have_text(final_comment)
+    expect(table_data.nth(4)).to_have_text(expected_scheme_class)
+    for paper in papers:
+        expect(table_data.nth(5).get_by_text(paper["pmid"])).to_have_count(1)
+    expect(table_data.nth(6)).to_have_text(user_from_db[2] + " " + user_from_db[3])
+    expect(table_data.nth(7)).to_have_text(user_from_db[4])

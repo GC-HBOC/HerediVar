@@ -46,7 +46,13 @@ if include_header:
         '##INFO=<ID=AC_popmax,Number=A,Type=Integer,Description="Allele count in the population with the maximum allele frequency">',
         '##INFO=<ID=AN_popmax,Number=A,Type=Integer,Description="Total number of alleles in the population with the maximum allele frequency">',
         '##INFO=<ID=AF_popmax,Number=A,Type=Float,Description="Maximum allele frequency across populations">',
-        '##INFO=<ID=faf95_popmax,Number=A,Type=Float,Description="Filtering allele frequency (using Poisson 95% CI) for the population with the maximum allele frequency">'
+        '##INFO=<ID=faf95_popmax,Number=A,Type=Float,Description="Filtering allele frequency (using Poisson 95% CI) for the population with the maximum allele frequency">',
+        # population specific scores - not downloaded yet
+        '##INFO=<ID=AF_afr,Number=A,Type=Float,Description="Alternate allele frequency in samples of African/African-American ancestry">',
+        '##INFO=<ID=AF_eas,Number=A,Type=Float,Description="Alternate allele frequency in samples of East Asian ancestry">',
+        '##INFO=<ID=AF_nfe,Number=A,Type=Float,Description="Alternate allele frequency in samples of Non-Finnish European ancestry">',
+        '##INFO=<ID=AF_amr,Number=A,Type=Float,Description="Alternate allele frequency in samples of Latino ancestry">',
+        '##INFO=<ID=AF_sas,Number=A,Type=Float,Description="Alternate allele frequency in samples of South Asian ancestry">'
     ]
     functions.write_vcf_header(info_headers)
 
@@ -99,6 +105,13 @@ for line in input_file:
     ac_nc = get_annotation(info, "AC_non_cancer=")
     hom_nc = get_annotation(info, "nhomalt_non_cancer=")
     ac_xy_nc = get_annotation(info, "AC_non_cancer_XY=")
+
+    # population specific scores
+    af_afr = get_annotation(info, "AF_afr=") # african
+    af_eas = get_annotation(info, "AF_eas=") # east asian
+    af_nfe = get_annotation(info, "AF_nfe=") # non finnish european
+    af_amr = get_annotation(info, "AF_amr=") # latino
+    af_sas = get_annotation(info, "AF_sas=") # south asian
     
     #calculate the number of heterozygotes
     het = ""
@@ -146,6 +159,13 @@ for line in input_file:
     info = functions.collect_info(info, "AN_popmax=", an_popmax)
     info = functions.collect_info(info, "AF_popmax=", af_popmax)
     info = functions.collect_info(info, "faf95_popmax=", faf95_popmax)
+    # population specific scores
+    info = functions.collect_info(info, "AF_afr=", af_afr)
+    info = functions.collect_info(info, "AF_eas=", af_eas)
+    info = functions.collect_info(info, "AF_nfe=", af_nfe)
+    info = functions.collect_info(info, "AF_amr=", af_amr)
+    info = functions.collect_info(info, "AF_sas=", af_sas)
+
 
     if info == '':
         info = '.'
