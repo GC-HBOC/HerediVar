@@ -39,10 +39,10 @@ def search():
     if request.method == 'POST':
         list_id = request.args.get('selected_list_id')
         require_valid(list_id, "user_variant_lists", conn)
-        require_list_permission(list_id, ["owner", "edit"], conn)
+        require_list_permission(list_id, ["edit"], conn)
         
         list_variant_import_queue_id = tasks.start_variant_list_import(user_id, list_id, request_args, conn)
-        flash(Markup("Successfully requested insertion of variants to list from the current search. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
+        flash("Successfully requested insertion of variants to list from the current search.", "alert-success")
         del request_args["selected_list_id"]
         return redirect(url_for('variant.search', **request_args))
 
@@ -80,48 +80,44 @@ def create():
             # here we just make sure that the user submitted **something**
             # -> better understanding/readability of the error message
             if not chrom or not pos or not ref or not alt or 'genome' not in request.form:
-                flash('All fields are required!', 'alert-danger')
+                flash('All fields are required!', 'alert-danger flash_id:missing_data_vcf')
             else:
                 was_successful, message, variant_id = tasks.validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn = conn, user_id = session['user']['user_id'])
                 new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_automatic_classification=False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False, include_external_ids=False)
                 if 'already in database' in message:
-                    flash(Markup("Variant not imported: already in database!! View it " + 
-                                 "<a href=" + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
-                                 " class=\"alert-link\">here</a>"), "alert-danger")
+                    flash({"message": "Variant not imported: " + new_variant.get_string_repr() + " already in database! View the variant",
+                           "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-danger flash_id:variant_already_in_database")
                 elif was_successful:
-                    flash(Markup("Successfully inserted variant: " + str(new_variant.chrom) + ' ' + str(new_variant.pos) + ' ' + new_variant.ref + ' ' + new_variant.alt + 
-                                 ' (view your variant <a href="' + url_for("variant.display", chr=str(new_variant.chrom), pos=str(new_variant.pos), ref=str(new_variant.ref), alt=str(new_variant.alt)) + 
-                                 '" class="alert-link">here</a>)'), "alert-success")
+                    flash({"message": "Successfully inserted variant: " + new_variant.get_string_repr() + ". View your variant",
+                           "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-success flash_id:successful_variant_from_vcf")
                     current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from vcf which resulted in this vcf-style variant: " + ' '.join([str(new_variant.chrom), str(new_variant.pos), new_variant.ref, new_variant.alt, "GRCh38"]))
                     do_redirect = True
                 else: # import had an error
-                    flash(message, 'alert-danger')
+                    flash(message, 'alert-danger flash_id:variant_from_vcf_error')
 
         if create_variant_from == 'hgvsc':
             reference_transcript = request.form.get('transcript')
             hgvsc = request.form.get('hgvsc')
 
             if not hgvsc or not reference_transcript:
-                flash('All fields are required!', 'alert-danger')
+                flash('All fields are required!', 'alert-danger flash_id:missing_data_hgvs')
             else:
                 chrom, pos, ref, alt, possible_errors = functions.hgvsc_to_vcf(reference_transcript + ':' + hgvsc)
                 if possible_errors != '':
-                    flash(possible_errors, "alert-danger")
+                    flash(possible_errors, "alert-danger flash_id:variant_from_hgvs_error")
                 else:
                     was_successful, message, variant_id = tasks.validate_and_insert_variant(chrom, pos, ref, alt, 'GRCh38', conn = conn, user_id = session['user']['user_id'])
                     new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
                     if 'already in database' in message:
-                        flash(Markup("Variant not imported: already in database!! View it " + 
-                                     "<a href=" + url_for("variant.display", variant_id = variant_id) + 
-                                     " class=\"alert-link\">here</a>"), "alert-danger")
+                        flash({"message": "Variant not imported: " + new_variant.get_string_repr() + " already in database! View your variant",
+                               "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-danger flash_id:variant_already_in_database")
                     elif was_successful:
-                        flash(Markup("Successfully inserted variant: " + new_variant.get_string_repr() + 
-                                     ' (view your variant <a href="' + url_for("variant.display", variant_id = variant_id) + 
-                                     '" class="alert-link">here</a>)'), "alert-success")
+                        flash({"message": "Successfully inserted variant: " + new_variant.get_string_repr() + ". View your variant",
+                               "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-success flash_id:successful_variant_from_hgvs")
                         current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([str(new_variant.chrom), str(new_variant.pos), new_variant.ref, new_variant.alt, "GRCh38"]))
                         do_redirect = True
                     else:
-                        flash(message, 'alert-danger')
+                        flash(message, 'alert-danger flash_id:variant_from_hgvs_error')
 
         if create_variant_from == 'vcf_file' and vcf_file_import_active:
             genome_build = request.form.get('genome')
@@ -176,15 +172,13 @@ def create_sv():
             else: # all valid
                 genome_build = request.form['genome']
                 was_successful, message, variant_id = tasks.validate_and_insert_cnv(chrom = chrom, start = start, end = end, sv_type = sv_type, imprecise = imprecise, hgvs_strings = hgvs_strings, conn = conn, genome_build = genome_build)
-                variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
+                new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
                 if 'already in database' in message:
-                        flash(Markup("Variant not imported: already in database!! Missing hgvs strings were added. View it " + 
-                                     "<a href=" + url_for("variant.display", variant_id = variant_id) + 
-                                     " class=\"alert-link\">here</a>"), "alert-danger")
+                    flash({"message": "Variant not imported: " + new_variant.get_string_repr() + " already in database! View your variant",
+                       "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-danger")
                 elif was_successful:
-                    flash(Markup("Successfully inserted structural variant: " + variant.get_string_repr() + 
-                                     ' (view your variant <a href="' + url_for("variant.display", variant_id = variant_id) + 
-                                     '" class="alert-link">here</a>)'), "alert-success")
+                    flash({"message": "Successfully inserted variant: " + new_variant.get_string_repr() + ". View your variant",
+                       "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-success")
                     return redirect(url_for('variant.create_sv'))
                 else:
                     flash("There was an error while importing the variant: " + message, "alert-danger")
@@ -297,6 +291,7 @@ def hide_variant(variant_id):
     return str(not is_hidden)
 
 
+
 @variant_blueprint.route('/classify/<int:variant_id>', methods=['GET', 'POST'])
 @require_permission(['edit_resources'])
 def classify(variant_id):
@@ -359,7 +354,11 @@ def classify(variant_id):
             scheme_received_update = variant_functions.handle_scheme_classification(user_classification_id, criteria, conn)
 
             if any([classification_received_update, literature_received_update, scheme_received_update]) and not is_new_classification:
-                flash(Markup("Successfully updated user classification return <a href=" + url_for("variant.display", variant_id = variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success flash_id:successful_user_classification_update")
+                flash({"message": "Successfully updated user classification! View your classification",
+                   "link": url_for("variant.display", variant_id = variant.id)}, "alert-success flash_id:successful_user_classification_update")
+            else:
+                flash({"message": "Successfully inserted new user classification! View your classification",
+                   "link": url_for("variant.display", variant_id = variant.id)}, "alert-success flash_id:successful_classification")
 
             do_redirect = True
 
@@ -377,36 +376,6 @@ def classify(variant_id):
                             )
 
 
-@variant_blueprint.route('/delete_classification', methods=['GET'])
-@require_permission(['edit_resources'])
-def delete_classification():
-    conn = get_connection()
-
-    user_classification_id = request.args.get('user_classification_id')
-    variant_id = request.args.get('variant_id')
-
-    require_valid(variant_id, "variant", conn)
-    require_valid(user_classification_id, "user_classification", conn)
-
-    variant = conn.get_variant(variant_id, include_annotations=False, include_consensus=False, include_heredicare_classifications=False, include_clinvar=False, include_consequences=False, include_assays=False, include_literature=False, include_external_ids=False)
-
-    user_classification = None
-    for cl in variant.user_classifications:
-        if str(cl.id) == str(user_classification_id):
-            user_classification = cl
-    
-    if user_classification is None:
-        abort(404)
-    if user_classification.submitter.id != session['user']['user_id']:
-        abort(405, "You are not allowed to delete this classification!")
-
-    conn.delete_user_classification(user_classification_id)
-
-    return "success"
-
-    
-
-    
 
 
 @variant_blueprint.route('/classify/<int:variant_id>/consensus', methods=['GET', 'POST'])
@@ -418,7 +387,7 @@ def consensus_classify(variant_id):
 
     variant = conn.get_variant(variant_id)
     classification_schemas = conn.get_classification_schemas()
-    classification_schemas = {schema_id: classification_schemas[schema_id] for schema_id in classification_schemas} # remove no-scheme classification as this can not be submitted to clinvar
+    #classification_schemas = {schema_id: classification_schemas[schema_id] for schema_id in classification_schemas} # remove no-scheme classification as this can not be submitted to clinvar
 
     # this is also used to preselect from previous user classify submissions
     # -1 is the imaginary user id for the consensus classifications
@@ -479,7 +448,8 @@ def consensus_classify(variant_id):
             # insert scheme criteria
             _ = variant_functions.handle_scheme_classification(classification_id, criteria, conn, where = "consensus") # always do that because no scheme is not allowed
             variant_functions.add_classification_report(variant.id, conn)
-            flash(Markup("Successfully inserted consensus classification return <a href=" + url_for("variant.display", variant_id = variant_id) + " class='alert-link'>here</a> to view it!"), "alert-success")
+            flash({"message": "Successfully inserted consensus classification! View your classification",
+               "link": url_for("variant.display", variant_id = variant.id)}, "alert-success flash_id:successful_classification")
             do_redirect = True
 
     if do_redirect: # do redirect if the submission was successful
@@ -492,6 +462,35 @@ def consensus_classify(variant_id):
                                 classification_schemas=classification_schemas,
                                 previous_classifications=previous_classifications
                             )
+
+
+
+@variant_blueprint.route('/delete_classification', methods=['GET'])
+@require_permission(['edit_resources'])
+def delete_classification():
+    conn = get_connection()
+
+    user_classification_id = request.args.get('user_classification_id')
+    variant_id = request.args.get('variant_id')
+
+    require_valid(variant_id, "variant", conn)
+    require_valid(user_classification_id, "user_classification", conn)
+
+    variant = conn.get_variant(variant_id, include_annotations=False, include_consensus=False, include_heredicare_classifications=False, include_clinvar=False, include_consequences=False, include_assays=False, include_literature=False, include_external_ids=False)
+
+    user_classification = None
+    for cl in variant.user_classifications:
+        if str(cl.id) == str(user_classification_id):
+            user_classification = cl
+    
+    if user_classification is None:
+        abort(404)
+    if user_classification.submitter.id != session['user']['user_id']:
+        abort(405, "You are not allowed to delete this classification!")
+
+    conn.delete_user_classification(user_classification_id)
+
+    return "success"
 
 
 # essentially returns the automatic classification calculated by herediclassify

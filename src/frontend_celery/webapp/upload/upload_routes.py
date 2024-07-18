@@ -80,7 +80,9 @@ def submit_assay(variant_id):
             assay_id = conn.insert_assay(variant_id, assay_type_id, b_64_assay_report, assay_filename, link = None, date = functions.get_today(), user_id = session["user"]["user_id"])
             for metadata_type_id in assay_metadata:
                 conn.insert_assay_metadata(assay_id, metadata_type_id, assay_metadata[metadata_type_id])
-            flash(Markup("Successfully inserted new assay for variant <a class='alert-link' href='" + url_for('variant.display', variant_id=variant_id) + "'>" + str(variant_id) + "</a>."), "alert-success")
+            variant = conn.get_variant(variant_id)
+            flash({'message': "Successfully inserted new assay for variant " + variant.get_string_repr() + ". View the assay",
+                   'link': url_for('variant.display', variant_id=variant_id)}, "alert-success")
             do_redirect = True
     
     if do_redirect :

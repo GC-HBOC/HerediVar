@@ -79,10 +79,17 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="bst alert {{ category }} alert-dismissible fade show break_text_all alert_msg">
-                        {{ message }}
-                        <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                {% if message is mapping %}
+                <div class="bst alert {{ category }} alert-dismissible fade show break_text_all alert_msg">
+                    {{ message['message'] }} <a href={{ message['link'] }} class="alert-link">here</a>
+                    <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% else %}
+                <div class="bst alert {{ category }} alert-dismissible fade show break_text_all alert_msg">
+                    {{ message }}
+                    <button class="btn-close" type="button" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endif %}
                 {% endfor %}
             {% endif %}
         {% endwith %}

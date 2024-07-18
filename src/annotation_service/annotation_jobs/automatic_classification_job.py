@@ -64,15 +64,13 @@ class automatic_classification_job(Job):
 
         if autoclass_input is None:
             return 0, "Not enough information to calculate the automatic classification"
-        #print(autoclass_input)
+
         config_path = os.path.join(paths.automatic_classification_path, "config_production.yaml")
         returncode, err_msg, classification = self.run_automatic_classification(autoclass_input, config_path)
 
         if returncode != 0:
             raise RuntimeError(err_msg)
 
-        #print(classification)
-        
         classification_result = json.loads(classification["result"])
         scheme_alias = classification.get("scheme_name", "acmg_svi")
         scheme_version = classification["scheme_version"]

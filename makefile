@@ -52,7 +52,7 @@ tools: python venv htslib keycloak redis vep ngs_bits samtools herediclass
 ## python
 PYTHONPATH := $(ROOT)
 PYTHONNAME := .localpython
-PYTHONVERSION := 3.8.10
+PYTHONVERSION := 3.12.4 #3.8.10
 PYTHON := $(PYTHONPATH)/$(PYTHONNAME)
 python:
 	if [ ! -d "${PYTHON}" ]; then \

@@ -1,13 +1,13 @@
 $(document).ready(function() {
-    if ($('#reference-genome').val() == null){
-        $('#reference-genome').css('color','gray');
+    if ($('#reference_genome').val() == null){
+        $('#reference_genome').css('color','gray');
     }
-    $('#reference-genome').change(function() {
-       var current = $('#reference-genome').val();
+    $('#reference_genome').change(function() {
+       var current = $('#reference_genome').val();
        if (current != 'null') {
-           $('#reference-genome').css('color','black');
+           $('#reference_genome').css('color','black');
        } else {
-           $('#reference-genome').css('color','gray');
+           $('#reference_genome').css('color','gray');
        }
     }); 
  });

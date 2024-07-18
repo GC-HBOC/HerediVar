@@ -57,9 +57,7 @@ def handle_user_classification(variant, user_id, new_classification, new_comment
         return None, received_update, is_new_classification
     else: # user does not yet have a classification for this variant -> he wants to create a new one
         is_new_classification = True
-
         conn.insert_user_classification(variant.id, new_classification, user_id, new_comment, current_datetime, scheme_id, scheme_class)
-        flash(Markup("Successfully inserted new user classification return <a href=/display/" + str(variant.id) + " class='alert-link'>here</a> to view it!"), "alert-success flash_id:successful_user_classification")
         return conn.get_last_insert_id(), received_update, is_new_classification
     
 

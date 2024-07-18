@@ -21,7 +21,12 @@ from flask_mail import Mail
 
 oauth = OAuth()
 sess = Session()
-celery = Celery(__name__, backend="redis", broker=Config.CELERY_BROKER_URL)
+celery = Celery(__name__, backend="redis", 
+    broker=Config.CELERY_BROKER_URL,
+    broker_connection_retry=True,
+    broker_connection_retry_on_startup=True,
+    broker_connection_max_retries=10
+)
 mail = Mail()
 #heredicare = Heredicare_Flask()
 

@@ -35,15 +35,17 @@ def modify_list_content():
         variant_id = request.args.get('variant_id')
         require_set(user_action)
         require_valid(list_id, "user_variant_lists", conn)
-        require_list_permission(list_id, required_permissions = ['owner', 'edit'], conn = conn)
+        require_list_permission(list_id, required_permissions = ['edit'], conn = conn)
 
         # perform the action -> either add or remove
         if user_action == 'add_to_list':
             conn.add_variant_to_list(list_id, variant_id)
-            flash(Markup("Successfully inserted variant to the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
+            flash({"message": "Successfully inserted variant to the list. You can view your list",
+               "link": url_for('user.my_lists', view=list_id)}, "alert-success")
         elif user_action == 'remove_from_list':
             conn.delete_variant_from_list(list_id, variant_id)
-            flash(Markup("Successfully removed variant from the list. You can view your list <a class='alert-link' href='" + url_for('user.my_lists', view=list_id) + "'>here</a>."), "alert-success")
+            flash({"message": "Successfully removed variant from the list. You can view your list",
+               "link": url_for('user.my_lists', view=list_id)}, "alert-success")
         else:
             flash("Action not allowed: " + str(user_action), "alert-danger")
     return save_redirect(next_url)

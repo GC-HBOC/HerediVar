@@ -75,20 +75,20 @@
 
 {% macro draw_most_recent_consensus_classification(most_recent_consensus_classification) %}
 {% if most_recent_consensus_classification is not none %}
-    <div class="classification-gradient left-space-padding" name="consensus_class_display" classification="{{ most_recent_consensus_classification.selected_class }}">
+    <div id="mrcc" class="classification-gradient left-space-padding" name="consensus_class_display" classification="{{ most_recent_consensus_classification.selected_class }}">
         <table class="table table-borderless table-slim" consensus_classification_id="{{ most_recent_consensus_classification.id }}">
             <tbody>
                 <tr class="nsl">
                     <td class="li-label width_very_small">Data</td>
                     <td class="vertical_align_middle">
                         <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
-                            <li class="list-group-item noboarder-td">
+                            <li id="mrcc_final_class" class="list-group-item noboarder-td">
                                 Class: {{ most_recent_consensus_classification.selected_class }}
                             </li>
-                            <li class="list-group-item noboarder-td">
+                            <li id="mrcc_date" class="list-group-item noboarder-td">
                                 Date: {{ most_recent_consensus_classification.date }}
                             </li>
-                            <li class="list-group-item noboarder-td">
+                            <li id="mrcc_document" class="list-group-item noboarder-td">
                                 Evidence document: <a class="remove_link" href="{{url_for('download.evidence_document', consensus_classification_id=most_recent_consensus_classification.id ) }}">download</a>
                             </li>
                         </ul>
@@ -1194,7 +1194,7 @@
                 <table class="table table-borderless table-slim">
                     <tbody>
                         <tr>
-                            <td class="width_small li-label">Variant</td>
+                            <td class="width_very_small li-label">Variant</td>
                             <td > 
                                 <div class="break_text_all d-flex align-items-center">
 
@@ -1207,7 +1207,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td class="width_small li-label"><abbr title="One or more strings in the format: gene hgvsc. hgvsp. This shows all 'best' transcripts and prefers mane select.">HGVS</abbr></td>
+                            <td class="li-label"><abbr title="One or more strings in the format: gene hgvsc. hgvsp. This shows all 'best' transcripts and prefers mane select.">HGVS</abbr></td>
                             <td>
                                 {% if variant.variant_type == 'sv' %}
                                     {% if variant.custom_hgvs | length > 0 %}
@@ -1266,9 +1266,12 @@
 
                         <!-- External Links / Further Information on external websites-->
                         <tr>
-                            <td class="li-label">External resources</td>
+                            <td class="li-label">Links</td>
                             <td class="vertical_align_middle">
                                 <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
+                                    <li class="list-group-item noboarder-td" >
+                                        <a href="{{url_for('variant.display', variant_id = variant.id)}}">HerediVar</a>
+                                    </li>
                                     <li class="list-group-item noboarder-td" >
                                         {{ external_link("UCSC", "https://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&position=chr2%3A" + variant.pos|string) }}
                                     </li>

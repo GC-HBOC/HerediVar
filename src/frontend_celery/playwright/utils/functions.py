@@ -46,7 +46,8 @@ def is_logged_in(page: Page, username: str):
         print("User not logged in: username not visible on page")
         return False
     if username_handle.inner_text().strip() != username.strip():
-        print("User not logged in: wrong username visible on page")
+        print("Wrong user logged in. Logging out now!")
+        logout(page)
         return False
 
     nav(page.goto, GOOD_STATI, url_for("auth.profile", _external=True))
@@ -192,6 +193,52 @@ def execute_sql_script(scriptPath) :
     if stdErr is not None and "[Error]" in stdErr.decode("utf-8"): 
         raise IOError(stdErr)
     return stdOut
+
+
+
+def select_classify(classification, page):
+    variant_id = classification["variant_id"]
+    scheme_oi = classification["scheme_oi"]
+    criteria = classification["criteria"]
+    expected_scheme_class = classification["expected_scheme_class"]
+    final_class = classification["final_class"]
+    final_comment = classification["final_comment"]
+    papers = classification["papers"]
+
+    page.select_option('select#scheme', label=scheme_oi)
+
+    # select / unselect criteria and fill comment
+    for criterium in criteria:
+        criterium_name = criterium["name"]
+        criterium_comment = criterium["comment"]
+        criterium_state = criterium["state"]
+        criterium_strength = criterium["strength"]
+        page.locator("#" + criterium_name + "_label").click()
+        expect(page.locator("#select_criterium_check")).to_have_count(1)
+        page.select_option('select#select_criterium_check', label=criterium_state)
+        page.locator("#criteria_evidence").fill(criterium_comment)
+        page.locator("#additional_content").get_by_label(criterium_strength, exact=True).check()
+
+    # select final classification
+    expect(page.locator("#classification_preview")).to_have_text(expected_scheme_class)
+    if expected_scheme_class != final_class:
+        page.select_option('select#final_class', label=final_class)
+    expect(page.locator("#final_class")).to_have_value(final_class)
+
+    # fill comment
+    page.locator("#comment").fill(final_comment)
+
+    # select literature
+    for paper in papers:
+        page.locator('#blank_row_button').click()
+        page.get_by_placeholder('pmid').last.fill(paper["pmid"])
+        page.get_by_placeholder('Text citation').last.fill(paper["passage"])
+
+    nav(page.click, GOOD_STATI, "#submit-acmg-form")
+    check_flash_id(page, "successful_classification")
+
+    check_all_links(page)
+
 
 
 #########################################

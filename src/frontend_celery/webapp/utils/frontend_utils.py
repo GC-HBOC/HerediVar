@@ -1,4 +1,4 @@
-from flask import flash, Markup, g, request, current_app, redirect, url_for, session, abort
+from flask import flash, g, request, current_app, redirect, url_for, session, abort
 import sys
 from os import path
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))

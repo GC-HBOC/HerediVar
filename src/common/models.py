@@ -1,4 +1,4 @@
-from dataclasses import dataclass, asdict, fields
+from dataclasses import dataclass, asdict, fields, field
 import json
 from typing import Any
 import common.functions as functions
@@ -947,7 +947,7 @@ class AbstractVariant(AbstractDataclass):
     literature: Any = None # list of papers
     cancerhotspots_annotations: Any = None # list of cancerhotspotsAnnotations
 
-    annotations: AllAnnotations = AllAnnotations()
+    annotations: AllAnnotations = field(default_factory=lambda: AllAnnotations())
 
     external_ids: Any = None # list of Annotations
 

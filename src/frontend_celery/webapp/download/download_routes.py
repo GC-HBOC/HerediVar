@@ -1,7 +1,7 @@
 import io
 from os import path
 import sys
-from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for, session, jsonify, Markup, make_response
+from flask import Blueprint, abort, current_app, send_from_directory, send_file, request, flash, redirect, url_for, session, jsonify, make_response
 
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 import common.functions as functions
@@ -36,7 +36,8 @@ def variant():
     vcf_file_buffer, status, vcf_errors, err_msg = download_functions.get_vcf([variant_id], conn, check_vcf=not request.args.get('force', False))
 
     if status in ['redirect', 'error']:
-        flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
+        flash({"message": "Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + ". Download it anyway",
+               "link": force_url}, "alert-danger")
         current_app.logger.error(get_preferred_username() + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant ids: " + str(variant_id))
         return redirect(redirect_url)
 
@@ -65,7 +66,8 @@ def variant_list():
     vcf_file_buffer, status, vcf_errors, err_msg = download_functions.get_vcf(variant_ids_oi, conn)
 
     if status == "redirect":
-        flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
+        flash({"message": "Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + ". Download it anyway",
+               "link": force_url}, "alert-danger")
         current_app.logger.error(get_preferred_username() + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant list " + str(list_id))
         return redirect(redirect_url)
 
@@ -97,7 +99,8 @@ def classified_variants():
 
     if returncode != 0:
         if request.args.get('force') is None:
-            flash(Markup("Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + "<br> Click <a href=" + force_url + " class='alert-link'>here</a> to download it anyway."), "alert-danger")
+            flash({"message": "Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + ". Download it anyway",
+                   "link": force_url}, "alert-danger")
             current_app.logger.error(get_preferred_username() + " tried to download all classified variants as vcf, but it contains errors: " + vcf_errors)
             return redirect(redirect_url)
 

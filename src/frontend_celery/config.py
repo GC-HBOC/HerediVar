@@ -72,7 +72,7 @@ class Config(object):
 
     # Celery configuration
     CELERY_BROKER_URL = REDIS_URL
-    CELERY_RESULT_BACKEND = REDIS_URL
+    result_backend = REDIS_URL
 
     # orphanet
     ORPHANET_DISCOVERY_URL = "https://api.orphacode.org/EN/ClinicalEntity"
