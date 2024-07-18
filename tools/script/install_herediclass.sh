@@ -61,7 +61,7 @@ pip install wheel
 pip install setuptools
 python3 -m pip install --upgrade setuptools wheel
 pip install -r requirements.txt
-pip install numpy<2
+pip install "numpy<2"
 #pip install pyyaml
 #pip install cyvcf2
 #pip install biopython
