@@ -79,8 +79,7 @@ wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/submission_summary.t
 wget https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz # newest version:  clinvar_20240107.vcf.gz
 gunzip -c clinvar.vcf.gz  | python3 $dbconverter --submissions submission_summary.txt.gz | $ngsbits/VcfLeftNormalize -stream -ref $grch38 | $ngsbits/VcfStreamSort | bgzip > clinvar_converted_GRCh38.vcf.gz
 tabix -p vcf clinvar_converted_GRCh38.vcf.gz
-$ngsbits/VcfCheck -in v -ref $grch38 -lines 0
-
+$ngsbits/VcfCheck -in clinvar_converted_GRCh38.vcf.gz -ref $grch38 -lines 0
 
 ## CNVs - not used atm
 #wget -O - http://ftp.ncbi.nlm.nih.gov/pub/clinvar/tab_delimited/archive/variant_summary_2021-12.txt.gz | gunzip > variant_summary_2021-12.txt

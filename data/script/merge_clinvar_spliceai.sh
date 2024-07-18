@@ -8,11 +8,13 @@ ngsbits=$tools/ngs-bits/bin
 grch38=$data/genomes/GRCh38.fa
 
 
-clinvar_dat=$tools/variant_classification/databases/Clinvar/clinvar_snv.vcf.gz
+clinvar_dat=$tools/herediclass/databases/Clinvar/clinvar_snv.vcf.gz
 spliceai_snv_dat=$dbs/SpliceAI/spliceai_scores.masked.snv.hg38.vcf.gz
 spliceai_indel_dat=$dbs/SpliceAI/spliceai_scores.masked.indel.hg38.vcf.gz
 
 
+cd $root
+source .venv/bin/activate
 
 
 cd $dbs
@@ -34,7 +36,6 @@ cd clinvar_merge_spliceai
 
 $ngsbits/VcfAnnotateFromVcf -in $clinvar_dat -source $spliceai_snv_dat -threads 5 -info_keys SpliceAI -out clinvar_annotated_snv.vcf
 $ngsbits/VcfAnnotateFromVcf -in clinvar_annotated_snv.vcf -source $spliceai_indel_dat -threads 5 -info_keys SpliceAI -out clinvar_annotated_snv_indel.vcf
-
 
 
 egrep "^#|;SpliceAI=" clinvar_annotated_snv_indel.vcf > clinvar_only_annotated.vcf

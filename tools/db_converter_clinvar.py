@@ -44,7 +44,7 @@ def read_submission_summary(path):
             continue
         
         parts = line.split('\t')
-        if len(parts) != 13:
+        if len(parts) != 15:
             raise IOError("Line does not have the correct number of columns (13): " + line)
         
         variation_id = parts[0]
@@ -113,10 +113,26 @@ for line in input_file:
         continue
     
     parts = line.split('\t')
+
     chr_num = functions.validate_chr(parts[0])
-    if not chr_num:
+    if not chr_num: # skip special chromosomes
         continue
     
+    pos = parts[1]
+    ref = parts[3]
+    alt = parts[4]
+    if alt == '.': # skip variants where ref == alt
+        continue
+    #if (len(ref)>1 or len(alt)>1) and (len(ref) != len(alt)) and (ref[0] != alt[0]): # add padding base - uncomment this?
+    #    pos = str(int(pos) - 1)
+    #    base = functions.get_sequence("GRCh38", chr_num, int(pos), int(pos))
+    #    ref = base + ref
+    #    alt = base + alt
+    #
+    #    parts[1] = pos
+    #    parts[3] = ref
+    #    parts[4] = alt
+
     variation_id = parts[2]
 
     infos = parts[7].split(';')
