@@ -217,9 +217,10 @@ def test_variant_details_annotations(page, conn):
     for annotation_type_title in annotations_to_check:
         current_annotations = default_annotation_values["transcript"][annotation_type_title]
         if annotation_type_title == "revel":
-            maxannot = get_max_transcript_annotation(current_annotations)
-            expect(page.get_by_test_id("annotation-" + annotation_type_title)).to_contain_text(maxannot["value"])
-            expect(page.get_by_test_id("annotation-" + annotation_type_title)).to_contain_text(maxannot["transcript"])
+            best_transcript = "ENST11111111111"
+            bestannot = get_best_transcript_annotation(current_annotations, best_transcript)
+            expect(page.get_by_test_id("annotation-" + annotation_type_title)).to_contain_text(bestannot["value"])
+            expect(page.get_by_test_id("annotation-" + annotation_type_title)).to_contain_text(bestannot["transcript"])
             page.get_by_test_id("revel_details").click() # open popover
             expect(page.locator(".popover")).to_be_visible()
             page.get_by_test_id("revel_details").click() # close popover

@@ -55,20 +55,20 @@ $TESTDIR/start_heredivar_for_tests.sh
 # run tests
 cd $TESTDIR
 
-# test read only
+## test read only
 #export TESTUSER=$TEST_READONLY
 #export TESTUSERPW=$TEST_READONLY_PW
-#pytest --screenshot=only-on-failure --browser firefox tests/read_only/ -k 'test_user_classify' #-k 'test_private_list_actions or test_variant_list_add' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
+#pytest --screenshot=only-on-failure --browser firefox tests/read_only/ #-k 'test_variant_details' #-k 'test_private_list_actions or test_variant_list_add' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
 
-# test default user
+## test default user
 export TESTUSER=$TEST_USER
 export TESTUSERPW=$TEST_USER_PW
-pytest --screenshot=only-on-failure --browser firefox tests/default_user/ -k 'test_user_classify' #-k 'test_private_list_actions or test_variant_list_add' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
+pytest --screenshot=only-on-failure --browser firefox tests/default_user/ -k 'test_create_simple_variant_hgvs' #-k 'test_private_list_actions or test_variant_list_add' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
 
-# test superuser
+## test superuser
 #export TESTUSER=$TEST_SUPERUSER
 #export TESTUSERPW=$TEST_SUPERUSER_PW
-# TODO...
+#pytest --screenshot=only-on-failure --browser firefox tests/superuser/ #-k 'test_consensus_classify' #-k 'test_private_list_actions or test_variant_list_add' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
 
 # stop services
 pkill -s 0 -e java

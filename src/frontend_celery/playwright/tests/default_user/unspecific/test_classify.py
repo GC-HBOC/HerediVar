@@ -41,6 +41,8 @@ def test_user_select_all_schemes(page, conn):
         for criterium in criteria:
             expect(page.locator("#" + criterium)).to_have_count(1)
 
+
+
 def test_user_classify(page, conn):
     # seed database
     user = utils.get_user()
@@ -52,6 +54,7 @@ def test_user_classify(page, conn):
     # start the test
     utils.login(page, user)
 
+    # successful classification
     classification = {
         "variant_id": variant_id,
         "scheme_oi": "ACMG SVI adaptation",
@@ -70,12 +73,15 @@ def test_user_classify(page, conn):
         "user": conn.get_user(user_id) # id,username,first_name,last_name,affiliation
     }
 
-    test_classification(page, classification)
+    utils.nav(page.goto, utils.GOOD_STATI, url_for("variant.classify", variant_id = variant_id, _external = True))
+    utils.select_classify(classification, page)
+    utils.check_flash_id(page, "successful_user_classification")
+    assert_user_classification(classification, page)
 
 
 
 
-def test_classification(page, classification):
+def assert_user_classification(classification, page):
     variant_id = classification["variant_id"]
     scheme_oi = classification["scheme_oi"]
     criteria = classification["criteria"]
@@ -84,42 +90,6 @@ def test_classification(page, classification):
     final_comment = classification["final_comment"]
     papers = classification["papers"]
     user_from_db = classification["user"]
-
-    utils.nav(page.goto, utils.GOOD_STATI, url_for('variant.classify', variant_id = variant_id, _external = True))
-
-    page.select_option('select#scheme', label=scheme_oi)
-
-    # select / unselect criteria and fill comment
-    for criterium in criteria:
-        criterium_name = criterium["name"]
-        criterium_comment = criterium["comment"]
-        criterium_state = criterium["state"]
-        criterium_strength = criterium["strength"]
-        page.locator("#" + criterium_name + "_label").click()
-        expect(page.locator("#select_criterium_check")).to_have_count(1)
-        page.select_option('select#select_criterium_check', label=criterium_state)
-        page.locator("#criteria_evidence").fill(criterium_comment)
-        page.locator("#additional_content").get_by_label(criterium_strength, exact=True).check()
-
-    # select final classification
-    expect(page.locator("#classification_preview")).to_have_text(expected_scheme_class)
-    if expected_scheme_class != final_class:
-        page.select_option('select#final_class', label=final_class)
-    expect(page.locator("#final_class")).to_have_value(final_class)
-
-    # fill comment
-    page.locator("#comment").fill(final_comment)
-
-    # select literature
-    for paper in papers:
-        page.locator('#blank_row_button').click()
-        page.get_by_placeholder('pmid').last.fill(paper["pmid"])
-        page.get_by_placeholder('Text citation').last.fill(paper["passage"])
-    
-    utils.nav(page.click, utils.GOOD_STATI, "#submit-acmg-form")
-    utils.check_flash_id(page, "successful_user_classification")
-
-    utils.check_all_links(page)
 
     # go back to the variant display page and assert that the classification is visible and correct
     utils.nav(page.goto, utils.GOOD_STATI, url_for('variant.display', variant_id = variant_id, _external=True))
