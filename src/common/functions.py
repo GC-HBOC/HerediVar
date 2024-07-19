@@ -284,7 +284,7 @@ def perform_liftover(infile, outfile, from_genome="GRCh37", to_genome="GRCh38", 
     elif to_genome == "GRCh37":
         genome_path = paths.ref_genome_path_grch37
 
-    command = ['CrossMap.py', infile_format, chainfile, infile]
+    command = ['CrossMap', infile_format, chainfile, infile]
     if infile_format == 'vcf':
         command.append(genome_path)
     command.append(outfile)
