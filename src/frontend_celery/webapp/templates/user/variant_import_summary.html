@@ -102,7 +102,7 @@
                                 <th class="width_small"><div>Requested at</div></th>
                                 <th class="width_small"><div>Finished at</div></th>
                                 <th class="width_large"><div>Message</div></th>
-                                <!--<th class="width_minimal"><div>Retry</div></th>-->
+                                <th class="width_minimal"><div>Retry</div></th>
                             </tr>
                         </thead>
                         <tbody id="variant_table_body">
@@ -122,8 +122,8 @@
 
 <input type='hidden' id='flask_data' 
     data-get-data-url='{{ url_for("user.variant_import_summary_data", import_queue_id = import_queue_id) }}'
-    data-vid-details-url='{{ url_for("extended_information.vid") }}'
-    data-import-one-variant-url='{{ url_for("user.admin_dashboard", type="import_one_variant") }}'
+    data-vid-details-url='{{ url_for("extended_information.vid", vid=0) }}'
+    data-variant-import-summary-url='{{ url_for("user.variant_import_summary", import_queue_id = import_queue_id) }}'
     data-import-queue-id="{{import_queue_id}}"
 />
 

@@ -332,12 +332,23 @@ def set_default_scheme():
 
 
 # shows all data of an import - is used for both bulk and single vid imports from heredicare
-@user_blueprint.route('/variant_import_summary/<int:import_queue_id>')
+@user_blueprint.route('/variant_import_summary/<int:import_queue_id>', methods=['GET', 'POST'])
 @require_permission(['admin_resources'])
 def variant_import_summary(import_queue_id):
     conn = get_connection()
     import_request = conn.get_import_request(import_queue_id)
     require_set(import_request)
+
+    if request.method == 'POST':
+        import_variant_queue_id = request.form.get('import_variant_queue_id')
+        print(import_variant_queue_id)
+        require_valid(import_variant_queue_id, 'import_variant_queue', conn)
+
+        tasks.retry_variant_import(import_variant_queue_id, session['user']['user_id'], session['user']['roles'], conn)
+        vid = conn.get_vid_from_import_variant_queue(import_variant_queue_id)
+        flash("Successfully requested reimport of vid " + str(vid) + ". It is processed in the background. If this page does not show a pending variant refresh to view changes.", "alert-success")
+        return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id))
+
     return render_template('user/variant_import_summary.html', import_queue_id = import_queue_id)
 
 

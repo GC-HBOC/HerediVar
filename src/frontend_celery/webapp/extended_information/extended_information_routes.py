@@ -20,14 +20,13 @@ def gene(gene_id):
 
 # return variant information from heredicare
 # this is more a utility and should only be used to debug
-@extended_information_blueprint.route('/vid')
+@extended_information_blueprint.route('/vid/<int:vid>')
 @require_permission(['admin_resources'])
-def vid():
-    vid = request.args.get('vid')
+def vid(vid):
     require_set(vid)
     heredicare_interface = Heredicare()
-    heredicare_variant = heredicare_interface.get_variant(vid)
-    return heredicare_variant
+    heredicare_variant, status, message = heredicare_interface.get_variant(vid)
+    return render_template('extended_information/vid.html', heredicare_variant = heredicare_variant, status = status, message = message)
 
 
 

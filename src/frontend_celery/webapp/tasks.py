@@ -175,6 +175,17 @@ def start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn: Co
 
     return task_id
 
+def retry_variant_import(import_variant_queue_id, user_id, user_roles, conn: Connection):
+    conn.reset_import_variant_queue(import_variant_queue_id)
+    vid = conn.get_vid_from_import_variant_queue(import_variant_queue_id)
+
+    task = import_one_variant_heredicare.apply_async(args=[vid, user_id, user_roles, import_variant_queue_id])
+    task_id = task.id
+
+    conn.update_import_variant_queue_celery_id(import_variant_queue_id, celery_task_id = task_id)
+
+    return task_id
+
 
 # this uses exponential backoff in case there is a http error
 # this will retry 3 times before giving up

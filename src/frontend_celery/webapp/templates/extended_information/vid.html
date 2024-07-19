@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1 class="bst"> {% block title %} Information for HerediCaRe VID {{heredicare_variant['VID']}} {% endblock %} </h1>
+
+<p class="card-text">Status from HerediCaRe API: {{status}}</p>
+
+<p class="card-text">Message from HerediCaRe API: {{message}}</p>
+
+<p class="card-text">
+    <div class="table-responsive table-lg">
+        <table class="table table-hover" id="variant_table">
+            <thead>
+                <tr>
+                    <th class="width_small">Type</div></th>
+                    <th class="width_medium">Value</div></th>
+                </tr>
+            </thead>
+            <tbody id="variant_table_body">
+                {% for key in heredicare_variant %}
+                    <tr>
+                        <td>{{key}}</td>
+                        <td>{{heredicare_variant[key]}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</p>
+
+</div>
+
+{% endblock %}
+
+{% block special_scripts %}
+{% endblock %}

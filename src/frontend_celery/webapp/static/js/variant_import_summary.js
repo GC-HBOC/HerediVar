@@ -2,8 +2,8 @@
 const flask_data = document.getElementById("flask_data")
 const data_url = flask_data.dataset.getDataUrl;
 const vid_details_url = flask_data.dataset.vidDetailsUrl;
-const import_one_variant_url = flask_data.dataset.importOneVariantUrl
-const import_queue_id = flask_data.dataset.importQueueId
+const import_queue_id = flask_data.dataset.importQueueId;
+const variant_import_summary_url = flask_data.dataset.variantImportSummaryUrl
 
 var first_load = true
 
@@ -168,8 +168,8 @@ function create_erroneous_variant_row(variant) {
         create_td(variant["status"]),
         create_td(variant["requested_at"]),
         create_td(variant["finished_at"]),
-        create_td(variant["message"])
-        //create_td_form("retry", import_one_variant_url, {'vid': variant["vid"], 'import_queue_id': import_queue_id})
+        create_td(variant["message"]),
+        create_td_form("retry", variant_import_summary_url, {'import_variant_queue_id': variant['id']})
     ];
     const trow = create_trow(tds);
     return trow;
@@ -183,17 +183,11 @@ function create_td_form(text_content, url, params) {
     form.setAttribute('method', 'post')
     td.appendChild(form)
 
-    var vid_input = document.createElement('input')
-    vid_input.value = params['vid']
-    vid_input.disabled = true
-    vid_input.classList.add("visually_hidden")
-    form.appendChild(vid_input)
-
-    var import_queue_id_input = document.createElement('input')
-    import_queue_id_input.value = params['import_queue_id']
-    import_queue_id_input.disabled = true
-    import_queue_id_input.classList.add("visually_hidden")
-    form.appendChild(import_queue_id_input)
+    var new_input = document.createElement('input')
+    new_input.value = params['import_variant_queue_id']
+    new_input.setAttribute('name', 'import_variant_queue_id')
+    new_input.classList.add("visually_hidden")
+    form.appendChild(new_input)
 
     var submit_button = document.createElement('button')
     submit_button.classList.add("btn")
@@ -213,7 +207,7 @@ function create_td(text_content) {
 function create_td_link(text_content, url) {
     var td = document.createElement('td');
     var a = document.createElement('a')
-    a.setAttribute('href', url + "?vid=" + text_content)
+    a.setAttribute('href', url.replace('0', text_content))
     a.textContent = text_content
     td.appendChild(a)
     return td;

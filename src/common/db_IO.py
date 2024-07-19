@@ -1881,6 +1881,19 @@ class Connection:
         self.cursor.execute(command, (vid, import_queue_id))
         self.conn.commit()
         return self.get_last_insert_id()
+
+    def reset_import_variant_queue(self, import_variant_queue_id):
+        command = "UPDATE import_variant_queue SET celery_task_id = NULL, status = 'pending', message = '', requested_at = CURRENT_TIMESTAMP(), finished_at = NULL WHERE id = %s"
+        self.cursor.execute(command, (import_variant_queue_id, ))
+        self.conn.commit()
+
+    def get_vid_from_import_variant_queue(self, import_variant_queue_id):
+        command = "SELECT vid FROM import_variant_queue WHERE id = %s"
+        self.cursor.execute(command, (import_variant_queue_id, ))
+        result = self.cursor.fetchone()
+        if result is None:
+            return None
+        return result[0]
     
     def update_import_variant_queue_celery_id(self, variant_import_queue_id, celery_task_id):
         command = "UPDATE import_variant_queue SET celery_task_id = %s WHERE id = %s"

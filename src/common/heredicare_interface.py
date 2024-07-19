@@ -43,6 +43,7 @@ class Heredicare(metaclass=Singleton):
             "download": os.environ.get("HEREDICARE_DOWNLOAD_PROJECT"),
             "upload": os.environ.get("HEREDICARE_UPLOAD_PROJECT")
         }
+        print(self.projects)
         self.endpoints = {
             # special endpoints
             "bearer": "oauth/token",
@@ -175,6 +176,7 @@ class Heredicare(metaclass=Singleton):
 
         url = self.get_url(project_type, "variant", path_args = [str(vid)])
         status, message, all_items = self.iterate_pagination(url, project_type)
+
         variant = self.convert_heredicare_variant_raw(all_items)
 
         return variant, status, message
@@ -206,7 +208,7 @@ class Heredicare(metaclass=Singleton):
                 status = "retry"
                 break
             elif resp.status_code != 200: # any other kind of error
-                message = "ERROR: HerediCare API get post info endpoint returned an HTTP " + str(resp.status_code) + " error: " + + self.extract_error_message(resp.text)
+                message = "ERROR: HerediCare API get post info endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
                 status = "error"
                 break
             else: # request was successful
