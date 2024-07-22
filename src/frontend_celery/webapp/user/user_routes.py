@@ -341,7 +341,6 @@ def variant_import_summary(import_queue_id):
 
     if request.method == 'POST':
         import_variant_queue_id = request.form.get('import_variant_queue_id')
-        print(import_variant_queue_id)
         require_valid(import_variant_queue_id, 'import_variant_queue', conn)
 
         tasks.retry_variant_import(import_variant_queue_id, session['user']['user_id'], session['user']['roles'], conn)

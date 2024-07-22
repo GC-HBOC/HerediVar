@@ -280,7 +280,7 @@ def hide_variant(variant_id):
                                include_consensus = False, 
                                include_user_classifications = False, 
                                include_heredicare_classifications = False,
-                               include_automatic_classifications = False,
+                               include_automatic_classification = False,
                                include_clinvar = False, 
                                include_consequences = False, 
                                include_assays = False, 
