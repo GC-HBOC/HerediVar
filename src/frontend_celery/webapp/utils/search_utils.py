@@ -475,7 +475,7 @@ def get_static_search_information(user_id, conn: Connection):
     allowed_user_classes = functions.order_classes(conn.get_enumtypes('user_classification', 'classification'))
     allowed_consensus_classes = functions.order_classes(conn.get_enumtypes('consensus_classification', 'classification'))
     allowed_automatic_classes = functions.order_classes(conn.get_enumtypes('automatic_classification', 'classification_splicing'))
-    allowed_variant_types = ['small_variants', 'structural_variant']
+    allowed_variant_types = ['small_variants', 'insertions', 'deletions', 'delins', 'structural_variant']
     annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
     annotation_types = preprocess_annotation_types_for_search(annotation_types)
     lists = conn.get_lists_for_user(user_id)

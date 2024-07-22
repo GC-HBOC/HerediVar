@@ -766,13 +766,20 @@ class Connection:
             new_constraints = functions.enbrace(new_constraints)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if variant_types is not None and len(variant_types) > 0:
+            new_constraints = []
             for variant_type in variant_types:
-                if 'small' in variant_type:
-                    actual_information += ('small', )
+                if 'insert' in variant_type:
+                    new_constraints.append("(LENGTH(ref) = 1 AND LENGTH(alt) > 1 AND variant_type = 'small')")
+                elif 'delet' in variant_type:
+                    new_constraints.append("(LENGTH(ref) > 1 AND LENGTH(alt) = 1 AND variant_type = 'small')")
+                elif 'delins' in variant_type:
+                    new_constraints.append("(LENGTH(ref) > 1 AND LENGTH(alt) > 1 AND variant_type = 'small')")
+                elif 'small' in variant_type:
+                    new_constraints.append("(LENGTH(ref) = 1 AND LENGTH(alt) = 1 AND variant_type = 'small')")
                 elif 'struct' in variant_type:
-                    actual_information += ('sv',)
-            placeholders = self.get_placeholders(len(variant_types))
-            postfix = self.add_constraints_to_command(postfix, "variant_type IN " + placeholders)
+                    new_constraints.append("(variant_type = 'sv')")
+            new_constraints = ' OR '.join(new_constraints)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
         if cdna_ranges is not None and len(cdna_ranges) > 0:
             new_constraints = []
             for cdna_range in cdna_ranges:
