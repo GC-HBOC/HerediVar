@@ -31,7 +31,7 @@
             </thead>
             <tbody id="variantTableBody">
                 {% for entry in publish_queue_requests %}
-                <tr class="clickable" data-href="{{ url_for('user.variant_publish_summary', publish_queue_id = entry[0]) }}">
+                <tr class="clickable" data-href="{{ url_for('user.variant_publish_summary', publish_queue_id = entry.id) }}">
                     <td>{{ entry.user.full_name }}</td>
                     <td>{{ entry.requested_at }}</td>
                     <td>{{ entry.finished_at }}</td>

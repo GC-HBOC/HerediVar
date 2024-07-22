@@ -189,9 +189,9 @@ function create_td_form(text_content, url, params) {
     new_input.classList.add("visually_hidden")
     form.appendChild(new_input)
 
-    var tmp = document.createElement('div')
-    tmp.textContent = params['import_variant_queue_id']
-    form.appendChild(tmp)
+    //var tmp = document.createElement('div')
+    //tmp.textContent = params['import_variant_queue_id']
+    //form.appendChild(tmp)
 
     var submit_button = document.createElement('button')
     submit_button.classList.add("btn")
