@@ -197,7 +197,8 @@ def preprocess_variant(infile, do_liftover=False):
 
     if do_liftover:
         returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh37")
-        if returncode != 0: return returncode, err_msg + " " + vcf_errors_pre, command_output
+        if vcf_errors_pre != '': return 1, err_msg + " " + vcf_errors_pre, command_output
+        if returncode != 0: return returncode, err_msg, command_output
         returncode, err_msg, command_output = bgzip(infile)
         if returncode != 0: return returncode, err_msg, command_output
         returncode, err_msg, command_output = perform_liftover(infile, infile + ".lifted")
