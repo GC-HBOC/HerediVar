@@ -531,7 +531,7 @@
                         <div id="variant_type-select" class="d-flex">
                             {% for variant_type in static_information['allowed_variant_types'] %}
                                 <div class="form-check d-flex bsr align-items-center">
-                                    <input class="form-check-input ssr" type="checkbox" value="{{variant_type}}" id="variant_type_{{variant_type}}" name="variant_type" {% if variant_type in selected_variant_types or selected_variant_types | length == 0 %}checked{% endif %}>
+                                    <input class="form-check-input ssr" type="checkbox" value="{{variant_type}}" id="variant_type_{{variant_type}}" name="variant_type" {% if variant_type in selected_variant_types %}checked{% endif %}>
                                     <label class="form-check-label" for="variant_type_{{variant_type}}">{{variant_type.replace('_', ' ')}}</label>
                                 </div>
                             {% endfor %}

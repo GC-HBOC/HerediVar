@@ -249,7 +249,7 @@ def fetch_heredicare(vid, user_id, conn:Connection, insert_variant = True, perfo
     if status != 'success': # error in variant retrieval from heredicare
         return status, message
 
-    if str(variant.get("VISIBLE", "0")) == "0" or len(variant) == 0: # skip invisible vid or vid that is unknown by heredicare
+    if (str(variant.get("VISIBLE", "0")) == "0" or len(variant) == 0) and insert_variant: # skip invisible vid or vid that is unknown by heredicare
         annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
         variant_id = conn.get_variant_id_from_external_id(vid, annotation_type_id) # check if heredivar knows the vid
         if variant_id is not None: # heredivar knows the vid, but heredicare doesnt OR vid is now invisible

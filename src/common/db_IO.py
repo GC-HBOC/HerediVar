@@ -778,7 +778,7 @@ class Connection:
                     new_constraints.append("(LENGTH(ref) = 1 AND LENGTH(alt) = 1 AND variant_type = 'small')")
                 elif 'struct' in variant_type:
                     new_constraints.append("(variant_type = 'sv')")
-            new_constraints = ' OR '.join(new_constraints)
+            new_constraints = functions.enbrace(' OR '.join(new_constraints))
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if cdna_ranges is not None and len(cdna_ranges) > 0:
             new_constraints = []

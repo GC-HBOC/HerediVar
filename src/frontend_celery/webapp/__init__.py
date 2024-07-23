@@ -1,12 +1,14 @@
+
+import sys
+import os
 from flask import Flask
 from authlib.integrations.flask_client import OAuth
 from flask_session import Session # alternatives: flask-caching, flask-kvsesssion
 from urllib.parse import urlparse, urljoin
 # for celery
 from celery import Celery
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import Config
-import sys
-import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from common import paths, functions
 #from annotation_service.heredicare_interface import Heredicare_Flask
@@ -16,7 +18,6 @@ from flask.logging import default_handler
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from flask_mail import Mail
-
 
 
 oauth = OAuth()
