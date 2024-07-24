@@ -27,7 +27,9 @@ import traceback
 
 def start_variant_import(vids, user_id, user_roles, conn: Connection): # starts the celery task
     source = "heredicare_specific"
-    if not vids: # we are not processing specific vids
+    if vids == "update": # we are not processing specific vids
+        source = "heredicare_update"
+    elif vids == "all":
         source = "heredicare_complete"
     new_import_request = conn.insert_import_request(user_id, source)
     import_queue_id = new_import_request.id
@@ -91,13 +93,15 @@ def heredicare_variant_import(self, vids, user_id, user_roles, import_queue_id):
         self.update_state(state="SUCCESS")
 
 
-def import_variants(vids: list, conn: Connection, user_id, user_roles, import_queue_id): # the task worker
+def import_variants(vids, conn: Connection, user_id, user_roles, import_queue_id): # the task worker
     status = "success"
     message = ""
 
-    if not vids: # we do not have any specific vid(s) to to import -> search for updated / new vids in heredicare
-        #vids, all_vids_heredicare, status, message = get_filtered_vid_list(conn)
-        status, message, intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = get_vid_sets(conn)
+    if vids in ['all', 'update']: # we do not have any specific vid(s) to to import -> search for updated / new vids in heredicare
+        do_filter = True
+        if vids == 'all':
+            do_filter = False
+        status, message, intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = get_vid_sets(conn, do_filter)
         vids = []
 
         #intersection = []
@@ -107,7 +111,8 @@ def import_variants(vids: list, conn: Connection, user_id, user_roles, import_qu
         vids.extend(intersection)
         vids.extend(heredivar_exclusive_vids)
         vids.extend(heredicare_exclusive_vids)
-    
+
+
     if status == "success":
         # spawn one task for each variant import
         for vid in vids:
@@ -116,7 +121,7 @@ def import_variants(vids: list, conn: Connection, user_id, user_roles, import_qu
     return status, message
 
 
-def get_vid_sets(conn: Connection):
+def get_vid_sets(conn: Connection, do_filter = True):
     intersection = []
     heredivar_exclusive_vids = []
     heredicare_exclusive_vids = []
@@ -124,8 +129,18 @@ def get_vid_sets(conn: Connection):
 
     all_vids_heredicare_raw, status, message = heredicare_interface.get_vid_list()
     if status == "success":
-        min_date = conn.get_min_date_heredicare_import(source = "heredicare_complete") # returns None if there are no successful imports (or no import requests at all)
-        #min_date = functions.str2datetime(min_date, fmt = '%Y-%m-%dT%H:%M:%S')
+
+        min_date = None
+        if do_filter:
+            min_date_1 = conn.get_min_date_heredicare_import(source = "heredicare_complete")
+            min_date_2 = conn.get_min_date_heredicare_import(source = "heredicare_update") # returns None if there are no successful imports (or no import requests at all)
+            if min_date_1 is None:
+                min_date = min_date_2
+            elif min_date_2 is None:
+                min_date = min_date_1
+            else:
+                min_date = max(min_date_1, min_date_2)
+            #min_date = functions.str2datetime(min_date, fmt = '%Y-%m-%dT%H:%M:%S')
         filtered_vids_heredicare, all_vids_heredicare, status, message = heredicare_interface.filter_vid_list(all_vids_heredicare_raw, min_date)
 
         if status == "success":
@@ -193,13 +208,12 @@ def retry_variant_import(import_variant_queue_id, user_id, user_roles, conn: Con
 @celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
 def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant_queue_id):
     """Background task for fetching variants from HerediCare"""
-    #from frontend_celery.webapp.utils.variant_importer import fetch_heredicare
     self.update_state(state='PROGRESS')
     
     try:
         conn = Connection(user_roles)
         conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
-        status, message = fetch_heredicare(vid, user_id, conn, insert_variant = True, perform_annotation = True)
+        status, message = fetch_heredicare(vid, user_id, conn, insert_variant = True, perform_annotation = False)
     except InternalError as e:
         # deadlock: code 1213
         status = "retry"

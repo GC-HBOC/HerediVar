@@ -332,6 +332,9 @@ class Connection:
         return result
     
     def insert_external_variant_id(self, variant_id, external_id, annotation_type_id):
+        #command = "DELETE FROM variant_ids WHERE external_id = %s AND annotation_type_id = %s and variant_id != %s"
+        #self.cursor.execute(command, (external_id, annotation_type_id, variant_id))
+        #self.conn.commit()
         command = "INSERT INTO variant_ids (variant_id, external_id, annotation_type_id) \
                     SELECT %s, %s, %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM variant_ids \
 	                    WHERE `variant_id`=%s AND `external_id`=%s AND `annotation_type_id`=%s LIMIT 1)"

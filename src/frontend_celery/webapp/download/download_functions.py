@@ -387,6 +387,8 @@ def get_possible_classes_enigma_atm_1_3_0(class_counts):
     # likely pathogenic
     if class_counts['pvs'] == 1 and class_counts['pm'] == 1:
         possible_classes.add(4)
+    if class_counts['pvs'] == 1 and class_counts['pm2_pp'] == 1:
+        possible_classes.add(4)
     if class_counts['pvs'] == 1 and class_counts['pp'] == 1 and class_counts['pvs1_pp'] == 0: #  (PS3_Supporting, PM2_Supporting, PM3_Supporting, PM5_Supporting, PP3)
         possible_classes.add(4)
     if class_counts['ps'] == 1:
@@ -739,7 +741,7 @@ def decide_for_class_task_force(selected_classes):
 def get_class_counts(data):
     result = {'pvs':0, 'ps':0, 'pm':0, 'pp':0, 'bp':0, 'bs':0, 'bm':0, 'bvs':0, 'ba':0, 'pm2_pp':0, 'bp1_bs': 0, 'pvs1_pp': 0} 
     # special cases:
-    # - pm2_pp: ATM 1.1.0 scheme
+    # - pm2_pp: ATM 1.1.0 scheme or ATM 1.3.0 scheme
     # - pvs1_pp: ATM 1.3.0 scheme
     # - bp1_bs: brca1/2 1.1.0 scheme
     data = [x.lower().strip('0123456789') for x in data]

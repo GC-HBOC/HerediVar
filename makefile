@@ -188,6 +188,7 @@ herediclass:
 	if [ ! -d "${HEREDICLASS}" ]; then \
 		printf ${_TEXTCOL_RED} "Installing the automatic classification algorithm" ; \
 		${TOOLS}/script/install_herediclass.sh -p ${HEREDICLASSPATH} -n ${HEREDICLASSNAME} ; \
+		${TOOLS}/script/install_herediclass_config.sh -p ${HEREDICLASSPATH} -n ${HEREDICLASSNAME} ; \
 	fi
 
 herediclass_clean:
@@ -199,7 +200,8 @@ herediclass_update_soft:
 	cd ${HEREDICLASS}
 	git pull
 
-
+herediclass_update_config:
+	${TOOLS}/script/install_herediclass_config.sh -p ${HEREDICLASSPATH} -n ${HEREDICLASSNAME} ; \
 
 
 

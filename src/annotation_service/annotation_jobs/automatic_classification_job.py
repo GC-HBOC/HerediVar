@@ -88,11 +88,23 @@ class automatic_classification_job(Job):
             current_criterium = classification_result[criterium_name]
             if not current_criterium['status']:
                 continue
+
+            rule_type = current_criterium['rule_type']
+            criterium_name_cut = criterium_name.strip().split('_')[0].lower()
+
             prefix = self.evidence_type2prefix(current_criterium['evidence_type'])
             postfix = self.strength2postfix(current_criterium['strength'])
-            rule_type = current_criterium['rule_type']
             criterium_strength_abbr = prefix + postfix
-            functions.extend_dict(selected_criteria, rule_type, criterium_strength_abbr)
+
+            criterium_complex = criterium_name_cut + '_' + criterium_strength_abbr
+            if criterium_complex == 'bp1_bs' and ('brca' in scheme_type.lower() and scheme_version == "v1.1.0"):
+                functions.extend_dict(selected_criteria, rule_type, criterium_complex)
+            elif criterium_complex == 'pvs1_pp' and ('atm' in scheme_type.lower() and scheme_version == "v1.3.0"):
+                functions.extend_dict(selected_criteria, rule_type, criterium_complex) 
+            elif criterium_complex == 'pm2_pp' and ('atm' in scheme_type.lower() and scheme_version in ["v1.1.0", "v1.3.0"]):
+                functions.extend_dict(selected_criteria, rule_type, criterium_complex)
+            else:
+                functions.extend_dict(selected_criteria, rule_type, criterium_strength_abbr)
         
         # calculate class for splicing
         selected_criteria_splicing = '+'.join(selected_criteria.get("splicing", []) + selected_criteria.get("general", []))

@@ -197,13 +197,13 @@
 
         <div class="bst"></div>
 
-        <h4>Import all variants</h4>
-        <!-- import all from heredicare button -->
+        <h4>Import variants</h4>
+
         <div class="bst d-flex items_align_center">
             <form action="/admin_dashboard?type=import_variants" id="import-variants-form" name="import-variants-form" method="post">
                 <div class="form-group">
                     <span id="tooltip-import-variants-button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button invokes a mass-import of all variants in HerediCare and collects metadata from HerediCare.">
-                        <button id="import-variants-button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#import-variants-modal">Import HerediCare</button>
+                        <button id="import-variants-button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#import-variants-modal">Import ALL</button>
                     </span>
                     <meta id="annotation_status" data-annotation-status="{{ most_recent_import_request.status }}">
                 </div>
@@ -223,25 +223,36 @@
             </div>
         </div>
 
+        <div class="sst"></div>
+
+        <form action="/admin_dashboard?type=import_variants_update" id="import-variants-update-form" name="import-variants-update-form" method="post">
+            <div class="form-group">
+                <span id="tooltip-import-variants-update-button" class="d-inline-block" tabindex="0" data-bs-toggle="tooltip" title="Pressing this button invokes a mass-import of all variants in HerediCare and collects metadata from HerediCare.">
+                    <button id="import-variants-update-button" type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#import-variants-update-modal">Import UPDATED</button>
+                </span>
+                <meta id="annotation_status" data-annotation-status="{{ most_recent_import_request.status }}">
+            </div>
+        </form>
+
+
         <div class="bst"></div>
 
-        <h4>Import one VID</h4>
+        <h4>Import specific VIDs</h4>
         
-        <form action="/admin_dashboard?type=import_specific_vids" id="import-one-variants-form" name="import-variants-form" method="post">
+        <form action="/admin_dashboard?type=import_specific_vids" id="import-specific-variants-form" name="import-specific-variants-form" method="post">
             <div class="form-group">
                 <div class="form-group sst">
-                    <label for="vid" class="form-label">HerediCare VID</label>
-                    <input type="text" name="vid" pattern="[0-9 ]+" id="vid"
-                           placeholder="vid" class="form-control validationreq"
-                           value="{{ request.form['vid'] }}" required>
+                    <label for="vids" class="form-label">HerediCare VID</label>
+                    <input type="text" name="vids" pattern="[0-9,; ]+" id="vids"
+                           placeholder="vids: a comma or semicolon separated list of HerediCaRe VIDs" class="form-control validationreq"
+                           value="{{ request.form['vids'] }}" required>
                     <div class="invalid-feedback">
                         Please provide a HerediCare VID!
                     </div>
                 </div>
                 <div class="sst d-flex items_align_center">
-                    <button id="import-one-variants-button" type="submit" class="btn btn-outline-primary sst" data-bs-toggle="modal" data-bs-target="#import-one-variants-modal">Import variant</button>
+                    <button id="import-specific-variants-button" type="submit" class="btn btn-outline-primary sst" data-bs-toggle="modal">Import variant</button>
                 </div>
-
             </div>
         </form>
 
@@ -369,6 +380,26 @@
 
 
 <!-- modal -->
+<div class="modal fade" id="import-variants-update-modal" tabindex="-1" aria-labelledby="import-variants-update-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="import-variants-update-modal-label">Confirm import & update</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure that you want to import all NEW variants from HerediCare?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button id="import-variants-update-submit" type="submit" class="btn btn-primary">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- modal -->
 <div class="modal fade" id="import-variants-modal" tabindex="-1" aria-labelledby="import-variants-modal-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -377,16 +408,15 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Are you sure that you want to import & update all variants in HerediVar from HerediCare?
+                Are you sure that you want to import ALL variants from HerediCare?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button id="import-variants-submit" type="submit" class="btn btn-primary">Yes</button>
+                <button id="import-variants-modal-submit" type="submit" class="btn btn-primary">Yes</button>
             </div>
         </div>
     </div>
 </div>
-
 
 
 

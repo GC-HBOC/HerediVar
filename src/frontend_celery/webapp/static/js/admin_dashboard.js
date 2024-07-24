@@ -7,11 +7,17 @@ $(document).ready(function()
 
 
     // functionality for the import & update button
-    $('#import-variants-submit').click(function(){
-        $('#import-variantsbutton').attr('disabled', true);
+    $('#import-variants-modal-submit').click(function(){
+        $('#import-variants-modal-submit').attr('disabled', true);
         /* when the submit button in the modal is clicked, submit the form */
         $('#import-variants-form').submit();
     });
+    $('#import-variants-update-submit').click(function(){
+        $('#import-variants-update-submit').attr('disabled', true);
+        /* when the submit button in the modal is clicked, submit the form */
+        $('#import-variants-update-form').submit();
+    });
+
 
     $('#abort_annotations-submit').click(function(){
         $('#abort_annotations-submit').attr('disabled', true);

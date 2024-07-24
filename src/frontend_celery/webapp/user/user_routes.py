@@ -271,15 +271,22 @@ def admin_dashboard():
             flash("Aborted " + str(len(annotation_requests)) + " annotation requests.", "alert-success")
             do_redirect = True
 
-        # mass import from heredicare: only imports updated heredicare vids based on the last mass import
+        # mass import from heredicare: consider ALL HerediCaRe VIDs independent of last import date / last updated
         elif request_type == 'import_variants':
-            vids = [] # start task importing all updated heredicare vids
+            vids = "all" # start task importing all updated heredicare vids
             import_queue_id = tasks.start_variant_import(vids, session['user']['user_id'], session['user']['roles'], conn)
             return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id))
 
-        # single vid import from heredicare
+        # mass import from heredicare: only imports updated heredicare vids based on the last mass import
+        elif request_type == 'import_variants_update':
+            vids = "update" # start task importing all updated heredicare vids
+            import_queue_id = tasks.start_variant_import(vids, session['user']['user_id'], session['user']['roles'], conn)
+            return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id))
+
+        # specific vid import from heredicare
         elif request_type == 'import_specific_vids':
-            vids = request.form.getlist('vid')
+            vids = request.form.get('vids', "")
+            vids = re.split(r"[,;]", vids)
             require_set(vids)
             
             import_queue_id = tasks.start_variant_import(vids, session['user']['user_id'], session['user']['roles'], conn)
