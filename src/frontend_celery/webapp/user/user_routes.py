@@ -338,37 +338,6 @@ def set_default_scheme():
     return "success"
 
 
-# shows all data of an import - is used for both bulk and single vid imports from heredicare
-@user_blueprint.route('/variant_import_summary/<int:import_queue_id>', methods=['GET', 'POST'])
-@require_permission(['admin_resources'])
-def variant_import_summary(import_queue_id):
-    conn = get_connection()
-    import_request = conn.get_import_request(import_queue_id)
-    require_set(import_request)
-
-    if request.method == 'POST':
-        import_variant_queue_id = request.form.get('import_variant_queue_id')
-        require_valid(import_variant_queue_id, 'import_variant_queue', conn)
-
-        tasks.retry_variant_import(import_variant_queue_id, session['user']['user_id'], session['user']['roles'], conn)
-        vid = conn.get_vid_from_import_variant_queue(import_variant_queue_id)
-        flash("Successfully requested reimport of vid " + str(vid) + ". It is processed in the background. If this page does not show a pending variant refresh to view changes.", "alert-success")
-        return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id))
-
-    return render_template('user/variant_import_summary.html', import_queue_id = import_queue_id)
-
-
-# api endpoint for fetching the data for the import summary
-# the import summary endpoint uses ajax to get information from this endpoint
-@user_blueprint.route('/variant_import_summary_data/<int:import_queue_id>')
-@require_permission(['admin_resources'])
-def variant_import_summary_data(import_queue_id):
-    conn = get_connection()
-    import_request = conn.get_import_request(import_queue_id)
-    require_set(import_request)
-    imported_variants = conn.get_imported_variants(import_queue_id, status = ["error"])
-    return jsonify({'import_request': import_request, 'imported_variants': imported_variants})
-
 
 # shows all variant import requests from heredicare in server sided pagination
 @user_blueprint.route('/variant_import_history')
@@ -386,6 +355,95 @@ def variant_import_history():
                            page = page,
                            page_size = page_size 
                         )
+
+# shows all data of an import - is used for both bulk and single vid imports from heredicare
+@user_blueprint.route('/variant_import_summary/<int:import_queue_id>', methods=['GET', 'POST'])
+@require_permission(['admin_resources'])
+def variant_import_summary(import_queue_id):
+    conn = get_connection()
+    import_request = conn.get_import_request(import_queue_id)
+    require_set(import_request)
+
+    if request.method == 'POST':
+        import_variant_queue_id = request.form.get('import_variant_queue_id')
+        require_valid(import_variant_queue_id, 'import_variant_queue', conn)
+
+        tasks.retry_variant_import(import_variant_queue_id, session['user']['user_id'], session['user']['roles'], conn)
+        vid = conn.get_vid_from_import_variant_queue(import_variant_queue_id)
+        flash("Successfully requested reimport of vid " + str(vid) + ". It is processed in the background. If this page does not show a pending variant refresh to view changes.", "alert-success")
+        return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id))
+
+    static_information = get_static_vis_information(conn)
+    imported_variants, total, page, page_size = get_vis_page(request.args, import_queue_id, static_information, conn)
+    pagination = Pagination(page=page, per_page=page_size, total=total, css_framework='bootstrap5')
+
+    return render_template('user/variant_import_summary.html', 
+                           import_queue_id = import_queue_id,
+                           static_information = static_information,
+                           imported_variants = imported_variants,
+                           pagination = pagination,
+                           page = page,
+                           page_size = page_size
+                        )
+
+def get_static_vis_information(conn: Connection):
+    result = {}
+    result["default_page"] = 1
+    result["default_page_size"] = "20"
+    result["allowed_stati"] = conn.get_enumtypes("import_variant_queue", "status")
+    return result
+
+def get_vis_page(request_args, import_queue_id, static_information, conn: Connection):
+    page = request.args.get('page', static_information["default_page"])
+    page_size = request.args.get('page_size', static_information["default_page_size"])
+
+    comments = extract_comments_vis(request_args)
+    stati = extract_stati_vis(request_args, static_information["allowed_stati"])
+    vids = extract_vids_vids(request_args)
+
+    imported_variants, total = conn.get_imported_variants_page(comments, stati, vids, import_queue_id, page, page_size)
+    
+
+    return imported_variants, total, page, page_size
+
+
+def extract_stati_vis(request_args, allowed_stati):
+    raw = request_args.getlist('status')#
+    raw = ';'.join(raw)
+    regex_inner = '|'.join(allowed_stati)
+    processed = preprocess_query(raw, r'(' + regex_inner + r')?')
+    if processed is None:
+        flash("You have an error in your status queries. Results are not filtered by stati.", "alert-danger")
+    return processed
+
+def extract_comments_vis(request_args):
+    raw = request_args.get('comment', '')
+    processed = preprocess_query(raw, pattern=r".*", seps = "[;]", remove_whitespace = False)
+    if processed is None:
+        flash("You have an error in your comment query(s). Results are not filtered by comment.", "alert-danger")
+    return processed
+
+def extract_vids_vids(request_args):
+    raw = request_args.get('vid', '')
+    processed = preprocess_query(raw, pattern=r"\d+")
+    if processed is None:
+        flash("You have an error in your VID query(s). Results are not filtered by VIDs.", "alert-danger")
+    return processed
+
+
+# api endpoint for fetching the data for the import summary
+# the import summary endpoint uses ajax to get information from this endpoint
+@user_blueprint.route('/variant_import_summary_data/<int:import_queue_id>')
+@require_permission(['admin_resources'])
+def variant_import_summary_data(import_queue_id):
+    conn = get_connection()
+    import_request = conn.get_import_request(import_queue_id)
+    require_set(import_request)
+    imported_variants = conn.get_imported_variants(import_queue_id, status = ["error"])
+    return jsonify({'import_request': import_request, 'imported_variants': imported_variants})
+
+
+
 
 
 # shows asll variant publish requests in server sided pagination

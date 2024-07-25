@@ -1796,7 +1796,6 @@ class Connection:
         if num_items is None:
             return [], 0
         return import_requests, num_items[0]
-    
 
     def get_max_finished_at_import_variant(self, import_queue_id):
         command = "SELECT MAX(finished_at) FROM import_variant_queue WHERE import_queue_id = %s"
@@ -1935,6 +1934,54 @@ class Connection:
         self.cursor.execute(command, actual_information)
         raw_results = self.cursor.fetchall()
         return [self.convert_raw_import_variant_request(raw_result) for raw_result in raw_results]
+
+    def get_imported_variants_page(self, comments, stati, vids, import_queue_id, page, page_size):
+        # get one page of import requests determined by offset & pagesize
+        prefix = "SELECT id, status, requested_at, finished_at, message, vid FROM import_variant_queue "
+        postfix = ""
+        actual_information = ()
+
+        if comments is not None and len(comments) > 0:
+            all_new_constraints = []
+            for comment in comments:
+                new_constraints = "message LIKE %s"
+                all_new_constraints.append(new_constraints)
+                actual_information += (functions.enpercent(comment), )
+            all_new_constraints = " OR ".join(all_new_constraints)
+            all_new_constraints = functions.enbrace(all_new_constraints)
+            postfix = self.add_constraints_to_command(postfix, all_new_constraints)
+        if stati is not None and len(stati) > 0:
+            placeholders = self.get_placeholders(len(stati))
+            new_constraints = "status IN " + placeholders
+            actual_information += tuple(stati)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if vids is not None and len(vids) > 0:
+            placeholders = self.get_placeholders(len(vids))
+            new_constraints = "vid IN " + placeholders
+            actual_information += tuple(vids)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+
+        new_constraints = "import_queue_id = %s"
+        postfix = self.add_constraints_to_command(postfix, new_constraints)
+        actual_information += (import_queue_id, )
+        command = prefix + postfix + " ORDER BY requested_at DESC LIMIT %s, %s"
+        page_size = int(page_size)
+        page = int(page)
+        offset = (page - 1) * page_size
+        actual_information += (offset, page_size)
+        print(command % actual_information)
+        self.cursor.execute(command, actual_information)
+        raw_results = self.cursor.fetchall()
+        result = [self.convert_raw_import_variant_request(raw_result) for raw_result in raw_results]
+
+        # get total number
+        prefix = "SELECT COUNT(id) FROM import_variant_queue"
+        command = prefix + postfix
+        self.cursor.execute(command, actual_information[:len(actual_information)-2])
+        num_items = self.cursor.fetchone()
+        if num_items is None:
+            return [], 0
+        return result, num_items[0]
 
     def get_single_vid_imports(self):
         command = "SELECT id, status, requested_at, finished_at, message, vid FROM import_variant_queue WHERE import_queue_id is NULL"
@@ -3235,7 +3282,7 @@ class Connection:
         self.conn.commit()
     
     def get_enumtypes(self, tablename, columnname):
-        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue", "automatic_classification", "sv_variant", "user_classification_criteria_applied", "consensus_classification_criteria_applied"]
+        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue", "automatic_classification", "sv_variant", "user_classification_criteria_applied", "consensus_classification_criteria_applied", "import_variant_queue"]
         if tablename in allowed_tablenames: # prevent sql injection
             command = "SHOW COLUMNS FROM " + tablename + " WHERE FIELD = %s"
         else:

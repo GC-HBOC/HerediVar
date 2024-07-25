@@ -8,10 +8,13 @@ from common.db_IO import Connection
 import common.models as models
 from functools import cmp_to_key
 
-def preprocess_query(query, pattern = '.*'):
-    seps = get_search_query_separators()
+def get_search_query_separators():
+    return '[;,\n]'
+
+def preprocess_query(query, pattern = '.*', seps = get_search_query_separators(), remove_whitespace = True):
     query = query.strip()
-    query = ''.join(re.split('[ \r\f\v\t]', query)) # remove whitespace except for newline
+    if remove_whitespace:
+        query = ''.join(re.split('[ \r\f\v\t]', query)) # remove whitespace except for newline
     reg = "^(%s" + seps + "*)*$"
     pattern = re.compile(reg % (pattern, ))
     result = pattern.match(query)
@@ -22,8 +25,7 @@ def preprocess_query(query, pattern = '.*'):
     query = [x for x in query if x != '']
     return query
 
-def get_search_query_separators():
-    return '[;,\n]'
+
 
 #def bed_ranges_to_heredivar_ranges(ranges):
 #    ranges = re.split('[\n]', ranges)
@@ -111,7 +113,6 @@ def extract_variant_types(request_args, allowed_variant_types):
     variant_types = request_args.get('variant_type', '')
     #variant_types = ';'.join(variant_types)
     regex_inner = '|'.join(allowed_variant_types)
-    regex_inner = regex_inner.replace('+', '\+')
     variant_types = preprocess_query(variant_types, r'(' + regex_inner + r')?')
     if variant_types is None:
         flash("You have an error in your variant type query. Results are not filtered by variant types.", "alert-danger")

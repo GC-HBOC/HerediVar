@@ -12,7 +12,7 @@ $(document).ready(function(){
 
     toggle_spinners() // show spinners
 
-    activate_datatables("variant_table")
+    //activate_datatables("variant_table")
 
     update_page(data_url)
 
@@ -49,7 +49,7 @@ function update_page(url) {
 
         //console.log(data)
         update_general_information(data)
-        update_erroneous_variants(data['imported_variants'])
+        //update_erroneous_variants(data['imported_variants'])
         update_variant_summary(data["import_request"]["variant_summary"])
 
         if (first_load) {

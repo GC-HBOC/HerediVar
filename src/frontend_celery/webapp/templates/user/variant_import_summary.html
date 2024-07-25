@@ -55,6 +55,8 @@
 
 
 
+
+
 <div class="card bsb bst">
     <div class="table-responsive bsb card-body">
         <table class="table table-borderless" id="variant_summary_table">
@@ -93,27 +95,126 @@
             <h4 class="card-subcaption">Status details</h4>
 
             <p class="card-text">
-                <div class="table-responsive table-lg">
-                    <table class="table table-hover" id="variant_table">
-                        <thead>
-                            <tr>
-                                <th class="width_very_small"><div>HerediCare VID</div></th>
-                                <th class="width_very_small"><div>Status</div></th>
-                                <th class="width_small"><div>Requested at</div></th>
-                                <th class="width_small"><div>Finished at</div></th>
-                                <th class="width_large"><div>Message</div></th>
-                                <th class="width_minimal"><div>Retry</div></th>
-                            </tr>
-                        </thead>
-                        <tbody id="variant_table_body">
 
-                        </tbody>
-                    </table>
+
+                <div>
+
+                    <div id="tabnav-head" class="row align-items-end  nsl nsr">
+                        <div class="col nopad">{{ pagination.links }}</div>
+                    
+                        <div class="col nopad">
+                            
+                            <a class="btn btn-sm btn-primary float_right" data-bs-toggle="collapse" id="searchOptionsToggle" href="#advanced_search" role="button" aria-expanded="false" aria-controls="advanced_search" >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                                </svg>
+                            </a>
+                    
+                            <a class="btn btn-sm btn-danger float_right" href="{{ url_for(request.url_rule.endpoint, import_queue_id = import_queue_id) }}" data-bs-toggle="tooltip" title="Clear all filters.">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                                    
+                                    <g transform="scale(1.5)">
+                                        <g transform="translate(-4,-2.5)">
+                                            <path d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0Z"/>
+                                        </g>
+                                    </g>
+                                </svg>
+                            </a>
+                        </div>
+                    
+                        <div class="collapse nopad" id="advanced_search">
+                            <div class="card card-body">
+                    
+                                <div>
+                                    <form action="" method="GET" novalidate>
+
+                                        <div class="form-group sst">
+                                            <label for="vid" class="form-label">VIDs</label>
+                                            <textarea type="text" name="vid" id="vid"
+                                                   placeholder="VID1; VID2; ..." class="form-control height_zero"
+                                                   >{{ request.args.get('vid', '') }}</textarea>
+                                        </div>
+                            
+                                        <div class="form-group sst">
+                                            <label for="comment" class="form-label">Comment</label>
+                                            <textarea type="text" name="comment" id="comment"
+                                                   placeholder="comment1; comment2; ..." class="form-control height_zero"
+                                                   >{{ request.args.get('comment', '') }}</textarea>
+                                        </div>
+
+                                        <div class="form-group sst">
+                                            {% set selected_stati = request.args.getlist('status') %}
+                                            <label for="status-select" class="form-label">Variant types</label>
+                                            <div id="status-select" class="d-flex">
+                                                {% for status in static_information['allowed_stati'] %}
+                                                    <div class="form-check d-flex bsr align-items-center">
+                                                        <input class="form-check-input ssr" type="checkbox" value="{{status}}" id="status_{{status}}" name="status" {% if status in selected_stati %}checked{% endif %}>
+                                                        <label class="form-check-label" for="status_{{status}}">{{status.replace('_', ' ')}}</label>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        
+                            
+                                        <div class="d-flex justify-content-end align-items-center">
+                                            <div>
+                                                <a class="ssr float_right" href="{{url_for('main.documentation')}}">Help</a>
+                                            </div>
+                                            <button id="submit_search" class="btn btn-primary float_right" type="submit">search</button>
+                                        </div>
+                            
+                                    </form>
+                                </div>
+                            
+                            </div>
+                        </div>
+                    </div>
+                      
+                    
+                    <div class="table-responsive tableFixHead table-100 ">
+                        <table class="table table-hover ssb" id="variant_table">
+                            <thead id="variantTableHead">
+                                <tr>
+                                    <th class="width_very_small"><div>HerediCare VID</div></th>
+                                    <th class="width_very_small"><div>Status</div></th>
+                                    <th class="width_small"><div>Requested at</div></th>
+                                    <th class="width_small"><div>Finished at</div></th>
+                                    <th class="width_large"><div>Message</div></th>
+                                    <th class="width_minimal"><div>Retry</div></th>
+                                </tr>
+                            </thead>
+                            <tbody id="variant_table_body">
+                                {% for entry in imported_variants %}
+                                <tr>
+                                    <td><a href="{{url_for('extended_information.vid', vid=entry.vid)}}">{{entry.vid}}</a></td>
+                                    <td>{{entry.status}}</td>
+                                    <td>{{entry.requested_at}}</td>
+                                    <td>{{entry.finished_at}}</td>
+                                    <td><div class="Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ entry.message }}">{{ entry.message }}</div></td>
+                                    <td>
+                                        <form action="{{url_for('user.variant_import_summary', import_queue_id=import_queue_id)}}" method="post">
+                                            <input class="visually-hidden" name="import_variant_queue_id" type="text" value="{{entry.id}}">
+                                            <button class="btn btn-outline-primary" type="submit">Retry</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                      
+                    <div id="tabnav-bottom" class="ssb">{{ pagination.links }}</div>
+                    
                 </div>
+
+
+
             </p>
         </div>
     </div>
 </div>
+
 
 
 
