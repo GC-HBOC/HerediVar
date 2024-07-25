@@ -805,7 +805,8 @@ def num2heredicare(classification, single_value = False):
             "3+": "34",
             "4": "14",
             "-": "21",
-            "4M": "14"
+            "4M": "14",
+            "R": "missing"
         }
     else:
         mapping = {
@@ -817,7 +818,8 @@ def num2heredicare(classification, single_value = False):
             "3+": ["34"],
             "4": ["14"],
             "-": ["20", "21", "4", "-1"],
-            "4M": ["14"]
+            "4M": ["14"],
+            "R": ["missing"]
     }
 
     return mapping[str(classification)]

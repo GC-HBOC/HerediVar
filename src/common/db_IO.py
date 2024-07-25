@@ -566,13 +566,14 @@ class Connection:
         return [x[0] for x in res]
 
     def get_variant_ids_with_consensus_classification(self, variant_types: list):
+        annotation_type_id = self.get_most_recent_annotation_type_id("heredicare")
         command_base = """
             SELECT variant.id FROM variant INNER JOIN (
-                SELECT DISTINCT variant_id FROM consensus_classification UNION SELECT DISTINCT variant_id FROM variant_heredicare_annotation WHERE consensus_class is not NULL
+                SELECT DISTINCT variant_id FROM consensus_classification UNION SELECT DISTINCT variant_id FROM variant_heredicare_annotation WHERE consensus_class is not NULL and annotation_type_id = %s
             )x ON variant.id = x.variant_id
         """
         command_ext = ""
-        actual_information = ()
+        actual_information = (annotation_type_id, )
         for variant_type in variant_types:
             command_ext = self.add_constraints_to_command(command_ext, "variant_type = %s", operator = 'OR')
             actual_information += (variant_type, )
@@ -889,10 +890,12 @@ class Connection:
         if consensus is not None and len(consensus) > 0:
             new_constraints_inner = ''
             consensus_without_dash = [value for value in consensus if value != '-']
+            heredicare_annotation_type_id = self.get_most_recent_annotation_type_id("heredicare")
             if '-' in consensus:
                 new_constraints_inner = "SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM consensus_classification WHERE is_recent=1)"
                 if include_heredicare_consensus:
-                    new_constraints_inner += " AND id NOT IN (SELECT variant_id FROM variant_heredicare_annotation WHERE consensus_class IS NOT NULL)"
+                    new_constraints_inner += " AND id NOT IN (SELECT variant_id FROM variant_heredicare_annotation WHERE consensus_class IS NOT NULL AND annotation_type_id = %s)"
+                    actual_information += (heredicare_annotation_type_id, )
                 if len(consensus_without_dash) > 0: # if we have - AND some other class(es) we need to add an or between them
                     new_constraints_inner = new_constraints_inner + " UNION "
             if len(consensus_without_dash) > 0: # if we have one or more classes without the -
@@ -908,7 +911,8 @@ class Connection:
                     heredicare_consensus.extend(functions.num2heredicare(c))
                 placeholders1 = self.get_placeholders(len(heredicare_consensus))
                 placeholders2 = self.get_placeholders(len(consensus_without_dash))
-                new_constraints = "variant.id IN (SELECT variant_id FROM variant_heredicare_annotation WHERE consensus_class IN " + placeholders1 +  " AND variant_id NOT IN (SELECT variant_id FROM consensus_classification WHERE classification NOT IN " + placeholders2 + " AND is_recent = 1))"
+                new_constraints = "variant.id IN (SELECT variant_id FROM variant_heredicare_annotation WHERE annotation_type_id = %s AND consensus_class IN " + placeholders1 +  " AND variant_id NOT IN (SELECT variant_id FROM consensus_classification WHERE classification NOT IN " + placeholders2 + " AND is_recent = 1))"
+                actual_information += (heredicare_annotation_type_id, )
                 actual_information += tuple(heredicare_consensus)
                 actual_information += tuple(consensus_without_dash)
                 constraints_complete = functions.enbrace(constraints_complete + " OR " + new_constraints)
@@ -1956,22 +1960,19 @@ class Connection:
 
     #returns a list of tuples with all information for each external id
     def get_all_external_ids(self, variant_id):
+        annotation_type_ids = self.get_recent_annotation_type_ids(only_transcript_specific = False).values()
+        placeholders = self.get_placeholders(len(annotation_type_ids))
+        actual_information = tuple(annotation_type_ids) + (variant_id, )
         command = """
             SELECT variant_ids.id, title, description, version, version_date, variant_id, external_id, group_name, display_title, value_type FROM variant_ids INNER JOIN ( 
-                SELECT * 
-	                FROM annotation_type WHERE (title, version_date) IN ( 
-		                select title, MAX(version_date) version_date from annotation_type INNER JOIN ( 
-			                select variant_id, annotation_type_id, external_id from variant_ids where variant_id=%s
-			        ) x 
-			        ON annotation_type.id = x.annotation_type_id 
-		            GROUP BY title 
-	            )  
+                SELECT * FROM annotation_type WHERE id IN """ + placeholders + """
             ) y  
-            ON y.id = variant_ids.annotation_type_id 
+           ON y.id = variant_ids.annotation_type_id 
             WHERE variant_id=%s AND group_name = 'ID'
         """
-        self.cursor.execute(command, (variant_id, variant_id))
+        self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
+        print(result)
         return result
 
     def get_all_external_ids_from_annotation_type(self, annotation_type_id):
@@ -2278,26 +2279,25 @@ class Connection:
 
 
     def get_recent_annotations(self, variant_id): # ! the ordering of the columns in the outer select statement is important and should not be changed
-        command = "SELECT variant_annotation.id, title, description, version, version_date, variant_id, value, supplementary_document, group_name, display_title, value_type, group_name FROM variant_annotation INNER JOIN ( \
-                        SELECT * \
-	                        FROM annotation_type WHERE is_deleted = 0 AND (title, version_date) IN ( \
-		                        select title, MAX(version_date) version_date from annotation_type INNER JOIN ( \
-				                    select variant_id, annotation_type_id, value, supplementary_document from variant_annotation where variant_id=%s \
-			                ) x \
-			                ON annotation_type.id = x.annotation_type_id \
-		                    GROUP BY title \
-	                    )  \
-                    ) y  \
-                    ON y.id = variant_annotation.annotation_type_id \
-                    WHERE variant_id=%s AND group_name != 'ID'"
-        self.cursor.execute(command, (variant_id, variant_id))
+        annotation_type_ids = self.get_recent_annotation_type_ids(only_transcript_specific = False).values()
+        placeholders = self.get_placeholders(len(annotation_type_ids))
+        actual_information = tuple(annotation_type_ids) + (variant_id, )
+        command = """
+            SELECT variant_annotation.id, title, description, version, version_date, variant_id, value, supplementary_document, group_name, display_title, value_type FROM variant_annotation INNER JOIN ( 
+                SELECT * FROM annotation_type WHERE id IN """ + placeholders + """
+            ) y  
+            ON y.id = variant_annotation.annotation_type_id 
+            WHERE variant_id=%s AND group_name != 'ID'
+        """
+        self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
         return result
 
 
     def get_heredicare_annotations(self, variant_id):
-        command = "SELECT id, vid, n_fam, n_pat, consensus_class, comment, date, lr_cooc, lr_coseg, lr_family FROM variant_heredicare_annotation WHERE variant_id = %s"
-        self.cursor.execute(command, (variant_id, ))
+        annotation_type_id = self.get_most_recent_annotation_type_id('heredicare')
+        command = "SELECT id, vid, n_fam, n_pat, consensus_class, comment, date, lr_cooc, lr_coseg, lr_family FROM variant_heredicare_annotation WHERE variant_id = %s AND annotation_type_id = %s"
+        self.cursor.execute(command, (variant_id, annotation_type_id))
         res = self.cursor.fetchall()
         return res
 
@@ -2369,7 +2369,7 @@ class Connection:
                 version_date = annot[4].strftime('%Y-%m-%d')
                 value = annot[6]
                 value_type = annot[10]
-                group_name = annot[11]
+                group_name = annot[8]
 
                 new_annotation = models.Annotation(id = annotation_id, value = value, title = title, display_title = display_title, description = description, version = version, version_date = version_date, value_type = value_type, group_name = group_name)
                 setattr(annotations, annot[1], new_annotation)
@@ -3184,23 +3184,25 @@ class Connection:
 
 
     def insert_heredicare_annotation(self, variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family):
-        command = "INSERT INTO variant_heredicare_annotation (variant_id, vid, n_fam, n_pat, consensus_class, date, comment, lr_cooc, lr_coseg, lr_family) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family))
+        annotation_type_id = self.get_most_recent_annotation_type_id('heredicare')
+        command = "INSERT INTO variant_heredicare_annotation (variant_id, vid, n_fam, n_pat, consensus_class, date, comment, lr_cooc, lr_coseg, lr_family, annotation_type_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family, annotation_type_id))
         self.conn.commit()
         return self.get_last_insert_id()
 
     def insert_update_heredicare_annotation(self, variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family):
-        #"INSERT INTO classification_scheme (name, version, display_name, type, reference) VALUES (%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE display_name = %s, type = %s, reference = %s"
-        command = """INSERT INTO variant_heredicare_annotation (variant_id, vid, n_fam, n_pat, consensus_class, date, comment, lr_cooc, lr_coseg, lr_family) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        annotation_type_id = self.get_most_recent_annotation_type_id('heredicare')
+        command = """INSERT INTO variant_heredicare_annotation (variant_id, vid, n_fam, n_pat, consensus_class, date, comment, lr_cooc, lr_coseg, lr_family, annotation_type_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         ON DUPLICATE KEY UPDATE n_fam = %s, n_pat = %s, consensus_class = %s, date = %s, comment = %s, lr_cooc = %s, lr_coseg = %s, lr_family = %s    
             """
-        self.cursor.execute(command, (variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family))
+        self.cursor.execute(command, (variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family, annotation_type_id, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family))
         self.conn.commit()
         return self.get_heredicare_annotation_id(variant_id, vid)
 
     def get_heredicare_annotation_id(self, variant_id, vid):
-        command = "SELECT id FROM variant_heredicare_annotation WHERE variant_id = %s AND vid = %s"
-        self.cursor.execute(command, (variant_id, vid))
+        annotation_type_id = self.get_most_recent_annotation_type_id('heredicare')
+        command = "SELECT id FROM variant_heredicare_annotation WHERE variant_id = %s AND vid = %s AND annotation_type_id = %s"
+        self.cursor.execute(command, (variant_id, vid, annotation_type_id))
         res = self.cursor.fetchone()
         if res is not None:
             return res[0]
@@ -3208,12 +3210,13 @@ class Connection:
 
     def delete_unknown_heredicare_annotations(self, variant_id):
         heredicare_vid_annotation_type_id = self.get_most_recent_annotation_type_id('heredicare_vid')
+        heredicare_annotation_type_id = self.get_most_recent_annotation_type_id('heredicare')
         command = """
                 DELETE FROM variant_heredicare_annotation WHERE id IN (
-	                SELECT id FROM variant_heredicare_annotation WHERE variant_id = %s AND vid NOT IN (SELECT external_id FROM variant_ids WHERE annotation_type_id = %s AND variant_id = %s)
+	                SELECT id FROM variant_heredicare_annotation WHERE annotation_type_id = %s AND variant_id = %s AND vid NOT IN (SELECT external_id FROM variant_ids WHERE annotation_type_id = %s AND variant_id = %s)
                 )
             """
-        self.cursor.execute(command, (variant_id, heredicare_vid_annotation_type_id, variant_id))
+        self.cursor.execute(command, (heredicare_annotation_type_id, variant_id, heredicare_vid_annotation_type_id, variant_id))
         self.conn.commit()
     
     def insert_update_heredicare_center_classification(self, heredicare_annotation_id, zid, classification, comment):
@@ -3227,8 +3230,9 @@ class Connection:
         self.conn.commit()
 
     def clear_heredicare_annotation(self, variant_id):
-        command = "DELETE FROM variant_heredicare_annotation WHERE variant_id = %s"
-        self.cursor.execute(command, (variant_id, ))
+        heredicare_annotation_type_id = self.get_most_recent_annotation_type_id('heredicare')
+        command = "DELETE FROM variant_heredicare_annotation WHERE variant_id = %s AND annotation_type_id = %s"
+        self.cursor.execute(command, (variant_id, heredicare_annotation_type_id))
         self.conn.commit()
     
     def get_enumtypes(self, tablename, columnname):
