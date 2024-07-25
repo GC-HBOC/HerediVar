@@ -43,7 +43,6 @@ class Heredicare(metaclass=Singleton):
             "download": os.environ.get("HEREDICARE_DOWNLOAD_PROJECT"),
             "upload": os.environ.get("HEREDICARE_UPLOAD_PROJECT")
         }
-        print(self.projects)
         self.endpoints = {
             # special endpoints
             "bearer": "oauth/token",
@@ -118,7 +117,7 @@ class Heredicare(metaclass=Singleton):
             project = self.projects[project_type]
             Heredicare.bearer[project] = new_bearer
             Heredicare.bearer_timestamp[project] = timestamp
-            print("UPDATED TOKEN!!!!")
+            #print("UPDATED TOKEN!!!!")
         return status, message
 
     def introspect_token(self, project_type):
@@ -693,7 +692,7 @@ class Heredicare(metaclass=Singleton):
         if status in ["error", "skipped"]:
             return vid, submission_id, status, message
         
-        print(data)
+        #print(data)
         status, message = self._post_data(data)
 
         return vid, submission_id, status, message

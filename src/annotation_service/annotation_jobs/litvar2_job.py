@@ -85,6 +85,8 @@ class litvar2_job(Job):
         query = urllib.parse.quote(str(query))
         url = "https://www.ncbi.nlm.nih.gov/research/litvar2-api/variant/autocomplete/?query=" + query
         resp = requests.get(url)
+        if "Submitted URI too large!" in resp.text:
+            return None
         data = resp.json()
 
         if len(data) == 0:
@@ -96,6 +98,8 @@ class litvar2_job(Job):
         litvar_id = urllib.parse.quote(str(litvar_id))
         url = "https://www.ncbi.nlm.nih.gov/research/litvar2-api/variant/get/" + litvar_id + "/publications"
         resp = requests.get(url)
+        if "Submitted URI too large!" in resp.text:
+            return None
         data = resp.json()
         
 

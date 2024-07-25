@@ -121,12 +121,18 @@ class consequence_job(Job):
             return returncode, err_msg, vcf_errors
         
 
+        reset_file = False
         with open(tmp_vcf, "r") as tmp_file:
             tmp_text = tmp_file.read()
             new_annotation = functions.find_between(tmp_text, "CSQ_ensembl=", '(;|$)')
-            if new_annotation is not None and new_annotation == '':
+            if new_annotation is not None and new_annotation == '': # this special case is needed because vcf check does not like if the info tag is there but there is not content
+                reset_file = True
                 functions.rm(tmp_vcf)
-                os.rename(input_vcf, tmp_vcf)
+        if reset_file:
+            with open(input_vcf, 'r') as input_file:
+                with open(tmp_vcf, 'w') as tmp_file:
+                    for line in input_file:
+                        tmp_file.write(line)
         
         # annotate refseq consequences
         command = [os.path.join(paths.ngs_bits_path, "VcfAnnotateConsequence")]

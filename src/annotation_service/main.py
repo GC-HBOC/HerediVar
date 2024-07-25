@@ -19,41 +19,41 @@ import os
 def get_default_job_config():
     job_config = {
         # heredicare annotations
-        'do_heredicare': True,
+        'do_heredicare': False,
 
         # external programs
-        'do_phylop': True,
-        'do_spliceai': True,
-        'do_hexplorer': True,
-        'do_maxentscan': True,
+        'do_phylop': False,
+        'do_spliceai': False,
+        'do_hexplorer': False,
+        'do_maxentscan': False,
 
         # consequences
-        'do_consequence': True,
-        'do_vep': True,
+        'do_consequence': False,
+        'do_vep': False,
 
         #vcf annotate from vcf
-        'do_dbsnp': True,
-        'do_revel': True,
-        'do_cadd': True,
-        'do_clinvar': True,
-        'do_gnomad': True,
-        'do_brca_exchange': True,
-        'do_flossies': True,
-        'do_cancerhotspots': True,
+        'do_dbsnp': False,
+        'do_revel': False,
+        'do_cadd': False,
+        'do_clinvar': False,
+        'do_gnomad': False,
+        'do_brca_exchange': False,
+        'do_flossies': False,
         
-        'do_tp53_database': True,
-        'do_priors': True,
-        'do_bayesdel': True,
-        'do_cosmic': True,
+        'do_tp53_database': False,
+        'do_priors': False,
+        'do_bayesdel': False,
+        'do_cosmic': False,
 
         # assays
-        'do_cspec_brca_assays': True,
+        'do_cspec_brca_assays': False,
 
         # additional annotations
-        'do_taskforce_domains': True,
-        'do_coldspots': True,
+        'do_cancerhotspots': False,
+        'do_taskforce_domains': False,
+        'do_coldspots': False,
         'do_litvar': True,
-        'do_auto_class': True
+        'do_auto_class': False
 
         # outdated
         #'do_arup': True,
@@ -118,7 +118,6 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         vcf_path = get_temp_vcf_path(annotation_queue_id)
         functions.variant_to_vcf(variant.chrom, variant.pos, variant.ref, variant.alt, vcf_path)
 
-
         # execute the annotation jobs sequentially
         annotation_data = Annotation_Data(job_config = job_config, variant = variant, vcf_path = vcf_path)
         annotation_queue = Annotation_Queue(annotation_data)
@@ -158,8 +157,7 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         runtime_error = str(e)
 
 
-    if exists(vcf_path): 
-        os.remove(vcf_path)
+    functions.rm(vcf_path)
 
 
     conn.close()

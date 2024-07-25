@@ -56,14 +56,14 @@ $TESTDIR/start_heredivar_for_tests.sh
 cd $TESTDIR
 
 ## test read only
-#export TESTUSER=$TEST_READONLY
-#export TESTUSERPW=$TEST_READONLY_PW
-#pytest --screenshot=only-on-failure --browser firefox tests/read_only/ #-k 'test_variant_details' #-k 'test_private_list_actions or test_variant_list_add' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
+export TESTUSER=$TEST_READONLY
+export TESTUSERPW=$TEST_READONLY_PW
+pytest --screenshot=only-on-failure --browser firefox tests/read_only/ #-k 'test_variant_details' #-k 'test_private_list_actions or test_variant_list_add' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
 
 ## test default user
-export TESTUSER=$TEST_USER
-export TESTUSERPW=$TEST_USER_PW
-pytest --screenshot=only-on-failure --browser firefox tests/default_user/ -k 'test_create_simple_variant_hgvs' #-k 'test_private_list_actions or test_variant_list_add' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
+#export TESTUSER=$TEST_USER
+#export TESTUSERPW=$TEST_USER_PW
+#pytest --screenshot=only-on-failure --browser firefox tests/default_user/ -k 'test_create_simple_variant_hgvs' #-k 'test_private_list_actions or test_variant_list_add' #-k 'test_dev' --browser webkit --browser chromium --numprocesses 2
 
 ## test superuser
 #export TESTUSER=$TEST_SUPERUSER

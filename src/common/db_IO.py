@@ -1972,7 +1972,6 @@ class Connection:
         """
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
-        print(result)
         return result
 
     def get_all_external_ids_from_annotation_type(self, annotation_type_id):
