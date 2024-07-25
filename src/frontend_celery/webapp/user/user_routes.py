@@ -439,8 +439,8 @@ def variant_import_summary_data(import_queue_id):
     conn = get_connection()
     import_request = conn.get_import_request(import_queue_id)
     require_set(import_request)
-    imported_variants = conn.get_imported_variants(import_queue_id, status = ["error"])
-    return jsonify({'import_request': import_request, 'imported_variants': imported_variants})
+    #imported_variants = conn.get_imported_variants(import_queue_id, status = ["error"])
+    return jsonify({'import_request': import_request})
 
 
 
