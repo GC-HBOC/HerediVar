@@ -95,7 +95,7 @@ class heredicare_job(Job):
                     try:
                         classification_date = datetime.strptime(classification_date, "%d.%m.%Y")
                     except:
-                        err_msg += "The date could not be saved in the database. Format should be dd.mm.yyyy, but was: " + str(classification_date)
+                        err_msg += "The date could not be saved in the database. Format should be dd.mm.yyyy, but was: " + str(classification_date) + " for VID " + str(vid)
                         status_code = 1
 
                 if status_code == 0:
