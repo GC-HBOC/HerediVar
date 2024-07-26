@@ -213,7 +213,7 @@ def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant
     try:
         conn = Connection(user_roles)
         conn.update_import_variant_queue_status(import_variant_queue_id, status = "progress", message = "")
-        status, message = fetch_heredicare(vid, user_id, conn, insert_variant = True, perform_annotation = False)
+        status, message = fetch_heredicare(vid, user_id, conn, insert_variant = True, perform_annotation = True)
     except InternalError as e:
         # deadlock: code 1213
         status = "retry"
