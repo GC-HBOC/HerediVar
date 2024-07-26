@@ -374,8 +374,9 @@ def variant_import_summary(import_queue_id):
         tasks.retry_variant_import(import_variant_queue_id, session['user']['user_id'], session['user']['roles'], conn)
         vid = conn.get_vid_from_import_variant_queue(import_variant_queue_id)
         flash("Successfully requested reimport of vid " + str(vid) + ". It is processed in the background. If this page does not show a pending variant refresh to view changes.", "alert-success")
-        return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id))
+        return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id, **request.args))
 
+    print(request.args)
     static_information = get_static_vis_information(conn)
     imported_variants, total, page, page_size = get_vis_page(request.args, import_queue_id, static_information, conn)
     pagination = Pagination(page=page, per_page=page_size, total=total, css_framework='bootstrap5')

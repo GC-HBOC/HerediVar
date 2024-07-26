@@ -193,7 +193,7 @@
                                     <td>{{entry.finished_at}}</td>
                                     <td><div class="Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ entry.message }}">{{ entry.message }}</div></td>
                                     <td>
-                                        <form action="{{url_for('user.variant_import_summary', import_queue_id=import_queue_id)}}" method="post">
+                                        <form action="{{url_for('user.variant_import_summary', import_queue_id=import_queue_id, **request.args)}}" method="post">
                                             <input class="visually-hidden" name="import_variant_queue_id" type="text" value="{{entry.id}}">
                                             <button class="btn btn-outline-primary" type="submit">Retry</button>
                                         </form>

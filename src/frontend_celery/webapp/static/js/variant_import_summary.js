@@ -226,3 +226,23 @@ function create_trow(tds) {
 }
 
 
+// save state of collapse in cookie such that it stays open if the user reloads the page (eg. upon search)
+document.getElementById("advanced_search").addEventListener("show.bs.collapse", function(e) {
+    var active = 'advanced_search';
+    localStorage.setItem('expandedSearchOptions', active);
+});
+
+document.getElementById("advanced_search").addEventListener("hide.bs.collapse", function(e) {
+    localStorage.removeItem('expandedSearchOptions');
+});
+
+var last = localStorage.getItem('expandedSearchOptions');
+if (last != null) {
+    //remove default collapse settings
+    document.getElementById("advanced_search").classList.add('show');
+    //show collapse
+    document.getElementById(last).classList.add('show');
+}
+
+
+
