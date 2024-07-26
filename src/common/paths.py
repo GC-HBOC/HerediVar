@@ -43,7 +43,7 @@ if webapp_env == 'dev':
     ngs_bits_path = joinpaths(toolsdir, "ngs-bits/bin")
     htslib_path = joinpaths(toolsdir, "htslib")
     automatic_classification_path = joinpaths(toolsdir, "herediclass")
-    automatic_classification_config_path = os.path.join(automatic_classification_path, "config_pejaver_mult_strength_production.yaml") # config_production.yaml
+    automatic_classification_config_path = os.path.join(automatic_classification_path, "config_pejaver_mult_strength_production.yaml") # "config_production.yaml"
     samtools_path = joinpaths(toolsdir, "samtools/samtools")
 
     # data

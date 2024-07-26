@@ -194,6 +194,7 @@
                                     <td><div class="Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ entry.message }}">{{ entry.message }}</div></td>
                                     <td>
                                         <form action="{{url_for('user.variant_import_summary', import_queue_id=import_queue_id, **request.args)}}" method="post">
+                                            <input class="visually-hidden" name="action" value="retry_one" type="text">
                                             <input class="visually-hidden" name="import_variant_queue_id" type="text" value="{{entry.id}}">
                                             <button class="btn btn-outline-primary" type="submit">Retry</button>
                                         </form>
@@ -203,8 +204,18 @@
                             </tbody>
                         </table>
                     </div>
-                      
-                    <div id="tabnav-bottom" class="ssb">{{ pagination.links }}</div>
+                    
+                    <div class="d-flex">
+                        <div id="tabnav-bottom" class="ssb">{{ pagination.links }}</div>
+                        <div class="flex-grow-1"></div>
+                        <div>
+                            <form action="{{url_for('user.variant_import_summary', import_queue_id = import_queue_id, **request.args)}}" method="post">
+                                <input class="visually-hidden" name="action" value="retry_search" type="text">
+                                <button class="btn btn-outline-primary" type="submit">Retry all</button>
+                            </form>
+                        </div>
+                    </div>
+                    
                     
                 </div>
 

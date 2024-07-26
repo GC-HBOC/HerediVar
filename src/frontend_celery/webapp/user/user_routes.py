@@ -367,16 +367,28 @@ def variant_import_summary(import_queue_id):
     import_request = conn.get_import_request(import_queue_id)
     require_set(import_request)
 
-    if request.method == 'POST':
-        import_variant_queue_id = request.form.get('import_variant_queue_id')
-        require_valid(import_variant_queue_id, 'import_variant_queue', conn)
-
-        tasks.retry_variant_import(import_variant_queue_id, session['user']['user_id'], session['user']['roles'], conn)
-        vid = conn.get_vid_from_import_variant_queue(import_variant_queue_id)
-        flash("Successfully requested reimport of vid " + str(vid) + ". It is processed in the background. If this page does not show a pending variant refresh to view changes.", "alert-success")
-        return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id, **request.args))
-
     static_information = get_static_vis_information(conn)
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+        require_set(action)
+        if action == "retry_one":
+            import_variant_queue_id = request.form.get('import_variant_queue_id')
+            require_valid(import_variant_queue_id, 'import_variant_queue', conn)
+
+            tasks.retry_variant_import(import_variant_queue_id, session['user']['user_id'], session['user']['roles'], conn)
+            vid = conn.get_vid_from_import_variant_queue(import_variant_queue_id)
+            flash("Successfully requested reimport of vid " + str(vid) + ". It is processed in the background. If this page does not show a pending variant refresh to view changes.", "alert-success")
+            return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id, **request.args))
+        if action == "retry_search":
+            imported_variants, total, page, page_size = get_vis_page(request.args, import_queue_id, static_information, conn, paginate = False)
+            for imported_variant in imported_variants:
+                import_variant_queue_id = imported_variant.id
+                tasks.retry_variant_import(import_variant_queue_id, session['user']['user_id'], session['user']['roles'], conn)
+            flash("Successfully requested reimport of " + str(len(imported_variants)) + " VIDs. If this page does not show a pending variant refresh to view changes.", "alert-success")
+            return redirect(url_for('user.variant_import_summary', import_queue_id = import_queue_id, **request.args))
+
+    
     imported_variants, total, page, page_size = get_vis_page(request.args, import_queue_id, static_information, conn)
     pagination = Pagination(page=page, per_page=page_size, total=total, css_framework='bootstrap5')
 
@@ -396,9 +408,11 @@ def get_static_vis_information(conn: Connection):
     result["allowed_stati"] = conn.get_enumtypes("import_variant_queue", "status")
     return result
 
-def get_vis_page(request_args, import_queue_id, static_information, conn: Connection):
+def get_vis_page(request_args, import_queue_id, static_information, conn: Connection, paginate = True):
     page = request.args.get('page', static_information["default_page"])
-    page_size = request.args.get('page_size', static_information["default_page_size"])
+    page_size = "all"
+    if paginate:
+        page_size = request.args.get('page_size', static_information["default_page_size"])
 
     comments = extract_comments_vis(request_args)
     stati = extract_stati_vis(request_args, static_information["allowed_stati"])

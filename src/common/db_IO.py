@@ -1964,15 +1964,20 @@ class Connection:
         new_constraints = "import_queue_id = %s"
         postfix = self.add_constraints_to_command(postfix, new_constraints)
         actual_information += (import_queue_id, )
-        command = prefix + postfix + " ORDER BY requested_at DESC LIMIT %s, %s"
-        page_size = int(page_size)
-        page = int(page)
-        offset = (page - 1) * page_size
-        actual_information += (offset, page_size)
-        print(command % actual_information)
+        command = prefix + postfix + " ORDER BY requested_at DESC"
+        if page_size != "all":
+            command += " LIMIT %s, %s"
+            page_size = int(page_size)
+            page = int(page)
+            offset = (page - 1) * page_size
+            actual_information += (offset, page_size)
+        #print(command % actual_information)
         self.cursor.execute(command, actual_information)
         raw_results = self.cursor.fetchall()
         result = [self.convert_raw_import_variant_request(raw_result) for raw_result in raw_results]
+
+        if page_size == "all":
+            return result, len(result)
 
         # get total number
         prefix = "SELECT COUNT(id) FROM import_variant_queue"
