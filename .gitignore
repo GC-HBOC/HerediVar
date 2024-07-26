@@ -186,7 +186,7 @@ classified_structural_variants
 /src/frontend_celery/playwright/redis*
 /Python-*
 /data_makefile
-/.localpython
+/.localpython*
 
 resources/backups/keycloak_export/dev/*/*-users*.json
 /resources/backups/database_dumper/dev/data

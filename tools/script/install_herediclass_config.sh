@@ -52,5 +52,8 @@ for filename in $gene_sepcific_config_path_production/*.yaml; do
    sed -r -i "s:variant_classification/::g" $filename
 done
 
-
+for filename in $gene_sepcific_config_path_production/pejaver_mult_strength/*.yaml; do
+   sed -r -i "s:/home/katzkean/:$variant_classification_path/:g" $filename
+   sed -r -i "s:variant_classification/::g" $filename
+done
 
