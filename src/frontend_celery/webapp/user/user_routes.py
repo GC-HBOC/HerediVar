@@ -257,6 +257,9 @@ def admin_dashboard():
                 variant_ids = annotation_stati['aborted']
             elif reannotate_which == 'unannotated':
                 variant_ids = annotation_stati['unannotated']
+            elif reannotate_which == 'specific':
+                raw = request.form.get('specific_variants', '')
+                variant_ids = search_utils.preprocess_query(raw, pattern = "\d+")
 
             tasks.annotate_all_variants.apply_async(args=[variant_ids, selected_job_config, session['user']['user_id'], session['user']['roles']])
             current_app.logger.info(session['user']['preferred_username'] + " issued a reannotation of " + reannotate_which + " variants") 
@@ -411,21 +414,21 @@ def extract_stati_vis(request_args, allowed_stati):
     raw = request_args.getlist('status')#
     raw = ';'.join(raw)
     regex_inner = '|'.join(allowed_stati)
-    processed = preprocess_query(raw, r'(' + regex_inner + r')?')
+    processed = search_utils.preprocess_query(raw, r'(' + regex_inner + r')?')
     if processed is None:
         flash("You have an error in your status queries. Results are not filtered by stati.", "alert-danger")
     return processed
 
 def extract_comments_vis(request_args):
     raw = request_args.get('comment', '')
-    processed = preprocess_query(raw, pattern=r".*", seps = "[;]", remove_whitespace = False)
+    processed = search_utils.preprocess_query(raw, pattern=r".*", seps = "[;]", remove_whitespace = False)
     if processed is None:
         flash("You have an error in your comment query(s). Results are not filtered by comment.", "alert-danger")
     return processed
 
 def extract_vids_vids(request_args):
     raw = request_args.get('vid', '')
-    processed = preprocess_query(raw, pattern=r"\d+")
+    processed = search_utils.preprocess_query(raw, pattern=r"\d+")
     if processed is None:
         flash("You have an error in your VID query(s). Results are not filtered by VIDs.", "alert-danger")
     return processed

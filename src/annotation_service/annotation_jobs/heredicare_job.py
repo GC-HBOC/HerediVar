@@ -98,21 +98,20 @@ class heredicare_job(Job):
                         err_msg += "The date could not be saved in the database. Format should be dd.mm.yyyy, but was: " + str(classification_date)
                         status_code = 1
 
-                heredicare_annotation_id = None
                 if status_code == 0:
                     heredicare_annotation_id = conn.insert_update_heredicare_annotation(variant_id, vid, n_fam, n_pat, consensus_class, classification_date, comment, lr_cooc, lr_coseg, lr_family)
 
-                for key in heredicare_variant:
-                    if key.startswith("PATH_Z"):
-                        zid = int(key[6:])
-                        heredicare_center_classification_raw = heredicare_variant[key]
-                        if heredicare_center_classification_raw is not None and heredicare_variant[key] == "-1":
-                            heredicare_center_classification_raw = None
-                        classification, comment = self.preprocess_heredicare_center_classification(heredicare_center_classification_raw)
-                        if classification is not None:
-                            conn.insert_update_heredicare_center_classification(heredicare_annotation_id, zid, classification, comment)
-                        else:
-                            conn.delete_heredicare_center_classification(heredicare_annotation_id, zid)
+                    for key in heredicare_variant:
+                        if key.startswith("PATH_Z"):
+                            zid = int(key[6:])
+                            heredicare_center_classification_raw = heredicare_variant[key]
+                            if heredicare_center_classification_raw is not None and heredicare_variant[key] == "-1":
+                                heredicare_center_classification_raw = None
+                            classification, comment = self.preprocess_heredicare_center_classification(heredicare_center_classification_raw)
+                            if classification is not None:
+                                conn.insert_update_heredicare_center_classification(heredicare_annotation_id, zid, classification, comment)
+                            else:
+                                conn.delete_heredicare_center_classification(heredicare_annotation_id, zid)
 
         return status_code, err_msg
 
