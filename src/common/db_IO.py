@@ -1228,6 +1228,8 @@ class Connection:
 
 
 
+    
+
     """
     def get_mane_select_for_gene(self, gene, source):
         gene_id = self.convert_to_gene_id(gene)
@@ -1239,6 +1241,11 @@ class Connection:
         return None
     """
 
+    def get_mane_select_for_gene(self, gene_id):
+        command = "SELECT name FROM transcript WHERE gene_id = %s AND (is_mane_select=1 or is_mane_plus_clinical=1)"
+        self.cursor.execute(command, (gene_id, ))
+        result = self.cursor.fetchall()
+        return [x[0] for x in result if x[0].startswith("ENST")]
 
 
 

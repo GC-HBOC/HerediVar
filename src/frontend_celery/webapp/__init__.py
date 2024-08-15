@@ -26,7 +26,8 @@ celery = Celery(__name__, backend="redis",
     broker=Config.CELERY_BROKER_URL,
     broker_connection_retry=True,
     broker_connection_retry_on_startup=True,
-    broker_connection_max_retries=10
+    broker_connection_max_retries=10,
+    result_backend=Config.result_backend
 )
 mail = Mail()
 #heredicare = Heredicare_Flask()

@@ -111,7 +111,7 @@ def classified_variants():
             resp.mimetype = "text/plain"
             return resp
     else:
-        return send_file(path_to_download, download_name="HerediVar-classified" + "-" + last_dump_date, as_attachment=True, mimetype="text/vcf")
+        return send_file(path_to_download, download_name="HerediVar-classified" + "-" + last_dump_date + ".vcf", as_attachment=True, mimetype="text/vcf")
 
 
 @download_blueprint.route('/download/vcf/heredivar/current')

@@ -245,6 +245,9 @@ def start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, u
     heredicare_interface = Heredicare()
     for vid in heredicare_exclusive_vids:
         heredicare_variant, status, message = heredicare_interface.get_variant(vid)
+        if status != 'success':
+            conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "error", message = "Could not fetch vid from heredicare: " + message)
+            return None
         if functions.trim_chr(variant.chrom) == str(functions.trim_chr(heredicare_variant['CHROM'])) and str(variant.pos) == str(heredicare_variant['POS_HG38']) and str(variant.alt) == str(heredicare_variant['ALT_HG38']) and str(variant.ref) == str(heredicare_variant['REF_HG38']) and vid not in vids:
             vids.append(vid)
     vids = [x for x in vids if x not in heredivar_exclusive_vids] # remove vids which are unknown by heredicare

@@ -10,6 +10,7 @@ import common.functions as functions
 from common.db_IO import Connection
 from ..utils import *
 from . import api_functions
+from webapp import tasks
 
 api_blueprint = Blueprint(
     'api',
@@ -51,8 +52,82 @@ def consensus_classification():
     return jsonify(result)
 
 
+@api_blueprint.route('/api/v1.0/get/check_hgvs', methods = ['GET'])
+@accept_token
+def check_hgvs():
+    variant = {
+            'VID': None,
+            'CHROM': None,
+            'POS_HG19': None,
+            'REF_HG19': None,
+            'ALT_HG19': None,
+            'POS_HG38': None,
+            'REF_HG38': None,
+            'ALT_HG38': None,
+            'REFSEQ': request.args.get('transcript'),
+            'CHGVS': request.args.get('hgvsc'),
+            'CGCHBOC': None,
+            'VISIBLE': 1,
+            'GEN': request.args.get("gene"),
+            'canon_chrom': '',
+            'canon_pos': '',
+            'canon_ref': '',
+            'canon_alt': '',
+            'comment': ''
+    }
+    conn = Connection(roles = ["read_only"])
+    status, message = tasks.map_hg38(variant, -1, conn, insert_variant = False, perform_annotation = False, external_ids = None)
+    conn.close()
+
+    result = {
+        "status": status,
+        "message": message
+    }
+    return jsonify(result)
 
 
+@api_blueprint.route('/api/v1.0/get/check_genomic', methods = ['GET'])
+@accept_token
+def check_genomic():
+    variant = {
+            'VID': None,
+            'CHROM': None,
+            'POS_HG19': None,
+            'REF_HG19': None,
+            'ALT_HG19': None,
+            'POS_HG38': None,
+            'REF_HG38': None,
+            'ALT_HG38': None,
+            'REFSEQ': None,
+            'CHGVS': None,
+            'CGCHBOC': None,
+            'VISIBLE': 1,
+            'GEN': None,
+            'canon_chrom': '',
+            'canon_pos': '',
+            'canon_ref': '',
+            'canon_alt': '',
+            'comment': ''
+    }
 
+    genome_build = request.args.get('genome')
+    if genome_build == "GRCh38":
+        variant["CHROM"] = request.args.get('chrom')
+        variant["POS_HG38"] = request.args.get('pos')
+        variant["REF_HG38"] = request.args.get('ref')
+        variant["ALT_HG38"] = request.args.get('alt')
+    elif genome_build == "GRCh37":
+        variant["CHROM"] = request.args.get('chrom')
+        variant["POS_HG19"] = request.args.get('pos')
+        variant["REF_HG19"] = request.args.get('ref')
+        variant["ALT_HG19"] = request.args.get('alt')
 
+    conn = Connection(roles = ["read_only"])
+    status, message = tasks.map_hg38(variant, -1, conn, insert_variant = False, perform_annotation = False, external_ids = None)
+    conn.close()
 
+    result = {
+        "status": status,
+        "message": message
+    }
+    return jsonify(result)

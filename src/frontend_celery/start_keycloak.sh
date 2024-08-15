@@ -36,7 +36,7 @@ echo "preparing keycloak startup"
 SCRIPT=$(readlink -f "$0")
 ROOT=$(dirname $(dirname $(dirname "$SCRIPT")))
 TOOLS=$ROOT/tools
-KEYCLOAK_PATH=$TOOLS/keycloak-tmp
+KEYCLOAK_PATH=$TOOLS/keycloak
 logs=$ROOT/logs/keycloak
 mkdir -p $logs
 cd $ROOT

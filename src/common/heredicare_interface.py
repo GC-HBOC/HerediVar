@@ -170,13 +170,13 @@ class Heredicare(metaclass=Singleton):
     def get_variant(self, vid):
         status = "success"
         message = ""
-        variant = None
+        variant = {}
         project_type = "download"
 
-        url = self.get_url(project_type, "variant", path_args = [str(vid)])
-        status, message, all_items = self.iterate_pagination(url, project_type)
-
-        variant = self.convert_heredicare_variant_raw(all_items)
+        if vid is not None:
+            url = self.get_url(project_type, "variant", path_args = [str(vid)])
+            status, message, all_items = self.iterate_pagination(url, project_type)
+            variant = self.convert_heredicare_variant_raw(all_items)
 
         return variant, status, message
 
@@ -207,7 +207,7 @@ class Heredicare(metaclass=Singleton):
                 status = "retry"
                 break
             elif resp.status_code != 200: # any other kind of error
-                message = "ERROR: HerediCare API get post info endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
+                message = "ERROR: HerediCare API get post info endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text) + " in URL: " + str(url)
                 status = "error"
                 break
             else: # request was successful
