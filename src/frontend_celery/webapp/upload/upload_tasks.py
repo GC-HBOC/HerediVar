@@ -14,7 +14,7 @@ from urllib.error import HTTPError
 from celery.exceptions import Ignore
 from werkzeug.exceptions import abort
 import traceback
-
+from celery.exceptions import SoftTimeLimitExceeded
 
 
 
@@ -22,7 +22,7 @@ def start_publish(variant_ids, options, user_id, user_roles, conn: Connection):
     upload_heredicare = options["do_heredicare"]
     upload_clinvar = options["do_clinvar"]
     publish_queue_id = conn.insert_publish_request(user_id, upload_heredicare, upload_clinvar, variant_ids)
-
+    
     task = publish.apply_async(args = [publish_queue_id, variant_ids, options, user_roles])
     task_id = task.id
 
@@ -32,7 +32,7 @@ def start_publish(variant_ids, options, user_id, user_roles, conn: Connection):
 
 
 
-@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
+@celery.task(bind=True, retry_backoff=5, max_retries=3, soft_time_limit=6000)
 def publish(self, publish_queue_id, variant_ids, options, user_roles):
     """Background task for adding all tasks for publishing variants"""
     #from frontend_celery.webapp.utils.variant_importer import import_variants
@@ -131,7 +131,7 @@ def start_upload_one_variant_clinvar(variant_id, publish_queue_id, options, user
 # this uses exponential backoff in case there is a http error
 # this will retry 3 times before giving up
 # first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
-@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
+@celery.task(bind=True, retry_backoff=5, max_retries=3, soft_time_limit=600)
 def clinvar_upload_one_variant(self, variant_id, user_roles, options, clinvar_accession, publish_clinvar_queue_id):
     """Background task for uploading one variant and its consensus classification to HerediCare. It also updates the consensus classification in case the variant is already known to HerediCare"""
     #from frontend_celery.webapp.utils.variant_importer import fetch_heredicare
@@ -278,7 +278,7 @@ def start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, u
 # this uses exponential backoff in case there is a http error
 # this will retry 3 times before giving up
 # first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
-@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
+@celery.task(bind=True, retry_backoff=5, max_retries=3, soft_time_limit=600)
 def heredicare_upload_one_variant(self, variant_id, vid, user_roles, options, publish_heredicare_queue_id):
     """Background task for uploading one variant and its consensus classification to HerediCare. It also updates the consensus classification in case the variant is already known to HerediCare"""
     self.update_state(state='PROGRESS')

@@ -41,7 +41,7 @@ def start_variant_import(vids, user_id, user_roles, conn: Connection): # starts 
 
     return import_queue_id
 
-@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=6000)
+@celery.task(bind=True, retry_backoff=5, max_retries=3, soft_time_limit=6000)
 def heredicare_variant_import(self, vids, user_id, user_roles, import_queue_id):
     """Background task for fetching variants from HerediCare"""
     self.update_state(state='PROGRESS')
@@ -205,7 +205,7 @@ def retry_variant_import(import_variant_queue_id, user_id, user_roles, conn: Con
 # this uses exponential backoff in case there is a http error
 # this will retry 3 times before giving up
 # first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
-@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
+@celery.task(bind=True, retry_backoff=5, max_retries=3, soft_time_limit=600)
 def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant_queue_id):
     """Background task for fetching variants from HerediCare"""
     self.update_state(state='PROGRESS')
@@ -738,7 +738,7 @@ def validate_and_insert_cnv(chrom: str, start: int, end: int, sv_type: str, impr
 # this uses exponential backoff in case there is a http error
 # this will retry 3 times before giving up
 # first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
-@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=600)
+@celery.task(bind=True, retry_backoff=5, max_retries=3, soft_time_limit=600)
 def annotate_all_variants(self, variant_ids, selected_job_config, user_id, roles):
     """Background task for running the annotation service"""
     conn = Connection(roles)
@@ -764,7 +764,7 @@ def start_annotation_service(variant_id, user_id, conn: Connection, job_config =
 # this uses exponential backoff in case there is a http error
 # this will retry 3 times before giving up
 # first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
-@celery.task(bind=True, retry_backoff=5, max_retries=3, time_limit=6000)
+@celery.task(bind=True, retry_backoff=5, max_retries=3, soft_time_limit=6000)
 def annotate_variant(self, annotation_queue_id, job_config):
     """Background task for running the annotation service"""
     self.update_state(state='PROGRESS')

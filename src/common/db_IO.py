@@ -3760,7 +3760,7 @@ class Connection:
 
     def insert_publish_request(self, user_id: int, upload_heredicare: bool, upload_clinvar: bool, variant_ids: list):
         command = "INSERT INTO publish_queue (user_id, upload_clinvar, upload_heredicare, variant_ids) VALUES (%s, %s, %s, %s)"
-        self.cursor.execute(command, (user_id, upload_clinvar, upload_heredicare, ";".join(variant_ids)))
+        self.cursor.execute(command, (user_id, upload_clinvar, upload_heredicare, ";".join([str(x) for x in variant_ids])))
         self.conn.commit()
         publish_queue_id = self.get_last_insert_id()
         return publish_queue_id
