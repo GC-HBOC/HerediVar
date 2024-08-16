@@ -1242,7 +1242,7 @@ class Connection:
     """
 
     def get_mane_select_for_gene(self, gene_id):
-        command = "SELECT name FROM transcript WHERE gene_id = %s AND (is_mane_select=1 or is_mane_plus_clinical=1)"
+        command = "SELECT name FROM transcript WHERE gene_id = %s AND is_mane_select=1"
         self.cursor.execute(command, (gene_id, ))
         result = self.cursor.fetchall()
         return [x[0] for x in result if x[0].startswith("ENST")]
@@ -2088,12 +2088,12 @@ class Connection:
         #result = sorted(result, key=lambda x: functions.convert_none_infinite(x[5]), reverse=True)
         return result
     
-    def insert_user(self, username, first_name, last_name, affiliation):
+    def insert_user(self, username, first_name, last_name, affiliation, api_roles):
         #command = "INSERT INTO user (username, first_name, last_name, affiliation) \
         #            SELECT %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM user \
         #                WHERE `username`=%s LIMIT 1)"
-        command = "INSERT INTO user (username, first_name, last_name, affiliation) VALUES (%s, %s, %s, %s) ON DUPLICATE KEY UPDATE first_name=%s, last_name=%s, affiliation=%s"
-        self.cursor.execute(command, (username, first_name, last_name, affiliation, first_name, last_name, affiliation))
+        command = "INSERT INTO user (username, first_name, last_name, affiliation, api_roles) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE first_name=%s, last_name=%s, affiliation=%s, api_roles=%s"
+        self.cursor.execute(command, (username, first_name, last_name, affiliation, api_roles, first_name, last_name, affiliation, api_roles))
         self.conn.commit()
     
     def get_user(self, user_id):
@@ -2106,6 +2106,11 @@ class Connection:
         command = "UPDATE user SET api_key = %s WHERE username = %s"
         self.cursor.execute(command, (api_key, username))
         self.conn.commit()
+    
+    def set_api_roles(self, username, api_roles):
+        command = "UPDATE user SET api_roles = %s WHERE username = %s"
+        self.cursor.execute(command, (api_roles, username))
+        self.conn.commit()
 
     def check_api_key(self, api_key: str, username: str) -> bool:
         command = "SELECT EXISTS (SELECT * FROM user WHERE api_key = %s AND username = %s)"
@@ -2114,6 +2119,16 @@ class Connection:
         if result == 1:
             return True
         return False
+
+    def check_api_roles(self, username: str, roles: list):
+        command = "SELECT api_roles FROM user WHERE username = %s"
+        self.cursor.execute(command, (username, ))
+        result = self.cursor.fetchone()[0]
+        db_roles = result.split(';')
+        for role in roles:
+            if role not in db_roles:
+                return False, db_roles
+        return True, db_roles
 
     def parse_raw_user(self, raw_user):
         return models.User(id = raw_user[0], 

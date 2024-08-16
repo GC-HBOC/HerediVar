@@ -87,6 +87,9 @@ class Config(object):
     MAIL_USE_SSL = False
     MAIL_DEBUG = False
 
+    # misc
+    VCF_FILE_IMPORT_ACTIVE = False
+
 
 
 class ProdConfig(Config):

@@ -15,23 +15,45 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
 import common.functions as functions
 from common.db_IO import Connection
 
-# used for api endpoints to check the bearer token header
-# similar to require login, but for api endpoints
-def accept_token(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
+## used for api endpoints to check the bearer token header
+## similar to require login, but for api endpoints
+#def accept_api_token(f):
+#    @wraps(f)
+#    def decorated_function(*args, **kwargs):
+#
+#        authorization_header = parse_authorization_header(request.headers.get('Authorization'))
+#
+#        conn = Connection()
+#        api_key_ok = conn.check_api_key(authorization_header['apikey'], authorization_header['username'])
+#        conn.close()
+#
+#        if not api_key_ok:
+#            abort(403, "Invalid credentials")
+#
+#        return f(*args, **kwargs)
+#    return decorated_function
 
-        authorization_header = parse_authorization_header(request.headers.get('Authorization'))
+def require_api_token_permission(roles):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            authorization_header = parse_authorization_header(request.headers.get('Authorization'))
 
-        conn = Connection()
-        api_key_ok = conn.check_api_key(authorization_header['apikey'], authorization_header['username'])
-        conn.close()
+            conn = Connection()
+            api_key_ok = conn.check_api_key(authorization_header['apikey'], authorization_header['username'])
+            roles_ok, api_roles = conn.check_api_roles(authorization_header['username'], roles)
+            user_id = conn.get_user_id(authorization_header['username'])
+            conn.close()
 
-        if not api_key_ok:
-            abort(403, "Invalid credentials")
+            if not api_key_ok:
+                abort(403, "Invalid credentials")
+            if not roles_ok:
+                abort(403, "Insufficient privileges")
 
-        return f(*args, **kwargs)
-    return decorated_function
+            session['user'] = {'roles': api_roles, 'user_id': user_id,'preferred_username': authorization_header['username']}
+            return f(*args, **kwargs)
+        return wrapper
+    return decorator
 
 def parse_authorization_header(authorization_header: str):
     authorization_header = authorization_header.split(' ')
@@ -56,7 +78,8 @@ def parse_authorization_header(authorization_header: str):
             abort(403, "Incomplete authorization header. Missing keyword: " + kw)
         
     return result
-            
+
+
 
 
 # a decorator which redirects to the login page if the user is not logged in. 

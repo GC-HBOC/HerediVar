@@ -568,9 +568,112 @@
             </div>
           </p>
         </div>
+
         <div id="item-api-3">
           <h5>Upload variants</h5>
-          <p></p>
+          <p>
+            <div>
+              <div class="underline">
+                POST variant
+              </div>
+              <div class="table-responsive table-lg">
+                <table class="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <td class="width_small">Endpoint</td>
+                            <td>/api/v1.0/post/variant</td>
+                        </tr>
+                        <tr>
+                          <td class="width_small">Description</td>
+                          <td>Upload a variant in VCF or HGVSc. notation</td>
+                        </tr>
+                        <tr>
+                          <td class="width_small">Allowed methods</td>
+                          <td>POST</td>
+                        </tr>
+                        <tr>
+                            <td class="width_small">Headers</td>
+                            <td>Required "Authorization:" header with apikey and username attributes.</td>
+                        </tr>
+                        <tr>
+                          <td class="width_small">GET-data</td>
+                          <td>
+                            type: The type of data that is going to be used. Must be one of {"vcf", "hgvs"}
+                          </td>
+                      </tr>
+                        <tr>
+                            <td class="width_small">POST-data</td>
+                            <td>
+                              One of the following sets is required:
+                              <ol>
+                                <li>
+                                  genome: The reference genome. Must be one of {GRCh38, GRCh37} <br>
+                                  chr: The chromosome. Must be one of {chr1, chr2, chr3, chr4, chr5, chr6, chr7, chr8, chr9, chr10, chr11, chr12, chr13, chr14, chr15, chr16, chr17, chr18, chr19, chr20, chr21, chr22, chrX, chrY, chrMT} <br>
+                                  pos: The chromosomal position relative to the reference genome provided <br>
+                                  ref: The genomic sequence at the provided position from the reference genome. Can not be longer than 1000 bp and must contain only ACGT letters. <br>
+                                  alt: The mutated genomic sequence at the provided position. Can not be longer than 1000 bp and must contain only ACGT letters. 
+                                </li>
+                                <li>
+                                  transcript: The reference transcript. Preferably Ensembl transcript identifiers. The version number is not required <br>
+                                  hgvsc: The HGVSc. string
+                                </li>
+                              </ol>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="width_small">Response & http status codes</td>
+                            <td>
+                              <ul>
+                                <li>403: authorization header is missing or was set incorrectly</li>
+                                <li>200: successful request (get details of the submission from the response)</li>
+                              </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                          <td class="width_small">Examples</td>
+                          <td>
+                            <div>Using the variant id:</div>
+                            <div class="alert alert-secondary">
+                              wget --header "Authorization: apikey $apikey username $username" --post-data="chr=chr19&pos=50398920&ref=G&alt=C&genome=GRCh38" "{{url_for('api.insert_variant', type="vcf")}}"
+                            </div>
+                            <div>Using chromosomal coordinates with respect to the GRCh38 reference genome</div>
+                            <div class="alert alert-secondary">
+                              wget --header "Authorization: apikey $yourkey username $yourusername" {{url_for('api.consensus_classification', chrom=chr2, pos=214730440, ref="G", alt="A")}}
+                            </div>
+                            <div>Example output variant already in database:</div>
+                            <div>
+                              {
+                                "flash_class": "alert-danger flash_id:variant_already_in_database",
+                                "flash_link": "/display/1234",
+                                "flash_message": "Variant not imported: chr19-50398920-G-C already in database!",
+                                "status": "skipped"
+                              }
+                            </div>
+                            <div>Example output erroneous variant:</div>
+                            <div>
+                              {
+                                "flash_class": "alert-danger flash_id:variant_from_vcf_error",
+                                "flash_link": "",
+                                "flash_message": "VcfCheck runtime ERROR: VcfCheck 2024_02-84-g1b249e47\nVCF check failed - see 'out' file for details! Code: 1 ERROR: Reference base(s) not correct. Is 'A', should be 'G'! - in line 6:\nchr19\t5039892\t.\tA\tC\t.\t.\t.",
+                                "status": "error"
+                              }
+                            </div>
+                            <div>Example output success</div>
+                            <div>
+                              {
+                                "flash_class": "alert-success flash_id:successful_variant_from_vcf",
+                                "flash_link": "/display/1234",
+                                "flash_message": "Successfully inserted variant: chr19-5039892-G-C",
+                                "status": "success"
+                              }
+                            </div>
+                          </td>
+                        </tr>
+                    </tbody>
+                </table>
+              </div>
+            </div>
+          </p>
         </div>
 
 

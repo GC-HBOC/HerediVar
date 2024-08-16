@@ -62,87 +62,21 @@ def search():
 def create():
     conn = get_connection()
     chroms = conn.get_enumtypes("variant", "chr")
-    vcf_file_import_active = False
     do_redirect = False
     
     if request.method == 'POST':
-        create_variant_from = request.args.get("type")
-        
-        if create_variant_from == 'vcf':
-            chrom = request.form.get('chr', '')
-            pos = ''.join(request.form.get('pos', '').split())
-            ref = request.form.get('ref', '').upper().strip()
-            alt = request.form.get('alt', '').upper().strip()
-            genome_build = request.form.get('genome')
-
-            # we do not have to check the input parameters in depth here because 
-            # they are checked by the validate_and_insert_variant function anyway
-            # here we just make sure that the user submitted **something**
-            # -> better understanding/readability of the error message
-            if not chrom or not pos or not ref or not alt or 'genome' not in request.form:
-                flash('All fields are required!', 'alert-danger flash_id:missing_data_vcf')
-            else:
-                was_successful, message, variant_id = tasks.validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn = conn, user_id = session['user']['user_id'])
-                new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_automatic_classification=False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False, include_external_ids=False)
-                if 'already in database' in message:
-                    flash({"message": "Variant not imported: " + new_variant.get_string_repr() + " already in database! View the variant",
-                           "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-danger flash_id:variant_already_in_database")
-                elif was_successful:
-                    flash({"message": "Successfully inserted variant: " + new_variant.get_string_repr() + ". View your variant",
-                           "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-success flash_id:successful_variant_from_vcf")
-                    current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from vcf which resulted in this vcf-style variant: " + ' '.join([str(new_variant.chrom), str(new_variant.pos), new_variant.ref, new_variant.alt, "GRCh38"]))
-                    do_redirect = True
-                else: # import had an error
-                    flash(message, 'alert-danger flash_id:variant_from_vcf_error')
-
-        if create_variant_from == 'hgvsc':
-            reference_transcript = request.form.get('transcript')
-            hgvsc = request.form.get('hgvsc')
-
-            if not hgvsc or not reference_transcript:
-                flash('All fields are required!', 'alert-danger flash_id:missing_data_hgvs')
-            else:
-                chrom, pos, ref, alt, possible_errors = functions.hgvsc_to_vcf(reference_transcript + ':' + hgvsc)
-                if possible_errors != '':
-                    flash(possible_errors, "alert-danger flash_id:variant_from_hgvs_error")
-                else:
-                    was_successful, message, variant_id = tasks.validate_and_insert_variant(chrom, pos, ref, alt, 'GRCh38', conn = conn, user_id = session['user']['user_id'])
-                    new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
-                    if 'already in database' in message:
-                        flash({"message": "Variant not imported: " + new_variant.get_string_repr() + " already in database! View your variant",
-                               "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-danger flash_id:variant_already_in_database")
-                    elif was_successful:
-                        flash({"message": "Successfully inserted variant: " + new_variant.get_string_repr() + ". View your variant",
-                               "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-success flash_id:successful_variant_from_hgvs")
-                        current_app.logger.info(session['user']['preferred_username'] + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([str(new_variant.chrom), str(new_variant.pos), new_variant.ref, new_variant.alt, "GRCh38"]))
-                        do_redirect = True
-                    else:
-                        flash(message, 'alert-danger flash_id:variant_from_hgvs_error')
-
-        if create_variant_from == 'vcf_file' and vcf_file_import_active:
-            genome_build = request.form.get('genome')
-            if 'file' not in request.files or genome_build is None:
-                flash('You must specify the genome build and select a vcf file.', 'alert-danger')
-            else:
-                file = request.files['file']
-                filename = file.filename
-
-                if file.filename.strip() == '' or not functions.filename_allowed(file.filename, allowed_extensions = {"vcf", "txt"}):
-                    flash('No valid file selected.', 'alert-danger')
-                else:
-                    filepath = functions.get_random_temp_file(fileending = "tsv", filename_ext = "import_vcf")
-                    with open(filepath, "w") as f: # file is deleted in task + we have to write to disk because filehandle can not be json serialized and thus, can not be given to a celery task
-                        f.write(file.read().decode("utf-8"))
-                    user_id = session["user"]["user_id"]
-                    user_roles = session["user"]["roles"]
-                    #inserted_variants, skipped_variants = variant_functions.insert_variants_vcf_file(vcf_file, genome_build, conn)
-                    import_queue_id = tasks.start_variant_import_vcf(user_id, user_roles, conn, filename, filepath, genome_build)
-                    flash("Successfully submitted vcf file. The import is processed in the background", "alert-success")
-                    do_redirect = True
+        user = conn.parse_raw_user(conn.get_user(session["user"]["user_id"]))
+        create_result, do_redirect = variant_functions.create_variant_from_request(request, user, conn)
+        if not create_result["flash_link"]:
+            flash_message = create_result["flash_message"]
+        else:
+            flash_message = {"message": create_result["flash_message"] + " view the variant ", "link": create_result["flash_link"]}
+        flash(flash_message, create_result["flash_class"])
 
     if do_redirect:
         return redirect(url_for('variant.create'))
-    return render_template('variant/create.html', chrs=chroms, vcf_file_import_active=vcf_file_import_active)
+    return render_template('variant/create.html', chrs=chroms, vcf_file_import_active=current_app.config["VCF_FILE_IMPORT_ACTIVE"])
+
 
 
 

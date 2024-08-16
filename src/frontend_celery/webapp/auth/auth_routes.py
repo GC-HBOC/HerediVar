@@ -55,6 +55,8 @@ def auth():
         first_name = user_info['given_name']
         last_name = user_info['family_name']
         affiliation = user_info.get('affiliation')
+        roles = user_info['roles']
+        
 
         # init the session
         session['user'] = user_info
@@ -66,8 +68,9 @@ def auth():
             return redirect(url_for('auth.logout', auto_logout='True'))
         conn = Connection(session['user']['roles'])
         # this inserts only if the user is not already in the database and updates the information if the information changed (except for username this one has to stay)
-        conn.insert_user(username, first_name, last_name, affiliation) 
-        user_info['user_id'] = conn.get_user_id(username)
+        conn.insert_user(username, first_name, last_name, affiliation, ';'.join(roles)) 
+        user_id = conn.get_user_id(username)
+        user_info['user_id'] = user_id
         conn.close()
 
         current_app.logger.info("User " + user_info['preferred_username'] + ' (' + user_info.get('affiliation') + ") successfully logged in.")
@@ -176,16 +179,22 @@ def edit_user(username):
             flash('Please provide at least one role!', 'alert-danger')
             return render_template('auth/edit_user.html', user = user, avail_roles = avail_roles, set_roles = set_roles)
         
-        if enabled == 'on':
-            enabled = True
-        else:
-            enabled = False
+        enabled = enabled == 'on'
 
         resp = auth_functions.update_user_information(kc_user_id, user['username'], first_name, last_name, e_mail, affiliation, enabled)
 
         added_roles, deleted_roles = auth_functions.get_added_and_deleted_roles(set_roles, new_roles)
         resp = auth_functions.grant_roles(kc_user_id, added_roles, avail_roles)
         resp = auth_functions.delete_roles(kc_user_id, deleted_roles, avail_roles)
+
+        avail_roles = auth_functions.get_roles()
+        new_roles = auth_functions.get_roles_of_user(kc_user_id, avail_roles)
+        final_new_roles = []
+        if enabled:
+            for new_role_index in new_roles:
+                final_new_roles.append(avail_roles[new_role_index]['name'])
+        conn = get_connection()
+        conn.set_api_roles(username, ";".join(final_new_roles))
 
         if resp.status_code == 204:
             flash('Successfully changed user information!', 'alert-success')
