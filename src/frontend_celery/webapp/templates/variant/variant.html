@@ -152,7 +152,7 @@
             <li>
                 {% set mrcc = variant.get_recent_consensus_classification() %}
                 <button id="publish_button" type="button" class="dropdown-item" data-href="{{url_for('upload.publish', variant_ids = variant.id, next = url_for('variant.display', variant_id = variant.id))}}" 
-                data-bs-toggle="tooltip" title="Publish this variant and selected data to external databases." {% if mrcc is none or (not mrcc.needs_heredicare_upload and not mrcc.needs_clinvar_upload) %}disabled="disabled"{% endif %}>
+                data-bs-toggle="tooltip" title="Publish this variant and selected data to external databases." {% if mrcc is none %}disabled="disabled"{% endif %}>
                     Publish
             </button>
             </li>
