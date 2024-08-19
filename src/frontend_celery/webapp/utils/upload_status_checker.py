@@ -39,10 +39,14 @@ def check_update_clinvar_status(variant_id, publish_queue_ids_oi: list, conn: Co
         clinvar_queue_entries = conn.get_clinvar_queue_entries(publish_queue_ids_oi, variant_id)
 
         # update the respective needs_upload field if a submission chaged to success
+        needs_clinvar_upload = False
         for clinvar_queue_entry in clinvar_queue_entries:
-            if clinvar_queue_entry[3] in ["success", "processed"]:
-                consensus_classification_id = clinvar_queue_entry[9]
-                conn.update_consensus_classification_needs_clinvar_upload(consensus_classification_id)
+            if clinvar_queue_entry[3] in ["error"]: #["success", "processed"]:
+                needs_clinvar_upload = True
+
+        if not needs_clinvar_upload:
+            consensus_classification_id = clinvar_queue_entry[9]
+            conn.update_consensus_classification_needs_clinvar_upload(consensus_classification_id)
 
     return clinvar_queue_entries
 
