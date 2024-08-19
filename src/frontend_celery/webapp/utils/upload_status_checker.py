@@ -78,10 +78,14 @@ def check_update_heredicare_status(variant_id, publish_queue_ids_oi: list, conn:
         heredicare_queue_entries = conn.get_heredicare_queue_entries(publish_queue_ids_oi, variant_id)
 
         # if an upload was successful update the respective needs_upload field
+        needs_heredicare_upload = False
         for heredicare_queue_entry in heredicare_queue_entries:
-            if heredicare_queue_entry[1] in ["success"]:
-                consensus_classification_id = heredicare_queue_entry[8]
-                conn.update_consensus_classification_needs_heredicare_upload(consensus_classification_id)
+            if heredicare_queue_entry[1] in ["error"]:
+                needs_heredicare_upload = True
+
+        if not needs_heredicare_upload:
+            consensus_classification_id = heredicare_queue_entry[8]
+            conn.update_consensus_classification_needs_heredicare_upload(consensus_classification_id)
 
     return heredicare_queue_entries
 
