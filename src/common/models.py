@@ -443,7 +443,7 @@ class Classification:
         if selected_criteria is not None:
             for criterium in selected_criteria:
                 if criterium.state == "selected":
-                    selected_criterium_strings.append(criterium.name + " (" + criterium.strength + ")" + ": " + criterium.evidence)
+                    selected_criterium_strings.append(criterium.name + " (" + criterium.strength + ")" + ": " + criterium.evidence.replace('\n', ' '))
                 if criterium.state == "unselected":
                     unselected_criterium_strings.append(criterium.name + " (" + criterium.strength + ")" + ": " + criterium.evidence)
 
