@@ -448,7 +448,7 @@ class Heredicare(metaclass=Singleton):
         item_name = "REFSEQ"
         item_regex = post_regexes[item_name]
         new_value = heredicare_variant["REFSEQ"]  if transaction_type == 'UPDATE' else preferred_transcript
-        if not self.is_valid_post_data(new_value, item_regex):
+        if not self.is_valid_post_data(new_value, item_regex, none_allowed = True):
             status = "error"
             message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
             return all_items, status, message
@@ -554,7 +554,7 @@ class Heredicare(metaclass=Singleton):
             status = "error"
             message = "The " + item_name + " (" + str(new_value) + ") from vid " + str(vid) + " does not match the expected regex pattern: " + item_regex
             return all_items, status, message
-        old_value = old_value = heredicare_variant["VUSTF_21"] if transaction_type == 'UPDATE' else None #self.get_heredicare_consensus_attribute(variant, vid, "comment")
+        old_value = heredicare_variant["VUSTF_21"] if transaction_type == 'UPDATE' else None #self.get_heredicare_consensus_attribute(variant, vid, "comment")
         new_item = self.get_postable_item(record_id = vid, submission_id = submission_id, item_name = item_name, old_value = old_value, new_value = new_value)
         all_items.append(new_item)
 
@@ -568,6 +568,9 @@ class Heredicare(metaclass=Singleton):
             return False
         pattern = re.compile(regex)
         result = pattern.match(value)
+        print(regex)
+        print(result)
+        print(value)
         if result is None:
             return False
         return True
