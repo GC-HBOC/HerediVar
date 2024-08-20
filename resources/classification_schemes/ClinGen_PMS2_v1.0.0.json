@@ -318,20 +318,13 @@
                 "Note: This requires testing of parents (or offspring) to determine phase.",
                 "",
                 "Gene-specific modifications:",
-                "Very Strong:",
-                ">= 4 points",
-                "",
-                "Strong:",
-                ">= 2 and < 4 points",
-                "",
-                "Moderate:",
-                ">=1 and < 2 points",
-                "",
-                "Supporting:",
-                "= 0.5 points",
+                "Very Strong: >= 4 points",
+                "Strong: >= 2 and < 4 points",
+                "Moderate: >=1 and < 2 points",
+                "Supporting: = 0.5 points",
                 "",
                 "Instructions:",
-                "Co-occurrence with a known pathogenic/likely pathogenic sequence variant in the same gene in a patient with clinical features consistent with CMMRD as per Aronson et al 2022 - Refer to “Table for CMMRD diagnosis.pdf”.",
+                "Co-occurrence with a known pathogenic/likely pathogenic sequence variant in the same gene in a patient with clinical features consistent with CMMRD as per Aronson et al 2022 - Refer to 'Table for CMMRD diagnosis.pdf'.",
                 "Classification/zygosity of other variant:",
                 "Pathogenic/Likely Pathogenic in trans: 1.0 point;",
                 "Pathogenic/Likely Pathogenic - phase unknown: 0.5 points",
@@ -436,6 +429,9 @@
             ],
             "mutually_exclusive_criteria": [
                 
+            ],
+            "mutually_inclusive_criteria": [
+                "PP3"
             ]
         },
 

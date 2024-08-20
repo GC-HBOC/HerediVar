@@ -24,7 +24,7 @@
                 "",
                 "Instructions:",
                 "In alignment with SVI recommendations for PVS1 code application, evidence strength and description has been separated for different variant types.  Apply according to PVS1 flowchart, which considers knowledge of clinically important functional domains. For predicted protein termination codon (PTC) variants, apply with exon-specific weights derived for the PM5_PTC code (See Appendix D for details).",
-                "See Specifications Table 4, provided as a separate searchable excel file, for a comprehensive summary of codes applicable for all variants considered against the BRCA1 and BRCA2 PVS1 decision trees (initiation, nonsense/frameshift, deletion, duplication, splice site (donor/acceptor ±1,2)) – organized by exon. See Appendix Figure 5,6 and Table 5 for further justification.",
+                "See Specifications Table 4, provided as a separate searchable excel file, for a comprehensive summary of codes applicable for all variants considered against the BRCA1 and BRCA2 PVS1 decision trees (initiation, nonsense/frameshift, deletion, duplication, splice site (donor/acceptor ±1,2)) - organized by exon. See Appendix Figure 5,6 and Table 5 for further justification.",
                 "See Specifications Figure 1B for process to apply codes for splicing data, in content of location and predicted bioinformatic impact of the variant, and adaptive weighting according to assay methodology and proportion of functional transcript retained."
             ],
             "is_selectable": "1",
