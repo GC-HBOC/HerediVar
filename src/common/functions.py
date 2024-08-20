@@ -203,6 +203,9 @@ def preprocess_variant(infile, do_liftover=False):
         if returncode != 0: return returncode, err_msg, command_output
         returncode, err_msg, command_output = execute_command(["mv", infile + ".leftnormalized", infile], "mv")
         if returncode != 0: return returncode, err_msg, command_output
+        print("GRCH37 LEFTNORMALIZE:")
+        with open(infile, "r") as f:
+            print(f.read())
         # check
         returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh37")
         if vcf_errors_pre != '': return 1, err_msg + " " + vcf_errors_pre, command_output
@@ -218,6 +221,9 @@ def preprocess_variant(infile, do_liftover=False):
         if returncode != 0: return returncode, err_msg, command_output
         returncode, err_msg, command_output = execute_command(["mv", infile + ".lifted", infile], "mv")
         if returncode != 0: return returncode, err_msg, command_output
+        print("LIFTED FILE:")
+        with open(infile, "r") as f:
+            print(f.read())
 
     # leftnormalize
     returncode, err_msg, command_output = left_align_vcf(infile, outfile= infile + ".leftnormalized", ref_genome="GRCh38")
@@ -226,6 +232,9 @@ def preprocess_variant(infile, do_liftover=False):
     if returncode != 0: return returncode, err_msg, command_output
     returncode, err_msg, command_output = execute_command(["mv", infile + ".leftnormalized", infile], "mv")
     if returncode != 0: return returncode, err_msg, command_output
+    print("GRCH38 LEFTNORMALIZE:")
+    with open(infile, "r") as f:
+        print(f.read())
     # check
     returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh38")
     if vcf_errors_pre != '': return 1, err_msg + " " + vcf_errors_pre, command_output
