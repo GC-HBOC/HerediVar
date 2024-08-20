@@ -51,6 +51,7 @@ pwd
 
 
 source .venv/bin/activate
+echo $(which python)
 export WEBAPP_ENV=$we
 vep_install_dir=$ROOT/tools/ensembl-vep-release-107.0
 cpan_dir=$vep_install_dir/cpan
