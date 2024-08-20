@@ -1,0 +1,1054 @@
+{
+    "name": "enigma-msh2",
+    "version": "v1.0.0",
+    "display_name": "ClinGen InSiGHT ACMG MSH2 v1.0.0",
+    "type": "acmg-enigma-msh2",
+    "reference": "#",
+    "aliases": [],
+    "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
+    "criteria": [
+        {
+            "name": "PVS1",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Null variant (nonsense, frameshift, canonical +/-1 or 2 splice sites, initiation codon, single or multi-exon deletion) in a gene where loss of function (LOF) is a known mechanism of disease.",
+                "Caveats:",
+                " - Beware of genes where LOF is not a known disease mechanism (e.g. GFAP, MYH7).",
+                " - Use caution interpreting LOF variants at the extreme 3' end of a gene.",
+                " - Use caution with splice variants that are predicted to lead to exon skipping but leave the remainder of the protein intact.",
+                " - Use caution in the presence of multiple transcripts.",
+                "",
+                "Gene-specific modifications:",
+                "Very Strong",
+                "At least one of the following has to be fulfilled:",
+                " - Nonsense/frameshift variant introducing Premature Termination Codon (PTC)a <= codon 891 in MSH2. Refer to Appendix for details.",
+                " - Large genomic alterationsa of single or multi-exon size.",
+                " - Variants at IVS±1 or IVS±2 where exon skipping or use of a cryptic splice site disrupts reading frame and is predicted to undergo NMD. Not to be combined with PP3 and not to be used for a confirmed splice defect (see PVS1 for variants where patient mRNA assays indicate splicing aberration). If exon skipping or use of a cryptic splice site preserves reading frame and the altered region is critical to protein functionb then use PVS1_Strong. If exon skipping or use of a cryptic splice site disrupts reading frame and is NOT predicted to undergo NMD then use PVS1_Moderate.",
+                " - Variants where mRNA assays using RNA derived from patient constitutional biological samples indicate that the variant allele results in a splicing aberration (with evidence that the variant allele produces no full-length/reference transcript) leading to premature stop codon or in-frame deletion disrupting a functional domainb or protein conformation. Splicing aberration must be confirmed in a minigene assay or an additional RNA assay from an independent laboratory if it is a non-canonical splice site variant.",
+                "",
+                "Strong",
+                "At least one of the following has to be fulfilled:",
+                " - Presumed by default in tandem duplication of >=1 exon resulting in a frameshift before the last splice junction. This rule does not apply for variants that involve the UTR (i.e. exon 1 or last exon) and whole gene duplications.",
+                " - G>non-G at last base of exon if first 6 bases of the intron are not GTRRGT. If confirmed to cause a splice defect, then PVS1 should be used instead.",
+                " - Variants at IVS±1 or IVS±2 where exon skipping or use of a cryptic splice site preserves reading frame and the altered region is critical to protein functionb. Not to be combined with PP3 and not to be used for a confirmed splice defect (see PVS1 for variants where patient mRNA assays indicate splicing aberration).",
+                "",
+                "Moderate",
+                "Nonsense/frameshift variant introducing premature termination codon between codons 892 & 934 in MSH2. Refer to Appendix for details.",
+                "",
+                "Instructions:",
+                "PVS1 does not apply for variants in the initiation codon of MSH2 as further ATGs exist inframe in exon 1, so this criterion is not applicable at any evidence weight."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                "PP3"
+            ]
+        },
+
+        {
+            "name": "PS1",
+            "description": [
+
+
+
+                "Original ACMG Summary",
+                "Same amino acid change as a previously established pathogenic variant regardless of nucleotide change.",
+                "Example: Val->Leu caused by either G>C or G>T in the same codon.",
+                "Caveat: Beware of changes that impact splicing rather than at the amino acid/protein level.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                "At least one of the following has to be fulfilled:",
+                " - A predicted missense substitution that encodes the same amino acid change with a different underlying nucleotide change previously established by this VCEP as Pathogenic (not a predicted or confirmed splice defect).",
+                " - Variants affecting the same non-canonical splice nucleotide as a confirmed pathogenic splice variant with similar or worse splicing in silico prediction using SpliceAI.",
+                "",
+                "Moderate",
+                "A predicted missense substitution that encodes the same amino acid change with a different underlying nucleotide change as a previously established Likely Pathogenic missense variant with normal RNA result*, and PM2_supporting is met.",
+                "*Otherwise, if the previously established Likely pathogenic missense variant truly is a splice defect, the new missense variant also has to be investigated on a functional level for RNA splicing.",
+                "",
+                "Instructions:",
+                "SpliceAI masked score option should be checked on."
+                
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "pathogenic Strong:",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS2",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "De novo (both maternity and paternity confirmed) in a patient with the disease and no family history.",
+                "Note: Confirmation of paternity only is insufficient. Egg donation, surrogate motherhood, errors in embryo transfer, etc. can contribute to non-maternity.",
+                "",
+                "Very Strong: >= 4 de novo points",
+                "Strong: 2 or 3 de novo points",
+                "Moderate: 1 de novo point",
+                "Supporting: 0.5 de novo points",
+                "",
+                "Instructions:",
+                "Proband with a de novo variant with both maternity and paternity confirmed in a case with MMR deficient LS spectrum tumor* (i.e. MSI/IHC consistent with affected gene, with no MLH1 methylation in tumor tissue, with the exception of MLH1 constitutional promoter methylation. If there is no tumor data, see PS2_Moderate). Refer to Appendix for protein expression consistent with variant location. 2 points per proband",
+                "OR",
+                "Proband with a de novo variant with both maternity and paternity confirmed in a case with LS spectrum tumor* (with no tumor data for MSI/IHC/methylation, otherwise see PS2). 1 point per proband",
+                "OR",
+                "Proband with assumed de novo variant and maternity and/or paternity unconfirmed with LS spectrum tumor* (No tumor data for MSI/IHC/methylation). 0.5 points per proband",
+                "*Lynch Syndrome (LS) tumors include: colorectal/colon/rectal, endometrial, ovarian, small bowel/small intestine, renal pelvis, ureter, and stomach/gastric carcinomas, sebaceous skin tumors (adenomas and carcinomas), gliomas."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS3",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Well-established in vitro or in vivo functional studies supportive of a damaging effect on the gene or gene product.",
+                "Note: Functional studies that have been validated and shown to be reproducible and robust in a clinical diagnostic laboratory setting are considered the most well-established.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                "Calibrated functional assays with functional odds for Pathogenicity > 18.7",
+                "",
+                "Moderate",
+                "At least one of the following has to be fulfilled:",
+                " - Calibrated functional assays with functional odds for pathogenicity >4.3 and <= 18.7",
+                " - MMR function defect following functional assay flowchart*",
+                " - Variants with monoallelic expression: complete loss of expression (<10% of wild-type in cDNA without puromycin) of the variant allele. Full-length transcript should be analysed with and without NMD block.",
+                "",
+                "Supporting",
+                "Calibrated functional odds for Pathogenicity >2.08 and <= 4.3",
+                "",
+                "Instructions:",
+                "Refer to file 'Functional assay SVI documentation (MMR genes)' for calibrated functional assays.",
+                "*The functional assay flowchart is a general framework for evaluating functional assays that were already performed, or from historic publications, not for prospective studies on variants. The information describing these assays are generic. The VCEP recommends use of the calibrated assays for prospective testing."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "pathogenic Strong:",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS4",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "The prevalence of the variant in affected individuals is significantly increased compared to the prevalence in controls.",
+                "Note 1: Relative risk (RR) or odds ratio (OR), as obtained from case-control studies, is >5.0 and the confidence interval around the estimate of RR or OR does not include 1.0. See manuscript for detailed guidance.",
+                "Note 2: In instances of very rare variants where case-control studies may not reach statistical significance, the prior observation of the variant in multiple unrelated patients with the same phenotype, and its absence in controls, may be used as moderate level of evidence.",
+                "Not Applicable",
+                "Comments: Due to the availability of tumor IHC data for variant classification (see PP4), PS4 has not been utilized for MMR variant classification using proband counting."
+                
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "pathogenic Strong:",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM1",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Located in a mutational hot spot and/or critical and well-established functional domain (e.g. active site of an enzyme) without benign variation.",
+                "Not Applicable",
+                "Comments: There are no recognized mutational hot spots that could be used for classification purposes. While there are functional domains in the MMR genes, the distribution of pathogenic variants is generalized over all the domains (unpublished data)."
+                
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM2",
+            "description": [
+
+                "Original ACMG Summary",
+                "Absent from controls (or at extremely low frequency if recessive) in Exome Sequencing Project, 1000 Genomes or Exome Aggregation Consortium.",
+                "Caveat: Population data for indels may be poorly called by next generation sequencing.",
+                "",
+                "Gene-specific modifications:",
+                "Absent/extremely rare (<1 in 50,000 alleles) in gnomAD v4 dataset"
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM3",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "For recessive disorders, detected in trans with a pathogenic variant",
+                "Note: This requires testing of parents (or offspring) to determine phase.",
+                "",
+                "Gene-specific modifications:",
+                "Very Strong: >= 4 points",
+                "Strong: >= 2 and < 4 points",
+                "Moderate: >=1 and < 2 points",
+                "Supporting: = 0.5 points",
+                "",
+                "Instructions:",
+                "Co-occurrence with a known pathogenic/likely pathogenic sequence variant in the same gene in a patient with clinical features consistent with CMMRD as per Aronson et al 2022 - Refer to “Table for CMMRD diagnosis.pdf”.",
+                "Classification/zygosity of other variant:",
+                "Pathogenic/Likely Pathogenic in trans: 1.0 point;",
+                "Pathogenic/Likely Pathogenic - phase unknown: 0.5 points",
+                "Sum all cases with the above evidence to determine the PM3 strength."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM4",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Protein length changes due to in-frame deletions/insertions in a non-repeat region or stop-loss variants.",
+                "Not Applicable",
+                "Comments: Protein length change from an in-frame variant is not used due to lack of evidence."
+                
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM5",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Novel missense change at an amino acid residue where a different missense change determined to be pathogenic has been seen before.",
+                "Example: Arg156His is pathogenic; now you observe Arg156Cys.",
+                "Caveat: Beware of changes that impact splicing rather than at the amino acid/protein level.",
+                "",
+                "Gene-specific modifications:",
+                "Moderate",
+                "Missense change at an amino acid residue where a different missense change was classified by this VCEP as Pathogenic on the protein level and not due to aberrant splicing. Only use PM5 if PP3 is supporting for the missense change. Use PM5_Supporting if other variant is Likely Pathogenic due to a missense alteration.",
+                "",
+                "Supporting",
+                "Missense change at an amino acid residue where a different missense change was classified as Likely Pathogenic on the protein level and not due to aberrant splicing. Only use PM5_Supporting if PP3 is supporting for the missense change. Use PM5 if other variant is Pathogenic due to a missense alteration."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM6",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Assumed de novo, but without confirmation of paternity and maternity.",
+                "Not Applicable",
+                "Comments: Please see PS2"
+                
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP1",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Co-segregation with disease in multiple affected family members in a gene definitively known to cause the disease.",
+                "Note: May be used as stronger evidence with increasing segregation data.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                "Co-segregation with disease in pedigree(s) with a combined* Bayes Likelihood Ratio >18.7 in >=2 families.",
+                "",
+                "Moderate",
+                "Co-segregation with disease in pedigree(s) with a combined* Bayes Likelihood Ratio >4.3 & <=18.7.",
+                "",
+                "Supporting",
+                "Co-segregation with disease in pedigree(s) with a combined* Bayes Likelihood Ratio >2.08 & <=4.3.",
+                "",
+                "Instructions:",
+                "*For multiple pedigrees, results are combined by multiplying together.",
+                "Recommended segregation analysis tool: COOL(COsegregation OnLine) v3 https://fenglab.chpc.utah.edu/cool3/manual.html",
+                "Copy the example pedigree format and complete the fields to build the pedigree in text format. Refer to online manual for cancer types to enter into pedigree. Click on the 'Analysis' tab to view the webform for pedigree file upload and enter appropriate parameters for population and allele frequency. Penetrance file and relative risk file are not required for MMR genes. Use the 'overall Bayes Factor' to determine evidence strength."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP2",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Missense variant in a gene that has a low rate of benign missense variation and where missense variants are a common mechanism of disease.",
+                "Not Applicable",
+                "Comments: Missense variant in a gene with low rate of benign missense changes does not apply."
+                
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP3",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Multiple lines of computational evidence support a deleterious effect on the gene or gene product (conservation, evolutionary, splicing impact, etc.).",
+                "Caveat: As many in silico algorithms use the same or very similar input for their predictions, each algorithm should not be counted as an independent criterion. PP3 can be used only once in any evaluation of a variant.",
+                "",
+                "Gene-specific modifications:",
+                "Moderate",
+                "Missense variant with HCI prior probability for pathogenicity >0.81 as per https://hci-priors.hci.utah.edu/PRIORS",
+                "",
+                "Supporting",
+                "At least one of the following has to be fulfilled:",
+                " - Missense variant with HCI prior probability for pathogenicity >0.68 & <=0.81 as per https://hci-priors.hci.utah.edu/PRIORS",
+                " - Predicted splice defect for non-canonical splicing nucleotides using SpliceAI with delta score >= 0.2 as per Walker et al 2023.",
+                "",
+                "Instructions:",
+                "SpliceAI masked score option should be checked on. For HCI-PRIORS, ensure correct gene is selected from the tabs, and enter the nucleotide number in either HGVS position or HG38 genomic co-ordinate and click 'view'. The output shows 3 substitutions at the nucleotide location, with probability based on splicing and protein predictions. Ensure the 'applicable prior' is used that corresponds to the variant under review."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP4",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Patient's phenotype or family history is highly specific for a disease with a single genetic etiology.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                ">=3 independent CRC/Endometrial MSI-H tumors in >=2 families using a standard panel of 5-10 markers or tumor genome and/or loss of MMR protein expression consistent with the variant location. MSI-H tumor with inconsistent protein expression does not meet PP4_Strong. Independent tumors can be from the same patient/family.",
+                "",
+                "Moderate",
+                "2 independent CRC/Endometrial MSI-H tumors using a standard panel of 5-10 markers or tumor genome and/or loss of MMR protein expression consistent with the variant location. MSI-H tumor with inconsistent protein expression does not meet PP4_Moderate. Independent tumors can be from the same patient/family.",
+                "",
+                "Supporting",
+                "1 CRC/Endometrial MSI-H tumor using a standard panel of 5-10 markers or tumor genome and/or loss of MMR protein expression consistent with the variant location. MSI-H tumor with inconsistent protein expression does not meet PP4.",
+                "",
+                "Instructions:",
+                "gStandard MSI markers panel: BAT25, BAT26, BAT40, BAT34, D5S346, D17S250, ACTC, D18S55, D10S197, MYCL; D2S123, D18S69; NR21, NR24, NR27  ",
+                "Protein Expression and consistency with variant location:",
+                "IHC evidence should be consistent with the variant gene and the protein that is tested and take into account the MutSα and MutLα heterodimers: MLH1 and PMS2 loss is consistent with an MLH1 pathogenic variant, MSH2 and MSH6 loss is consistent with an MSH2 pathogenic variant, MSH6 loss is consistent with an MSH6 pathogenic variant, and PMS2 loss is consistent with a PMS2 pathogenic variant."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP5",
+            "description": [
+
+                "Original ACMG Summary",
+                "Reputable source recently reports variant as pathogenic, but the evidence is not available to the laboratory to perform an independent evaluation.",
+                "Not Applicable",
+                "This criterion is not for use as recommended by the ClinGen Sequence Variant Interpretation VCEP Review Committee. "
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BA1",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Allele frequency is above 5% in Exome Sequencing Project, 1000 Genomes or Exome Aggregation Consortium.",
+                "",
+                "Gene-specific modifications:",
+                "Stand Alone",
+                "GnomAD v4 Grpmax filtering allele frequency >= 0.001 (0.1%) and variant is excluded as founder pathogenic variant."
+                
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ba",
+                    "display_name":"alo",
+                    "description": "stand-alone benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS1",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Allele frequency is greater than expected for disorder.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                "GnomAD v4 Grpmax filtering allele frequency >= 0.0001 and < 0.001 (0.01-0.1%) and variant is excluded as founder pathogenic variant."
+                
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS2",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Observed in a healthy adult individual for a recessive (homozygous), dominant (heterozygous), or X-linked (hemizygous) disorder, with full penetrance expected at an early age.",
+                "",
+                "Strong",
+                "Co-occurrence in trans with a known pathogenic sequence variant in the same gene in a patient with colorectal cancer after age 45 (or other LS cancer above the median age of onset for that cancer in LSf), and who has no previous or current evidence of clinical manifestations of CMMRD as per Aronson et al 2022 (Refer to 'Table for CMMRD diagnosis.pdf'). Confirmation of phase requires testing of parents or offspring."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS3",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Well-established in vitro or in vivo functional studies show no damaging effect on protein function or splicing.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                "At least one of the following has to be fulfilled:",
+                " - Calibrated functional assays with functional odds for Pathogenicity <= 0.05",
+                " - Synonymous substitutions and intronic variants with no associated mRNA aberration (either splicing or allelic imbalance) as determined by laboratory assays conducted with nonsense-mediated decay inhibition. Whenever abnormal transcripts are identified at similar levels in controls they will be considered naturally occurring isoforms and not mRNA aberrations.",
+                "",
+                "Supporting",
+                "At least one of the following has to be fulfilled:",
+                " - Calibrated functional assays with functional odds for Pathogenicity >0.05 & <=0.48",
+                " - Variant-specific proficient function in protein and mRNA-based lab assays as per MMR functional assay flowchart.",
+                "",
+                "Instructions:",
+                "Refer to file 'Functional assay SVI documentation (MMR genes)' for calibrated functional assays.",
+                "*The functional assay flowchart is a general framework for evaluating functional assays that were already performed, or from historic publications, not for prospective studies on variants. The information describing these assays are generic. The VCEP recommends use of the calibrated assays for prospective testing."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS4",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Lack of segregation in affected members of a family.",
+                "Caveat: The presence of phenocopies for common phenotypes (i.e. cancer, epilepsy) can mimic lack of segregation among affected individuals. Also, families may have more than one pathogenic variant contributing to an autosomal dominant disorder, further confounding an apparent lack of segregation.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                "Lack of co-segregation with disease in pedigree(s) with a combined* Bayes Likelihood Ratio <0.05.",
+                "",
+                "Supporting",
+                "Lack of co-segregation with disease in pedigree(s) with a combined* Bayes Likelihood Ratio >0.05 & <=0.48.",
+                "",
+                "Instructions:",
+                "*For multiple pedigrees, results are combined by multiplying together.",
+                "Recommended segregation analysis tool: COOL(COsegregation OnLine) v3 https://fenglab.chpc.utah.edu/cool3/manual.html",
+                "Copy the example pedigree format and complete the fields to build the pedigree in text format. Refer to online manual for cancer types to enter into pedigree. Click on the 'Analysis' tab to view the webform for pedigree file upload and enter appropriate parameters for population and allele frequency. Penetrance file and relative risk file are not required for MMR genes. Use the 'overall Bayes Factor' to determine evidence strength."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP1",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Missense variant in a gene for which primarily truncating variants are known to cause disease.",
+                "Not Applicable",
+                "Comments: Missense variant in a gene where only loss of function causes disease is not applicable."
+                
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP2",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Observed in trans with a pathogenic variant for a fully penetrant dominant gene/disorder or observed in cis with a pathogenic variant in any inheritance pattern.",
+                "Not Applicable",
+                "Comments: BS2 is used instead."
+                
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP3",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "In frame-deletions/insertions in a repetitive region without a known function.",
+                "Not Applicable",
+                "Comments: In-frame deletions/insertions in a repetitive region without a known function is not used."
+                
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP4",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Multiple lines of computational evidence suggest no impact on gene or gene product (conservation, evolutionary, splicing impact, etc)",
+                "Caveat: As many in silico algorithms use the same or very similar input for their predictions, each algorithm cannot be counted as an independent criterion. BP4 can be used only once in any evaluation of a variant.",
+                "",
+                "Gene-specific modifications:",
+                "Supporting",
+                " - Missense variant with HCI-prior probability of pathogenicity <0.11 as per https://hci-priors.hci.utah.edu/PRIORS",
+                " - For intronic and synonymous variants: SpliceAI predicts no splicing impact with delta score <= 0.1 as per Walker et al 2023.",
+                "",
+                "Instructions:",
+                "SpliceAI masked score option should be checked on. For HCI-PRIORS, ensure correct gene is selected from the tabs, and enter the nucleotide number in either HGVS position or HG38 genomic co-ordinate and click 'view'. The output shows 3 substitutions at the nucleotide location, with probability based on splicing and protein predictions. Ensure the 'applicable prior' is used that corresponds to the variant under review."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP5",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Variant found in a case with an alternate molecular basis for disease.",
+                "",
+                "Gene-specific modifications:",
+                "Strong",
+                " - >= 4 tumors: CRC/Endometrial tumors with MSS and/or no loss of MMR protein expression and/or LS spectrum tumorsf with loss of MMR protein(s) that is inconsistent with the gene demonstrating genetic variation",
+                " - >=2 BRAF V600E (CRC only)/MLH1 methylation (in LS spectrum tumor only) with MSI-H/MLH1 loss.",
+                "",
+                "Supporting",
+                " - 2 or 3 tumors: CRC/Endometrial tumors with MSS and/or no loss of MMR protein expression and/or LS spectrum tumorsf with loss of MMR protein(s) that is inconsistent with the gene demonstrating genetic variation.",
+                " - 1 BRAF V600E (Colon only)/MLH1 methylation (in LS spectrum tumor only) with MSI-H/MLH1 loss."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "0"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP6",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "Reputable source recently reports variant as benign, but the evidence is not available to the laboratory to perform an independent evaluation.",
+                "Not Applicable",
+                "This criterion is not for use as recommended by the ClinGen Sequence Variant Interpretation VCEP Review Committee. "
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP7",
+            "description": [
+
+
+                "Original ACMG Summary",
+                "A synonymous variant for which splicing prediction algorithms predict no impact to the splice consensus sequence nor the creation of a new splice site AND the nucleotide is not highly conserved.",
+                "",
+                "Supporting",
+                "A synonymous (silent) or intronic variant at or beyond -21/+7 (5'/3' exonic). Variants may satisfy both BP7 and BP4."
+                
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        }
+    ]
+}
