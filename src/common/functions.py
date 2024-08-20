@@ -33,7 +33,7 @@ def load_webapp_env():
     return webapp_env
 
 # converts one line from the variant table to a vcf record
-def variant_to_vcf(chr, pos, ref, alt, path):
+def variant_to_vcf(chr, pos, ref, alt, path, reference_genome="GRCh38"):
     #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
     chr_num = validate_chr(chr)
     if not chr_num:
@@ -46,7 +46,7 @@ def variant_to_vcf(chr, pos, ref, alt, path):
     vcf_record = [chr, str(pos), '.', str(ref), str(alt), '.', '.', '.']
     
     file = open(path, "w")
-    write_vcf_header(["##contig=<ID=%s>"%chr], output_func = file.write, tail = "\n")
+    write_vcf_header(["##contig=<ID=%s>"%chr], output_func = file.write, tail = "\n", reference_genome=reference_genome)
     file.write('\t'.join(vcf_record) + '\n')
     file.close()
     return True
@@ -203,11 +203,6 @@ def preprocess_variant(infile, do_liftover=False):
         if returncode != 0: return returncode, err_msg, command_output
         returncode, err_msg, command_output = execute_command(["mv", infile + ".leftnormalized", infile], "mv")
         if returncode != 0: return returncode, err_msg, command_output
-        print("GRCH37 LEFTNORMALIZE:")
-        with open(infile, "r") as f:
-            for line in f:
-                if not line.startswith('##contig='):
-                    print(f.read())
         # check
         returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh37")
         if vcf_errors_pre != '': return 1, err_msg + " " + vcf_errors_pre, command_output
@@ -223,11 +218,6 @@ def preprocess_variant(infile, do_liftover=False):
         if returncode != 0: return returncode, err_msg, command_output
         returncode, err_msg, command_output = execute_command(["mv", infile + ".lifted", infile], "mv")
         if returncode != 0: return returncode, err_msg, command_output
-        print("LIFTED FILE:")
-        with open(infile, "r") as f:
-            for line in f:
-                if not line.startswith('##contig='):
-                    print(f.read())
 
     # leftnormalize
     returncode, err_msg, command_output = left_align_vcf(infile, outfile= infile + ".leftnormalized", ref_genome="GRCh38")
@@ -236,11 +226,6 @@ def preprocess_variant(infile, do_liftover=False):
     if returncode != 0: return returncode, err_msg, command_output
     returncode, err_msg, command_output = execute_command(["mv", infile + ".leftnormalized", infile], "mv")
     if returncode != 0: return returncode, err_msg, command_output
-    print("GRCH38 LEFTNORMALIZE:")
-    with open(infile, "r") as f:
-        for line in f:
-            if not line.startswith('##contig='):
-                print(f.read())
     # check
     returncode, err_msg, vcf_errors_pre = check_vcf(infile, ref_genome="GRCh38")
     if vcf_errors_pre != '': return 1, err_msg + " " + vcf_errors_pre, command_output

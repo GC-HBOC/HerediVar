@@ -258,9 +258,7 @@ def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant
 
 def fetch_heredicare(vid, user_id, conn:Connection, insert_variant = True, perform_annotation = True):
     heredicare_interface = Heredicare()
-    print("THE VID: " + str(vid))
     variant, status, message = heredicare_interface.get_variant(vid)
-    print(variant)
 
     if status != 'success': # error in variant retrieval from heredicare
         return status, message
@@ -566,7 +564,7 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
 
 
     tmp_file_path = functions.get_random_temp_file("vcf")
-    functions.variant_to_vcf(chrom, pos, ref, alt, tmp_file_path)
+    functions.variant_to_vcf(chrom, pos, ref, alt, tmp_file_path, genome_build)
 
     do_liftover = genome_build == 'GRCh37'
     returncode, err_msg, command_output = functions.preprocess_variant(tmp_file_path, do_liftover = do_liftover)

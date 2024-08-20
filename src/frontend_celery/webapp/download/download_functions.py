@@ -780,44 +780,30 @@ def get_possible_classes_enigma_pms2_100(class_counts):
 
 
 
-def get_possible_classes_enigma_mlh_100(class_counts):
+
+
+
+def get_possible_classes_enigma_insight_mmr_100(class_counts):
     possible_classes = set()
 
     # pathogenic
-    #1 Very Strong (PVS1) AND ≥ 1 Strong (PVS1_Strong, PS1, PS2, PS3, PP1_Strong, PP3_Strong, PP4_Strong)
-    #1 Very Strong (PVS1) AND ≥ 2 Supporting (PS3_Supporting, PM2_Supporting, PM5_Supporting, PP1, PP3, PP4)
-    #USELESS: 1 Very Strong (PVS1) AND 1 Moderate (PVS1_Moderate, PS1_Moderate, PS2_Moderate, PS3_Moderate, PM3, PM5, PM6, PP1_Moderate, PP3_Moderate, PP4_Moderate)
-    #1 Very Strong (PVS1) AND ≥ 1 Moderate (PVS1_Moderate, PS1_Moderate, PS2_Moderate, PS3_Moderate, PM3, PM5, PM6, PP1_Moderate, PP3_Moderate, PP4_Moderate)
-    
-    #≥ 2 Strong (PVS1_Strong, PS1, PS2, PS3, PP1_Strong, PP3_Strong, PP4_Strong)
-    #1 Strong (PVS1_Strong, PS1, PS2, PS3, PP1_Strong, PP3_Strong, PP4_Strong) AND ≥ 3 Moderate (PVS1_Moderate, PS1_Moderate, PS2_Moderate, PS3_Moderate, PM3, PM5, PM6, PP1_Moderate, PP3_Moderate, PP4_Moderate)
-    #1 Strong (PVS1_Strong, PS1, PS2, PS3, PP1_Strong, PP3_Strong, PP4_Strong) AND 2 Moderate (PVS1_Moderate, PS1_Moderate, PS2_Moderate, PS3_Moderate, PM3, PM5, PM6, PP1_Moderate, PP3_Moderate, PP4_Moderate) AND ≥ 2 Supporting (PS3_Supporting, PM2_Supporting, PM5_Supporting, PP1, PP3, PP4)
-    #1 Strong (PVS1_Strong, PS1, PS2, PS3, PP1_Strong, PP3_Strong, PP4_Strong) AND 1 Moderate (PVS1_Moderate, PS1_Moderate, PS2_Moderate, PS3_Moderate, PM3, PM5, PM6, PP1_Moderate, PP3_Moderate, PP4_Moderate) AND ≥ 4 Supporting (PS3_Supporting, PM2_Supporting, PM5_Supporting, PP1, PP3, PP4)
-
     if class_counts['pvs'] >= 2:
         possible_classes.add(5)
     if class_counts['pvs'] == 1:
         if class_counts['ps'] >= 1 or class_counts['pm'] >= 1 or class_counts['pp'] >= 2:
             possible_classes.add(5)
-    if class_counts['ps'] >= 2:
+    if class_counts['ps'] >= 3:
         possible_classes.add(5)
     if class_counts['ps'] == 1:
         if class_counts['pm'] >= 3 or (class_counts['pm'] == 2 and class_counts['pp'] >= 2) or (class_counts['pm'] == 1 and class_counts['pp'] >= 4):
             possible_classes.add(5)
     
     #Likely Pathogenic
-    #1 Strong (PVS1_Strong, PS1, PS2, PS3, PP1_Strong, PP4_Strong) AND 1 Moderate (PVS1_Moderate, PS1_Moderate, PS2_Moderate, PS3_Moderate, PM3, PM5, PM6, PP1_Moderate, PP3_Moderate, PP4_Moderate)
-    #1 Strong (PVS1_Strong, PS1, PS2, PS3, PP1_Strong, PP4_Strong) AND ≥ 2 Supporting (PS3_Supporting, PM2_Supporting, PM5_Supporting, PP1, PP3, PP4)
-    #1 Strong (PVS1_Strong, PS1, PS2, PS3, PP1_Strong, PP4_Strong) AND 2 Moderate (PVS1_Moderate, PS1_Moderate, PS2_Moderate, PS3_Moderate, PM3, PM5, PM6, PP1_Moderate, PP3_Moderate, PP4_Moderate)
-
-    #≥ 3 Moderate (PVS1_Moderate, PS1_Moderate, PS2_Moderate, PS3_Moderate, PM3, PM5, PM6, PP1_Moderate, PP3_Moderate, PP4_Moderate)
-    #2 Moderate (PVS1_Moderate, PS1_Moderate, PS2_Moderate, PS3_Moderate, PM3, PM5, PM6, PP1_Moderate, PP3_Moderate, PP4_Moderate) AND ≥ 2 Supporting (PS3_Supporting, PM2_Supporting, PM5_Supporting, PP1, PP3, PP4)
-    #1 Moderate (PVS1_Moderate, PS1_Moderate, PS2_Moderate, PS3_Moderate, PM3, PM5, PM6, PP1_Moderate, PP3_Moderate, PP4_Moderate) AND ≥ 4 Supporting (PS3_Supporting, PM2_Supporting, PM5_Supporting, PP1, PP3, PP4)
-    
-    #1 Very Strong (PVS1) AND 1 Supporting (PS3_Supporting, PM2_Supporting, PM5_Supporting, PP1, PP3, PP4)
     if class_counts['ps'] == 1:
         if (class_counts['pm'] >= 1 and class_counts['pm'] <= 2) or class_counts['pp'] >= 2:
             possible_classes.add(4)
+    if class_counts['ps'] == 2:
+        possible_classes.add(4)
     if class_counts['pm'] >= 3:
         possible_classes.add(4)
     if class_counts['pm'] == 2 and class_counts['pp'] >= 2:
@@ -828,19 +814,22 @@ def get_possible_classes_enigma_mlh_100(class_counts):
         possible_classes.add(4)
 
     #Benign
-    #≥ 2 Strong (BS1, BS2, BS3, BS4, BP5_Strong)
-    #1 Stand Alone (BA1, BS1_Stand Alone)
     if class_counts['ba'] >= 1:
         possible_classes.add(1)
     if class_counts['bs'] >= 2:
         possible_classes.add(1)
 
     #Likely Benign
-    #1 Strong (BS1, BS2, BS3, BS4, BP5_Strong) AND 1 Supporting (BS3_Supporting, BS4_Supporting, BP4, BP5, BP7)
     if class_counts['bs'] == 1 and class_counts['bp'] == 1:
         possible_classes.add(2)
+    if class_counts['bp'] >= 2:
+        possible_classes.add(1)
 
     return possible_classes
+
+
+
+
 
 
 

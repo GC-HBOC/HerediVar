@@ -200,30 +200,29 @@ def calculate_class(scheme_type = None, version = None, selected_classes = ''):
     elif 'acmg' in scheme_type:
         class_counts = download_functions.get_class_counts(selected_classes) # count how often we have each strength
 
+        # get a set of possible classes depending on selected criteria depending on the gene and version
         if 'brca1' in scheme_type and version == "v1.0.0":
-            possible_classes = download_functions.get_possible_classes_enigma_brca1_1_0_0(class_counts) # get a set of possible classes depending on selected criteria
+            possible_classes = download_functions.get_possible_classes_enigma_brca1_1_0_0(class_counts) 
         elif 'brca1' in scheme_type and version == "v1.1.0":
-            possible_classes = download_functions.get_possible_classes_enigma_brca12_1_1_0(class_counts) # get a set of possible classes depending on selected criteria
+            possible_classes = download_functions.get_possible_classes_enigma_brca12_1_1_0(class_counts) 
         elif 'brca2' in scheme_type and version == "v1.0.0":
-            possible_classes = download_functions.get_possible_classes_enigma_brca2_1_0_0(class_counts) # get a set of possible classes depending on selected criteria
+            possible_classes = download_functions.get_possible_classes_enigma_brca2_1_0_0(class_counts) 
         elif 'brca2' in scheme_type and version == "v1.1.0":
-            possible_classes = download_functions.get_possible_classes_enigma_brca12_1_1_0(class_counts) # get a set of possible classes depending on selected criteria
+            possible_classes = download_functions.get_possible_classes_enigma_brca12_1_1_0(class_counts) 
         elif 'palb2' in scheme_type and (version == "v1.0.0" or version == "v1.1.0"):
-            possible_classes = download_functions.get_possible_classes_enigma_palb2(class_counts) # get a set of possible classes depending on selected criteria
+            possible_classes = download_functions.get_possible_classes_enigma_palb2(class_counts) 
         elif 'tp53' in scheme_type and version == "v1.4.0":
-            possible_classes = download_functions.get_possible_classes_enigma_tp53(class_counts) # get a set of possible classes depending on selected criteria
+            possible_classes = download_functions.get_possible_classes_enigma_tp53(class_counts) 
         elif 'atm' in scheme_type and version == "v1.1.0":
-            possible_classes = download_functions.get_possible_classes_enigma_atm_1_1_0(class_counts) # get a set of possible classes depending on selected criteria
+            possible_classes = download_functions.get_possible_classes_enigma_atm_1_1_0(class_counts) 
         elif 'atm' in scheme_type and version == "v1.3.0":
-            possible_classes = download_functions.get_possible_classes_enigma_atm_1_3_0(class_counts) # get a set of possible classes depending on selected criteria
+            possible_classes = download_functions.get_possible_classes_enigma_atm_1_3_0(class_counts) 
         elif 'pten' in scheme_type and version == "v3.0.0":
-            possible_classes = download_functions.get_possible_classes_enigma_pten(class_counts) # get a set of possible classes depending on selected criteria
+            possible_classes = download_functions.get_possible_classes_enigma_pten(class_counts) 
         elif 'pten' in scheme_type and version == "v3.1.0":
-            possible_classes = download_functions.get_possible_classes_enigma_pten_310(class_counts) # get a set of possible classes depending on selected criteria
-        elif 'pms2' in scheme_type and version == "v1.0.0":
-            possible_classes = download_functions.get_possible_classes_enigma_pms2_100(class_counts) # get a set of possible classes depending on selected criteria
-        elif 'mlh1' in scheme_type and version == "v1.0.0":
-            possible_classes = download_functions.get_possible_classes_enigma_mlh_100(class_counts) # get a set of possible classes depending on selected criteria
+            possible_classes = download_functions.get_possible_classes_enigma_pten_310(class_counts) 
+        elif any([gene_symbol in scheme_type for gene_symbol in ['pms2', 'mlh1', 'msh2', 'msh6']]) and version == "v1.0.0": # MMR genes
+            possible_classes = download_functions.get_possible_classes_enigma_insight_mmr_100(class_counts) 
         else:
             raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme and version? (either "acmg" or VUS "task-force" based)')
 
