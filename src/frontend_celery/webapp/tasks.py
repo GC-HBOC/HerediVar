@@ -258,7 +258,9 @@ def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant
 
 def fetch_heredicare(vid, user_id, conn:Connection, insert_variant = True, perform_annotation = True):
     heredicare_interface = Heredicare()
+    print("THE VID: " + str(vid))
     variant, status, message = heredicare_interface.get_variant(vid)
+    print(variant)
 
     if status != 'success': # error in variant retrieval from heredicare
         return status, message
@@ -415,7 +417,8 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
         was_successful, new_message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, insert_variant = insert_variant, perform_annotation=perform_annotation)
         if new_message not in message:
             message = functions.collect_info(message, "hg38_msg=", new_message, sep = " ~~ ")
-
+    print("WAS SUCCESSFUL HG38: " + str(was_successful))
+    
     if not was_successful:
         # check hg19 information
         pos = variant.get('POS_HG19')
@@ -428,7 +431,8 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
             was_successful, new_message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, insert_variant = insert_variant, perform_annotation=perform_annotation)
             if new_message not in message:
                 message = functions.collect_info(message, "hg37_msg=", new_message, sep = " ~~ ")
-    
+    print("WAS SUCCESSFUL HG37: " + str(was_successful))
+
     if not was_successful:
         # if there is still missing data check if the variant has hgvs_c information
         transcript = variant.get('REFSEQ')
@@ -499,6 +503,7 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
             was_successful, new_message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, insert_variant = insert_variant, perform_annotation=perform_annotation)
             if new_message not in message:
                 message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
+    print("WAS SUCCESSFUL HGVS: " + str(was_successful))
 
     if variant_id is not None and external_ids is not None: # insert new vid
         for external_id in external_ids:
