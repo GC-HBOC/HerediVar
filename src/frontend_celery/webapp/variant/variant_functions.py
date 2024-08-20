@@ -315,14 +315,7 @@ def handle_selected_literature(previous_selected_literature, classification_id, 
 def summarize_heredicare_status(heredicare_queue_entries, publish_queue):
     summary = {"status": "unknown", "max_requested_at": "unknown", "insert_tasks_message": ""}
     if publish_queue is not None:
-        if publish_queue.status == 'error':
-            summary["status"] = "error"
-            summary["insert_tasks_message"] = publish_queue.insert_tasks_message
-        elif publish_queue.insert_tasks_status == 'pending':
-            summary["status"] = "waiting"
-        elif publish_queue.insert_tasks_status == 'progress':
-            summary["status"] = "requesting"
-        elif heredicare_queue_entries is not None:
+        if heredicare_queue_entries is not None:
             all_skipped = True
             for heredicare_queue_entry in heredicare_queue_entries:
                 current_status = heredicare_queue_entry[1]
@@ -341,6 +334,15 @@ def summarize_heredicare_status(heredicare_queue_entries, publish_queue):
                     summary["max_requested_at"] = current_requested_at
             if all_skipped:
                 summary["status"] = "skipped"
+        else:
+            if publish_queue.status == 'error':
+                summary["status"] = "error"
+                summary["insert_tasks_message"] = publish_queue.insert_tasks_message
+            elif publish_queue.insert_tasks_status == 'pending':
+                summary["status"] = "waiting"
+            elif publish_queue.insert_tasks_status == 'progress':
+                summary["status"] = "requesting"
+
     return summary
 
 
