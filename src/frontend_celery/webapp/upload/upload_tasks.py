@@ -49,7 +49,7 @@ def publish(self, publish_queue_id, variant_ids, options, user_roles):
         conn.update_publish_queue_status(publish_queue_id, status = "progress", message = "")
 
         for variant_id in variant_ids:
-            variant = conn.get_variant(variant_id)
+            #variant = conn.get_variant(variant_id)
 
             # start the task to upload the consensus classification to clinvar
             if options['do_clinvar']:

@@ -457,8 +457,8 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
         
         if not was_successful and hgvs_c_valid and gene_valid:
             gene_id = conn.get_gene_id_by_symbol(gene_symbol)
-            #transcripts = conn.get_gencode_basic_transcripts(gene_id)
-            transcripts = conn.get_mane_select_for_gene(gene_id)
+            transcripts = conn.get_gencode_basic_transcripts(gene_id)
+            #transcripts = conn.get_mane_select_for_gene(gene_id)
 
             if transcripts is not None:
                 #print(transcripts)
@@ -503,6 +503,12 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
     if variant_id is not None and external_ids is not None: # insert new vid
         for external_id in external_ids:
             annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
+            previous_variant_ids = conn.get_variant_ids_from_external_id(external_id, annotation_type_id)
+            for previous_variant_id in previous_variant_ids:
+                if previous_variant_id != variant_id:
+                    conn.delete_external_id(external_id, annotation_type_id, previous_variant_id)
+                    if perform_annotation:
+                        start_annotation_service(previous_variant_id, user_id, conn)
             conn.insert_external_variant_id(variant_id, external_id, annotation_type_id)
 
     if not was_successful and message == '':

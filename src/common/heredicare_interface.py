@@ -320,7 +320,7 @@ class Heredicare(metaclass=Singleton):
 
         resp = requests.get(url, headers=header)
         if resp.status_code != 200:
-            message = "ERROR: HerediCare API getsubmission id endpoint endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
+            message = "ERROR: HerediCare API get submission id endpoint endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
             status = "api_error"
         else: # success
             resp = resp.json(strict=False)
@@ -568,9 +568,6 @@ class Heredicare(metaclass=Singleton):
             return False
         pattern = re.compile(regex)
         result = pattern.match(value)
-        print(regex)
-        print(result)
-        print(value)
         if result is None:
             return False
         return True

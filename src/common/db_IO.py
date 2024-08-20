@@ -1424,7 +1424,7 @@ class Connection:
         self.cursor.execute(command, (consensus_classification_id, ))
         self.conn.commit()
 
-    def get_variant_ids_which_need_heredicare_upload(self):
+    def get_variant_ids_which_need_heredicare_upload(self, variant_ids_oi = None):
         # excludes structural variants and intergenic variants and variants of unfinished submissions
         command = """
             SELECT DISTINCT variant_id FROM consensus_classification WHERE needs_heredicare_upload = 1  AND is_recent = 1 and variant_id NOT IN (
@@ -1436,11 +1436,16 @@ class Connection:
                 GROUP BY variant_id 
             HAVING COUNT(exon_nr is not null or intron_nr is not null OR NULL) = 0)
         """
-        self.cursor.execute(command)
+        actual_information = ()
+        if variant_ids_oi is not None:
+            placeholders = self.get_placeholders(len(variant_ids_oi))
+            command += " AND variant_id IN " + placeholders
+            actual_information = tuple(variant_ids_oi)
+        self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
         return [x[0] for x in result]
     
-    def get_variant_ids_which_need_clinvar_upload(self):
+    def get_variant_ids_which_need_clinvar_upload(self, variant_ids_oi = None):
         command = """
             SELECT DISTINCT variant_id FROM consensus_classification WHERE needs_clinvar_upload = 1  AND is_recent = 1 and variant_id NOT IN (
 	            SELECT publish_clinvar_queue.variant_id FROM publish_clinvar_queue RIGHT JOIN (
@@ -1449,7 +1454,12 @@ class Connection:
 	            WHERE status = 'submitted' or status = 'pending' or status = 'progress' or status = 'retry'
             ) AND variant_id NOT IN (SELECT id FROM variant WHERE sv_variant_id IS NOT NULL)
         """
-        self.cursor.execute(command)
+        actual_information = ()
+        if variant_ids_oi is not None:
+            placeholders = self.get_placeholders(len(variant_ids_oi))
+            command += " AND variant_id IN " + placeholders
+            actual_information = tuple(variant_ids_oi)
+        self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
         return [x[0] for x in result]
 
@@ -1510,7 +1520,11 @@ class Connection:
             return result[0]
         return result
     
-
+    def get_variant_ids_from_external_id(self, external_id, annotation_type_id):
+        command = "SELECT variant_id FROM variant_ids WHERE external_id = %s AND annotation_type_id = %s"
+        self.cursor.execute(command, (external_id, annotation_type_id))
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
 
     def get_consensus_classification(self, variant_id, most_recent = False, sql_modifier=None): # it is possible to have multiple consensus classifications
         command = "SELECT id,user_id,variant_id,classification,comment,date,is_recent,classification_scheme_id,scheme_class,needs_heredicare_upload,needs_clinvar_upload FROM consensus_classification WHERE variant_id = %s"

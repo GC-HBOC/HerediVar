@@ -5,7 +5,8 @@ sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath
 from common import functions
 from common.heredicare_interface import Heredicare
 from common.db_IO import Connection
-from ..utils import *
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+from utils import *
 from werkzeug.utils import secure_filename
 
 # searches for the tag variant_ids in a request.args.
@@ -32,8 +33,13 @@ def extract_variant_ids(request_args, conn: Connection) -> list:
     for list_id in list_ids_strs:
         require_valid(list_id, "user_variant_lists", conn)
         require_list_permission(list_id, required_permissions = ['read'], conn = conn)
-        result.extend(conn.get_variant_ids_from_list(list_id))
-    return result
+        list_variant_ids = conn.get_variant_ids_from_list(list_id)
+        check_update_all_most_recent_heredicare(list_variant_ids, conn)
+        check_update_all_most_recent_clinvar(list_variant_ids, conn)
+
+        result.extend(conn.get_variant_ids_which_need_heredicare_upload(variant_ids_oi = list_variant_ids))
+        result.extend(conn.get_variant_ids_which_need_clinvar_upload(variant_ids_oi = list_variant_ids))
+    return list(set(result)) # make unique
 
 # this function searches for clinvar_gene_{variant_id} tags of variants 
 # of interest in a request form and saves it to a dictionary
