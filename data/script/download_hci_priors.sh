@@ -86,7 +86,7 @@ tabix -p vcf priors_hg19.vcf.gz
 
 
 ## crossmap to lift from GRCh37 to GRCh38
-CrossMap.py vcf $data/genomes/hg19ToHg38.fixed.over.chain.gz priors_hg19.vcf.gz $grch38 priors.vcf
+CrossMap vcf $data/genomes/hg19ToHg38.fixed.over.chain.gz priors_hg19.vcf.gz $grch38 priors.vcf
 rm priors_hg19.vcf.gz
 rm priors_hg19.vcf.gz.tbi
 
@@ -94,7 +94,7 @@ rm priors_hg19.vcf.gz.tbi
 python3 $dbconverter -g MLH1 -e exon1 >> priors.vcf
 
 ##### STILL MISSING:
-python3 $dbconverter -g MSH2 -e exon1 >> priors.vcf
+python3 $dbconverter -g MSH2 -e exon1 > priors_msh2.vcf
 python3 $dbconverter -g MSH6 -e exon1 >> priors.vcf
 
 $ngsbits/VcfSort -in priors.vcf -out priors.vcf

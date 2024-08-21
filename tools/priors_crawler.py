@@ -69,11 +69,13 @@ def extract_ref_alt(variant_container_text):
 
 def parse_html(url):
     try:
-        resp = requests.get(url)
+        resp = requests.get(url, verify=False)
+        resp.raise_for_status()
         html_text = resp.text
         return lxml.html.fromstring(html_text)
     except: #(HTTPError, RemoteDisconnected) as e
-        functions.eprint("Got an error for url: " + url + "... retrying")
+        functions.eprint(resp.text)
+        functions.eprint("Got a http " + str(resp.status_code) + " error for url: " + url + "... retrying")
         return None
 
 
@@ -88,7 +90,7 @@ def retry_parse_html(url):
 
 
 
-base_url = "http://priors.hci.utah.edu/PRIORS/BRCA/"
+base_url = "https://priors.hci.utah.edu/PRIORS/BRCA/"
 exon_url = urljoin(base_url, ("viewer.php?gene=%s&exon=%s" % (gene, first_exon)))
 
 
@@ -123,6 +125,7 @@ if include_header:
     ]
     functions.write_vcf_header(info_headers, reference_genome="hg19")
 
+functions.eprint("YOYO")
 
 all_exon_urls = []
 
@@ -133,7 +136,6 @@ for tr in doc.iter('tr'):
         for link_elem in tr.iter('a'):
             new_exon_url = urljoin(base_url, link_elem.attrib['href'] )
             all_exon_urls.append(new_exon_url)
-
 
 
 for exon_url in all_exon_urls:
