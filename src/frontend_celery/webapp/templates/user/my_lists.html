@@ -194,6 +194,7 @@
     data-page='{{ request.args.get("page", 1) }}'
     data-page-size='{{ request.args.get("page_size", 20)}}'
     data-delete-action='{{url_for("user.modify_list_content", selected_list_id=request.args.get("view", ""), action="remove_from_list", next=url_for("user.my_lists", view=request.args.get("view", "")))}}'
+    data-view-list='{{request.args.get('view')}}'
 />
 
 

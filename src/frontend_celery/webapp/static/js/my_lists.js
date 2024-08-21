@@ -8,6 +8,7 @@ $(document).ready(function()
     const page = flask_data.dataset.page
     const page_size = flask_data.dataset.pageSize 
     const base_delete_action_url = flask_data.dataset.deleteAction
+    const data_view_list = flask_data.dataset.dataViewList
 
     // edit / create button functionality
     $('#list-modal-submit').click(function(){
@@ -22,7 +23,7 @@ $(document).ready(function()
         $.ajax({
             type: 'GET',
             url: "/download/vcf/variant_list",
-            data: {'list_id': "77"},
+            data: {'list_id': data_view_list},
             success: function(returnval, status, request) {
                 console.log(returnval)
             },
