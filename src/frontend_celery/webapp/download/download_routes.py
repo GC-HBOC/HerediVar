@@ -77,14 +77,14 @@ def variant_list():
 
 
 from flask import Response, stream_with_context
-@download_blueprint.route('/download/test')
-@require_permission(["admin_resources"])
-def download_test():
-    return Response(
-        stream_with_context(download_functions.test_large_download()),
-        headers={'Content-Disposition': 'attachment; filename=test.txt'}
-    )
-
+#@download_blueprint.route('/download/test')
+#@require_permission(["admin_resources"])
+#def download_test():
+#    return Response(
+#        stream_with_context(download_functions.test_large_download()),
+#        headers={'Content-Disposition': 'attachment; filename=test.txt'}
+#    )
+#
 @download_blueprint.route('/download/test_vcf')
 @require_permission(["admin_resources"])
 def download_test_vcf():
@@ -99,7 +99,8 @@ def download_test_vcf():
 
     return Response(
         stream_with_context(download_functions.get_vcf_stream(variant_ids_oi, conn)),
-        headers={'Content-Disposition': 'attachment; filename=test.txt'}
+        content_type = "text/event-stream",
+        headers={'Content-Disposition': 'attachment; filename=test.txt', 'X-Accel-Buffering': 'no'}
     )
 
 

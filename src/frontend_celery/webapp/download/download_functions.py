@@ -121,15 +121,14 @@ def get_vcf(variants_oi, conn, worker=get_variant_vcf_line, check_vcf=True):
     return buffer, status, "", ""
 
 
-import time
-def test_large_download():
-    for i in range(50):
-        yield str(i).encode()
-        print(i)
-        time.sleep(1)
-
-
-
+#import time
+#def test_large_download():
+#    for i in range(50):
+#        yield str(i).encode()
+#        print(i)
+#        time.sleep(1)
+#
+#
 def get_vcf_stream(variants_oi, conn, worker=get_variant_vcf_line):
     for id in variants_oi:
         info_headers, variant_vcf = worker(id, conn)
@@ -140,8 +139,6 @@ def get_vcf_stream(variants_oi, conn, worker=get_variant_vcf_line):
     #printable_info_headers = list(final_info_headers.values())
     #printable_info_headers.sort()
     #functions.write_vcf_header(printable_info_headers, lambda l: yield_something(l.encode()), tail='\n')
-
-
 def yield_something(val):
     yield val
 
