@@ -69,12 +69,12 @@ def extract_ref_alt(variant_container_text):
 
 def parse_html(url):
     try:
-        resp = requests.get(url, verify=False)
+        resp = requests.get(url, verify=True)
         resp.raise_for_status()
         html_text = resp.text
         return lxml.html.fromstring(html_text)
     except: #(HTTPError, RemoteDisconnected) as e
-        functions.eprint(resp.text)
+        #functions.eprint(resp.text)
         functions.eprint("Got a http " + str(resp.status_code) + " error for url: " + url + "... retrying")
         return None
 
@@ -125,7 +125,6 @@ if include_header:
     ]
     functions.write_vcf_header(info_headers, reference_genome="hg19")
 
-functions.eprint("YOYO")
 
 all_exon_urls = []
 

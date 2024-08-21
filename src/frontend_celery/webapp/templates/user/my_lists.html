@@ -78,6 +78,10 @@
                                 <a href="{{ url_for('download.variant_list', list_id=request.args.get('view')) }}" class="dropdown-item">Export list to VCF</a>
                             </li>
                             <li>
+                                <button id="export_to_vcf_button" class="dropdown-item">Export AJAX</button>
+                                <a id="export_to_vcf_worker" href="{{ url_for('download.variant_list', list_id=request.args.get('view')) }}" class="visually_hidden" download>Export list to VCF</a>
+                            </li>
+                            <li>
                                 <a href="{{ url_for('upload.publish', list_id = request.args.get('view', ''), next = url_for('user.my_lists', view = request.args.get('view'))) }}" class="dropdown-item">Publish</a>
                             </li>
                         </ul>

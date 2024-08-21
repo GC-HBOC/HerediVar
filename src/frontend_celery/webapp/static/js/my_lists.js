@@ -16,6 +16,23 @@ $(document).ready(function()
         $('#list-modal-form').submit();
     });
 
+    $('#export_to_vcf_button').click(function(){
+        document.getElementById("export_to_vcf_worker").click()
+        //$.ajax({
+        //    type: 'GET',
+        //    url: "/download/vcf/variant_list",
+        //    data: {'list_id': "77"},
+        //    success: function(returnval, status, request) {
+        //        console.log(returnval)
+        //    },
+        //    error: function(xhr, status, error) {
+        //        console.log(xhr)
+        //        console.log(status)
+        //        console.log(error)
+        //    }
+        //});
+    });
+
     var list_id = $('#current-list-id')[0].innerText
 
     // delete button functionality
