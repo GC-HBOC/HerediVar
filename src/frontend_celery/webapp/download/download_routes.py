@@ -76,6 +76,33 @@ def variant_list():
     return send_file(vcf_file_buffer, as_attachment=True, download_name=download_file_name, mimetype="text/vcf")
 
 
+from flask import Response, stream_with_context
+@download_blueprint.route('/download/test')
+@require_permission(["admin_resources"])
+def download_test():
+    return Response(
+        stream_with_context(download_functions.test_large_download()),
+        headers={'Content-Disposition': 'attachment; filename=test.txt'}
+    )
+
+@download_blueprint.route('/download/test_vcf')
+@require_permission(["admin_resources"])
+def download_test_vcf():
+    conn = get_connection()
+
+    list_id = request.args.get('list_id')
+    require_valid(list_id, "user_variant_lists", conn)
+
+    # check that the logged in user is the owner of this list
+    require_list_permission(list_id, ['read'], conn)
+    variant_ids_oi = conn.get_variant_ids_from_list(list_id)
+
+    return Response(
+        stream_with_context(download_functions.get_vcf_stream(variant_ids_oi, conn)),
+        headers={'Content-Disposition': 'attachment; filename=test.txt'}
+    )
+
+
 # listens on get parameter: raw
 @download_blueprint.route('/download/vcf/classified')
 @require_permission(['read_resources'])
