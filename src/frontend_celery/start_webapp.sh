@@ -69,6 +69,6 @@ then
    logsdir=$ROOT/logs
    mkdir -p $logsdir/gunicorn-access-logs
    mkdir -p $logsdir/gunicorn-error-logs
-   gunicorn -b $HOST:$PORT -k 'gevent' -w 4 'webapp:create_app()' --access-logfile $logsdir/gunicorn-access-logs/access.log --error-logfile $logsdir/gunicorn-error-logs/error.log # heredivar.uni-koeln.de:8000
+   gunicorn -b $HOST:$PORT -k 'gevent' -w 2 'webapp:create_app()' --access-logfile $logsdir/gunicorn-access-logs/access.log --error-logfile $logsdir/gunicorn-error-logs/error.log # heredivar.uni-koeln.de:8000
    #gunicorn -b SRV018.img.med.uni-tuebingen.de:8001 -w 1 'webapp:create_app()'
 fi
