@@ -91,7 +91,7 @@ def retry_parse_html(url):
 
 
 base_url = "https://priors.hci.utah.edu/PRIORS/BRCA/"
-exon_url = urljoin(base_url, ("viewer.php?gene=%s&exon=%s" % (gene, first_exon)))
+first_exon_url = urljoin(base_url, ("viewer.php?gene=%s&exon=%s" % (gene, first_exon)))
 
 
 if include_header:
@@ -128,7 +128,7 @@ if include_header:
 
 all_exon_urls = []
 
-doc = retry_parse_html(exon_url)
+doc = retry_parse_html(first_exon_url)
 for tr in doc.iter('tr'):
     text_content=tr.text_content()
     if text_content.startswith('EXON'):
@@ -137,8 +137,13 @@ for tr in doc.iter('tr'):
             all_exon_urls.append(new_exon_url)
 
 
+consider = False
 for exon_url in all_exon_urls:
     functions.eprint(exon_url)
+    if first_exon_url in exon_url:
+        consider = True
+    if not consider:
+        continue
     doc = retry_parse_html(exon_url)
     #seq_container = doc.xpath("//td[@class='seqarea']")[0]
     for variant_url_container in doc.xpath("//a[@class='seq']"):
