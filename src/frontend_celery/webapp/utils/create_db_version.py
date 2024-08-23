@@ -28,16 +28,14 @@ print(outpath)
 
 conn = Connection(roles = ["db_admin"])
 all_variant_ids = conn.get_all_valid_variant_ids(exclude_sv = False)
-vcf_file_buffer, status, vcf_errors, err_msg = download_functions.get_vcf(all_variant_ids, conn)
+status, message = download_functions.write_vcf_file(all_variant_ids, outpath, conn)
+#vcf_file_buffer, status, vcf_errors, err_msg = download_functions.get_vcf(all_variant_ids, conn)
 conn.close()
 
 if status == "error":
-    msg = functions.collect_info("", "vcf_errors=", vcf_errors)
-    msg = functions.collect_info(msg, "err_msg=", err_msg)
     with open(all_variants_folder + "/errors_" + today + ".txt", 'w') as f:
-        f.write(msg)
+        f.write(message)
 
-functions.buffer_to_file_system(vcf_file_buffer, outpath)
 with open(last_dump_path, 'w') as last_dump_file:
     last_dump_file.write(today)
 

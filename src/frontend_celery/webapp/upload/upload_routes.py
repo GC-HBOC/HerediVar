@@ -86,5 +86,8 @@ def submit_assay(variant_id):
             do_redirect = True
     
     if do_redirect :
+        list_ids = conn.get_list_ids_with_variant(variant_id) # invalidate list vcfs
+        for list_id in list_ids:
+            invalidate_download_queue(list_id, "list_download", conn)
         return redirect(url_for('upload.submit_assay', variant_id = variant_id))
     return render_template('upload/submit_assay.html', assay_types = assay_types)

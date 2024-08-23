@@ -8,7 +8,8 @@ import common.functions as functions
 from common.db_IO import Connection
 import common.paths as paths
 from ..utils import *
-from . import download_functions
+from . import download_functions, download_tasks
+import werkzeug
 
 
 download_blueprint = Blueprint(
@@ -33,18 +34,53 @@ def variant():
     redirect_url = url_for('variant.display', variant_id = variant_id)
     download_file_name = "variant_" + str(variant_id) + ".vcf"
 
-    vcf_file_buffer, status, vcf_errors, err_msg = download_functions.get_vcf([variant_id], conn, check_vcf=not request.args.get('force', False))
+    #vcf_file_buffer, status, vcf_errors, err_msg = download_functions.get_vcf([variant_id], conn, check_vcf=not request.args.get('force', False))
+    filepath = functions.get_random_temp_file(fileending = ".vcf", filename_ext = "variant_download_" + str(variant_id))
+    status, message = download_functions.write_vcf_file([variant_id], filepath, conn, check_vcf=not request.args.get('force', False))
 
-    if status in ['redirect', 'error']:
-        flash({"message": "Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + ". Download it anyway",
+    if status in ['error']:
+        flash({"message": "Error during VCF generation: " + message + ". Download it anyway",
                "link": force_url}, "alert-danger")
-        current_app.logger.error(get_preferred_username() + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant ids: " + str(variant_id))
+        current_app.logger.error(get_preferred_username() + " tried to download a vcf which contains errors: " + message + ". For variant ids: " + str(variant_id))
         return redirect(redirect_url)
 
     current_app.logger.info(get_preferred_username() + " downloaded vcf of variant id: " + str(variant_id))
 
-    return send_file(vcf_file_buffer, as_attachment=True, download_name=download_file_name, mimetype="text/vcf")
+    return current_app.response_class(
+        download_functions.stream_file(filepath, remove_after = True),
+        content_type = "text/event-stream",
+        headers={'Content-Disposition': f'attachment; filename={download_file_name}', 'X-Accel-Buffering': 'no'}
+    )
 
+
+## listens on get parameter: list_id
+#@download_blueprint.route('/download/vcf/variant_list')
+#@require_permission(['read_resources'])
+#def variant_list():
+#    conn = get_connection()
+#
+#    list_id = request.args.get('list_id')
+#    require_valid(list_id, "user_variant_lists", conn)
+#
+#    # check that the logged in user is the owner of this list
+#    require_list_permission(list_id, ['read'], conn)
+#    variant_ids_oi = conn.get_variant_ids_from_list(list_id)
+#
+#    force_url = url_for("download.variant_list", list_id = list_id, force = True)
+#    redirect_url = url_for("user.my_lists", view = list_id)
+#    download_file_name = "list_" + str(list_id) + ".vcf"
+#
+#    vcf_file_buffer, status, vcf_errors, err_msg = download_functions.get_vcf(variant_ids_oi, conn)
+#
+#    if status == "redirect":
+#        flash({"message": "Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + ". Download it anyway",
+#               "link": force_url}, "alert-danger")
+#        current_app.logger.error(get_preferred_username() + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant list " + str(list_id))
+#        return redirect(redirect_url)
+#
+#    current_app.logger.info(get_preferred_username() + " downloaded vcf of variant list: " + str(list_id))
+#    
+#    return send_file(vcf_file_buffer, as_attachment=True, download_name=download_file_name, mimetype="text/vcf")
 
 # listens on get parameter: list_id
 @download_blueprint.route('/download/vcf/variant_list')
@@ -57,37 +93,39 @@ def variant_list():
 
     # check that the logged in user is the owner of this list
     require_list_permission(list_id, ['read'], conn)
-    variant_ids_oi = conn.get_variant_ids_from_list(list_id)
 
-    force_url = url_for("download.variant_list", list_id = list_id, force = True)
-    redirect_url = url_for("user.my_lists", view = list_id)
-    download_file_name = "list_" + str(list_id) + ".vcf"
+    download_queue_id = conn.get_most_recent_download_queue_id(list_id, "list_download")
+    if download_queue_id is None:
+        flash("No download available! Generate the VCF first.", "alert-danger")
+        return redirect(url_for("user.my_lists", view=list_id))
 
-    vcf_file_buffer, status, vcf_errors, err_msg = download_functions.get_vcf(variant_ids_oi, conn)
-
-    if status == "redirect":
-        flash({"message": "Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + ". Download it anyway",
-               "link": force_url}, "alert-danger")
-        current_app.logger.error(get_preferred_username() + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant list " + str(list_id))
-        return redirect(redirect_url)
+    download_queue = conn.get_download_queue(download_queue_id)
+    file_name = download_queue[5]
+    file_path = paths.download_variant_list_dir + "/" + file_name
+    is_valid = download_queue[1]
+    if not is_valid:
+        flash("No download available! Generate the VCF first.", "alert-danger")
+        return redirect(url_for("user.my_lists", view=list_id))
+    if not functions.is_secure_filename(file_name):
+        flash("Invalid filename", "alert-danger")
+        return redirect(url_for("user.my_lists", view=list_id))
+    if not os.path.exists(file_path):
+        flash("No download available! Generate the VCF first.", "alert-danger")
+        return redirect(url_for("user.my_lists", view=list_id))
 
     current_app.logger.info(get_preferred_username() + " downloaded vcf of variant list: " + str(list_id))
-    
-    return send_file(vcf_file_buffer, as_attachment=True, download_name=download_file_name, mimetype="text/vcf")
+
+    download_filename = "list_" + str(list_id) + ".vcf"
+    return current_app.response_class(
+        download_functions.stream_file(file_path),
+        content_type = "text/event-stream",
+        headers={'Content-Disposition': f'attachment; filename={download_filename}', 'X-Accel-Buffering': 'no'}
+    )
 
 
-from flask import Response, stream_with_context
-#@download_blueprint.route('/download/test')
-#@require_permission(["admin_resources"])
-#def download_test():
-#    return Response(
-#        stream_with_context(download_functions.test_large_download()),
-#        headers={'Content-Disposition': 'attachment; filename=test.txt'}
-#    )
-#
-@download_blueprint.route('/download/test_vcf')
-@require_permission(["admin_resources"])
-def download_test_vcf():
+@download_blueprint.route('/generate/vcf/variant_list')
+@require_permission(['read_resources'])
+def generate_variant_list_vcf():
     conn = get_connection()
 
     list_id = request.args.get('list_id')
@@ -95,13 +133,82 @@ def download_test_vcf():
 
     # check that the logged in user is the owner of this list
     require_list_permission(list_id, ['read'], conn)
-    variant_ids_oi = conn.get_variant_ids_from_list(list_id)
 
-    return Response(
-        stream_with_context(download_functions.get_vcf_stream(variant_ids_oi, conn)),
-        content_type = "text/event-stream",
-        headers={'Content-Disposition': 'attachment; filename=test.txt', 'X-Accel-Buffering': 'no'}
-    )
+    download_queue_id = conn.get_most_recent_download_queue_id(list_id, "list_download")
+    download_queue = conn.get_download_queue(download_queue_id)
+    if download_queue is not None:
+        if download_queue[1] in ["pending", "progress", "retry"]:
+            return "skipped"
+    
+    download_queue_id = download_tasks.start_generate_list_vcf(list_id, session["user"]["roles"], conn)
+
+    return "success"
+
+@download_blueprint.route('/generate/vcf/variant_list/status')
+@require_permission(['read_resources'])
+def generate_variant_list_vcf_status():
+    conn = get_connection()
+
+    list_id = request.args.get('list_id')
+    require_valid(list_id, "user_variant_lists", conn)
+
+    # check that the logged in user is the owner of this list
+    require_list_permission(list_id, ['read'], conn)
+
+    download_queue_id = conn.get_most_recent_download_queue_id(list_id, "list_download")
+    download_queue_raw = conn.get_download_queue(download_queue_id, minimal_info = True) #requested_at, status, finished_at, message, is_valid
+
+    if download_queue_raw is None:
+        return jsonify({
+            "requested_at": "",
+            "status": "no_vcf",
+            "finished_at": "",
+            "message": "",
+            "is_valid": 0
+        })
+
+    return jsonify({
+        "requested_at": download_queue_raw[0],
+        "status": download_queue_raw[1],
+        "finished_at": download_queue_raw[2],
+        "message": download_queue_raw[3],
+        "is_valid": download_queue_raw[4]
+    })
+
+
+
+#@download_blueprint.route('/download/test')
+#@require_permission(["admin_resources"])
+#def download_test():
+#    import time
+#    def test_large_download():
+#        for i in range(50):
+#            yield str(i).encode()
+#            print(i)
+#            time.sleep(1)
+#    return Response(
+#        stream_with_context(download_functions.test_large_download()),
+#        content_type = "text/event-stream",
+#        headers={'Content-Disposition': 'attachment; filename=test.txt', 'X-Accel-Buffering': 'no'}
+#    )
+
+#@download_blueprint.route('/download/test_vcf')
+#@require_permission(["admin_resources"])
+#def download_test_vcf():
+#    conn = get_connection()
+#
+#    list_id = request.args.get('list_id')
+#    require_valid(list_id, "user_variant_lists", conn)
+#
+#    # check that the logged in user is the owner of this list
+#    require_list_permission(list_id, ['read'], conn)
+#    variant_ids_oi = conn.get_variant_ids_from_list(list_id)
+#
+#    return Response(
+#        stream_with_context(download_functions.get_vcf_stream(variant_ids_oi, conn)),
+#        content_type = "text/event-stream",
+#        headers={'Content-Disposition': 'attachment; filename=test.txt', 'X-Accel-Buffering': 'no'}
+#    )
 
 
 # listens on get parameter: raw

@@ -14,6 +14,13 @@ import json
 import uuid
 from functools import cmp_to_key
 import pathlib
+import werkzeug
+
+
+
+
+def is_secure_filename(filename):
+    return werkzeug.utils.secure_filename(filename) == filename
 
 def prettyprint_json(json_obj, func = print):
     pretty_json = json.dumps(json_obj, indent=2)
@@ -168,11 +175,12 @@ def convert_none_infinite(x):
     else:
         return x
 
-def execute_command(command, process_name, use_prefix_error_log = True):
-    completed_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    std_out, std_err = completed_process.communicate()#[1].strip().decode("utf-8") # catch errors and warnings and convert to str
+def execute_command(command, process_name, use_prefix_error_log = True, stdout=subprocess.PIPE):
+    completed_process = subprocess.Popen(command, stdout=stdout, stderr=subprocess.PIPE)
+    command_output, std_err = completed_process.communicate()#[1].strip().decode("utf-8") # catch errors and warnings and convert to str
     std_err = std_err.strip().decode("utf-8")
-    command_output = std_out.strip().decode("utf-8")
+    if command_output is not None:
+        command_output = command_output.strip().decode("utf-8")
     err_msg = ""
     if completed_process.returncode != 0:
         if use_prefix_error_log:
@@ -672,9 +680,9 @@ def enpercent(string):
     return '%' + string + '%'
 
 
-def get_random_temp_file(fileending, filename_ext = ""):
+def get_random_temp_file(fileending, filename_ext = "", folder = tempfile.gettempdir()):
     filename = collect_info(str(uuid.uuid4()), "", filename_ext, sep = '_')
-    return os.path.join(tempfile.gettempdir(), filename + "." + str(fileending.strip('.'))).strip('.')
+    return os.path.join(folder, filename + "." + str(fileending.strip('.'))).strip('.')
 
 def rm(path):
     if os.path.exists(path): 
@@ -971,3 +979,7 @@ def one_to_three_letter(s):
     if s == "V": return "Val"
     if s == "X": return "Ter"
     return "-"
+
+
+
+

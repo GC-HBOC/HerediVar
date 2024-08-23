@@ -754,7 +754,8 @@ class Connection:
     def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, 
                                  ranges = None, genes = None, consensus = None, user = None, automatic_splicing = None, automatic_protein = None, 
                                  hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, 
-                                 include_heredicare_consensus = False, variant_strings = None, variant_types = None):
+                                 include_heredicare_consensus = False, variant_strings = None, variant_types = None, clinvar_upload_states = None,
+                                 heredicare_upload_states = None):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -964,6 +965,30 @@ class Connection:
                 actual_information += tuple(automatic_without_dash)
             new_constraints = "id IN (" + new_constraints_inner + ")"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if clinvar_upload_states is not None and len(clinvar_upload_states) > 0:
+            new_constraints_inner = """
+                SELECT variant_id FROM publish_clinvar_queue WHERE id IN (
+                    SELECT MAX(id) FROM publish_clinvar_queue WHERE status != 'skipped' GROUP BY variant_id
+                ) AND status IN 
+            """
+            placeholders = self.get_placeholders(len(clinvar_upload_states))
+            new_constraints_inner += placeholders
+            new_constraints_inner = functions.enbrace(new_constraints_inner)
+            new_constraints = "id IN " + new_constraints_inner
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+            actual_information += tuple(clinvar_upload_states)
+        if heredicare_upload_states is not None and len(heredicare_upload_states) > 0:
+            new_constraints_inner = """
+                SELECT DISTINCT variant_id FROM publish_heredicare_queue WHERE id IN (
+                    SELECT MAX(id) FROM publish_heredicare_queue WHERE status != 'skipped' GROUP BY vid
+                ) AND status IN 
+            """
+            placeholders = self.get_placeholders(len(heredicare_upload_states))
+            new_constraints_inner += placeholders
+            new_constraints_inner = functions.enbrace(new_constraints_inner)
+            new_constraints = "id IN " + new_constraints_inner
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+            actual_information += tuple(heredicare_upload_states)
         if hgvs is not None and len(hgvs) > 0:
             all_variants = []
             for hgvs_string in hgvs:
@@ -1060,7 +1085,7 @@ class Connection:
             offset = (page - 1) * page_size
             command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
-        #print(command % actual_information)
+        print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 
@@ -2214,6 +2239,12 @@ class Connection:
         result = [str(x[0]) for x in result] # extract variant_id
         return result
     
+    def get_list_ids_with_variant(self, variant_id):
+        command = "SELECT DISTINCT list_id FROM list_variants WHERE variant_id = %s"
+        self.cursor.execute(command, (variant_id, ))
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
+
     # list_id to get the right list
     # list_name is the value which will be updated
     def update_user_variant_list(self, list_id, new_list_name, public_read, public_edit):
@@ -3323,7 +3354,8 @@ class Connection:
         self.conn.commit()
     
     def get_enumtypes(self, tablename, columnname):
-        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue", "automatic_classification", "sv_variant", "user_classification_criteria_applied", "consensus_classification_criteria_applied", "import_variant_queue"]
+        allowed_tablenames = ["consensus_classification", "user_classification", "variant", "annotation_queue", "automatic_classification", "sv_variant", 
+                              "user_classification_criteria_applied", "consensus_classification_criteria_applied", "import_variant_queue", "publish_heredicare_queue"]
         if tablename in allowed_tablenames: # prevent sql injection
             command = "SHOW COLUMNS FROM " + tablename + " WHERE FIELD = %s"
         else:
@@ -3887,6 +3919,12 @@ class Connection:
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
         return result
+    
+    def get_unique_publish_clinvar_queue_status(self):
+        command = "SELECT DISTINCT status FROM publish_clinvar_queue WHERE status != 'skipped'"
+        self.cursor.execute(command)
+        result = self.cursor.fetchall()
+        return [x[0] for x in result]
 
     # DEPRECATED: delete later
     #def check_publish_queue_id(self, publish_queue_id):
@@ -4066,3 +4104,57 @@ class Connection:
 	                    WHERE `classification_scheme_id`=%s AND `classification`=%s LIMIT 1)"""
         self.cursor.execute(command, (classification_scheme_id, final_class, classification_scheme_id, final_class))
         self.conn.commit()
+
+
+
+
+    def insert_download_request(self, list_id, request_type, filename):
+        command = "INSERT INTO download_queue (identifier, type, filename) VALUES (%s, %s, %s)"
+        self.cursor.execute(command, (list_id, request_type, filename))
+        self.conn.commit()
+        return self.get_most_recent_download_queue_id(list_id, request_type)
+
+    def get_most_recent_download_queue_id(self, list_id, request_type):
+        command = "SELECT MAX(id) FROM download_queue WHERE identifier = %s AND type = %s AND is_valid = 1"
+        self.cursor.execute(command, (list_id, request_type))
+        result = self.cursor.fetchone()
+        return result[0]
+
+    def update_download_queue_celery_task_id(self, download_queue_id, celery_task_id):
+        command = "UPDATE download_queue SET celery_task_id = %s WHERE id = %s"
+        self.cursor.execute(command, (celery_task_id, download_queue_id))
+        self.conn.commit()
+
+    def close_download_queue(self, status, download_queue_id, message):
+        command = "UPDATE download_queue SET status = %s, finished_at = NOW(), message = %s WHERE id = %s"
+        self.cursor.execute(command, (status, message, download_queue_id))
+        self.conn.commit()
+
+    def update_download_queue_status(self, download_queue_id, status, message):
+        command = "UPDATE download_queue SET status = %s, message = %s WHERE id = %s"
+        self.cursor.execute(command, (status, message, download_queue_id))
+        self.conn.commit()
+
+    def get_download_queue(self, download_queue_id, minimal_info = False):
+        if download_queue_id is None:
+            return None
+        info = "requested_at, status, finished_at, message, is_valid, filename, identifier, type, celery_task_id"
+        if minimal_info:
+            info = "requested_at, status, finished_at, message, is_valid"
+        command = "SELECT " + info + " FROM download_queue WHERE id = %s"
+        self.cursor.execute(command, (download_queue_id, ))
+        result = self.cursor.fetchone()
+        return result
+
+    def get_valid_download_queue_ids(self, identifier, request_type):
+        command = "SELECT id FROM download_queue WHERE identifier = %s AND type = %s AND is_valid = 1"
+        self.cursor.execute(command, (identifier, request_type))
+        data = self.cursor.fetchall()
+        return [x[0] for x in data]
+
+    def invalidate_download_queue(self, download_queue_id):
+        # invalidate in db
+        command = "UPDATE download_queue SET is_valid = 0 WHERE id = %s"
+        self.cursor.execute(command, (download_queue_id, ))
+        self.conn.commit()
+    

@@ -39,10 +39,12 @@ def modify_list_content():
 
         # perform the action -> either add or remove
         if user_action == 'add_to_list':
+            invalidate_download_queue(list_id, "list_download", conn)
             conn.add_variant_to_list(list_id, variant_id)
             flash({"message": "Successfully inserted variant to the list. You can view your list",
                "link": url_for('user.my_lists', view=list_id)}, "alert-success")
         elif user_action == 'remove_from_list':
+            invalidate_download_queue(list_id, "list_download", conn)
             conn.delete_variant_from_list(list_id, variant_id)
             flash({"message": "Successfully removed variant from the list. You can view your list",
                "link": url_for('user.my_lists', view=list_id)}, "alert-success")
@@ -117,6 +119,7 @@ def my_lists():
                 list_permissions = conn.check_list_permission(user_id, list_id)
                 if not list_permissions['owner']:
                     return abort(403)
+            invalidate_download_queue(list_id, "list_download", conn)
             conn.delete_user_variant_list(list_id)
             flash("Successfully removed list", "alert-success flash_id:list_delete_success")
             current_app.logger.info(session['user']['preferred_username'] + " successfully deleted list " + str(list_id)) 
@@ -163,6 +166,7 @@ def my_lists():
                 list_permissions = conn.check_list_permission(user_id, target_list_id)
                 if not list_permissions["edit"]:
                     return abort(403)
+                invalidate_download_queue(list_id, "list_download", conn)
                 conn.intersect_lists(first_list_id = list_id, second_list_id = other_list_id, target_list_id = target_list_id)
                 flash("Successfully intersected the two lists", 'alert-success flash_id:intersect_list_success')
             return redirect(url_for('user.my_lists', view=target_list_id))
@@ -189,6 +193,7 @@ def my_lists():
                 list_permissions = conn.check_list_permission(user_id, target_list_id)
                 if not list_permissions["edit"]:
                     return abort(403)
+                invalidate_download_queue(list_id, "list_download", conn)
                 conn.subtract_lists(first_list_id = list_id, second_list_id = other_list_id, target_list_id = target_list_id)
                 flash("Successfully subtracted the two lists", 'alert-success flash_id:subtract_list_success')
             return redirect(url_for('user.my_lists', view=target_list_id))
@@ -215,6 +220,7 @@ def my_lists():
                 list_permissions = conn.check_list_permission(user_id, target_list_id)
                 if not list_permissions["edit"]:
                     return abort(403)
+                invalidate_download_queue(list_id, "list_download", conn)
                 conn.add_lists(first_list_id = list_id, second_list_id = other_list_id, target_list_id = target_list_id)
                 flash("Successfully added the two lists", 'alert-success flash_id:add_list_success')
             return redirect(url_for('user.my_lists', view=target_list_id))

@@ -113,6 +113,12 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         conn.set_annotation_queue_status(annotation_queue_id, status="progress")
         print("processing request " + str(annotation_queue_id)  + " annotating variant: " + "-".join([variant.chrom, str(variant.pos), variant.ref, variant.alt]) + " with id: " + str(variant.id) )
 
+        # invalidate variant list download vcf files
+        list_ids = conn.get_list_ids_with_variant(variant_id)
+        for list_id in list_ids:
+            download_queue_ids = conn.get_valid_download_queue_ids(list_id, "list_download")
+            for download_queue_id in download_queue_ids:
+                conn.invalidate_download_queue(download_queue_id)
 
         # write a vcf with the current variant to disc
         vcf_path = get_temp_vcf_path(annotation_queue_id)

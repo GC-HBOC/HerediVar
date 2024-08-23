@@ -75,11 +75,10 @@
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="options_dropdown">
                             <li>
-                                <a href="{{ url_for('download.variant_list', list_id=request.args.get('view')) }}" class="dropdown-item">Export list to VCF</a>
+                                <button id="generate_list_vcf_button" class="dropdown-item">Generate list VCF</button>
                             </li>
                             <li>
-                                <button id="export_to_vcf_button" class="dropdown-item">Export AJAX</button>
-                                <a id="export_to_vcf_worker" href="{{ url_for('download.variant_list', list_id=request.args.get('view')) }}" class="visually_hidden" download>Export list to VCF</a>
+                                <a href="{{ url_for('download.variant_list', list_id=request.args.get('view')) }}" class="dropdown-item">Download list VCF</a>
                             </li>
                             <li>
                                 <a href="{{ url_for('upload.publish', list_id = request.args.get('view', ''), next = url_for('user.my_lists', view = request.args.get('view'))) }}" class="dropdown-item">Publish</a>
@@ -113,13 +112,19 @@
                             <span class="badge rounded-pill bg-warning" data-bs-toggle="tooltip" title="Most recent import yielded an error: {{ list_import_status[3] }}. Retrying soon.">Import retry</span>
                         {% endif %}
                         {% if list_import_status[1] == 'aborted' %}
-                            <span class="badge rounded-pill bg-danger" data-bs-toggle="tooltip" title="The import was aborted by a superuser. It is recommended to restart the import.">Import aborted</span>
+                            <span class="badge rounded-pill bg-warning" data-bs-toggle="tooltip" title="The import was aborted by a superuser. It is recommended to restart the import.">Import aborted</span>
                         {% endif %}
                         {% if list_import_status[1] == 'progress' %}
-                            <span class="badge rounded-pill bg-primary" data-bs-toggle="tooltip" title="The variant import is processed in the background please wait until it is finished. Refresh this page to see if it is ready.">Import progress</span>
+                            <span class="badge rounded-pill bg-primary" data-bs-toggle="tooltip" title="The variant import is processed in the background. Please wait until it is finished. Refresh this page to see if it is ready.">Import progress</span>
                         {% endif %}
                     </div>
                     {% endif %}
+                    <div id="vcf_gen_pill_holder" class="ssb">
+                        <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="Fetching annotation status">
+                            loading annotation status <div class="spinner-border spinner_text_height" role="status"></div>
+                        </span>
+                    </div>
+
                 </div>
                 {{ macros.draw_paginated_variant_table(pagination, variants, static_information) }}
             {% else %}
@@ -194,7 +199,9 @@
     data-page='{{ request.args.get("page", 1) }}'
     data-page-size='{{ request.args.get("page_size", 20)}}'
     data-delete-action='{{url_for("user.modify_list_content", selected_list_id=request.args.get("view", ""), action="remove_from_list", next=url_for("user.my_lists", view=request.args.get("view", "")))}}'
-    data-view-list='{{request.args.get('view')}}'
+    data-generate-list-vcf-url='{{ url_for("download.generate_variant_list_vcf", list_id=request.args.get("view")) }}'
+    data-generate-list-vcf-status-url='{{ url_for("download.generate_variant_list_vcf_status", list_id=request.args.get("view")) }}'
+    
 />
 
 

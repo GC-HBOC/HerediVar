@@ -850,7 +850,7 @@ def abort_annotation_tasks(annotation_requests, conn:Connection):
 
 def abort_annotation_task(annotation_queue_id, celery_task_id, conn:Connection):
     if annotation_queue_id is not None:
-        celery.control.revoke(celery_task_id, terminate = True)
+        abort_task(celery_task_id)
 
         #row_id, status, error_msg
         conn.update_annotation_queue(annotation_queue_id, "aborted", "")
@@ -859,7 +859,8 @@ def abort_annotation_task(annotation_queue_id, celery_task_id, conn:Connection):
 def purge_celery():
     celery.control.purge()
 
-
+def abort_task(celery_task_id):
+    celery.control.revoke(celery_task_id, terminate = True)
 
 
 

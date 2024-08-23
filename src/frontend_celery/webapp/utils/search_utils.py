@@ -188,6 +188,24 @@ def extract_automatic_classifications(request_args, allowed_classes, which):
     return automatic_classifications
 
 
+def extract_clinvar_upload_states(request_args, allowed_upload_states):
+    regex_inner = '|'.join(allowed_upload_states)
+    clinvar_upload_states = request_args.get('clinvar_upload_state', '')
+    clinvar_upload_states = preprocess_query(clinvar_upload_states, r'(' + regex_inner + r')?')
+    if clinvar_upload_states is None:
+        flash("You have an error in your clinvar upload state query(s). Must be one of " + str(allowed_upload_states) + " Results are not filtered by clinvar upload states.", "alert-danger")
+    return clinvar_upload_states
+
+
+def extract_heredicare_upload_states(request_args, allowed_upload_states):
+    regex_inner = '|'.join(allowed_upload_states)
+    heredicare_upload_states = request_args.get('heredicare_upload_state', '')
+    heredicare_upload_states = preprocess_query(heredicare_upload_states, r'(' + regex_inner + r')?')
+    if heredicare_upload_states is None:
+        flash("You have an error in your heredicare upload state query(s). Must be one of " + str(allowed_upload_states) + " Results are not filtered by heredicare upload states.", "alert-danger")
+    return heredicare_upload_states
+
+
 def extract_hgvs(request_args):
     hgvs = request_args.get('hgvs', '')
     hgvs = preprocess_query(hgvs, pattern = r".*:?c\..+") 
@@ -480,8 +498,13 @@ def get_static_search_information(user_id, conn: Connection):
     annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
     annotation_types = preprocess_annotation_types_for_search(annotation_types)
     lists = conn.get_lists_for_user(user_id)
+    allowed_clinvar_upload_states = conn.get_unique_publish_clinvar_queue_status()
+    allowed_heredicare_upload_states = conn.get_enumtypes('publish_heredicare_queue', 'status')
+    if 'skipped' in allowed_heredicare_upload_states:
+        allowed_heredicare_upload_states.remove('skipped')
     return {'sort_bys': sort_bys, 'page_sizes': page_sizes, 'allowed_user_classes': allowed_user_classes, 'allowed_consensus_classes': allowed_consensus_classes, 'allowed_automatic_classes': allowed_automatic_classes,
-            'annotation_types': annotation_types, 'allowed_variant_types': allowed_variant_types, 'default_page_size': default_page_size, 'default_sort_by': default_sort_by, 'default_page': default_page, 'lists': lists}
+            'annotation_types': annotation_types, 'allowed_variant_types': allowed_variant_types, 'default_page_size': default_page_size, 'default_sort_by': default_sort_by, 'default_page': default_page, 'lists': lists,
+            'allowed_clinvar_upload_states': allowed_clinvar_upload_states, "allowed_heredicare_upload_states": allowed_heredicare_upload_states}
 
 
 
@@ -500,6 +523,8 @@ def get_merged_variant_page(request_args, user_id, static_information, conn:Conn
     external_ids = extract_external_ids(request_args)
     cdna_ranges = extract_cdna_ranges(request_args)
     annotation_restrictions = extract_annotations(request_args, conn)
+    clinvar_upload_states = extract_clinvar_upload_states(request_args, static_information['allowed_clinvar_upload_states'])
+    heredicare_upload_states = extract_heredicare_upload_states(request_args, static_information['allowed_heredicare_upload_states'])
 
     variant_ids_oi = extract_lookup_list(request_args, user_id, conn)
     view_list_id = request_args.get('view', None)
@@ -556,7 +581,9 @@ def get_merged_variant_page(request_args, user_id, static_information, conn:Conn
         cdna_ranges = cdna_ranges,
         annotation_restrictions = annotation_restrictions,
         variant_strings = variant_strings,
-        variant_types = variant_types
+        variant_types = variant_types,
+        clinvar_upload_states = clinvar_upload_states,
+        heredicare_upload_states = heredicare_upload_states
     )
 
     return variants, total, page, selected_page_size

@@ -299,6 +299,9 @@ def classify(variant_id):
     # either redirect or show the webpage depending on success of submission / page reload
     if do_redirect: # do redirect if the submission was successful
         current_app.logger.info(session['user']['preferred_username'] + " successfully user-classified variant " + str(variant_id) + " with class " + str(classification))
+        list_ids = conn.get_list_ids_with_variant(variant_id) # invalidate list vcfs
+        for list_id in list_ids:
+            invalidate_download_queue(list_id, "list_download", conn)
         return redirect(url_for('variant.classify', variant_id = variant_id))
     else:
         return render_template('variant/classify.html',
@@ -388,6 +391,9 @@ def consensus_classify(variant_id):
 
     if do_redirect: # do redirect if the submission was successful
         current_app.logger.info(session['user']['preferred_username'] + " successfully consensus-classified variant " + str(variant_id) + " with class " + str(classification) + " from scheme_id " + str(scheme_id))
+        list_ids = conn.get_list_ids_with_variant(variant_id) # invalidate list vcfs
+        for list_id in list_ids:
+            invalidate_download_queue(list_id, "list_download", conn)
         return redirect(url_for('variant.consensus_classify', variant_id=variant_id))
     else:
         return render_template('variant/classify.html', 

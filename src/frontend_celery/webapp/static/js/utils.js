@@ -670,3 +670,21 @@ function remove_tooltip(element) {
     element.removeAttribute('data-bs-title')
     $(element).tooltip('dispose')
 }
+
+
+
+// utility for showing/updating the current status
+function show_status(color_class, tooltip_text, inner_text, pill_holder_id, pill_id) {
+    $('#' + pill_id).tooltip('hide') // hide tooltip in case it is shown - prevents persisting tooltips on update
+    var pill_holder = document.getElementById(pill_holder_id)
+    pill_holder.innerHTML = "" // delete previous pill
+    var status_pill = document.createElement('span')
+    status_pill.classList.add('badge')
+    status_pill.classList.add('rounded-pill')
+    status_pill.classList.add(color_class)
+    status_pill.setAttribute('data-bs-toggle', "tooltip")
+    status_pill.setAttribute('title', tooltip_text)
+    status_pill.id=pill_id
+    status_pill.innerText = inner_text
+    pill_holder.appendChild(status_pill) // add new pill
+}

@@ -669,7 +669,37 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
 
+                    <div class="form-group sst d-flex">
+                        <div>
+                            {% set selected_clinvar_upload_state = request.args.getlist('clinvar_upload_state') %}
+                            <label for="user-select" class="form-label">ClinVar upload state</label>
+                            <div id="user-select" class="d-flex">
+                                {% for s in static_information['allowed_clinvar_upload_states'] %}
+                                    <div class="form-check d-flex bsr align-items-center">
+                                        <input class="form-check-input ssr" type="checkbox" value="{{s}}" id="cus{{s}}" name="clinvar_upload_state" {% if s in selected_clinvar_upload_state %}checked{% endif %}>
+                                        <label class="form-check-label" for="cus{{s}}">{{s}}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+
+                        <div class="bsl bsr"></div>
+
+                        <div>
+                            {% set selected_heredicare_upload_state = request.args.getlist('heredicare_upload_state') %}
+                            <label for="user-select" class="form-label">HerediCaRe upload state</label>
+                            <div id="user-select" class="d-flex">
+                                {% for s in static_information['allowed_heredicare_upload_states'] %}
+                                    <div class="form-check d-flex bsr align-items-center">
+                                        <input class="form-check-input ssr" type="checkbox" value="{{s}}" id="hus{{s}}" name="heredicare_upload_state" {% if s in selected_heredicare_upload_state %}checked{% endif %}>
+                                        <label class="form-check-label" for="hus{{s}}">{{s}}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
 
                     </div>
 

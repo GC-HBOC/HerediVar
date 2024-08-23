@@ -9,6 +9,8 @@ $(document).ready(function()
     const page_size = flask_data.dataset.pageSize 
     const base_delete_action_url = flask_data.dataset.deleteAction
     const view_list = flask_data.dataset.viewList
+    const generate_list_vcf_url = flask_data.dataset.generateListVcfUrl
+    const generate_list_vcf_status_url = flask_data.dataset.generateListVcfStatusUrl
 
     // edit / create button functionality
     $('#list-modal-submit').click(function(){
@@ -17,25 +19,24 @@ $(document).ready(function()
         $('#list-modal-form').submit();
     });
 
-    $('#export_to_vcf_button').click(function(){
+    $('#generate_list_vcf_button').click(function(){
         //document.getElementById("export_to_vcf_worker").click()
-        console.log(view_list)
-        console.log("started")
+        console.log(generate_list_vcf_url)
         $.ajax({
             type: 'GET',
-            url: "/download/vcf/variant_list",
-            data: {'list_id': view_list},
+            url: generate_list_vcf_url,
             success: function(returnval, status, request) {
-                console.log(returnval)
+                show_vcf_gen_status('bg-secondary', "Annotation requested successfully", "Annotation requested")
+                update_vcf_generation_status(generate_list_vcf_status_url);
             },
             error: function(xhr, status, error) {
                 console.log(xhr)
-                console.log(status)
-                console.log(error)
+                show_vcf_gen_status("bg-danger", "The variant could not be annotated. Either the service is unreachable or some other unexpected exception occured. You can try to reload this page or issue another annotation to fix this. If that does not help try again later. Status code is: " + xhr.status, "Internal error")
+                $('#reannotate_button').attr('disabled', false)
             }
         });
-        console.log("after download")
     });
+    update_vcf_generation_status(generate_list_vcf_status_url)
 
     var list_id = $('#current-list-id')[0].innerText
 
@@ -100,6 +101,92 @@ $(document).ready(function()
         }
     })
 });
+
+
+
+
+//<div class="ssb">
+//{% if generate_list_vcf_status is not none %} <!--requested_at, status, finished_at, message, is_valid-->
+//    {% if list_import_status[1] == 'pending' %}
+//        <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="VCF generation requested at {{ generate_list_vcf_status[0] }}. Waiting for worker to pick it up.">VCF gen requested</span>
+//    {% endif %}
+//    {% if list_import_status[1] == 'success' %}
+//        <span class="badge rounded-pill bg-success" data-bs-toggle="tooltip" title="VCF generation requested finished successfully at {{ generate_list_vcf_status[2] }}">VCF gen successful</span>
+//    {% endif %}
+//    {% if list_import_status[1] == 'error' %}
+//        <span class="badge rounded-pill bg-danger" data-bs-toggle="tooltip" title="VCF generation finished at {{ generate_list_vcf_status[2] }} with fatal error {{ generate_list_vcf_status[3] }}">VCF gen error</span>
+//    {% endif %}
+//    {% if list_import_status[1] == 'retry' %}
+//        <span class="badge rounded-pill bg-warning" data-bs-toggle="tooltip" title="VCF generation yielded an error. Retrying soon: {{ generate_list_vcf_status[3] }}">VCF gen retry</span>
+//    {% endif %}
+//    {% if list_import_status[1] == 'aborted' %}
+//        <span class="badge rounded-pill bg-warning" data-bs-toggle="tooltip" title="VCF generation was aborted">VCF gen aborted</span>
+//    {% endif %}
+//    {% if list_import_status[1] == 'progress' %}
+//        <span class="badge rounded-pill bg-primary" data-bs-toggle="tooltip" title="The VCF generation is processed in the background. Please wait until it is finished.">VCF gen aborted</span>
+//    {% endif %}
+//{% else %}
+//    <span class="badge rounded-pill bg-secondary" data-bs-toggle="tooltip" title="VCF generation is required if you want to download the list in VCF format">No VCF</span>
+//{% endif %}
+//</div>
+
+
+// polling & status display update
+function update_vcf_generation_status(status_url) {
+    // send GET request to status URL (defined by flask)
+    $.ajax({
+        type: 'GET',
+        url: status_url,
+        success: function(data, status, request) {
+            console.log(data)
+            if (data === undefined) {
+                show_vcf_gen_status("bg-secondary", "VCF generation is required if you want to download the list in VCF format. You can generate one through the gear button.", "No VCF")
+            } else if (data["is_valid"] == 0) {
+                show_vcf_gen_status("bg-secondary", "VCF generation is required if you want to download the list in VCF format. You can generate one through the gear button.", "No VCF")
+            } else {
+                if (data['status'] == 'pending') {
+                    show_vcf_gen_status("bg-secondary", "VCF generation is queued. This job is waiting for other jobs to finish first.", "VCF gen queued")
+                } else if (data['status'] == 'progress') {
+                    show_vcf_gen_status("bg-primary", "VCF generation is being processed in the background. Please wait for it to finish.", "VCF gen processing")
+                } else if (data['status'] == "success") {
+                    show_vcf_gen_status("bg-success", "VCF generation finished at " + data["finished_at"], "VCF gen success")
+                } else if (data['status'] == "error") {
+                    show_vcf_gen_status("bg-danger", "VCF generation annotation finished at " + data["finished_at"] + " with fatal error: " + data['message'], "VCF gen error")
+                } else if (data['status'] == 'retry') {
+                    show_vcf_gen_status("bg-warning", "Task yielded an error: " + data['error_message'] + ". Will try again soon.", "Retrying VCF gen")
+                } else if (data['status'] == 'aborted') {
+                    show_vcf_gen_status("bg-primary", "This task was manually aborted at " + data['finished_at'], "VCF gen aborted")
+                } else if (data['status'] == 'no_vcf') {
+                    show_vcf_gen_status("bg-secondary", "VCF generation is required if you want to download the list in VCF format. You can generate one through the gear button.", "No VCF")
+                } else {
+                    show_vcf_gen_status("bg-warning", "An unexpected status found: " + data['status'], "Unexpected status")
+                    //$('#reannotate_button').attr('disabled', false);
+                }
+
+                // polling happens here:
+                // rerun in 5 seconds if state resembles an unfinished task
+                if (data['status'] == 'pending' || data['status'] == 'progress' || data['status'] == 'retry') {
+                    setTimeout(function() {
+                        update_vcf_generation_status(status_url);
+                    }, 5000);
+                }
+            }
+        },
+        error: function(xhr) {
+            show_vcf_gen_status("bg-danger", "Unable to fetch the status. Server returned http status " + xhr.status, "Internal error")
+            $('#reannotate_button').attr('disabled', false)
+        }
+    })
+
+}
+
+function show_vcf_gen_status(color_class, tooltip_text, inner_text) {
+    const pill_holder_id = "vcf_gen_pill_holder"
+    const pill_id = "vcf_gen_pill"
+    show_status(color_class, tooltip_text, inner_text, pill_holder_id, pill_id)
+}
+
+
 
 
 

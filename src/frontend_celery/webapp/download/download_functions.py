@@ -53,12 +53,11 @@ def generate_consensus_only_vcf(variant_types, dummy = False):
     variant_ids_oi = []
     if not dummy:
         variant_ids_oi = conn.get_variant_ids_with_consensus_classification(variant_types = variant_types)
-    vcf_file_buffer, status, vcf_errors, err_msg = get_vcf(variant_ids_oi, conn, get_variant_vcf_line_only_consensus, check_vcf=False)
-    if status == "error":
-        raise IOError("There was an error during vcf generation: " + str(vcf_errors) + "; " + err_msg)
-    functions.buffer_to_file_system(vcf_file_buffer, path_to_download)
+    status, message = write_vcf_file(variant_ids_oi, path_to_download, conn, get_variant_vcf_line_only_consensus, check_vcf = False)
     conn.close()
-
+    if status == "error":
+        raise IOError("There was an error during vcf generation: " + str(message))
+    
     with open(last_dump_path, 'w') as last_dump_file:
         last_dump_file.write(last_dump_date)
 
@@ -121,26 +120,70 @@ def get_vcf(variants_oi, conn, worker=get_variant_vcf_line, check_vcf=True):
     return buffer, status, "", ""
 
 
-#import time
-#def test_large_download():
-#    for i in range(50):
-#        yield str(i).encode()
-#        print(i)
-#        time.sleep(1)
-#
-#
-def get_vcf_stream(variants_oi, conn, worker=get_variant_vcf_line):
-    for id in variants_oi:
-        info_headers, variant_vcf = worker(id, conn)
-        yield variant_vcf
-        #all_variant_vcf_lines.append(variant_vcf)
-        #final_info_headers = merge_info_headers(final_info_headers, info_headers)
+
+def write_vcf_file(variant_ids, path, conn: Connection, worker=get_variant_vcf_line, check_vcf = True):
+    status = "success"
+    message = ""
+
+    # write file in reverse to disc
+    generator = get_vcf_stream(variant_ids, conn, worker)
+    with open(path, "w") as file:
+        for line in generator:
+            file.write(line)
+
+    # reverse vcf
+    path2 = path + ".rev"
+    command = ["tac", path]
+    with open(path2, "w") as f:
+        returncode, serr, sout = functions.execute_command(command, "tac", stdout = f)
+    if returncode != 0:
+        status = "error"
+        message = functions.collect_info(message, "", serr)
+        message = functions.collect_info(message, "", sout)
+        functions.rm(path2)
+        return status, message
+    functions.rm(path)
+    returncode, err_msg, command_output = functions.execute_command(["mv", path2, path], "mv")
+    if returncode != 0: return "error", err_msg
     
-    #printable_info_headers = list(final_info_headers.values())
-    #printable_info_headers.sort()
-    #functions.write_vcf_header(printable_info_headers, lambda l: yield_something(l.encode()), tail='\n')
-def yield_something(val):
-    yield val
+    # check vcf
+    if check_vcf:
+        returncode, err_msg, vcf_errors = functions.check_vcf(path)
+        if returncode != 0:
+            status = "error"
+            message = functions.collect_info(message, "", err_msg)
+            message = functions.collect_info(message, "", vcf_errors)
+            return status, message
+
+    return status, message
+
+
+# this is a generator to get a vcf file in reverse order
+def get_vcf_stream(variant_ids, conn, worker=get_variant_vcf_line):
+    final_info_headers = {}
+    for variant_id in variant_ids:
+        info_headers, variant_vcf = worker(variant_id, conn)
+        yield variant_vcf + "\n"
+        final_info_headers = merge_info_headers(final_info_headers, info_headers)
+
+    printable_info_headers = list(final_info_headers.values())
+    printable_info_headers.sort()
+    buffer = io.StringIO()
+    functions.write_vcf_header(printable_info_headers, lambda l: buffer.write(l), tail='\n')
+    buffer.seek(0)
+    for line in reversed(list(buffer)):
+        yield line
+
+
+def stream_file(file_path, remove_after = False):
+    file = open(file_path, 'r')
+    yield from file
+    file.close()
+    if remove_after:
+        os.remove(file_path)
+
+
+
 
 
 

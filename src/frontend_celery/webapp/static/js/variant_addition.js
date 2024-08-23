@@ -153,20 +153,25 @@ function update_annotation_status(status_url, show_reload_modal=false) {
 
 }
 
-
-// utility for showing the current annotation status
 function show_annotation_status(color_class, tooltip_text, inner_text) {
-    $('#annotation_status_pill').tooltip('hide')
-    document.getElementById('annotation_status_pill_holder').innerHTML = ""
-    var status_pill = document.createElement('span')
-    status_pill.classList.add('badge')
-    status_pill.classList.add('rounded-pill')
-    status_pill.classList.add(color_class)
-    status_pill.setAttribute('data-bs-toggle', "tooltip")
-    status_pill.setAttribute('title', tooltip_text)
-    status_pill.innerText = inner_text
-    annotation_status_pill_holder.appendChild(status_pill)
+    const pill_holder_id = "annotation_status_pill_holder"
+    const pill_id = "annotation_status_pill"
+    show_status(color_class, tooltip_text, inner_text, pill_holder_id, pill_id)
 }
+
+//// utility for showing the current annotation status
+//function show_annotation_status(color_class, tooltip_text, inner_text) {
+//    $('#annotation_status_pill').tooltip('hide')
+//    document.getElementById('annotation_status_pill_holder').innerHTML = ""
+//    var status_pill = document.createElement('span')
+//    status_pill.classList.add('badge')
+//    status_pill.classList.add('rounded-pill')
+//    status_pill.classList.add(color_class)
+//    status_pill.setAttribute('data-bs-toggle', "tooltip")
+//    status_pill.setAttribute('title', tooltip_text)
+//    status_pill.innerText = inner_text
+//    annotation_status_pill_holder.appendChild(status_pill)
+//}
 
 
 /////////////////////////////////////////////////

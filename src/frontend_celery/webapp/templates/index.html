@@ -93,16 +93,19 @@
 <div class="bst bsb">
     <h4>Changelog</h4>
 
-    <div class="underline">v 1.13.7 (20.08.2024)</div>
+    <div class="underline">v 1.14 ()</div>
     <div>
         General changes:
         <ul>
             <li>Added ACMG schemes for MMR genes (pms2, mlh1, msh2, msh6)</li>
+            <li>Improved VCF downloads. Variant list VCFs must now be generated seperately prior to downloading. This allows for larger file downloads.</li>
+            <li>Added upload state search</li>
         </ul>
         Bugfixes:
         <ul>
             <li>Fixed some minor issues with HerediCaRe up- and downloads</li>
             <li>Downgraded CrossMap to v0.7.0 because v0.7.3 yields wrong results for specific variants</li>
+            <li>Fixed a bug where the tooltip of status pills would persist if the pill was updated</li>
         </ul>
     </div>
 

@@ -4,10 +4,11 @@ from os import path
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 from common.db_IO import Connection
 import common.functions as functions
+import common.paths as paths
 
 from urllib.parse import urlparse, urljoin
 
-
+from webapp import tasks
 
 # require-* functions
 # they take some data, check the database and abort if conditions are not met
@@ -123,3 +124,28 @@ def strength_to_text(strength, scheme):
             return 'benign'
         if strength == 'bp':
             return 'uncertain'
+        
+
+
+
+def invalidate_download_queue(identifier, request_type, conn: Connection):
+    download_queue_ids = conn.get_valid_download_queue_ids(identifier, request_type)
+
+    for download_queue_id in download_queue_ids:
+        download_queue = conn.get_download_queue(download_queue_id) # requested_at, status, finished_at, message, is_valid, filename, identifier, type
+        filename = download_queue[5]
+        celery_task_id = download_queue[8]
+        status = download_queue[1]
+
+        conn.invalidate_download_queue(download_queue_id)
+
+        # abort task if it is still running
+        if status in ['pending', 'progress', 'retry']:
+            tasks.abort_task(celery_task_id)
+            conn.update_download_queue_status(download_queue_id, "aborted", "")
+
+        # delete file
+        if functions.is_secure_filename(filename):
+            filepath = paths.download_variant_list_dir + "/" + filename
+            functions.rm(filepath)
+
