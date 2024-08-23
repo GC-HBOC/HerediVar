@@ -392,6 +392,24 @@ def insert_variants_vcf_file(vcf_file, genome_build, user_id, import_queue_id, c
     return status, message
 
 
+# this is basically a workaround for a liftover error when the reference base was missing: ex: vid:9476493	chrom:22	pos_hg19:29090030	ref_hg19:GG	alt_hg19:A
+# some of these variants have an erroneous hg38 variant in heredicare. However, when lifting them from hg19 they are recovered correctly
+def skip_hg38(variant) -> bool:
+    chrom = variant.get('CHROM')
+    pos_38 = variant.get('POS_HG38')
+    ref_38 = variant.get('REF_HG38')
+    alt_38 = variant.get('ALT_HG38')
+
+    pos_19 = variant.get('POS_HG19')
+    ref_19 = variant.get('REF_HG19')
+    alt_19 = variant.get('ALT_HG19')
+
+    if all([chrom, pos_38, ref_38, alt_38]):
+        if all([chrom, pos_19, ref_19, alt_19]):
+            if (ref_19[0] != alt_19[0]) and (len(ref_19) > 1 or len(alt_19) > 1) and (len(ref_19) != len(alt_19)):
+                return True
+            
+    return False
 
 
 
@@ -411,7 +429,7 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
     genome_build = "GRCh38"
 
     was_successful = False
-    if all([x is not None for x in [chrom, pos, ref, alt]]):
+    if all([x is not None for x in [chrom, pos, ref, alt]]) and not skip_hg38(variant):
         was_successful, new_message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, insert_variant = insert_variant, perform_annotation=perform_annotation)
         if new_message not in message:
             message = functions.collect_info(message, "hg38_msg=", new_message, sep = " ~~ ")

@@ -1059,8 +1059,10 @@ class Connection:
 
             if len(ids_unknown_source) > 0:
                 placeholders = self.get_placeholders(len(ids_unknown_source))
-                new_constraints.append("id IN (SELECT variant_id FROM variant_ids WHERE external_id IN " + placeholders + " UNION SELECT id FROM variant WHERE id IN " + placeholders + ")")
-                actual_information += tuple(ids_unknown_source) * 2
+                annotation_type_ids_oi = list(self.get_recent_annotation_type_ids().values())
+                annotation_type_id_placeholders = self.get_placeholders(len(annotation_type_ids_oi))
+                new_constraints.append("id IN (SELECT variant_id FROM variant_ids WHERE external_id IN " + placeholders + " AND annotation_type_id IN " + annotation_type_id_placeholders + " UNION SELECT id FROM variant WHERE id IN " + placeholders + ")")
+                actual_information += tuple(ids_unknown_source) + tuple(annotation_type_ids_oi) + tuple(ids_unknown_source)
             new_constraints = ' OR '.join(new_constraints)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
 
@@ -1085,7 +1087,7 @@ class Connection:
             offset = (page - 1) * page_size
             command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
-        print(command % actual_information)
+        #print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 
