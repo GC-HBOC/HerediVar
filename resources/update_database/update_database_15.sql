@@ -33,3 +33,7 @@
 -- 
 -- 
 -- INSERT INTO `HerediVar`.`annotation_type` (`title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`, `is_deleted`) VALUES ('hci_prior', 'HCI prior', 'The prior probability of pathogenicity as reported in the priors HCI website. These range from 0.97 for variants with high probability to damage a donor or acceptor to 0.02 for exonic variants that do not impact a splice junction and are unlikely to create a de novo donor.', 'float', '1', '2024-08-23', 'Pathogenicity', '0', '0');
+
+
+INSERT INTO `HerediVar`.`annotation_type` (`title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`, `is_deleted`) VALUES ('heredicare_vid', 'HerediCare VID', 'The VID from HerediCare.The version_date is inaccurate. They are always up to date when reimporting from heredicare.', 'int', '-', '2024-08-23', 'ID', '0', '0');
+INSERT INTO `HerediVar`.`annotation_type` (`title`, `display_title`, `description`, `value_type`, `version`, `version_date`, `group_name`, `is_transcript_specific`, `is_deleted`) VALUES ('heredicare', 'HerediCare', 'The HerediCaRe annotation. Including LR scores and n_pat and n_fam', 'text', '-', '2024-08-23', 'None', '0', '0');
