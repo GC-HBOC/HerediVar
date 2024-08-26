@@ -3,7 +3,7 @@
     "version": "v1.0.0",
     "display_name": "ClinGen InSiGHT ACMG MSH6 v1.0.0",
     "type": "acmg-enigma-msh6",
-    "reference": "#",
+    "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/fcwbswco/clingen_msh6_v1.0.0.pdf/?format=attachment",
     "aliases": [],
     "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
     "criteria": [
