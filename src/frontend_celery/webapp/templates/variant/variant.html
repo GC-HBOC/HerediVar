@@ -35,7 +35,7 @@
                 {% if clinvar_queue_entry_summary["status"] not in ["skipped", "unknown"] %}
                     {% set mrcc = variant.get_recent_consensus_classification() %}
                     {% if mrcc is not none %}
-                        {% if mrcc.needs_clinvar_upload and clinvar_queue_entry_summary["status"] not in ["progress", "processing", "submitted", "pending", "waiting", "requesting"] %}
+                        {% if mrcc.needs_clinvar_upload and clinvar_queue_entry_summary["status"] not in ["progress", "processing", "submitted", "pending", "waiting", "requesting", "multiple stati"] %}
                             {{macros.draw_exclamation_mark("The consensus classification needs to be uploaded to ClinVar!")}}
                         {% endif %}
                     {% endif %}
@@ -87,7 +87,7 @@
                 {% if heredicare_queue_entry_summary["status"] not in ["skipped", "unknown"] %}
                     {% set mrcc = variant.get_recent_consensus_classification() %}
                     {% if mrcc is not none %}
-                        {% if mrcc.needs_heredicare_upload and heredicare_queue_entry_summary["status"] in ["error", "api_error", "success", "waiting", "requested"] %}
+                        {% if mrcc.needs_heredicare_upload and heredicare_queue_entry_summary["status"] in ["error", "api_error", "success", "waiting", "requested", "multiple stati"] %}
                             {{macros.draw_exclamation_mark("The consensus classification needs to be uploaded to HerediCaRe!")}}
                         {% endif %}
                     {% endif %}
@@ -154,8 +154,16 @@
                 <button id="publish_button" type="button" class="dropdown-item" data-href="{{url_for('upload.publish', variant_ids = variant.id, next = url_for('variant.display', variant_id = variant.id))}}" 
                 data-bs-toggle="tooltip" title="Publish this variant and selected data to external databases." {% if mrcc is none %}disabled="disabled"{% endif %}>
                     Publish
-            </button>
+                </button>
             </li>
+            {% if 'super_user' in session['user']['roles'] %}
+            <li>
+                <a id="add_clinvar_button" class="dropdown-item" href="{{url_for('upload.edit_clinvar_submissions', variant_id = variant.id)}}" 
+                data-bs-toggle="tooltip"  title="Manually insert an external ClinVar submission.">
+                    External ClinVar submission
+                </a>
+            </li>
+            {% endif %}
             {% endif %}
             <li>
                 <a id="vcf_export_button" type="button" class="dropdown-item" href="{{url_for('download.variant', variant_id = variant.id)}}" 

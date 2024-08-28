@@ -147,6 +147,7 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     most_recent_publish_queue = conn.get_most_recent_publish_queue(variant_id = variant_id, upload_heredicare = True)
     publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_heredicare(variant_id)
     heredicare_queue_entries = check_update_heredicare_status(variant_id, publish_queue_ids_oi, conn)
+    #most_recent_heredicare_queue_entries = conn.get_heredicare_queue_entries([most_recent_publish_queue.id], variant_id)
     heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(heredicare_queue_entries, most_recent_publish_queue)
 
     # get the variant and all its annotations

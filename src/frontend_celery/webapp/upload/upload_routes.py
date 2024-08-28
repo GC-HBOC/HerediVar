@@ -91,3 +91,56 @@ def submit_assay(variant_id):
             invalidate_download_queue(list_id, "list_download", conn)
         return redirect(url_for('upload.submit_assay', variant_id = variant_id))
     return render_template('upload/submit_assay.html', assay_types = assay_types)
+
+
+
+@upload_blueprint.route('/upload/clinvar_submissions/<int:variant_id>', methods=['GET', 'POST'])
+@require_permission(['admin_resources'])
+def edit_clinvar_submissions(variant_id):
+    conn = get_connection()
+
+    require_valid(variant_id, "variant", conn)
+
+    variant = conn.get_variant(variant_id)
+    clinvar_submissions = conn.get_clinvar_queue_entries(None, variant_id = variant_id)
+
+    do_redirect = False
+
+    if request.method == 'POST':
+        submission_type = request.form.get('submission_type', "")
+
+        if submission_type == "add":
+            clinvar_interface = ClinVar()
+            submission_id = request.form.get('submission_id', "").strip()
+            if not submission_id:
+                flash("The ClinVar submission id is required.", "alert-danger")
+            else:
+                submission_status = clinvar_interface.get_clinvar_submission_status(submission_id)
+                if submission_status is None:
+                    flash("The status of the submission id could not be fetched. This usually happens when the ClinVar submission ID is incorrect. It is also possible that the ClinVar API is unreachable. In this case try again later.", "alert-danger")
+                elif submission_status['status'] == 'error':
+                    flash("The submission status of the submission id is error with message: " + str(submission_status['message'], "alert-danger"))
+                else:
+                    publish_queue_id = conn.insert_publish_request(session['user']['user_id'], upload_heredicare = False, upload_clinvar = True, variant_ids = [variant_id])
+                    conn.update_publish_queue_status(publish_queue_id, status = "success", message = "")
+                    publish_clinvar_queue_id = conn.insert_publish_clinvar_request(publish_queue_id, variant_id, manually_added = True)
+                    conn.update_publish_clinvar_queue_status(publish_clinvar_queue_id, status = "submitted", message = "", submission_id = submission_id)
+                    do_redirect = True
+                    flash("Successfully added ClinVar submission to HerediVar", "alert-success")
+        elif submission_type == "delete":
+            publish_clinvar_queue_id = request.form.get('publish_clinvar_queue_id', "")
+            require_valid(publish_clinvar_queue_id, "publish_clinvar_queue", conn)
+            if not conn.is_manual_publish_clinvar_queue(publish_clinvar_queue_id):
+                flash("Only manually added ClinVar submissions can be deleted.", "alert-danger")
+            else:
+                conn.update_publish_clinvar_queue_status(publish_clinvar_queue_id, status = "deleted", message = "Manually deleted by " + str(get_preferred_username()))
+                flash("Successfully removed ClinVar submission", "alert-success")
+                do_redirect = True
+        else:
+            flash("Invalid submission type: " + str(submission_type), "alert-danger")
+
+    if do_redirect:
+        return redirect(url_for('variant.display', variant_id = variant_id))
+    return render_template('upload/edit_clinvar_submissions.html', variant = variant, clinvar_submissions = clinvar_submissions)
+
+

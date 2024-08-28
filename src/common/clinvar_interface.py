@@ -158,6 +158,7 @@ class ClinVar(metaclass=Singleton):
                 "data": {"content": data}
             }]
         }
+        print(postable_data)
         return postable_data
 
     def post_consensus_classification(self, variant, selected_gene, clinvar_accession):
@@ -234,3 +235,4 @@ class ClinVar(metaclass=Singleton):
                 submission_status['message'] = clinvar_submission_message
 
         return submission_status
+

@@ -107,6 +107,7 @@ def start_upload_one_variant_clinvar(variant_id, publish_queue_id, options, user
     clinvar_accession = None
     publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_clinvar(variant_id)
     previous_clinvar_submissions = check_update_clinvar_status(variant_id, publish_queue_ids_oi, conn) # is None if there is no previous clinvar accession
+    #print(previous_clinvar_submissions)
     if previous_clinvar_submissions is not None:
         for previous_clinvar_submission in previous_clinvar_submissions:
             clinvar_accession = previous_clinvar_submission[6] # while we are at it also grab the accession_id if there is one (in case this is an update)

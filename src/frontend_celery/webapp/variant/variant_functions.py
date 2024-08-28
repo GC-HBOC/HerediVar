@@ -311,66 +311,113 @@ def handle_selected_literature(previous_selected_literature, classification_id, 
 
 
 
-
+#heredicare_queue_entries: ALL heredicare queue entries until error or success is hit
+#publish_queue_heredicare_queue_entries: ONLY entries of publish_queue
 def summarize_heredicare_status(heredicare_queue_entries, publish_queue):
     summary = {"status": "unknown", "max_requested_at": "unknown", "insert_tasks_message": ""}
-    if publish_queue is not None:
-        if heredicare_queue_entries is not None:
-            all_skipped = True
-            for heredicare_queue_entry in heredicare_queue_entries:
-                current_status = heredicare_queue_entry[1]
-                current_requested_at = heredicare_queue_entry[2]
-                if current_status == 'skipped':
-                    continue
-                all_skipped = False
-                if summary["status"] == "unknown":
-                    summary["status"] = current_status
-                elif summary["status"] != current_status:
-                    summary["status"] = "multiple stati"
-                
-                if summary["max_requested_at"] == "unknown":
-                    summary["max_requested_at"] = current_requested_at
-                elif summary["max_requested_at"] < current_requested_at:
-                    summary["max_requested_at"] = current_requested_at
-            if all_skipped:
-                summary["status"] = "skipped"
-        else:
-            if publish_queue.status == 'error':
+
+    if publish_queue is not None: # fresh upload - preferred
+        prefer_publish_queue_status = True
+        if publish_queue.insert_tasks_status in ["pending"]:
+            summary["status"] = "waiting"
+        elif publish_queue.insert_tasks_status in ["progress", "error"]:
+            if heredicare_queue_entries is not None:
+                for entry in heredicare_queue_entries: # id, status, requested_at, finished_at, message, vid, variant_id, submission_id, consensus_classification_id, publish_queue_id
+                    if entry[9] == publish_queue.id: # current publish queue already issued job(s) for this variant
+                        prefer_publish_queue_status = False
+            if prefer_publish_queue_status and publish_queue.insert_tasks_status == "progress":
+                summary["status"] = "requesting"
+            if prefer_publish_queue_status and publish_queue.insert_tasks_status == "error":
                 summary["status"] = "error"
                 summary["insert_tasks_message"] = publish_queue.insert_tasks_message
-            elif publish_queue.insert_tasks_status == 'pending':
-                summary["status"] = "waiting"
-            elif publish_queue.insert_tasks_status == 'progress':
-                summary["status"] = "requesting"
+        elif publish_queue.insert_tasks_status in ["success"]:
+            prefer_publish_queue_status = False
+        if not prefer_publish_queue_status:
+            if heredicare_queue_entries is not None: # prefer the status of the heredicare submission if they are available
+                all_skipped = True
+                for heredicare_queue_entry in heredicare_queue_entries:
+                    current_status = heredicare_queue_entry[1]
+                    current_requested_at = heredicare_queue_entry[2]
+                    if current_status == 'skipped':
+                        continue
+                    all_skipped = False
+                    if summary["status"] == "unknown":
+                        summary["status"] = current_status
+                    elif summary["status"] != current_status:
+                        summary["status"] = "multiple stati"
+
+                    if summary["max_requested_at"] == "unknown":
+                        summary["max_requested_at"] = current_requested_at
+                    elif summary["max_requested_at"] < current_requested_at:
+                        summary["max_requested_at"] = current_requested_at
+                if all_skipped:
+                    summary["status"] = "skipped"
+
+    #print(publish_queue)
+    #print(heredicare_queue_entries)
+    #print(summary)
 
     return summary
 
 
 
 def summarize_clinvar_status(clinvar_queue_entries, publish_queue):
+
     summary = {"status": "unknown", "insert_tasks_message": ""}
-    if publish_queue is not None:
-        if clinvar_queue_entries is not None:
-            all_skipped = True
-            for clinvar_queue_entry in clinvar_queue_entries:
-                current_status = clinvar_queue_entry[3]
-                if current_status == 'skipped':
-                    continue
-                all_skipped = False
-                if summary["status"] == "unknown":
-                    summary["status"] = current_status
-                elif summary["status"] != current_status:
-                    summary["status"] = "multiple stati"
-            if all_skipped:
-                summary["status"] = "skipped"
-        else:
-            if publish_queue.status == 'error':
+
+    if publish_queue is not None: # fresh upload - preferred
+        prefer_publish_queue_status = True
+        if publish_queue.insert_tasks_status in ["pending"]:
+            summary["status"] = "waiting"
+        elif publish_queue.insert_tasks_status in ["progress", "error"]:
+            if clinvar_queue_entries is not None:
+                for entry in clinvar_queue_entries: # id, status, requested_at, finished_at, message, vid, variant_id, submission_id, consensus_classification_id, publish_queue_id
+                    if entry[1] == publish_queue.id: # current publish queue already issued job(s) for this variant
+                        prefer_publish_queue_status = False
+            if prefer_publish_queue_status and publish_queue.insert_tasks_status == "progress":
+                summary["status"] = "requesting"
+            if prefer_publish_queue_status and publish_queue.insert_tasks_status == "error":
                 summary["status"] = "error"
                 summary["insert_tasks_message"] = publish_queue.insert_tasks_message
-            if publish_queue.insert_tasks_status == 'pending':
-                summary["status"] = "waiting"
-            elif publish_queue.insert_tasks_status == 'progress':
-                summary["status"] = "requesting"
+        elif publish_queue.insert_tasks_status in ["success"]:
+            prefer_publish_queue_status = False
+        if not prefer_publish_queue_status:
+            if clinvar_queue_entries is not None: # prefer the status of the heredicare submission if they are available
+                all_skipped = True
+                for entry in clinvar_queue_entries:
+                    current_status = entry[3]
+                    if current_status == 'skipped':
+                        continue
+                    all_skipped = False
+                    if summary["status"] == "unknown":
+                        summary["status"] = current_status
+                    elif summary["status"] != current_status:
+                        summary["status"] = "multiple stati"
+                if all_skipped:
+                    summary["status"] = "skipped"
+
+    #if publish_queue is not None:
+    #    if clinvar_queue_entries is not None:
+    #        all_skipped = True
+    #        for clinvar_queue_entry in clinvar_queue_entries:
+    #            current_status = clinvar_queue_entry[3]
+    #            if current_status == 'skipped':
+    #                continue
+    #            all_skipped = False
+    #            if summary["status"] == "unknown":
+    #                summary["status"] = current_status
+    #            elif summary["status"] != current_status:
+    #                summary["status"] = "multiple stati"
+    #        if all_skipped:
+    #            summary["status"] = "skipped"
+    #    else:
+    #        if publish_queue.status == 'error':
+    #            summary["status"] = "error"
+    #            summary["insert_tasks_message"] = publish_queue.insert_tasks_message
+    #        if publish_queue.insert_tasks_status == 'pending':
+    #            summary["status"] = "waiting"
+    #        elif publish_queue.insert_tasks_status == 'progress':
+    #            summary["status"] = "requesting"
 
     return summary
 

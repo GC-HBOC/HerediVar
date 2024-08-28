@@ -412,6 +412,28 @@ def skip_hg38(variant) -> bool:
     return False
 
 
+def is_sv(variant) -> bool:
+    ref_19 = functions.none2default(variant.get('REF_HG19'), "")
+    alt_19 = functions.none2default(variant.get('ALT_HG19'), "")
+    ref_38 = functions.none2default(variant.get('REF_HG38'), "")
+    alt_38 = functions.none2default(variant.get('ALT_HG38'), "")
+
+    sv_indicators = ["<", ">"]
+    unallowed_sv_indicators = ["g."]
+
+    if any([indicator in ref_19 for indicator in sv_indicators]) and not any([indicator in ref_19 for indicator in unallowed_sv_indicators]):
+        return True
+    if any([indicator in alt_19 for indicator in sv_indicators]) and not any([indicator in alt_19 for indicator in unallowed_sv_indicators]):
+        return True
+    if any([indicator in ref_38 for indicator in sv_indicators]) and not any([indicator in ref_38 for indicator in unallowed_sv_indicators]):
+        return True
+    if any([indicator in alt_38 for indicator in sv_indicators]) and not any([indicator in alt_38 for indicator in unallowed_sv_indicators]):
+        return True
+    if any([len(seq) > 1000 for seq in [ref_19, alt_19, ref_38, alt_38]]):
+        return True
+    
+    return False
+
 
 # this is the main add variant from heredicare function! -> sanitizes and inserts variant
 def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_annotation = True, external_ids = None): # the task worker
@@ -420,6 +442,12 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
     variant_id = None
 
     allowed_sequence_letters = "ACGT"
+
+    if is_sv(variant): # skip structural variants
+        status = "error"
+        message = "Structural variants are not supported for import from HerediCaRe"
+        return status, message
+
 
     # first check if the hg38 information is there
     chrom = variant.get('CHROM')

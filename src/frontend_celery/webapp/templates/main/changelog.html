@@ -9,6 +9,116 @@
 <h1 class="bst"> {% block title %} Changelog {% endblock %} </h1>
 
 
+
+<div class="underline">v 1.13.6 (16.08.2024)</div>
+<div>
+    General changes:
+    <ul>
+        <li>Improved API security</li>
+        <li>Added variant upload and variant check through api</li>
+    </ul>
+    Bugfixes:
+    <ul>
+        <li>Fixed a visual bug when the request to start a new upload to HerediCaRe task was erroneous, but the ClinVar upload was successful</li>
+    </ul>
+</div>
+
+
+<div class="underline">v 1.13.5 (15.08.2024)</div>
+<div>
+    Bugfixes:
+    <ul>
+        <li>When using a non-default redis port background tasks would not work correctly. This was resolved.</li>
+        <li>Fixed a bug when uploading variants to HerediCaRe that are unknown by HerediCaRe</li>
+    </ul>
+</div>
+
+<div class="underline">v 1.13.4 (25.07.2024)</div>
+<div>
+    General changes:
+    <ul>
+        <li>Added full import of HerediCaRe VIDs button to admin dashboard alongside the preexisting incremental update</li>
+        <li>Updated HerediClassify to v1.0.4</li>
+        <li>Improved admin dashboard variant import summary page. It now loads way faster</li>
+    </ul>
+    Bugfixes:
+    <ul>
+        <li>Fixed a rare bug where HerediCaRe VIDs were inconsistently annotated</li>
+        <li>pm2_pp + 1x pvs now correctly classifies as likely benign in ATM v1.3.0 scheme</li>
+        <li>Fixed a bug that the annotation would fail when the consequence annotation tool would not get any consequences from ensembl</li>
+        <li>Very large variants would fail to recieve literature from litvar2 which would result in an erroneous annotation</li>
+    </ul>
+</div>
+
+<div class="underline">v 1.13.3 (23.07.2024)</div>
+<div>
+    Bugfixes:
+    <ul>
+        <li>Searching for specific variants would not apply filters correctly</li>
+    </ul>
+</div>
+
+<div class="underline">v 1.13.2 (22.07.2024)</div>
+<div>
+    General changes:
+    <ul>
+        <li>Added retry import button for single failed HerediCaRe VIDs</li>
+        <li>Improved HerediCaRe VID information page</li>
+        <li>Added more fine grained variant type search: added insertion, deletion and delins. Small variants are now single nucleotide variants.</li>
+    </ul>
+    Bugfixes:
+    <ul>
+        <li>Fixed a bug that CrossMap could not be invoked when lifting between genome versions</li>
+        <li>Variant annotation would fail when the HerediCaRe API returned a bad status code</li>
+        <li>Fixed a bug where variants could not be hidden</li>
+    </ul>
+</div>
+
+<div class="underline">v 1.13.1 (18.07.2024)</div>
+<div>
+    General changes:
+    <ul>
+        <li>Updated ClinVar to version 2024-07-16</li>
+        <li>Updated HerediClassify to version 1.0.3</li>
+        <li>Improved security for flashed messages</li>
+        <li>Added HerediVar link to variant banner on multiple pages</li>
+    </ul>
+    Bugfixes:
+    <ul>
+        <li>Fixed a bug where users were unable to add variants to lists from public editable databases created by another user</li>
+    </ul>
+</div>
+
+<div class="underline">v 1.13 (05.07.2024)</div>
+<div>
+    General changes:
+    <ul>
+        <li>Publish and insert queue history pages are now paginated for better scalability</li>
+        <li>Improved single HerediCaRe VID import</li>
+        <li>Updated PFAM protein domain external links to link to InterPro</li>
+        <li>Increased login idle timer</li>
+        <li>Now the REVEL score of the best transcript is shown first</li>
+        <li>Enabled HerediCaRe uploads</li>
+    </ul>
+    Bugfixes:
+    <ul>
+        <li>Resolved an issue where the consensus classification needs upload warning sign was shown on requested publish status</li>
+        <li>The ClinVar and HerediCaRe status showed status requesting when any variant was uploaded to heredicare/clinvar</li>
+        <li>The ClinVar and HerediCaRe status pills did not show the error message in specific cases</li>
+        <li>Fixed a bug that caused dynamically generated VCFs to not show the download diaglogue</li>
+        <li>Removed wrong chromosome from check variants page</li>
+        <li>Classification criteria were not wrapping properly on the variant history page</li>
+        <li>In specific cases the cancerhotspots annotations were incorrect</li>
+        <li>Fixed an issue when two criteria had the same mutually exclusive criterion target and both were selected. If the use would unselect one of them the mutually exclusive criterion would be enabled for selection even though it shouldn't</li>
+        <li>When a variant was not annotated or did not have any consequences the "no scheme" would be preselected on the variant classify page. Now, the correct selected default classification scheme is selected</li>
+        <li>Fixed an issue where the previous status of ClinVar and HerediCaRe uploads would be shown on the variant display page upon status updates</li>
+        <li>Fixed a bug where sometimes wrong COSMIC links would be generated</li>
+    </ul>
+</div>
+
+
+
+
 <div class="underline">v 1.12 (17.06.2024)</div>
 <div>
     General changes:

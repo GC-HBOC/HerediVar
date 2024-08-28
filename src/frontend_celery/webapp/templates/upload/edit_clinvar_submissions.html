@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+<div class="container">
+
+  
+<h1 class="bst"> {% block title %} Edit ClinVar submissions {% endblock %} </h1>
+
+
+{{ macros.add_variant_banner(variant) }}
+
+
+
+<div class="bst bsb">
+    <h4>Current ClinVar submission history:</h4>
+    <div class="table-responsive tableFixHead">
+        <table class="table table-hover" id="genes_for_clinvar_table">
+            <thead>
+                <tr>
+                    <!-- id, publish_queue_id, requested_at, status, message, submission_id, accession_id, last_updated, celery_task_id, consensus_classification_id, manually_added -->
+                    <th class="width_very_small"><div class="sortable">requested at</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th class="width_very_small"><div class="sortable">last updated</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th class="width_small"><div class="sortable">submission id</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th class="width_small"><div class="sortable">accession id</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+
+                    <th class="width_very_small"><div class="sortable">status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    <th class="width_medium"><div class="sortable">message</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+
+                    <th class="width_very_small"><div class="sortable">manual</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for clinvar_submission in clinvar_submissions %}
+                <tr>
+                    <td>{{clinvar_submission[2]}}</td>
+                    <td>{{clinvar_submission[7]}}</td>
+                    <td>{{clinvar_submission[5]}}</td>
+                    <td>{{clinvar_submission[6]}}</td>
+                    <td>{{clinvar_submission[3]}}</td>
+                    <td>{{clinvar_submission[4]}}</td>
+                    <td>{{clinvar_submission[10]}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<div class="bst bsb">
+    <h4>Add ClinVar submission:</h4>
+    <div class="alert alert-warning">
+        WARNING: Only manually add ClinVar submissions when HerediVar does not know about a specific ClinVar submission. This happens when a submission was done outside of HerediVar through the same organization (eg. the ClinVar submission portal). 
+
+        HerediVar shows an error message upon submitting the same variant to ClinVar that was uploaded elsewhere before. The message is similar to this: "This record is submitted as novel but it should be submitted as an update, including the SCV accession, because your organization previously submitted SCV0000000000 for the same variant and condition."
+
+        You can use the following form to add this unknown ClinVar submission and retry the upload afterwards.
+    </div>
+
+    <form method="post">
+        <div class="form-group sst">
+            <label for="submission_id" class="form-label">ClinVar submission ID</label>
+            <input type="text" pattern="SUB[0-9]+" name="submission_id"
+            placeholder="SUB12345678" class="form-control validationreq"
+            value="{{ request.form.get("submission_id", '') }}" id="submission_id" required>
+            <div class="invalid-feedback">
+                Please provide one ClinVar submission ID (SUBxxxxxxx)
+            </div>
+        </div>
+
+        <div class="form-group sst">
+            <input type="text" name="submission_type" class="visually_hidden"
+            value="add" required>
+        </div>
+
+        <div class="form-group sst">
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </form>
+</div>
+
+
+<div class="bst bsb">
+    <h4>Delete ClinVar submission:</h4>
+    <div class="alert alert-warning">
+        WARNING: Only do this if a manually added ClinVar submission was added falsely
+    </div>
+
+    <form method="post">
+        <div class="table-responsive tableFixHead">
+            <table class="table table-hover" id="genes_for_clinvar_table">
+                <thead>
+                    <tr>
+                        <!-- id, publish_queue_id, requested_at, status, message, submission_id, accession_id, last_updated, celery_task_id, consensus_classification_id, manually_added -->
+                        <th class="width_minimal">select</th>
+
+                        <th class="width_very_small"><div class="sortable">requested at</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_very_small"><div class="sortable">last updated</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_small"><div class="sortable">submission id</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_small"><div class="sortable">accession id</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+    
+                        <th class="width_very_small"><div class="sortable">status</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                        <th class="width_medium"><div class="sortable">message</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+    
+                        <th class="width_very_small"><div class="sortable">manual</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for clinvar_submission in clinvar_submissions %}
+                    {% if clinvar_submission[10] %}
+                    <tr>
+                        <td>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="publish_clinvar_queue_id" value="{{clinvar_submission[0]}}" id="id_{{clinvar_submission[0]}}">
+                            </div>
+                        </td>
+                        <td>{{clinvar_submission[2]}}</td>
+                        <td>{{clinvar_submission[7]}}</td>
+                        <td>{{clinvar_submission[5]}}</td>
+                        <td>{{clinvar_submission[6]}}</td>
+                        <td>{{clinvar_submission[3]}}</td>
+                        <td>{{clinvar_submission[4]}}</td>
+                        <td>{{clinvar_submission[10]}}</td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="form-group sst">
+            <input type="text" name="submission_type" class="visually_hidden"
+            value="delete" required>
+        </div>
+
+        <div class="form-group sst">
+            <button type="submit" class="btn btn-primary">Delete selected</button>
+        </div>
+    </form>
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+{% endblock %}
+
+{% block special_scripts %}
+{% endblock%}

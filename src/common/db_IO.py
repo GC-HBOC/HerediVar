@@ -1447,9 +1447,10 @@ class Connection:
         self.conn.commit()
 
     def update_consensus_classification_needs_clinvar_upload(self, consensus_classification_id):
-        command = "UPDATE consensus_classification SET needs_clinvar_upload = 0 WHERE id = %s"
-        self.cursor.execute(command, (consensus_classification_id, ))
-        self.conn.commit()
+        if consensus_classification_id is not None:
+            command = "UPDATE consensus_classification SET needs_clinvar_upload = 0 WHERE id = %s"
+            self.cursor.execute(command, (consensus_classification_id, ))
+            self.conn.commit()
 
     def get_variant_ids_which_need_heredicare_upload(self, variant_ids_oi = None):
         # excludes structural variants and intergenic variants and variants of unfinished submissions
@@ -3791,7 +3792,7 @@ class Connection:
         if len(publish_queue_ids) == 0:
             return []
         placeholders = self.get_placeholders(len(publish_queue_ids))
-        command = "SELECT id, status, requested_at, finished_at, message, vid, variant_id, submission_id, consensus_classification_id from publish_heredicare_queue WHERE publish_queue_id IN " + placeholders + " AND variant_id = %s"
+        command = "SELECT id, status, requested_at, finished_at, message, vid, variant_id, submission_id, consensus_classification_id, publish_queue_id from publish_heredicare_queue WHERE publish_queue_id IN " + placeholders + " AND variant_id = %s"
         actual_information = tuple(publish_queue_ids) + (variant_id, )
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
@@ -3860,11 +3861,24 @@ class Connection:
 
 
 
-    def insert_publish_clinvar_request(self, publish_queue_id, variant_id):
-        command = "INSERT INTO publish_clinvar_queue (publish_queue_id, variant_id) VALUES (%s, %s)"
-        self.cursor.execute(command, (publish_queue_id, variant_id))
+    def insert_publish_clinvar_request(self, publish_queue_id, variant_id, manually_added = False):
+        command = "INSERT INTO publish_clinvar_queue (publish_queue_id, variant_id, manually_added) VALUES (%s, %s, %s)"
+        self.cursor.execute(command, (publish_queue_id, variant_id, manually_added))
         self.conn.commit()
         return self.get_last_insert_id()
+
+    def is_manual_publish_clinvar_queue(self, publish_queue_id):
+        command = "SELECT EXISTS (SELECT * FROM publish_clinvar_queue WHERE id = %s AND manually_added = 1)"
+        self.cursor.execute(command, (publish_queue_id, ))
+        result = self.cursor.fetchone()[0]
+        if result == 1:
+            return True
+        return False
+
+    #def delete_manual_publish_clinvar_queue(self, publish_clinvar_queue_id):
+    #    command = "DELETE FROM publish_clinvar_queue WHERE manually_added = 1 AND id = %s"
+    #    self.cursor.execute(command, (publish_clinvar_queue_id, ))
+    #    self.conn.commit()
     
     def update_publish_clinvar_queue_celery_task_id(self, publish_clinvar_queue_id, celery_task_id):
         command = "UPDATE publish_clinvar_queue SET celery_task_id = %s WHERE id = %s"
@@ -3903,21 +3917,24 @@ class Connection:
 
 
     def get_most_recent_publish_queue_ids_clinvar(self, variant_id):
-        command = "SELECT DISTINCT publish_queue_id FROM publish_clinvar_queue WHERE variant_id = %s AND id >= (SELECT MAX(id) FROM publish_clinvar_queue WHERE variant_id = %s AND status != 'skipped')"
+        command = "SELECT DISTINCT publish_queue_id FROM publish_clinvar_queue WHERE variant_id = %s AND id >= (SELECT MAX(id) FROM publish_clinvar_queue WHERE variant_id = %s AND status != 'skipped' AND status != 'deleted')"
         self.cursor.execute(command, (variant_id, variant_id))
         result = self.cursor.fetchall()
         if len(result) == 0:
-            command = "SELECT DISTINCT publish_queue_id from publish_clinvar_queue WHERE variant_id = %s AND status = 'skipped'"
+            command = "SELECT DISTINCT publish_queue_id from publish_clinvar_queue WHERE variant_id = %s AND status = 'skipped' AND status != 'deleted'"
             self.cursor.execute(command, (variant_id, ))
             result = self.cursor.fetchall()
         return [x[0] for x in result]
     
     def get_clinvar_queue_entries(self, publish_queue_ids: list, variant_id):
-        if len(publish_queue_ids) == 0:
-            return []
-        placeholders = self.get_placeholders(len(publish_queue_ids))
-        command = "SELECT id, publish_queue_id, requested_at, status, message, submission_id, accession_id, last_updated, celery_task_id, consensus_classification_id FROM publish_clinvar_queue WHERE publish_queue_id IN " + placeholders + " AND variant_id = %s"
-        actual_information = tuple(publish_queue_ids) + (variant_id, )
+        command = "SELECT id, publish_queue_id, requested_at, status, message, submission_id, accession_id, last_updated, celery_task_id, consensus_classification_id, manually_added FROM publish_clinvar_queue WHERE variant_id = %s"
+        actual_information = (variant_id, )
+        if publish_queue_ids is not None:
+            if len(publish_queue_ids) == 0:
+                return []
+            placeholders = self.get_placeholders(len(publish_queue_ids))
+            command += " AND publish_queue_id IN " + placeholders
+            actual_information += tuple(publish_queue_ids)
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
         return result

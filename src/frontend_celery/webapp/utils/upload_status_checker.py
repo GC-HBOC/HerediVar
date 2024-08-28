@@ -26,7 +26,7 @@ def check_update_clinvar_status(variant_id, publish_queue_ids_oi: list, conn: Co
 
         # the request is still in process -> check for an update & synchronize heredivar database
         # pull new information from external
-        if (status in ['processing', 'submitted', 'retry', 'process', 'pending'] and submission_id is not None) or force_update:
+        if (status in ['processing', 'submitted', 'retry', 'process', 'pending'] and submission_id is not None) or force_update and status != 'deleted':
             clinvar_interface = ClinVar()
             new_submission_status = clinvar_interface.get_clinvar_submission_status(submission_id)
             status = new_submission_status['status']
@@ -39,10 +39,13 @@ def check_update_clinvar_status(variant_id, publish_queue_ids_oi: list, conn: Co
         clinvar_queue_entries = conn.get_clinvar_queue_entries(publish_queue_ids_oi, variant_id)
 
         # update the respective needs_upload field if a submission chaged to success
-        needs_clinvar_upload = False
+        needs_clinvar_upload = True
         for clinvar_queue_entry in clinvar_queue_entries:
-            if clinvar_queue_entry[3] in ["error"]: #["success", "processed"]:
+            if clinvar_queue_entry[3] in ["success", "processed"]: #["success", "processed"]:
+                needs_clinvar_upload = False
+            else:
                 needs_clinvar_upload = True
+                break
 
         if not needs_clinvar_upload:
             consensus_classification_id = clinvar_queue_entry[9]
@@ -82,10 +85,13 @@ def check_update_heredicare_status(variant_id, publish_queue_ids_oi: list, conn:
         heredicare_queue_entries = conn.get_heredicare_queue_entries(publish_queue_ids_oi, variant_id)
 
         # if an upload was successful update the respective needs_upload field
-        needs_heredicare_upload = False
+        needs_heredicare_upload = True
         for heredicare_queue_entry in heredicare_queue_entries:
-            if heredicare_queue_entry[1] in ["error"]:
+            if heredicare_queue_entry[3] in ["success"]: #["success", "processed"]:
+                needs_heredicare_upload = False
+            else:
                 needs_heredicare_upload = True
+                break
 
         if not needs_heredicare_upload:
             consensus_classification_id = heredicare_queue_entry[8]

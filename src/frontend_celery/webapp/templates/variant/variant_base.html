@@ -59,6 +59,9 @@
         <button class="nav-link active" id="classification-tab" data-bs-toggle="tab" data-bs-target="#classification" type="button" role="tab" aria-controls="classification" aria-selected="true">Classification</button>
     </li>
     <li class="nav-item" role="presentation">
+        <button class="nav-link" id="variant_ids-tab" data-bs-toggle="tab" data-bs-target="#variant_ids" type="button" role="tab" aria-controls="variant_ids" aria-selected="false">Variant IDs</button>
+    </li>
+    <li class="nav-item" role="presentation">
         <button class="nav-link" id="pop_score-tab" data-bs-toggle="tab" data-bs-target="#pop_score" type="button" role="tab" aria-controls="pop_score" aria-selected="false">Population & in-silico annotations</button>
     </li>
     <li class="nav-item" role="presentation">
@@ -384,6 +387,44 @@
 
 
     </div>
+
+
+    <div class="tab-pane fade" id="variant_ids" role="tabpanel" aria-labelledby="variant_ids-tab">
+
+        <!--variant information-->
+        <div class="w-100 ssb">
+            <div class="card noboarder_top">
+                <div class="card-body">
+                    <h4 class="card-subcaption">Variant IDs</h4>
+    
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-border-between">
+                            <thead>
+                                <tr>
+                                    <th class="width_small"></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set external_id_annotations = variant.group_external_ids() %}
+                                {% for group_identifier in external_id_annotations %}
+                                    {{ macros.draw_annotation_group(annotations, external_id_annotations[group_identifier], group_identifier) }}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+    
+                </div>
+            </div>
+        </div>
+    
+    
+    </div>
+    
+
+
+
+
 
     <div class="tab-pane fade" id="consequence" role="tabpanel" aria-labelledby="consequence-tab">
             
