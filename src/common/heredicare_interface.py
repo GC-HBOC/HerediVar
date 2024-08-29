@@ -213,6 +213,7 @@ class Heredicare(metaclass=Singleton):
                 message = "ERROR: HerediCare API endpoint returned an HTTP " + str(resp.status_code) + " in URL: " + str(url)
                 status = "error"
                 current_try += 1
+                print("Retrying " + str(url) + " because of HTTP code: " + str(resp.status_code))
             elif resp.status_code != 200: # any other kind of error
                 message = "ERROR: HerediCare API endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text) + " in URL: " + str(url)
                 status = "error"
