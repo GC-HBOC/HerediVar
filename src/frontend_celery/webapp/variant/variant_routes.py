@@ -137,10 +137,16 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     # get available lists for user
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
+
+    # get the variant and all its annotations
+    variant = conn.get_variant(variant_id)
+    mrcc = variant.get_recent_consensus_classification()
+
     # get current status of clinvar submission
     most_recent_publish_queue = conn.get_most_recent_publish_queue(variant_id = variant_id, upload_clinvar = True)
     publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_clinvar(variant_id)
     clinvar_queue_entries = check_update_clinvar_status(variant_id, publish_queue_ids_oi, conn)
+    clinvar_queue_entry_summary = variant_functions.summarize_clinvar_status(clinvar_queue_entries, most_recent_publish_queue, mrcc)
     
 
     # get current status of heredicare submission
@@ -148,17 +154,9 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_heredicare(variant_id)
     heredicare_queue_entries = check_update_heredicare_status(variant_id, publish_queue_ids_oi, conn)
     #most_recent_heredicare_queue_entries = conn.get_heredicare_queue_entries([most_recent_publish_queue.id], variant_id)
-    
-
-    # get the variant and all its annotations
-    # get this after updating the upload stati to display the most recent status of each upload
-    variant = conn.get_variant(variant_id)
-
-    # summarize the stati for display
-    mrcc = variant.get_recent_consensus_classification()
-    clinvar_queue_entry_summary = variant_functions.summarize_clinvar_status(clinvar_queue_entries, most_recent_publish_queue, mrcc)
     heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(heredicare_queue_entries, most_recent_publish_queue, mrcc)
-
+    
+    
     return render_template('variant/variant.html',
                             lists = lists,
                             variant = variant,
