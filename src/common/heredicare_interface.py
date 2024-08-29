@@ -577,7 +577,7 @@ class Heredicare(metaclass=Singleton):
                 return True
             return False
         pattern = re.compile(regex)
-        result = pattern.match(value)
+        result = pattern.match(json.dumps(value)[1:-1])
         if result is None:
             return False
         return True
@@ -616,6 +616,9 @@ class Heredicare(metaclass=Singleton):
         submission_id = None
 
         post_regexes, status, message = self.get_post_regexes()
+        #if os.environ.get('WEBAPP_ENV', '') == 'dev':
+        #    with open('/mnt/storage2/users/ahdoebm1/HerediVar/src/common/heredicare_interface_debug/post_regexes.json', "w") as f:
+        #        functions.prettyprint_json(post_regexes, f.write)
         if status == "error":
             return data, vid, submission_id, status, message
         
