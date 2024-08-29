@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import re
 import json
 import urllib
+import time
 
 #class Heredicare_Flask():
 #    def __init__(self, app=None):
@@ -195,21 +196,27 @@ class Heredicare(metaclass=Singleton):
         result = []
         url = start_url
         has_next = True
-        while has_next:
+
+        retry = True
+        max_tries = 3
+        backoff_mult = 20
+        current_try = 0
+        while has_next and retry and( current_try <= max_tries):
             status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
             if status == 'error':
                 break
             bearer, timestamp = self.get_saved_bearer(project_type)
             header = {"Authorization": "Bearer " + bearer}
+            time.sleep(current_try * backoff_mult)
             resp = requests.get(url, headers=header)
-            if resp.status_code == 401: # unauthorized
-                message = "ERROR: HerediCare API get post info endpoint returned an HTTP 401, unauthorized error. Attempting retry."
-                status = "retry"
-                break
-            elif resp.status_code != 200: # any other kind of error
-                message = "ERROR: HerediCare API get post info endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text) + " in URL: " + str(url)
+            if resp.status_code in [401, 503]: # unauthorized, service unavailable
+                message = "ERROR: HerediCare API endpoint returned an HTTP " + str(resp.status_code) + " in URL: " + str(url)
                 status = "error"
-                break
+                current_try += 1
+            elif resp.status_code != 200: # any other kind of error
+                message = "ERROR: HerediCare API endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text) + " in URL: " + str(url)
+                status = "error"
+                retry = False
             else: # request was successful
                 resp = resp.json(strict=False)
                 new_items = resp[items_key]
@@ -225,7 +232,9 @@ class Heredicare(metaclass=Singleton):
                         message = "ERROR: response 'hasMore' attribute is true but no 'next' url found."
                         status = "error"
                         has_next = False # prevent infinite loop in case the next url is missing for some reason
-                        break
+                        retry = False
+                else:
+                    retry = False # for safety, has_next is false anyway
         return status, message, result
 
     def get_post_regexes(self):
@@ -311,7 +320,7 @@ class Heredicare(metaclass=Singleton):
             return finished_at, status, message
 
         status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
-        if status == 'api_error':
+        if status == 'error':
             return finished_at, status, message
 
         url = self.get_url(project_type, "submission_status", [str(submission_id)])
@@ -321,7 +330,7 @@ class Heredicare(metaclass=Singleton):
         resp = requests.get(url, headers=header)
         if resp.status_code != 200:
             message = "ERROR: HerediCare API get submission id endpoint endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
-            status = "api_error"
+            status = "retry"
         else: # success
             resp = resp.json(strict=False)
             items = resp["items"]
@@ -661,26 +670,40 @@ class Heredicare(metaclass=Singleton):
         message = ""
         project_type = "upload"
 
-        status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
-        if status == 'error':
-            return status, message        
+        retry = True
+        max_tries = 3
+        backoff_mult = 20
+        current_try = 0
 
-        url = self.get_url(project_type, "send_data")
-        bearer, timestamp = self.get_saved_bearer(project_type)
-        header = {"Authorization": "Bearer " + bearer}
-        resp = requests.post(url, headers=header, data=data)
+        while retry and (current_try <= max_tries):
+            status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
+            if status == 'error':
+                break
+            
+            url = self.get_url(project_type, "send_data")
+            bearer, timestamp = self.get_saved_bearer(project_type)
+            header = {"Authorization": "Bearer " + bearer}
 
-        if resp.status_code == 401: # unauthorized
-            message = "ERROR: HerediCare API post variant data endpoint returned an HTTP 401, unauthorized error. Attempting retry."
-            status = "retry"
-        elif resp.status_code == 555:
-            message = "ERROR: HerediCare API post variant data endpoint returned an HTTP 555 error. Reason: " + urllib.parse.unquote(resp.headers.get("Error-Reason", "not provided"))
-            status = "error"
-        elif resp.status_code != 200:
-            message = "ERROR: HerediCare API post variant data endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
-            status = "error"
-        else: # success
-            print(resp.text)
+            time.sleep(current_try * backoff_mult)
+            resp = requests.post(url, headers=header, data=data)
+
+            if resp.status_code in [401, 503]: # unauthorized, service unavailable --> retry these
+                message = "ERROR: HerediCare API post variant data endpoint returned an HTTP "  + str(resp.status_code)
+                status = "error"
+                current_try += 1
+            elif resp.status_code == 555:
+                message = "ERROR: HerediCare API post variant data endpoint returned an HTTP 555 error. Reason: " + urllib.parse.unquote(resp.headers.get("Error-Reason", "not provided"))
+                status = "error"
+                retry = False
+            elif resp.status_code != 200:
+                message = "ERROR: HerediCare API post variant data endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
+                status = "error"
+                retry = False
+            else: # success
+                status = "success"
+                message = ""
+                retry = False
+                #print(resp.text)
 
         return status, message
 

@@ -313,7 +313,7 @@ def handle_selected_literature(previous_selected_literature, classification_id, 
 
 #heredicare_queue_entries: ALL heredicare queue entries until error or success is hit
 #publish_queue_heredicare_queue_entries: ONLY entries of publish_queue
-def summarize_heredicare_status(heredicare_queue_entries, publish_queue):
+def summarize_heredicare_status(heredicare_queue_entries, publish_queue, mrcc):
     summary = {"status": "unknown", "max_requested_at": "unknown", "insert_tasks_message": ""}
 
     if publish_queue is not None: # fresh upload - preferred

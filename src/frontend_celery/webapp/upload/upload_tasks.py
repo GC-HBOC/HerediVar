@@ -247,7 +247,8 @@ def start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, u
     for vid in heredicare_exclusive_vids:
         heredicare_variant, status, message = heredicare_interface.get_variant(vid)
         if status != 'success':
-            conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "error", message = "Could not fetch vid from heredicare: " + message)
+            publish_heredicare_queue_id = conn.insert_publish_heredicare_request(vid, variant_id, publish_queue_id)
+            conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "skipped", message = "Could not fetch vid from heredicare: " + message)
             return None
         if functions.trim_chr(variant.chrom) == str(functions.trim_chr(heredicare_variant['CHROM'])) and str(variant.pos) == str(heredicare_variant['POS_HG38']) and str(variant.alt) == str(heredicare_variant['ALT_HG38']) and str(variant.ref) == str(heredicare_variant['REF_HG38']) and vid not in vids:
             vids.append(vid)
@@ -267,7 +268,7 @@ def start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, u
         #elif requires_reannotation: # if the variant was reannotated before the last heredicare upload skip the new upload: reason: heredivar might not know that the variant was already inserted and would want to insert it again. or have outdated old data
         #    conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "error", message = "The annotation is older than the last upload to heredicare. Please reannotate first and then upload to HerediCaRe.")
         elif vid_list_status != "success":
-            conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "error", message = "Could not fetch vid list: " + vid_list_message)
+            conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = "skipped", message = "Could not fetch vid list: " + vid_list_message)
         else:
             task = heredicare_upload_one_variant.apply_async(args=[variant_id, vid, user_roles, options, publish_heredicare_queue_id])
             task_id = task.id

@@ -141,18 +141,22 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     most_recent_publish_queue = conn.get_most_recent_publish_queue(variant_id = variant_id, upload_clinvar = True)
     publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_clinvar(variant_id)
     clinvar_queue_entries = check_update_clinvar_status(variant_id, publish_queue_ids_oi, conn)
-    clinvar_queue_entry_summary = variant_functions.summarize_clinvar_status(clinvar_queue_entries, most_recent_publish_queue)
+    
 
     # get current status of heredicare submission
     most_recent_publish_queue = conn.get_most_recent_publish_queue(variant_id = variant_id, upload_heredicare = True)
     publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_heredicare(variant_id)
     heredicare_queue_entries = check_update_heredicare_status(variant_id, publish_queue_ids_oi, conn)
     #most_recent_heredicare_queue_entries = conn.get_heredicare_queue_entries([most_recent_publish_queue.id], variant_id)
-    heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(heredicare_queue_entries, most_recent_publish_queue)
+    
 
     # get the variant and all its annotations
     # get this after updating the upload stati to display the most recent status of each upload
     variant = conn.get_variant(variant_id)
+
+    # summarize the stati for display
+    clinvar_queue_entry_summary = variant_functions.summarize_clinvar_status(clinvar_queue_entries, most_recent_publish_queue)
+    heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(heredicare_queue_entries, most_recent_publish_queue, variant.get_recent_consensus_classification())
 
     return render_template('variant/variant.html',
                             lists = lists,
