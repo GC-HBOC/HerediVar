@@ -155,8 +155,9 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     variant = conn.get_variant(variant_id)
 
     # summarize the stati for display
-    clinvar_queue_entry_summary = variant_functions.summarize_clinvar_status(clinvar_queue_entries, most_recent_publish_queue)
-    heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(heredicare_queue_entries, most_recent_publish_queue, variant.get_recent_consensus_classification())
+    mrcc = variant.get_recent_consensus_classification()
+    clinvar_queue_entry_summary = variant_functions.summarize_clinvar_status(clinvar_queue_entries, most_recent_publish_queue, mrcc)
+    heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(heredicare_queue_entries, most_recent_publish_queue, mrcc)
 
     return render_template('variant/variant.html',
                             lists = lists,
