@@ -380,7 +380,7 @@ def summarize_clinvar_status(clinvar_queue_entries, publish_queue, mrcc):
             if prefer_publish_queue_status and publish_queue.insert_tasks_status == "progress":
                 summary["status"] = "requesting"
             if prefer_publish_queue_status and publish_queue.insert_tasks_status == "error":
-                if mrcc.needs_heredicare_upload:
+                if mrcc.needs_clinvar_upload:
                     summary["status"] = "error"
                     summary["insert_tasks_message"] = publish_queue.insert_tasks_message
                 else:
