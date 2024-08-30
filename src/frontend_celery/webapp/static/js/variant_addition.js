@@ -184,7 +184,7 @@ function update_clinvar_upload_status(url) {
                     show_clinvar_upload_status("bg-secondary", data, "no ClinVar submission")
 
                 } else {
-                    show_clinvar_upload_status("bg-secondary", data, "ClinVar" + data["status"])
+                    show_clinvar_upload_status("bg-secondary", data, "ClinVar " + data["status"])
                 }
             }
         },
@@ -261,7 +261,7 @@ function update_heredicare_upload_status(url) {
                     show_heredicare_upload_status("bg-secondary", data, "no HerediCaRe submission")
 
                 } else {
-                    show_heredicare_upload_status("bg-secondary", data, "HerediCaRe" + data["status"])
+                    show_heredicare_upload_status("bg-secondary", data, "HerediCaRe " + data["status"])
                 }
             }
         },
