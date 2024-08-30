@@ -2,7 +2,6 @@
 from ._job import Job
 import common.paths as paths
 import common.functions as functions
-import os
 from common.heredicare_interface import Heredicare
 import time
 from datetime import datetime
@@ -17,6 +16,7 @@ class heredicare_job(Job):
         self.err_msg = ""
         self.annotation_data = annotation_data
         self.generated_paths = []
+
 
     def do_execution(self, *args, **kwargs):
         result = True
@@ -51,13 +51,10 @@ class heredicare_job(Job):
         err_msg = ""
 
         heredicare_interface = Heredicare()
-        #conn.clear_heredicare_annotation(variant_id)
         
         heredicare_vid_annotation_type_id = conn.get_most_recent_annotation_type_id('heredicare_vid')
         vids = conn.get_external_ids_from_variant_id(variant_id, annotation_type_id=heredicare_vid_annotation_type_id) # the vids are imported from the import variants admin page
         conn.delete_unknown_heredicare_annotations(variant_id) # remove legacy annotations from vids that are deleted now
-
-        #print(vids)
         
         for vid in vids:
             status = "retry"
@@ -85,7 +82,7 @@ class heredicare_job(Job):
                 n_fam = heredicare_variant["N_FAM"]
                 n_pat = heredicare_variant["N_PAT"]
                 consensus_class = heredicare_variant["PATH_TF"] if heredicare_variant["PATH_TF"] != "-1" else None
-                comment = heredicare_variant.get("VUSTF_21", heredicare_variant["VUSTF_15"]) # use vustf21, but if it is missing fallback to vustf15 - fallback can be removed later once the production heredicare api has the vustf21 field
+                comment = heredicare_variant["VUSTF_21"]
                 comment = comment.strip() if comment is not None else None
                 classification_date = heredicare_variant["VUSTF_DATUM"] if heredicare_variant["VUSTF_DATUM"] != '' else None
                 lr_cooc = heredicare_variant["LR_COOC"]
@@ -116,7 +113,6 @@ class heredicare_job(Job):
         return status_code, err_msg
 
 
-
     def preprocess_heredicare_center_classification(self, info):
         if info is None:
             return None, None
@@ -129,4 +125,3 @@ class heredicare_job(Job):
             comment = None
         return classification, comment
 
-        

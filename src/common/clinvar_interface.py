@@ -4,14 +4,10 @@ import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import common.functions as functions
-from common.xml_validator import xml_validator
 from common.singleton import Singleton
 from . import paths
 
-from datetime import datetime, timedelta
-import re
 import json
-import urllib
 import jsonschema
 
 
@@ -26,8 +22,6 @@ class ClinVar(metaclass=Singleton):
             "check_status": "submissions/%s/actions/"
         }
         #print("NEW INSTANCE")
-
-        #os.environ.get('CLINVAR_API_KEY')
 
     def get_url(self, endpoint):
         return "/".join([self.base_url, self.endpoints[endpoint]])
@@ -128,7 +122,6 @@ class ClinVar(metaclass=Singleton):
         clinvar_submission.append(clinvar_submission_properties)
 
         data['germlineSubmission'] = clinvar_submission
-        #print(data)
         return data
 
 
@@ -158,7 +151,6 @@ class ClinVar(metaclass=Singleton):
                 "data": {"content": data}
             }]
         }
-        print(postable_data)
         return postable_data
 
     def post_consensus_classification(self, variant, selected_gene, clinvar_accession):
@@ -192,7 +184,6 @@ class ClinVar(metaclass=Singleton):
             submission_id = resp.json()['id']
         
         return submission_id, status, message
-    
 
 
     # returns None if there was an ERROR

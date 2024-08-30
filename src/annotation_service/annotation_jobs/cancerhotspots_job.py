@@ -4,8 +4,6 @@ from .consequence_job import consequence_job
 import common.paths as paths
 import common.functions as functions
 from common.db_IO import Connection
-import tempfile
-import os
 import re
 
 ## this annotates various information from different vcf files
@@ -55,8 +53,6 @@ class cancerhotspots_job(Job):
         self.status = "success"
 
 
-
-
     def annotate_cancerhotspots(self, variant):
         status_code = 0
         err_msg = ""
@@ -101,8 +97,6 @@ class cancerhotspots_job(Job):
         return '-'.join([gene_name, aa_pos, ref_aa, alt_aa])
 
 
-
-
     def hgvs_p_useful(self, hgvs_p):
         if hgvs_p is None:
             return False
@@ -114,11 +108,6 @@ class cancerhotspots_job(Job):
             return False
         
         return True
-
-
-
-
-
 
 
     def save_to_db(self, result, variant_id, conn):
@@ -144,10 +133,4 @@ class cancerhotspots_job(Job):
 
         conn.insert_variant_annotation(variant_id, recent_annotation_ids['cancerhotspots_ac'], ac)
         conn.insert_variant_annotation(variant_id, recent_annotation_ids['cancerhotspots_af'], af)
-
-
-
-
-
-
 

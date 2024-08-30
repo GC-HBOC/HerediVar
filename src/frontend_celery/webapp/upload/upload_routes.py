@@ -143,4 +143,3 @@ def edit_clinvar_submissions(variant_id):
         return redirect(url_for('variant.display', variant_id = variant_id))
     return render_template('upload/edit_clinvar_submissions.html', variant = variant, clinvar_submissions = clinvar_submissions)
 
-

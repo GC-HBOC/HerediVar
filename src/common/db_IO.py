@@ -1,17 +1,12 @@
-from logging import raiseExceptions
 from os import path
 import sys
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-import mysql.connector
-from mysql.connector import Error
 import common.functions as functions
 import common.models as models
-from operator import itemgetter
-import datetime
-import re
+import mysql.connector
+from mysql.connector import Error
 from functools import cmp_to_key
 import os
-import html # html.escape(s)
 
 
 def get_db_connection(roles):
@@ -67,12 +62,16 @@ class Connection:
         self.cursor.execute("SET NAMES 'utf8'")
         self.cursor.execute("SET CHARACTER SET utf8")
         self.cursor.execute('SET character_set_connection=utf8;')
+        
+
+    def close(self):
+        self.conn.close()
+        self.cursor.close()
 
 
     # This function removes ALL occurances of duplicated items
     def remove_duplicates(self, table, unique_column):
         command = "DELETE FROM " + table + " WHERE " + unique_column + " IN (SELECT * FROM (SELECT " + unique_column + " FROM " + table + " GROUP BY " + unique_column + " HAVING (COUNT(*) > 1)) AS A)"
-        #command = "DELETE FROM " + table + " WHERE " + unique_column + " IN (SELECT * FROM (SELECT %s FROM %s GROUP BY %s HAVING (COUNT(*) > 1)) AS A)"
         self.cursor.execute(command)
         self.conn.commit()
 
@@ -88,14 +87,6 @@ class Connection:
             return None
         return result[0][0] # subset the result as fetching only one column still returns a tuple!
 
-    def close(self):
-        self.conn.close()
-        self.cursor.close()
-
-    #def get_pending_requests(self):
-    #    self.cursor.execute("SELECT id,variant_id,user_id FROM annotation_queue WHERE status = 'pending'")
-    #    pending_variant_ids = self.cursor.fetchall()
-    #    return pending_variant_ids
 
     def get_annotation_queue(self, status = []):
         placeholders = self.get_placeholders(len(status))
@@ -103,7 +94,6 @@ class Connection:
         self.cursor.execute(command, tuple(status))
         result = self.cursor.fetchall()
         return result
-
 
 
     def update_annotation_queue(self, annotation_queue_id, status, error_msg):
@@ -156,11 +146,6 @@ class Connection:
     def insert_variant_consequence(self, variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, symbol, consequence_source):
         columns_with_info = "variant_id, transcript_name, consequence, impact, source"
         actual_information = (variant_id, transcript_name, consequence, impact, consequence_source)
-        #if pfam_acc != '':
-        #    pfam_acc, domain_description = self.get_pfam_description_by_pfam_acc(pfam_acc)
-        #    if domain_description is not None and pfam_acc is not None and domain_description != 'removed':
-        #        columns_with_info = columns_with_info + ", pfam_accession, pfam_description"
-        #        actual_information = actual_information + (pfam_acc, domain_description)
         if hgvs_c != '':
             columns_with_info = columns_with_info + ", hgvs_c"
             actual_information = actual_information + (hgvs_c,)
@@ -177,12 +162,6 @@ class Connection:
             hgnc_id = functions.trim_hgnc(hgnc_id)
             columns_with_info = columns_with_info + ", hgnc_id"
             actual_information = actual_information + (hgnc_id, )
-            #gene_id = self.get_gene_id_by_hgnc_id(hgnc_id)
-            #if gene_id is not None:
-            #    columns_with_info = columns_with_info + ", gene_id"
-            #    actual_information = actual_information + (gene_id,)
-            #else:
-            #    print("WARNING: there was no row in the gene table for hgnc_id " + str(hgnc_id) + ". geneid will be empty even though hgncid was given. Error occured during insertion of variant consequence: " + str(variant_id) + ", " + str(transcript_name) + ", " + str(hgvs_c) + ", " +str(hgvs_p) + ", " +str(consequence) + ", " + str(impact) + ", " + str(exon_nr) + ", " + str(intron_nr) + ", " + str(hgnc_id) + ", " + str(symbol) + ", " + str(consequence_source))
         elif symbol != '':
             gene_id = self.get_gene_id_by_symbol(symbol)
             if gene_id is not None:
@@ -194,10 +173,6 @@ class Connection:
         placeholders = "%s, "*len(actual_information)
         placeholders = placeholders[:len(placeholders)-2]
         command = "INSERT INTO variant_consequence (" + columns_with_info + ") VALUES (" + placeholders + ")"
-        #command = "INSERT INTO variant_consequence (" + columns_with_info + ") \
-        #            SELECT " + placeholders +  " FROM DUAL WHERE NOT EXISTS (SELECT * FROM variant_consequence \
-        #                WHERE " + columns_with_info.replace(', ', '=%s AND ') + '=%s ' + " LIMIT 1)"
-        #actual_information = actual_information * 2
         self.cursor.execute(command, actual_information)
         self.conn.commit()
 
@@ -251,10 +226,6 @@ class Connection:
     
     def insert_variant_annotation(self, variant_id, annotation_type_id, value, supplementary_document = None):
         # supplementary documents are not supported yet! see: https://stackoverflow.com/questions/10729824/how-to-insert-blob-and-clob-files-in-mysql
-        #command = "INSERT INTO variant_annotation (`variant_id`, `annotation_type_id`, `value`) \
-        #           SELECT %s, %s, %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM variant_annotation \
-        #                WHERE `variant_id`=%s AND `annotation_type_id`=%s AND `value`=%s LIMIT 1)"
-        #self.cursor.execute(command, (variant_id, annotation_type_id, value, variant_id, annotation_type_id, value))
         command = "INSERT INTO variant_annotation (`variant_id`, `annotation_type_id`, `value`) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE `value`=%s"
         self.cursor.execute(command, (variant_id, annotation_type_id, value, value))
         self.conn.commit()
@@ -283,10 +254,7 @@ class Connection:
 
         # insert data into variant table to generate the variant_id
         variant_id = self.insert_variant(chrom, pos, ref, alt, None,None,None,None,None, 'sv', sv_variant_id)
-        #command = "INSERT INTO variant (chr, pos, ref, alt, orig_chr, orig_pos, orig_ref, orig_alt, variant_type, sv_variant_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'sv', %s)"
-        #self.cursor.execute(command, (chrom, pos, ref, alt, None,None,None,None,None, 'sv', sv_variant_id))
-        #self.conn.commit()
-        #variant_id = self.get_variant_id_by_sv_variant_id(sv_variant_id)
+
         return variant_id, sv_variant_id
     
 
@@ -332,30 +300,14 @@ class Connection:
         return result
     
     def insert_external_variant_id(self, variant_id, external_id, annotation_type_id):
-        #command = "DELETE FROM variant_ids WHERE external_id = %s AND annotation_type_id = %s and variant_id != %s"
-        #self.cursor.execute(command, (external_id, annotation_type_id, variant_id))
-        #self.conn.commit()
         command = "INSERT INTO variant_ids (variant_id, external_id, annotation_type_id) \
                     SELECT %s, %s, %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM variant_ids \
 	                    WHERE `variant_id`=%s AND `external_id`=%s AND `annotation_type_id`=%s LIMIT 1)"
         self.cursor.execute(command, (variant_id, external_id, annotation_type_id, variant_id, external_id, annotation_type_id))
         self.conn.commit()
-    
-    #def update_external_variant_id(self, variant_id, external_id, annotation_type_id):
-    #    command = "UPDATE variant_ids SET external_id = %s WHERE variant_id = %s AND annotation_type_id = %s"
-    #    self.cursor.execute(command, (external_id, variant_id, annotation_type_id))
-    #    self.conn.commit()
-#
-    #def insert_update_external_variant_id(self, variant_id, external_id, annotation_type_id):
-    #    previous_external_variant_id = self.get_external_ids_from_variant_id(variant_id, annotation_type_id=annotation_type_id)
-    #    #print(previous_external_variant_id)
-    #    if (len(previous_external_variant_id) == 1): # do update
-    #        self.update_external_variant_id(variant_id, external_id, annotation_type_id)
-    #    else: # save new
-    #        self.insert_external_variant_id(variant_id, external_id, annotation_type_id)
+
 
     def insert_annotation_request(self, variant_id, user_id): # this inserts only if there is not an annotation request for this variant which is still pending
-        #command = "INSERT INTO annotation_queue (variant_id, status, user_id) VALUES (%s, %s, %s)"
         command = "INSERT INTO annotation_queue (`variant_id`, `user_id`) \
                     SELECT %s, %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM annotation_queue \
 	                    WHERE `variant_id`=%s AND `status`='pending' LIMIT 1)"
@@ -394,11 +346,6 @@ class Connection:
         self.conn.commit()
 
     def get_clinvar_variant_annotation_id_by_variant_id(self, variant_id):
-        #command = "SELECT a.id,a.variant_id,a.version_date \
-        #            FROM clinvar_variant_annotation a \
-        #            INNER JOIN ( \
-        #                SELECT variant_id, max(version_date) AS version_date FROM clinvar_variant_annotation GROUP BY variant_id \
-        #            ) b ON a.variant_id = b.variant_id AND a.variant_id = " + functions.enquote(variant_id) + " AND a.version_date = b.version_date"
         command = "SELECT id FROM clinvar_variant_annotation WHERE variant_id=%s"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchone()
@@ -494,7 +441,7 @@ class Connection:
         command = "INSERT INTO pfam_id_mapping (accession_id, description) VALUES (%s, %s)"
         self.cursor.execute(command, (accession_id, description))
         self.conn.commit()
-       
+
        
     def insert_pfam_legacy(self, old_accession_id, new_accession_id):
         #remove version numbers first
@@ -527,7 +474,6 @@ class Connection:
         return result
     
     def insert_variant_literature(self, variant_id, pmid, title, authors, journal, year, source):
-        #command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher, year) VALUES (%s, %s, %s, %s, %s, %s)"
         command = "INSERT INTO variant_literature (variant_id, pmid, title, authors, journal_publisher, year, source) \
                     SELECT %s, %s, %s, %s, %s, %s, %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM variant_literature \
                         WHERE `variant_id`=%s AND `pmid`=%s LIMIT 1)"
@@ -676,80 +622,6 @@ class Connection:
             return False
         return True
 
-    #def get_variant_more_info(self, variant_id, user_id = None):
-    #    command = "SELECT * FROM variant WHERE id = %s"
-    #    command = self.annotate_genes(command)
-    #    command = self.annotate_consensus_classification(command)
-    #    actual_information = (variant_id, )
-    #    if user_id is not None:
-    #        command = self.annotate_specific_user_classification(command)
-    #        actual_information += (user_id, )
-    #    self.cursor.execute(command, actual_information)
-    #    result = self.cursor.fetchone()
-    #    return result
-
-    ## these functions add additional columns to the variant table
-    #def annotate_genes(self, command):
-    #    prefix = """
-    #    				SELECT id, chr, pos, ref, alt, group_concat(gene_id SEPARATOR '; ') as gene_id, group_concat(symbol SEPARATOR '; ') as symbol FROM (
-	#						SELECT * FROM (
-    #    """
-    #    postfix = """
-    #    						) a LEFT JOIN (
-    #                                SELECT DISTINCT variant_id, gene_id FROM variant_consequence WHERE gene_id IS NOT NULL) b ON a.id=b.variant_id
-	#				) c LEFT JOIN (
-    #                            SELECT id AS gene_id_2, symbol FROM gene WHERE id
-	#			) d ON c.gene_id=d.gene_id_2
-    #                    GROUP BY id, chr, pos, ref, alt
-    #    """
-    #    return prefix + command + postfix
-
-    #def annotate_specific_user_classification(self, command):
-    #    prefix = """
-    #    SELECT g.*, h.user_classification FROM (
-    #    """
-    #    postfix = """
-    #    		) g LEFT JOIN (
-    #                SELECT user_classification.variant_id, user_classification.classification as user_classification FROM user_classification
-    #                    LEFT JOIN user_classification x ON x.variant_id = user_classification.variant_id AND x.date > user_classification.date
-    #                WHERE x.variant_id IS NULL AND user_classification.user_id=%s
-    #                ORDER BY user_classification.variant_id) h ON g.id = h.variant_id ORDER BY chr, pos, ref, alt
-    #    """
-    #    return prefix + command + postfix
-    
-    #def annotate_consensus_classification(self, command):
-    #    prefix = """
-    #        SELECT e.*, f.classification FROM (
-    #    """
-    #    postfix = """
-    #    	) e LEFT JOIN (
-    #            SELECT variant_id, classification FROM consensus_classification WHERE is_recent=1) f ON e.id = f.variant_id
-    #    """
-    #    return prefix + command + postfix
-
-    #### DEPRECATED!
-    ## this function returns a list of variant tuples (can have length more than one if there are multiple mane select transcripts for this variant)
-    #def annotate_preferred_transcripts(self, variant):
-    #    result = []
-    #    consequences = self.get_variant_consequences(variant_id = variant[0])
-    #    if consequences is not None:
-    #        consequences = self.order_consequences(consequences)
-    #        best_consequence = consequences[0]
-    #            
-    #        if best_consequence[14] == 1: # if the best one is a mane select transcript scan also the following and add them as well
-    #            for consequence in consequences:
-    #                if consequence[14] == 1: # append one variant entry for each mane select transcript (in case of multiple genes, usually a low number)
-    #                    result.append(variant + consequence)
-    #                else:
-    #                    break # we can do this because the list is sorted
-    #        else: # in case the best consequence is no mane select transcrip
-    #            result.append(variant + best_consequence)
-#
-    #    else:
-    #        result.append(variant + (None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None))
-    #    return result
-    
-
 
     def get_variants_page_merged(self, page, page_size, sort_by, include_hidden, user_id, 
                                  ranges = None, genes = None, consensus = None, user = None, automatic_splicing = None, automatic_protein = None, 
@@ -794,7 +666,6 @@ class Connection:
                 if len(transcripts) == 0:
                     gene_id = self.get_gene_id_by_symbol(source)
                     transcripts = self.get_preferred_transcripts(gene_id, return_all = False)
-                #print("Transcripts: " + str(transcripts))
                 for transcript in transcripts:
                     chrom = transcript.chrom
                     start_pos = self.cdna_pos_to_genomic_pos(transcript.id, start, transcript.orientation, start_modifier, beyond_cds_operation_start)
@@ -853,7 +724,6 @@ class Connection:
                     actual_information += (annotation_type_id, value)
                 postfix = self.add_constraints_to_command(postfix, new_constraints)
         if genes is not None and len(genes) > 0:
-            #genes = [self.get_gene(self.convert_to_gene_id(x))[1] for x in genes]
             hgnc_ids = set()
             for gene in genes:
                 current_gene_id = self.convert_to_gene_id(gene)
@@ -878,7 +748,6 @@ class Connection:
                 parts = variant_string.split('-')
                 parts[0] = 'chr' + parts[0] if not parts[0].startswith('chr') else parts[0]
                 list_of_constraints.append(["(chr = %s AND pos = %s AND ref = %s AND alt = %s)", "(chrom = %s AND start = %s AND end = %s AND sv_type LIKE %s)"])
-                #list_of_constraints.append("(SELECT id FROM variant WHERE chr = %s AND pos = %s AND ref = %s AND alt = %s UNION SELECT variant.id FROM variant WHERE sv_variant_id IN (SELECT id FROM sv_variant WHERE chrom = %s AND start = %s AND end = %s AND sv_type LIKE %s))")
                 list_of_information.append([[parts[0], parts[1], parts[2], parts[3]], [parts[0], parts[1], parts[2], functions.enpercent(parts[3])]])
             restrictions1 = " OR ".join([x[0] for x in list_of_constraints])
             restrictions2 = " OR ".join([x[1] for x in list_of_constraints])
@@ -904,7 +773,6 @@ class Connection:
                 new_constraints_inner = new_constraints_inner + "SELECT variant_id FROM consensus_classification WHERE classification IN " + placeholders + " AND is_recent = 1"
                 actual_information += tuple(consensus_without_dash)
             new_constraints = "variant.id IN (" + new_constraints_inner + ")"
-            #postfix = self.add_constraints_to_command(postfix, new_constraints)
             constraints_complete = new_constraints
             if include_heredicare_consensus and len(consensus_without_dash) > 0:
                 heredicare_consensus = []
@@ -1122,7 +990,6 @@ class Connection:
         else:
             command = self.add_constraints_to_command(command, "cdna_start <= %s AND cdna_end >= %s")
             actual_information += (cdna_pos, cdna_pos)
-            #command = "SELECT start, cdna_start FROM exon WHERE transcript_id = %s AND cdna_start <= %s AND cdna_end >= %s"
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchone()
         if result is None:
@@ -1192,8 +1059,6 @@ class Connection:
             sortable_dict = {}
             for c in current_batch:
                 sortable_dict[c[0]] = c
-            #current_batch = self.order_consequences(current_batch)
-            # THIS SHOULD BE REPLACED WITH SOMETHING LIKE THIS:
             transcripts, current_batch = functions.sort_transcript_dict(sortable_dict)
             best_consequence = current_batch[0]
 
@@ -1212,61 +1077,15 @@ class Connection:
 
         return matching_variant_ids
 
-    ## DEPRECATED
-    #def order_consequences(self, consequences):
-    #    keyfunc = cmp_to_key(mycmp = self.sort_consequences)
-    #            
-    #    consequences.sort(key = keyfunc) # sort by preferred transcript
-    #    return consequences
-    
-    ## DEPRECATED
-    #def sort_consequences(self, a, b):
-    #    # sort by ensembl/refseq
-    #    if a[9] == 'ensembl' and b[9] == 'refseq':
-    #        return -1
-    #    elif a[9] == 'refseq' and b[9] == 'ensembl':
-    #        return 1
-    #    elif a[9] == b[9]:
-    #
-    #        # sort by mane select
-    #        if a[14] is None or b[14] is None:
-    #            return 1
-    #        elif a[14] == 1 and b[14] == 0:
-    #            return -1
-    #        elif a[14] == 0 and b[14] == 1:
-    #            return 1
-    #        elif a[14] == b[14]:
-    #
-    #            # sort by biotype
-    #            if a[18] == 'protein coding' and b[18] != 'protein coding':
-    #                return -1
-    #            elif a[18] != 'protein coding' and b[18] == 'protein coding':
-    #                return 1
-    #            elif (a[18] != 'protein coding' and b[18] != 'protein coding') or (a[18] == 'protein coding' and b[18] == 'protein coding'):
-    #
-    #                # sort by length
-    #                if a[12] > b[12]:
-    #                    return -1
-    #                elif a[12] < b[12]:
-    #                    return 1
-    #                else:
-    #                    return 0
 
-
-
-
-    
-
-    """
-    def get_mane_select_for_gene(self, gene, source):
-        gene_id = self.convert_to_gene_id(gene)
-        command = "SELECT DISTINCT transcript_name FROM variant_consequence WHERE transcript_name IN (SELECT name FROM transcript WHERE is_mane_select=1) AND gene_id=%s AND source=%s"
-        self.cursor.execute(command, (gene_id, source))
-        result = self.cursor.fetchone()
-        if result is not None:
-            return result[0]
-        return None
-    """
+    #def get_mane_select_for_gene(self, gene, source):
+    #    gene_id = self.convert_to_gene_id(gene)
+    #    command = "SELECT DISTINCT transcript_name FROM variant_consequence WHERE transcript_name IN (SELECT name FROM transcript WHERE is_mane_select=1) AND gene_id=%s AND source=%s"
+    #    self.cursor.execute(command, (gene_id, source))
+    #    result = self.cursor.fetchone()
+    #    if result is not None:
+    #        return result[0]
+    #    return None
 
     def get_mane_select_for_gene(self, gene_id):
         command = "SELECT name FROM transcript WHERE gene_id = %s AND is_mane_select=1"
@@ -1322,10 +1141,7 @@ class Connection:
 	                    ON gene.hgnc_id = y.hgnc_id \
                     ) x \
                     ON transcript.name = x.transcript_name"
-        #import time
-        #start_time = time.time()
         self.cursor.execute(command, (variant_id, ))
-        #print("--- consequences: %s seconds ---" % (time.time() - start_time))
         result = self.cursor.fetchall()
 
         #result = sorted(result, key=lambda x: functions.convert_none_infinite(x[12]), reverse=True) # sort table by transcript length
@@ -1669,7 +1485,6 @@ class Connection:
 
     def get_scheme_criteria_applied(self, classification_id, where="user"):
         if where == "user":
-            # command = "SELECT * FROM user_classification_criteria_applied WHERE user_classification_id=%s"
             table_oi = "user_classification_criteria_applied"
             prefix = "user"
         elif where == "consensus":
@@ -1768,28 +1583,6 @@ class Connection:
         self.cursor.execute(command, (str(classification), comment, date, str(scheme_class), user_classification_id))
         self.conn.commit()
 
-    #def delete_variant(self, variant_id):
-    #    status = "deleted"
-    #    message  = "Deleted variant " + str(variant_id)
-    #    consensus_classification = self.get_consensus_classification(variant_id)
-    #    if consensus_classification is None:
-    #        consensus_classification = []
-    #    if len(consensus_classification) > 0: # do not delete if the variant has a consensus classification
-    #        status = "skipped"
-    #        message = "Did not delete variant because it has consensus classifications"
-    #        return status, message
-    #    user_classifications = self.get_user_classifications(variant_id)
-    #    if user_classifications is None:
-    #        user_classifications = []
-    #    if len(user_classifications) > 0: # do not delete if the variant has a user classification
-    #        status = "skipped"
-    #        message = "Did not delete variant because it has user classifications"
-    #        return status, message
-    #    command = "DELETE FROM variant WHERE id = %s"
-    #    self.cursor.execute(command, (variant_id,))
-    #    self.conn.commit()
-    #    return status, message
-
 
 
 
@@ -1819,13 +1612,6 @@ class Connection:
         import_request_raw = self.cursor.fetchone()
         import_request = self.convert_raw_import_request(import_request_raw)
         return import_request
-
-    #def get_import_request_overview(self):
-    #    command = "SELECT id FROM import_queue ORDER BY requested_at DESC"
-    #    self.cursor.execute(command)
-    #    import_queue_ids = self.cursor.fetchall()
-    #    import_requests = [self.get_import_request(import_queue_id[0]) for import_queue_id in import_queue_ids]
-    #    return import_requests
 
     def get_import_requests_page(self, page, page_size):
         # get one page of import requests determined by offset & pagesize
@@ -2103,23 +1889,6 @@ class Connection:
         self.cursor.execute(command, (value, variant_id, annotation_type_id))
         self.conn.commit()
 
-    """
-    def get_import_request(self, import_queue_id = '', date = ''):
-        command = ''
-        if import_queue_id != '':
-            command = 'SELECT * FROM import_queue WHERE id = %s'
-            information = (import_queue_id, )
-        if date != '':
-            date_parts = date.split('-')
-            information = (date_parts[0] + '-' + date_parts[1] + '-' + date_parts[2] + ' ' + date_parts[3] + ':' + date_parts[4] + ':' + date_parts[5], )
-            command = 'SELECT * FROM import_queue WHERE requested_at = %s'
-
-        if command != '':
-            self.cursor.execute(command, information)
-            res = self.cursor.fetchone()
-            return res
-        return None
-    """
 
     def get_heredicare_center_classifications(self, heredicare_annotation_id):
         command = 'SELECT id, heredicare_ZID, (SELECT name FROM heredicare_ZID WHERE heredicare_ZID.ZID = heredicare_center_classification.heredicare_ZID) as center_name, classification, comment FROM heredicare_center_classification WHERE variant_heredicare_annotation_id = %s'
@@ -2127,13 +1896,9 @@ class Connection:
         result = self.cursor.fetchall()
         if len(result) == 0:
             return None
-        #result = sorted(result, key=lambda x: functions.convert_none_infinite(x[5]), reverse=True)
         return result
     
     def insert_user(self, username, first_name, last_name, affiliation, api_roles):
-        #command = "INSERT INTO user (username, first_name, last_name, affiliation) \
-        #            SELECT %s FROM DUAL WHERE NOT EXISTS (SELECT * FROM user \
-        #                WHERE `username`=%s LIMIT 1)"
         command = "INSERT INTO user (username, first_name, last_name, affiliation, api_roles) VALUES (%s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE first_name=%s, last_name=%s, affiliation=%s, api_roles=%s"
         self.cursor.execute(command, (username, first_name, last_name, affiliation, api_roles, first_name, last_name, affiliation, api_roles))
         self.conn.commit()
@@ -2277,20 +2042,6 @@ class Connection:
             result['edit'] = True 
         return result
 
-    #### DELETE LATER!
-    #def check_user_list_ownership(self, user_id, list_id, requests_write=False):
-    #    inner_command = "SELECT * FROM user_variant_lists WHERE (user_id = %s OR public_read = 1)"
-    #    if requests_write:
-    #        inner_command += " AND public_edit = 1"
-    #    inner_command += " AND id = %s"
-    #    command = "SELECT EXISTS (" + inner_command + ")"
-    #    self.cursor.execute(command, (user_id, list_id))
-    #    result = self.cursor.fetchone()
-    #    result = result[0]
-    #    if result == 1:
-    #        return True
-    #    else:
-    #        return False
     
     # this is used in tests
     def get_latest_list_id(self):
@@ -2343,14 +2094,12 @@ class Connection:
         first_list_variant_ids = self.get_variant_ids_from_list(first_list_id)
         second_list_variant_ids = self.get_variant_ids_from_list(second_list_id)
         variant_ids_for_target_list = list(set(first_list_variant_ids) | set(second_list_variant_ids))
-        #print(variant_ids_for_target_list)
 
         self.clear_list(target_list_id)
         for variant_id in variant_ids_for_target_list:
             self.add_variant_to_list(target_list_id, variant_id)
 
     def clear_list(self, list_id):
-        #"DELETE FROM " + db_table + " WHERE classification_id = %s AND pmid = %s"
         command = "DELETE FROM list_variants WHERE list_id = %s"
         self.cursor.execute(command, (list_id, ))
         self.conn.commit()
@@ -2387,7 +2136,6 @@ class Connection:
 
     
     def get_variant_id(self, chr, pos, ref, alt):
-        #command = "SELECT id FROM variant WHERE chr = " + functions.enquote(chr) + " AND pos = " + str(pos) + " AND ref = " + functions.enquote(ref) + " AND alt = " + functions.enquote(alt)
         chr, chr_valid = functions.curate_chromosome(chr)
         if not chr_valid:
             return None
@@ -2772,7 +2520,6 @@ class Connection:
                                                          intron = consequence[6]
                                                     )
                     consequences.append(new_consequence)
-       
 
         assays = None
         if include_assays:
@@ -2799,7 +2546,6 @@ class Connection:
                             assay_metadata_dict[assay_metadata_type.title] = assay_metadata
                     new_assay = models.Assay(id = int(assay_id), assay_type_id = assay_type_id, type_title=assay_type_name, metadata = assay_metadata_dict, date = date, link = link)
                     assays.append(new_assay)
-        
 
         literature = None
         if include_literature:
@@ -2940,14 +2686,7 @@ class Connection:
                 result[assay_metadata_type.title] = assay_metadata_type
         return result
     
-    #def get_assay_type_id_dict(self):
-    #    command = "SELECT id, title FROM assay_type"
-    #    self.cursor.execute(command)
-    #    res = self.cursor.fetchall()
-    #    d = {}
-    #    for elem in res:
-    #        d[elem[1]] = elem[0]
-    #    return d
+
     def get_assay_id(self, assay_title):
         command = "SELECT id FROM assay_type WHERE title = %s"
         self.cursor.execute(command, (assay_title, ))
@@ -2969,16 +2708,6 @@ class Connection:
             result[assay_type_id] = {"title": assay_title, "metadata_types": assay_metadata_types}
         return result
 
-    # DEPRECATED: delete later
-    #def valid_assay_type_id(self, assay_type_id):
-    #    command = "SELECT EXISTS (SELECT id FROM assay_type WHERE id = %s)"
-    #    self.cursor.execute(command, (assay_type_id, ))
-    #    result = self.cursor.fetchone()[0] # get the first element as result is always a tuple
-    #    if result == 0:
-    #        return False
-    #    return True
-        
-
     def insert_assay_metadata(self, assay_id, assay_metadata_type_id, value):
         if value is not None:
             command = "INSERT INTO assay_metadata (assay_id, assay_metadata_type_id, value) VALUES (%s, %s, %s)"
@@ -2991,8 +2720,6 @@ class Connection:
         assay_metadata_type = models.Assay_Metadata_Type(id = int(assay_metadata_type_raw[0]), title = assay_metadata_type_raw[1], display_title = assay_metadata_type_raw[2], assay_type_id = int(assay_metadata_type_raw[3]),
                                                          value_type = assay_metadata_type_raw[4], is_deleted = is_deleted, is_required = is_required)
         return assay_metadata_type
-
-
 
 
     def get_last_insert_id(self):
@@ -3175,12 +2902,6 @@ class Connection:
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchone()
         return result
-
-    #def update_heredivar_clinvar_submission_accession_id(self, accession_id):
-    #    command = "UPDATE publish_clinvar_queue SET accession_id = %s"
-    #    self.cursor.execute(command, (accession_id, ))
-    #    self.conn.commit()
-
 
     def get_current_annotation_staus_all_variants(self):
         command = """
@@ -3402,81 +3123,6 @@ class Connection:
         
         return result
 
-        #result = []
-        #command = "SELECT name, biotype, length, is_gencode_basic, is_mane_select, is_mane_plus_clinical, is_ensembl_canonical FROM transcript WHERE gene_id = %s"
-        #self.cursor.execute(command, (gene_id, ))
-        #result_raw = self.cursor.fetchall()
-        #transcripts = []
-        #for elem in result_raw:
-        #    if elem[0].startswith("ENST"):
-        #        source = "ensembl" if elem[0].startswith("ENST") else "refseq"
-        #        new_elem = {"name": elem[0],
-        #                    "biotype": elem[1],
-        #                    "length": elem[2],
-        #                    "is_gencode_basic": elem[3],
-        #                    "is_mane_select": elem[4],
-        #                    "is_mane_plus_clinical": elem[5],
-        #                    "is_ensembl_canonical": elem[6],
-        #                    "source": source
-        #                }
-        #        transcripts.append(new_elem)
-        #
-        #if len(transcripts) > 0:
-        #    transcripts = self.order_transcripts(transcripts)
-        #
-        #    if not return_all:
-        #        result.append(transcripts.pop(0)) # always append the first one
-        #
-        #        for transcript in transcripts: # scan for all mane select transcripts
-        #            if transcript["is_mane_select"]:
-        #                result.append(transcript)
-        #            else:
-        #                break # we can do this because the list is sorted
-        #    else:
-        #        result = transcripts
-        #else: # the variant does not have any consequences
-        #    return None
-        #return result
-
-    #def order_transcripts(self, consequences):
-    #    keyfunc = cmp_to_key(mycmp = self.sort_transcripts)
-    #    consequences.sort(key = keyfunc) # sort by preferred transcript
-    #    return consequences
-    # 
-    #def sort_transcripts(self, a, b):
-    #    # sort by ensembl/refseq
-    #    if a["source"] == 'ensembl' and b["source"] == 'refseq':
-    #        return -1
-    #    elif a["source"] == 'refseq' and b["source"] == 'ensembl':
-    #        return 1
-    #    elif a["source"] == b["source"]:
-#
-    #        # sort by mane select
-    #        if a["is_mane_select"] is None or b["is_mane_select"] is None:
-    #            return 1
-    #        elif a["is_mane_select"] and not b["is_mane_select"]:
-    #            return -1
-    #        elif not a["is_mane_select"] and b["is_mane_select"]:
-    #            return 1
-    #        elif a["is_mane_select"] == b["is_mane_select"]:
-#
-    #            # sort by biotype
-    #            if a["biotype"] == 'protein coding' and b["biotype"] != 'protein coding':
-    #                return -1
-    #            elif a["biotype"] != 'protein coding' and b["biotype"] == 'protein coding':
-    #                return 1
-    #            elif (a["biotype"] != 'protein coding' and b["biotype"] != 'protein coding') or (a["biotype"] == 'protein coding' and b["biotype"] == 'protein coding'):
-#
-    #                # sort by length
-    #                if a["length"] > b["length"]:
-    #                    return -1
-    #                elif a["length"] < b["length"]:
-    #                    return 1
-    #                else:
-    #                    return 0
-                    
-
-
 
 
     def insert_criterium_scheme(self, name, version, display_name, scheme_type, reference):
@@ -3656,19 +3302,6 @@ class Connection:
         return result
     
 
-    ##### DELETE LATER!
-    #def get_automatic_classification_ids(self):
-    #    command = "SELECT id FROM automatic_classification"
-    #    self.cursor.execute(command)
-    #    result = self.cursor.fetchall()
-    #    return [x[0] for x in result]
-    #
-    ##### DELETE LATER!
-    #def update_automatic_classification(self, automatic_classification_id, classification_splicing, classification_protein):
-    #    command = "UPDATE automatic_classification SET classification_splicing = %s, classification_protein = %s WHERE id = %s"
-    #    self.cursor.execute(command, (classification_splicing, classification_protein, automatic_classification_id))
-    #    self.conn.commit()
-
     def insert_coldspot(self, chrom, start, end, source):
         command = "INSERT INTO coldspots (chrom, start, end, source) VALUES (%s, %s, %s, %s)"
         self.cursor.execute(command, (chrom, start, end, source))
@@ -3767,16 +3400,6 @@ class Connection:
         result = self.cursor.fetchone()
         return result[0]
 
-    #def get_most_recent_publish_heredicare_queue_entries(self, variant_id):
-    #    command = """
-    #        SELECT id, status, requested_at, finished_at, message, vid, variant_id, submission_id, consensus_classification_id FROM publish_heredicare_queue 
-	#	        WHERE variant_id = %s AND id >= (SELECT MAX(id) FROM publish_heredicare_queue WHERE variant_id = %s AND status != "skipped") ORDER BY vid
-    #    """
-    #    self.cursor.execute(command, (variant_id, variant_id))
-    #    result = self.cursor.fetchall()
-    #    if len(result) == 0:
-    #        return None
-    #    return result
 
     def get_most_recent_publish_queue_ids_heredicare(self, variant_id):
         command = "SELECT DISTINCT publish_queue_id FROM publish_heredicare_queue WHERE variant_id = %s AND id >= (SELECT MAX(id) FROM publish_heredicare_queue WHERE variant_id = %s AND status != 'skipped')"
@@ -3797,14 +3420,6 @@ class Connection:
         self.cursor.execute(command, actual_information)
         result = self.cursor.fetchall()
         return result
-    
-    #def has_skipped_heredicare_publishes_before_finished_one(self, variant_id, last_finished_requested_at):
-    #    command = "SELECT COUNT(id) FROM publish_heredicare_queue WHERE variant_id = %s AND status = 'skipped' AND requested_at > %s"
-    #    self.cursor.execute(command, (variant_id, last_finished_requested_at))
-    #    result = self.cursor.fetchone()
-    #    if result[0] > 0:
-    #        return True
-    #    return False
 
 
     def insert_publish_request(self, user_id: int, upload_heredicare: bool, upload_clinvar: bool, variant_ids: list):
@@ -3829,16 +3444,6 @@ class Connection:
         self.cursor.execute(command, (status, message, publish_queue_id))
         self.conn.commit()
 
-    #def get_publish_request_overview(self):
-    #    command = """
-    #        SELECT id, (SELECT first_name FROM user WHERE user.id=publish_queue.user_id)first_name, (SELECT last_name FROM user WHERE user.id=publish_queue.user_id)last_name,
-    #        	requested_at, status, finished_at, message, (SELECT DISTINCT COUNT(publish_clinvar_queue.variant_id) FROM publish_clinvar_queue WHERE publish_clinvar_queue.publish_queue_id=publish_queue.id) clinvar_subs,
-    #            (SELECT DISTINCT COUNT(publish_heredicare_queue.variant_id) FROM publish_heredicare_queue WHERE publish_heredicare_queue.publish_queue_id=publish_queue.id) heredicare_subs
-    #        FROM publish_queue
-    #    """
-    #    self.cursor.execute(command)
-    #    result = self.cursor.fetchall()
-    #    return result
 
     def get_publish_requests_page(self, page, page_size):
         # get one page of import requests determined by offset & pagesize
@@ -3906,16 +3511,6 @@ class Connection:
         self.conn.commit()
 
 
-    #def get_most_recent_publish_clinvar_queue_entry(self, variant_id):
-    #    command = """
-    #        SELECT id, publish_queue_id, requested_at, status, message, submission_id, accession_id, last_updated, celery_task_id, consensus_classification_id FROM publish_clinvar_queue 
-    #            WHERE id = (SELECT MAX(id) FROM publish_clinvar_queue WHERE variant_id = %s and status != 'skipped')
-    #    """
-    #    self.cursor.execute(command, (variant_id, ))
-    #    result = self.cursor.fetchone()
-    #    return result
-
-
     def get_most_recent_publish_queue_ids_clinvar(self, variant_id):
         command = "SELECT DISTINCT publish_queue_id FROM publish_clinvar_queue WHERE variant_id = %s AND id >= (SELECT MAX(id) FROM publish_clinvar_queue WHERE variant_id = %s AND status != 'skipped' AND status != 'deleted')"
         self.cursor.execute(command, (variant_id, variant_id))
@@ -3944,16 +3539,6 @@ class Connection:
         self.cursor.execute(command)
         result = self.cursor.fetchall()
         return [x[0] for x in result]
-
-    # DEPRECATED: delete later
-    #def check_publish_queue_id(self, publish_queue_id):
-    #    command = "SELECT id FROM publish_queue WHERE id = %s"
-    #    self.cursor.execute(command, (publish_queue_id, ))
-    #    result = self.cursor.fetchone()
-    #    if result is None:
-    #        return False
-    #    return True
-    
 
 
     def get_publish_request(self, publish_queue_id):
@@ -4176,4 +3761,5 @@ class Connection:
         command = "UPDATE download_queue SET is_valid = 0 WHERE id = %s"
         self.cursor.execute(command, (download_queue_id, ))
         self.conn.commit()
-    
+
+

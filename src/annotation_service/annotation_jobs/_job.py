@@ -1,6 +1,4 @@
 import abc
-import tempfile
-import os
 import common.functions as functions
 
 ########## This class is an abstract class which needs to be implemented by

@@ -3,16 +3,11 @@ from os import path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from common.db_IO import Connection
 import common.functions as functions
-import tempfile
 import traceback
 from urllib.error import HTTPError
-from os.path import exists
 from .annotation_queue import Annotation_Queue
 from .annotation_data import Annotation_Data
-import random
-from mysql.connector import Error, InternalError
-
-import os
+from mysql.connector import InternalError
 
 
 ## configuration
@@ -90,10 +85,8 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         #if random.randint(1,10) > 5:
         #    raise HTTPError(url = "srv18", code=429, msg="Too many requests", hdrs = {}, fp = None)
 
-
         # initialize the connection
         conn = Connection(roles=["annotation"])
-
 
         # get the variant_id from the annotation queue id & check that the annotation_queue_id is valid
         annotation_queue_entry = conn.get_annotation_queue_entry(annotation_queue_id)
@@ -101,7 +94,6 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
             status = "error"
             return status, "Annotation queue entry not found"
         variant_id = annotation_queue_entry[1]
-
 
         # check the variant type
         variant = conn.get_variant(variant_id, include_annotations = False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_automatic_classification = False, include_clinvar = False, include_assays = False, include_literature = False, include_external_ids = False) # 0id,1chr,2pos,3ref,4alt
@@ -142,15 +134,14 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         # cleanup after http error before retry
         print("An HTTP exception occured: " + str(e))
         print(traceback.format_exc())
-
         status = "retry"
         conn.update_annotation_queue(annotation_queue_id, status=status, error_msg=str(e))
-        
         runtime_error = str(e)
 
-        #raise e #HTTPError(url = e.url, code = e.code, msg = "A HTTP error occured", hdrs = e.hdrs, fp = e.fp)
     except InternalError as e:
         # deadlock: code 1213
+        print("An exception occured: " + str(e))
+        print(traceback.format_exc())
         status = "retry"
         conn.update_annotation_queue(annotation_queue_id, status=status, error_msg=str(e))
         runtime_error = "Attempting retry because of database error: " + str(e)  + ' ' + traceback.format_exc()
@@ -162,15 +153,11 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         status = "error"
         runtime_error = str(e)
 
-
+    # cleanup
     functions.rm(vcf_path)
-
-
     conn.close()
 
-
     return status, runtime_error
-
 
 
 # sequentially processes all pending requests
@@ -180,7 +167,4 @@ def process_all_pending_requests(pending_requests):
     """ fetches all pending requests from the annotatino queue and annotates all of them sequentially"""
     for pending_request in pending_requests:
         process_one_request(pending_request[0])
-
-
-
 

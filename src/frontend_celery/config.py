@@ -116,14 +116,6 @@ class DevConfig(Config):
     #CLIENTSECRET = os.environ.get('CLIENT_SECRET', 'NRLzlQfotGy9W8hkuYFm3T48Bjnti15k')
 
 
-class GithubtestConfig(Config):
-    #HOST = "127.0.0.1" # localhost
-    TESTING = True
-    DEBUG = True
-    TLS = False
-
-
-
 class LocaltestConfig(Config):
     #HOST = "SRV018.img.med.uni-tuebingen.de"
     TESTING = True

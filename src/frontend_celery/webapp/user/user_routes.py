@@ -1,18 +1,14 @@
 from flask import render_template, request, url_for, flash, redirect, Blueprint, current_app, session, jsonify
+from flask_paginate import Pagination
 from os import path
 import sys
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 from common.db_IO import Connection
-from werkzeug.exceptions import abort
 import common.functions as functions
-from datetime import datetime
 from ..utils import *
-from flask_paginate import Pagination
 import annotation_service.main as annotation_service
 import frontend_celery.webapp.tasks as tasks
-import random
-
-from . import user_functions
+from werkzeug.exceptions import abort
 
 user_blueprint = Blueprint(
     'user',
@@ -425,7 +421,6 @@ def get_vis_page(request_args, import_queue_id, static_information, conn: Connec
     vids = extract_vids_vids(request_args)
 
     imported_variants, total = conn.get_imported_variants_page(comments, stati, vids, import_queue_id, page, page_size)
-    
 
     return imported_variants, total, page, page_size
 
@@ -464,9 +459,6 @@ def variant_import_summary_data(import_queue_id):
     require_set(import_request)
     #imported_variants = conn.get_imported_variants(import_queue_id, status = ["error"])
     return jsonify({'import_request': import_request})
-
-
-
 
 
 # shows asll variant publish requests in server sided pagination

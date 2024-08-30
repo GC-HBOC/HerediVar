@@ -15,23 +15,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(
 import common.functions as functions
 from common.db_IO import Connection
 
-## used for api endpoints to check the bearer token header
-## similar to require login, but for api endpoints
-#def accept_api_token(f):
-#    @wraps(f)
-#    def decorated_function(*args, **kwargs):
-#
-#        authorization_header = parse_authorization_header(request.headers.get('Authorization'))
-#
-#        conn = Connection()
-#        api_key_ok = conn.check_api_key(authorization_header['apikey'], authorization_header['username'])
-#        conn.close()
-#
-#        if not api_key_ok:
-#            abort(403, "Invalid credentials")
-#
-#        return f(*args, **kwargs)
-#    return decorated_function
 
 def require_api_token_permission(roles):
     def decorator(f):
@@ -111,13 +94,6 @@ def require_login(f):
         resp = requests.post(url, data=data, headers=header)
         resp.raise_for_status()
         resp = resp.json()
-        #print(resp['active'])
-
-        #url = f'{issuer}/protocol/openid-connect/userinfo'
-        #test_resp = requests.get(url, headers = {'Authorization': f'Bearer {token.get("access_token")}'})
-        #print(token)
-        #print(test_resp)
-        #print(test_resp.text)
 
         # if access token is not valid request a new one using the refresh token
         if not resp['active']:

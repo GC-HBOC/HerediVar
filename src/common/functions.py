@@ -1,5 +1,4 @@
 import os
-import collections
 import datetime
 import re
 import sys
@@ -17,10 +16,9 @@ import pathlib
 import werkzeug
 
 
-
-
 def is_secure_filename(filename):
     return werkzeug.utils.secure_filename(filename) == filename
+
 
 def prettyprint_json(json_obj, func = print):
     pretty_json = json.dumps(json_obj, indent=2)
@@ -33,11 +31,13 @@ def prettyprint_json(json_obj, func = print):
 def basedir():
     return os.getcwd()
 
+
 def load_webapp_env():
     webapp_env = os.environ.get('WEBAPP_ENV', None)
     if webapp_env is None:
         raise ValueError("No WEBAPP_ENV environment variable set.")
     return webapp_env
+
 
 # converts one line from the variant table to a vcf record
 def variant_to_vcf(chr, pos, ref, alt, path, reference_genome="GRCh38"):
@@ -58,48 +58,12 @@ def variant_to_vcf(chr, pos, ref, alt, path, reference_genome="GRCh38"):
     file.close()
     return True
 
+
 def cnv_to_bed(chrom, start, end, path):
     with open(path, "w") as file:
         line = '\t'.join([chrom, str(start), str(end)])
         file.write(line + '\n')
     return True
-
-#def read_vcf_info(path):
-#    file = open(path, "r")
-#    entries = []
-#    info_headers = []
-#    for line in file:
-#        if line.strip() == '':
-#            continue
-#        if line.startswith('##INFO'):
-#            info_headers.append(line.strip())
-#            continue
-#        if not line.startswith('#'):
-#            l = line.split('\t')[7]
-#            entries.append(l.strip())
-#    file.close()
-#    return info_headers, entries
-
-
-#Record = collections.namedtuple('Record', [
-#    'CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER'
-#])
-
-
-# doesnt collect FORMAT/INFO fields
-#def read_vcf_variant(path):
-#    all_records = []
-#    for line in open(path, "r"):
-#        if not line.startswith("#"):
-#            prep_line = line.strip().split("\t")#[0:upper_bound]
-#            rec = Record(prep_line[0], prep_line[1], prep_line[2], prep_line[3], prep_line[4], prep_line[5], prep_line[6])
-#            all_records.append(rec)
-#    return all_records
-#    #variant = functions.read_vcf_variant(tmp_file_path)[0] # accessing only the first element of the returned list is save because we process only one variant at a time
-#    #new_chr = variant.CHROM
-#    #new_pos = variant.POS
-#    #new_ref = variant.REF
-#    #new_alt = variant.ALT
 
 
 def get_refseq_chom_to_chrnum():
@@ -110,6 +74,7 @@ def get_refseq_chom_to_chrnum():
                "NC_000016.10": "chr16", "NC_000017.11": "chr17", "NC_000018.10": "chr18", "NC_000019.10": "chr19", "NC_000020.11": "chr20",
                "NC_000021.9": "chr21", "NC_000022.11": "chr22", "NC_000023.11": "chrX", "NC_000024.10": "chrY", "NC_012920.1": "chrMT"}
     return refseq_dict
+
 
 def write_vcf_header(info_columns, output_func = print, tail = "", reference_genome="GRCh38"):
     output_func("##fileformat=VCFv4.2" + tail)
@@ -130,7 +95,6 @@ def trim_chr(chr):
 
 def validate_chr(chr, max = 22):
     chr = trim_chr(chr)
-
     if not chr in ['X', 'Y', 'M', 'MT'] and not chr in [str(i) for i in range(1,max+1)]:
         return False
     if chr == "M":
@@ -145,9 +109,7 @@ def collect_info(old_info, new_info_name, new_value, sep = ';'):
         values_to_join.append(str(old_info))
     if new_value is not None and new_value != '':
         values_to_join.append(new_info_name + str(new_value))
-
     return sep.join(values_to_join)
-
 
 
 def trim_hgnc(hgnc_id):
@@ -156,24 +118,29 @@ def trim_hgnc(hgnc_id):
         return hgnc_id[5:]
     else:
         return hgnc_id
-        
+
+
 def remove_version_num(identifier, char = '.'):
     if char in identifier:
         return identifier[:identifier.find(char)]
     else:
         return identifier
 
+
 def is_dna(strg, search=re.compile(r'[^ACGTacgt-]').search):
     return not bool(search(strg))
 
+
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
 
 def convert_none_infinite(x):
     if x is None:
         return -float('inf')
     else:
         return x
+
 
 def execute_command(command, process_name, use_prefix_error_log = True, stdout=subprocess.PIPE):
     completed_process = subprocess.Popen(command, stdout=stdout, stderr=subprocess.PIPE)
@@ -191,6 +158,7 @@ def execute_command(command, process_name, use_prefix_error_log = True, stdout=s
             err_msg = process_name + " runtime WARNING: "
         err_msg = err_msg + std_err
     return completed_process.returncode, err_msg, command_output
+
 
 def grep(regex, filepath):
     command = ["grep", "-e", regex, filepath]
@@ -241,9 +209,11 @@ def preprocess_variant(infile, do_liftover=False):
 
     return final_returncode, err_msg, command_output
 
+
 def bgzip(path):
     returncode, err_msg, command_output = execute_command([os.path.join(paths.htslib_path, 'bgzip'), '-f', '-k', path], process_name="bgzip")
     return returncode, err_msg, command_output
+
 
 def curate_chromosome(chrom):
     if chrom is None:
@@ -271,6 +241,7 @@ def curate_position(pos):
     else:
         return pos, is_valid
 
+
 def curate_sequence(seq, allowed = "ACGT-"):
     if seq is None:
         return None, False
@@ -283,6 +254,7 @@ def curate_sequence(seq, allowed = "ACGT-"):
     if len(seq) == 0:
         is_valid = False
     return seq, is_valid
+
 
 def filename_allowed(filename, allowed_extensions = {'vcf', 'txt'}):
     return '.' in filename and \
@@ -319,6 +291,7 @@ def check_vcf(path, ref_genome = 'GRCh38'):
 
     return returncode, err_msg, vcf_errors
 
+
 def left_align_vcf(infile, outfile, ref_genome = 'GRCh38'):
     genome_path = ''
     if ref_genome == 'GRCh37':
@@ -331,40 +304,6 @@ def left_align_vcf(infile, outfile, ref_genome = 'GRCh38'):
     returncode, err_msg, command_output = execute_command(command, 'VcfLeftNormalize')
 
     return returncode, err_msg, command_output
-
-## DEPRECATED
-#def hgvsc_to_vcf(hgvs, reference = None):
-#    #tmp_file_path = tempfile.gettempdir() + "/hgvs_to_vcf"
-#    tmp_file_path = get_random_temp_file("_hgvs2vcf")
-#    tmp_file = open(tmp_file_path + ".tsv", "w")
-#    tmp_file.write("#reference	hgvs_c\n")
-#    if reference is None:
-#        reference, hgvs = split_hgvs(hgvs)
-#    tmp_file.write(reference + "\t" + hgvs + "\n")
-#    tmp_file.close()
-#
-#    command = [os.path.join(paths.ngs_bits_path, "HgvsToVcf")]
-#    command.extend(['-in', tmp_file_path + '.tsv', '-ref', paths.ref_genome_path, '-out', tmp_file_path + '.vcf'])
-#    returncode, err_msg, command_output = execute_command(command, "HgvsToVcf", use_prefix_error_log=False)
-#    
-#    chr = None
-#    pos = None
-#    ref = None
-#    alt = None
-#    tmp_file = open(tmp_file_path + '.vcf', "r")
-#    for line in tmp_file: # this assumes a single-entry vcf
-#        if line.strip() == '' or line.startswith('#'):
-#            continue
-#        parts = line.split('\t')
-#        chr = parts[0]
-#        pos = parts[1]
-#        ref = parts[3]
-#        alt = parts[4]
-#    
-#
-#    rm(tmp_file_path + ".tsv")
-#    rm(tmp_file_path + ".vcf")
-#    return chr, pos, ref, alt, err_msg
 
 
 def hgvsc_to_vcf(hgvs_strings, references = None):
@@ -430,7 +369,6 @@ def split_hgvs(hgvs):
         hgvs = hgvs[double_point_pos+1:].strip()
         return reference, hgvs
     return None, hgvs
-    
 
 
 def find_between(s, prefix, postfix):
@@ -461,6 +399,7 @@ def get_refseq_to_ensembl_transcript_dict(reverse = False):
             result[key] = value
     parsing_table.close()
     return result
+
 
 def get_transcript_to_gene_dict():
     ensembl_to_refseq = get_refseq_to_ensembl_transcript_dict(reverse = True) # ccds included!
@@ -531,13 +470,16 @@ def complement(seq, missing_data = "NA"):
     seq = seq.upper()
     return seq
 
+
 def get_base64_encoding(path):
     with open(path, "rb") as pdf_file:
         encoded_string = base64.b64encode(pdf_file.read())
         return encoded_string
 
+
 def buffer_to_base64(buffer):
     return base64.b64encode(buffer.getvalue())
+
 
 # not used atm
 #def base64_to_file(base64_string, path):
@@ -546,8 +488,10 @@ def buffer_to_base64(buffer):
 #    file_result.write(file_64_decode)
 #    file_result.close()
 
+
 def decode_base64(base64_string):
     return base64.b64decode(base64_string)
+
 
 def encode_vcf(text):
     result = decode_html(text)
@@ -571,6 +515,7 @@ def encode_vcf(text):
                  .replace('~1Y', '=')
     return result
 
+
 def decode_vcf(text):
     result = text.replace('_', ' ') \
                  .replace('%3B', ';') \
@@ -582,10 +527,12 @@ def decode_vcf(text):
                  .replace('%1Y', '=')
     return result
 
+
 def encode_html(text): # this escapes special characters for the use in html text
     result = text.replace('>', '&gt;') \
                  .replace('<', '&lt;')
     return result
+
 
 def decode_html(text):
     result = text.replace('&gt;', '>') \
@@ -603,6 +550,7 @@ def process_multiple(list_of_objects, sep = '~26', do_prefix = True) -> str:
         do_prefix = False
     new_info = sep.join(infos)
     return new_info
+
 
 def list_of_objects_to_dict(list_of_objects, key_func = lambda a : a, val_func = lambda a : a):
     result = {}
@@ -627,17 +575,21 @@ def add_args_to_url(url, new_params):
 def get_today():
     return datetime.datetime.today().strftime('%Y-%m-%d')
 
+
 def get_now():
     return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
 
 def reformat_date(date_str, input_pattern, output_pattern):
     datetime_obj = datetime.datetime.strptime(date_str, input_pattern)
     return datetime_obj.strftime(output_pattern)
 
+
 def days_between(d1, d2):
     d1 = datetime.datetime.strptime(d1, "%Y-%m-%d")
     d2 = datetime.datetime.strptime(d2, "%Y-%m-%d")
     return abs((d2 - d1).days)
+
 
 def buffer_to_file_system(buffer, path):
     with open(path, 'w') as f:
@@ -653,6 +605,7 @@ def is_snv(one_var):
     else:
         return True
 
+
 def read_dotenv():
     webapp_env = os.environ.get('WEBAPP_ENV', None)
     if webapp_env is None:
@@ -666,14 +619,17 @@ def read_dotenv():
     
     load_dotenv(dotenv_path)
 
+
 def enquote(string):
     string = str(string).strip("'") # remove quotes if the input string is already quoted!
     return "'" + string + "'"
+
 
 def enbrace(string):
     #string = str(string).strip("(").strip(")")
     string = "(" + string + ")"
     return string
+
 
 def enpercent(string):
     string = str(string).strip('%')
@@ -684,13 +640,16 @@ def get_random_temp_file(fileending, filename_ext = "", folder = tempfile.gettem
     filename = collect_info(str(uuid.uuid4()), "", filename_ext, sep = '_')
     return os.path.join(folder, filename + "." + str(fileending.strip('.'))).strip('.')
 
+
 def rm(path):
     if os.path.exists(path): 
         os.remove(path)
 
+
 def cleanup_files(*args):
     for path in args:
         rm(path)
+
 
 def remove_oldest_file(folder, maxfiles=10):
     if os.path.exists(folder):
@@ -705,6 +664,7 @@ def remove_oldest_file(folder, maxfiles=10):
 def mkdir_recursive(dirpath):
     pathlib.Path(dirpath).mkdir(parents=True, exist_ok=True)
 
+
 def str2datetime(datetime_str, fmt):
     if datetime_str is None:
         return None
@@ -712,13 +672,13 @@ def str2datetime(datetime_str, fmt):
         return datetime.datetime.strptime(datetime_str, fmt)
 
 
-
 def order_classes( classes):
     keyfunc = cmp_to_key(mycmp = sort_classes)
     classes = [str(x) for x in classes]
     classes.sort(key = keyfunc) # sort by preferred transcript
     return classes
- 
+
+
 def sort_classes(a, b):
     # sort by ensembl/refseq
     class_sequence = ['1', '2', '3-', '3', '3+', '4M', '4', '5', 'R']
@@ -731,6 +691,7 @@ def sort_classes(a, b):
     elif a_importance < b_importance:
         return -1
     return 0
+
 
 def reverse_seq(seq):
     seq = seq.upper().replace('A', 't').replace('T', 'a').replace('G', 'c').replace('C', 'g')
@@ -840,6 +801,7 @@ def extend_dict(dictionary, key, new_value):
         dictionary[key] = [new_value]
     return dictionary
 
+
 # format: chr:start-stop
 def get_sequence(chrom: str, start: int, end: int):
     # chrom, start and end is the region of interest
@@ -859,6 +821,7 @@ def get_sequence(chrom: str, start: int, end: int):
     sequence, region = extract_sequence(stdout)
     return sequence, region
 
+
 # fasta_str should only contain a single fasta entry
 def extract_sequence(fasta_str):
     lines = fasta_str.split('\n')
@@ -873,6 +836,7 @@ def extract_sequence(fasta_str):
         else:
             sequence += line
     return sequence, region
+
 
 def get_sv_variant_sequence(chrom, start, end, sv_type):
     start = int(start)
@@ -901,8 +865,6 @@ def get_sv_variant_sequence(chrom, start, end, sv_type):
     return ref, alt, pos
 
 
-
-
 def get_preferred_genes():
     return set(["ATM", "BARD1", "BRCA1", "BRCA2", "BRIP1", "CDH1", "CHEK2", "PALB2", "PTEN", "RAD51C", "RAD51D", "STK11", "TP53"])
 
@@ -912,10 +874,12 @@ def none_to_empty_list(obj):
         return []
     return obj
 
+
 def none2default(obj, default):
     if obj is None:
         return default
     return obj
+
 
 def percent_to_decimal(input) -> float:
     if input is None:
@@ -923,7 +887,6 @@ def percent_to_decimal(input) -> float:
     input = float(input)
     input = input / 100
     return input
-
 
 
 def three_to_one_letter(s):
@@ -953,6 +916,7 @@ def three_to_one_letter(s):
     if s == "ter": return "X"
     return "-"
 
+
 def one_to_three_letter(s):
     s = s.upper()
     if s == "A": return "Ala"
@@ -979,7 +943,4 @@ def one_to_three_letter(s):
     if s == "V": return "Val"
     if s == "X": return "Ter"
     return "-"
-
-
-
 

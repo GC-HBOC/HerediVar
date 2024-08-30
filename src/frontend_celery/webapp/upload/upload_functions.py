@@ -3,7 +3,6 @@ from os import path
 import sys
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__))))))
 from common import functions
-from common.heredicare_interface import Heredicare
 from common.db_IO import Connection
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from utils import *

@@ -2,12 +2,9 @@
 from ._job import Job
 import common.paths as paths
 import common.functions as functions
-import tempfile
 import os
-from os.path import exists
 import urllib
 
-from ..pubmed_parser import fetch
 
 ## this annotates various information from different vcf files
 class consequence_job(Job):
@@ -64,14 +61,6 @@ class consequence_job(Job):
         conn.delete_variant_consequences(variant_id)
 
         #FORMAT: Allele|Consequence|IMPACT|SYMBOL|HGNC_ID|Feature|Feature_type|EXON|INTRON|HGVSc|HGVSp
-        # CSQ=
-        # T|synonymous_variant|LOW|CDH1|HGNC:1748|ENST00000261769.10|Transcript|12/16||c.1896C>T|p.His632%3D,
-        # T|3_prime_UTR_variant&NMD_transcript_variant|MODIFIER|CDH1|HGNC:1748|ENST00000566612.5|Transcript|11/15||c.*136C>T|,
-        # T|synonymous_variant|LOW|CDH1|HGNC:1748|ENST00000422392.6|Transcript|11/15||c.1713C>T|p.His571%3D,
-        # T|3_prime_UTR_variant&NMD_transcript_variant|MODIFIER|CDH1|HGNC:1748|ENST00000566510.5|Transcript|11/15||c.*562C>T|,
-        # T|non_coding_transcript_exon_variant|MODIFIER|CDH1|HGNC:1748|ENST00000562836.5|Transcript|11/15||n.1967C>T|,
-        # T|upstream_gene_variant|MODIFIER|FTLP14|HGNC:37964|ENST00000562087.2|Transcript||||,
-        # T|upstream_gene_variant|MODIFIER|CDH1|HGNC:1748|ENST00000562118.1|Transcript||||
         for source in sources:
             info_field = info_field_prefix + source + "="
             csq_info = functions.find_between(info, info_field, '(;|$)')
@@ -102,7 +91,6 @@ class consequence_job(Job):
                 hgvs_p = urllib.parse.unquote(parts[10])
 
                 #variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, symbol, consequence_source, pfam_acc
-                #print([variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, gene_symbol, source])
                 conn.insert_variant_consequence(variant_id, transcript_name, hgvs_c, hgvs_p, consequence, impact, exon_nr, intron_nr, hgnc_id, gene_symbol, source)
 
         return status_code, err_msg
@@ -150,5 +138,3 @@ class consequence_job(Job):
 
         return returncode, err_msg, vcf_errors
 
-
-    

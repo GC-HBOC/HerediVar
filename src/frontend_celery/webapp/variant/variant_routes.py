@@ -123,7 +123,6 @@ def create_sv():
 
 @variant_blueprint.route('/display/<int:variant_id>', methods=['GET'])
 @variant_blueprint.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>', methods=['GET']) # alternative url using vcf information
-# example: http:#srv018.img.med.uni-tuebingen.de:5000/display/chr=chr2&pos=214767531&ref=C&alt=T is the same as: http:#srv018.img.med.uni-tuebingen.de:5000/display/17
 @require_permission(['read_resources'])
 def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     conn = get_connection()
@@ -137,35 +136,50 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
     # get available lists for user
     lists = conn.get_lists_for_user(user_id = session['user']['user_id'], variant_id=variant_id)
 
-
-    # get the variant and all its annotations
+    # get variant
     variant = conn.get_variant(variant_id)
-    mrcc = variant.get_recent_consensus_classification()
-
-    # get current status of clinvar submission
-    most_recent_publish_queue = conn.get_most_recent_publish_queue(variant_id = variant_id, upload_clinvar = True)
-    publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_clinvar(variant_id)
-    clinvar_queue_entries = check_update_clinvar_status(variant_id, publish_queue_ids_oi, conn)
-    clinvar_queue_entry_summary = variant_functions.summarize_clinvar_status(clinvar_queue_entries, most_recent_publish_queue, mrcc)
-    
-
-    # get current status of heredicare submission
-    most_recent_publish_queue = conn.get_most_recent_publish_queue(variant_id = variant_id, upload_heredicare = True)
-    publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_heredicare(variant_id)
-    heredicare_queue_entries = check_update_heredicare_status(variant_id, publish_queue_ids_oi, conn)
-    #most_recent_heredicare_queue_entries = conn.get_heredicare_queue_entries([most_recent_publish_queue.id], variant_id)
-    heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(heredicare_queue_entries, most_recent_publish_queue, mrcc)
-    
     
     return render_template('variant/variant.html',
                             lists = lists,
                             variant = variant,
-                            is_classification_report = False,
-                            clinvar_queue_entries = clinvar_queue_entries,
-                            clinvar_queue_entry_summary = clinvar_queue_entry_summary,
-                            heredicare_queue_entries = heredicare_queue_entries,
-                            heredicare_queue_entry_summary = heredicare_queue_entry_summary
+                            is_classification_report = False
                         )
+
+
+@variant_blueprint.route('/get_clinvar_upload_status', methods=['GET'])
+@require_permission(['read_resources'])
+def get_clinvar_upload_status():
+    conn = get_connection()
+
+    variant_id = request.args.get('variant_id')
+    require_valid(variant_id, "variant", conn)
+
+    most_recent_publish_queue = conn.get_most_recent_publish_queue(variant_id = variant_id, upload_clinvar = True)
+    publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_clinvar(variant_id)
+    clinvar_queue_entries = check_update_clinvar_status(variant_id, publish_queue_ids_oi, conn)
+
+    mrcc = conn.get_variant(variant_id, include_annotations=False, include_automatic_classification=False, include_clinvar = False, include_consequences=False).get_recent_consensus_classification()
+    clinvar_queue_entry_summary = variant_functions.summarize_clinvar_status(clinvar_queue_entries, most_recent_publish_queue, mrcc)
+
+    return clinvar_queue_entry_summary
+
+
+@variant_blueprint.route('/get_heredicare_upload_status', methods=['GET'])
+@require_permission(['read_resources'])
+def get_heredicare_upload_status():
+    conn = get_connection()
+
+    variant_id = request.args.get('variant_id')
+    require_valid(variant_id, "variant", conn)
+
+    most_recent_publish_queue = conn.get_most_recent_publish_queue(variant_id = variant_id, upload_heredicare = True)
+    publish_queue_ids_oi = conn.get_most_recent_publish_queue_ids_heredicare(variant_id)
+    heredicare_queue_entries = check_update_heredicare_status(variant_id, publish_queue_ids_oi, conn)
+
+    mrcc = conn.get_variant(variant_id, include_annotations=False, include_automatic_classification=False, include_clinvar = False, include_consequences=False).get_recent_consensus_classification()
+    heredicare_queue_entry_summary = variant_functions.summarize_heredicare_status(heredicare_queue_entries, most_recent_publish_queue, mrcc)
+
+    return heredicare_queue_entry_summary
 
 
 @variant_blueprint.route('/start_annotation_service', methods=['POST'])
@@ -328,9 +342,8 @@ def consensus_classify(variant_id):
 
     variant = conn.get_variant(variant_id)
     classification_schemas = conn.get_classification_schemas()
-    #classification_schemas = {schema_id: classification_schemas[schema_id] for schema_id in classification_schemas} # remove no-scheme classification as this can not be submitted to clinvar
 
-    # this is also used to preselect from previous user classify submissions
+    # previous_classifications is also used to preselect from previous user classify submissions
     # -1 is the imaginary user id for the consensus classifications
     previous_classifications = {-1: variant.get_recent_consensus_classification_all_schemes(convert_to_dict = True)} 
 

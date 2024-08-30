@@ -50,8 +50,6 @@ class maxentscan_job(Job):
         self.status = "success"
 
 
-
-
     def save_to_db(self, info, variant_id, conn):
         status_code = 0
         err_msg = ""
@@ -59,8 +57,6 @@ class maxentscan_job(Job):
         recent_annotation_ids = conn.get_recent_annotation_type_ids()
         mes_annotation_id = recent_annotation_ids["maxentscan"]
         mes_swa_annotation_id = recent_annotation_ids["maxentscan_swa"]
-
-        #print(info)
 
         # STANDARD MES
         mes_annotation = functions.find_between(info, "MES=", '(;|$)')
@@ -78,6 +74,7 @@ class maxentscan_job(Job):
 
                 conn.insert_variant_transcript_annotation(variant_id, transcript, mes_annotation_id, '|'.join([mes_ref.strip(), mes_alt.strip()]))
         
+        # MES SWA
         mes_swa_annotation = functions.find_between(info, "MES_SWA=", '(;|$)')
         if mes_swa_annotation != '' and mes_swa_annotation is not None:
 
@@ -104,22 +101,11 @@ class maxentscan_job(Job):
 
     
     def annotate_maxentscan(self, input_vcf_path, output_vcf_path):
-
-        #if os.environ.get('WEBAPP_ENV') == 'githubtest': # use docker container installation
-        #    command = functions.get_docker_instructions(os.environ.get("NGSBITS_CONTAINER_ID"))
-        #    command.append("VcfAnnotateHexplorer")
-        #else: # use local installation
         command = [os.path.join(paths.ngs_bits_path, "VcfAnnotateMaxEntScan")]
         command = command + ["-swa", "-in", input_vcf_path, "-out", output_vcf_path, "-ref", paths.ref_genome_path, "-gff", paths.ensembl_transcript_path]
         returncode, stderr, stdout = functions.execute_command(command, 'VcfAnnotateMaxEntScan')
 
         return returncode, stderr, stdout
-
-
-
-        #command = [paths.ngs_bits_path + "VcfAnnotateHexplorer", "-in", input_vcf_path, "-out", output_vcf_path, "-ref", paths.ref_genome_path]
-        #returncode, stderr, stdout = functions.execute_command(command, process_name = "hexplorer")
-        #return returncode, stderr, stdout
 
 
 

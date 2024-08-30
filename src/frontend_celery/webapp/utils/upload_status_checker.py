@@ -75,7 +75,7 @@ def check_update_heredicare_status(variant_id, publish_queue_ids_oi: list, conn:
         publish_heredicare_queue_id = heredicare_queue_entry[0]
         status = heredicare_queue_entry[1]
         submission_id = heredicare_queue_entry[7]
-        if status in ['pending', 'progress', 'submitted'] and submission_id is not None:
+        if status in ['pending', 'progress', 'submitted', 'retry'] and submission_id is not None:
             finished_at, status, message = check_heredicare_status(submission_id)
             conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status, message, finished_at = finished_at)
             got_update = True
@@ -98,10 +98,6 @@ def check_update_heredicare_status(variant_id, publish_queue_ids_oi: list, conn:
 
     return heredicare_queue_entries
 
-#def check_update_all_progressing_heredicare(conn: Connection):
-#    variant_ids = conn.get_variant_ids_by_publish_heredicare_status(stati = ['pending', 'progress', 'submitted'])
-#    for variant_id in variant_ids:
-#        heredicare_queue_entries = check_update_heredicare_status(variant_id, conn)
 
 def check_update_all(variant_ids: list, publish_queue_ids_oi: list, conn: Connection):
     for variant_id in variant_ids:

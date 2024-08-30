@@ -3,7 +3,6 @@ from ._job import Job
 import common.paths as paths
 import common.functions as functions
 from common.db_IO import Connection
-import tempfile
 import os
 import json
 import requests
@@ -113,8 +112,6 @@ class automatic_classification_job(Job):
         selected_criteria_protein = '+'.join(selected_criteria.get("protein", []) + selected_criteria.get("general", []))
         classification_protein = self.get_classification(selected_criteria_protein, scheme_type, scheme_version)
 
-        #print(classification_endpoint)
-
         automatic_classification_id = conn.insert_automatic_classification(variant_id, scheme_id, classification_splicing, classification_protein, tool_version)
 
         for criterium_name in classification_result:
@@ -167,14 +164,12 @@ class automatic_classification_job(Job):
         #    "variant_json": "{\"chr\": \"17\", \"pos\": 43057110, \"gene\": \"BRCA1\", \"ref\": \"A\", \"alt\": \"C\", \"variant_type\": [\"missense_variant\"], \"variant_effect\": [{\"transcript\": \"ENST00000357654\", \"hgvs_c\": \"c.5219T>G\", \"hgvs_p\": \"p.Val1740Gly\", \"variant_type\": [\"missense_variant\"], \"exon\": 19}, {\"transcript\": \"ENST00000471181\", \"hgvs_c\": \"c.5282T>G\", \"hgvs_p\": \"p.Val1761Gly\", \"variant_type\": [\"missense_variant\"], \"exon\": 20}], \"splicing_prediction_tools\": {\"SpliceAI\": 0.5}, \"pathogenicity_prediction_tools\": {\"REVEL\": 0.5, \"BayesDel\": 0.5}, \"gnomAD\": {\"AF\": 0.007, \"AC\": 12, \"popmax\": \"EAS\", \"popmax_AF\": 0.009, \"popmax_AC\": 5}, \"FLOSSIES\": {\"AFR\": 9, \"EUR\": 130}, \"mRNA_analysis\": {\"performed\": true, \"pathogenic\": true, \"benign\": true}, \"functional_data\": {\"performed\": true, \"pathogenic\": true, \"benign\": true}, \"prior\": 0.25, \"co-occurrence\": 0.56, \"segregation\": 0.56, \"multifactorial_log-likelihood\": 0.56, \"VUS_task_force_domain\": true, \"cancer_hotspot\": true, \"cold_spot\": true}"
         #}'
         api_host = "http://" + os.environ.get("AUTOCLASS_HOST", "0.0.0.0") + ":" + os.environ.get("AUTOCLASS_PORT", "8080") + "/"
-        #api_host = "http://srv018.img.med.uni-tuebingen.de:5004/"
         endpoint = "classify_variant"
         url = api_host + endpoint
         headers = {"accept": "application/json", "Content-Type": "application/json"}
         data = {"config_path": config_path, "variant_json": autoclass_input}
         data = json.dumps(data)
         resp = requests.post(url, headers=headers, data=data)
-        #print(resp.__dict__)
 
         if resp.status_code != 200:
             status_code = resp.status_code
@@ -189,10 +184,9 @@ class automatic_classification_job(Job):
 
     def get_autoclass_json(self, variant_id, conn: Connection) -> str:
         variant = conn.get_variant(variant_id, include_clinvar=False, include_consensus=False, include_user_classifications=False, include_heredicare_classifications=False, include_literature = False, include_external_ids = False, include_automatic_classification=False)
+        
         if variant is None:
             return None
-        
-
         if len(variant.ref) > 15 or len(variant.alt) > 15: # cannot calculate on long insertions/deletions
             return None
         

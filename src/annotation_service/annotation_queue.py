@@ -37,6 +37,7 @@ class Annotation_Queue:
             automatic_classification_job(annotation_data) # must be called last
         ]
 
+
     def execute(self, conn):
         err_msg = ""
         status = "success"
@@ -49,8 +50,6 @@ class Annotation_Queue:
                     err_msg = self.collect_error_msgs(err_msg, "Job " + job.job_name + " finished with status " + job.status + ". Message: " + job.err_msg)
         return status, err_msg
 
-
-    
 
     def collect_error_msgs(self, msg1, msg2):
         res = msg1

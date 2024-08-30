@@ -2,10 +2,7 @@
 from ._job import Job
 import common.paths as paths
 import common.functions as functions
-import tempfile
-import uuid
 import os
-from os.path import exists
 
 
 ## run SpliecAI on the variants which are not contained in the precomputed file
@@ -18,6 +15,7 @@ class spliceai_job(Job):
         self.err_msg = ""
         self.annotation_data = annotation_data
         self.generated_paths = []
+
 
     def do_execution(self, *args, **kwargs):
         result = True
@@ -81,7 +79,6 @@ class spliceai_job(Job):
         return returncode, err_msg, vcf_errors
     
 
-
     def save_to_db(self, info, variant_id, conn):
         recent_annotation_ids = conn.get_recent_annotation_type_ids()
 
@@ -102,7 +99,6 @@ class spliceai_job(Job):
 
         config_file.close()
         return config_file_path
-
 
 
     #','.join([str(max([float(x) for x in x.split('|')[2:6] if x != '.'])) for x in value.replace(',', '&').split('&')])
@@ -159,7 +155,7 @@ class spliceai_job(Job):
         # prepare input data
         input_vcf_zipped_path = input_vcf_path + ".gz"
 
-        # gbzip and index the input file as this is required for spliceai...
+        # bgzip and index the input file as this is required for spliceai...
         returncode, stderr, stdout = functions.execute_command([os.path.join(paths.htslib_path, 'bgzip'), '-f', '-k', input_vcf_path], 'bgzip')
         if returncode != 0:
             return returncode, "SpliceAI bgzip error:" + stderr, stdout
@@ -169,6 +165,7 @@ class spliceai_job(Job):
             return returncode, "SpliceAI tabix error: " + stderr, stdout
 
         # execute spliceai
+        # -M: masked scores!
         command = ['spliceai', '-I', input_vcf_zipped_path, '-O', output_vcf_path, '-R', paths.ref_genome_path, '-A', paths.ref_genome_name.lower(), '-M', '1']
         returncode, stderr, stdout = functions.execute_command(command, 'SpliceAI')
 

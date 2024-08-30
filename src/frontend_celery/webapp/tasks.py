@@ -147,8 +147,6 @@ def get_vid_sets(conn: Connection, do_filter = True):
             annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
             all_vids_heredivar = conn.get_all_external_ids_from_annotation_type(annotation_type_id)
 
-            #intersection, heredivar_exclusive_vids, heredicare_exclusive_vids = compare_v_id_lists(all_vids_heredicare, vids_heredivar, filtered_vids_heredicare)
-
             filtered_vids_heredicare = set(filtered_vids_heredicare)
             all_vids_heredivar = set(all_vids_heredivar)
             all_vids_heredicare = set(all_vids_heredicare)
@@ -507,12 +505,7 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
             #transcripts = conn.get_mane_select_for_gene(gene_id)
 
             if transcripts is not None:
-                #print(transcripts)
-                #print(variant["CHGVS"])
-
                 chrom, pos, ref, alt, err_msg = functions.hgvsc_to_vcf([variant["CHGVS"]]*len(transcripts), transcripts) # convert to vcf
-
-                #print(err_msg)
 
                 if 'unequal' in err_msg:
                     if err_msg not in message:
@@ -577,8 +570,8 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
     message = ""
     was_successful = True
     variant_id = None
-    # validate request
 
+    # validate request
     chrom, chrom_is_valid = functions.curate_chromosome(chrom)
     ref, ref_is_valid = functions.curate_sequence(ref, allowed_sequence_letters)
     alt, alt_is_valid = functions.curate_sequence(alt, allowed_sequence_letters)
@@ -607,15 +600,15 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
         was_successful = False
         return was_successful, message, variant_id
 
-
-
+    # variant information valid
     tmp_file_path = functions.get_random_temp_file("vcf")
     functions.variant_to_vcf(chrom, pos, ref, alt, tmp_file_path, genome_build)
 
+    # lift if necceessary + leftalign + check reference base
     do_liftover = genome_build == 'GRCh37'
     returncode, err_msg, command_output = functions.preprocess_variant(tmp_file_path, do_liftover = do_liftover)
 
-
+    # assess problems with the variant itself
     if returncode != 0:
         message = err_msg
         was_successful = False
@@ -674,7 +667,6 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
         if not insert_variant:
             message += "HG38 variant would be: " + '-'.join([str(new_chr), str(new_pos), str(new_ref), str(new_alt)])
 
-
     functions.rm(tmp_file_path)
     functions.rm(tmp_file_path + ".lifted.unmap")
     return was_successful, message, variant_id
@@ -711,7 +703,6 @@ def validate_and_insert_cnv(chrom: str, start: int, end: int, sv_type: str, impr
     if not chrom_is_valid or not start_is_valid or not end_is_valid or not sv_type_is_valid:
         was_successful = False
         return was_successful, message, variant_id
-
 
     do_liftover = genome_build == 'GRCh37'
     if do_liftover:
@@ -763,7 +754,6 @@ def validate_and_insert_cnv(chrom: str, start: int, end: int, sv_type: str, impr
         chrom = new_chrom
         start = new_start
         end = new_end
-
 
     is_duplicate = conn.check_sv_duplicate(chrom, start, end, sv_type)
 
@@ -846,7 +836,9 @@ def annotate_variant(self, annotation_queue_id, job_config):
 
 
 
-
+##################################################
+############## other random tasks ################
+##################################################
 
 
 def send_mail(subject, sender, recipient, text_body):

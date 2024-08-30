@@ -23,7 +23,7 @@ api_blueprint = Blueprint(
 @require_api_token_permission(["read_only"])
 def consensus_classification():
     
-    conn = get_connection() #Connection(roles = ["read_only"])
+    conn = get_connection()
 
     variant_id = request.args.get('variant_id')
     if variant_id is None:
@@ -98,8 +98,6 @@ def check():
     return jsonify(result)
 
 
-
-
 @api_blueprint.route('/api/v1.0/post/variant', methods = ['POST'])
 @require_api_token_permission(["user"])
 def insert_variant():
@@ -109,6 +107,4 @@ def insert_variant():
     create_result, do_redirect = variant_functions.create_variant_from_request(request, user, conn)
 
     return jsonify(create_result)
-
-
 

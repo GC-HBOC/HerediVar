@@ -12,8 +12,6 @@ def forbidden(e):
 def internal_server_error(e):
     original = getattr(e, "original_exception", None) # original != None: unhandled exception
 
-    #current_app.logger.exception(e)
-
     if original is None:
         # triggered if abort(500) is called
         original = e

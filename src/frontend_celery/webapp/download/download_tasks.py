@@ -7,7 +7,6 @@ from common import functions
 from common import paths
 from common.db_IO import Connection
 from celery.exceptions import Ignore
-import time
 
 from . import download_functions
 # errors
@@ -72,7 +71,7 @@ def generate_list_vcf(self, list_id, user_roles, download_queue_id, filename):
         status = "error"
         message = "There was a runtime error: " + str(e) + ' ' + traceback.format_exc()
 
-    print(status)
+    #print(status)
     #print(message)
 
     if status != "retry":

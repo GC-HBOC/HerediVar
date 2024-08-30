@@ -2,9 +2,7 @@
 from ._job import Job
 import common.paths as paths
 import common.functions as functions
-import tempfile
 import os
-from os.path import exists
 
 from ..pubmed_parser import fetch
 
@@ -150,8 +148,8 @@ class annotate_from_vcf_job(Job):
         clv_inpret = functions.find_between(info, 'ClinVar_inpret=', '(;|$)')
 
         if clv_revstat is not None and clv_inpret is not None and clv_varid is not None:
-            clv_revstat = functions.decode_vcf(clv_revstat)#.replace('\\', ',').replace('_', ' ')
-            clv_inpret = functions.decode_vcf(clv_inpret)#.replace('\\', ',').replace('_', ' ')
+            clv_revstat = functions.decode_vcf(clv_revstat)
+            clv_inpret = functions.decode_vcf(clv_inpret)
 
             conn.clean_clinvar(variant_id) # remove all clinvar information of this variant from database and insert it again -> only the most recent clinvar annotaion is saved in database!
             conn.insert_clinvar_variant_annotation(variant_id, clv_varid, clv_inpret, clv_revstat)
@@ -263,14 +261,6 @@ class annotate_from_vcf_job(Job):
         if job_config['do_flossies']:
             config_file.write(paths.FLOSSIES_path + "\tFLOSSIES\tnum_eur,num_afr\t\n")
 
-        ### add cancerhotspots annotations
-        #if job_config['do_cancerhotspots']:
-        #    config_file.write(paths.cancerhotspots_path + "\tcancerhotspots\tcancertypes,AC,AF\t\n")
-
-        ### add arup brca classification
-        #if job_config['do_arup']:
-        #    config_file.write(paths.arup_brca_path + "\tARUP\tclassification\t\n")
-
         ## add TP53 database information
         if job_config['do_tp53_database']:
             config_file.write(paths.tp53_db + "\ttp53db\tclass,transactivation_class,DNE_LOF_class,DNE_class,domain_function,pubmed\t\n")
@@ -294,32 +284,4 @@ class annotate_from_vcf_job(Job):
 
         config_file.close()
         return config_file_path
-
-
-
-
-
-"""
-
-CSQ=ENST00000240651|||downstream_gene_variant|MODIFIER|||HGNC:26162|PYROXD1||||,ENST00000375266|||downstream_gene_variant|MODIFIER|||HGNC:26162|PYROXD1||||,ENST00000421138|ENST00000421138.6:c.1643_1644del|ENSP00000395449.2:p.His548LeufsTer8|frameshift_variant|HIGH|14/16||HGNC:9948|RECQL|Gene3D:1.10.10.10&PDB-ENSP_mappings:2v1x.A&PDB-ENSP_mappings:2v1x.B&PDB-ENSP_mappings:2wwy.A&PDB-ENSP_mappings:2wwy.B&PDB-ENSP_mappings:4u7d.A&PDB-ENSP_mappings:4u7d.B&PDB-ENSP_mappings:4u7d.C&PDB-ENSP_mappings:4u7d.D&PDB-ENSP_mappings:6jtz.A&PDB-ENSP_mappings:6jtz.B&AFDB-ENSP_mappings:AF-P46063-F1.A&Pfam:PF09382&PANTHER:PTHR13710&PANTHER:PTHR13710:SF72|||,ENST00000444129|ENST00000444129.7:c.1643_1644del|ENSP00000416739.2:p.His548LeufsTer8|frameshift_variant|HIGH|13/15||HGNC:9948|RECQL|Gene3D:1.10.10.10&PDB-ENSP_mappings:2v1x.A&PDB-ENSP_mappings:2v1x.B&PDB-ENSP_mappings:2wwy.A&PDB-ENSP_mappings:2wwy.B&PDB-ENSP_mappings:4u7d.A&PDB-ENSP_mappings:4u7d.B&PDB-ENSP_mappings:4u7d.C&PDB-ENSP_mappings:4u7d.D&PDB-ENSP_mappings:6jtz.A&PDB-ENSP_mappings:6jtz.B&AFDB-ENSP_mappings:AF-P46063-F1.A&Pfam:PF09382&PANTHER:PTHR13710&PANTHER:PTHR13710:SF72|||,ENST00000536851|||downstream_gene_variant|MODIFIER|||HGNC:26162|PYROXD1||||,ENST00000538582|||downstream_gene_variant|MODIFIER|||HGNC:26162|PYROXD1||||,ENST00000538615|||downstream_gene_variant|MODIFIER|||HGNC:26162|PYROXD1||||,ENST00000544970|||downstream_gene_variant|MODIFIER|||HGNC:26162|PYROXD1||||,ENSR00000452487|||regulatory_region_variant|MODIFIER||||||||
-CSQ_refseq=NM_001350912.2|||downstream_gene_variant|MODIFIER||||PYROXD1|,NM_001350913.2|||downstream_gene_variant|MODIFIER||||PYROXD1|,NM_002907.4|NM_002907.4:c.1643_1644del|NP_002898.2:p.His548LeufsTer8|frameshift_variant|HIGH|13/15|||RECQL|,NM_024854.5|||downstream_gene_variant|MODIFIER||||PYROXD1|,NM_032941.3|NM_032941.3:c.1643_1644del|NP_116559.1:p.His548LeufsTer8|frameshift_variant|HIGH|14/16|||RECQL|,XM_005253461.3|XM_005253461.3:c.1643_1644del|XP_005253518.1:p.His548LeufsTer8|frameshift_variant|HIGH|14/16|||RECQL|,XM_005253462.5|XM_005253462.5:c.1643_1644del|XP_005253519.1:p.His548LeufsTer8|frameshift_variant|HIGH|14/16|||RECQL|,XM_005253463.4|XM_005253463.4:c.1643_1644del|XP_005253520.1:p.His548LeufsTer8|frameshift_variant|HIGH|13/15|||RECQL|,XM_005253464.4|XM_005253464.4:c.1643_1644del|XP_005253521.1:p.His548LeufsTer8|frameshift_variant|HIGH|13/15|||RECQL|,XM_017019976.2|||downstream_gene_variant|MODIFIER||||PYROXD1|,XR_242902.4|||downstream_gene_variant|MODIFIER||||PYROXD1|
-PHYLOP=4.112
-hexplorer_delta=-0.20
-hexplorer_mut=-2.18
-hexplorer_wt=-1.99
-hexplorer_delta_rev=-0.83
-hexplorer_mut_rev=-7.99
-hexplorer_wt_rev=-7.16
-max_hbond_delta=0.00
-max_hbond_mut=5.40
-max_hbond_wt=5.40
-dbSNP_RS=1942960300
-indel_SpliceAI=A|RECQL|0.00|0.00|0.00|0.00|23|-24|-22|-26
-ClinVar_inpret=Uncertain_significance
-ClinVar_revstat=criteria_provided,_single_submitter
-ClinVar_varid=2450947
-ClinVar_submissions=index,VariationID,ClinicalSignificance,DateLastEvaluated,Description,SubmittedPhenotypeInfo,ReportedPhenotypeInfo,ReviewStatus,CollectionMethod,OriginCounts,Submitter,SCV,SubmittedGeneSymbol,ExplanationOfInterpretation
-
-"""
-
 

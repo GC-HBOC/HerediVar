@@ -38,6 +38,9 @@ class Heredicare(metaclass=Singleton):
     bearer = {}
     bearer_timestamp = {}
 
+    max_tries = 3
+    backoff_mult = 20
+
     def __init__(self):
         self.base_url = "https://hazel.imise.uni-leipzig.de/pids2" # /project
         self.projects = {
@@ -85,19 +88,41 @@ class Heredicare(metaclass=Singleton):
         message = ""
         bearer = None
         status = "success"
-        url = self.get_url(project_type, "bearer")
+        
         auth = self.get_auth(project_type)
-        data = {"grant_type":"client_credentials"}
         if any([x is None for x in auth]): # bearer is none
             message = "ERROR: missing credentials for HerediCare API!"
             status = "error"
         else:
-            resp = requests.post(url, auth=auth, data=data)
-            if resp.status_code != 200: # bearer is None
-                message = "ERROR: HerediCare API client credentials endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
-                status = "error"
-            else:
-                bearer = resp.json()["access_token"]
+            retry = True
+            current_try = 0
+
+            while retry and (current_try <= self.max_tries):
+                url = self.get_url(project_type, "bearer")
+                data = {"grant_type":"client_credentials"}
+
+                time.sleep(current_try * self.backoff_mult)
+                resp = requests.post(url, auth=auth, data=data)
+
+                if resp.status_code in [401, 503]: # unauthorized, service unavailable --> retry these
+                    message = "ERROR: HerediCare API client credentials endpoint returned an HTTP "  + str(resp.status_code)
+                    status = "error"
+                    current_try += 1
+                elif resp.status_code == 555:
+                    message = "ERROR: HerediCare API client credentials endpoint returned an HTTP 555 error. Reason: " + urllib.parse.unquote(resp.headers.get("Error-Reason", "not provided"))
+                    status = "error"
+                    retry = False
+                elif resp.status_code != 200:
+                    message = "ERROR: HerediCare API client credentials endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
+                    status = "error"
+                    retry = False
+                else: # success
+                    status = "success"
+                    message = ""
+                    retry = False
+                    bearer = resp.json()["access_token"]
+                    #print(resp.text)
+
         return bearer, status, message
 
     def extract_error_message(self, error_text):
@@ -125,7 +150,6 @@ class Heredicare(metaclass=Singleton):
         now = datetime.now()
         status = "success"
         message = ""
-        #print("TOKEN: " + str(self.bearer))
         bearer, timestamp = self.get_saved_bearer(project_type)
         if bearer is None:
             status, message = self.update_token(now, project_type)
@@ -264,23 +288,11 @@ class Heredicare(metaclass=Singleton):
         submission_id = None
         project_type = "upload"
 
-        status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
-        if status == 'error':
-            return submission_id, status, message
-
         url = self.get_url(project_type, "submissionid")
-        bearer, timestamp = self.get_saved_bearer(project_type)
-        header = {"Authorization": "Bearer " + bearer}
+        status, message, all_items = self.iterate_pagination(url, project_type)
 
-        resp = requests.get(url, headers=header)
-        if resp.status_code == 401: # unauthorized
-            message = "ERROR: HerediCare API get submission id endpoint returned an HTTP 401, unauthorized error. Attempting retry."
-            status = "retry"
-        elif resp.status_code != 200:
-            message = "ERROR: HerediCare API getsubmission id endpoint endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
-            status = "error"
-        else: # success
-            submission_id = resp.json()["items"][0]["submission_id"]
+        if status == "success":
+            submission_id = all_items[0]["submission_id"]
             
         return submission_id, status, message
     
@@ -290,23 +302,11 @@ class Heredicare(metaclass=Singleton):
         record_id = None
         project_type = "upload"
 
-        status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
-        if status == 'error':
-            return record_id, status, message
-
         url = self.get_url(project_type, "recordid")
-        bearer, timestamp = self.get_saved_bearer(project_type)
-        header = {"Authorization": "Bearer " + bearer}
+        status, message, all_items = self.iterate_pagination(url, project_type)
 
-        resp = requests.get(url, headers=header)
-        if resp.status_code == 401: # unauthorized
-            message = "ERROR: HerediCare API get submission id endpoint returned an HTTP 401, unauthorized error. Attempting retry."
-            status = "retry"
-        elif resp.status_code != 200:
-            message = "ERROR: HerediCare API getsubmission id endpoint endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
-            status = "error"
-        else: # success
-            record_id = resp.json()["items"][0]["record_id"]
+        if status == "success": # success
+            record_id = all_items[0]["record_id"]
 
         return record_id, status, message
 
@@ -320,26 +320,17 @@ class Heredicare(metaclass=Singleton):
             status = "pending"
             return finished_at, status, message
 
-        status, message = self.introspect_token(project_type) # checks validity of the token and updates it if neccessary
-        if status == 'error':
-            return finished_at, status, message
-
         url = self.get_url(project_type, "submission_status", [str(submission_id)])
-        bearer, timestamp = self.get_saved_bearer(project_type)
-        header = {"Authorization": "Bearer " + bearer}
+        status, message, all_items = self.iterate_pagination(url, project_type)
 
-        resp = requests.get(url, headers=header)
-        if resp.status_code != 200:
-            message = "ERROR: HerediCare API get submission id endpoint endpoint returned an HTTP " + str(resp.status_code) + " error: " + self.extract_error_message(resp.text)
+        if status == "error":
             status = "retry"
-        else: # success
-            resp = resp.json(strict=False)
-            items = resp["items"]
+        if status == "success": # success
             
-            if len(items) == 0: # submission id was generated but no data was posted yet
+            if len(all_items) == 0: # submission id was generated but no data was posted yet
                 status = "pending"
             else:
-                info = items[0]
+                info = all_items[0]
                 process_result = info["process_result"]
                 process_date = info["process_date"]
 
@@ -616,9 +607,6 @@ class Heredicare(metaclass=Singleton):
         submission_id = None
 
         post_regexes, status, message = self.get_post_regexes()
-        #if os.environ.get('WEBAPP_ENV', '') == 'dev':
-        #    with open('/mnt/storage2/users/ahdoebm1/HerediVar/src/common/heredicare_interface_debug/post_regexes.json', "w") as f:
-        #        functions.prettyprint_json(post_regexes, f.write)
         if status == "error":
             return data, vid, submission_id, status, message
         
@@ -707,7 +695,6 @@ class Heredicare(metaclass=Singleton):
                 status = "success"
                 message = ""
                 retry = False
-                #print(resp.text)
 
         return status, message
 
@@ -724,119 +711,3 @@ class Heredicare(metaclass=Singleton):
 
         return vid, submission_id, status, message
 
-
-
-
-#if __name__ == "__main__":
-#    functions.read_dotenv()
-#    heredicare_interface = Heredicare()
-#
-#    variant_id_oi = "55"
-#
-#    from common.db_IO import Connection
-#    conn = Connection(roles = ["db_admin"])
-#    variant = conn.get_variant(variant_id_oi)
-#    conn.close()
-#
-#    #submission_id, status, message = heredicare_interface.upload_consensus_classification(variant)
-#    #print(submission_id)
-#    #print(status)
-#    #print(message)
-#
-#    #finished_at, status, message = heredicare_interface.get_submission_status(submission_id)
-#    #print(finished_at)
-#    #print(status)
-#    #print(message)
-#
-#
-#    #submission_id, status, message = heredicare_interface.get_new_submission_id()
-#    #print(submission_id)
-#    #print(status)
-#    #print(message)
-#    #finished_at, status, message = heredicare_interface.get_submission_status(submission_id)
-#    #print(finished_at)
-#    #print(status)
-#    #print(message)
-#
-#    # 122: first success!
-#    finished_at, status, message = heredicare_interface.get_submission_status(122)
-#    print(finished_at)
-#    print(status)
-#    print(message)
-#
-#    #
-#    heredicare_interface.get_data(variant, vid = "8882909", options = {"post_consensus_classification": True})
-
-#if __name__ == "__main__":
-#    functions.read_dotenv()
-#
-#    vids, status, message = heredicare_interface.get_vid_list()
-#
-#    for vid_raw in vids:
-#        vid = vid_raw['record_id']
-#        variant, status, message = heredicare_interface.get_variant(vid)
-#
-#        if variant["PATH_TF"] != "-1":
-#            print(variant)
-#            break
-
-    
-
-
-"""
-{
-GENERELLE INFORMATIONEN ÜBER DIE VARIANTE:
- 'VID': '19439917' --> variant id
- 'REV_STAT': '2' --> 2: kein review, 3: review erfolgt, 1: neu angelegt?
- 'QUELLE': '2' --> 1: manuell, 2: upload
- 'GEN': 'MSH2' --> das gen
- 'REFSEQ': 'NM_000251.3' --> Transkript
- 'ART': '-1' --> 1-6 sind klar, was bedeutet -1?
- 'CHROM': '2' --> chromosom
- 'POS_HG19': '47630514' --> hg19 position
- 'REF_HG19': 'G' --> hg19 reference base
- 'ALT_HG19': 'C' --> hg19 alternative base
- 'POS_HG38': '47403375' --> hg38 position
- 'REF_HG38': 'G' --> hg38 reference base
- 'ALT_HG38': 'C' --> hg38 alternative base
- 'KONS': '-1' --> consequence, value 1-10
- 'KONS_VCF': 'missense_variant' --> consequence?? was ist der Unterschied zu KONS?
- 'CHGVS': 'c.184G>C' --> c.hgvs
- 'PHGVS': 'Gly62Arg' --> p.hgvs
-
- 'CBIC': None --> ??
- 'PBIC': None --> ??
- 'CGCHBOC': None --> ??
- 'PGCHBOC': None --> ??
-
-TF CONSENSUS KLASSIFIKATION:
- 'PATH_TF': '-1' --> Klassifikation der task-force: Fragen: wofür werden die Werte 1-3 verwendet?, Was ist der Wert 20 (Artefakt)?, Was ist der Unterschied zwischen den Werten -1, 21 und 4?
- 'BEMERK': None --> Das Kommentar der task-force zur Klassifikation
- 'VUSTF_DATUM': None --> Datum der task-force Klassifikation
- 'VUSTF_01': None --> annotation
- 'VUSTF_02': None --> annotation
- 'VUSTF_03': None --> annotation
- 'VUSTF_04': None --> annotation
- 'VUSTF_05': None --> annotation
- 'VUSTF_06': None --> annotation
- 'VUSTF_07': None --> annotation
- 'VUSTF_08': None --> annotation
- 'VUSTF_09': None --> annotation
- 'VUSTF_10': None --> annotation
- 'VUSTF_11': None --> annotation
- 'VUSTF_12': None --> annotation
- 'VUSTF_13': None --> annotation
- 'VUSTF_14': None --> annotation
- 'VUSTF_15': None --> annotation - literatur -> wichtig?
- 'VUSTF_16': None --> annotation - evidenzlevel literatur -> wichtig?
- 'VUSTF_17': None --> annotation - kommentar -> wichtig?
- 'VUSTF_18': None --> annotation
- 'VUSTF_BEMERK': None --> wo liegt hier der Unterschied zu BEMERK?
- 'ERFDAT': '23.09.2023' --> Datum an dem die Variante hochgeladen wurde?
- 'VISIBLE': '1' --> Ignoriere Varianten mit 0?
- 'VID_REMAP': None --> Hat was mit VISIBLE zu tun. Wenn sie nicht visible ist dann ist es ein duplikat und wurde remapped auf die vid die dann hier steht?
- 'N_PAT': '1' --> Anzahl der Fälle mit dieser Variante?
- 'N_FAM': '1' --> Anzahl der Familien mit dieser Variante?
-}
-
-"""

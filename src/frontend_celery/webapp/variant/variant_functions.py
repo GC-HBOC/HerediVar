@@ -71,7 +71,6 @@ def handle_consensus_classification(variant, classification, comment, scheme_id,
         criteria[criterium_id]['strength_description'] = conn.get_classification_criterium_strength(criteria[criterium_id]['criterium_strength_id'])[3]
     evidence_b64 = functions.buffer_to_base64(io.BytesIO())
 
-    #functions.base64_to_file(evidence_b64, '/mnt/users/ahdoebm1/HerediVar/src/frontend/downloads/consensus_classification_reports/testreport.pdf')
     conn.insert_consensus_classification(session['user']['user_id'], variant.id, classification, comment, evidence_document=evidence_b64, date = current_datetime, scheme_id = scheme_id, scheme_class = scheme_class)
     return conn.get_last_insert_id() # returns the consensus_classification_id
 
@@ -314,7 +313,11 @@ def handle_selected_literature(previous_selected_literature, classification_id, 
 #heredicare_queue_entries: ALL heredicare queue entries until error or success is hit
 #publish_queue_heredicare_queue_entries: ONLY entries of publish_queue
 def summarize_heredicare_status(heredicare_queue_entries, publish_queue, mrcc):
-    summary = {"status": "unknown", "max_requested_at": "unknown", "insert_tasks_message": ""}
+    summary = {"status": "unknown", "max_requested_at": "unknown", "insert_tasks_message": "", "needs_upload": False, "queue_entries": heredicare_queue_entries}
+
+    if mrcc is not None:
+        if mrcc.needs_heredicare_upload:
+            summary["needs_upload"] = True
 
     if publish_queue is not None: # fresh upload - preferred
         prefer_publish_queue_status = True
@@ -365,8 +368,11 @@ def summarize_heredicare_status(heredicare_queue_entries, publish_queue, mrcc):
 
 
 def summarize_clinvar_status(clinvar_queue_entries, publish_queue, mrcc):
+    summary = {"status": "unknown", "insert_tasks_message": "", "needs_upload": False, "queue_entries": clinvar_queue_entries}
 
-    summary = {"status": "unknown", "insert_tasks_message": ""}
+    if mrcc is not None:
+        if mrcc.needs_clinvar_upload:
+            summary["needs_upload"] = True
 
     if publish_queue is not None: # fresh upload - preferred
         prefer_publish_queue_status = True
@@ -401,29 +407,6 @@ def summarize_clinvar_status(clinvar_queue_entries, publish_queue, mrcc):
                         summary["status"] = "multiple stati"
                 if all_skipped:
                     summary["status"] = "skipped"
-
-    #if publish_queue is not None:
-    #    if clinvar_queue_entries is not None:
-    #        all_skipped = True
-    #        for clinvar_queue_entry in clinvar_queue_entries:
-    #            current_status = clinvar_queue_entry[3]
-    #            if current_status == 'skipped':
-    #                continue
-    #            all_skipped = False
-    #            if summary["status"] == "unknown":
-    #                summary["status"] = current_status
-    #            elif summary["status"] != current_status:
-    #                summary["status"] = "multiple stati"
-    #        if all_skipped:
-    #            summary["status"] = "skipped"
-    #    else:
-    #        if publish_queue.status == 'error':
-    #            summary["status"] = "error"
-    #            summary["insert_tasks_message"] = publish_queue.insert_tasks_message
-    #        if publish_queue.insert_tasks_status == 'pending':
-    #            summary["status"] = "waiting"
-    #        elif publish_queue.insert_tasks_status == 'progress':
-    #            summary["status"] = "requesting"
 
     return summary
 
@@ -463,7 +446,6 @@ def create_variant_from_request(request_obj, user, conn):
             result["flash_message"] = 'All fields are required!'
             result["flash_class"] = 'alert-danger flash_id:missing_data_vcf'
             result["status"] = "error"
-            #flash('All fields are required!', 'alert-danger flash_id:missing_data_vcf')
         else:
             was_successful, message, variant_id = tasks.validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn = conn, user_id = user.id)
             new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_automatic_classification=False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False, include_external_ids=False)
@@ -472,22 +454,17 @@ def create_variant_from_request(request_obj, user, conn):
                 result["flash_class"] = 'alert-danger flash_id:variant_already_in_database'
                 result["flash_link"] = url_for("variant.display", variant_id = new_variant.id)
                 result["status"] = "skipped"
-                #flash({"message": "Variant not imported: " + new_variant.get_string_repr() + " already in database! View the variant",
-                #       "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-danger flash_id:variant_already_in_database")
             elif was_successful:
                 result["flash_message"] = "Successfully inserted variant: " + new_variant.get_string_repr()
                 result["flash_class"] = 'alert-success flash_id:successful_variant_from_vcf'
                 result["flash_link"] = url_for("variant.display", variant_id = new_variant.id)
                 result["status"] = "success"
-                #flash({"message": "Successfully inserted variant: " + new_variant.get_string_repr() + ". View your variant",
-                #       "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-success flash_id:successful_variant_from_vcf")
                 current_app.logger.info(str(user.id) + " successfully created a new variant from vcf which resulted in this vcf-style variant: " + ' '.join([str(new_variant.chrom), str(new_variant.pos), new_variant.ref, new_variant.alt, "GRCh38"]))
                 do_redirect = True
             else: # import had an error
                 result["flash_message"] = message
                 result["flash_class"] = 'alert-danger flash_id:variant_from_vcf_error'
                 result["status"] = "error"
-                #flash(message, 'alert-danger flash_id:variant_from_vcf_error')
 
     if create_variant_from == 'hgvsc':
         reference_transcript = request_obj.form.get('transcript')
@@ -497,13 +474,11 @@ def create_variant_from_request(request_obj, user, conn):
             result["flash_message"] = 'All fields are required!'
             result["flash_class"] = 'alert-danger flash_id:missing_data_hgvs'
             result["status"] = "error"
-            #flash('All fields are required!', 'alert-danger flash_id:missing_data_hgvs')
         else:
             chrom, pos, ref, alt, possible_errors = functions.hgvsc_to_vcf(reference_transcript + ':' + hgvsc)
             if possible_errors != '':
                 flash_message = possible_errors
                 flash_class = 'alert-danger flash_id:variant_from_hgvs_error'
-                #flash(possible_errors, "alert-danger flash_id:variant_from_hgvs_error")
             else:
                 was_successful, message, variant_id = tasks.validate_and_insert_variant(chrom, pos, ref, alt, 'GRCh38', conn = conn, user_id = session['user']['user_id'])
                 new_variant = conn.get_variant(variant_id, include_annotations=False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_clinvar = False, include_consequences = False, include_assays = False, include_literature = False)
@@ -512,22 +487,17 @@ def create_variant_from_request(request_obj, user, conn):
                     result["flash_class"] = 'alert-danger flash_id:variant_already_in_database'
                     result["flash_link"] = url_for("variant.display", variant_id = new_variant.id)
                     result["status"] = "skipped"
-                    #flash({"message": "Variant not imported: " + new_variant.get_string_repr() + " already in database! View your variant",
-                    #       "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-danger flash_id:variant_already_in_database")
                 elif was_successful:
                     result["flash_message"] = "Successfully inserted variant: " + new_variant.get_string_repr()
                     result["flash_class"] = 'alert-success flash_id:successful_variant_from_hgvs'
                     result["flash_link"] = url_for("variant.display", variant_id = new_variant.id)
                     result["status"] = "success"
-                    #flash({"message": "Successfully inserted variant: " + new_variant.get_string_repr() + ". View your variant",
-                    #       "link": url_for("variant.display", variant_id = new_variant.id)}, "alert-success flash_id:successful_variant_from_hgvs")
                     current_app.logger.info(str(user.id) + " successfully created a new variant from hgvs: " + hgvsc + "Which resulted in this vcf-style variant: " + ' '.join([str(new_variant.chrom), str(new_variant.pos), new_variant.ref, new_variant.alt, "GRCh38"]))
                     do_redirect = True
                 else:
                     result["flash_message"] = message
                     result["flash_class"] = "alert-danger flash_id:variant_from_hgvs_error"
                     result["status"] = "error"
-                    #flash(message, 'alert-danger flash_id:variant_from_hgvs_error')
 
     if create_variant_from == 'vcf_file' and current_app.config["vcf_file_import_active"]:
         genome_build = request_obj.form.get('genome')
@@ -535,7 +505,6 @@ def create_variant_from_request(request_obj, user, conn):
             result["flash_message"] = 'You must specify the genome build and select a vcf file.'
             result["flash_class"] = "alert-danger"
             result["status"] = "error"
-            #flash('You must specify the genome build and select a vcf file.', 'alert-danger')
         else:
             file = request_obj.files['file']
             filename = file.filename
@@ -544,7 +513,6 @@ def create_variant_from_request(request_obj, user, conn):
                 result["flash_message"] = 'No valid file selected.'
                 result["flash_class"] = "alert-danger"
                 result["status"] = "error"
-                #flash('No valid file selected.', 'alert-danger')
             else:
                 filepath = functions.get_random_temp_file(fileending = "tsv", filename_ext = "import_vcf")
                 with open(filepath, "w") as f: # file is deleted in task + we have to write to disk because filehandle can not be json serialized and thus, can not be given to a celery task

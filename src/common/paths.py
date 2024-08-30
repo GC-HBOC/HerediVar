@@ -30,8 +30,6 @@ if webapp_env == 'dev':
     logs_dir = joinpaths(workdir, 'logs')
     downloads_dir = joinpaths(workdir, 'downloads')
     download_variant_list_dir = joinpaths(downloads_dir, 'variant_lists')
-    # classified variants folders are calculated in tasks.py
-    #report_dir = joinpaths(workdir, "") #'downloads/consensus_classification_reports/'
 
     # webapp logs path
     webapp_log_dir = joinpaths(logs_dir, "webapp")
@@ -67,7 +65,6 @@ if webapp_env == 'dev':
     #spliceai_path = joinpaths(datadir, "SpliceAI/spliceai_scores_2022_02_09_GRCh38.vcf.gz")
     #spliceai_path = joinpaths(datadir, "SpliceAI/spliceai_test.vcf.gz")
     cadd_snvs_path = joinpaths(datadir, "CADD/CADD_SNVs_1.6_GRCh38.vcf.gz")
-    #cadd_snvs_path = joinpaths(datadir, "CADD/CADD_SNVs_1.6_test.vcf.gz")
     cadd_indels_path = joinpaths(datadir, "CADD/CADD_InDels_1.6_GRCh38.vcf.gz")
     clinvar_path = joinpaths(datadir, "ClinVar/clinvar_converted_GRCh38.vcf.gz")
     submission_summary_path = joinpaths(datadir, "ClinVar/submission_summary_preprocessed.txt.gz")
@@ -116,7 +113,6 @@ elif webapp_env == 'localtest':
     resources_dir = joinpaths(workdir, 'resources')
     logs_dir = joinpaths(workdir, 'logs')
     classified_variants_dir = joinpaths(workdir, 'classified_variants')
-    #report_dir = joinpaths(workdir, "") #'downloads/consensus_classification_reports/'
 
     # webapp logs path
     webapp_log_dir = joinpaths(logs_dir, "test")
@@ -147,7 +143,7 @@ elif webapp_env == 'localtest':
     #metadata
     gnomad_path = datadir + "gnomAD.vcf.gz"
     gnomad_m_path  = datadir + "gnomAD_mito.vcf.gz"
-    phylop_file_path = "/mnt/users/ahdoebm1/HerediVar/data/dbs/phyloP/hg38.phyloP100way.bw"#"https://download.imgag.de/public/dbs/phyloP/hg38_phyloP100way_vertebrate.bw"
+    phylop_file_path = "/mnt/users/ahdoebm1/HerediVar/data/dbs/phyloP/hg38.phyloP100way.bw"
     dbsnp_path = datadir + "dbSNP.vcf.gz"
     revel_path = datadir + "revel.vcf.gz"
     spliceai_path = datadir + "SpliceAI.vcf.gz"
@@ -168,59 +164,9 @@ elif webapp_env == 'localtest':
     # clinvar submission
     clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_18_10_23.json")
 
-elif webapp_env == 'githubtest':   
-    """ configuration for the testing environment on github actions """
-
-    workdir = "/home/runner/work/HerediVar/HerediVar/"
-    datadir =  joinpaths(workdir, "src/annotation_service/tests/data/testdbs/")
-    toolsdir = joinpaths(workdir, "tools")
-    resources_dir = joinpaths(workdir, 'resources')
-    logs_dir = joinpaths(workdir, 'logs')
-    classified_variants_dir = joinpaths(workdir, 'classified_variants')
-    #datadir = "/data/"
-
-    # tools
-    # vep not used atm
-    ngs_bits_path = "" # added to path variable
-    htslib_path = "" # added to path variable
-
-
-    # data
-    #ref_genome_path = "https://download.imgag.de/public/genomes/GRCh38.fa"
-    ref_genome_path = workdir + "GRCh38.fa" # used for spliceai
-    ref_genome_path_grch37 = workdir + "GRCh37.fa"
-    chainfile_path =  workdir + "hg19ToHg38.fixed.over.chain.gz"
-
-    
-    #metadata
-    gnomad_path = datadir + "gnomAD.vcf.gz"
-    gnomad_m_path  = datadir + "gnomAD_mito.vcf.gz"
-    phylop_file_path = workdir + "hg38.phyloP100way.bw"
-    dbsnp_path = datadir + "dbSNP.vcf.gz"
-    revel_path = datadir + "revel.vcf.gz"
-    spliceai_path = datadir + "SpliceAI.vcf.gz"
-    cadd_snvs_path = datadir + "CADD.vcf.gz"
-    cadd_indels_path = datadir + "CADD_InDels.vcf.gz"
-    clinvar_path = datadir + "ClinVar.vcf.gz"
-    submission_summary_path = datadir + "ClinVar.txt.gz"
-    BRCA_exchange_path = datadir + "BRCA_exchange.vcf.gz"
-    FLOSSIES_path = datadir + "FLOSSIES.vcf.gz"
-    cancerhotspots_path = datadir + "cancerhotspots.vcf.gz"
-    #arup_brca_path = datadir + "ARUP_BRCA.vcf.gz"
-    tp53_db = datadir + "TP53_database.vcf.gz"
-    hci_priors = datadir + "HCI_priors.vcf.gz"
-
-    # IGV data
-    igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
-
-    # clinvar submission
-    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_18_10_23.json")
-
-
 
 elif webapp_env == 'prod':
     """ configuration for the production environment """
-
 
     # general paths
     workdir = "/mnt/storage1/HerediVar"
@@ -231,14 +177,10 @@ elif webapp_env == 'prod':
     logs_dir = joinpaths(workdir, 'logs')
     downloads_dir = joinpaths(workdir, 'downloads')
     download_variant_list_dir = joinpaths(downloads_dir, 'variant_lists')
-    #classified_variants_dir = joinpaths(workdir, 'classified_variants')
-    #report_dir = joinpaths(workdir, "") #'downloads/consensus_classification_reports/'
 
     # webapp logs path
     webapp_log_dir = joinpaths(logs_dir, "webapp")
     webapp_log = joinpaths(webapp_log_dir, "webapp.log")
-
-
 
     #tools
     vep_path = joinpaths(toolsdir, "ensembl-vep")
@@ -250,17 +192,14 @@ elif webapp_env == 'prod':
     automatic_classification_path = joinpaths(toolsdir, "herediclass")
     automatic_classification_config_path = os.path.join(automatic_classification_path, "config_production.yaml")
 
-
     # data
     ref_genome_dir = joinpaths(workdir, "data/genomes")
     ref_genome_path = joinpaths(ref_genome_dir, "GRCh38.fa")
     ref_genome_path_grch37 = joinpaths(ref_genome_dir, "GRCh37.fa")
     chainfile_path = joinpaths(ref_genome_dir, "hg19ToHg38.fixed.over.chain.gz")
     ensembl_transcript_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.110.gff3")
-    #refseq_transcript_path = joinpaths(datadir, "RefSeq/refseq_transcripts_110.gff.gz")
     refseq_transcript_path = joinpaths(datadir, "RefSeq/refseq_transcripts_110.gff")
     refseq_transcript_4_consequence_path = joinpaths(datadir, "RefSeq/refseq_transcripts_110.4consequence.gff")
-
     
     #metadata
     gnomad_path = joinpaths(datadir, "gnomAD/gnomAD_genome_GRCh38.vcf.gz")
@@ -270,7 +209,6 @@ elif webapp_env == 'prod':
     revel_path = joinpaths(datadir, "REVEL/revel_grch38_all_chromosomes.vcf.gz")
     spliceai_snv_path = joinpaths(datadir, "SpliceAI/spliceai_scores.masked.snv.hg38.vcf.gz")
     spliceai_indel_path = joinpaths(datadir, "SpliceAI/spliceai_scores.masked.indel.hg38.vcf.gz")
-    #spliceai_path = joinpaths(datadir, "SpliceAI/spliceai_scores_2022_02_09_GRCh38.vcf.gz")
     cadd_snvs_path = joinpaths(datadir, "CADD/CADD_SNVs_1.6_GRCh38.vcf.gz")
     cadd_indels_path = joinpaths(datadir, "CADD/CADD_InDels_1.6_GRCh38.vcf.gz")
     clinvar_path = joinpaths(datadir, "ClinVar/clinvar_converted_GRCh38.vcf.gz")

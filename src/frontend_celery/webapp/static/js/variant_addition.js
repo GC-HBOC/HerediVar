@@ -5,7 +5,8 @@ const delete_classification_url = flask_data.dataset.deleteClassificationUrl
 const annotation_status_url = flask_data.dataset.annotationStatusUrl
 const variant_id = flask_data.dataset.variantId
 const run_annotation_service_url = flask_data.dataset.runAnnotationServiceUrl
-
+const heredicare_upload_status_url = flask_data.dataset.heredicareUploadStatusUrl
+const clinvar_upload_status_url = flask_data.dataset.clinvarUploadStatusUrl
 
 $(document).ready(function(){
 
@@ -74,6 +75,8 @@ $(document).ready(function(){
     })
 
     update_annotation_status(annotation_status_url);
+    update_heredicare_upload_status(heredicare_upload_status_url)
+    update_clinvar_upload_status(clinvar_upload_status_url)
 })
 
 
@@ -159,19 +162,189 @@ function show_annotation_status(color_class, tooltip_text, inner_text) {
     show_status(color_class, tooltip_text, inner_text, pill_holder_id, pill_id)
 }
 
-//// utility for showing the current annotation status
-//function show_annotation_status(color_class, tooltip_text, inner_text) {
-//    $('#annotation_status_pill').tooltip('hide')
-//    document.getElementById('annotation_status_pill_holder').innerHTML = ""
-//    var status_pill = document.createElement('span')
-//    status_pill.classList.add('badge')
-//    status_pill.classList.add('rounded-pill')
-//    status_pill.classList.add(color_class)
-//    status_pill.setAttribute('data-bs-toggle', "tooltip")
-//    status_pill.setAttribute('title', tooltip_text)
-//    status_pill.innerText = inner_text
-//    annotation_status_pill_holder.appendChild(status_pill)
-//}
+
+function update_clinvar_upload_status(url) {
+    // send GET request to status URL (defined by flask)
+    $.ajax({
+        type: 'GET',
+        url: url,
+        data: {"variant_id": variant_id},
+        success: function(data, status, request) {
+            console.log(data)
+            if (data === undefined) {
+                show_clinvar_upload_status("bg-secondary", data, "no ClinVar submission")
+            } else {
+                if (data['status'] == 'multiple stati') {
+                    show_clinvar_upload_status("bg-warning", data, "ClinVar multiple stati")
+                } else if (data['status'] == "processed") {
+                    show_clinvar_upload_status("bg-success", data, "ClinVar success")
+                } else if (data['status'] == "error") {
+                    show_clinvar_upload_status("bg-danger", data, "ClinVar error")
+                } else if (data['status'] == 'unknown') {
+                    show_clinvar_upload_status("bg-secondary", data, "no ClinVar submission")
+
+                } else {
+                    show_clinvar_upload_status("bg-secondary", data, "ClinVar" + data["status"])
+                }
+            }
+        },
+        error: function(xhr) {
+            print(xhr)
+            show_clinvar_upload_status("bg-danger", "", "ClinVar internal error")
+        }
+    })
+}
+
+function show_clinvar_upload_status(color_class, summary, inner_text) {
+    const pill_holder_id = "clinvar_status_pill_holder"
+    const pill_id = "clinvar_status_pill"
+    var prepend_html = null
+    
+    if (summary["needs_upload"] && !["progress", "processing", "submitted", "pending", "waiting", "requesting"].includes(summary["status"])) {
+        prepend_html = create_exclamation_mark()
+        add_tooltip(prepend_html, "The consensus classification needs to be uploaded to ClinVar!")
+    }
+    show_status(color_class, "", inner_text, pill_holder_id, pill_id, prepend_html)
+    const content = get_clinvar_upload_status_content(summary["queue_entries"], summary["status"], summary["insert_tasks_message"])
+    add_popover(pill_holder_id, pill_id, content)
+}
+
+function get_clinvar_upload_status_content(entries, status, overall_message) {
+    var content = document.createElement("div")
+    if (entries != null && !["waiting", "requested"].includes(status)) {
+        // add header
+        var head = get_div("", ["row", "gx-2", "border-bottom", "bg-light"])
+        head.appendChild(get_div("HerediCaRe VID", ["col-3"]))
+        head.appendChild(get_div("Status", ["col-3", "text-center", "border-start"]))
+        head.appendChild(get_div("Message", ["col-6", "text-center", "border-start"]))
+        content.appendChild(head)
+
+        // add content lines
+        entries.forEach(entry => {
+            var line = get_div("", ["row", "gx-2"])
+            line.appendChild(get_div(entry[6], ["col-3"], "None"))
+            line.appendChild(get_div(entry[3], ["col-3", "text-center", "border-start"], "None"))
+            line.appendChild(get_div(entry[4], ["col-6", "text-center", "border-start"], "None"))
+            content.appendChild(line)
+        });
+    }
+
+    // add overall task message
+    if (overall_message != "" && overall_message != null) {
+        content.appendChild(get_div(overall_message, []))
+    }
+    
+    return content
+}
+
+
+function update_heredicare_upload_status(url) {
+    // send GET request to status URL (defined by flask)
+    $.ajax({
+        type: 'GET',
+        url: url,
+        data: {"variant_id": variant_id},
+        success: function(data, status, request) {
+            console.log(data)
+            if (data === undefined) {
+                show_heredicare_upload_status("bg-secondary", data, "no HerediCaRe submission")
+            } else {
+                if (data['status'] == 'multiple stati') {
+                    show_heredicare_upload_status("bg-warning", data, "HerediCaRe multiple stati")
+                } else if (data['status'] == "success") {
+                    show_heredicare_upload_status("bg-success", data, "HerediCaRe success")
+                } else if (data['status'] == "error") {
+                    show_heredicare_upload_status("bg-danger", data, "HerediCaRe error")
+                } else if (data['status'] == "api_error") {
+                    show_heredicare_upload_status("bg-danger", data, "HerediCaRe api error")
+                } else if (data['status'] == 'unknown') {
+                    show_heredicare_upload_status("bg-secondary", data, "no HerediCaRe submission")
+
+                } else {
+                    show_heredicare_upload_status("bg-secondary", data, "HerediCaRe" + data["status"])
+                }
+            }
+        },
+        error: function(xhr) {
+            print(xhr)
+            show_heredicare_upload_status("bg-danger", "", "HerediCaRe internal error")
+        }
+    })
+}
+
+
+
+
+function show_heredicare_upload_status(color_class, summary, inner_text) {
+    const pill_holder_id = "heredicare_status_pill_holder"
+    const pill_id = "heredicare_status_pill"
+    var prepend_html = null
+    
+    if (summary["needs_upload"] && ["error", "api_error", "success", "requested", "multiple stati"].includes(summary["status"])) {
+        prepend_html = create_exclamation_mark()
+        add_tooltip(prepend_html, "The consensus classification needs to be uploaded to HerediCaRe!")
+    }
+    show_status(color_class, "", inner_text, pill_holder_id, pill_id, prepend_html)
+    const content = get_heredicare_upload_status_content(summary["queue_entries"], summary["status"], summary["insert_tasks_message"])
+    add_popover(pill_holder_id, pill_id, content)
+}
+
+
+function get_heredicare_upload_status_content(entries, status, overall_message) {
+    var content = document.createElement("div")
+    if (entries != null && !["waiting", "requested"].includes(status)) {
+        // add header
+        var head = get_div("", ["row", "gx-2", "border-bottom", "bg-light"])
+        head.appendChild(get_div("HerediCaRe VID", ["col-3"]))
+        head.appendChild(get_div("Status", ["col-3", "text-center", "border-start"]))
+        head.appendChild(get_div("Message", ["col-6", "text-center", "border-start"]))
+        content.appendChild(head)
+
+        // add content lines
+        entries.forEach(entry => {
+            var line = get_div("", ["row", "gx-2"])
+            line.appendChild(get_div(entry[5], ["col-3"], "None"))
+            line.appendChild(get_div(entry[1], ["col-3", "text-center", "border-start"], "None"))
+            line.appendChild(get_div(entry[4], ["col-6", "text-center", "border-start"], "None"))
+            content.appendChild(line)
+        });
+    }
+
+    // add overall task message
+    if (overall_message != "" && overall_message != null) {
+        content.appendChild(get_div(overall_message, []))
+    }
+    
+    return content
+}
+
+
+function add_popover(parent_id, trigger_id, content) {
+    var parent = document.getElementById(parent_id)
+    var trigger = document.getElementById(trigger_id)
+
+    var popover = document.createElement("div");
+    popover.classList.add("popover_collapse")
+    popover.classList.add("collapse")
+    popover.classList.add("collapse-horizontal")
+
+    var content_holder = document.createElement("div")
+    content_holder.classList.add("card")
+    content_holder.classList.add("card-body")
+    content_holder.classList.add("width_very_large")
+    content_holder.appendChild(content)
+
+    popover.appendChild(content_holder)
+    parent.appendChild(popover)
+
+    trigger.classList.add("popover_collapse_toggle")
+    trigger.setAttribute("tabindex", "0")
+    trigger.setAttribute("role", "button")
+    trigger.setAttribute("data-bs-toggle", "collapse")
+    trigger.setAttribute("data-bs-target", ".popover_collapse_toggle:hover + .popover_collapse")
+    trigger.setAttribute("aria-expanded", "false")
+}
+
 
 
 /////////////////////////////////////////////////

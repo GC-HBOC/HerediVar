@@ -14,6 +14,7 @@ class task_force_protein_domain_job(Job):
         self.annotation_data = annotation_data
         self.generated_paths = []
 
+
     def do_execution(self, *args, **kwargs):
         result = True
         job_config = kwargs['job_config']
@@ -35,7 +36,7 @@ class task_force_protein_domain_job(Job):
         if status_code != 0:
             self.status = "error"
             self.err_msg = err_msg
-            return # abort execution
+            return # abort
     
         # update state
         self.status = "success"
@@ -52,6 +53,4 @@ class task_force_protein_domain_job(Job):
             conn.insert_variant_annotation(variant.id, recent_annotation_ids["task_force_protein_domain_source"], domain[6])
         
         return status_code, err_msg
-
-
 

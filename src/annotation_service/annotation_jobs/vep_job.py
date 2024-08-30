@@ -4,7 +4,6 @@ import common.paths as paths
 import common.functions as functions
 import re
 import os
-import urllib.parse
 from common.db_IO import Connection
 
 from ..pubmed_parser import fetch
@@ -63,7 +62,6 @@ class vep_job(Job):
         transcript_specific_annotation_type_ids = conn.get_recent_annotation_type_ids(only_transcript_specific = True)
         pfam_annotation_id = transcript_specific_annotation_type_ids["pfam_domains"]
         
-        # !!!! format of annotations from vep need to be equal: 0Feature,1HGVSc,2HGVSp,3Consequence,4IMPACT,5EXON,6INTRON,7HGNC_ID,8SYMBOL,9DOMAIN,...additional info
         csq_info = functions.find_between(info, "CSQ=", '(;|$)')
         
         if csq_info == '' or csq_info is None:
@@ -92,13 +90,11 @@ class vep_job(Job):
         if pmids != '':
             literature_entries = fetch(pmids) # defined in pubmed_parser.py
             for paper in literature_entries: #[pmid, article_title, authors, journal, year]
-                #print(paper[0])
                 conn.insert_variant_literature(variant_id, paper[0], paper[1], paper[2], paper[3], paper[4], "vep")
 
         return status_code, err_msg
 
 
-    #"/mnt/storage2/GRCh38/share/data/genomes/GRCh38.fa"
     def _annotate_vep(self, input_vcf, output_vcf):
         fields_oi_base = "Feature,HGVSc,HGVSp,Consequence,IMPACT,EXON,INTRON,HGNC_ID,SYMBOL,DOMAINS"
         command = [os.path.join(paths.vep_path, "vep"),

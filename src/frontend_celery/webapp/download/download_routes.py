@@ -9,7 +9,6 @@ from common.db_IO import Connection
 import common.paths as paths
 from ..utils import *
 from . import download_functions, download_tasks
-import werkzeug
 
 
 download_blueprint = Blueprint(
@@ -52,35 +51,6 @@ def variant():
         headers={'Content-Disposition': f'attachment; filename={download_file_name}', 'X-Accel-Buffering': 'no'}
     )
 
-
-## listens on get parameter: list_id
-#@download_blueprint.route('/download/vcf/variant_list')
-#@require_permission(['read_resources'])
-#def variant_list():
-#    conn = get_connection()
-#
-#    list_id = request.args.get('list_id')
-#    require_valid(list_id, "user_variant_lists", conn)
-#
-#    # check that the logged in user is the owner of this list
-#    require_list_permission(list_id, ['read'], conn)
-#    variant_ids_oi = conn.get_variant_ids_from_list(list_id)
-#
-#    force_url = url_for("download.variant_list", list_id = list_id, force = True)
-#    redirect_url = url_for("user.my_lists", view = list_id)
-#    download_file_name = "list_" + str(list_id) + ".vcf"
-#
-#    vcf_file_buffer, status, vcf_errors, err_msg = download_functions.get_vcf(variant_ids_oi, conn)
-#
-#    if status == "redirect":
-#        flash({"message": "Error during VCF Check: " + vcf_errors + " with error message: " + err_msg + ". Download it anyway",
-#               "link": force_url}, "alert-danger")
-#        current_app.logger.error(get_preferred_username() + " tried to download a vcf which contains errors: " + vcf_errors + ". For variant list " + str(list_id))
-#        return redirect(redirect_url)
-#
-#    current_app.logger.info(get_preferred_username() + " downloaded vcf of variant list: " + str(list_id))
-#    
-#    return send_file(vcf_file_buffer, as_attachment=True, download_name=download_file_name, mimetype="text/vcf")
 
 # listens on get parameter: list_id
 @download_blueprint.route('/download/vcf/variant_list')
@@ -174,41 +144,6 @@ def generate_variant_list_vcf_status():
         "message": download_queue_raw[3],
         "is_valid": download_queue_raw[4]
     })
-
-
-
-#@download_blueprint.route('/download/test')
-#@require_permission(["admin_resources"])
-#def download_test():
-#    import time
-#    def test_large_download():
-#        for i in range(50):
-#            yield str(i).encode()
-#            print(i)
-#            time.sleep(1)
-#    return Response(
-#        stream_with_context(download_functions.test_large_download()),
-#        content_type = "text/event-stream",
-#        headers={'Content-Disposition': 'attachment; filename=test.txt', 'X-Accel-Buffering': 'no'}
-#    )
-
-#@download_blueprint.route('/download/test_vcf')
-#@require_permission(["admin_resources"])
-#def download_test_vcf():
-#    conn = get_connection()
-#
-#    list_id = request.args.get('list_id')
-#    require_valid(list_id, "user_variant_lists", conn)
-#
-#    # check that the logged in user is the owner of this list
-#    require_list_permission(list_id, ['read'], conn)
-#    variant_ids_oi = conn.get_variant_ids_from_list(list_id)
-#
-#    return Response(
-#        stream_with_context(download_functions.get_vcf_stream(variant_ids_oi, conn)),
-#        content_type = "text/event-stream",
-#        headers={'Content-Disposition': 'attachment; filename=test.txt', 'X-Accel-Buffering': 'no'}
-#    )
 
 
 # listens on get parameter: raw

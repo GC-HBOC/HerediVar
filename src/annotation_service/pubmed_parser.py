@@ -32,7 +32,6 @@ def parse_record(rec, doc_section, article_section, title_section, journal_secti
     pmid = rec[doc_section]['PMID']
 
     rec = rec[doc_section][article_section]
-    #print(rec)
     
     year_section = rec[date_section]
     if not book:
