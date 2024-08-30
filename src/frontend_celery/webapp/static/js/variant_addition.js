@@ -200,7 +200,7 @@ function show_clinvar_upload_status(color_class, summary, inner_text) {
     const pill_id = "clinvar_status_pill"
     var prepend_html = null
     
-    if (summary["needs_upload"] && !["progress", "processing", "submitted", "pending", "waiting", "requesting"].includes(summary["status"])) {
+    if (summary["needs_upload"] && !["progress", "processing", "submitted", "pending", "waiting", "requesting", "skipped"].includes(summary["status"])) {
         prepend_html = create_exclamation_mark()
         add_tooltip(prepend_html, "The consensus classification needs to be uploaded to ClinVar!")
     }
