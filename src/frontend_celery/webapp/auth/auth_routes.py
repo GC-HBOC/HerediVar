@@ -246,7 +246,7 @@ def profile():
 
 
 @auth_blueprint.route('/generate_api_key', methods=['GET', 'POST'])
-@require_permission(["read_resources"])
+@require_permission(["admin_resources"])
 def generate_api_key():
     username = session['user']['preferred_username']
     new_key = secrets.token_hex(32)

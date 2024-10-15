@@ -29,6 +29,7 @@
                     <td class="width_small vertical_align_middle">Affiliation</td>
                     <td><input class="form-control" type="text" value="{{ user.get('attributes', {}).get('affiliation', [''])[0] }}" name="affiliation"></td>
                 </tr>
+                {% if session.get('user') is not none and 'super_user' in session['user']['roles'] %}
                 <tr>
                     <td class="width_small vertical_align_middle">API key</td>
                     <td>
@@ -39,6 +40,7 @@
                         </div>
                     </td>
                 </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>
