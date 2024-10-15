@@ -149,7 +149,7 @@ def register():
                     resp = auth_functions.grant_roles(kc_user_id, selected_roles, roles)
                     if resp.status_code == 204: # grant roles was successful
                         flash("New user created successfully!", 'alert-success')
-                        task = tasks.apply_async(args=[first_name + ' ' + last_name, email, username, password])
+                        task = tasks.notify_new_user.apply_async(args=[first_name + ' ' + last_name, email, username, password])
                         return redirect(url_for('auth.register'))
 
         flash(resp.json(), 'alert-danger')
