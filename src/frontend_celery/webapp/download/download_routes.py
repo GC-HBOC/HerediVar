@@ -148,7 +148,6 @@ def generate_variant_list_vcf_status():
 
 # listens on get parameter: raw
 @download_blueprint.route('/download/vcf/classified')
-@require_permission(['read_resources'])
 def classified_variants():
     return_raw = request.args.get('raw')
     

@@ -28,7 +28,6 @@ def index():
 
 # user access of versioned downloads
 @main_blueprint.route('/downloads')
-@require_permission(['read_resources'])
 def downloads():
     all_variants_folder = download_functions.get_all_variants_folder()
     last_dump_path = os.path.join(all_variants_folder, ".last_dump.txt")
