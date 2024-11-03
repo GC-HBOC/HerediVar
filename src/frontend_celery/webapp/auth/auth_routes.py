@@ -26,17 +26,42 @@ auth_blueprint = Blueprint(
 
 @auth_blueprint.route('/login')
 def login():
+
+    next_url = request.args.get('next_login', url_for('main.index'))
+
+    if not current_app.config["LOGIN_REQUIRED"]:
+        return redirect(url_for("auth.auth", next_login=next_url))
+
     # construct redirect uri: first redirect to keycloak login page
     # then redirect to auth with the next param which defaults to the '/' route
     # auth itself redirects to next ie. the page which required a login
-    redirect_uri = url_for('auth.auth', _external=True, next_login=request.args.get('next_login', url_for('main.index')))
+    redirect_uri = url_for('auth.auth', _external=True, next_login=next_url)
 
     return oauth.keycloak.authorize_redirect(redirect_uri)
 
 
 @auth_blueprint.route('/auth')
 def auth():
-    token_response = oauth.keycloak.authorize_access_token()
+
+    if not current_app.config["LOGIN_REQUIRED"]:
+        token_response = {
+            "access_token": "xxx",
+            "expires_in": 300,
+            "refresh_expires_in": 1800,
+            "refresh_token": "xxx",
+            "token_type": "bearer",
+            "not-before-policy": 0,
+            "session_state": "xxx",
+            "userinfo": {
+                "preferred_username": "anonymous",
+                "given_name": "Arno",
+                "family_name": "Nym",
+                "affiliation": "Anonymous",
+                "roles": ["super_user", "user", "read_only"]
+            }
+        }
+    else:
+        token_response = oauth.keycloak.authorize_access_token()
 
     #userinfo = oauth.keycloak.userinfo(request)
     #idToken = oauth.keycloak.parse_id_token(tokenResponse)

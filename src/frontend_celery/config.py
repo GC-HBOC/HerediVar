@@ -30,6 +30,8 @@ class Config(object):
     HOST = os.environ.get('HOST')
     PORT = os.environ.get('PORT')
 
+    LOGIN_REQUIRED = os.environ.get('LOGIN_REQUIRED', "True").lower() in ["true"]
+
     ##### production config ####
     TESTING = False
     DEBUG = False

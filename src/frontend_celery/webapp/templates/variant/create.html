@@ -31,7 +31,7 @@
                      <label for="Chromosome" class="form-label">Chromosome</label>
                      <select class="form-select" name="chr" id="Chromosome" required>
                          {% for chr in chrs %}
-                            <option value="{{chr}}" {% if (chr == request.form['chr']) %} selected="selected" {% endif %}> {{chr}} </option>
+                            <option value="{{chr}}" {% if chr == request.form['chr'] or chr == request.args.get('chrom') %} selected="selected" {% endif %}> {{chr}} </option>
                          {% endfor %}
                     </select>
                     <div class="invalid-feedback">
@@ -43,7 +43,8 @@
                     <label for="Position" class="form-label">Chromosomal position</label>
                     <input type="text" name="pos" pattern="[0-9 ]+" id="Position"
                            placeholder="pos" class="form-control validationreq"
-                           value="{{ request.form['pos'] }}" required>
+                           value={% if request.form.get('pos') is not none %}"{{ request.form.get('pos', '') }}"{% else %}"{{ request.args.get('pos', '') }}"{% endif %}
+                           required>
                     <div class="invalid-feedback">
                         Please provide a chromosomal position!
                     </div>
@@ -53,7 +54,8 @@
                     <label for="Reference" class="form-label">Reference sequence</label>
                     <input type="text" name="ref"
                            placeholder="ref" class="form-control validationreq"
-                           value="{{ request.form['ref'] }}" id="Reference" required>
+                           value={% if request.form.get('ref') is not none %}"{{ request.form.get('ref', '') }}"{% else %}"{{ request.args.get('ref', '') }}"{% endif %}
+                           id="Reference" required>
                     <div class="invalid-feedback">
                         Please provide a reference sequence!
                     </div>
@@ -63,7 +65,8 @@
                     <label for="Alternative" class="form-label">Alternative sequence</label>
                     <input type="text" name="alt"
                            placeholder="alt" class="form-control validationreq"
-                           value="{{ request.form['alt'] }}" id="Alternative" required>
+                           value={% if request.form.get('alt') is not none %}"{{ request.form.get('alt', '') }}"{% else %}"{{ request.args.get('alt', '') }}"{% endif %}
+                           id="Alternative" required>
                     <div class="invalid-feedback">
                         Please provide an alternative sequence!
                     </div>

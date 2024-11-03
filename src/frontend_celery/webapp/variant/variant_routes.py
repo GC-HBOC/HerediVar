@@ -75,7 +75,7 @@ def create():
 
     if do_redirect:
         return redirect(url_for('variant.create'))
-    return render_template('variant/create.html', chrs=chroms, vcf_file_import_active=current_app.config["VCF_FILE_IMPORT_ACTIVE"])
+    return render_template('variant/create.html', chrs=chroms, vcf_file_import_active=current_app.config["VCF_FILE_IMPORT_ACTIVE"], **request.args)
 
 
 
@@ -125,12 +125,15 @@ def create_sv():
 @variant_blueprint.route('/display/chr=<string:chr>&pos=<int:pos>&ref=<string:ref>&alt=<string:alt>', methods=['GET']) # alternative url using vcf information
 @require_permission(['read_resources'])
 def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
+
     conn = get_connection()
 
     # get variant id from parameters or pull from genomic coordinates
     if variant_id is None:
         require_set(chr, pos, ref, alt)
         variant_id = conn.get_variant_id(chr, pos, ref, alt)
+    if variant_id is None and any([e is not None for e in [chr, pos, ref, alt]]):
+        return redirect(url_for('variant.unknown_variant', chrom=chr, pos=pos, ref=ref, alt=alt))
     require_valid(variant_id, "variant", conn)
     
     # get available lists for user
@@ -144,6 +147,12 @@ def display(variant_id=None, chr=None, pos=None, ref=None, alt=None):
                             variant = variant,
                             is_classification_report = False
                         )
+
+
+@variant_blueprint.route('/unknown_variant', methods=["GET"])
+@require_permission(['read_resources'])
+def unknown_variant():
+    return render_template('variant/unknown_variant.html', **request.args)
 
 
 @variant_blueprint.route('/get_clinvar_upload_status', methods=['GET'])

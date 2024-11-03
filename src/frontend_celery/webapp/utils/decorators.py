@@ -74,34 +74,35 @@ def require_login(f):
         if session.get('user') is None:
             return redirect(url_for('auth.login', next_login=request.url))
         
-        # user is logged in -> check if access token is still valid using introspect endpoint --> introspect endpoint can be omitted if token is validated locally using some jwt lib
+        if current_app.config["LOGIN_REQUIRED"]:
+            # user is logged in -> check if access token is still valid using introspect endpoint --> introspect endpoint can be omitted if token is validated locally using some jwt lib
         
-        token = session['tokenResponse']
+            token = session['tokenResponse']
 
-        #print(session['user'])
-        #print(token)
+            #print(session['user'])
+            #print(token)
 
-        # maybe also add: 
-        # state=5AzjFWCkQzjmh4YozUfuE8pHytJj3i
-        # nonce=fvdZHHR1mmAHBIbCQtgZ
-        # code_challenge=hoiDWU7Vf4tOreIeYyIi7IKcw2BseRW7j5wwXROJtPA
-        # code_challenge_method=S256
+            # maybe also add: 
+            # state=5AzjFWCkQzjmh4YozUfuE8pHytJj3i
+            # nonce=fvdZHHR1mmAHBIbCQtgZ
+            # code_challenge=hoiDWU7Vf4tOreIeYyIi7IKcw2BseRW7j5wwXROJtPA
+            # code_challenge_method=S256
         
-        issuer = current_app.config['ISSUER']
-        url = f'{issuer}/protocol/openid-connect/token/introspect'
-        data = {'token': token.get("access_token"), 'token_type_hint': 'access_token', 'username': session['user']['preferred_username'], 'client_secret': current_app.config['CLIENTSECRET'], 'client_id': current_app.config['CLIENTID']}
-        header = {'Authorization': f'Bearer {token.get("access_token")}'}
-        resp = requests.post(url, data=data, headers=header)
-        resp.raise_for_status()
-        resp = resp.json()
+            issuer = current_app.config['ISSUER']
+            url = f'{issuer}/protocol/openid-connect/token/introspect'
+            data = {'token': token.get("access_token"), 'token_type_hint': 'access_token', 'username': session['user']['preferred_username'], 'client_secret': current_app.config['CLIENTSECRET'], 'client_id': current_app.config['CLIENTID']}
+            header = {'Authorization': f'Bearer {token.get("access_token")}'}
+            resp = requests.post(url, data=data, headers=header)
+            resp.raise_for_status()
+            resp = resp.json()
 
-        # if access token is not valid request a new one using the refresh token
-        if not resp['active']:
-            print('access token invalid refreshing token')
-            refresh_status_code = refresh_token()
-            # if the refresh token is expired as well promt a new login by invalidating the client session
-            if refresh_status_code != 200:
-                return redirect(url_for('auth.logout', auto_logout='True', next_logout=url_for('auth.login', next_login=request.url))) # logout and return to login page! with next= page which you wanted to access in the first place
+            # if access token is not valid request a new one using the refresh token
+            if not resp['active']:
+                print('access token invalid refreshing token')
+                refresh_status_code = refresh_token()
+                # if the refresh token is expired as well promt a new login by invalidating the client session
+                if refresh_status_code != 200:
+                    return redirect(url_for('auth.logout', auto_logout='True', next_logout=url_for('auth.login', next_login=request.url))) # logout and return to login page! with next= page which you wanted to access in the first place
         
         return f(*args, **kwargs)
     return decorated_function
@@ -113,9 +114,10 @@ def require_permission(resources):
         @require_login
         @wraps(f)
         def wrapper(*args, **kwargs):
-            grant_access, status_code = request_uma_ticket(resources)
-            if not grant_access:
-                abort(status_code)
+            if current_app.config["LOGIN_REQUIRED"]:
+                grant_access, status_code = request_uma_ticket(resources)
+                if not grant_access:
+                    abort(status_code)
             return f(*args, **kwargs)
         return wrapper
     return decorator

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    
+
+
+    <h1 class="bst">{% block title %} Unknown variant {% endblock %}</h1>
+
+
+    <div class="bst">
+        <div>The variant you are trying to access is unknown by HerediVar. Please click to following button to request a new variant:</div>
+        <div>
+            <a class="btn btn-primary" href="{{url_for('variant.create', **request.args)}}">create new variant</a>
+        </div>
+    </div>
+
+      
+</div>
+
+{% endblock %}
+
+{% block special_scripts %}
+    <script src="/static/js/create.js"></script>
+{% endblock%}
