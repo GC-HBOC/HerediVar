@@ -14,6 +14,8 @@ The live version is hosted by the university of cologne: [https://heredivar.uni-
 
 Further details about the features of HerediVar can be found here: [https://heredivar.uni-koeln.de/documentation](https://heredivar.uni-koeln.de/documentation)
 
+![infrastructure](https://github.com/GC-HBOC/HerediVar/blob/main/doc/img/Infrastructure.png?raw=true)
+
 ## Tooling
 HerediVar uses the following tools:
 - Operating System: tested on Linux Ubuntu 20.04
