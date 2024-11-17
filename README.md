@@ -10,16 +10,19 @@ To close the gap between genetic data analysis, variant classification and clini
 - a consensus procedure for classifications
 - publishing of classifications
 
-The live version is hosted online at [https://heredivar.uni-koeln.de/](https://heredivar.uni-koeln.de/).
+The live version is hosted by the university of cologne: [https://heredivar.uni-koeln.de/](https://heredivar.uni-koeln.de/).
 
 Further details about the features of HerediVar can be found here: [https://heredivar.uni-koeln.de/documentation](https://heredivar.uni-koeln.de/documentation)
 
 ## Tooling
 HerediVar uses the following tools:
-- Backend: Python Flask
-- Background tasks: Celery + Redis
-- Frontend: Bootstrap, JQuery
-- Authentication and authorization: Keycloak
+- Operating System: tested on Linux Ubuntu 20.04
+- Backend: Python (v.3.12.4) Flask (v.2.2.3) hosted through gunicorn (v.22.0.0)
+- Background tasks: Celery (v.5.4.0) + Redis (v.5.0.7)
+- Frontend: Bootstrap (v.5.2.3), JQuery (v.3.6.3)
+- Authentication and authorization: Keycloak (v.18.0.0)
+- Database: MariaDB (v.10.3.39)
+- Tests: PyTest (v.8.2.2) and Playwright (v.1.45.0)
 
 ## Installation
 The HerediVar installation is quite lengthy, because it requires a lot of data and tools. It is recommended that you have at least 500 GB of free disk space to install HerediVar. HerediVar was developed and tested on Linux Ubuntu 20.04. So the following steps assume you are using this operating system. (There is however a good chance that HerediVar will work properly on any operating system, but you might need to adjust the installation scripts.)
@@ -166,8 +169,9 @@ In your browser navigate to $KEYCLOAK_HOST:$KEYCLOAK_PORT (as specified in the .
 
 Once your are done update your .env file with the new secret and restart the HerediVar Flask server.
 
-## TLS
-HerediVar was set up such that it runs behind an http-server (like Apache or NGINX) in reverse proxy mode. Thus, HerediVar itself does not consider TLS and should only run on localhost without direct access to the public domain. TLS should be implemented in a production environment by the public facing http-server.
+## Security
+HerediVar was set up such that it runs behind an http-server (like Apache or NGINX) in reverse proxy mode. Thus, HerediVar itself does not consider security protocols like TLS or CSP and should only run on localhost without direct access to the public domain. 
+The security protocols should be implemented in a production environment by the public facing http-server. Cross site scripting (XSS) is handled natively by the HerediVar front- and back-end.
 
 ## Run tests
 HerediVar uses Playwright for testing.
@@ -184,6 +188,6 @@ Note: Starting the tests for the first time will take quite a long time, because
 
 
 ## Contribute and Questions
-If you are interested in contributing classifications to HerediVar please reach out to Jan Hauke ().
+If you are interested in contributing classifications to HerediVar please reach out to Jan Hauke (jan.hauke@uk-koeln.de).
 
 If you have questions about variant classifications on HerediVar please use the online form on our website: [https://heredivar.uni-koeln.de/contact](https://heredivar.uni-koeln.de/contact)
