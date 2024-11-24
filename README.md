@@ -24,6 +24,9 @@ HerediVar uses the following tools:
 - Database: MariaDB (v.10.3.39)
 - Tests: PyTest (v.8.2.2) and Playwright (v.1.45.0)
 
+On a high level, the HerediVar infrastructure looks like this:
+![infrastructure](https://github.com/GC-HBOC/HerediVar/blob/main/doc/img/Infrastructure.png?raw=true)
+
 ## Installation
 The HerediVar installation is quite lengthy, because it requires a lot of data and tools. It is recommended that you have at least 500 GB of free disk space to install HerediVar. HerediVar was developed and tested on Linux Ubuntu 20.04. So the following steps assume you are using this operating system. (There is however a good chance that HerediVar will work properly on any operating system, but you might need to adjust the installation scripts.)
 
