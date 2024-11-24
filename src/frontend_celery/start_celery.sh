@@ -72,5 +72,5 @@ fi
 
 if [ "${WEBAPP_ENV}" == "prod" ]
 then
-    celery -A celery_worker.celery multi start single-worker --pidfile=/var/run/celery/celery.pid --logfile=/var/log/celery/celery.log --loglevel=info -Ofair --concurrency=5 --without-heartbeat --without-gossip --without-mingle
+    celery -A celery_worker.celery multi start single-worker --pidfile=$ROOT/run/celery/celery.pid --logfile=$ROOT/log/celery/celery.log --loglevel=info -Ofair --concurrency=5 --without-heartbeat --without-gossip --without-mingle
 fi
