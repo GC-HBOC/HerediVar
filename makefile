@@ -245,8 +245,8 @@ igv_clean:
 igv_update: igv_clean igv
 
 ## JQUERY
-JQUERYNAME := $(JSLIBS)
-JQUERYPATH := jquery
+JQUERYPATH := $(JSLIBS)
+JQUERYNAME := jquery
 JQUERY := $(JQUERYPATH)/$(JQUERYNAME)
 JQUERYVERSION := 3.6.3
 jquery:
@@ -261,8 +261,8 @@ jquery_clean:
 jquery_update: jquery_clean jquery
 
 ## DATATABLES
-DATATABLESNAME := $(JSLIBS)
-DATATABLESPATH := datatables
+DATATABLESPATH := $(JSLIBS)
+DATATABLESNAME := datatables
 DATATABLES := $(DATATABLESPATH)/$(DATATABLESNAME)
 DATATABLESVERSION := 1.13.4
 datatables:
