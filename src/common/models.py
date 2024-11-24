@@ -513,7 +513,8 @@ class Classification:
         else:
 
             cl_vcf = '~3B'.join(['classification~1Y' + str(self.selected_class), 
-                                 'comment~1Y' + self.comment, 
+                                 'comment~1Y' + self.comment,
+                                 'criteria~1Y' + self.scheme.to_vcf(),
                                  'date~1Y' + self.date, 
                                  'scheme~1Y' + self.scheme.display_name,
                                  'source~1Y' + "heredivar"]) # sep: ;
@@ -525,6 +526,7 @@ class Classification:
             header = {key: '##INFO=<ID=' + key + ',Number=.,Type=String,Description="The recent consensus classification by the VUS-task-force. Format: consensus_class|consensus_comment|submission_date|consensus_scheme|consensus_scheme_class|consensus_criteria_string. The consensus criteria string itself is a $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence+state ">\n'}
         else:
             header = {'classification': '##INFO=<ID=classification,Number=1,Type=String,Description="The consensus classification from the VUS-task-force. Either 1 (benign), 2 (likely benign), 3 (uncertain), 4 (likely pathogenic) or 5 (pathogenic)">\n',
+                      'criteria': '##INFO=<ID=criteria,Number=.,Type=String,Description="The criteria selected by the VUS-task-force for the consensus classification. A $ separated list with the Format: criterium_name+criterium_strength+criterium_evidence+state">\n',
                       'comment': '##INFO=<ID=comment,Number=1,Type=String,Description="The comment of the VUS-task-force for the consensus classification">\n',
                       'date': '##INFO=<ID=date,Number=1,Type=String,Description="The date when the consensus classification was submitted. FORMAT: %Y-%m-%d %H:%M:%S">\n',
                       'scheme': '##INFO=<ID=scheme,Number=1,Type=String,Description="The classification scheme which was used to classify the variant.">\n',

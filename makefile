@@ -168,6 +168,7 @@ ngs_bits_update: ngs_bits_clean ngs_bits
 ## SAMTOOLS
 SAMTOOLS := $(TOOLS)/samtools
 SAMTOOLS_VERSION := 1.11
+SAMTOOLSNAME := samtools
 samtools:
 	if [ ! -d "$(SAMTOOLS)" ]; then \
 		printf ${_TEXTCOL_RED} "Installing samtools" ; \
