@@ -31,14 +31,14 @@ then
 fi
 
 # Begin script in case all parameters are correct
-echo "Setting up python $version in $basedir/$foldername..."
+echo "Setting up jquery $version in $basedir/$foldername..."
 
 
 
 
-mkdir -p $path/$foldername
+mkdir -p $basedir/$foldername
 
-cd $path/$foldername
+cd $basedir/$foldername
 
 wget -q https://code.jquery.com/jquery-$version.min.js
 

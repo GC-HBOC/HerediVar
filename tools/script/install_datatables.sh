@@ -31,15 +31,15 @@ then
 fi
 
 # Begin script in case all parameters are correct
-echo "Setting up python $version in $basedir/$foldername..."
+echo "Setting up datatables $version in $basedir/$foldername..."
 
 
 
-path=$path/$foldername
+path=$basedir/$foldername
 
 mkdir -p $path
 
 cd $path
 
-wget -q https://cdn.datatables.net/$bsversion/js/jquery.dataTables.min.js
-wget -q https://cdn.datatables.net/$bsversion/css/jquery.dataTables.min.css
+wget -q https://cdn.datatables.net/$version/js/jquery.dataTables.min.js
+wget -q https://cdn.datatables.net/$version/css/jquery.dataTables.min.css

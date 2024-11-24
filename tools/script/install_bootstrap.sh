@@ -31,18 +31,18 @@ then
 fi
 
 # Begin script in case all parameters are correct
-echo "Setting up python $version in $basedir/$foldername..."
+echo "Setting up bootstrap $version in $basedir/$foldername..."
 
 
 
 
 
 
-mkdir -p $path
+mkdir -p $basedir
 
-cd $path
+cd $basedir
 
-wget -q https://github.com/twbs/bootstrap/releases/download/v$bsversion/bootstrap-$bsversion-dist.zip
-unzip bootstrap-$bsversion-dist.zip
-mv bootstrap-$bsversion-dist $foldername
-rm bootstrap-$bsversion-dist.zip
+wget -q https://github.com/twbs/bootstrap/releases/download/v$version/bootstrap-$version-dist.zip
+unzip bootstrap-$version-dist.zip
+mv bootstrap-$version-dist $foldername
+rm bootstrap-$version-dist.zip

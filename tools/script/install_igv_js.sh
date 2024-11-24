@@ -31,15 +31,15 @@ then
 fi
 
 # Begin script in case all parameters are correct
-echo "Setting up python $version in $basedir/$foldername..."
+echo "Setting up igv js $version in $basedir/$foldername..."
 
 
 
 
 
-mkdir -p $path/$foldername
+mkdir -p $basedir/$foldername
 
-cd $path/$foldername
+cd $basedir/$foldername
 
 # official release
 #wget -q https://cdn.jsdelivr.net/npm/igv@$version/dist/igv.min.js
