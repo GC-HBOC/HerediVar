@@ -166,7 +166,7 @@ ngs_bits_clean:
 ngs_bits_update: ngs_bits_clean ngs_bits
 
 ## SAMTOOLS
-SAMTOOLSPATH := $(TOOLS)/samtools
+SAMTOOLSPATH := $(TOOLS)
 SAMTOOLSVERSION := 1.11
 SAMTOOLSNAME := samtools
 samtools:
