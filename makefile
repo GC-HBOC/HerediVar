@@ -1,5 +1,6 @@
 ROOT := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 TOOLS := $(ROOT)/tools
+JSLIBS := $(ROOT)/src/frontend_celery/webapp/static/packages
 DATA := $(ROOT)/data
 DBS := $(DATA)/dbs
 GENOMES := $(DATA)/genomes
@@ -211,7 +212,7 @@ herediclass_update_config:
 js_libs: bootstrap igv jquery datatables
 
 ## BOOTSTRAP
-BOOTSTRAPPATH := $(TOOLS)
+BOOTSTRAPPATH := $(JSLIBS)
 BOOTSTRAPNAME := bootstrap
 BOOTSTRAP := $(BOOTSTRAPPATH)/$(BOOTSTRAPNAME)
 BOOTSTRAPVERSION := 5.2.3
@@ -228,7 +229,7 @@ bootstrap_update: bootstrap_clean bootstrap
 
 ## IGV
 # download csp conform version from: https://download.imgag.de/ahdoebm1/igv/
-IGVPATH := $(TOOLS)
+IGVPATH := $(JSLIBS)
 IGVNAME := igv
 IGV := $(IGVPATH)/$(IGVNAME)
 IGVVERSION := 2.15.0
@@ -244,7 +245,7 @@ igv_clean:
 igv_update: igv_clean igv
 
 ## JQUERY
-JQUERYNAME := $(TOOLS)
+JQUERYNAME := $(JSLIBS)
 JQUERYPATH := jquery
 JQUERY := $(JQUERYPATH)/$(JQUERYNAME)
 JQUERYVERSION := 3.6.3
@@ -260,7 +261,7 @@ jquery_clean:
 jquery_update: jquery_clean jquery
 
 ## DATATABLES
-DATATABLESNAME := $(TOOLS)
+DATATABLESNAME := $(JSLIBS)
 DATATABLESPATH := datatables
 DATATABLES := $(DATATABLESPATH)/$(DATATABLESNAME)
 DATATABLESVERSION := 1.13.4
