@@ -48,7 +48,7 @@ python3 -m pip install --upgrade setuptools wheel
 pip install flask flask-session flask-paginate
 #pip install Flask-OIDC
 pip install authlib
-pip install mysql-connector
+pip install mysql-connector-python
 
 
 pip install spliceai tensorflow
@@ -77,6 +77,7 @@ pip install pytest
 
 
 pip install gunicorn
+pip install gevent
 
 pip install flask-mail
 
