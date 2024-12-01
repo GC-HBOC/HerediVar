@@ -58,7 +58,7 @@ then
    python3 main.py
 fi
 
-if [ "${WEBAPP_ENV}" == "prod" ]
+if [ "${WEBAPP_ENV}" == "prod"  ] || [ "${WEBAPP_ENV}" == "demo" ];
 then
    #export CURL_CA_BUNDLE=""
    set -o allexport

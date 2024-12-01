@@ -69,7 +69,7 @@ then
     python3 variant_classification/webservice.py --port $AUTOCLASS_PORT --host $AUTOCLASS_HOST
 fi
 
-if [ "${WEBAPP_ENV}" == "prod" ]
+if [ "${WEBAPP_ENV}" == "prod" ] || [ "${WEBAPP_ENV}" == "demo" ];
 then
     python3 variant_classification/webservice.py --port $AUTOCLASS_PORT --host $AUTOCLASS_HOST
 fi

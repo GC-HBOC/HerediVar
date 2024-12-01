@@ -391,8 +391,8 @@ class automatic_classification_job(Job):
 
         result_json = json.dumps(result)
 
-        #with open("/mnt/storage2/users/ahdoebm1/HerediVar/src/annotation_service/test.json", "w") as f:
-        #    f.write(result_json)
+        with open("/var/www/html/heredivar-demo/logs/herediclassify_jsons/test.json", "w") as f:
+            f.write(result_json)
 
         return result_json
 

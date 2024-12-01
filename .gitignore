@@ -172,6 +172,7 @@ fabric.properties
 .env_localtest
 .env_dev
 .env_prod
+.env_demo
 src/frontend_celery/logs
 /src/frontend_celery/webapp/static/files/
 classified_structural_variants

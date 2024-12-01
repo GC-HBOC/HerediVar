@@ -499,7 +499,7 @@ def create_variant_from_request(request_obj, user, conn):
                     result["flash_class"] = "alert-danger flash_id:variant_from_hgvs_error"
                     result["status"] = "error"
 
-    if create_variant_from == 'vcf_file' and current_app.config["vcf_file_import_active"]:
+    if create_variant_from == 'vcf_file' and current_app.config["VCF_FILE_IMPORT_ACTIVE"]:
         genome_build = request_obj.form.get('genome')
         if 'file' not in request_obj.files or genome_build is None:
             result["flash_message"] = 'You must specify the genome build and select a vcf file.'

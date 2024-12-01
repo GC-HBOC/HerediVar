@@ -231,3 +231,72 @@ elif webapp_env == 'prod':
 
     # clinvar submission
     clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_15_05_24.json")
+
+
+
+elif webapp_env == 'demo':
+    """ configuration for the demo environment """
+
+    # general paths
+    workdir = "/var/www/html/heredivar-demo"
+    datadir = joinpaths(workdir, "data/dbs")
+    hardcoded_datadir = joinpaths(workdir, "data/dbs_hardcoded")
+    toolsdir = joinpaths(workdir, "tools")
+    resources_dir = joinpaths(workdir, 'resources')
+    logs_dir = joinpaths(workdir, 'logs')
+    downloads_dir = joinpaths(workdir, 'downloads')
+    download_variant_list_dir = joinpaths(downloads_dir, 'variant_lists')
+
+    # webapp logs path
+    webapp_log_dir = joinpaths(logs_dir, "webapp")
+    webapp_log = joinpaths(webapp_log_dir, "webapp.log")
+
+    #tools
+    vep_path = joinpaths(toolsdir, "ensembl-vep")
+    vep_cache_dir = joinpaths(vep_path, "data/cache")
+    os.environ['PERL5LIB'] = vep_path + "/Bio/:" + vep_path + "/cpan/lib/perl5/:" + os.environ.get('PERL5LIB', '')
+    ngs_bits_path = joinpaths(toolsdir, "ngs-bits/bin")
+    htslib_path = joinpaths(toolsdir, "htslib-1.16")
+    samtools_path = joinpaths(toolsdir, "samtools/samtools")
+    automatic_classification_path = joinpaths(toolsdir, "herediclass")
+    automatic_classification_config_path = os.path.join(automatic_classification_path, "config_production.yaml")
+
+    # data
+    ref_genome_dir = joinpaths(workdir, "data/genomes")
+    ref_genome_path = joinpaths(ref_genome_dir, "GRCh38.fa")
+    ref_genome_path_grch37 = joinpaths(ref_genome_dir, "GRCh37.fa")
+    chainfile_path = joinpaths(ref_genome_dir, "hg19ToHg38.fixed.over.chain.gz")
+    ensembl_transcript_path = joinpaths(datadir, "ensembl/Homo_sapiens.GRCh38.110.gff3")
+    refseq_transcript_path = joinpaths(datadir, "RefSeq/refseq_transcripts_110.gff")
+    refseq_transcript_4_consequence_path = joinpaths(datadir, "RefSeq/refseq_transcripts_110.4consequence.gff")
+    
+    #metadata
+    gnomad_path = joinpaths(datadir, "gnomAD/gnomAD_genome_GRCh38.vcf.gz")
+    gnomad_m_path  = joinpaths(datadir, "gnomAD/gnomAD_mito_GRCh38.vcf.gz")
+    phylop_file_path = joinpaths(datadir, "phyloP/hg38.phyloP100way.bw")
+    dbsnp_path = joinpaths(datadir, "dbSNP/dbSNP_v155.vcf.gz")
+    revel_path = joinpaths(datadir, "REVEL/revel_grch38_all_chromosomes.vcf.gz")
+    spliceai_snv_path = joinpaths(datadir, "SpliceAI/spliceai_scores.masked.snv.hg38.vcf.gz")
+    spliceai_indel_path = joinpaths(datadir, "SpliceAI/spliceai_scores.masked.indel.hg38.vcf.gz")
+    cadd_snvs_path = joinpaths(datadir, "CADD/CADD_SNVs_1.6_GRCh38.vcf.gz")
+    cadd_indels_path = joinpaths(datadir, "CADD/CADD_InDels_1.6_GRCh38.vcf.gz")
+    clinvar_path = joinpaths(datadir, "ClinVar/clinvar_converted_GRCh38.vcf.gz")
+    submission_summary_path = joinpaths(datadir, "ClinVar/submission_summary_preprocessed.txt.gz")
+    BRCA_exchange_path = joinpaths(datadir, "BRCA_exchange/BRCA_exchange_02-22-22.vcf.gz")
+    FLOSSIES_path = joinpaths(datadir, "FLOSSIES/FLOSSIES_25-03-2022.vcf.gz")
+    cancerhotspots_path = joinpaths(datadir, "cancerhotspots/cancerhotspots.v2.tsv")
+    #arup_brca_path = joinpaths(datadir, "ARUP/ARUP_BRCA_2022_04_01.vcf.gz")
+    tp53_db = joinpaths(datadir, "TP53_database/GermlineDownload_r20.normalized.vcf.gz")
+    hci_priors = joinpaths(datadir, "HCI_priors/priors.vcf.gz")
+    bayesdel = joinpaths(datadir, "BayesDEL/bayesdel_4.4.vcf.gz")
+    cosmic = joinpaths(datadir, "COSMIC/cosmic_cmc.vcf.gz")
+
+    # assays
+    cspec_brca_assays_splicing = joinpaths(datadir, "CSpec_BRCA_assays/splicing_assays.vcf.gz")
+    cspec_brca_assays_functional = joinpaths(datadir, "CSpec_BRCA_assays/functional_assays.vcf.gz")
+
+    # IGV data
+    igv_data_path = joinpaths(workdir, "src/frontend_celery/webapp/static/packages/igv/data")
+
+    # clinvar submission
+    clinvar_submission_schema = joinpaths(resources_dir, "clinvar_submission_schemas/clinvar_submission_schema_15_05_24.json")

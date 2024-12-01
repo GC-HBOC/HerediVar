@@ -3055,7 +3055,7 @@ class Connection:
         heredicare_annotation_type_id = self.get_most_recent_annotation_type_id('heredicare')
         command = """
                 DELETE FROM variant_heredicare_annotation WHERE id IN (
-	                SELECT id FROM variant_heredicare_annotation WHERE annotation_type_id = %s AND variant_id = %s AND vid NOT IN (SELECT external_id FROM variant_ids WHERE annotation_type_id = %s AND variant_id = %s)
+	                SELECT id FROM (SELECT * FROM variant_heredicare_annotation) as useless WHERE annotation_type_id = %s AND variant_id = %s AND vid NOT IN (SELECT external_id FROM variant_ids WHERE annotation_type_id = %s AND variant_id = %s)
                 )
             """
         self.cursor.execute(command, (heredicare_annotation_type_id, variant_id, heredicare_vid_annotation_type_id, variant_id))

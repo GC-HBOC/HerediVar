@@ -128,4 +128,6 @@ class LocaltestConfig(Config):
     PORT = os.environ.get('PORT')
     SERVER_NAME = HOST + ':' + PORT # add port to url_for()
 
-
+class DemoConfig(Config):
+    SESSION_COOKIE_SECURE = True
+    VCF_FILE_IMPORT_ACTIVE = True

@@ -70,7 +70,7 @@ then
     celery -A celery_worker.celery worker --loglevel=info --concurrency=5 #--pool=solo
 fi
 
-if [ "${WEBAPP_ENV}" == "prod" ]
+if [ "${WEBAPP_ENV}" == "prod" ] || [ "${WEBAPP_ENV}" == "demo" ];
 then
     celery -A celery_worker.celery multi start single-worker --pidfile=$ROOT/run/celery/celery.pid --logfile=$ROOT/logs/celery/celery.log --loglevel=info -Ofair --concurrency=5 --without-heartbeat --without-gossip --without-mingle
 fi
