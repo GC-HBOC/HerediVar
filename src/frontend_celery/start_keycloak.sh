@@ -58,7 +58,7 @@ set -o allexport
 extension=env_
 source $ROOT/.$extension$WEBAPP_ENV
 set +o allexport
-
+export no_proxy=$NO_PROXY
 
 
 if [ "${WEBAPP_ENV}" == "dev" ]

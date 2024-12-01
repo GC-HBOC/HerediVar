@@ -56,6 +56,7 @@ set -o allexport
 extension=env_
 source $ROOT/.$extension$WEBAPP_ENV
 set +o allexport
+export no_proxy=$NO_PROXY
 
 cd tools/redis-stable
 src/redis-server --port $REDIS_PORT

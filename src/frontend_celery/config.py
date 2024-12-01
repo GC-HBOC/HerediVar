@@ -29,6 +29,7 @@ class Config(object):
 
     HOST = os.environ.get('HOST')
     PORT = os.environ.get('PORT')
+    os.environ["no_proxy"] = os.environ.get("NO_PROXY", "")
 
     LOGIN_REQUIRED = os.environ.get('LOGIN_REQUIRED', "True").lower() in ["true"]
 

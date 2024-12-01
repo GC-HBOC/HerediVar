@@ -306,14 +306,16 @@ class automatic_classification_job(Job):
 
         splicing_assays = assays_dict.get("splicing")
 
+        #print(splicing_assays)
+
         all_splicing_assays = []
         if splicing_assays is not None:
-            for assay in all_splicing_assays:
+            for assay in splicing_assays:
                 if assay.metadata.get("minigene") is None or assay.metadata.get("patient_rna") is None or assay.metadata.get("allele_specific") is None: # skip legacy assays
                     continue
-                minigene = assay.metadata.get("minigene", "") == "True"
-                patient_rna = assay.metadata.get("patient_rna", "") == "True"
-                allelic = assay.metadata.get("allele_specific", "False")
+                minigene = assay.get_metadata_value("minigene", "False") == "True"
+                patient_rna = assay.get_metadata_value("patient_rna", "False") == "True"
+                allelic = assay.get_metadata_value("allele_specific", "False")
                 quantification = functions.percent_to_decimal(assay.metadata.get("minimal_percentage", None))
                 all_splicing_assays.append({"minigene": minigene,
                                             "patient_rna": patient_rna,
@@ -339,8 +341,8 @@ class automatic_classification_job(Job):
             for assay in functional_assays:
                 if assay.metadata.get("functional_category") is None or assay.metadata.get("functional_category") is None: # skip legacy assays
                     continue
-                is_pathogenic = assay.metadata.get("functional_category", "") == "pathogenic"
-                is_benign =  assay.metadata.get("functional_category", "") == "benign"
+                is_pathogenic = assay.get_metadata_value("functional_category", "") == "pathogenic"
+                is_benign = assay.get_metadata_value("functional_category", "") == "benign"
                 all_functional_assays.append({"pathogenic": is_pathogenic,
                                               "benign": is_benign})
         result["functional_data"] = all_functional_assays
@@ -391,8 +393,7 @@ class automatic_classification_job(Job):
 
         result_json = json.dumps(result)
 
-        with open("/var/www/html/heredivar-demo/logs/herediclassify_jsons/test.json", "w") as f:
-            f.write(result_json)
+        #print(result_json)
 
         return result_json
 

@@ -55,6 +55,7 @@ export WEBAPP_ENV=$we
 vep_install_dir=$ROOT/tools/ensembl-vep-release-107.0
 cpan_dir=$vep_install_dir/cpan
 export PERL5LIB=$vep_install_dir/Bio/:$cpan_dir/lib/perl5/:$PERL5LIB
+export no_proxy=$NO_PROXY
 
 
 if [ -z "${WEBAPP_ENV}" ]

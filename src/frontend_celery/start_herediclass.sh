@@ -51,7 +51,7 @@ set -o allexport
 extension=env_
 source $ROOT/.$extension$WEBAPP_ENV
 set +o allexport
-
+export no_proxy=$NO_PROXY
 
 autoclass_path=$ROOT/tools/herediclass
 cd $autoclass_path

@@ -734,6 +734,11 @@ class Assay:
 
     metadata: Any # dict of Assay Metadata
 
+    def get_metadata_value(self, metadata_type, default):
+        if metadata_type in self.metadata:
+            return self.metadata.get(metadata_type).value
+        return default
+
     def get_header(self):
         ## Separator-symbol-hierarchy: ; -> & -> | -> $ -> +
         header = {'assays': '##INFO=<ID=assays,Number=.,Type=String,Description="All types of assays (e. g. functional or splicing) which were submitted to HerediVar. Assays are separated by "&" symbols. Format:assay_type|date|link|metadata. Metadata itself is a $ separated list of key+value pairs.">\n'}
