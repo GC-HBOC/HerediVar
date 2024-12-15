@@ -112,8 +112,8 @@
                             <div id="additional_content" class="sst"></div>
                             <h4 class="bst">Evidence:</h4>
                             <textarea type="text" id="criteria_evidence" class="form-control sst" placeholder="insert evidence..."></textarea>
-                            <h4 class="bst">Important information</h4>
-                            <div>
+                            <h4 id="important_information_heading" class="bst visually_hidden">Important information</h4>
+                            <div id="important_information_container">
                                 <div class="sst important_information" id="splicing_info">
                                     <h5>Splicing</h5>
                                     {% set current_annotations = variant.annotations.get_group('Splicing') %}

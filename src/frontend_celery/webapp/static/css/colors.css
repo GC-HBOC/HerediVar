@@ -171,7 +171,13 @@ input[type=checkbox]:checked + label.btn-ba {
     background-color: #000d58;
 }
 
-
+/*
+input {
+    appearance: unset;
+    -webkit-appearance: unset;
+    -moz-appearance: unset;
+}
+*/
 
 .btn-check:disabled + label.acmg-button {
     color: rgb(170, 170, 170);

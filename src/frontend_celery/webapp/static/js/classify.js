@@ -328,6 +328,7 @@ $(document).ready(function() {
     });
 
     add_default_for_important_information()
+    hide_important_information_heading()
 });
 
 
@@ -342,7 +343,9 @@ function add_default_for_important_information() {
             $(this).append(default_empty)
         }
     })
+    
 }
+
 
 // update global scheme field variable
 function update_scheme_field_variable() {
@@ -427,10 +430,12 @@ function set_user_selection_counts(scheme) {
             var selected_criteria = scheme_with_info['criteria'] ?? [] // propagate the above
             for (var i in selected_criteria) {
                 var criterium = selected_criteria[i]
-                var criterium_id = criterium['name']
-                var count_label = document.getElementById('users_selected_' + criterium_id)
-                count_label.innerText = parseInt(count_label.innerText) + 1
-                count_label.hidden = false;
+                if (criterium["state"] == "selected") {
+                    var criterium_id = criterium['name']
+                    var count_label = document.getElementById('users_selected_' + criterium_id)
+                    count_label.innerText = parseInt(count_label.innerText) + 1
+                    count_label.hidden = false;
+                }
             }
         }
     }
@@ -459,8 +464,28 @@ function preselect_criteria_from_database(scheme) {
     if (typeof current_scheme_with_info !== "undefined") { // only preselect if there is data for it
         selected_criteria = current_scheme_with_info['scheme']['criteria']
         preselect_criteria_from_list(selected_criteria)
+        remove_criterium_button_backgrounds() 
     }
+}
 
+function remove_criterium_button_backgrounds() {
+    $(".acmg-button").each(function() {
+        var criterium_label = this
+        var all_btn_classes = []
+        for (var i = 0; i < criterium_label.classList.length; i++) {
+            var current_class = criterium_label.classList[i]
+            if (current_class.indexOf("btn-") >= 0) {
+                all_btn_classes.push(current_class)
+                //criterium_label.classList.remove(current_class)
+                //criterium_label.classList.toggle(current_class)
+            }
+        }
+        all_btn_classes.pop()
+
+        all_btn_classes.forEach(css_class => {
+            criterium_label.classList.remove(css_class)
+        });
+    })
 }
 
 function preselect_criteria_from_list(selected_criteria, is_intermediate = false) {
@@ -478,6 +503,8 @@ function preselect_criteria_from_list(selected_criteria, is_intermediate = false
             set_criterium(criterium_id, state, is_intermediate)
         }
     }
+
+
 }
 
 
@@ -627,6 +654,12 @@ function hide_all_information() {
     $('.important_information').each(function() {
         this.classList.add('visually_hidden')
     })
+}
+
+function hide_important_information_heading() {
+    if ($("#important_information_container").find("visually_hidden").length > 0) {
+        document.getElementById('important_information_heading').classList.remove('visually_hidden')
+    }
 }
 
 function revert_strength_selects() {
@@ -1204,6 +1237,7 @@ function copy_evidence(obj) {
 
     select_criterium_check.value = state
     set_criterium(criterium_id, state, is_intermediate = true)
+    update_classification_preview()
 }
 
 function add_user_acmg_classification_details(criterium_id) {
@@ -1568,14 +1602,17 @@ function set_criterium(criterium_id, state, is_intermediate = false) {
 
     state_check.value = state
 
-    console.log("set_criterium: " + criterium_id + " to state: " + state)
+    console.log("set_criterium: " + criterium_id + " to state: " + state + " with strength: " + strength_check.value)
 
     update_criterium_button_label(criterium_id)
+    //remove_criterium_button_background(criterium_id)
     update_criterium_button_background(criterium_id)
 
     if (!(['unchecked', 'unselected'].includes(previous_state) && ['unchecked', 'unselected'].includes(state))) {
         update_mutual_criteria(criterium_id)
     }
+
+    
 }
 
 

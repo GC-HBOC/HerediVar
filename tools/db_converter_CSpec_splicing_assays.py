@@ -54,6 +54,7 @@ for line in input_file:
     percent_aberrant_transcript = parts[13]
     allele_specific = parts[14]
     comment = parts[15]
+    result = parts[9]
 
 
     transcript = gene2transcript[gene]
@@ -74,17 +75,22 @@ for line in input_file:
         for percentage in re.findall(r'[\d]+[.,\d]+|[\d]*[.][\d]+|[\d]+', percentage):
             percentage = float(percentage)
             all_percentages_curated.append(percentage)
-    minimal_percentage = ""
+    quantification = ""
     if len(all_percentages_curated) > 0:
-        minimal_percentage = str(min(all_percentages_curated))
+        quantification = str(sum(all_percentages_curated))
+    else: # add quantification 0% if not stated
+        if minigene == "Y" or patient_rna == "Y":
+            if result == "no aberration" and comment != "Result ignored (design limitations to detect aberration)":
+                quantification = "0"
 
 
     splicing_assay = [functions.encode_vcf(patient_rna),
                       functions.encode_vcf(minigene), 
-                      functions.encode_vcf(minimal_percentage),
+                      functions.encode_vcf(quantification),
                       functions.encode_vcf(allele_specific), 
                       functions.encode_vcf(comment),
-                      functions.encode_vcf("https://pubmed.ncbi.nlm.nih.gov/" + pmid)]
+                      functions.encode_vcf("https://pubmed.ncbi.nlm.nih.gov/" + pmid),
+                      functions.encode_vcf(result)]
     splicing_assay = "|".join(splicing_assay)
 
     csv_line_parts = [transcript, 

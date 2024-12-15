@@ -90,9 +90,9 @@ then
     echo $DATE > $SCRIPTPATH/most_recent_dump.txt
 fi
 
-if [ "${WEBAPP_ENV}" == "prod" ]
+if [ "${WEBAPP_ENV}" == "prod" ] || [ "${WEBAPP_ENV}" == "demo" ]
 then
-    dump_path=$SCRIPTPATH/prod
+    dump_path=$SCRIPTPATH/$WEBAPP_ENV
     mkdir -p $dump_path
     dump_name=production-dump-$DATE.sql
 

@@ -279,8 +279,8 @@ function show_heredicare_upload_status(color_class, summary, inner_text) {
     const pill_holder_id = "heredicare_status_pill_holder"
     const pill_id = "heredicare_status_pill"
     var prepend_html = null
-    
-    if (summary["needs_upload"] && ["error", "api_error", "success", "requested", "multiple stati"].includes(summary["status"])) {
+
+    if (summary["needs_upload"] && ["error", "api_error", "success", "requested", "multiple stati", "unknown"].includes(summary["status"])) {
         prepend_html = create_exclamation_mark()
         add_tooltip(prepend_html, "The consensus classification needs to be uploaded to HerediCaRe!")
     }

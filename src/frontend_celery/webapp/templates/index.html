@@ -95,9 +95,19 @@
 
     <div class="underline">v 1.14.5 ()</div>
     <div>
+        General changes:
+        <ul>
+            <li>Removed "Important Information" heading on classify page if there is no important information to show</li>
+            <li>CSpecBRCA splicing assay quantification is now the sum of percent abberant transcript. It was the minimal value previously.</li>
+            <li>CSpecBRCA splicing assay quantification is now explicitly set to 0 if the assay is minigene or patient RNA and the result is "no abberation" which is not ignored</li>
+            <li>Consensus classify count labels now only count criteria which were selected and ignore unselected criteria</li>
+        </ul>
         Bugfixes:
         <ul>
             <li>Fixed a bug where assay annotations would not be considered for automatic classification</li>
+            <li>Fixed a bug which was causing criteria buttons to show the default color after page reload even though the strength was non-default. This problem only existed in Firefox.</li>
+            <li>When copying evidence on the consensus classify page, the classifcation preview would not update</li>
+            <li>Needs HerediCaRe upload for consensus classifications was not showing when there was no HerediCaRe submission</li>
         </ul>
     </div>
 
