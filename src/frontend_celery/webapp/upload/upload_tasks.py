@@ -32,7 +32,7 @@ def start_publish(variant_ids, options, user_id, user_roles, conn: Connection):
 
 
 
-@celery.task(bind=True, retry_backoff=5, max_retries=3, soft_time_limit=6000)
+@celery.task(bind=True, retry_backoff=5, max_retries=3, soft_time_limit=20000)
 def publish(self, publish_queue_id, variant_ids, options, user_roles):
     """Background task for adding all tasks for publishing variants"""
     #from frontend_celery.webapp.utils.variant_importer import import_variants

@@ -129,8 +129,8 @@ class ClinVar(metaclass=Singleton):
         assertion_criteria = {}
         if assertion_criteria_source == '#' or assertion_criteria_source is None:
             return None
-        if selected_class == "4M": # uploaded schemes do not contain information about how to choose 4M class -> do not use the scheme
-            return None
+        #if selected_class == "4M": # uploaded schemes do not contain information about how to choose 4M class -> do not use the scheme
+        #    return None
         if assertion_criteria_source.startswith("https://pubmed.ncbi.nlm.nih.gov/"):
             assertion_criteria_source = assertion_criteria_source.replace('https://pubmed.ncbi.nlm.nih.gov/', '').strip('/')
             assertion_criteria['db'] = "PubMed"

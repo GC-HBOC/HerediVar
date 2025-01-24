@@ -493,6 +493,8 @@ class Classification:
             return 'Pathogenic'
         if classification == '4M':
             return 'Likely pathogenic, low penetrance'
+        if classification == '5M':
+            return 'Pathogenic, low penetrance'
         if classification == 'R':
             return 'Established risk allele'
 

@@ -203,7 +203,7 @@ def retry_variant_import(import_variant_queue_id, user_id, user_roles, conn: Con
 # this uses exponential backoff in case there is a http error
 # this will retry 3 times before giving up
 # first retry after 5 seconds, second after 25 seconds, third after 125 seconds (if task queue is empty that is)
-@celery.task(bind=True, retry_backoff=5, max_retries=3, soft_time_limit=600)
+@celery.task(bind=True, retry_backoff=5, max_retries=3, soft_time_limit=1000)
 def import_one_variant_heredicare(self, vid, user_id, user_roles, import_variant_queue_id):
     """Background task for fetching variants from HerediCare"""
     self.update_state(state='PROGRESS')
@@ -517,13 +517,15 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
                     for current_transcript in preferred_transcripts:
                         for e in err_msgs:
                             if current_transcript.name in e:
-                                new_message = "HGVS to VCf yielded an error with transcript: " + e
+                                new_message = "HGVS to VCF yielded an error with transcript: " + e
                                 if new_message not in message:
                                     message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
                                 break_outer = True
                                 break
                         if break_outer:
                             break
+                    if not was_successful and all([x is not None for x in [chrom, pos, ref, alt]]):
+                        message += " possible candidate variant: " + '-'.join([chrom, pos, ref, alt]) + " (from transcript(s): " + current_transcript.name + ")"
                 elif any([x is None for x in [chrom, pos, ref, alt]]): # the conversion was not successful
                     new_message = "HGVS could not be converted to VCF: " + str(hgvs_c)
                     if new_message not in message:
@@ -531,17 +533,14 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
                 else:
                     was_successful = True
 
-                if not was_successful and all([x is not None for x in [chrom, pos, ref, alt]]):
-                    message += " possible candidate variant: " + '-'.join([chrom, pos, ref, alt]) + " (from transcript(s): " + current_transcript.name + ")"
-
         if was_successful:
             was_successful, new_message, variant_id = validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn, user_id, allowed_sequence_letters = allowed_sequence_letters, insert_variant = insert_variant, perform_annotation=perform_annotation)
             if new_message not in message:
                 message = functions.collect_info(message, "hgvs_msg=", new_message, sep = " ~~ ")
 
     if variant_id is not None and external_ids is not None: # insert new vid
+        annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
         for external_id in external_ids:
-            annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
             previous_variant_ids = conn.get_variant_ids_from_external_id(external_id, annotation_type_id)
             for previous_variant_id in previous_variant_ids:
                 if previous_variant_id != variant_id:
@@ -558,6 +557,13 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
         status = "update"
     elif not was_successful:
         status = "error"
+        # remove external id from all variants
+        annotation_type_id = conn.get_most_recent_annotation_type_id("heredicare_vid")
+        if external_ids is not None and insert_variant:
+            for external_id in external_ids:
+                previous_variant_ids = conn.get_variant_ids_from_external_id(external_id, annotation_type_id)
+                for previous_variant_id in previous_variant_ids:
+                    conn.delete_external_id(external_id, annotation_type_id, previous_variant_id)
 
     return status, message
 
@@ -665,7 +671,7 @@ def validate_and_insert_variant(chrom, pos, ref, alt, genome_build, conn: Connec
             celery_task_id = start_annotation_service(variant_id, user_id, conn = conn) # starts the celery background task
 
         if not insert_variant:
-            message += "HG38 variant would be: " + '-'.join([str(new_chr), str(new_pos), str(new_ref), str(new_alt)])
+            message += "HG38 variant would be: %~" + '-'.join([str(new_chr), str(new_pos), str(new_ref), str(new_alt)]) + "~%"
 
     functions.rm(tmp_file_path)
     functions.rm(tmp_file_path + ".lifted.unmap")
@@ -771,6 +777,86 @@ def validate_and_insert_cnv(chrom: str, start: int, end: int, sv_type: str, impr
 
     return was_successful, message, variant_id
 
+
+
+
+def start_check_variants_file(inpath, outpath):
+    task = check_variants_file.apply_async(args=[inpath, outpath])
+    return task.id
+
+@celery.task(bind=True, retry_backoff=5, max_retries=3, soft_time_limit=6000)
+def check_variants_file(self, inpath, outpath):
+    """Background task to check all variants in a file - can be used for HerediCaRe variant lists"""
+    self.update_state(state='PROGRESS')
+    
+    conn = Connection()
+    status = "success"
+
+    outfile = open(outpath, "w")
+
+    with open(inpath, "r") as infile:
+        for line in infile:
+            if line.startswith('#') or line.strip() == "":
+                continue
+            
+            line = line.strip("\n")
+            parts = line.split('\t')
+            temp_variant = {
+            'VID': None,
+            'CHROM': functions.str2none(parts[1]),
+            'POS_HG19': functions.str2none(parts[2]),
+            'REF_HG19': functions.str2none(parts[3]),
+            'ALT_HG19': functions.str2none(parts[4]),
+            'POS_HG38': functions.str2none(parts[5]),
+            'REF_HG38': functions.str2none(parts[6]),
+            'ALT_HG38': functions.str2none(parts[7]),
+            'REFSEQ': functions.str2none(parts[8]),
+            'CHGVS': functions.str2none(parts[10]),
+            'CGCHBOC': None,
+            'VISIBLE': 1,
+            'GEN': functions.str2none(parts[9]),
+            'canon_chrom': '',
+            'canon_pos': '',
+            'canon_ref': '',
+            'canon_alt': '',
+            'comment': ''
+            }
+
+            print(temp_variant)
+
+            map_status, message = map_hg38(temp_variant, -1, conn, insert_variant = False, perform_annotation = False)
+
+            variant4line = ["", "", "", ""]
+            if map_status == "success":
+                variant_str = functions.find_between(message, "%~", "~%")
+                if variant_str is not None:
+                    variant4line = variant_str.split('-')
+            
+            outline = parts
+            outline.extend(variant4line)
+            outline.append(message.replace('\n', " "))
+            outfile.write('\t'.join(outline) + "\n")
+
+    conn.close()
+    outfile.close()
+
+    celery_status = 'success'
+    if status == 'error':
+        celery_status = 'FAILURE'
+        self.update_state(state=celery_status, meta={ 
+                        'exc_type': "Runtime error",
+                        'exc_message': "The annotation service yielded a runtime error.", 
+                        'custom': '...'
+                    })
+        raise Ignore()
+    if status == "retry":
+        celery_status = "RETRY"
+        self.update_state(state=celery_status, meta={
+                        'exc_type': "Runtime error",
+                        'exc_message': "The annotation service yielded an error! Will attempt retry.", 
+                        'custom': '...'})
+        annotate_variant.retry()
+    self.update_state(state=celery_status)
 
 
 ##########################################################

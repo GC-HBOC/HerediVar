@@ -55,6 +55,12 @@
             <text class="classM_text" x="3.9" y="8.8">4M</text>
         </svg>
         {% else %}
+        {% if class == "5M" %}
+        <svg name="consensus_class_svg" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" viewBox="2.469 1.934 10 10" preserveAspectRatio="xMidYMid meet" fill="currentColor">
+            <!--<path transform="translate(-4,10) scale(1.3)" d="M5.295 11V5.995H7V5H2.403v.994h1.701V11h1.19zm3.397 0V7.01h.058l1.428 3.239h.773l1.42-3.24h.057V11H13.5V5.001h-1.2l-1.71 3.894h-.039l-1.71-3.894H7.634V11h1.06z"/>-->
+            <text class="classM_text" x="3.9" y="8.8">5M</text>
+        </svg>
+        {% else %}
         {% if class == "R" %}
         <svg name="consensus_class_svg" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" viewBox="2.469 1.934 10 10" preserveAspectRatio="xMidYMid meet" fill="currentColor">
             <text class="classR_text" x="4.7" y="10">R</text>
@@ -63,6 +69,7 @@
         <svg name="consensus_class_svg" xmlns="http://www.w3.org/2000/svg" width="{{ width }}" fill="currentColor" class="bi bi-dash" viewBox="5.5 -0.7 16 16" preserveAspectRatio="xMidYMid meet">
             <path d="M11 7.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5z"/>
         </svg>
+        {% endif %}
         {% endif %}
         {% endif %}
         {% endif %}

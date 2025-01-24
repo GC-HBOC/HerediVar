@@ -353,6 +353,7 @@ def evidence_document(consensus_classification_id):
     
     return send_file(buffer, as_attachment=True, download_name=report_filename, mimetype='text/html')
 
+import base64
 @download_blueprint.route('/download/assay_report/<int:assay_id>')
 @require_permission(['read_resources'])
 def assay_report(assay_id):
@@ -362,10 +363,11 @@ def assay_report(assay_id):
 
     # the assay report is not part of the assay object [defined in models.py] 
     # -> this way we do not have to transmit it every time we access a variant
-    b_64_assay, filename = conn.get_assay_report(assay_id) 
+    b_64_assay, filename = conn.get_assay_report(assay_id)
+    report_bytes = base64.b64decode(b_64_assay)
 
     buffer = io.BytesIO()
-    buffer.write(b_64_assay) # decode_b64 is not required because bytes are converted automatically by send_file
+    buffer.write(report_bytes)
     buffer.seek(0)
 
     current_app.logger.info(get_preferred_username() + " downloaded assay " + str(assay_id))

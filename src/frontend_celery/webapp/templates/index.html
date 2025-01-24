@@ -93,7 +93,7 @@
 <div class="bst bsb">
     <h4>Changelog</h4>
 
-    <div class="underline">v 1.14.5 ()</div>
+    <div class="underline">v 1.15 (24.01.2025)</div>
     <div>
         General changes:
         <ul>
@@ -101,6 +101,8 @@
             <li>CSpecBRCA splicing assay quantification is now the sum of percent abberant transcript. It was the minimal value previously.</li>
             <li>CSpecBRCA splicing assay quantification is now explicitly set to 0 if the assay is minigene or patient RNA and the result is "no abberation" which is not ignored</li>
             <li>Consensus classify count labels now only count criteria which were selected and ignore unselected criteria</li>
+            <li>Added 5M to the final classification possibilities of BRCA1 v1.1.0 and BRCA2 v1.1.0 classification schemes</li>
+            <li>R, 4M and 5M consensus classifications can now be uploaded to HerediCaRe</li>
         </ul>
         Bugfixes:
         <ul>
@@ -108,66 +110,7 @@
             <li>Fixed a bug which was causing criteria buttons to show the default color after page reload even though the strength was non-default. This problem only existed in Firefox.</li>
             <li>When copying evidence on the consensus classify page, the classifcation preview would not update</li>
             <li>Needs HerediCaRe upload for consensus classifications was not showing when there was no HerediCaRe submission</li>
-        </ul>
-    </div>
-
-    <div class="underline">v 1.14.4 (03.11.2024)</div>
-    <div>
-        General changes:
-        <ul>
-            <li>Added shortcut to insert unknown variants from variant display page</li>
-        </ul>
-    </div>
-
-    <div class="underline">v 1.14.3 (15.10.2024)</div>
-    <div>
-        General changes:
-        <ul>
-            <li>Consensus classified variants can now be downloaded publically</li>
-        </ul>
-    </div>
-
-    <div class="underline">v 1.14.2 (15.10.2024)</div>
-    <div>
-        General changes:
-        <ul>
-            <li>Added class "R" to SVI adaptation scheme</li>
-            <li>Improved security for API</li>
-        </ul>
-        Bugfixes:
-        <ul>
-            <li>Fixed bug where mails were not sent to new created users</li>
-            <li>All final classifications are now shown properly in no_scheme classification scheme</li>
-        </ul>
-    </div>
-
-    <div class="underline">v 1.14.1 (30.08.2024)</div>
-    <div>
-        General changes:
-        <ul>
-            <li>Improved stability of HerediCaRe uploads</li>
-            <li>HerediCaRe and ClinVar upload stati are now loaded in the background on variant display pages</li>
-        </ul>
-        Bugfixes:
-        <ul>
-            <li>Improved and fixed some issues with HerediCaRe and ClinVar upload status display and update</li>
-        </ul>
-    </div>
-
-    <div class="underline">v 1.14 (23.08.2024)</div>
-    <div>
-        General changes:
-        <ul>
-            <li>Added ACMG schemes for MMR genes (pms2, mlh1, msh2, msh6)</li>
-            <li>Improved VCF downloads. Variant list VCFs must now be generated seperately prior to downloading. This allows for larger file downloads.</li>
-            <li>Added upload state search</li>
-        </ul>
-        Bugfixes:
-        <ul>
-            <li>Fixed some minor issues with HerediCaRe up- and downloads</li>
-            <li>Downgraded CrossMap to v0.7.0 because v0.7.3 yields wrong results for specific variants</li>
-            <li>Fixed a bug where the tooltip of status pills would persist if the pill was updated</li>
-            <li>Fixed a bug where the user was able to search for deprecated variant ids using the browse variant table</li>
+            <li>Fixed a bug that caused download of corrupt files when downloading certain variant assay reports in pdf format</li>
         </ul>
     </div>
 

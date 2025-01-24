@@ -681,7 +681,7 @@ def order_classes( classes):
 
 def sort_classes(a, b):
     # sort by ensembl/refseq
-    class_sequence = ['1', '2', '3-', '3', '3+', '4M', '4', '5', 'R']
+    class_sequence = ['1', '2', '3-', '3', '3+', '4M', '4', '5M', '5', 'R']
 
     a_importance = class_sequence.index(a)
     b_importance = class_sequence.index(b)
@@ -774,8 +774,9 @@ def num2heredicare(classification, single_value = False):
             "3+": "34",
             "4": "14",
             "-": "21",
-            "4M": "14",
-            "R": "missing"
+            "4M": "17",
+            "5M": "18",
+            "R": "16"
         }
     else:
         mapping = {
@@ -787,8 +788,9 @@ def num2heredicare(classification, single_value = False):
             "3+": ["34"],
             "4": ["14"],
             "-": ["20", "21", "4", "-1"],
-            "4M": ["14"],
-            "R": ["missing"]
+            "4M": ["17"],
+            "5M": ["18"],
+            "R": ["16"]
     }
 
     return mapping[str(classification)]
@@ -943,4 +945,11 @@ def one_to_three_letter(s):
     if s == "V": return "Val"
     if s == "X": return "Ter"
     return "-"
+
+
+
+def str2none(s, default = ""):
+    if s == default:
+        return None
+    return s
 
