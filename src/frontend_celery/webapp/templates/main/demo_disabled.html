@@ -6,7 +6,7 @@
 <div class="container">
 
   
-<h1 class="bst"> {% block title %} This feature is disabled demo mode ): {% endblock %} </h1>
+<h1 class="bst"> {% block title %} Disabled in demo mode 😓 {% endblock %} </h1>
 
 
 
@@ -17,10 +17,10 @@
 <div class="bst">
     Why don't you try one these awesome features of HerediVar instead:
     <ul>
-        <li><div class="d-flex"><div class="ssr">Create variant:</div> <a href="{{ url_for('variant.create') }}">{{ url_for("variant.create", _external=True) }}</a></div></li>
-        <li><div class="d-flex"><div class="ssr">Browse variants:</div> <a href="{{ url_for('variant.search') }}">{{ url_for("variant.search", _external=True) }}</a></div></li>
-        <li><div class="d-flex"><div class="ssr">Show a classified variant (BRCA1:c.191G>A):</div> <a href="{{ url_for('variant.display', variant_id = 4) }}">{{ url_for("variant.display", variant_id = 4, _external=True) }}</a></div></li>
-        <li><div class="d-flex"><div class="ssr">Re-consensus-classify BRCA1:c.191G>A:</div> <a href="{{ url_for('variant.consensus_classify', variant_id = 4) }}">{{ url_for("variant.consensus_classify", variant_id = 4, _external=True) }}</a></div></li>
+        <li class="hide_bullet_point"><div class="d-flex"><div class="ssr">🧬 Create variant:</div> <a href="{{ url_for('variant.create') }}">{{ url_for("variant.create", _external=True) }}</a></div></li>
+        <li class="hide_bullet_point"><div class="d-flex"><div class="ssr">🔍 Browse variants:</div> <a href="{{ url_for('variant.search') }}">{{ url_for("variant.search", _external=True) }}</a></div></li>
+        <li class="hide_bullet_point"><div class="d-flex"><div class="ssr">🧩 Show a classified variant (BRCA1:c.191G>A):</div> <a href="{{ url_for('variant.display', variant_id = 4) }}">{{ url_for("variant.display", variant_id = 4, _external=True) }}</a></div></li>
+        <li class="hide_bullet_point"><div class="d-flex"><div class="ssr">🧠 Re-consensus-classify BRCA1:c.191G>A:</div> <a href="{{ url_for('variant.consensus_classify', variant_id = 4) }}">{{ url_for("variant.consensus_classify", variant_id = 4, _external=True) }}</a></div></li>
     </ul>
 </div>
 
