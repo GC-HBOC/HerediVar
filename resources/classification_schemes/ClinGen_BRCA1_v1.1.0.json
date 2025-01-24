@@ -5,7 +5,7 @@
     "type": "acmg-enigma-brca1",
     "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/lg5bcaux/clingen_brca1_v1.1.0.pdf/?format=attachment",
     "aliases": ["ACMG BRCA1", "ACMG BRCA1 Pejaver"],
-    "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
+    "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5M", "5"],
     "criteria": [
         {
             "name": "PVS1",
