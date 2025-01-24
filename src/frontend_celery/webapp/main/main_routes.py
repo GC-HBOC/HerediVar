@@ -16,6 +16,12 @@ main_blueprint = Blueprint(
 
 
 
+@main_blueprint.route('/demo_disabled')
+def demo_disabled():
+    return render_template("main/demo_disabled.html")
+
+
+
 # the landing page
 @main_blueprint.route('/')
 def index():

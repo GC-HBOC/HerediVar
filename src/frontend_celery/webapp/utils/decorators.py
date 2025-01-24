@@ -4,7 +4,7 @@ import os
 import certifi
 import requests
 from authlib.oauth2.rfc6749 import OAuth2Token
-from flask import url_for, session, request, current_app, abort, redirect
+from flask import url_for, session, request, current_app, abort, redirect, render_template
 from authlib.integrations.flask_client import OAuth, token_update
 from authlib.integrations.flask_oauth2 import ResourceProtector
 from functools import wraps
@@ -13,7 +13,18 @@ from authlib.oauth2.rfc7636 import create_s256_code_challenge
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 import common.functions as functions
+import common.paths as paths
 from common.db_IO import Connection
+
+
+def disable_in_demo_mode(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if paths.webapp_env == "demo":
+            return redirect(url_for("main.demo_disabled"))
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 
 def require_api_token_permission(roles):

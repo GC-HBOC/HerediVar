@@ -235,6 +235,7 @@ def edit_user(username):
 #############################################
 
 @auth_blueprint.route('/change_password')
+@disable_in_demo_mode
 @require_login
 def change_password():
     # handled by keycloak directly -> simply redirect
