@@ -328,7 +328,7 @@ def hgvsc_to_vcf(hgvs_strings, references = None):
     command.extend(['-in', tmp_file_path + '.tsv', '-ref', paths.ref_genome_path, '-out', tmp_file_path + '.vcf'])
     returncode, err_msg, command_output = execute_command(command, "HgvsToVcf", use_prefix_error_log=False)
     
-    chr = None
+    chrom = None
     pos = None
     ref = None
     alt = None
@@ -342,13 +342,13 @@ def hgvsc_to_vcf(hgvs_strings, references = None):
         #print(parts)
 
         if first_iter:
-            chr = parts[0]
+            chrom = parts[0]
             pos = parts[1]
             ref = parts[3]
             alt = parts[4]
             first_iter = False
         else:
-            if chr != parts[0] or pos != parts[1] or ref != parts[3] or alt != parts[4]: # check that all are equal
+            if chrom != parts[0] or pos != parts[1] or ref != parts[3] or alt != parts[4]: # check that all are equal
                 tmp_file.close()
                 rm(tmp_file_path + ".tsv")
                 rm(tmp_file_path + ".vcf")
@@ -357,7 +357,7 @@ def hgvsc_to_vcf(hgvs_strings, references = None):
     tmp_file.close()
     rm(tmp_file_path + ".tsv")
     rm(tmp_file_path + ".vcf")
-    return chr, pos, ref, alt, err_msg
+    return chrom, pos, ref, alt, err_msg
 
 
 # function for splitting hgvs in refrence transcript and variant

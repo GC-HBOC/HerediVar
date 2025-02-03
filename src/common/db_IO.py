@@ -3105,7 +3105,7 @@ class Connection:
     
     
     # this function returns a list of consequence objects of the preferred transcripts 
-    # (can be multiple if there are eg. 2 mane select transcripts for this variant)
+    # (can be multiple if there are eg. 2 mane select transcripts for this gene)
     def get_preferred_transcripts(self, gene_id, return_all=False):
         transcripts = self.get_transcripts(gene_id)
         transcripts = functions.order_transcripts(transcripts)

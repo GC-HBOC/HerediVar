@@ -501,8 +501,9 @@ def map_hg38(variant, user_id, conn:Connection, insert_variant = True, perform_a
         
         if not was_successful and hgvs_c_valid and gene_valid:
             gene_id = conn.get_gene_id_by_symbol(gene_symbol)
-            transcripts = conn.get_gencode_basic_transcripts(gene_id)
+            #transcripts = conn.get_gencode_basic_transcripts(gene_id)
             #transcripts = conn.get_mane_select_for_gene(gene_id)
+            transcripts = [x.name for x in conn.get_preferred_transcripts(gene_id)]
 
             if transcripts is not None:
                 chrom, pos, ref, alt, err_msg = functions.hgvsc_to_vcf([variant["CHGVS"]]*len(transcripts), transcripts) # convert to vcf
