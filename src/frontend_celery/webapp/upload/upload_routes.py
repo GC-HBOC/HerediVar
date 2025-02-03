@@ -19,6 +19,7 @@ upload_blueprint = Blueprint(
 
 # listens on get parameter: variant_ids (+ separated list of variant ids)
 @upload_blueprint.route('/publish', methods=['GET', 'POST'])
+@disable_in_demo_mode
 @require_permission(['admin_resources'])
 def publish():
     conn = get_connection()
@@ -95,6 +96,7 @@ def submit_assay(variant_id):
 
 
 @upload_blueprint.route('/upload/clinvar_submissions/<int:variant_id>', methods=['GET', 'POST'])
+@disable_in_demo_mode
 @require_permission(['admin_resources'])
 def edit_clinvar_submissions(variant_id):
     conn = get_connection()

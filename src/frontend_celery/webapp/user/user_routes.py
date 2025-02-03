@@ -242,6 +242,8 @@ def admin_dashboard():
     most_recent_import_request = conn.get_most_recent_import_request(source = "heredicare")
 
     if request.method == 'POST':
+        if paths.webapp_env == "demo": # disable posting in demo mode
+            return redirect(url_for("main.demo_disabled"))
         request_type = request.args.get("type")
 
         # mass reannotation based on current annotation status

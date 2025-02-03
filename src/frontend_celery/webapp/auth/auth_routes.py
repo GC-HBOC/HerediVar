@@ -144,6 +144,7 @@ def logout():
 ##############################################
 
 @auth_blueprint.route('/show_users')
+@disable_in_demo_mode
 @require_permission(['account_manager_resources'])
 def show_users():
     users = auth_functions.get_users()
@@ -151,6 +152,7 @@ def show_users():
 
 
 @auth_blueprint.route('/register', methods=['GET', 'POST'])
+@disable_in_demo_mode
 @require_permission(['account_manager_resources'])
 def register():
     roles = auth_functions.get_roles()
@@ -183,6 +185,7 @@ def register():
 
 
 @auth_blueprint.route('/edit_user/<string:username>', methods = ['GET', 'POST'])
+@disable_in_demo_mode
 @require_permission(['account_manager_resources'])
 def edit_user(username):
     user = auth_functions.get_users(username)
@@ -243,6 +246,7 @@ def change_password():
 
 
 @auth_blueprint.route('/profile', methods=['GET', 'POST'])
+@disable_in_demo_mode
 @require_login
 def profile():
     # every user can view and edit basic user information
@@ -272,6 +276,7 @@ def profile():
 
 
 @auth_blueprint.route('/generate_api_key', methods=['GET', 'POST'])
+@disable_in_demo_mode
 @require_permission(["admin_resources"])
 def generate_api_key():
     username = session['user']['preferred_username']

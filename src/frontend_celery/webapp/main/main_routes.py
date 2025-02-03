@@ -76,6 +76,7 @@ def changelog():
 
 
 @main_blueprint.route('/contact', methods=['GET', 'POST'])
+@disable_in_demo_mode
 def contact():
     conn = get_connection()
 
