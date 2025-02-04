@@ -6,9 +6,9 @@ set -o pipefail
 helpFunction()
 {
    echo ""
-   echo "Usage: $0 -w env -h path"
+   echo "Usage: $0 -w env"
    echo "This script starts a full import from HerediCaRe"
-   echo -e "\t-w Provide 'dev' for development server and 'prod' for production gunicorn server."
+   echo -e "\t-w Provide 'dev' for development and 'prod' for production or 'demo' for demo."
    exit 1 # Exit script after printing help
 }
 

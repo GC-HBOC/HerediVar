@@ -4,9 +4,9 @@ sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(path.abspath
 from common.db_IO import Connection
 import common.functions as functions
 import common.paths as paths
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-import upload.upload_functions as upload_functions
-import frontend_celery.webapp.tasks as tasks
+sys.path.append(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
+import webapp.upload.upload_functions as upload_functions
+from webapp import tasks
 
 
 roles = ["db_admin"]
