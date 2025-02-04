@@ -49,7 +49,6 @@ cd $ROOT
 pwd
 
 
-
 source .venv/bin/activate
 export WEBAPP_ENV=$we
 vep_install_dir=$ROOT/tools/ensembl-vep-release-107.0
@@ -73,5 +72,5 @@ fi
 
 if [ "${WEBAPP_ENV}" == "prod" ] || [ "${WEBAPP_ENV}" == "demo" ];
 then
-    celery -A celery_worker.celery multi start single-worker --pidfile=$ROOT/run/celery/celery.pid --logfile=$ROOT/logs/celery/celery.log --loglevel=info -Ofair --concurrency=5 --without-heartbeat --without-gossip --without-mingle
+    celery -A celery_worker.celery multi start single-worker --logfile=$ROOT/logs/celery/celery.log --loglevel=info -Ofair --concurrency=5 --without-heartbeat --without-gossip --without-mingle
 fi
