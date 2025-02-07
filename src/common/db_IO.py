@@ -9,7 +9,7 @@ from functools import cmp_to_key
 import os
 
 
-def get_db_connection(roles):
+def get_db_connection(roles, encoding = "utf8"):
     conn = None
 
     host = os.environ.get('DB_HOST')
@@ -24,7 +24,7 @@ def get_db_connection(roles):
                                host=host,
                                port=os.environ.get("DB_PORT"),
                                database=os.environ.get("DB_NAME"), 
-                               charset = 'utf8', buffered = True) # 
+                               charset = encoding, buffered = True) # 
     except Error as e:
         raise RuntimeError("Error while connecting to HerediVar database " + str(e))
     finally:
@@ -53,15 +53,17 @@ def get_db_user(roles):
 
 class Connection:
     def __init__(self, roles = ["read_only"]):
-        self.conn = get_db_connection(roles)
+        encoding = "utf8mb4"
+        self.conn = get_db_connection(roles, encoding)
         self.cursor = self.conn.cursor()
-        self.set_connection_encoding()
+        self.set_connection_encoding(encoding)
 
 
-    def set_connection_encoding(self):
-        self.cursor.execute("SET NAMES 'utf8'")
-        self.cursor.execute("SET CHARACTER SET utf8")
-        self.cursor.execute('SET character_set_connection=utf8;')
+    def set_connection_encoding(self, encoding = "utf8"):
+        self.cursor.execute("SET NAMES %s COLLATE 'utf8mb4_general_ci'", (encoding, ))
+        self.cursor.execute("SET CHARACTER SET %s", (encoding, ))
+        self.cursor.execute("SET character_set_connection=%s", (encoding, ))
+        self.conn.commit()
         
 
     def close(self):
