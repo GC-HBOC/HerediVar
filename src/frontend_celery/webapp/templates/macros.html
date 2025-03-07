@@ -495,16 +495,19 @@
 
 {% macro draw_paginated_variant_table(pagination, variants, static_information) %} <!--sort_bys, page_sizes, allowed_user_classes, allowed_consensus_classes, allowed_automatic_classes, annotation_types, allowed_variant_types, lists=none-->
 <div id="tabnav-head" class="row align-items-end  nsl nsr">
+    
     <div class="col nopad">{{ pagination.links }}</div>
 
     <div class="col nopad">
         
-        <a class="btn btn-sm btn-primary float_right" data-bs-toggle="collapse" id="searchOptionsToggle" href="#advanced_search" role="button" aria-expanded="false" aria-controls="advanced_search" >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+        
+        <div class="btn btn-sm btn-primary float_right" data-bs-toggle="collapse" id="searchOptionsToggle" href="#advanced_search" role="button" aria-expanded="false" aria-controls="advanced_search" >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16" data-bs-toggle="tooltip" title="Advanced filter options">
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
             </svg>
-        </a>
-        
+        </div>
+
+
 
         <a class="btn btn-sm btn-danger float_right" href="{{ url_for(request.url_rule.endpoint) }}" data-bs-toggle="tooltip" title="Clear all filters.">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
@@ -517,259 +520,295 @@
                 </g>
             </svg>
         </a>
+
     </div>
 
-    <div class="collapse nopad" id="advanced_search">
+    <form action="" method="GET" class="nopad" novalidate>
+
+        <!-- Baisc Search -->
         <div class="card card-body">
 
-            <div>
-                <form action="" method="GET" novalidate>
-
-                    <div class="form-group">
-                        <label for="variants" class="form-label">Variants</label>
-                        <textarea type="text" name="variants" id="variants"
-                               placeholder="chr16-23608020-C-T; chr17-43045752-43045852-DUP; ...." class="form-control height_zero"
-                               >{{ request.args.get('variants', '') }}</textarea>
-                    </div>
-
-                    <div class="form-group sst">
-                        {% set selected_variant_types = request.args.getlist('variant_type') %}
-                        <label for="variant_type-select" class="form-label">Variant types</label>
-                        <div id="variant_type-select" class="d-flex">
-                            {% for variant_type in static_information['allowed_variant_types'] %}
-                                <div class="form-check d-flex bsr align-items-center">
-                                    <input class="form-check-input ssr" type="checkbox" value="{{variant_type}}" id="variant_type_{{variant_type}}" name="variant_type" {% if variant_type in selected_variant_types %}checked{% endif %}>
-                                    <label class="form-check-label" for="variant_type_{{variant_type}}">{{variant_type.replace('_', ' ')}}</label>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-        
-                    <div class="form-group sst">
-                        <label for="genes" class="form-label">Genes</label>
-                        <textarea type="text" name="genes" id="genes"
-                               placeholder="BRCA1; BARD1; ..." class="form-control height_zero"
-                               >{{ request.args.get('genes', '') }}</textarea>
-                    </div>
-        
-                    <div class="form-group sst">
-                        <label for="ranges" class="form-label">Ranges</label>
-                        <textarea type="text" name="ranges" id="ranges"
-                               placeholder="chr1:10295758-17027834; chr11:108229378-108229378; ..." class="form-control height_zero"
-                               >{{ request.args.get('ranges', '') }}</textarea>
-                        
-                        <div class="d-flex"> <!-- custom file upload -->
-                            <input class="btn btn-secondary fake-upload-button" type="button" id="loadbed" value="select bed..." />
-                            <label class="form-control fake-upload-label cursor_pointer" for="loadbed" id="filepath_display">No file selected.</label>
-                            <input type="file" name="bed" class="form-control visually-hidden" id="bed" accept=".bed">
-                        </div>
-
-                        <div id="status"></div>
-                    </div>
-
-                    <div class="form-group sst">
-                        <label for="cdna_ranges" class="form-label">cDNA ranges</label>
-                        <textarea type="text" name="cdna_ranges" id="cdna_ranges"
-                               placeholder="ENST00000141510 1234-12 4567; TP53 1234+3 4567+3" class="form-control height_zero"
-                               >{{ request.args.get('cdna_ranges', '') }}</textarea>
-                    </div>
-
-                    <div class="form-group sst">
-                        <label for="hgvs" class="form-label">HGVS c.</label>
-                        <textarea type="text" name="hgvs" id="hgvs"
-                               placeholder="ENST00000260947:c.1972C>T; ..." class="form-control height_zero"
-                               >{{ request.args.get('hgvs', '') }}</textarea>
-                    </div>
-
-                    <div class="form-group sst">
-                        <label for="external_ids" class="form-label">IDs</label>
-                        <textarea type="text" name="external_ids" id="external_ids"
-                               placeholder="COSV99639284; rs9217747; 35110:heredivar; ..." class="form-control height_zero"
-                               >{{ request.args.get('external_ids', '') }}</textarea>
-                    </div>
-
-                    <div class="form-group sst">
-                        <label class="form-label">Annotations</label>
-                        <div id="annotation_wrapper">
-
-                        </div>
-                        <button class="btn btn-primary" type="button" id="add_annotation_select">+</button>
-                    </div>
-
-                    <div class="form-group sst">
-                        {% set selected_consensus = request.args.getlist('consensus') %}
-                        <label for="consensus-select" class="form-label">Consensus classification</label>
-                        <div id="consensus-select" class="d-flex">
-                            {% for c in static_information['allowed_consensus_classes'] %}
-                                <div class="form-check d-flex bsr align-items-center">
-                                    <input class="form-check-input ssr" type="checkbox" value="{{c}}" id="cl{{c}}" data-testid="cl{{c.replace('+', 'p')}}" name="consensus" {% if c in selected_consensus %}checked{% endif %}>
-                                    <label class="form-check-label" for="cl{{c}}">{{c}}</label>
-                                </div>
-                            {% endfor %}
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="-" id="cl-" data-testid="cl-" name="consensus" {% if '-' in selected_consensus %}checked{% endif %}>
-                                <label class="form-check-label" for="cl-">none</label>
-                            </div>
-                            <div class="form-check d-flex align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="on" id="include_heredicare_consensus" data-testid="include_heredicare_consensus" name="include_heredicare_consensus" {% if request.args.get('include_heredicare_consensus') == 'on' %}checked{% endif %}>
-                                <label class="form-check-label" for="include_heredicare_consensus">include_heredicare</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group sst">
-                        {% set selected_user = request.args.getlist('user') %}
-                        <label for="user-select" class="form-label">Your classification</label>
-                        <div id="user-select" class="d-flex">
-                            {% for c in static_information['allowed_user_classes'] %}
-                                <div class="form-check d-flex bsr align-items-center">
-                                    <input class="form-check-input ssr" type="checkbox" value="{{c}}" id="ucl{{c}}" data-testid="ucl{{c.replace('+', 'p')}}" name="user" {% if c in selected_user %}checked{% endif %}>
-                                    <label class="form-check-label" for="ucl{{c}}">{{c}}</label>
-                                </div>
-                            {% endfor %}
-                            <div class="form-check d-flex align-items-center">
-                                <input class="form-check-input ssr" type="checkbox" value="-" id="ucl-" data-testid="ucl-" name="user" {% if '-' in selected_user %}checked{% endif %}>
-                                <label class="form-check-label" for="ucl-">none</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group sst">
-                        <label for="user-select" class="form-label">Automatic classification</label>
-                        <table class="table table-borderless table-slim">
-                            <tbody>
-                                <tr>
-                                    <td class="nopad"><div>Splicing:</div></td>
-                                    <td>
-                                        <div id="user-select" class="d-flex">
-                                            {% set selected_automatic = request.args.getlist('automatic_splicing') %}
-                                            {% for c in static_information['allowed_automatic_classes'] %}
-                                                <div class="form-check d-flex bsr align-items-center">
-                                                    <input class="form-check-input ssr" type="checkbox" value="{{c}}" id="acls{{c}}" data-testid="acls{{c.replace('+', 'p')}}" name="automatic_splicing" {% if c in selected_automatic %}checked{% endif %}>
-                                                    <label class="form-check-label" for="acls{{c}}">{{c}}</label>
-                                                </div>
-                                            {% endfor %}
-                                            <div class="form-check d-flex align-items-center">
-                                                <input class="form-check-input ssr" type="checkbox" value="-" id="acls-" data-testid="acls-" name="automatic_splicing" {% if '-' in selected_automatic %}checked{% endif %}>
-                                                <label class="form-check-label" for="acls-">none</label>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="nopad"><div>Protein:</div></td>
-                                    <td>
-                                        <div id="user-select" class="d-flex">
-                                            {% set selected_automatic = request.args.getlist('automatic_protein') %}
-                                            {% for c in static_information['allowed_automatic_classes'] %}
-                                                <div class="form-check d-flex bsr align-items-center">
-                                                    <input class="form-check-input ssr" type="checkbox" value="{{c}}" id="aclp{{c}}" data-testid="aclp{{c.replace('+', 'p')}}" name="automatic_protein" {% if c in selected_automatic %}checked{% endif %}>
-                                                    <label class="form-check-label" for="aclp{{c}}">{{c}}</label>
-                                                </div>
-                                            {% endfor %}
-                                            <div class="form-check d-flex align-items-center">
-                                                <input class="form-check-input ssr" type="checkbox" value="-" id="aclp-" data-testid="aclp-" name="automatic_protein" {% if '-' in selected_automatic %}checked{% endif %}>
-                                                <label class="form-check-label" for="aclp-">none</label>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="form-group sst d-flex">
-                        <div>
-                            {% set selected_clinvar_upload_state = request.args.getlist('clinvar_upload_state') %}
-                            <label for="user-select" class="form-label">ClinVar upload state</label>
-                            <div id="user-select" class="d-flex">
-                                {% for s in static_information['allowed_clinvar_upload_states'] %}
-                                    <div class="form-check d-flex bsr align-items-center">
-                                        <input class="form-check-input ssr" type="checkbox" value="{{s}}" id="cus{{s}}" name="clinvar_upload_state" {% if s in selected_clinvar_upload_state %}checked{% endif %}>
-                                        <label class="form-check-label" for="cus{{s}}">{{s}}</label>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-
-                        <div class="bsl bsr"></div>
-
-                        <div>
-                            {% set selected_heredicare_upload_state = request.args.getlist('heredicare_upload_state') %}
-                            <label for="user-select" class="form-label">HerediCaRe upload state</label>
-                            <div id="user-select" class="d-flex">
-                                {% for s in static_information['allowed_heredicare_upload_states'] %}
-                                    <div class="form-check d-flex bsr align-items-center">
-                                        <input class="form-check-input ssr" type="checkbox" value="{{s}}" id="hus{{s}}" name="heredicare_upload_state" {% if s in selected_heredicare_upload_state %}checked{% endif %}>
-                                        <label class="form-check-label" for="hus{{s}}">{{s}}</label>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                    </div>
-
-                    {% if static_information['lists'] is not none %}
-                    <div class="form-group sst">
-                        <label for="lookup_list_name" class="form-label">List</label>
-                        <div id="select_list_wrapper"></div>
-                        <button class="btn btn-primary" type="button" id="add_list_select">+</button>
-                    </div>
-                    {% endif %}
-
-                    
-                    <div class="form-group d-flex sst">
-                        <div class="bsr">
-                            <label for="page_size" class="form-label">Page size</label>
-                            <select class="form-select width_very_small" name="page_size" id="page_size" required>
-                                {% set selected_page_size = request.args.get('page_size', static_information['default_page_size']) %}
-                                {% for option in static_information['page_sizes'] %}
-                                    <option value="{{option}}" {% if selected_page_size == option %} selected="selected" {% endif %}> {{option}} </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="bsr">
-                            <label for="sort_by" class="form-label">Sort by</label>
-                            <select class="form-select width_small" name="sort_by" id="sort_by" required>
-                                {% set selected_sort_by = request.args.get('sort_by', static_information['default_search_by']) %}
-                                {% for option in static_information['sort_bys'] %}
-                                    <option value="{{option}}" {% if selected_sort_by == option %} selected="selected" {% endif %}> {{option}} </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="status-select" class="form-label">Status</label>
-                            <div id="status-select" class="d-flex">
-                                <div class="form-check d-flex bsr align-items-center">
-                                    <input class="form-check-input vssr" type="checkbox" id="include_hidden" name="include_hidden" {% if request.args.get('include_hidden') == 'on' %}checked{% endif %}>
-                                    <label class="form-check-label" for="include_hidden">Include hidden</label>
-                                </div>
-                            </div>
-                        </div>
-                    
-                    </div>
-
-
-                    {% if request.args.get('view') is not none %}
-                        <input type="hidden" name="view" id="view" value="{{request.args.get('view')}}">
-                    {% endif %}
-                    
-        
-                    <div class="d-flex justify-content-end align-items-center">
-                        <div>
-                            <a class="ssr float_right" href="{{url_for('main.documentation')}}">Help</a>
-                        </div>
-                        <button id="submit_search" class="btn btn-primary float_right" type="submit">search</button>
-                    </div>
-        
-                </form>
+            <div class="form-group">
+                <label for="variants" class="form-label">Variants</label>
+                <textarea type="text" name="variants" id="variants"
+                       placeholder="chr16-23608020-C-T; chr17-43045752-43045852-DUP; ...." class="form-control height_zero"
+                       >{{ request.args.get('variants', '') }}</textarea>
             </div>
+    
+            <div class="form-group sst">
+                <label for="genes" class="form-label">Genes</label>
+                <textarea type="text" name="genes" id="genes"
+                       placeholder="BRCA1; BARD1; ..." class="form-control height_zero"
+                       >{{ request.args.get('genes', '') }}</textarea>
+            </div>
+    
+            <div class="form-group sst">
+                <label for="hgvs" class="form-label">HGVS c.</label>
+                <textarea type="text" name="hgvs" id="hgvs"
+                       placeholder="ENST00000260947:c.1972C>T; ..." class="form-control height_zero"
+                       >{{ request.args.get('hgvs', '') }}</textarea>
+            </div>
+    
+            <div class="d-flex sst">
+                <div class="form-group d-flex">
+                    <div class="bsr">
+                        <label for="page_size" class="form-label">Page size</label>
+                        <select class="form-select width_very_small" name="page_size" id="page_size" required>
+                            {% set selected_page_size = request.args.get('page_size', static_information['default_page_size']) %}
+                            {% for option in static_information['page_sizes'] %}
+                                <option value="{{option}}" {% if selected_page_size == option %} selected="selected" {% endif %}> {{option}} </option>
+                            {% endfor %}
+                        </select>
+                    </div>
         
+                    <div class="bsr">
+                        <label for="sort_by" class="form-label">Sort by</label>
+                        <select class="form-select width_small" name="sort_by" id="sort_by" required>
+                            {% set selected_sort_by = request.args.get('sort_by', static_information['default_search_by']) %}
+                            {% for option in static_information['sort_bys'] %}
+                                <option value="{{option}}" {% if selected_sort_by == option %} selected="selected" {% endif %}> {{option}} </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+        
+                    <div class="form-group">
+                        <label for="status-select" class="form-label">Status</label>
+                        <div id="status-select" class="d-flex">
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input vssr" type="checkbox" id="include_hidden" name="include_hidden" {% if request.args.get('include_hidden') == 'on' %}checked{% endif %}>
+                                <label class="form-check-label" for="include_hidden">Include hidden</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-grow-1"></div>
+
+                <div class="d-flex justify-content-end align-items-center">
+                    <div>
+                        <a class="ssr float_right" href="{{url_for('main.documentation')}}">Help</a>
+                    </div>
+                    <button id="submit_search" class="btn btn-primary float_right" type="submit">search</button>
+                </div>
+            </div>
+
+
         </div>
-    </div>
+
+
+        <!-- Advanced Search -->
+        <div class="collapse nopad" id="advanced_search">
+            <div class="card card-body  stylish-color-light">
+
+
+                <div class="form-group">
+                    {% set selected_variant_types = request.args.getlist('variant_type') %}
+                    <label for="variant_type-select" class="form-label">Variant types</label>
+                    <div id="variant_type-select" class="d-flex">
+                        {% for variant_type in static_information['allowed_variant_types'] %}
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input ssr" type="checkbox" value="{{variant_type}}" id="variant_type_{{variant_type}}" name="variant_type" {% if variant_type in selected_variant_types %}checked{% endif %}>
+                                <label class="form-check-label" for="variant_type_{{variant_type}}">{{variant_type.replace('_', ' ')}}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+
+
+                <div class="form-group sst">
+                    <label for="ranges" class="form-label">Ranges</label>
+                    <textarea type="text" name="ranges" id="ranges"
+                           placeholder="chr1:10295758-17027834; chr11:108229378-108229378; ..." class="form-control height_zero"
+                           >{{ request.args.get('ranges', '') }}</textarea>
+                    
+                    <div class="d-flex"> <!-- custom file upload -->
+                        <input class="btn btn-secondary fake-upload-button" type="button" id="loadbed" value="select bed..." />
+                        <label class="form-control fake-upload-label cursor_pointer" for="loadbed" id="filepath_display">No file selected.</label>
+                        <input type="file" name="bed" class="form-control visually-hidden" id="bed" accept=".bed">
+                    </div>
+
+                    <div id="status"></div>
+                </div>
+
+                <div class="form-group sst">
+                    <label for="cdna_ranges" class="form-label">cDNA ranges</label>
+                    <textarea type="text" name="cdna_ranges" id="cdna_ranges"
+                           placeholder="ENST00000141510 1234-12 4567; TP53 1234+3 4567+3" class="form-control height_zero"
+                           >{{ request.args.get('cdna_ranges', '') }}</textarea>
+                </div>
+
+                <div class="form-group sst">
+                    <label for="external_ids" class="form-label">IDs</label>
+                    <textarea type="text" name="external_ids" id="external_ids"
+                           placeholder="COSV99639284; rs9217747; 35110:heredivar; ..." class="form-control height_zero"
+                           >{{ request.args.get('external_ids', '') }}</textarea>
+                </div>
+
+
+                <div class="form-group sst">
+                    <label class="form-label">Annotations</label>
+                    <div id="annotation_wrapper">
+
+                    </div>
+                    <button class="btn btn-primary" type="button" id="add_annotation_select">+</button>
+                </div>
+
+
+
+                <div class="form-group sst">
+                    {% set selected_consensus = request.args.getlist('consensus') %}
+                    <label for="consensus-select" class="form-label">Consensus classification</label>
+                    <div id="consensus-select" class="d-flex">
+                        {% for c in static_information['allowed_consensus_classes'] %}
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input ssr" type="checkbox" value="{{c}}" id="cl{{c}}" data-testid="cl{{c.replace('+', 'p')}}" name="consensus" {% if c in selected_consensus %}checked{% endif %}>
+                                <label class="form-check-label" for="cl{{c}}">{{c}}</label>
+                            </div>
+                        {% endfor %}
+                        <div class="form-check d-flex bsr align-items-center">
+                            <input class="form-check-input ssr" type="checkbox" value="-" id="cl-" data-testid="cl-" name="consensus" {% if '-' in selected_consensus %}checked{% endif %}>
+                            <label class="form-check-label" for="cl-">none</label>
+                        </div>
+                        <div class="form-check d-flex align-items-center">
+                            <input class="form-check-input ssr" type="checkbox" value="on" id="include_heredicare_consensus" data-testid="include_heredicare_consensus" name="include_heredicare_consensus" {% if request.args.get('include_heredicare_consensus') == 'on' %}checked{% endif %}>
+                            <label class="form-check-label" for="include_heredicare_consensus">include_heredicare</label>
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div class="form-group sst">
+                    {% set selected_user = request.args.getlist('user') %}
+                    <label for="user-select" class="form-label">Your classification</label>
+                    <div id="user-select" class="d-flex">
+                        {% for c in static_information['allowed_user_classes'] %}
+                            <div class="form-check d-flex bsr align-items-center">
+                                <input class="form-check-input ssr" type="checkbox" value="{{c}}" id="ucl{{c}}" data-testid="ucl{{c.replace('+', 'p')}}" name="user" {% if c in selected_user %}checked{% endif %}>
+                                <label class="form-check-label" for="ucl{{c}}">{{c}}</label>
+                            </div>
+                        {% endfor %}
+                        <div class="form-check d-flex align-items-center">
+                            <input class="form-check-input ssr" type="checkbox" value="-" id="ucl-" data-testid="ucl-" name="user" {% if '-' in selected_user %}checked{% endif %}>
+                            <label class="form-check-label" for="ucl-">none</label>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="form-group sst">
+                    <label for="user-select" class="form-label">Automatic classification</label>
+                    <table class="table table-borderless table-slim">
+                        <tbody>
+                            <tr>
+                                <td class="nopad"><div>Splicing:</div></td>
+                                <td>
+                                    <div id="user-select" class="d-flex">
+                                        {% set selected_automatic = request.args.getlist('automatic_splicing') %}
+                                        {% for c in static_information['allowed_automatic_classes'] %}
+                                            <div class="form-check d-flex bsr align-items-center">
+                                                <input class="form-check-input ssr" type="checkbox" value="{{c}}" id="acls{{c}}" data-testid="acls{{c.replace('+', 'p')}}" name="automatic_splicing" {% if c in selected_automatic %}checked{% endif %}>
+                                                <label class="form-check-label" for="acls{{c}}">{{c}}</label>
+                                            </div>
+                                        {% endfor %}
+                                        <div class="form-check d-flex align-items-center">
+                                            <input class="form-check-input ssr" type="checkbox" value="-" id="acls-" data-testid="acls-" name="automatic_splicing" {% if '-' in selected_automatic %}checked{% endif %}>
+                                            <label class="form-check-label" for="acls-">none</label>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="nopad"><div>Protein:</div></td>
+                                <td>
+                                    <div id="user-select" class="d-flex">
+                                        {% set selected_automatic = request.args.getlist('automatic_protein') %}
+                                        {% for c in static_information['allowed_automatic_classes'] %}
+                                            <div class="form-check d-flex bsr align-items-center">
+                                                <input class="form-check-input ssr" type="checkbox" value="{{c}}" id="aclp{{c}}" data-testid="aclp{{c.replace('+', 'p')}}" name="automatic_protein" {% if c in selected_automatic %}checked{% endif %}>
+                                                <label class="form-check-label" for="aclp{{c}}">{{c}}</label>
+                                            </div>
+                                        {% endfor %}
+                                        <div class="form-check d-flex align-items-center">
+                                            <input class="form-check-input ssr" type="checkbox" value="-" id="aclp-" data-testid="aclp-" name="automatic_protein" {% if '-' in selected_automatic %}checked{% endif %}>
+                                            <label class="form-check-label" for="aclp-">none</label>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+
+                
+                <div class="form-group sst d-flex">
+                    <div>
+                        {% set selected_clinvar_upload_state = request.args.getlist('clinvar_upload_state') %}
+                        <label for="user-select" class="form-label">ClinVar upload state</label>
+                        <div id="user-select" class="d-flex">
+                            {% for s in static_information['allowed_clinvar_upload_states'] %}
+                                <div class="form-check d-flex bsr align-items-center">
+                                    <input class="form-check-input ssr" type="checkbox" value="{{s}}" id="cus{{s}}" name="clinvar_upload_state" {% if s in selected_clinvar_upload_state %}checked{% endif %}>
+                                    <label class="form-check-label" for="cus{{s}}">{{s}}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+
+                    <div class="bsl bsr"></div>
+
+                    <div>
+                        {% set selected_heredicare_upload_state = request.args.getlist('heredicare_upload_state') %}
+                        <label for="user-select" class="form-label">HerediCaRe upload state</label>
+                        <div id="user-select" class="d-flex">
+                            {% for s in static_information['allowed_heredicare_upload_states'] %}
+                                <div class="form-check d-flex bsr align-items-center">
+                                    <input class="form-check-input ssr" type="checkbox" value="{{s}}" id="hus{{s}}" name="heredicare_upload_state" {% if s in selected_heredicare_upload_state %}checked{% endif %}>
+                                    <label class="form-check-label" for="hus{{s}}">{{s}}</label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+
+
+                {% if static_information['lists'] is not none %}
+                <div class="form-group sst">
+                    <label for="lookup_list_name" class="form-label">List</label>
+                    <div id="select_list_wrapper"></div>
+                    <button class="btn btn-primary" type="button" id="add_list_select">+</button>
+                </div>
+                {% endif %}
+
+
+                {% if request.args.get('view') is not none %}
+                <input type="hidden" name="view" id="view" value="{{request.args.get('view')}}">
+                {% endif %}
+
+
+
+                <div class="d-flex justify-content-end align-items-center">
+                    <div>
+                        <a class="ssr float_right" href="{{url_for('main.documentation')}}">Help</a>
+                    </div>
+                    <button id="submit_search" class="btn btn-primary float_right" type="submit">search</button>
+                </div>
+
+
+            </div>
+        </div>
+
+
+
+
+
+    </form>
+
 </div>
   
   
