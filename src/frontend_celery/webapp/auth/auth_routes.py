@@ -178,8 +178,7 @@ def register():
                         flash("New user created successfully!", 'alert-success')
                         task = tasks.notify_new_user.apply_async(args=[first_name + ' ' + last_name, email, username, password])
                         return redirect(url_for('auth.register'))
-
-        flash(resp.json(), 'alert-danger')
+        flash("ERROR: User was not created. Keycloak returned status code " + str(resp.status_code) + ". With error message: " + str(resp.json().get("errorMessage")), 'alert-danger')
 
     return render_template('auth/register.html', roles = roles)
 
