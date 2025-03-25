@@ -499,15 +499,11 @@
     <div class="col nopad">{{ pagination.links }}</div>
 
     <div class="col nopad">
-        
-        
         <div class="btn btn-sm btn-primary float_right" data-bs-toggle="collapse" id="searchOptionsToggle" href="#advanced_search" role="button" aria-expanded="false" aria-controls="advanced_search" >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16" data-bs-toggle="tooltip" title="Advanced filter options">
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
             </svg>
         </div>
-
-
 
         <a class="btn btn-sm btn-danger float_right" href="{{ url_for(request.url_rule.endpoint) }}" data-bs-toggle="tooltip" title="Clear all filters.">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
@@ -520,7 +516,6 @@
                 </g>
             </svg>
         </a>
-
     </div>
 
     <form action="" method="GET" class="nopad" novalidate>
@@ -598,7 +593,7 @@
 
         <!-- Advanced Search -->
         <div class="collapse nopad" id="advanced_search">
-            <div class="card card-body  stylish-color-light">
+            <div class="card card-body  stylish-color-lightblue">
 
 
                 <div class="form-group">

@@ -34,20 +34,6 @@ folders:
 
 #### INSTALL TOOLS
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 tools: python venv htslib keycloak redis vep ngs_bits samtools herediclass
 
 ## python
