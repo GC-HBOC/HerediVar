@@ -1,4 +1,5 @@
 from flask import render_template, request, url_for, flash, redirect, Blueprint, current_app, session
+from flask_paginate import Pagination
 from werkzeug.exceptions import abort
 from os import path
 import sys
@@ -26,34 +27,51 @@ def publish():
     user_id = session['user']['user_id']
     user_roles = session['user']['roles']
 
-    variant_ids = upload_functions.extract_variant_ids(request.args, conn)
 
-    variants = []
-    for variant_id in variant_ids:
-        variant = conn.get_variant(variant_id, include_annotations=False,include_user_classifications=False, include_heredicare_classifications=False, include_automatic_classification=False, include_clinvar=False, include_assays=False, include_literature=False)
-        if variant is None:
-            return abort(404)
-        else:
-            variants.append(variant)
+    
+    user_id = session['user']['user_id']
+    request_args = request.args.to_dict(flat=False)
+    request_args = {key: ';'.join(value) for key, value in request_args.items()}
+
+    static_information = search_utils.get_static_search_information(user_id, conn)
+    variants, total, page, selected_page_size = search_utils.get_merged_variant_page(request_args, user_id, static_information, conn, flash_messages = True)
+    pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
+
+
+
+    #variant_ids = upload_functions.extract_variant_ids(request.args, conn)
+    #variants = []
+    #for variant_id in variant_ids:
+    #    variant = conn.get_variant(variant_id, include_annotations=False,include_user_classifications=False, include_heredicare_classifications=False, include_automatic_classification=False, include_clinvar=False, include_assays=False, include_literature=False)
+    #    if variant is None:
+    #        return abort(404)
+    #    else:
+    #        variants.append(variant)
 
     if request.method == 'POST':
         options = {
             "do_clinvar": request.form.get('publish_clinvar', 'off') == 'on',
-            "clinvar_selected_genes": upload_functions.extract_clinvar_selected_genes(variant_ids, request.form),
+            "clinvar_selected_genes": upload_functions.extract_clinvar_selected_genes(variant_ids = "", request_form = request.form), # TODO!!!
             "do_heredicare": request.form.get('publish_heredicare', 'off') == 'on',
-            "post_consensus_classification": request.form.get('post_consensus_classification', 'off') == 'on'
+            "post_consensus_classification": request.form.get('post_consensus_classification', 'off') == 'on',
+            "variant_filters": request_args
         }
         print(options)
 
         if not options['post_consensus_classification']: # might be removed if it is allowed to only post the variant to HerediCaRe without consensus classification
             flash("You have to post the consensus classification to HerediCaRe.", "alert-danger")
         else:
-            upload_tasks.start_publish(variant_ids, options, user_id, user_roles, conn) # (variant_ids, options, user_id, user_roles, conn: Connection):
+            upload_tasks.start_publish(options, user_id, user_roles, conn)
             flash("Successfully requested data upload. It will be processed in the background.", "alert-success")
         return save_redirect(request.args.get('next', url_for('main.index')))
 
     return render_template("upload/publish.html",
-                           variants = variants
+                           variants=variants,
+                           page=page, 
+                           per_page=selected_page_size, 
+                           pagination=pagination,
+                           static_information = static_information,
+                           request_args = request_args
                         )
 
 

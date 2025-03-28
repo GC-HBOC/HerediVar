@@ -18,12 +18,12 @@ from celery.exceptions import SoftTimeLimitExceeded
 
 
 
-def start_publish(variant_ids, options, user_id, user_roles, conn: Connection):
+def start_publish(options, user_id, user_roles, conn: Connection):
     upload_heredicare = options["do_heredicare"]
     upload_clinvar = options["do_clinvar"]
-    publish_queue_id = conn.insert_publish_request(user_id, upload_heredicare, upload_clinvar, variant_ids)
+    publish_queue_id = conn.insert_publish_request(user_id, upload_heredicare, upload_clinvar, "")
     
-    task = publish.apply_async(args = [publish_queue_id, variant_ids, options, user_roles])
+    task = publish.apply_async(args = [publish_queue_id, options, user_roles, user_id])
     task_id = task.id
 
     conn.update_publish_queue_celery_task_id(publish_queue_id, celery_task_id = task_id)
@@ -33,13 +33,12 @@ def start_publish(variant_ids, options, user_id, user_roles, conn: Connection):
 
 
 @celery.task(bind=True, retry_backoff=5, max_retries=3, soft_time_limit=20000)
-def publish(self, publish_queue_id, variant_ids, options, user_roles):
+def publish(self, publish_queue_id, options, user_roles, user_id):
     """Background task for adding all tasks for publishing variants"""
     #from frontend_celery.webapp.utils.variant_importer import import_variants
     self.update_state(state='PROGRESS')
 
-    print("Started variant upload of variant ids: " + str(variant_ids))
-    print("... with these options: " + str(options))
+    print("Started variant upload with these options: " + str(options))
 
     try:
         status = "success"
@@ -48,17 +47,24 @@ def publish(self, publish_queue_id, variant_ids, options, user_roles):
 
         conn.update_publish_queue_status(publish_queue_id, status = "progress", message = "")
 
-        for variant_id in variant_ids:
-            #variant = conn.get_variant(variant_id)
+        static_information = search_utils.get_static_search_information(user_id, conn)
+        variants, total, page, selected_page_size = search_utils.get_merged_variant_page(options["variant_filters"], user_id, static_information, conn, select_all = True, flash_messages = False, respect_selected_variants=True)
+        variant_ids = []
+        for variant in variants:
+            if variant.get_recent_consensus_classification() is not None:
+                variant_ids.append(str(variant.id))
+        conn.update_publish_queue_variant_ids(publish_queue_id, ';'.join(variant_ids))
 
+        for variant in variants:
             # start the task to upload the consensus classification to clinvar
             if options['do_clinvar']:
-                ccid = start_upload_one_variant_clinvar(variant_id, publish_queue_id, options, user_roles, conn)
+                pass
+                #ccid = start_upload_one_variant_clinvar(variant.id, publish_queue_id, options, user_roles, conn)
             
             # start the task to upload the variant/consensus_classification/whatever to HerediCaRe
             if options['do_heredicare']:
-                #pass
-                hcid = start_upload_one_variant_heredicare(variant_id, publish_queue_id, options, user_roles, conn)
+                pass
+                #hcid = start_upload_one_variant_heredicare(variant.id, publish_queue_id, options, user_roles, conn)
 
     except InternalError as e:
         # deadlock: code 1213

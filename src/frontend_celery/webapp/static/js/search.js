@@ -54,6 +54,14 @@ $(document).ready(function(){
             the_form.action = new_action
         })
     }
+
+    const publish_submit_button = document.getElementById("publish_submit_button")
+    publish_submit_button.addEventListener("click", function() {
+        const the_form = this.parentNode.parentNode
+        var current_action = the_form.action
+        var new_action = add_selected_variants_to_uri(current_action)
+        the_form.action = new_action
+    })
 });
 
 

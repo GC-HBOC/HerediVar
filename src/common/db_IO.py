@@ -629,7 +629,8 @@ class Connection:
                                  ranges = None, genes = None, consensus = None, user = None, automatic_splicing = None, automatic_protein = None, 
                                  hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, 
                                  include_heredicare_consensus = False, variant_strings = None, variant_types = None, clinvar_upload_states = None,
-                                 heredicare_upload_states = None):
+                                 heredicare_upload_states = None, lookup_list_ids = None, respect_selected_variants = False, selected_variants = None,
+                                 select_all_variants = False):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -836,29 +837,57 @@ class Connection:
             new_constraints = "id IN (" + new_constraints_inner + ")"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         if clinvar_upload_states is not None and len(clinvar_upload_states) > 0:
-            new_constraints_inner = """
-                SELECT variant_id FROM publish_clinvar_queue WHERE id IN (
-                    SELECT MAX(id) FROM publish_clinvar_queue WHERE status != 'skipped' GROUP BY variant_id
-                ) AND status IN 
-            """
-            placeholders = self.get_placeholders(len(clinvar_upload_states))
-            new_constraints_inner += placeholders
-            new_constraints_inner = functions.enbrace(new_constraints_inner)
-            new_constraints = "id IN " + new_constraints_inner
+            new_constraints_parts = []
+            if ("no_upload" in clinvar_upload_states):
+                new_constraints_parts.append("""
+                    SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM publish_clinvar_queue)
+                """)
+            if len(clinvar_upload_states) > 0:
+                new_constraints_inner = """
+                    SELECT variant_id FROM publish_clinvar_queue WHERE id IN (
+                        SELECT MAX(id) FROM publish_clinvar_queue WHERE status != 'skipped' GROUP BY variant_id
+                    ) AND status IN 
+                """
+                placeholders = self.get_placeholders(len(clinvar_upload_states))
+                new_constraints_inner += placeholders
+                #new_constraints_inner = functions.enbrace(new_constraints_inner)
+                new_constraints_parts.append(new_constraints_inner)
+                #new_constraints = "id IN " + new_constraints_inner
+            new_constraints = "id IN " + functions.enbrace(" UNION ".join(new_constraints_parts))
             postfix = self.add_constraints_to_command(postfix, new_constraints)
             actual_information += tuple(clinvar_upload_states)
         if heredicare_upload_states is not None and len(heredicare_upload_states) > 0:
-            new_constraints_inner = """
-                SELECT DISTINCT variant_id FROM publish_heredicare_queue WHERE id IN (
-                    SELECT MAX(id) FROM publish_heredicare_queue WHERE status != 'skipped' GROUP BY vid
-                ) AND status IN 
-            """
-            placeholders = self.get_placeholders(len(heredicare_upload_states))
-            new_constraints_inner += placeholders
-            new_constraints_inner = functions.enbrace(new_constraints_inner)
-            new_constraints = "id IN " + new_constraints_inner
+            new_constraints_parts = []
+            if ("no_upload" in heredicare_upload_states):
+                new_constraints_parts.append("""
+                    SELECT id FROM variant WHERE id NOT IN (SELECT variant_id FROM publish_heredicare_queue)
+                """)
+            if len(heredicare_upload_states) > 0:
+                new_constraints_inner = """
+                    SELECT DISTINCT variant_id FROM publish_heredicare_queue WHERE id IN (
+                        SELECT MAX(id) FROM publish_heredicare_queue WHERE status != 'skipped' GROUP BY vid
+                    ) AND status IN 
+                """
+                placeholders = self.get_placeholders(len(heredicare_upload_states))
+                new_constraints_inner += placeholders
+                #new_constraints_inner = functions.enbrace(new_constraints_inner)
+                new_constraints_parts.append(new_constraints_inner)
+                #new_constraints = "id IN " + new_constraints_inner
+            new_constraints = "id IN " + functions.enbrace(" UNION ".join(new_constraints_parts))
             postfix = self.add_constraints_to_command(postfix, new_constraints)
             actual_information += tuple(heredicare_upload_states)
+            
+            #new_constraints_inner = """
+            #    SELECT DISTINCT variant_id FROM publish_heredicare_queue WHERE id IN (
+            #        SELECT MAX(id) FROM publish_heredicare_queue WHERE status != 'skipped' GROUP BY vid
+            #    ) AND status IN 
+            #"""
+            #placeholders = self.get_placeholders(len(heredicare_upload_states))
+            #new_constraints_inner += placeholders
+            #new_constraints_inner = functions.enbrace(new_constraints_inner)
+            #new_constraints = "id IN " + new_constraints_inner
+            #postfix = self.add_constraints_to_command(postfix, new_constraints)
+            #actual_information += tuple(heredicare_upload_states)
         if hgvs is not None and len(hgvs) > 0:
             all_variants = []
             for hgvs_string in hgvs:
@@ -935,11 +964,26 @@ class Connection:
                 actual_information += tuple(ids_unknown_source) + tuple(annotation_type_ids_oi) + tuple(ids_unknown_source)
             new_constraints = ' OR '.join(new_constraints)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if lookup_list_ids is not None and len(lookup_list_ids) > 0:
+            placeholders = self.get_placeholders(len(lookup_list_ids))
+            new_constraints = """
+                SELECT variant_id FROM (SELECT variant_id, COUNT(*) as list_variant_num FROM list_variants WHERE list_id IN """ + placeholders + """ GROUP BY variant_id) as list_variant_aggregated WHERE list_variant_aggregated.list_variant_num = %s
+            """
+            new_constraints = "id IN" + functions.enbrace(new_constraints)
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+            actual_information += tuple(lookup_list_ids) + (len(lookup_list_ids), )
+
+        if respect_selected_variants and selected_variants is not None and len(selected_variants) > 0:
+            placeholders = self.get_placeholders(len(selected_variants))
+            if not select_all_variants:
+                new_constraints = "id IN " + placeholders
+            else:
+                new_constraints = "id NOT IN " + placeholders
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+            actual_information += tuple(selected_variants)
 
         if variant_ids_oi is not None and len(variant_ids_oi) > 0:
-            placeholders = ["%s"] * len(variant_ids_oi)
-            placeholders = ', '.join(placeholders)
-            placeholders = functions.enbrace(placeholders)
+            placeholders = self.get_placeholders(len(variant_ids_oi))
             new_constraints = "id IN " + placeholders
             actual_information += tuple(variant_ids_oi)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
@@ -957,7 +1001,9 @@ class Connection:
             offset = (page - 1) * page_size
             command = command + " LIMIT %s, %s"
             actual_information += (offset, page_size)
-        #print(command % actual_information)
+        #print(command)
+        #print(actual_information)
+        print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 
@@ -3436,6 +3482,11 @@ class Connection:
         self.cursor.execute(command, (status, message, publish_queue_id))
         self.conn.commit()
 
+    def update_publish_queue_variant_ids(self, publish_queue_id, variant_ids):
+        command = "UPDATE publish_queue SET variant_ids = %s WHERE id = %s"
+        self.cursor.execute(command, (variant_ids, publish_queue_id))
+        self.conn.commit()
+
     def update_publish_queue_celery_task_id(self, publish_queue_id, celery_task_id):
         command = "UPDATE publish_queue SET celery_task_id = %s WHERE id = %s"
         self.cursor.execute(command, (celery_task_id, publish_queue_id))
@@ -3540,7 +3591,11 @@ class Connection:
         command = "SELECT DISTINCT status FROM publish_clinvar_queue WHERE status != 'skipped'"
         self.cursor.execute(command)
         result = self.cursor.fetchall()
-        return [x[0] for x in result]
+        return [x[0] for x in result] + ["no_upload"]
+    
+    def get_unique_publish_heredicare_queue_status(self):
+        result = self.get_enumtypes('publish_heredicare_queue', 'status')
+        return result + ["no_upload"]
 
 
     def get_publish_request(self, publish_queue_id):

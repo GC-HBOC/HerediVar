@@ -81,7 +81,7 @@
                                 <a href="{{ url_for('download.variant_list', list_id=request.args.get('view')) }}" class="dropdown-item">Download list VCF</a>
                             </li>
                             <li>
-                                <a href="{{ url_for('upload.publish', list_id = request.args.get('view', ''), next = url_for('user.my_lists', view = request.args.get('view'))) }}" class="dropdown-item">Publish</a>
+                                <a href="{{ url_for('upload.publish', view = request.args.get('view', ''), next = url_for('user.my_lists', view = request.args.get('view'))) }}" class="dropdown-item">Publish</a>
                             </li>
                         </ul>
                     </div>

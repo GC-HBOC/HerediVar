@@ -95,6 +95,20 @@ def extract_ranges(request_args):
     return ranges
 
 
+def extract_variant_ids(request_args):
+    variant_ids = request_args.get('variant_ids', '')
+    variant_ids = preprocess_query(variant_ids, pattern=r"\d+")
+    if variant_ids is None:
+        flash("You have an error in your variant_ids query(s). Results are not filtered by variant_ids.", "alert-danger")
+    return variant_ids
+
+def extract_selected_variants(request_args):
+    variant_ids = request_args.get('selected_variants', '')
+    variant_ids = preprocess_query(variant_ids, pattern=r"\d+")
+    if variant_ids is None:
+        flash("You have an error in your variant_ids query(s). Results are not filtered by variant_ids.", "alert-danger")
+    return variant_ids
+
 def extract_genes(request_args):
     genes = request_args.get('genes', '')
     genes = preprocess_query(genes)
@@ -485,6 +499,35 @@ def extract_lookup_list(request_args, user_id, conn: Connection):
     return variant_ids_oi
 
 
+def extract_lookup_list_ids(request_args, user_id, conn: Connection):
+    lookup_list_names = request_args.get('lookup_list_name', "").split(';')
+    lookup_list_ids = request_args.get('lookup_list_id', "").split(';')
+    all_list_ids = []
+    for list_name, list_id in zip(lookup_list_names, lookup_list_ids):
+        list_name = list_name.strip()
+        list_id = list_id.strip()
+        if list_name == '' and list_id == '':
+            continue
+        if (list_name != '' and list_id == ''):
+            flash("The list " + list_name + " does not exist. Results are not filtered by this list.", 'alert-danger flash_id:unknown_list_search')
+        else:
+            list_ids = preprocess_query(list_id, r'\d*') # either none if there was an error or a list_id
+            if list_id is None:
+                flash("You have an error in your list search.", "alert-danger")
+            elif len(list_ids) >= 1:
+                list_id = list_ids[0]
+                list_permissions = conn.check_list_permission(user_id, list_id)
+                if list_permissions is not None:
+                    if not list_permissions['owner'] and not list_permissions['read']:
+                        return abort(403)
+                    else:
+                        all_list_ids.append(list_id)
+                else:
+                    flash("The list " + list_name + " which you are trying to access does not exist.", "alert-danger flash_id:unknown_list_search") # this should not happen
+
+    return all_list_ids
+
+
 def get_static_search_information(user_id, conn: Connection):
     sort_bys = ["genomic position", "recent"]
     page_sizes = ["5", "20", "50", "100"]
@@ -499,7 +542,7 @@ def get_static_search_information(user_id, conn: Connection):
     annotation_types = preprocess_annotation_types_for_search(annotation_types)
     lists = conn.get_lists_for_user(user_id)
     allowed_clinvar_upload_states = conn.get_unique_publish_clinvar_queue_status()
-    allowed_heredicare_upload_states = conn.get_enumtypes('publish_heredicare_queue', 'status')
+    allowed_heredicare_upload_states = conn.get_unique_publish_heredicare_queue_status()
     if 'skipped' in allowed_heredicare_upload_states:
         allowed_heredicare_upload_states.remove('skipped')
     return {'sort_bys': sort_bys, 'page_sizes': page_sizes, 'allowed_user_classes': allowed_user_classes, 'allowed_consensus_classes': allowed_consensus_classes, 'allowed_automatic_classes': allowed_automatic_classes,
@@ -508,7 +551,7 @@ def get_static_search_information(user_id, conn: Connection):
 
 
 
-def get_merged_variant_page(request_args, user_id, static_information, conn:Connection, flash_messages = True, select_all = False, empty_if_no_variants_oi = False):
+def get_merged_variant_page(request_args, user_id, static_information, conn:Connection, flash_messages = True, select_all = False, empty_if_no_variants_oi = False, respect_selected_variants = False):
     variant_strings = extract_variants(request_args)
     variant_types = extract_variant_types(request_args, static_information['allowed_variant_types'])
 
@@ -526,21 +569,26 @@ def get_merged_variant_page(request_args, user_id, static_information, conn:Conn
     clinvar_upload_states = extract_clinvar_upload_states(request_args, static_information['allowed_clinvar_upload_states'])
     heredicare_upload_states = extract_heredicare_upload_states(request_args, static_information['allowed_heredicare_upload_states'])
 
-    variant_ids_oi = extract_lookup_list(request_args, user_id, conn)
+    #variant_ids_oi = extract_lookup_list(request_args, user_id, conn)
+    variant_ids_oi = extract_variant_ids(request_args)
+    lookup_list_ids = extract_lookup_list_ids(request_args, user_id, conn)
     view_list_id = request_args.get('view', None)
-    if view_list_id == '':
-        return abort(404)
-    if view_list_id is not None: # the user wants to see the list
-        list_permissions = conn.check_list_permission(user_id, view_list_id)
-        if not list_permissions['read'] and flash_messages:
-            return abort(403)
-    variant_ids_from_list = conn.get_variant_ids_from_list(view_list_id)
-    if variant_ids_from_list is not None and len(variant_ids_from_list) > 0 and (variant_ids_oi is None or len(variant_ids_oi) == 0):
-        variant_ids_oi = variant_ids_from_list
-    elif variant_ids_from_list is not None and len(variant_ids_from_list) > 0 and variant_ids_oi is not None and len(variant_ids_oi) > 0:
-        variant_ids_oi = list(set(functions.none_to_empty_list(variant_ids_from_list)) & set(functions.none_to_empty_list(variant_ids_oi))) # take the intersection of the two lists
-    if empty_if_no_variants_oi and len(variant_ids_oi) == 0:
-        return [], 0, static_information['default_page'], static_information['default_page_size']
+    if view_list_id is not None and view_list_id not in lookup_list_ids:
+        lookup_list_ids.append(view_list_id)
+    #if view_list_id == '':
+    #    return abort(404)
+    #if view_list_id is not None: # the user wants to see the list
+    #    list_permissions = conn.check_list_permission(user_id, view_list_id)
+    #    if not list_permissions['read'] and flash_messages:
+    #        return abort(403)
+    #variant_ids_from_list = conn.get_variant_ids_from_list(view_list_id)
+    #if variant_ids_from_list is not None and len(variant_ids_from_list) > 0 and (variant_ids_oi is None or len(variant_ids_oi) == 0):
+    #    variant_ids_oi = variant_ids_from_list
+    #elif variant_ids_from_list is not None and len(variant_ids_from_list) > 0 and variant_ids_oi is not None and len(variant_ids_oi) > 0:
+    #    variant_ids_oi = list(set(functions.none_to_empty_list(variant_ids_from_list)) & set(functions.none_to_empty_list(variant_ids_oi))) # take the intersection of the two lists
+    #if empty_if_no_variants_oi and len(variant_ids_oi) == 0:
+    #if view_list_id is not None and view_list_id not in lookup_list_ids:
+    #    return [], 0, static_information['default_page'], static_information['default_page_size']
 
     selected_page_size = request_args.get('page_size', static_information['default_page_size'])
     selected_sort_by = request_args.get('sort_by', static_information['default_sort_by'])
@@ -561,6 +609,9 @@ def get_merged_variant_page(request_args, user_id, static_information, conn:Conn
             selected_page_size = static_information['default_page_size']
         selected_page_size = int(selected_page_size)
         page = int(request_args.get('page', 1))
+
+    selected_variants = extract_selected_variants(request_args)
+    select_all_variants = request_args.get('select_all_variants', "false") == "true"
     
     variants, total = conn.get_variants_page_merged(
         page=page, 
@@ -583,7 +634,11 @@ def get_merged_variant_page(request_args, user_id, static_information, conn:Conn
         variant_strings = variant_strings,
         variant_types = variant_types,
         clinvar_upload_states = clinvar_upload_states,
-        heredicare_upload_states = heredicare_upload_states
+        heredicare_upload_states = heredicare_upload_states,
+        lookup_list_ids = lookup_list_ids,
+        respect_selected_variants = respect_selected_variants,
+        selected_variants = selected_variants,
+        select_all_variants = select_all_variants
     )
 
     return variants, total, page, selected_page_size

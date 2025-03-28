@@ -3,57 +3,35 @@
 
 {% block content %}
 
-<div class="container">
+
 
   
 <h1 class="bst"> {% block title %} Publish variants {% endblock %} </h1>
 
 
-<div>
-    <h4>Variants which will be uploaded:</h4>
-    <div class="table-responsive tableFixHead">
-        <table class="table table-hover" id="genes_for_clinvar_table">
-            <thead>
-                <tr>
-                    <th class="width_minimal"><div class="sortable">Variant ID</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th class="width_very_small"><div class="sortable">Chrom</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th class="width_very_small"><div class="sortable">Pos</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th class="width_small"><div class="sortable">Ref</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                    <th class="width_small"><div class="sortable">Alt</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for variant in variants %}
-                <tr>
-                    <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable nowrap">{{variant.id}}</td>
-                    <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable nowrap">{{variant.chrom}}</td>
-                    <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable nowrap">
-                        {% if variant.imprecise %}{{macros.draw_exclamation_mark(variant.variant_type + " variant with imprecise position!")}}{% endif %}
-                        {% if variant.variant_type == 'sv' and variant.alt[0] == '<' %}
-                            {{ variant.start }} - {{ variant.end }}
-                        {% else %}
-                            {{ variant.pos }}
-                        {% endif %}
-                    </td>
-                    <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss">
-                        <div class="fit_content Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ variant.ref }}">{{ variant.ref }}</div>
-                    </td>
-                    <td data-href="{{ url_for('variant.display', variant_id=variant.id) }}" class="clickable longTextCss">
-                        <div class="fit_content Nellipsis" data-bs-toggle="tooltip" data-bs-title="{{ variant.alt }}">{{ variant.alt }}</div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+
+<h4>
+    1. Select variants which should be uploaded
+</h4>
+<div id="list-content" class="sst ssr ssl">
+    {{ macros.draw_paginated_variant_table(pagination, variants, static_information) }}
 </div>
 
+<div class="form-check ssl align-items-center d-flex">
+    <input class="form-check-input" type="checkbox" id="select_all_variants" checked=''>
+    <label class="form-check-label vssl" for="select_all_variants">
+        Select all variants
+    </label>
+</div>
 
+<h4>
+    2. Select upload sites
+</h4>
 
-<form class="bsb" method="post">
+<form class="bsb" action="{{ url_for('upload.publish', **request_args) }}" method="post">
 
     <div class="bst">
-        <h4>ClinVar</h4>
+        <h5>ClinVar</h5>
         <div class="bsl">
             <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="on" name="publish_clinvar" id="publish_clinvar_check" data-bs-toggle="collapse" href="#publish_clinvar_collapse" role="button" aria-expanded="false" aria-controls="publish_clinvar_collapse" autocomplete="off">
@@ -111,7 +89,7 @@
 
 
     <div class="bst">
-        <h4>HerediCaRe</h4>
+        <h5>HerediCaRe</h5>
         <div class="form-check bsl">
             <input class="form-check-input" type="checkbox" value="on" name="publish_heredicare" id="publish_heredicare_check"  data-bs-toggle="collapse" href="#publish_heredicare_collapse" role="button" aria-expanded="false" aria-controls="publish_heredicare_collapse" autocomplete="off">
             <label class="form-check-label" for="publish_heredicare_check">Publish to HerediCaRe</label>
@@ -136,14 +114,11 @@
     </div>
 
 
-    <div class="bst">
-        <div class="form-group">
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </div>
+    <div class="form-group bst">
+        <button id="publish_submit_button" type="submit" class="btn btn-primary">Submit</button>
     </div>
 </form>
 
-</div>
 
 
 

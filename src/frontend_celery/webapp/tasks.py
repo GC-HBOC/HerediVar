@@ -1016,20 +1016,26 @@ def variant_list_import(self, user_id, list_id, list_variant_import_queue_id, re
     try:
         conn = Connection()
         conn.update_list_variant_import_status(list_variant_import_queue_id, status = "progress", message = "")
-        selected_variants = request_args.get('selected_variants', "").split(',')
-        select_all_variants = request_args.get('select_all_variants', "false") == "true"
-        if select_all_variants:
-            static_information = search_utils.get_static_search_information(user_id, conn)
-            variants, total, page, selected_page_size = search_utils.get_merged_variant_page(request_args, user_id, static_information, conn, flash_messages = False, select_all = True)
-            variant_ids = [variant.id for variant in variants]
-            for variant_id in variant_ids:
-                if str(variant_id) not in selected_variants:
-                    num_new_variants = conn.add_variant_to_list(list_id, variant_id)
-        else:
-            for variant_id in selected_variants:
-                variant = conn.get_variant(variant_id)
-                if variant is not None:
-                    num_new_variants = conn.add_variant_to_list(list_id, variant_id)
+
+        static_information = search_utils.get_static_search_information(user_id, conn)
+        variants, total, page, selected_page_size = search_utils.get_merged_variant_page(request_args, user_id, static_information, conn, flash_messages = False, select_all = True, respect_selected_variants=True)
+        for variant in variants:
+            num_new_variants = conn.add_variant_to_list(list_id, variant.id)
+
+        #selected_variants = request_args.get('selected_variants', "").split(',')
+        #select_all_variants = request_args.get('select_all_variants', "false") == "true"
+        #if select_all_variants:
+        #    static_information = search_utils.get_static_search_information(user_id, conn)
+        #    variants, total, page, selected_page_size = search_utils.get_merged_variant_page(request_args, user_id, static_information, conn, flash_messages = False, select_all = True)
+        #    variant_ids = [variant.id for variant in variants]
+        #    for variant_id in variant_ids:
+        #        if str(variant_id) not in selected_variants:
+        #            num_new_variants = conn.add_variant_to_list(list_id, variant_id)
+        #else:
+        #    for variant_id in selected_variants:
+        #        variant = conn.get_variant(variant_id)
+        #        if variant is not None:
+        #            num_new_variants = conn.add_variant_to_list(list_id, variant_id)
     except InternalError as e:
         # deadlock: code 1213
         status = "retry"
