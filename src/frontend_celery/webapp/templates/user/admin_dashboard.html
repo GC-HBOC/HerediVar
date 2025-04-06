@@ -279,12 +279,12 @@
 
         <h4>Publish all variants with updated consensus classification</h4>
         <div class="sst d-flex">
-            <a class="btn btn-outline-primary" href="{{url_for('upload.publish', variant_ids = 'heredicare', next=url_for('user.variant_publish_history'))}}">Needs HerediCaRe upload</a>
+            <a class="btn btn-outline-primary" href="{{url_for('upload.publish', needs_upload = 'heredicare', next=url_for('user.variant_publish_history'))}}">Needs HerediCaRe upload</a>
             <div class="flex-grow-1"></div> <!-- spacer to move button to the right-->
             <a class="btn btn-primary" href="{{url_for('user.variant_publish_history')}}">All publish requests</a>
         </div>
         <div class="sst">
-            <a class="btn btn-outline-primary" href="{{url_for('upload.publish', variant_ids = 'clinvar', next=url_for('user.variant_publish_history'))}}">Needs ClinVar upload</a>
+            <a class="btn btn-outline-primary" href="{{url_for('upload.publish', needs_upload = 'clinvar', next=url_for('user.variant_publish_history'))}}">Needs ClinVar upload</a>
         </div>
         
 

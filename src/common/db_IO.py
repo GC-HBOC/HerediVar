@@ -630,7 +630,7 @@ class Connection:
                                  hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, 
                                  include_heredicare_consensus = False, variant_strings = None, variant_types = None, clinvar_upload_states = None,
                                  heredicare_upload_states = None, lookup_list_ids = None, respect_selected_variants = False, selected_variants = None,
-                                 select_all_variants = False):
+                                 select_all_variants = False, needs_upload = None):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -967,11 +967,37 @@ class Connection:
         if lookup_list_ids is not None and len(lookup_list_ids) > 0:
             placeholders = self.get_placeholders(len(lookup_list_ids))
             new_constraints = """
-                SELECT variant_id FROM (SELECT variant_id, COUNT(*) as list_variant_num FROM list_variants WHERE list_id IN """ + placeholders + """ GROUP BY variant_id) as list_variant_aggregated WHERE list_variant_aggregated.list_variant_num = %s
+                SELECT DISTINCT variant_id FROM (SELECT variant_id, COUNT(*) as list_variant_num FROM list_variants WHERE list_id IN """ + placeholders + """ GROUP BY variant_id) as list_variant_aggregated WHERE list_variant_aggregated.list_variant_num = %s
             """
             new_constraints = "id IN" + functions.enbrace(new_constraints)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
             actual_information += tuple(lookup_list_ids) + (len(lookup_list_ids), )
+        if needs_upload is not None and len(needs_upload) > 0:
+            if 'clinvar' in needs_upload:
+                new_constraints = """
+                    SELECT DISTINCT variant_id FROM consensus_classification WHERE needs_clinvar_upload = 1  AND is_recent = 1 and variant_id NOT IN (
+	                    SELECT publish_clinvar_queue.variant_id FROM publish_clinvar_queue RIGHT JOIN (
+		                    SELECT variant_id, MAX(requested_at) as requested_at FROM publish_clinvar_queue WHERE status != 'skipped' GROUP BY variant_id
+	                    )x ON x.requested_at = publish_clinvar_queue.requested_at AND x.variant_id = publish_clinvar_queue.variant_id
+	                    WHERE status = 'submitted' or status = 'pending' or status = 'progress' or status = 'retry'
+                    ) AND variant_id NOT IN (SELECT id FROM variant WHERE sv_variant_id IS NOT NULL)
+                """
+                new_constraints = "id IN " + functions.enbrace(new_constraints)
+                postfix = self.add_constraints_to_command(postfix, new_constraints)
+            if 'heredicare' in needs_upload:
+                new_constraints = """
+                    SELECT DISTINCT variant_id FROM consensus_classification WHERE needs_heredicare_upload = 1  AND is_recent = 1 and variant_id NOT IN (
+	                    SELECT publish_heredicare_queue.variant_id FROM publish_heredicare_queue RIGHT JOIN (
+		                    SELECT variant_id, MAX(requested_at) as requested_at FROM publish_heredicare_queue WHERE status != 'skipped' GROUP BY variant_id
+	                    )x ON x.requested_at = publish_heredicare_queue.requested_at AND x.variant_id = publish_heredicare_queue.variant_id
+	                    WHERE status = 'submitted' or status = 'pending' or status = 'progress' or status = 'retry'
+                    ) AND variant_id NOT IN (SELECT id FROM variant WHERE sv_variant_id IS NOT NULL) AND variant_id NOT IN (SELECT variant_id FROM (SELECT * FROM variant_consequence WHERE source = 'ensembl')y
+                        GROUP BY variant_id 
+                    HAVING COUNT(exon_nr is not null or intron_nr is not null OR NULL) = 0)
+                """
+                new_constraints = "id IN " + functions.enbrace(new_constraints)
+                postfix = self.add_constraints_to_command(postfix, new_constraints)
+
 
         if respect_selected_variants and selected_variants is not None and len(selected_variants) > 0:
             placeholders = self.get_placeholders(len(selected_variants))
@@ -1003,7 +1029,7 @@ class Connection:
             actual_information += (offset, page_size)
         #print(command)
         #print(actual_information)
-        print(command % actual_information)
+        #print(command % actual_information)
         self.cursor.execute(command, actual_information)
         variants_raw = self.cursor.fetchall()
 

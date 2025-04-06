@@ -505,7 +505,7 @@
             </svg>
         </div>
 
-        <a class="btn btn-sm btn-danger float_right" href="{{ url_for(request.url_rule.endpoint) }}" data-bs-toggle="tooltip" title="Clear all filters.">
+        <a class="btn btn-sm btn-danger float_right" href="{{ url_for(request.url_rule.endpoint, next = request.args.get('next', ''), view = request.args.get('view', '')) }}" data-bs-toggle="tooltip" title="Clear all filters.">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
                 
@@ -771,6 +771,19 @@
                 </div>
 
 
+                <div class="form-group sst">
+                    <label for="user-select" class="form-label">Needs upload</label>
+                    <div class="d-flex">
+                        {% for needs_upload_value in static_information.get('allowed_needs_upload') %}
+                        <div class="form-check d-flex bsr align-items-center">
+                            <input class="form-check-input ssr" type="checkbox" value="{{needs_upload_value}}" id="needs_{{needs_upload_value}}_upload" name="needs_upload" {% if needs_upload_value in request.args.getlist('needs_upload') %}checked{% endif %}>
+                            <label class="form-check-label" for="needs_{{needs_upload_value}}_upload">{{needs_upload_value}}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+
 
                 {% if static_information['lists'] is not none %}
                 <div class="form-group sst">
@@ -784,7 +797,9 @@
                 {% if request.args.get('view') is not none %}
                 <input type="hidden" name="view" id="view" value="{{request.args.get('view')}}">
                 {% endif %}
-
+                {% if request.args.get('next') is not none %}
+                <input type="hidden" name="next" id="next" value="{{request.args.get('next')}}">
+                {% endif %}
 
 
                 <div class="d-flex justify-content-end align-items-center">

@@ -211,6 +211,14 @@ def extract_clinvar_upload_states(request_args, allowed_upload_states):
     return clinvar_upload_states
 
 
+def extract_needs_upload(request_args, allowed_needs_request):
+    regex_inner = '|'.join(allowed_needs_request)
+    clinvar_upload_states = request_args.get('needs_upload', '')
+    clinvar_upload_states = preprocess_query(clinvar_upload_states, r'(' + regex_inner + r')?')
+    if clinvar_upload_states is None:
+        flash("You have an error in your needs upload query(s). Must be one of " + str(allowed_needs_request) + " Results are not filtered by needs upload.", "alert-danger")
+    return clinvar_upload_states
+
 def extract_heredicare_upload_states(request_args, allowed_upload_states):
     regex_inner = '|'.join(allowed_upload_states)
     heredicare_upload_states = request_args.get('heredicare_upload_state', '')
@@ -543,11 +551,12 @@ def get_static_search_information(user_id, conn: Connection):
     lists = conn.get_lists_for_user(user_id)
     allowed_clinvar_upload_states = conn.get_unique_publish_clinvar_queue_status()
     allowed_heredicare_upload_states = conn.get_unique_publish_heredicare_queue_status()
+    allowed_needs_upload = ["clinvar", "heredicare"]
     if 'skipped' in allowed_heredicare_upload_states:
         allowed_heredicare_upload_states.remove('skipped')
     return {'sort_bys': sort_bys, 'page_sizes': page_sizes, 'allowed_user_classes': allowed_user_classes, 'allowed_consensus_classes': allowed_consensus_classes, 'allowed_automatic_classes': allowed_automatic_classes,
             'annotation_types': annotation_types, 'allowed_variant_types': allowed_variant_types, 'default_page_size': default_page_size, 'default_sort_by': default_sort_by, 'default_page': default_page, 'lists': lists,
-            'allowed_clinvar_upload_states': allowed_clinvar_upload_states, "allowed_heredicare_upload_states": allowed_heredicare_upload_states}
+            'allowed_clinvar_upload_states': allowed_clinvar_upload_states, "allowed_heredicare_upload_states": allowed_heredicare_upload_states, 'allowed_needs_upload': allowed_needs_upload}
 
 
 
@@ -612,6 +621,8 @@ def get_merged_variant_page(request_args, user_id, static_information, conn:Conn
 
     selected_variants = extract_selected_variants(request_args)
     select_all_variants = request_args.get('select_all_variants', "false") == "true"
+
+    needs_upload = extract_needs_upload(request_args, static_information['allowed_needs_upload'])
     
     variants, total = conn.get_variants_page_merged(
         page=page, 
@@ -638,7 +649,8 @@ def get_merged_variant_page(request_args, user_id, static_information, conn:Conn
         lookup_list_ids = lookup_list_ids,
         respect_selected_variants = respect_selected_variants,
         selected_variants = selected_variants,
-        select_all_variants = select_all_variants
+        select_all_variants = select_all_variants,
+        needs_upload = needs_upload
     )
 
     return variants, total, page, selected_page_size
