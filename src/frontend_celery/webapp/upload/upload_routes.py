@@ -51,7 +51,7 @@ def publish():
     if request.method == 'POST':
         options = {
             "do_clinvar": request.form.get('publish_clinvar', 'off') == 'on',
-            "clinvar_selected_genes": upload_functions.extract_clinvar_selected_genes(variant_ids = "", request_form = request.form), # TODO!!!
+            #"clinvar_selected_genes": upload_functions.extract_clinvar_selected_genes(variant_ids = "", request_form = request.form), # TODO!!!
             "do_heredicare": request.form.get('publish_heredicare', 'off') == 'on',
             "post_consensus_classification": request.form.get('post_consensus_classification', 'off') == 'on',
             "variant_filters": request_args

@@ -40,15 +40,15 @@ from werkzeug.utils import secure_filename
 #        result.extend(conn.get_variant_ids_which_need_clinvar_upload(variant_ids_oi = list_variant_ids))
 #    return list(set(result)) # make unique
 
-# this function searches for clinvar_gene_{variant_id} tags of variants 
-# of interest in a request form and saves it to a dictionary
-def extract_clinvar_selected_genes(variant_ids, request_form) -> dict:
-    result = {}
-    for variant_id in variant_ids:
-        selected_gene_id = request_form.get("clinvar_gene_" + str(variant_id))
-        if selected_gene_id is not None:
-            result[variant_id] = selected_gene_id
-    return result
+## this function searches for clinvar_gene_{variant_id} tags of variants 
+## of interest in a request form and saves it to a dictionary
+#def extract_clinvar_selected_genes(variant_ids, request_form) -> dict:
+#    result = {}
+#    for variant_id in variant_ids:
+#        selected_gene_id = request_form.get("clinvar_gene_" + str(variant_id))
+#        if selected_gene_id is not None:
+#            result[variant_id] = selected_gene_id
+#    return result
 
 # search for assay metadata within a request
 def extract_assay_metadata(metadata_types, request):

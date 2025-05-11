@@ -453,19 +453,22 @@ class Classification:
         if len(comment) > 0:
             result.append(comment)
 
-        # 2.: comment about selected criteria
-        if len(selected_criterium_strings) == 1:
-            result.append("According to the " + self.scheme.display_name + " criteria we chose this criterion: " + selected_criterium_strings[0])
-        elif len(selected_criterium_strings) > 1:
-            result.append("According to the " + self.scheme.display_name + " criteria we chose these criteria: " + ', '.join(selected_criterium_strings))
+        # 2.: comment about classificationscheme
+        result.append("This classification follows the " + self.scheme.display_name + " classification scheme")
 
-        # 3.: comment about not selected criteria (based on evidence)
+        # 3.: comment about selected criteria
+        if len(selected_criterium_strings) == 1:
+            result.append("We chose this criterion: " + selected_criterium_strings[0])
+        elif len(selected_criterium_strings) > 1:
+            result.append("We chose these criteria: " + ', '.join(selected_criterium_strings))
+
+        # 4.: comment about not selected criteria (based on evidence)
         if len(unselected_criterium_strings) == 1:
             result.append("Based on evidence we decided that this criterion can not be selected: " + unselected_criterium_strings[0])
         elif len(unselected_criterium_strings) > 1:
             result.append("Based on evidence we decided that these criteria can not be selected: " + ', '.join(unselected_criterium_strings))
 
-        # 4.: comment about selected literature
+        # 5.: comment about selected literature
         selected_literature_strings = []
         if self.literature is not None:
             for literature_passage in self.literature:

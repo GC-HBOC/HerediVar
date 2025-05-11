@@ -30,7 +30,7 @@ class ClinVar(metaclass=Singleton):
         return {'SP-API-KEY': os.environ.get('CLINVAR_API_KEY'), 'Content-type': 'application/json'}
     
 
-    def get_clinvar_submission_json(self, variant, selected_gene, clinvar_accession = None):
+    def get_clinvar_submission_json(self, variant, clinvar_accession = None):
         # required fields: 
         # clinvarSubmission > clinicalSignificance > clinicalSignificanceDescription (one of: "Pathogenic", "Likely pathogenic", "Uncertain significance", "Likely benign", "Benign", "Pathogenic, low penetrance", "Uncertain risk allele", "Likely pathogenic, low penetrance", "Established risk allele", "Likely risk allele", "affects", "association", "drug response", "confers sensitivity", "protective", "other", "not provided")
         # clinvarSubmission > clinicalSignificance > comment
@@ -109,11 +109,11 @@ class ClinVar(metaclass=Singleton):
             'stop': int(variant.pos) + len(variant.ref)-1
         }
 
-        if selected_gene is not None:
-            gene = []
-            gene_properties = {'symbol': selected_gene}
-            gene.append(gene_properties)
-            variant_properties['gene'] = gene
+        #if selected_gene is not None:
+        #    gene = []
+        #    gene_properties = {'symbol': selected_gene}
+        #    gene.append(gene_properties)
+        #    variant_properties['gene'] = gene
     
         variant_json.append(variant_properties)
         variant_set['variant'] = variant_json
@@ -139,9 +139,9 @@ class ClinVar(metaclass=Singleton):
             assertion_criteria['url'] = assertion_criteria_source
         return assertion_criteria
 
-    def get_postable_consensus_classification(self, variant, selected_gene, clinvar_accession):
+    def get_postable_consensus_classification(self, variant, clinvar_accession):
         schema = json.loads(open(paths.clinvar_submission_schema).read())
-        data = self.get_clinvar_submission_json(variant, selected_gene, clinvar_accession)
+        data = self.get_clinvar_submission_json(variant, clinvar_accession)
         jsonschema.validate(instance = data, schema = schema) # this throws jsonschema.exceptions.ValidationError on fail
 
         postable_data = {
@@ -153,7 +153,7 @@ class ClinVar(metaclass=Singleton):
         }
         return postable_data
 
-    def post_consensus_classification(self, variant, selected_gene, clinvar_accession):
+    def post_consensus_classification(self, variant, clinvar_accession):
         status = "success"
         message = ""
         submission_id = None
@@ -172,7 +172,7 @@ class ClinVar(metaclass=Singleton):
             message = "The consensus classification does not follow a scheme supported for upload to ClinVar."
             return submission_id, status, message
         
-        postable_data = self.get_postable_consensus_classification(variant, selected_gene, clinvar_accession)
+        postable_data = self.get_postable_consensus_classification(variant, clinvar_accession)
         url = self.get_url(endpoint = "submit")
         headers = self.get_header()
         resp = requests.post(url, headers = headers, data=json.dumps(postable_data))

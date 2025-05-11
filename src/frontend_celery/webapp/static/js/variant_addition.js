@@ -8,6 +8,7 @@ const run_annotation_service_url = flask_data.dataset.runAnnotationServiceUrl
 const heredicare_upload_status_url = flask_data.dataset.heredicareUploadStatusUrl
 const clinvar_upload_status_url = flask_data.dataset.clinvarUploadStatusUrl
 
+
 $(document).ready(function(){
 
     // add delete column to list variant view
@@ -214,7 +215,7 @@ function get_clinvar_upload_status_content(entries, status, overall_message) {
     if (entries != null && !["waiting", "requested"].includes(status)) {
         // add header
         var head = get_div("", ["row", "gx-2", "border-bottom", "bg-light"])
-        head.appendChild(get_div("HerediCaRe VID", ["col-3"]))
+        head.appendChild(get_div("Submission ID", ["col-3"]))
         head.appendChild(get_div("Status", ["col-3", "text-center", "border-start"]))
         head.appendChild(get_div("Message", ["col-6", "text-center", "border-start"]))
         content.appendChild(head)
@@ -222,7 +223,7 @@ function get_clinvar_upload_status_content(entries, status, overall_message) {
         // add content lines
         entries.forEach(entry => {
             var line = get_div("", ["row", "gx-2"])
-            line.appendChild(get_div(entry[6], ["col-3"], "None"))
+            line.appendChild(get_div(entry[5], ["col-3"], "None"))
             line.appendChild(get_div(entry[3], ["col-3", "text-center", "border-start"], "None"))
             line.appendChild(get_div(entry[4], ["col-6", "text-center", "border-start"], "None"))
             content.appendChild(line)
