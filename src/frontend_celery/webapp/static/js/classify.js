@@ -531,7 +531,7 @@ function preselect_criteria_from_list(selected_criteria, is_intermediate = false
         var state = current_data['state'];
 
         var selected_button = document.getElementById(criterium_id);
-        if (selected_button != null){
+        if (selected_button != null && !selected_button.disabled){
             selected_button.value = current_evidence;
             set_criterium_strength(criterium_id, current_strength)
             set_criterium(criterium_id, state, is_intermediate)
