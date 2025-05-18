@@ -1,0 +1,1027 @@
+{
+    "name": "enigma-palb2",
+    "version": "v1.1.0",
+    "display_name": "ClinGen ACMG PALB2 v1.1.0",
+    "type": "acmg-enigma-palb2",
+    "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/bhmmcver/clingen_palb2_v1.1.0.pdf/?format=attachment",
+    "aliases": ["ACMG PALB2", "ACMG PALB2 Pejvaer", "ACMG PALB2 Pejaver"],
+    "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
+    "criteria": [
+        {
+            "name": "PVS1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Null variant (nonsense, frameshift, canonical +/-1 or 2 splice sites, initiation codon, single or multi-exon deletion) in a gene where loss of function (LOF) is a known mechanism of disease.",
+                "Caveats:",
+                " • Beware of genes where LOF is not a known disease mechanism (e.g. GFAP, MYH7).",
+                " • Use caution interpreting LOF variants at the extreme 3' end of a gene.",
+                " • Use caution with splice variants that are predicted to lead to exon skipping but leave the remainder of the protein intact.",
+                " • Use caution in the presence of multiple transcripts.",
+                "",
+                "Instructions:",
+                "   Use PALB2 PVS1 Decision Tree Per PALB2 Exon Map and PALB2 PVS1 Guide ",
+                "   - PVS1: Predicted splice defect ",
+                "   - PVS1_Strength(RNA): Observed splice defect  ",
+                "   - The default RefSeq transcript for nucleotide (c.) annotation is NM_024675.3/ENST00000261584.8. Several naturally occurring alternate splicing isoforms have been described1. Yet, after careful examination, none of them is considered a candidate rescue transcript (very low contribution to overall expression, not coding proteins predicted functional, or both). In keeping with that, we have considered that all presumed LoF events (PVS1 decision tree specifications) occur in biologically relevant transcript(s).",
+                "   - WD40 beta propeller and the Coiled-coil domain (CC) are considered indispensable for PALB2 protein function. ",
+                "       - PVS1 alterations that are predicted to escape NMD, but that adversely affect the WD40 domain can be granted PVS1 (as opposed to PVS1_Strong as the recommended baseline2. The following evidence supports this strength change: ",
+                "       - The WD40 domain interacts with many different protein partners that are involved in the double strand break repair pathway3",
+                "       - Two different C-terminal truncating mutations (c.3549C>A and c.3549C>G) resulting in loss of the last 3 amino acids [p.(Tyr1183Ter)], were identified in trans with PALB2 stop-gain variants in three unrelated FA (FA-N) patients4",
+                "           - The PALB2 WD40 toroidal structure is “sealed” in the seventh blade by interaction of the C-terminal strand with the incomplete N-terminal blade. The last four residues of PALB2 (Y1183, H1184, Y1185, and S1186) are directly involved in this interaction (molecular Velcro hydrogen bonding)00. This is the rationale for the clinical relevance of the last 4 amino acids of the protein.",
+                "       - Alterations predicted to lead to in frame losses adversely affecting the WD40 structure/function are found in trans with LoF PALB2 alterations in Fanconi Anemia patients4",
+                "           - Exon 10 donor: c.3113+5G>C (biallelic with c.395delT)",
+                "           - Exon 12 donor: c.3350+4A>G (biallelic with c.2393_2394insCT)",
+                "       - LoF alterations are rare in GnomAD in all exons",
+                "           - GnomAD v2.1 accessed 5/30/2019",
+                "               - Total Variants (includes splice acceptor/donor-conservative)",
+                "                   - 1418 variants",
+                "                   - 336,349 carriers",
+                "               - LoF Flag (excludes splice acceptor/donor-conservative)",
+                "                   - 95 variants (6.7%)",
+                "                   - 239 carriers (.07%)",
+                "   - PVS1 can be applied as per the PVS1 decision tree.",
+                "       - PVS1_Variable(RNA) shall be used for observed splice defects, whether from canonical +/-1,2 positions or other spliceogenic regions (including mid-exonic missense/synonymous variants that cause splice defects) with baseline weight as per the below decision tree. Weight can be further modified based on the quality of the RNA study including consideration of concepts such as:",
+                "       - Starting material (where patient material is preferable to in vitro minigene)",
+                "       - Use of NMD inhibitors where translation does occur such as cell lines56",
+                "       - Primer design (to make sure it's comprehensive to capture possible multicassette events)",
+                "       - Method of quantification ",
+                "           - where e.g. capillary electrophoresis is preferable to estimation by gel band density",
+                "           - where SNP analysis is most preferred (where analysis of exonic SNPs and their relative presence in aberrant and WT transcripts is informative)",
+                "       - Quantification (where complete effects should have increased weight over incomplete effects)",
+                "       - Specific guidance on the use of RNA evidence in variant assessment is not a gene-specific consideration for PALB2 at this time, therefore discretion is left to assessors until further guidance is provided for this general concept from the Sequence Variant Interpretation group."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Same amino acid change as a previously established pathogenic variant regardless of nucleotide change.",
+                "Example: Val->Leu caused by either G>C or G>T in the same codon.",
+                "Caveat: Beware of changes that impact splicing rather than at the amino acid/protein level.",
+                "",
+                "Gene-specific modifications:",
+                "Use PALB2 PS1 Splicing table",
+                "",
+                "Instructions:",
+                "   - Protein: Do not use. Missense changes are not yet confirmed as a mechanism of disease for PALB2",
+                "   - Splicing: See PALB2 PS1 Table (PMID: 37352859)"
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "pathogenic Strong:",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS2",
+            "description": [
+
+                "Original ACMG Summary:",
+                "De novo (both maternity and paternity confirmed) in a patient with the disease and no family history.",
+                "Note: Confirmation of paternity only is insufficient. Egg donation, surrogate motherhood, errors in embryo transfer, etc. can contribute to non-maternity.",
+                "Not Applicable",
+                "Comments:",
+                "   ● Do not use for AD or AR disease: Informative de novo occurrences have not yet been observed and de novo AR conditions are unlikely to be informed by phase ",
+                "   ● Autosomal Dominant Disease: Do not use-Informative de novo occurrences have not yet been observed for autosomal dominant disease. As breast cancer is relatively common and occurs frequently as an apparently sporadic event, de novo is unlikely to ever be informative unless specific features of PALB2-related cancer predisposition are identified. ",
+                "   ● Autosomal Recessive Disease: Do not use - de novo occurrences are too rare to be informative at this time. In addition, in a biallelic state, de novo occurrences have an exceedingly low probability of being able to be confirmed as in trans because parental testing (and identification of one variant in each parent) is typically required without the use of long-range technologies."
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "pathogenic Strong:",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS3",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Well-established in vitro or in vivo functional studies supportive of a damaging effect on the gene or gene product.",
+                "Note: Functional studies that have been validated and shown to be reproducible and robust in a clinical diagnostic laboratory setting are considered the most well-established.",
+                "Not Applicable",
+                "Comments: ",
+                "    ● Protein: Do not use: Lack of known positive controls ",
+                "    ● RNA: Do not use: See code PVS1_Variable(RNA)"
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "pathogenic Strong:",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS4",
+            "description": [
+
+                "Original ACMG Summary:",
+                "The prevalence of the variant in affected individuals is significantly increased compared to the prevalence in controls.",
+                "Note 1: Relative risk (RR) or odds ratio (OR), as obtained from case-control studies, is >5.0 and the confidence interval around the estimate of RR or OR does not include 1.0. See manuscript for detailed guidance.",
+                "Note 2: In instances of very rare variants where case-control studies may not reach statistical significance, the prior observation of the variant in multiple unrelated patients with the same phenotype, and its absence in controls, may be used as moderate level of evidence.",
+                "",
+                "Gene-specific modifications:",
+                "Strong:",
+                "Case-control studies; p-value <=.05 AND (Odds ratio, hazard ratio, or relative risk  >=3 OR lower 95% CI >=1.5).",
+                "",
+                "Instructions:",
+                "PS4_Moderate: Do not use. Proband counting for genes causing a common disorder need to be calibrated in a population-specific way before use."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "pathogenic Strong:",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Located in a mutational hot spot and/or critical and well-established functional domain (e.g. active site of an enzyme) without benign variation.",
+                "Not Applicable",
+                "Comments: Do not use: Missense pathogenic variation in PALB2 is not yet confirmed as a mechanism of disease."
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM2",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Absent from controls (or at extremely low frequency if recessive) in Exome Sequencing Project, 1000 Genomes or Exome Aggregation Consortium.",
+                "Caveat: Population data for indels may be poorly called by next generation sequencing.",
+                "",
+                "Gene-specific modifications:",
+                "Supporting:",
+                "Variant absent in gnomAD or present in <= 1/300,000 alleles",
+                "",
+                "Instructions:",
+                "   - PM2_supporting is not considered a conflicting piece of evidence for variants that otherwise are likely benign/benign ",
+                "   - Use as PM2_Supporting (not moderate)"
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM3",
+            "description": [
+
+                "Original ACMG Summary:",
+                "For recessive disorders, detected in trans with a pathogenic variant",
+                "Note: This requires testing of parents (or offspring) to determine phase.",
+                "",
+                "Gene-specific modifications:",
+                "Use Fanconi Anemia PM3 tables",
+                "",
+                "Instructions:",
+                "Fanconi Anemia (FA) of any subtype is generally considered an exceedingly rare, severe, early-onset disease with variable features. In the case of BRCA2, hypomorphic FA patients have been described who are diagnosed at older ages with less severe phenotypes. The criteria set forth in the tables below are designed to accommodate such hypomorphs and are recommended to be applied to all FA-associated genes which may not be as well described due to the extreme infrequency of their identification, and due to ascertainment bias (for severe phenotype) in the literature.",
+                "Variant may not exceed general population frequency  >0.01%. Consider other gene panel test results as potential explanation for phenotype. ",
+                "Multiple unrelated cases are additive.",
+                "   - Ex. one individual homozygous for a variant with Fanconi gets 2.0 points. Another individual affected with Fanconi Anemia has the same variant and another truncating PALB2 variant with phase unknown gets 2.0 points. In total, there are 4.0 points towards PM3.",
+                "Phenotype consistent: Chromosomal breakage with 1 clinical feature OR at least 2 of 3 clinical features from separate categories without chromosomal breakage studies",
+                "   - Ex.  Chromosomal breakage testing + microcephaly / triangular face ",
+                "   - Ex. (Without chromosomal breakage):  Myelodysplastic Syndrome and microcephaly / triangular face. Individuals must have features from at least 2 of 3 distinct Cinical Feature categories below.  ",
+                "   - Positive for chromosome breakage test:",
+                "       - Increased chromosome breakage and/or radial forms on cytogenetic testing of lymphocytes with diepoxybutane (DEB) or mitomycin C (MMC)",
+                "   - Clinical features indicative of FA, including ",
+                "       - Physical features (in ~75% of affected persons), include: ",
+                "           - prenatal and/or postnatal short stature",
+                "           - abnormal skin pigmentation (e.g., café au lait macules, hypo- pigmentation)",
+                "           - Skeletal malformations (e.g., hypoplastic thumb, hypoplastic radius)",
+                "           - Microcephaly, triangular face",
+                "           - Ophthalmic anomalies",
+                "           - Genitourinary tract anomalies.",
+                "           - See Orphanet 13 for full list of >100 HPO terms (and their reported frequency).",
+                "       - Pathology findings and laboratory findings (non-cancer related) include",
+                "           - progressive bone marrow failure (unrelated to cancer treatment)",
+                "           - aplastic anemia",
+                "           - Myelodysplastic syndrome",
+                "           - Inordinate toxicities from chemotherapy or radiation",
+                "           - macrocytosis",
+                "           - cytopenia (especially thrombocytopenia, leukopenia, and neutropenia)",
+                "           - increased fetal hemoglobin (often precedes anemia). ",
+                "           - Note: FA patients with very early onset cancer (<=5yr) may not present with hematologic disease, which is reported to have median age at onset of 7 years in FA patients in general14",
+                "       - Cancer diagnosis <=5yr, particularly",
+                "           - Blood cancers (AML)",
+                "           - Brain cancers (medulloblastoma, neuroblastoma)",
+                "           - Wilms Tumor",
+                "Specifications are adapted from definitions from GeneReviews (last revision June 3, 2021)"
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM4",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Protein length changes due to in-frame deletions/insertions in a non-repeat region or stop-loss variants.",
+                "Not Applicable",
+                "Comments: ",
+                "    ● Do not use for in-frame deletions/insertions that are not already PVS1-eligible as no information is available to justify the application of this rule.",
+                "    ● In addition, missense and small in-frame indels are not yet confirmed as a mechanism of disease for PALB2. ● Do not use for stop-loss due to lack of data on stop-loss variants."
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM5",
+            "description": [
+
+
+                "Original ACMG Summary:",
+                "Novel missense change at an amino acid residue where a different missense change determined to be pathogenic has been seen before.",
+                "Example: Arg156His is pathogenic; now you observe Arg156Cys.",
+                "Caveat: Beware of changes that impact splicing rather than at the amino acid/protein level.",
+                "",
+                "Gene-specific modifications:",
+                "Apply to frameshifting or truncating variants with premature termination codons upstream of p.Tyr1183, based on location of the most C-terminal known pathogenic variant, p.Tyr1183*",
+                "",
+                "Instructions:",
+                "   - For protein: Do not use. Missense changes are not yet confirmed as a mechanism of disease for PALB2.",
+                "   - Apply as PM5_Supporting to frameshifting or truncating variants with premature termination codons upstream of p.Tyr1183, based on location of the most C-terminal known pathogenic variant, p.Tyr1183*",
+                "   - Apply to splice variants as PM5_supporting for splice variants can only be applied for variants premature termination codons upstream of p.Tyr1183 where PVS1_VS(RNA) is applied based on high quality observed splicing impact and must be NMD prone"
+                
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM6",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Assumed de novo, but without confirmation of paternity and maternity.",
+                "Not Applicable",
+                "Comments: Do not use for AD or AR disease: Informative de novo occurrences have not yet been observed and de novo AR conditions are unlikely to be informed by phase"
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Co-segregation with disease in multiple affected family members in a gene definitively known to cause the disease.",
+                "Note: May be used as stronger evidence with increasing segregation data.",
+                "",
+                "Gene-specific modifications:",
+                "Strong:",
+                "LOD >=1.26 or Bayes Factor (LR) >=18:1",
+                "",
+                "Moderate:",
+                "LOD >=.60 or Bayes Factor (LR) >=4:1",
+                "",
+                "Supporting:",
+                "LOD >=0.3 or Bayes Factor (LR) >=2:1",
+                "",
+                "Instructions:",
+                "   - AD Condition: use as per Co-Segregation Guidelines",
+                "   - AR Condition: informative instances of co-segregation in FANCN families are too rare to be considered for weight at this time. ",
+                "   - Co-Segregation Guidelines",
+                "       - Quantitative co-segregation analysis is mandated for more accurate assessment of causality for PALB2 alterations. It is strongly preferred that biocurators use a quantitative method that accommodates both pathologies of AD PALB2: breast cancer, ovarian cancer and pancreatic cancer. These methods may be conducted by biostatisticians, particularly if they are able to compute LR scores9 using multiple phenotypes.",
+                "           - PP1_Strong: LOD >=1.26 or Bayes Factor (LR) >=18:1",
+                "           - PP1_Moderate: LOD >=.60 or Bayes Factor (LR) >=4:1",
+                "           - PP1: LOD >=0.3 or Bayes Factor (LR) >=2:18",
+                "           - BS4_Supporting: LOD <=-.32 or Bayes Factor (LR) <=.48",
+                "           - BS4_Moderate: LOD <= -.64 or Bayes Factor (LR) <=.23",
+                "           - BS4: LOD <= -1.28 or Bayes Factor (LR) LR<=.053:1",
+                "   - A freely available tool, COOL (COsegregation OnLine) from Bing-Jian Feng's laboratory can be used to calculate LoD scores for co-segregation analysis ",
+                "        1. Navigate to  COOL (COsegregation OnLine)7",
+                "        2. Input 'PALB2' into the 'Input a Gene Symbol' field (the PALB2 defaults are approved by this VCEP)",
+                "        3. Upload your Pedigree File (see  COOL (COsegregation OnLine) manual8 for formatting)",
+                "        4. Leave all defaults as is. Select 'Submit' to obtain LR based on Full Likelihood Bayes (FLB)"
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP2",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Missense variant in a gene that has a low rate of benign missense variation and where missense variants are a common mechanism of disease.",
+                "Not Applicable",
+                "Comments: Do not use. Missense is not yet confirmed or refuted as a mechanism of disease for PALB2"
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP3",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Multiple lines of computational evidence support a deleterious effect on the gene or gene product (conservation, evolutionary, splicing impact, etc.).",
+                "Caveat: As many in silico algorithms use the same or very similar input for their predictions, each algorithm should not be counted as an independent criterion. PP3 can be used only once in any evaluation of a variant.",
+                "",
+                "Gene-specific modifications:",
+                "   - Protein: Do not use.",
+                "   - RNA: At least one well-established in silico predictor (e.g. SpliceAI) shows impact on splicing",
+                "",
+                "",
+                "Instructions:",
+                "   - Protein: Do not use. So far, published predictors have yet to achieve functional outcome for PALB2 missense variants",
+                "   - RNA: At least one well-established in silico predictor (e.g. SpliceAI) shows impact on splicing",
+                "       - NOTE: Splice analysis needs to be considered for all variant types (including missense, frameshift, nonsense, etc. as any variant has the potential to impact splicing which may preclude any expected protein effects) ",
+                "       - NOTE: PP3 for splice predictions may not be applied in addition to PVS1 or PVS1_Variable(RNA) codes.",
+                "       - Use caution in applying the wrong type of computational evidence (protein vs. RNA) towards the cumulative body of evidence for the opposite mechanism."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP4",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Patient's phenotype or family history is highly specific for a disease with a single genetic etiology.",
+                "Not Applicable",
+                "Comments: Do not use for AD disorder as breast cancer is a disease with multiple genetic etiology (genetic heterogeneity) and there are no features that can readily distinguish hereditary from sporadic causes. For AR disorder, use PM3 for specific phenotype considerations"
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP5",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Reputable source recently reports variant as pathogenic, but the evidence is not available to the laboratory to perform an independent evaluation.",
+                "Not Applicable",
+                "This criterion is not for use as recommended by the ClinGen Sequence Variant Interpretation VCEP Review Committee."
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BA1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Allele frequency is above 5% in Exome Sequencing Project, 1000 Genomes or Exome Aggregation Consortium.",
+                "",
+                "Gene-specific modifications:",
+                "GnomAD Filtering Allele Frequency Allele frequency >0.1%",
+                "",
+                "Instructions:",
+                "Rounded from .118% established using Whiffin calculator10:",
+                "   - Prevalence (breast cancer): 1:8",
+                "   - Allelic Heterogeneity: 1 (differs from BS1)",
+                "   - Genetic Heterogeneity: .01",
+                "   - Penetrance: .53"
+                
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ba",
+                    "display_name":"alo",
+                    "description": "stand-alone benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Allele frequency is greater than expected for disorder.",
+                "",
+                "Gene-specific modifications:",
+                "GnomAD Filtering Allele Frequency greater than expected for disease >.01%",
+                "",
+                "Instructions:",
+                "Rounded from .0118% established using Whiffin calculator: ",
+                "   - Prevalence (breast cancer): 8 ",
+                "   - Allelic Heterogeneity: 0.1 (differs from BA1) ",
+                "   - Genetic Heterogeneity: .01 ",
+                "   - Penetrance: .53"
+                
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS2",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Observed in a healthy adult individual for a recessive (homozygous), dominant (heterozygous), or X-linked (hemizygous) disorder, with full penetrance expected at an early age.",
+                "",
+                "Gene-specific modifications:",
+                "Per Fanconi Anemia BS2 tables",
+                "",
+                "Instructions:",
+                "   - See Fanconi Anemia BS2 tables",
+                "   - Do not use for individuals in population based cohorts, such as gnomAD ",
+                "   - Consider multiple instances of co-occurrence with the same variant are more likely to be in cis in unrelated individuals when assessing BS2 application"
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                },
+                {
+                    "name": "bm",
+                    "display_name":"mod",
+                    "description": "medium benign",
+                    "is_default": "0"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS3",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Well-established in vitro or in vivo functional studies show no damaging effect on protein function or splicing.",
+                "Not Applicable",
+                "Comments: ",
+                "    ● Do not use: Protein functional studies (BS3) See PS3 for details",
+                "    ● RNA functional studies (Use BP7_Variable(RNA))"
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS4",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Lack of segregation in affected members of a family.",
+                "Caveat: The presence of phenocopies for common phenotypes (i.e. cancer, epilepsy) can mimic lack of segregation among affected individuals. Also, families may have more than one pathogenic variant contributing to an autosomal dominant disorder, further confounding an apparent lack of segregation.",
+                "",
+                "Gene-specific modifications:",
+                "Strong:",
+                "LOD <= -1.28 or Bayes Factor (LR) LR<=.053:1",
+                "",
+                "Moderate:",
+                "LOD <= -.64 or Bayes Factor (LR) <=.23",
+                "",
+                "Supporting:",
+                "LOD <=-.32 or Bayes Factor (LR) <=.48",
+                "",
+                "Instructions:",
+                "   - Quantitative co-segregation analysis is mandated for more accurate assessment of causality for PALB2 alterations. It is strongly preferred that biocurators use a quantitative method that accommodates both pathologies of AD PALB2: breast cancer, ovarian cancer and pancreatic cancer. These methods may be conducted by biostatisticians, particularly if they are able to compute LR scores using multiple phenotypes. ",
+                "       - PP1_Strong: LOD >=1.26 or Bayes Factor (LR) >=18:1 ",
+                "       - PP1_Moderate: LOD >=.60 or Bayes Factor (LR) >=4:1",
+                "       - PP1: LOD >=0.3 or Bayes Factor (LR) >=2:1",
+                "       - BS4_Supporting: LOD <=-.32 or Bayes Factor (LR) <=.48",
+                "       - BS4_Moderate: LOD <= -.64 or Bayes Factor (LR) <=.23",
+                "       - BS4: LOD <= -1.28 or Bayes Factor (LR) LR<=.053:1",
+                "   - A freely available tool, COOL (COsegregation OnLine) from Bing-Jian Feng's laboratory can be used to calculate LoD scores for co-segregation analysis ",
+                "        1. Navigate to  COOL (COsegregation OnLine)",
+                "        2. Input 'PALB2' into the 'Input a Gene Symbol' field (the PALB2 defaults are approved by this VCEP)",
+                "        3. Upload your Pedigree File (see  COOL (COsegregation OnLine) manual for formatting)",
+                "        4. Leave all defaults as is. Select 'Submit' to obtain LR based on Full Likelihood Bayes (FLB)"
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                },
+                {
+                    "name": "bm",
+                    "display_name":"mod",
+                    "description": "medium benign",
+                    "is_default": "0"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Missense variant in a gene for which primarily truncating variants are known to cause disease.",
+                "",
+                "Gene-specific modifications:",
+                "Apply to all missense variants.",
+                "",
+                "Instructions:",
+                "Based on published and unpublished functional studies, PALB2 has a low rate of missense variants that are non-functional in relevant assays. True missense pathogenic variants are not yet confirmed or refuted but are thought to be exceedingly rare. Given the very low likelihood that missense variants are pathogenic, this rule applies to all missense variants in PALB2."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP2",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Observed in trans with a pathogenic variant for a fully penetrant dominant gene/disorder or observed in cis with a pathogenic variant in any inheritance pattern.",
+                "Not Applicable",
+                "Comments: Do not use: See Fanconi Anemia BS2 table"
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP3",
+            "description": [
+
+                "Original ACMG Summary:",
+                "In frame-deletions/insertions in a repetitive region without a known function.",
+                "Not Applicable",
+                "Comments: Do not use: small in-frame losses are neither confirmed nor refuted as a mechanism of pathogenicity for PALB2. In addition, PALB2 is not considered to have repetitive regions without known function"
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP4",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Multiple lines of computational evidence suggest no impact on gene or gene product (conservation, evolutionary, splicing impact, etc)",
+                "Caveat: As many in silico algorithms use the same or very similar input for their predictions, each algorithm cannot be counted as an independent criterion. BP4 can be used only once in any evaluation of a variant.",
+                "",
+                "Gene-specific modifications:",
+                "    ● Protein: Do not use. So far, published predictors have yet to achieve functional outcome for PALB2 missense variants",
+                "    ● RNA: At least one well-established in silico predictor (e.g. SpliceAI) shows no impact on splicing",
+                "    o NOTE: Splice analysis needs to be considered for all variant types (including missense, frameshift, nonsense, etc. as any variant has the potential to impact splicing which may preclude any expected protein effects)",
+                "    o NOTE: BP4 for splice predictions may not be applied in conjunction with BP7_Variable(RNA) (a lack of observed RNA defect)",
+                "    o Use caution in applying the wrong type of computational evidence (protein vs. RNA) towards the cumulative body of evidence for the opposite mechanism."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                "BP7"
+            ]
+        },
+
+        {
+            "name": "BP5",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Variant found in a case with an alternate molecular basis for disease.",
+                "Not Applicable",
+                "Comments: Do not use: Cases with multiple pathogenic variants have been observed with no noticeable difference in phenotype (e.g. BRCA1 and BRCA2). In addition, PALB2 has moderate penetrance and will naturally occur with other pathogenic variants more frequently due to higher tolerance/presence in the general population."
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP6",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Reputable source recently reports variant as benign, but the evidence is not available to the laboratory to perform an independent evaluation.",
+                "Not Applicable",
+                "This criterion is not for use as recommended by the ClinGen Sequence Variant Interpretation VCEP Review Committee. "
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP7",
+            "description": [
+
+
+                "Original ACMG Summary:",
+                "A synonymous variant for which splicing prediction algorithms predict no impact to the splice consensus sequence nor the creation of a new splice site AND the nucleotide is not highly conserved.",
+                "",
+                "Gene-specific modifications:",
+                "Strong:",
+                "    BP7_Strong(RNA): Observed lack of aberrant RNA defect for silent substitutions and intronic variants. May reduce weight applied depending on assay quality.",
+                "",
+                "Moderate:",
+                "    BP7_Variable(RNA):Observed Lack of aberrant RNA defect with variable weight applied depending on assay quality",
+                "",
+                "Supporting:",
+                "    BP7: Synonymous and deep intronic",
+                "    BP7_Variable(RNA): Observed Lack of aberrant RNA defect with variable weight applied depending on assay quality",
+                "",
+                "Instructions:",
+                "    BP7: Synonymous and deep intronic",
+                "       - Can be used for deep intronic variants beyond (but not including) +7 (donor) and -21 (acceptor)",
+                "       - May also apply BP4 to achieve Likely Benign",
+                "       - Is not considered a conflicting piece of evidence against a body of evidence supporting a pathogenic splice defect",
+                "    BP7_Variable(RNA): RNA functional studies",
+                "       - Lack of aberrant splice defect: Please see PVS1_Variable(RNA) section for guidance on baseline weights and modifications of weight based on quality for RNA assays",
+                "       - NOTE: BP4 splice predictions may not be used in conjunction with BP7_variable(RNA)"
+                
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "0"
+                },
+                {
+                    "name": "bm",
+                    "display_name":"mod",
+                    "description": "medium benign",
+                    "is_default": "0"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        }
+    ]
+}
