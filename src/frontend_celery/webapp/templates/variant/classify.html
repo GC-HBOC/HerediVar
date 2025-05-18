@@ -41,10 +41,13 @@
                 </div>
                 
                 <div>
-                    <button type="button" class="btn btn-sm btn-secondary ssr"  data-bs-toggle="modal" data-bs-target="#automatic_classification_options-modal">{{ macros.draw_gear(tooltip = "") }}</button>
+                    <button type="button" class="btn btn-sm btn-secondary ssr" data-bs-toggle="modal" data-bs-target="#automatic_classification_options-modal">{{ macros.draw_gear(tooltip = "") }}</button>
                 </div>
                 <div>
-                    <button type="button" class="btn btn-sm btn-primary" id="automatic_classification_button">Preselect criteria</button>
+                    <button type="button" class="btn btn-sm btn-primary ssr" id="automatic_classification_button">Preselect criteria</button>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-primary" id="migrate_classification_button" data-bs-toggle="modal" data-bs-target="#migrate_classification_button-modal">Migrate classification</button>
                 </div>
             </div>
 
@@ -366,6 +369,53 @@
         </div>
     </div>
 
+
+    
+    <!-- modal for classification migration -->
+    <div class="modal fade" id="migrate_classification_button-modal" tabindex="-1" aria-labelledby="migrate_classification_button-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="migrate_classification_button-modal-label">Migrate classification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Select a previous classification to import:
+                        <div>
+                            
+                        </div>
+
+                        <div class="table-responsive tableFixHead">
+                            <table class="table table-hover" id="migrate_classification_table">
+                                <thead>
+                                    <tr>
+                                        <th class="width_small"><div class="sortable">Scheme</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_minimal text_align_center"><div class="sortable">Final class</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                        <th class="width_small"><div class="sortable">Date</div><input type="text" class="form-control form-control-sm column-filter sst" placeholder="search..." autocomplete="off"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set current_scheme_with_info = previous_classifications[logged_in_user_id] %}
+                                    {% if classification_type == "consensus" %}
+                                        {% set current_scheme_with_info = previous_classifications[-1] %}
+                                    {% endif %}
+                                    {% if current_scheme_with_info is none %}
+                                        {% set current_scheme_with_info = {} %}
+                                    {% endif %}
+                                    {% for scheme_id in current_scheme_with_info %}
+                                    <tr id="migrate_from_{{scheme_id}}" class="clickable" scheme_id="{{scheme_id}}">
+                                        <td>{{ current_scheme_with_info[scheme_id]["scheme"]["display_name"] }}</td>
+                                        <td class="text_align_center">{{ current_scheme_with_info[scheme_id]["selected_class"] }}</td>
+                                        <td>{{ current_scheme_with_info[scheme_id]["date"] }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
       
 </div>
 

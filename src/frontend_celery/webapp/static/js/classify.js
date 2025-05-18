@@ -162,34 +162,50 @@ function submit_classification() {
 ///////////// preselect stuff ////////////
 
 
-function preselect_literature() {
+function preselect_literature(scheme_id) {
     if (classification_type === 'consensus') { // remove all rows in add from user literature selection
         document.getElementById('user_text_passages_for_copy').innerHTML = ""
         update_default_caption(document.getElementById('userSelectedLiterature'))
     }
-    for (var user_id in previous_classifications) {
-        var all_user_classifications = previous_classifications[user_id] ?? {}
-        var selected_classification = all_user_classifications[scheme] ?? {}
-        var previous_selected_literature = selected_classification['literature'] ?? []
-        var submitter = selected_classification['submitter'] ?? {}
-        var provided_by = submitter['full_name']
-        var affiliation = submitter['affiliation']
-        for (var i = 0; i < previous_selected_literature.length; i++) {
-            var current_literature = previous_selected_literature[i]
-            var pmid = current_literature['pmid']
-            var text_passage = current_literature['text_passage']
-            if ((classification_type !== 'consensus') || (user_id == -1)) { // add directly to the literature select 
-                create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
-            } else { // add to modal table for copying
-                create_line_consensus_modal(document.getElementById('user_text_passages_for_copy'), pmid = pmid, evidence_text = text_passage, provided_by=provided_by, affiliation=affiliation)
+
+    if (classification_type === 'consensus') {
+        var current_previous_classifications = previous_classifications[-1] ?? {}
+    } else {
+        var current_previous_classifications = previous_classifications[logged_in_user_id] ?? {}
+    }
+    var previous_classification = current_previous_classifications[scheme_id] ?? {}
+    var previous_selected_literature = previous_classification['literature'] ?? []
+    for (var i = 0; i < previous_selected_literature.length; i++) {
+        var current_literature = previous_selected_literature[i]
+        var pmid = current_literature['pmid']
+        var text_passage = current_literature['text_passage']
+        create_literature_select(document.getElementById('selectedLiteratureList'), pmid = pmid, placeholder = "Text citation", evidence_text = text_passage)
+    }
+
+    if (classification_type === 'consensus') { // create lines in user selected literature for copying
+        for (var user_id in previous_classifications) {
+            var all_user_classifications = previous_classifications[user_id] ?? {}
+            var selected_classification = all_user_classifications[scheme_id] ?? {}
+            var previous_selected_literature = selected_classification['literature'] ?? []
+            var submitter = selected_classification['submitter'] ?? {}
+            var provided_by = submitter['full_name']
+            var affiliation = submitter['affiliation']
+            for (var i = 0; i < previous_selected_literature.length; i++) {
+                var current_literature = previous_selected_literature[i]
+                var pmid = current_literature['pmid']
+                var text_passage = current_literature['text_passage']
+                if (user_id != -1) { // add to modal table for copying 
+                    create_line_consensus_modal(document.getElementById('user_text_passages_for_copy'), pmid = pmid, evidence_text = text_passage, provided_by=provided_by, affiliation=affiliation)
+                }
             }
         }
     }
+
 }
 
 
 // call functions once on page load
-function preselect_final_classification() {
+function preselect_final_classification(scheme_id) {
     var comment_text_area = document.getElementById('comment')
     var final_class_select = document.getElementById('final_class')
     var warning_display = document.getElementById('warning_alert_previous_classification')
@@ -198,10 +214,10 @@ function preselect_final_classification() {
     } else {
         var current_previous_classifications = previous_classifications[logged_in_user_id] ?? {}
     }
-    if (scheme in current_previous_classifications){
-        final_class_select.value = current_previous_classifications[scheme]['selected_class']
-        comment_text_area.value = current_previous_classifications[scheme]['comment']
-        comment_text_area.innerText = current_previous_classifications[scheme]['comment']
+    if (scheme_id in current_previous_classifications){
+        final_class_select.value = current_previous_classifications[scheme_id]['selected_class']
+        comment_text_area.value = current_previous_classifications[scheme_id]['comment']
+        comment_text_area.innerText = current_previous_classifications[scheme_id]['comment']
         warning_display.hidden = false
     } else {
         final_class_select.value = request_form['final_class'] || '3'
@@ -281,7 +297,7 @@ $(document).ready(function() {
     } else {
         preselect_scheme()
         update_scheme_field_variable()
-        preselect_final_classification()
+        preselect_final_classification(scheme)
     }
 
     scheme_select_action(do_revert=!do_request_form_preselect)
@@ -326,6 +342,21 @@ $(document).ready(function() {
         select_criterium(this);
         document.activeElement.blur() // clear focus so that tooltip is not shown after selecting
     });
+    var current_scheme_with_info = previous_classifications[logged_in_user_id]
+    if (classification_type === 'consensus') {
+        var current_scheme_with_info = previous_classifications[-1] ?? {} // use imaginary consensus classification user id
+    }
+    for (var scheme_id in current_scheme_with_info) {
+        $('#migrate_from_' + scheme_id).click(function() {
+            scheme_select_action(do_revert=true, do_preselect=false)
+            const current_scheme_id = this.getAttribute("scheme_id")
+            preselect_criteria_from_database(current_scheme_id);
+            preselect_final_classification(current_scheme_id)
+            preselect_literature(current_scheme_id)
+            update_classification_preview()
+            $('#migrate_classification_button-modal').modal('hide');
+        });
+    }
 
     add_default_for_important_information()
     hide_important_information_heading()
@@ -375,7 +406,7 @@ function create_final_class_option(parent, final_class) {
 // call the function once to preselect on page load
 // we need to wait until the document is ready to call the function because there is some jquery
 // which will not be loaded if this function is called without the document ready!
-function scheme_select_action(do_revert=true) {
+function scheme_select_action(do_revert=true, do_preselect=true) {
     if (do_revert) {
         revert_all()
     }
@@ -395,7 +426,7 @@ function scheme_select_action(do_revert=true) {
         create_criteria_buttons()
         //colors = load_colors()
         
-        if (do_revert) {
+        if (do_revert && do_preselect) {
             preselect_criteria_from_database(scheme)
         }
         if (classification_type === 'consensus') {
@@ -406,11 +437,13 @@ function scheme_select_action(do_revert=true) {
         update_reference_link(scheme)
         
     }
-    preselect_final_classification()
-
-    if (do_revert) {
+    if (do_preselect) {
+        preselect_final_classification(scheme)
+    }
+    
+    if (do_revert && do_preselect) {
         remove_all_selected_literature()
-        preselect_literature()
+        preselect_literature(scheme)
     }
 
 }
@@ -464,9 +497,10 @@ function preselect_criteria_from_database(scheme) {
     if (typeof current_scheme_with_info !== "undefined") { // only preselect if there is data for it
         selected_criteria = current_scheme_with_info['scheme']['criteria']
         preselect_criteria_from_list(selected_criteria)
-        remove_criterium_button_backgrounds() 
+        remove_criterium_button_backgrounds()
     }
 }
+
 
 function remove_criterium_button_backgrounds() {
     $(".acmg-button").each(function() {
