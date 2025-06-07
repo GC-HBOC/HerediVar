@@ -107,12 +107,24 @@ class automatic_classification_job(Job):
         # calculate class for splicing
         selected_criteria_splicing = '+'.join(selected_criteria.get("splicing", []) + selected_criteria.get("general", []))
         classification_splicing = self.get_classification(selected_criteria_splicing, scheme_type, scheme_version)
+        point_classification_splicing, point_score_splicing = self.get_points(selected_criteria_splicing, scheme_type, scheme_version)
         
         # calculate class for protein
         selected_criteria_protein = '+'.join(selected_criteria.get("protein", []) + selected_criteria.get("general", []))
         classification_protein = self.get_classification(selected_criteria_protein, scheme_type, scheme_version)
+        point_classification_protein, point_score_protein = self.get_points(selected_criteria_protein, scheme_type, scheme_version)
 
-        automatic_classification_id = conn.insert_automatic_classification(variant_id, scheme_id, classification_splicing, classification_protein, tool_version)
+        automatic_classification_id = conn.insert_automatic_classification(
+            variant_id, 
+            scheme_id, 
+            classification_splicing, 
+            classification_protein, 
+            point_classification_splicing, 
+            point_score_splicing, 
+            point_classification_protein,
+            point_score_protein, 
+            tool_version
+        )
 
         for criterium_name in classification_result:
             current_criterium = classification_result[criterium_name]
@@ -133,10 +145,24 @@ class automatic_classification_job(Job):
         classification_endpoint = urllib.parse.urljoin("http://" + host, "calculate_class/" + scheme + "/" + version + "/" + selected_criteria)
         resp = requests.get(classification_endpoint)
         resp.raise_for_status()
-        classification = resp.json().get("final_class")
-        if classification is None:
+        result = resp.json()
+        if "final_class" not in result:
             raise RuntimeError("The classification endpoint did not return a classification")
+        classification = result.get("final_class")
+
         return classification
+    
+    def get_points(self, selected_criteria: str, scheme: str, version: str):
+        host = os.environ.get("HOST", "localhost") + ":" + os.environ.get("PORT", "5000")
+        classification_endpoint = urllib.parse.urljoin("http://" + host, "calculate_point_score/" + scheme + "/" + version + "/" + selected_criteria)
+        resp = requests.get(classification_endpoint)
+        resp.raise_for_status()
+        result = resp.json()
+        if "points" not in result or "classification" not in result:
+            raise RuntimeError("The point score endpoint did not return a classification")
+        point_class = result["classification"]
+        point_score = result["points"]
+        return point_class, point_score
 
     def evidence_type2prefix(self, evidence_type):
         mapping = {"benign": "b", "pathogenic": "p"}

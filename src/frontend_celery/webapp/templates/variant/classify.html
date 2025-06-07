@@ -78,15 +78,32 @@
                 </div>
 
                 <!-- acmg classification preview -->
-                <div class="card">
-                    <div class="card-body d-flex justify-content-center align-items-center padding_big">
+                <div class="card" class="card-body d-flex justify-content-center align-items-center padding_big">
+                    <div class="card-body">
+                    <hr>
+
+                    <div class="d-flex justify-content-center align-items-center">
                         <div class="">
-                            <hr>
                             <div>Classification based on selected criteria:</div>
                             <div class="display-3 bolder text_align_center" id="classification_preview"></div>
-                            <hr>
                         </div>
                     </div>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div class="">
+                            <div class="text_align_center">Point score:</div>
+                            <div class="display-6 bolder text_align_center" id="points_score"></div>
+                            <div class="text_align_center">Classification based on point score:</div>
+                            <div class="display-6 bolder text_align_center" id="point_score_class"></div>
+                        </div>
+                    </div>
+
+                    <hr>
+                    </div>
+
+
                 </div>
 
             </div>
@@ -431,6 +448,7 @@
     data-selected-text-passages='{{ request.form.getlist("text_passage") | tojson }}'
     data-automatic-classification-url='{{ url_for("variant.automatic_classification", variant_id=variant.id) }}'
     data-calculate-class-url='{{ url_for("download.calculate_class") }}'
+    data-calculate-points-score-url='{{ url_for("download.calculate_point_score") }}'
 />
 
 

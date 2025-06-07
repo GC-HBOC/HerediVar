@@ -1,5 +1,5 @@
 from ..utils import *
-from ..download.download_routes import calculate_class
+from ..download.download_routes import calculate_class, calculate_point_score
 from flask import render_template
 import io
 from webapp import tasks
@@ -46,24 +46,30 @@ def handle_scheme_classification(classification_id, criteria, conn: Connection, 
     return scheme_classification_got_update
 
 
-def handle_user_classification(variant, user_id, new_classification, new_comment, scheme_id, scheme_class, conn: Connection):
+def handle_user_classification(variant, user_id, new_classification, new_comment, scheme_id, scheme_class, point_class, point_score, conn: Connection):
     current_datetime = functions.get_now()
     received_update = False
     is_new_classification = False
     previous_classification_oi = variant.get_recent_user_classification(user_id, scheme_id)
     if previous_classification_oi is not None: # user already has a classification -> he requests an update
-        if previous_classification_oi.comment != new_comment or previous_classification_oi.selected_class != new_classification or previous_classification_oi.scheme.selected_class != scheme_class:
-            conn.update_user_classification(previous_classification_oi.id, new_classification, new_comment, date = current_datetime, scheme_class = scheme_class)
-            received_update = True
+        received_update = any([
+            previous_classification_oi.comment != new_comment,
+            previous_classification_oi.selected_class != new_classification,
+            previous_classification_oi.scheme.selected_class != scheme_class,
+            previous_classification_oi.point_score != point_score,
+            previous_classification_oi.point_class != point_class
+        ])
+        if received_update:
+            conn.update_user_classification(previous_classification_oi.id, new_classification, new_comment, date = current_datetime, scheme_class = scheme_class, point_score = point_score, point_class = point_class)
         return None, received_update, is_new_classification
     else: # user does not yet have a classification for this variant -> he wants to create a new one
         is_new_classification = True
-        conn.insert_user_classification(variant.id, new_classification, user_id, new_comment, current_datetime, scheme_id, scheme_class)
+        conn.insert_user_classification(variant.id, new_classification, user_id, new_comment, current_datetime, scheme_id, scheme_class, point_score = point_score, point_class = point_class)
         return conn.get_last_insert_id(), received_update, is_new_classification
     
 
 
-def handle_consensus_classification(variant, classification, comment, scheme_id, pmids, text_passages, criteria, scheme_description, scheme_class, conn: Connection):
+def handle_consensus_classification(variant, classification, comment, scheme_id, criteria, scheme_class, point_score, point_class, conn: Connection):
     current_datetime = functions.get_now()
 
     ## compute pdf containing all annotations
@@ -71,7 +77,7 @@ def handle_consensus_classification(variant, classification, comment, scheme_id,
         criteria[criterium_id]['strength_description'] = conn.get_classification_criterium_strength(criteria[criterium_id]['criterium_strength_id'])[3]
     evidence_b64 = functions.buffer_to_base64(io.BytesIO())
 
-    conn.insert_consensus_classification(session['user']['user_id'], variant.id, classification, comment, evidence_document=evidence_b64, date = current_datetime, scheme_id = scheme_id, scheme_class = scheme_class)
+    conn.insert_consensus_classification(session['user']['user_id'], variant.id, classification, comment, evidence_document=evidence_b64, date = current_datetime, scheme_id = scheme_id, scheme_class = scheme_class, point_score = point_score, point_class = point_class)
     return conn.get_last_insert_id() # returns the consensus_classification_id
 
 
@@ -163,7 +169,7 @@ def extract_criteria_from_request(request_obj, scheme_id, conn: Connection):
     return criteria
 
 # criteria dict from the extract criteria request function is the input
-def get_scheme_class(criteria_dict, scheme_type, version):
+def get_classification_class(criteria_dict, scheme_type, version):
     all_criteria_strengths = []
     keyval = 'strength'
     if scheme_type == 'task-force':
@@ -180,7 +186,11 @@ def get_scheme_class(criteria_dict, scheme_type, version):
                 all_criteria_strengths.append(criteria_dict[key][keyval])
     all_criteria_string = '+'.join(all_criteria_strengths)
     scheme_class = calculate_class(scheme_type, version, all_criteria_string)
-    return scheme_class
+    point_class = calculate_point_score(scheme_type, version, all_criteria_string)
+    return scheme_class.json['final_class'], point_class['classification'], point_class['points']
+
+
+
 
 
 def is_valid_scheme(selected_criteria, scheme, possible_states):

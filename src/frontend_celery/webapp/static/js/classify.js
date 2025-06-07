@@ -17,6 +17,7 @@ const selected_text_passages = JSON.parse(flask_data.dataset.selectedTextPassage
 
 const automatic_classification_url = flask_data.dataset.automaticClassificationUrl;
 const calculate_class_url = flask_data.dataset.calculateClassUrl;
+const calculate_points_score_url = flask_data.dataset.calculatePointsScoreUrl;
 
 var previous_obj = null;
 //var colors; // this maps a criterium strength to a color which are defined in css
@@ -1408,6 +1409,7 @@ function enable_disable_buttons(criterium_ids, is_disable) {
     }
 }
 
+
 function update_classification_preview() {
     if (scheme_type == 'task-force') {
         var selected_criteria = get_currently_checked_criteria(); // this is an array of critera ids
@@ -1448,20 +1450,26 @@ function update_classification_preview() {
     });
 
 
-    //fetch('/calculate_class/'+scheme_type+'/'+selected_criteria).then(function (response) {
-    //    return response.json();
-    //}).then(function (text) {
-    //    const final_class = text.final_class
-    //    document.getElementById('classification_preview').textContent = final_class
-    //    if (classification_type === "consensus") {
-    //        var pc = previous_classifications[-1] ?? {} // use imaginary consensus classification user id
-    //    } else {
-    //        var pc = previous_classifications[logged_in_user_id] ?? {}
-    //    }
-    //    if (!(scheme in pc) && !do_request_form_preselect) {
-    //        document.getElementById('final_class').value = final_class
-    //    }
-    //});
+    $.ajax({
+        type: 'GET',
+        url: calculate_points_score_url,
+        data: {
+            'scheme_type': scheme_type,
+            'version': version,
+            'selected_classes': selected_criteria
+        },
+        success: function(returnval, status, request) {
+            const classification_on_points = returnval["classification"]
+            const points_score = returnval["points"]
+            document.getElementById('points_score').textContent = points_score
+            document.getElementById('point_score_class').textContent = classification_on_points
+        },
+        error: function(xhr, status, error) {
+            console.log("There was an error during point score retrieval:")
+            console.log(status)
+            console.log(error)
+        }
+    });
 }
 
 function remove_criterium_button_background(criterium_id) {

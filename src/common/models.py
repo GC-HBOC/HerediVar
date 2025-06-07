@@ -415,10 +415,14 @@ class SelectedLiterature:
 class Classification:
     id: int
     type: str
-    selected_class: str
+
     comment: str
     date: str
     submitter: User
+
+    selected_class: str # final manually selected classification
+    point_score: int # score based on selected criteria
+    point_class: str # classification based on point_score
 
     scheme: Scheme
     literature: Any = None # list of selected literature
@@ -573,6 +577,11 @@ class AutomaticClassification:
     classification_splicing: int
     classification_protein: int
     date: datetime
+
+    point_class_splicing: str
+    point_score_splicing: int
+    point_class_protein: str
+    point_score_protein: int
 
     criteria: Any # list of automatic classification criterium
 

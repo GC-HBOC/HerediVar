@@ -224,6 +224,44 @@ def heredivar_version(version): # version is a date
 ######### DOWNLOAD CLASS #########
 ##################################
 
+
+# get point score after https://pubmed.ncbi.nlm.nih.gov/32720330/
+@download_blueprint.route('/calculate_point_score/<string:scheme_type>/<string:version>/<string:selected_classes>')
+@download_blueprint.route('/calculate_point_score/<string:scheme_type>/<string:version>/')
+@download_blueprint.route('/calculate_point_score/<string:scheme_type>/<string:version>')
+@download_blueprint.route('/calculate_point_score')
+def calculate_point_score(scheme_type = None, version = None, selected_classes = ''):
+    if scheme_type is None:
+        scheme_type = request.args.get("scheme_type")
+    if version is None:
+        version = request.args.get("version")
+    if selected_classes == '':
+        selected_classes = request.args.get('selected_classes', '')
+
+    scheme_type = scheme_type.lower()
+    selected_classes = selected_classes.split('+')
+
+    class_counts = download_functions.get_class_counts(selected_classes)
+
+    points = {'pvs':8, 'ps':4, 'pm':2, 'pp':1, 'bp':-1, 'bm':-2, 'bs':-4, 'bvs':-8, 'ba':-8} #, 'pm2_pp':1, 'bp1_bs':-4, 'pvs1_pp':1
+
+    result = sum([points[criterium_strength.split('_')[-1]] * class_counts[criterium_strength] for criterium_strength in class_counts])
+
+    return {"points": result, "classification": decide_for_class_point_score(result)}
+
+
+def decide_for_class_point_score(score: int) -> int:
+    if score >= 10:
+        return 5
+    if score >= 6:
+        return 4
+    if score <= -7:
+        return 1
+    if score <= -1:
+        return 2
+    return 3
+
+
 # GET VARIANT CLASS BY SCHEME
 @download_blueprint.route('/calculate_class/<string:scheme_type>/<string:version>/<string:selected_classes>')
 @download_blueprint.route('/calculate_class/<string:scheme_type>/<string:version>/')

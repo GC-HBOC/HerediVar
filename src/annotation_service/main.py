@@ -14,40 +14,40 @@ from mysql.connector import InternalError
 def get_default_job_config():
     job_config = {
         # heredicare annotations
-        'do_heredicare': True,
+        'do_heredicare': False,
 
         # external programs
-        'do_phylop': True,
-        'do_spliceai': True,
-        'do_hexplorer': True,
-        'do_maxentscan': True,
+        'do_phylop': False,
+        'do_spliceai': False,
+        'do_hexplorer': False,
+        'do_maxentscan': False,
 
         # consequences
-        'do_consequence': True,
-        'do_vep': True,
+        'do_consequence': False,
+        'do_vep': False,
 
         #vcf annotate from vcf
-        'do_dbsnp': True,
-        'do_revel': True,
-        'do_cadd': True,
-        'do_clinvar': True,
-        'do_gnomad': True,
-        'do_brca_exchange': True,
-        'do_flossies': True,
+        'do_dbsnp': False,
+        'do_revel': False,
+        'do_cadd': False,
+        'do_clinvar': False,
+        'do_gnomad': False,
+        'do_brca_exchange': False,
+        'do_flossies': False,
         
-        'do_tp53_database': True,
-        'do_priors': True,
-        'do_bayesdel': True,
-        'do_cosmic': True,
+        'do_tp53_database': False,
+        'do_priors': False,
+        'do_bayesdel': False,
+        'do_cosmic': False,
 
         # assays
-        'do_cspec_brca_assays': True,
+        'do_cspec_brca_assays': False,
 
         # additional annotations
-        'do_cancerhotspots': True,
-        'do_taskforce_domains': True,
-        'do_coldspots': True,
-        'do_litvar': True,
+        'do_cancerhotspots': False,
+        'do_taskforce_domains': False,
+        'do_coldspots': False,
+        'do_litvar': False,
         'do_auto_class': True
 
         # outdated

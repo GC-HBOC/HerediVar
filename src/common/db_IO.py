@@ -1315,10 +1315,10 @@ class Connection:
         result = self.cursor.fetchall()
         return [x[0] for x in result]
 
-    def insert_consensus_classification(self, user_id, variant_id, consensus_classification, comment, evidence_document, date, scheme_id, scheme_class):
+    def insert_consensus_classification(self, user_id, variant_id, consensus_classification, comment, evidence_document, date, scheme_id, scheme_class, point_score, point_class):
         self.invalidate_previous_consensus_classifications(variant_id)
-        command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document, classification_scheme_id, scheme_class) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (user_id, variant_id, str(consensus_classification), comment, date, evidence_document.decode(), scheme_id, scheme_class))
+        command = "INSERT INTO consensus_classification (user_id, variant_id, classification, comment, date, evidence_document, classification_scheme_id, scheme_class, point_score, point_class) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (user_id, variant_id, str(consensus_classification), comment, date, evidence_document.decode(), scheme_id, scheme_class, point_score, str(point_class)))
         self.conn.commit()
 
     def update_consensus_classification_report(self, consensus_classification_id, report):
@@ -1445,7 +1445,7 @@ class Connection:
         return [x[0] for x in result]
 
     def get_consensus_classification(self, variant_id, most_recent = False, sql_modifier=None): # it is possible to have multiple consensus classifications
-        command = "SELECT id,user_id,variant_id,classification,comment,date,is_recent,classification_scheme_id,scheme_class,needs_heredicare_upload,needs_clinvar_upload FROM consensus_classification WHERE variant_id = %s"
+        command = "SELECT id,user_id,variant_id,classification,comment,date,is_recent,classification_scheme_id,scheme_class,needs_heredicare_upload,needs_clinvar_upload,point_score,point_class FROM consensus_classification WHERE variant_id = %s"
         if most_recent:
             command = command  + " AND is_recent = '1'"
         else:
@@ -1461,7 +1461,7 @@ class Connection:
         return result
 
     def get_user_classifications(self, variant_id, user_id = 'all', scheme_id = 'all', sql_modifier = None):
-        command = "SELECT id, classification, variant_id, user_id, comment, date, classification_scheme_id, scheme_class FROM user_classification WHERE variant_id=%s AND deleted_date IS NULL"
+        command = "SELECT id, classification, variant_id, user_id, comment, date, classification_scheme_id, scheme_class, point_score, point_class FROM user_classification WHERE variant_id=%s AND deleted_date IS NULL"
         actual_information = (variant_id, )
         if user_id != 'all':
             command = command + ' AND user_id=%s'
@@ -1647,14 +1647,14 @@ class Connection:
         self.cursor.execute(command, (scheme_id, ))
         self.conn.commit()
 
-    def insert_user_classification(self, variant_id, classification, user_id, comment, date, scheme_id, scheme_class):
-        command = "INSERT INTO user_classification (variant_id, classification, user_id, comment, date, classification_scheme_id, scheme_class) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, str(classification), user_id, comment, date, scheme_id, str(scheme_class)))
+    def insert_user_classification(self, variant_id, classification, user_id, comment, date, scheme_id, scheme_class, point_score, point_class):
+        command = "INSERT INTO user_classification (variant_id, classification, user_id, comment, date, classification_scheme_id, scheme_class, point_score, point_class) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, str(classification), user_id, comment, date, scheme_id, str(scheme_class), point_score, str(point_class)))
         self.conn.commit()
 
-    def update_user_classification(self, user_classification_id, classification, comment, date, scheme_class):
-        command = "UPDATE user_classification SET classification = %s, comment = %s, date = %s, scheme_class = %s WHERE id = %s"
-        self.cursor.execute(command, (str(classification), comment, date, str(scheme_class), user_classification_id))
+    def update_user_classification(self, user_classification_id, classification, comment, date, scheme_class, point_score, point_class):
+        command = "UPDATE user_classification SET classification = %s, comment = %s, date = %s, scheme_class = %s, point_score = %s, point_class = %s WHERE id = %s"
+        self.cursor.execute(command, (str(classification), comment, date, str(scheme_class), point_score, str(point_class), user_classification_id))
         self.conn.commit()
 
 
@@ -2366,6 +2366,9 @@ class Connection:
                     scheme_class = cl_raw[8]
                     needs_heredicare_upload = cl_raw[9] == 1
                     needs_clinvar_upload = cl_raw[10] == 1
+                    point_score = cl_raw[11]
+                    point_class = cl_raw[12]
+
 
                     # get further information from database (could use join to get them as well)
                     current_userinfo = self.get_user(user_id = cl_raw[1]) # id,username,first_name,last_name,affiliation
@@ -2406,7 +2409,19 @@ class Connection:
                         literatures.append(new_literature)
 
                     # save the new classification object
-                    new_classification = models.Classification(id = classification_id, type = 'consensus classification', selected_class=selected_class, comment=comment, date=date, submitter=user, scheme=scheme, literature = literatures, needs_heredicare_upload=needs_heredicare_upload, needs_clinvar_upload=needs_clinvar_upload)
+                    new_classification = models.Classification(
+                        id = classification_id, 
+                        type = 'consensus classification', 
+                        selected_class=selected_class, 
+                        comment=comment, 
+                        date=date, 
+                        submitter=user, 
+                        scheme=scheme, 
+                        literature = literatures,
+                        point_score = point_score,
+                        point_class = point_class,
+                        needs_heredicare_upload=needs_heredicare_upload, needs_clinvar_upload=needs_clinvar_upload
+                    )
                     consensus_classifications.append(new_classification)
 
 
@@ -2424,6 +2439,8 @@ class Connection:
                     date = cl_raw[5].strftime('%Y-%m-%d %H:%M:%S')
                     classification_id = int(cl_raw[0])
                     scheme_class = cl_raw[7]
+                    point_score = cl_raw[8]
+                    point_class = cl_raw[9]
 
                     # get further information
                     current_userinfo = self.get_user(user_id = cl_raw[3])
@@ -2464,7 +2481,18 @@ class Connection:
                         new_literature = models.SelectedLiterature(id = literature_raw[0], pmid = literature_raw[2], text_passage = literature_raw[3])
                         literatures.append(new_literature)
                     
-                    new_user_classification = models.Classification(id = classification_id, type = 'user classification', selected_class=selected_class, comment=comment, date=date, submitter=user, scheme=scheme, literature = literatures)
+                    new_user_classification = models.Classification(
+                        id = classification_id, 
+                        type = 'user classification', 
+                        selected_class=selected_class, 
+                        comment=comment, 
+                        date=date, 
+                        submitter=user, 
+                        scheme=scheme, 
+                        literature = literatures,
+                        point_score = point_score,
+                        point_class = point_class
+                    )
                     user_classifications.append(new_user_classification)
 
         automatic_classification = None
@@ -2492,7 +2520,23 @@ class Connection:
                 classification_splicing = automatic_classification_raw[3]
                 classification_protein = automatic_classification_raw[4]
                 date = automatic_classification_raw[5]
-                automatic_classification = models.AutomaticClassification(id = automatic_classification_id, scheme_id = scheme_id, scheme_display_title = scheme_display_title, classification_splicing = classification_splicing, classification_protein = classification_protein, date = date, criteria = all_criteria)
+                point_class_splicing = automatic_classification_raw[6]
+                point_score_splicing = automatic_classification_raw[7]
+                point_class_protein = automatic_classification_raw[8]
+                point_score_protein = automatic_classification_raw[9]
+                automatic_classification = models.AutomaticClassification(
+                    id = automatic_classification_id, 
+                    scheme_id = scheme_id, 
+                    scheme_display_title = scheme_display_title, 
+                    classification_splicing = classification_splicing, 
+                    classification_protein = classification_protein, 
+                    point_class_splicing = point_class_splicing,
+                    point_score_splicing = point_score_splicing,
+                    point_class_protein = point_class_protein,
+                    point_score_protein = point_score_protein,
+                    date = date, 
+                    criteria = all_criteria
+                )
 
 
         all_heredicare_annotations = None
@@ -3342,10 +3386,10 @@ class Connection:
 
         return transcripts
     
-    def insert_automatic_classification(self, variant_id, classification_scheme_id, classification_splicing, classification_protein, tool_version):
+    def insert_automatic_classification(self, variant_id, classification_scheme_id, classification_splicing, classification_protein, point_class_splicing, point_score_splicing, point_class_protein, point_score_protein, tool_version):
         date = functions.get_now()
-        command = "INSERT INTO automatic_classification (variant_id, classification_scheme_id, classification_splicing, classification_protein, date, tool_version) VALUES (%s, %s, %s, %s, %s, %s)"
-        self.cursor.execute(command, (variant_id, classification_scheme_id, classification_splicing, classification_protein, date, tool_version))
+        command = "INSERT INTO automatic_classification (variant_id, classification_scheme_id, classification_splicing, classification_protein, date, tool_version, point_class_splicing, point_score_splicing, point_class_protein, point_score_protein) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        self.cursor.execute(command, (variant_id, classification_scheme_id, classification_splicing, classification_protein, date, tool_version, point_class_splicing, point_score_splicing, point_class_protein, point_score_protein))
         self.conn.commit()
         return self.get_last_insert_id()
 
@@ -3361,7 +3405,7 @@ class Connection:
         self.conn.commit()
 
     def get_automatic_classification(self, variant_id):
-        command = "SELECT id, classification_scheme_id, (SELECT display_name FROM classification_scheme WHERE classification_scheme.id = automatic_classification.classification_scheme_id), classification_splicing, classification_protein, date FROM automatic_classification WHERE variant_id = %s"
+        command = "SELECT id, classification_scheme_id, (SELECT display_name FROM classification_scheme WHERE classification_scheme.id = automatic_classification.classification_scheme_id), classification_splicing, classification_protein, date, point_class_splicing, point_score_splicing, point_class_protein, point_score_protein FROM automatic_classification WHERE variant_id = %s"
         self.cursor.execute(command, (variant_id, ))
         result = self.cursor.fetchall() # prevent unfetched result
         if len(result) == 0:

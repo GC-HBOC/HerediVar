@@ -285,8 +285,7 @@ def classify(variant_id):
 
         scheme_id_is_valid = True
         if scheme_id in classification_schemas:
-            scheme_class = variant_functions.get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type'], classification_schemas[scheme_id]['version'])
-            scheme_class = scheme_class.json['final_class']
+            scheme_class, point_class, point_score = variant_functions.get_classification_class(criteria, classification_schemas[scheme_id]['scheme_type'], classification_schemas[scheme_id]['version'])
         else:
             flash("Unknown or deprecated classification scheme provided. Please provide a different one.", "alert-danger")
             scheme_id_is_valid = False
@@ -302,7 +301,7 @@ def classify(variant_id):
         # actually submit the data to the database
         if classification_is_valid and scheme_classification_is_valid and literature_is_valid and scheme_id_is_valid:
             # insert/update the classification itself
-            user_classification_id, classification_received_update, is_new_classification = variant_functions.handle_user_classification(variant, user_id, classification, comment, scheme_id, scheme_class, conn)
+            user_classification_id, classification_received_update, is_new_classification = variant_functions.handle_user_classification(variant, user_id, classification, comment, scheme_id, scheme_class, point_class, point_score, conn)
 
             # insert/update selected literature
             previous_selected_literature = [] # a new classification -> no previous sleected literature
@@ -384,8 +383,7 @@ def consensus_classify(variant_id):
 
         scheme_id_is_valid = True
         if scheme_id in classification_schemas:
-            scheme_class = variant_functions.get_scheme_class(criteria, classification_schemas[scheme_id]['scheme_type'], classification_schemas[scheme_id]['version']) # always calculate scheme class because no scheme is not allowed here!
-            scheme_class = scheme_class.json['final_class']
+            scheme_class, point_class, point_score = variant_functions.get_classification_class(criteria, classification_schemas[scheme_id]['scheme_type'], classification_schemas[scheme_id]['version']) # always calculate scheme class because no scheme is not allowed here!
         else:
             flash("Unknown or deprecated classification scheme provided. Please provide a different one.", "alert-danger")
             scheme_id_is_valid = False
@@ -401,7 +399,7 @@ def consensus_classify(variant_id):
         # actually submit the data to the database
         if classification_is_valid and scheme_classification_is_valid and literature_is_valid and scheme_id_is_valid:
             # insert consensus classification
-            classification_id = variant_functions.handle_consensus_classification(variant, classification, comment, scheme_id, pmids, text_passages, criteria, classification_schemas[scheme_id]['description'], scheme_class, conn)
+            classification_id = variant_functions.handle_consensus_classification(variant, classification, comment, scheme_id, criteria, scheme_class, point_score, point_class, conn)
 
             # insert literature passages
             # classification id never none because we always insert a new classification

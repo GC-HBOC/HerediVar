@@ -86,7 +86,7 @@
         <table class="table table-borderless table-slim" consensus_classification_id="{{ most_recent_consensus_classification.id }}">
             <tbody>
                 <tr class="nsl">
-                    <td class="li-label width_very_small">Data</td>
+                    <td class="li-label width_very_small">General</td>
                     <td class="vertical_align_middle">
                         <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
                             <li id="mrcc_final_class" class="list-group-item noboarder-td">
@@ -116,10 +116,24 @@
                     <td class="vertical_align_middle">
                         <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
                             <li class="list-group-item noboarder-td">
-                                Class by scheme: {{ scheme_determined_class }}
+                                Class by criteria: {{ scheme_determined_class }}
                             </li>
                             <li class="list-group-item noboarder-td">
                                 Scheme: {{ selected_scheme.display_name }}
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+                <tr class="nsl">
+                    <td class="li-label width_very_small">Points</td>
+                    <td class="vertical_align_middle">
+                        <ul class="list-group list-group-horizontal-sm list-nopad-td list-nobackground" >
+                            <li class="list-group-item noboarder-td">
+                                Class by points score: {{ most_recent_consensus_classification.point_class }}
+                            </li>
+                            <li class="list-group-item noboarder-td">
+                                Score: {{ most_recent_consensus_classification.point_score }}
                             </li>
                         </ul>
                     </td>
