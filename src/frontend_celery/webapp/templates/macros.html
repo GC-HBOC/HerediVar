@@ -751,6 +751,15 @@
                 </div>
 
 
+                <div class="form-group sst">
+                    <label class="form-label">Point score</label>
+                    <div id="point_score_wrapper">
+
+                    </div>
+                    <button class="btn btn-primary" type="button" id="add_point_score_select">+</button>
+                </div>
+
+
 
                 
                 <div class="form-group sst d-flex">
@@ -842,15 +851,16 @@
       <tr>
         <th class="visually_hidden">id</th>
         <th class="text_align_center width_minimal">CHROM</th>
-        <th class="width_very_medium">POS</th>
+        <th class="width_small">POS</th>
         <th class="width_very_medium">REF</th>
         <th class="width_very_medium">ALT</th>
         <th class="width_very_small">VARTYPE</th>
         <th class="width_small">HGVS c.</th>
         <th class="width_small">HGVS p.</th>
         <th class="width_very_small">GENE</th>
-        <th class="text_align_center width_small">Automatic classification</th>
-        <th class="text_align_center width_small">Your classification</th>
+        <th class="text_align_center width_very_small">Automatic classification</th>
+        <th class="text_align_center width_very_small">Your classification</th>
+        <th class="text_align_center width_very_small">Consensus point score</th>
         <th class="text_align_center width_small">Consensus classification</th>
       </tr>
     </thead>
@@ -961,7 +971,9 @@
             {% set your_classification = variant.get_recent_user_classification(session['user']['user_id']) %}
             {% if your_classification is not none %} {{ your_classification.selected_class }} {% else %}-{%endif%}
         </td>
-        <!--<td style="text-align:center;">{% if variant[7] is not none %} {{ variant[7] }} {% else %}-{%endif%}</td>-->
+        <td class="text_align_center clickable" data-href="{{ url_for('variant.display', variant_id=variant.id) }}">
+            {{ variant.get_recent_consensus_classification().point_score }}
+        </td>
         <td class="text_align_center clickable" data-href="{{ url_for('variant.display', variant_id=variant.id) }}">
             {% set _consensus_class, _source = variant.get_consensus_class() %}
             {{ render_consensus_classification_label(_consensus_class, _source, '2em') }}
@@ -984,6 +996,10 @@
     data-selected-annotation-type-ids='{{ request.args.getlist("annotation_type_id") | tojson }}'
     data-selected-annotation-operations='{{ request.args.getlist("annotation_operation") | tojson }}'
     data-selected-annotation-values='{{ request.args.getlist("annotation_value") | tojson }}'
+    data-point-score-types='{{ static_information["point_score_types"] | tojson | safe }}'
+    data-selected-point-score-type-ids='{{ request.args.getlist("point_score_type_id") | tojson }}'
+    data-selected-point-score-operations='{{ request.args.getlist("point_score_operation") | tojson }}'
+    data-selected-point-score-values='{{ request.args.getlist("point_score_value") | tojson }}'
 />
 <script src="/static/js/paginated_variants.js"></script>
 

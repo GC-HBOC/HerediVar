@@ -630,7 +630,7 @@ class Connection:
                                  hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, 
                                  include_heredicare_consensus = False, variant_strings = None, variant_types = None, clinvar_upload_states = None,
                                  heredicare_upload_states = None, lookup_list_ids = None, respect_selected_variants = False, selected_variants = None,
-                                 select_all_variants = False, needs_upload = None):
+                                 select_all_variants = False, needs_upload = None, point_score = None):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -789,6 +789,19 @@ class Connection:
                 actual_information += tuple(consensus_without_dash)
                 constraints_complete = functions.enbrace(constraints_complete + " OR " + new_constraints)
             postfix = self.add_constraints_to_command(postfix, constraints_complete)
+        if point_score is not None and len(point_score) > 0:
+            for restriction in point_score:
+                table = restriction[0]
+                operation = restriction[2]
+                value = restriction[3]
+                if table == "consensus_classification":
+                    new_constraints_inner = "SELECT DISTINCT variant_id FROM " + table + " WHERE point_score " + operation + " %s AND is_recent = 1"
+                    actual_information += (value, )
+                if table == "automatic_classification":
+                    new_constraints_inner = "SELECT DISTINCT variant_id FROM " + table + " WHERE point_score_splicing " + operation + " %s or point_score_protein " + operation + " %s"
+                    actual_information += (value, value)
+                new_constraints = "id IN (" + new_constraints_inner + ")"
+                postfix = self.add_constraints_to_command(postfix, new_constraints)
         if user is not None and len(user) > 0:
             new_constraints_inner = ''
             user_without_dash = [value for value in user if value != '-']

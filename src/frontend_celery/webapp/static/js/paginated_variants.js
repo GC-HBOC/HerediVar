@@ -7,6 +7,10 @@ const annotation_types = JSON.parse(flask_data.dataset.annotationTypes)
 const selected_annotation_type_ids = JSON.parse(flask_data.dataset.selectedAnnotationTypeIds)
 const selected_annotation_operations = JSON.parse(flask_data.dataset.selectedAnnotationOperations)
 const selected_annotation_values = JSON.parse(flask_data.dataset.selectedAnnotationValues)
+const point_score_types = JSON.parse(flask_data.dataset.pointScoreTypes)
+const selected_point_score_type_ids = JSON.parse(flask_data.dataset.selectedPointScoreTypeIds)
+const selected_point_score_operations = JSON.parse(flask_data.dataset.selectedPointScoreOperations)
+const selected_point_score_values = JSON.parse(flask_data.dataset.selectedPointScoreValues)
 
 console.log(annotation_types)
 
@@ -143,15 +147,18 @@ if (document.getElementsByName("lookup_list_name").length == 0) {
 }
 
 
-
+const point_score_wrapper = document.getElementById("point_score_wrapper")
+document.getElementById("add_point_score_select").addEventListener("click", function(e) {
+    create_range_select(point_score_wrapper, point_score_types, "point_score")
+})
 
 
 const annotation_wrapper = document.getElementById("annotation_wrapper")
 document.getElementById("add_annotation_select").addEventListener("click", function(e) {
-    create_annotation_select(annotation_wrapper)
+    create_range_select(annotation_wrapper, annotation_types, "annotation")
 })
 
-function create_annotation_select(parent, annotation_type_id = "", annotation_operation = "", annotation_value = "") {
+function create_range_select(parent, available_types, prefix, type_id = "", operation = "", value = "") {
     //<div class="d-flex">
     //<select class="form-select width_small" name="annotation" id="">
     //    <option value="">PhyloP-100way</option> <!-- value = index in annotation_types array -->
@@ -168,34 +175,34 @@ function create_annotation_select(parent, annotation_type_id = "", annotation_op
     const select = document.createElement('select')
     select.classList.add("form-select")
     select.classList.add("width_very_medium")
-    select.setAttribute("name", "annotation_type_id")
+    select.setAttribute("name", prefix + "_type_id")
     wrapper.appendChild(select)
 
-    for (var i = 0; i < annotation_types.length; i++) {
-        var current_annotation_type = annotation_types[i]
+    for (var i = 0; i < available_types.length; i++) {
+        var current_type = available_types[i]
         var option = document.createElement('option')
-        option.value = current_annotation_type['id']
-        option.innerText = current_annotation_type['display_title']
-        if (annotation_type_id == current_annotation_type['id']) { // preselect
+        option.value = current_type['id']
+        option.innerText = current_type['display_title']
+        if (type_id == current_type['id']) { // preselect
             option.selected = 'selected'
         }
         select.appendChild(option)
     }
 
-    const operation = document.createElement("input")
-    operation.classList.add("form-control")
-    operation.classList.add("width_minimal")
-    operation.setAttribute("placeholder", ">=")
-    operation.setAttribute("name", "annotation_operation")
-    operation.value = annotation_operation
-    wrapper.appendChild(operation)
+    const operation_inp = document.createElement("input")
+    operation_inp.classList.add("form-control")
+    operation_inp.classList.add("width_minimal")
+    operation_inp.setAttribute("placeholder", ">=")
+    operation_inp.setAttribute("name", prefix + "_operation")
+    operation_inp.value = operation
+    wrapper.appendChild(operation_inp)
 
-    const value = document.createElement("input")
-    value.classList.add("form-control")
-    value.setAttribute("placeholder", "5")
-    value.setAttribute("name", "annotation_value")
-    value.value = annotation_value
-    wrapper.appendChild(value)
+    const value_inp = document.createElement("input")
+    value_inp.classList.add("form-control")
+    value_inp.setAttribute("placeholder", "5")
+    value_inp.setAttribute("name", prefix + "_value")
+    value_inp.value = value
+    wrapper.appendChild(value_inp)
 
     const delete_button = document.createElement("button")
     delete_button.setAttribute("type", "button")
@@ -208,23 +215,38 @@ function create_annotation_select(parent, annotation_type_id = "", annotation_op
     wrapper.appendChild(delete_button)
 }
 
+// preselect
 if ((selected_annotation_type_ids.length == selected_annotation_operations.length) && (selected_annotation_type_ids.length == selected_annotation_values.length)) {
-    
     for (var i = 0; i < selected_annotation_type_ids.length; i++) {
         annotation_type_id = selected_annotation_type_ids[i]
         annotation_operation = selected_annotation_operations[i]
         annotation_value = selected_annotation_values[i]
         if (!((annotation_type_id == annotation_types[0]["id"]) && (annotation_operation == "") && (annotation_value == ""))) {
-            create_annotation_select(annotation_wrapper, annotation_type_id = annotation_type_id, annotation_operation = annotation_operation, annotation_value = annotation_value)
+            create_range_select(annotation_wrapper, annotation_types, "annotation", type_id = annotation_type_id, operation = annotation_operation, value = annotation_value)
         }
     }
 }
 
-if (document.getElementsByName("annotation_type_id").length == 0) {
-    create_annotation_select(annotation_wrapper)
+
+if ((selected_point_score_type_ids.length == selected_point_score_operations.length) && (selected_point_score_type_ids.length == selected_point_score_values.length)) {
+    for (var i = 0; i < selected_point_score_type_ids.length; i++) {
+        point_score_type_id = selected_point_score_type_ids[i]
+        point_score_operation = selected_point_score_operations[i]
+        point_score_value = selected_point_score_values[i]
+        if (!((point_score_type_id == point_score_types[0]["id"]) && (point_score_operation == "") && (point_score_value == ""))) {
+            create_range_select(point_score_wrapper, point_score_types, "point_score", type_id = point_score_type_id, operation = point_score_operation, value = point_score_value)
+        }
+    }
 }
 
+// create empty if there were no annotation searches
+if (document.getElementsByName("annotation_type_id").length == 0) {
+    create_range_select(annotation_wrapper, annotation_types, "annotation")
+}
 
+if (document.getElementsByName("point_score_type_id").length == 0) {
+    create_range_select(point_score_wrapper, point_score_types, "point_score")
+}
 
 
 

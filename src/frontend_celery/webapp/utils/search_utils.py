@@ -471,6 +471,61 @@ def sort_annotation_types(a, b):
     return 0
 
 
+def extract_point_score(request_args, point_score_types):
+    type_ids = request_args.get('point_score_type_id', '')
+    operations = request_args.get('point_score_operation', '')
+    values = request_args.get('point_score_value', '')
+
+    restrictions = []
+
+    if type_ids == "":
+        return restrictions
+
+    type_ids = [int(x.strip()) for x in type_ids.split(';')]
+    operations = [x.strip() for x in operations.split(';')]
+    values = [x.strip() for x in values.split(';')]
+
+    valid_point_score_types = [x["id"] for x in point_score_types]
+    
+
+    did_flash = False
+    for type_id, operation, value in zip(type_ids, operations, values):
+
+        # check that all information is there
+        if value == "" and operation == "":
+            continue
+        if value == "" or operation == "":
+            if not did_flash:
+                flash("Missing some information for point score search value and operation must be present. Skipped some point score searches.", "alert-danger")
+            did_flash = True
+            continue
+
+        if type_id not in valid_point_score_types: # check that type id is valid
+            if not did_flash:
+                flash("Unknown point score type(s) given! Skipping unknown ones.", "alert-danger")
+                did_flash = True
+            continue
+
+        # set allowed_operations
+        allowed_operations = ["=", ">", "<", "<=", ">=", "!="]
+        if operation not in allowed_operations:
+            flash("The operation " + operation + " is not allowed for " + point_score_types[type_id]["display_title"] + ". It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
+            continue
+
+        try:
+            value = float(value)
+        except:
+            flash("The value " + str(value) + " is not numeric, but must be numeric for " + point_score_types[type_id]["display_title"], "alert-danger")
+            continue
+
+        new_restriction = [point_score_types[type_id]["table"], type_id, operation, value]
+
+        restrictions.append(new_restriction)
+    
+    return restrictions
+
+
+
 def extract_lookup_list(request_args, user_id, conn: Connection):
     lookup_list_names = request_args.get('lookup_list_name', "").split(';')
     lookup_list_ids = request_args.get('lookup_list_id', "").split(';')
@@ -548,6 +603,10 @@ def get_static_search_information(user_id, conn: Connection):
     allowed_variant_types = ['small_variants', 'insertions', 'deletions', 'delins', 'structural_variant']
     annotation_types = conn.get_annotation_types(exclude_groups = ['ID'])
     annotation_types = preprocess_annotation_types_for_search(annotation_types)
+    point_score_types = [
+        {"id": 0, "display_title": "consensus classification", "table": "consensus_classification"},
+        {"id": 1, "display_title": "automatic classification", "table": "automatic_classification"}
+    ]
     lists = conn.get_lists_for_user(user_id)
     allowed_clinvar_upload_states = conn.get_unique_publish_clinvar_queue_status()
     allowed_heredicare_upload_states = conn.get_unique_publish_heredicare_queue_status()
@@ -556,11 +615,13 @@ def get_static_search_information(user_id, conn: Connection):
         allowed_heredicare_upload_states.remove('skipped')
     return {'sort_bys': sort_bys, 'page_sizes': page_sizes, 'allowed_user_classes': allowed_user_classes, 'allowed_consensus_classes': allowed_consensus_classes, 'allowed_automatic_classes': allowed_automatic_classes,
             'annotation_types': annotation_types, 'allowed_variant_types': allowed_variant_types, 'default_page_size': default_page_size, 'default_sort_by': default_sort_by, 'default_page': default_page, 'lists': lists,
-            'allowed_clinvar_upload_states': allowed_clinvar_upload_states, "allowed_heredicare_upload_states": allowed_heredicare_upload_states, 'allowed_needs_upload': allowed_needs_upload}
+            'allowed_clinvar_upload_states': allowed_clinvar_upload_states, "allowed_heredicare_upload_states": allowed_heredicare_upload_states, 'allowed_needs_upload': allowed_needs_upload, 'point_score_types': point_score_types}
 
 
 
 def get_merged_variant_page(request_args, user_id, static_information, conn:Connection, flash_messages = True, select_all = False, empty_if_no_variants_oi = False, respect_selected_variants = False):
+    static_information = get_static_search_information(user_id, conn)
+
     variant_strings = extract_variants(request_args)
     variant_types = extract_variant_types(request_args, static_information['allowed_variant_types'])
 
@@ -570,6 +631,7 @@ def get_merged_variant_page(request_args, user_id, static_information, conn:Conn
     user_classifications = extract_user_classifications(request_args, static_information['allowed_user_classes'])
     automatic_classifications_splicing = extract_automatic_classifications(request_args, static_information['allowed_automatic_classes'], which="automatic_splicing")
     automatic_classifications_protein = extract_automatic_classifications(request_args, static_information['allowed_automatic_classes'], which="automatic_protein")
+    point_score_restrictions = extract_point_score(request_args, static_information["point_score_types"])
     hgvs = extract_hgvs(request_args)
     #variant_ids_oi = extract_lookup_list(request_args, user_id, conn)
     external_ids = extract_external_ids(request_args)
@@ -581,8 +643,8 @@ def get_merged_variant_page(request_args, user_id, static_information, conn:Conn
     #variant_ids_oi = extract_lookup_list(request_args, user_id, conn)
     variant_ids_oi = extract_variant_ids(request_args)
     lookup_list_ids = extract_lookup_list_ids(request_args, user_id, conn)
-    view_list_id = request_args.get('view', None)
-    if view_list_id is not None and view_list_id not in lookup_list_ids:
+    view_list_id = request_args.get('view', "")
+    if view_list_id != "" and view_list_id not in lookup_list_ids:
         lookup_list_ids.append(view_list_id)
     #if view_list_id == '':
     #    return abort(404)
@@ -636,6 +698,7 @@ def get_merged_variant_page(request_args, user_id, static_information, conn:Conn
         user=user_classifications, 
         automatic_splicing=automatic_classifications_splicing,
         automatic_protein=automatic_classifications_protein,
+        point_score=point_score_restrictions,
         hgvs=hgvs, 
         variant_ids_oi=variant_ids_oi,
         include_heredicare_consensus = include_heredicare_consensus,
