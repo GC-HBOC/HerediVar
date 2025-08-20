@@ -98,7 +98,7 @@ def process_one_request(annotation_queue_id, job_config = get_default_job_config
         # check the variant type
         variant = conn.get_variant(variant_id, include_annotations = False, include_consensus = False, include_user_classifications = False, include_heredicare_classifications = False, include_automatic_classification = False, include_clinvar = False, include_assays = False, include_literature = False, include_external_ids = False) # 0id,1chr,2pos,3ref,4alt
         if variant.variant_type in ['sv']:
-            status = "error"
+            status = "success"
             return "Variant type " + str(variant.variant_type) + " is not supported by the annotation algorithm."
         
         # update the annotation queue status

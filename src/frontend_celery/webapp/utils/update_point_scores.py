@@ -121,3 +121,4 @@ for i, variant_id in enumerate(variant_ids):
 
 
 conn.close()
+

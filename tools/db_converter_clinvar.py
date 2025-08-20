@@ -44,7 +44,7 @@ def read_submission_summary(path):
             continue
         
         parts = line.split('\t')
-        if len(parts) != 15:
+        if len(parts) != 16:
             raise IOError("Line does not have the correct number of columns (13): " + line)
         
         variation_id = parts[0]

@@ -1,0 +1,991 @@
+{
+    "name": "enigma-ATM",
+    "version": "v1.4.0",
+    "display_name": "ClinGen ACMG ATM v1.4.0",
+    "type": "acmg-enigma-atm",
+    "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/0trolwzr/clingen_atm_v1.4.0.pdf/?format=attachment",
+    "aliases": ["ACMG ATM"],
+    "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5"],
+    "criteria": [
+        {
+            "name": "PVS1",
+            "description": [
+                
+                "Original ACMG Summary:",
+                "Null variant (nonsense, frameshift, canonical +/-1 or 2 splice sites, initiation codon, single or multi-exon deletion) in a gene where loss of function (LOF) is a known mechanism of disease.",
+                "Caveats:",
+                " • Beware of genes where LOF is not a known disease mechanism (e.g. GFAP, MYH7).",
+                " • Use caution interpreting LOF variants at the extreme 3' end of a gene.",
+                " • Use caution with splice variants that are predicted to lead to exon skipping but leave the remainder of the protein intact.",
+                " • Use caution in the presence of multiple transcripts.",
+                "",
+                "VCEP Specifications:",
+                "Use ATM PVS1 Decision Tree.",
+                "    PVS1: Predicted splice defect ",
+                "    PVS1_Strength(RNA): Observed splice defect",
+                "    The default RefSeq transcript for nucleotide (c.) annotation is NM_000051.3/ENST00000278616.8. All exons from this transcript can be considered constitutive exons without major alternate splice isoforms that could potentially rescue presumed LoF events (ENIGMA unpublished data).",
+                "    Of note, ATM is occasionally annotated with multiple non-coding first exons so exon numbering must be carefully reviewed for variant interpretation using literature sources of data.",
+                "    The FAT/PI3K/FATC (collectively the FATKIN) domains are considered critical for ATM protein function (PMID 28508083, 31740029, 31320732). PVS1 alterations that are predicted to escape NMD, but that adversely affect these domains can be granted PVS1 (as opposed to PVS1_Strong as the recommended base-line (PMID 30192042). ",
+                "    The HEAT repeat domain is considered important for protein function based on the appearance of many A-T affected individuals harboring a variant resulting in an in-frame, single exon loss in this domain (PMID 10980530, 19535770, 30819809, 15054841, 22927201, 19691550, 10330348, 17124347, 8845835, 16266405, 9463314, 24090759, 22213089). PVS1-eligible alterations that are predicted to escape NMD, but that adversely affect the HEAT repeat domain can be granted PVS1_Strong. They are limited to strong due to a lack of known missense pathogenic alterations in this domain.",
+                "    The most 3'/C-Terminal residue considered to be pathogenic is p.R3047 (PMIDs: 8755918, 19691550, 18560558, 10980530, 26628246)",
+                "    NOTE: Many diagrams for ATM show the FAT, PI3-K and FATC domains as separated by spacers, however these are not empirically derived and there is evidence of missense pathogenic alterations in the 'spacer' regions. This VCEP considers them a contiguous domain (PMID 28508083).",
+                "    PVS1 can be applied as per the PVS1 decision tree.",
+                "        PVS1_Variable(RNA) shall be used for observed splice defects, whether from canonical +/-1,2 positions or other spliceogenic regions (including mid-exonic missense/synonymous variants that cause splice defects) with baseline weight as per the below decision tree. Weight can be further modified based on the quality of the RNA study including consideration of concepts such as:",
+                "        Starting material (where patient material is preferable to in vitro minigene)",
+                "        Use of NMD inhibitors where translation does occur such as cell lines56",
+                "        Primer design (to make sure it's comprehensive to capture possible multicassette events)",
+                "        Method of quantification ",
+                "            where e.g. capillary electrophoresis is preferable to estimation by gel band density",
+                "            where SNP analysis is most preferred (where analysis of exonic SNPs and their relative presence in aberrant and WT transcripts is informative)",
+                "        Quantification (where complete effects should have increased weight over incomplete effects)",
+                "        Specific guidance on the use of RNA evidence in variant assessment is not a gene-specific consideration for PALB2 at this time, therefore discretion is left to assessors until further guidance is provided for this general concept from the Sequence Variant Interpretation group.",
+                "    In the event that RNA data are available and they reflect a substantial variant-specific impact, do not use both PVS1(RNA) and PP3 or BP4. However, in the event that RNA data are available and they reflect no variant-specific impacts, PP3 or BP4 may be applied in conjunction with BP7(RNA)."
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                "PP3", "BP4"
+            ]
+        },
+
+        {
+            "name": "PS1",
+            "description": [
+
+
+                "Original ACMG Summary:",
+                "Same amino acid change as a previously established pathogenic variant regardless of nucleotide change.",
+                "Example: Val->Leu caused by either G>C or G>T in the same codon.",
+                "Caveat: Beware of changes that impact splicing rather than at the amino acid/protein level.",
+                "",
+                "VCEP Specifications:",
+                "    - Use as ascribed for missense changes as long as a splice defect is ruled out for both variants;",
+                "    - Use ATM PS1 Splicing table for splicing variants with similar predictions or observations of splice defect. (PMID: 36865205)",
+                "",
+                "Strong:",
+                "    - Use for missense changes as long as splicing is ruled-out for both alterations. "
+
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "pathogenic Strong:",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS2",
+            "description": [
+
+                "Original ACMG Summary",
+                "De novo (both maternity and paternity confirmed) in a patient with the disease and no family history.",
+                "Note: Confirmation of paternity only is insufficient. Egg donation, surrogate motherhood, errors in embryo transfer, etc. can contribute to non-maternity.",
+                "Not Applicable",
+                "Comments: Do not use for AD or AR disease: Informative de novo occurrences have not yet been observed and de novo AR conditions are unlikely to be informed by phase"
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "pathogenic Strong:",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS3",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Well-established in vitro or in vivo functional studies supportive of a damaging effect on the gene or gene product.",
+                "Note: Functional studies that have been validated and shown to be reproducible and robust in a clinical diagnostic laboratory setting are considered the most well-established.",
+                "",
+                "VCEP Specifications:",
+                "For protein, see detailed notes on ATM-specific assays; For RNA use code PVS1_Strength(RNA) and modulate strength based on assay quality and quantity (curator discretion).",
+                "",
+                "Strong:",
+                "Do not use as strong.",
+                "Moderate:",
+                "Use when a variant fails to rescue both an ATM specifc feature (e.g. phosphorylation of ATM-specific targets) AND radiosensitivity.",
+                "Supporting:",
+                "Use when a variant fails to rescue an ATM specifc feature, only (e.g. phosphorylation of ATM-specific targets). Do not use for radiosensitivity-only as that is not a feature specific to ATM deficiency"
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS4",
+            "description": [
+
+                "Original ACMG Summary:",
+                "The prevalence of the variant in affected individuals is significantly increased compared to the prevalence in controls.",
+                "Note 1: Relative risk (RR) or odds ratio (OR), as obtained from case-control studies, is >5.0 and the confidence interval around the estimate of RR or OR does not include 1.0. See manuscript for detailed guidance.",
+                "Note 2: In instances of very rare variants where case-control studies may not reach statistical significance, the prior observation of the variant in multiple unrelated patients with the same phenotype, and its absence in controls, may be used as moderate level of evidence.",
+                "",
+                "VCEP Specifications:",
+                "PS4_Moderate:",
+                "Do not use. Proband counting for genes causing a common disorder need to be calibrated in a population-specific way before use.",
+                "",
+                "Strong:",
+                "Case-control studies; p-value ≤.05 AND (Odds ratio, hazard ratio, or relative risk  ≥2 OR lower 95% CI ≥1.5)."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "pathogenic Strong:",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM1",
+            "description": [
+
+                "Original ACMG Summary",
+                "Located in a mutational hot spot and/or critical and well-established functional domain (e.g. active site of an enzyme) without benign variation.",
+                "Not Applicable",
+                "Comments: Do not use: Benign and pathogenic variants are known to occur within the same domains and germline mutational hotspots are not well defined at this time"
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM2",
+            "description": [
+
+                "Original ACMG Summary",
+                "Absent from controls (or at extremely low frequency if recessive) in Exome Sequencing Project, 1000 Genomes or Exome Aggregation Consortium.",
+                "Caveat: Population data for indels may be poorly called by next generation sequencing.",
+                "",
+                "VCEP Specifications:",
+                "    - Is not considered a conflicting piece of evidence for variants that otherwise are likely benign/benign ",
+                "    - Use as PM2_Supporting (not moderate)",
+                "",
+                "Supporting:",
+                "Frequency <=.001% in gnomAD v4 dataset",
+                "If n=1 in a single sub population, that is sufficiently rare and PM2_supporting would apply."
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM3",
+            "description": [
+
+
+                "Original ACMG Summary:",
+                "For recessive disorders, detected in trans with a pathogenic variant",
+                "Note: This requires testing of parents (or offspring) to determine phase.",
+                "",
+                "VCEP Specifications:",
+                "See ATM PM3/BP2 table for approach to assign points per proband, and final PM3 code assignment based on the sum of PM3-related points.",
+                "Ataxia Telangiectasia (A-T) is a rare, severe, early-onset disease with some exceptions denoted 'variant' or 'atypical' A-T in which cases phenotypes are more mild with slower progression. Phenotypes associated with A-T are very specific and do not generally require differential diagnosis. Therefore, publications that claim a 'clinical diagnosis of A-T' are taken at face value and granted a 'confident diagnosis. Specific phenotype criteria may qualify for 'confident or 'consistent' diagnosis of A-T based on the below criteria. No additional weight modifications are made for 'atypical' cases if they meet 'confident or 'consistent' criteria as although the disease progression is different, the clinical features are the same.",
+                "Variant may not exceed general population frequency >0.01%. ",
+                "If the variant under assessment has co-occurred with at least 2 different P/LP variants, one co-occurrence must be weighed as phase unknown while the remaining can be assumed in trans",
+                "",
+                "Multiple unrelated cases are additive. For example, one individual with a 'confident A-T phenotype' is homozygous for a variant scores 2.0 points. Another individual who has a 'consistent A-T phenotype' and has the same variant and another phase-unknown truncating ATM variant scores 1.0 points. The total points towards PM3 are 3.0 points leading to PM3 used as its baseline moderate strength.",
+                "",
+                "CONFIDENT PHENOTYPE (must include Laboratory result)",
+                "    Presence of ≥2 Laboratory results 1-4 (see notes) -OR- ",
+                "    Presence of Clinical feature 1a or 1b AND presence of Laboratory result 1 or 2 -OR-",
+                "    Presence of Clinical feature 2 or 3 AND Laboratory result 1 or 2",
+                "",
+                "CONSISTENT PHENOTYPE (does not require laboratory result)",
+                "    Presence of two or more Clinical features of ataxia (1a-1e) -OR-",
+                "    Presence of one Clinical feature 1a or 1b AND either Clinical feature 2 or 3",
+                "",
+                "Clinical features (Neurological and MRI findings):",
+                "    Progressive cerebellar ataxia, manifesting as:",
+                "        a: Progressive truncal/limb ataxia ",
+                "        b: Cerebellar degeneration (atrophy of the frontal and posterior vermis and both hemispheres by MRI).",
+                "        c: Oculomotor apraxia (inability to follow an object across visual fields) or abnormal ocular saccades (rapid refixation from one object to another).",
+                "        d: Choreoathetosis or dystonia (involuntary movements; twisting and repetitive movements, abnormal postures).",
+                "        e: Peripheral axonal neuropathy OR Anterior horn cell neuronopathy",
+                "    Oculocutaneous telangiectasia of the conjunctivae, ears, or face.",
+                "    Immunodeficiency (often frequent infections) and/or leukemia/lymphoma.",
+                "",
+                "Laboratory Results:",
+                "    - ATM protein levels ≤ 15% of controls in patient fibroblast or lymphoblastoid cell lines. If ATM protein levels are slightly greater than 15%, the ATM kinase activity must be shown to be 'negative or low or residual' (see notes).",
+                "    - Elevated serum alpha-fetoprotein (AFP) levels >65ug/L in a patient ≥ 2 years old.",
+                "    - Increased sensitivity to ionizing radiation in patient fibroblast or lymphoblastoid cell lines.",
+                "    - Presence of a 7;14 chromosomal translocation in patient peripheral blood cells (≥ 5% of cells).",
+                "",
+                "Notes:",
+                "    - ATM protein levels ≤15% of control levels show >95% sensitivity and >98% specificity for diagnosing ataxia-telangiectasia (A-T). Protein levels >15% may arise due to a missense variant, a leaky splicing variant, a variant resulting in a kinase-dead protein (where protein levels may not be affected), or a diagnosis other than A-T.",
+                "    - When assigning case report criteria based solely on laboratory results (i.e., presence of TWO or more of laboratory results 1-4), there is a greater likelihood that the most specific laboratory results #1 and #2 will be available, and that there will be some clinical indication that the individual(s) has A-T.",
+                "    - See ATM PM3/BP2 table for approach to assign points per proband.",
+                "",
+                "Very Strong: PM3_VeryStrong ≥ 8 points",
+                "Strong: PM3_Strong = 4 points",
+                "Moderate: PM3 = 2 points",
+                "Supporting: PM3_Supporting = 1 point"
+
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM4",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Protein length changes due to in-frame deletions/insertions in a non-repeat region or stop-loss variants.",
+                "",
+                "VCEP Specifications:",
+                "Do not use for in-frame insertions or deletions less than a single exon. Use for stop-loss variants, only."
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM5",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Novel missense change at an amino acid residue where a different missense change determined to be pathogenic has been seen before.",
+                "Example: Arg156His is pathogenic; now you observe Arg156Cys.",
+                "Caveat: Beware of changes that impact splicing rather than at the amino acid/protein level.",
+                "",
+                "VCEP Specifications:",
+                "    - Based on location of the most C-terminal known pathogenic variant, p.Arg3047*.",
+                "    - Use as PM5_Supporting (not moderate)",
+                "    - Do not use for start-loss variants",
+                "    - Do not use for missense changes: Multiple amino acid substitutions at the same residue can be pathogenic or benign and bioinformatic tools cannot yet confidently distinguish them",
+                "",
+                "Supporting:",
+                "    - Apply to frameshifting or truncating variants with premature termination codons upstream of p.Arg3047.",
+                "    - Apply to splice variants as with premature termination codons upstream of p.Arg3047 where PVS1_VS(RNA) is applied based on high quality observed splicing impact and must be NMD prone."
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM6",
+            "description": [
+
+                "Original ACMG Summary",
+                "Assumed de novo, but without confirmation of paternity and maternity.",
+                "Not Applicable",
+                "Comments: Do not use for AD or AR disease: Informative de novo occurrences have not yet been observed and de novo AR conditions are unlikely to be informed by phase"
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Co-segregation with disease in multiple affected family members in a gene definitively known to cause the disease.",
+                "Note: May be used as stronger evidence with increasing segregation data.",
+                "",
+                "VCEP Specifications:",
+                "    - AR Condition: Affected relatives must have both variants identified in proband.",
+                "    - AD Condition - Do not use: Co-segregation analysis in lower-penetrance genes can lead to false positive results (PMID 32773770)",
+                "",
+                "Strong:",
+                "AR Condition: Segregation in ≥3 affected relatives",
+                "",
+                "Moderate:",
+                "AR Condition: Segregation in 2 affected relatives",
+                "",
+                "Supporting:",
+                "AR Condition: Segregation in 1 affected relative"
+                
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP2",
+            "description": [
+
+                "Original ACMG Summary",
+                "Missense variant in a gene that has a low rate of benign missense variation and where missense variants are a common mechanism of disease.",
+                "Not Applicable",
+                "Comments: Do not use: ATM does not have a defined low rate of missense benign variation."
+                
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP3",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Multiple lines of computational evidence support a deleterious effect on the gene or gene product (conservation, evolutionary, splicing impact, etc.).",
+                "Caveat: As many in silico algorithms use the same or very similar input for their predictions, each algorithm should not be counted as an independent criterion. PP3 can be used only once in any evaluation of a variant.",
+                "",
+                "VCEP Specifications:",
+                "    NOTE: Splice analysis needs to be considered for all variant types (including missense, frameshift, nonsense, etc. as any variant has the potential to impact splicing which may preclude any expected protein effects) ",
+                "    NOTE: PP3 for splice predictions may not be applied in addition to PVS1 or PVS1_Variable(RNA) codes.",
+                "    Use caution in applying the wrong type of computational evidence (protein vs. RNA) towards the cumulative body of evidence for the opposite mechanism.",
+                "    The VCEP uses SpliceAI as a sole predictor due to its ability to accurately predict loss of native splice sites and creation of cryptic sites (Jaganathan et al., 2019). This VCEP recommends SpliceAI thresholds set forth by the SVI in applying PP3 and BP4 to non-canonical splice variants: Apply PP3 for SpliceAI scores ≥0.2 and apply BP4 for SpliceAI scores ≤0.1 (Walker et al., 2023).",
+                "    In the event that RNA data are available and they reflect a substantial variant-specific impact, do not use both PVS1(RNA) and PP3 or BP4. However, in the event that RNA data are available and they reflect no variant-specific impacts, PP3 or BP4 may be applied in conjunction with BP7(RNA).",
+                "",
+                "Supporting:",
+                "    Missense: REVEL >.7333",
+                "    Splicing: Predicted impact via splicing (SpliceAI ≥0.2) for silent, missense/in-frame and for intronic variants outside of donor and acceptor 1,2 sites."
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP4",
+            "description": [
+
+                "Original ACMG Summary",
+                "Patient's phenotype or family history is highly specific for a disease with a single genetic etiology.",
+                "Not Applicable",
+                "Comments: Autosomal Dominant: do not use as breast cancer is a disease with multiple genetic etiology (genetic heterogeneity) and there are no features that can readily distinguish hereditary from sporadic causes. Autosomal Recessive: do not use as a separate line of evidence. Such evidence is built into the Ataxia Telangiectasia PM3|BP2 table"
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP5",
+            "description": [
+
+                "Original ACMG Summary",
+                "Reputable source recently reports variant as pathogenic, but the evidence is not available to the laboratory to perform an independent evaluation.",
+                "Not Applicable",
+                "This criterion is not for use as recommended by the ClinGen Sequence Variant Interpretation VCEP Review Committee. "
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BA1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Allele frequency is above 5% in Exome Sequencing Project, 1000 Genomes or Exome Aggregation Consortium.",
+                "",
+                "VCEP Specifications:",
+                "Follow all SVI general guidance on applying population filters.",
+                "",
+                "Stand Alone",
+                "Grpmax Filtering AF >.5% in gnomAD v4 dataset"
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ba",
+                    "display_name":"alo",
+                    "description": "stand-alone benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Allele frequency is greater than expected for disorder.",
+                "",
+                "VCEP Specifications:",
+                "Follow all SVI general guidance on applying population filters.",
+                "",
+                "Strong:",
+                "Grpmax Filtering AF >.05% in gnomAD v4 dataset"
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS2",
+            "description": [
+
+                "Original ACMG Summary",
+                "Observed in a healthy adult individual for a recessive (homozygous), dominant (heterozygous), or X-linked (hemizygous) disorder, with full penetrance expected at an early age.",
+                "Not Applicable",
+                "Comments: Do not use: ATM has incomplete penetrance."
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS3",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Well-established in vitro or in vivo functional studies show no damaging effect on protein function or splicing.",
+                "",
+                "VCEP Specifications:",
+                "For protein, see detailed notes on ATM-specific assays; ",
+                "For RNA use code BP7_RNA and modulate strength based on assay quality and quantity (curator discretion).",
+                "",
+                "Moderate:",
+                "Use when a variant rescues both an ATM specifc feature (e.g. phosphorylation of ATM-specific targets) AND radiosensitivity.",
+                "",
+                "Supporting:",
+                "Use when a variant rescues EITHER an ATM specifc feature OR rescues radiosensitivity."
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bm",
+                    "display_name":"mod",
+                    "description": "medium benign",
+                    "is_default": "1"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS4",
+            "description": [
+
+                "Original ACMG Summary",
+                "Lack of segregation in affected members of a family.",
+                "Caveat: The presence of phenocopies for common phenotypes (i.e. cancer, epilepsy) can mimic lack of segregation among affected individuals. Also, families may have more than one pathogenic variant contributing to an autosomal dominant disorder, further confounding an apparent lack of segregation.",
+                "Not Applicable",
+                "Comments: AD Condition: Co-segregation analysis in low penetrance genes can lead to false positive results (PMID 32773770) AR Condition: Informative instances of lack of co-segregation in A-T families are too rare to be considered for weight at this time and can also be considered for BP2 if biallelic unaffected patients are observed in an A-T family."
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP1",
+            "description": [
+
+                "Original ACMG Summary",
+                "Missense variant in a gene for which primarily truncating variants are known to cause disease.",
+                "Not Applicable",
+                "Comments: Do not use: Missense pathogenic variants are known for ATM"
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP2",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Observed in trans with a pathogenic variant for a fully penetrant dominant gene/disorder or observed in cis with a pathogenic variant in any inheritance pattern.",
+                "",
+                "VCEP Specifications:",
+                "See ATM PM3/BP2 table for approach to assign points per proband, and final BP2 code assignment based on the sum of BP2-related points. When assessing homozygous or in trans variants (with a likely pathogenic or pathogenic ATM variant) for possible downgrade in an unaffected individual, the individual should be 18 years or older with no evidence of A-T.",
+                "",
+                "Strong: ≤ -4 points",
+                "Moderate: -2 points",
+                "Supporting: = -1 point"
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "0"
+                },
+                {
+                    "name": "bm",
+                    "display_name":"mod",
+                    "description": "medium benign",
+                    "is_default": "0"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP3",
+            "description": [
+
+                "Original ACMG Summary",
+                "In frame-deletions/insertions in a repetitive region without a known function.",
+                "Not Applicable",
+                "Comments: Do not use."
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP4",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Multiple lines of computational evidence suggest no impact on gene or gene product (conservation, evolutionary, splicing impact, etc)",
+                "Caveat: As many in silico algorithms use the same or very similar input for their predictions, each algorithm cannot be counted as an independent criterion. BP4 can be used only once in any evaluation of a variant.",
+                "",
+                "VCEP Specifications:",
+                "    NOTE: Splice analysis needs to be considered for all variant types (including missense, frameshift, nonsense, etc. as any variant has the potential to impact splicing which may preclude any expected protein effects) ",
+                "    NOTE: BP4 for splice predictions may not be applied in conjunction with BP7_Variable(RNA) (a lack of observed RNA defect) ",
+                "    Use caution in applying the wrong type of computational evidence (protein vs. RNA) towards the cumulative body of evidence for the opposite mechanism.",
+                "    The VCEP uses SpliceAI as a sole predictor due to its ability to accurately predict loss of native splice sites and creation of cryptic sites (Jaganathan et al., 2019). This VCEP recommends SpliceAI thresholds set forth by the SVI in applying PP3 and BP4 to non-canonical splice variants: Apply PP3 for SpliceAI scores ≥0.2 and apply BP4 for SpliceAI scores ≤0.1 (Walker et al., 2023).",
+                "    In the event that RNA data are available and they reflect a substantial variant-specific impact, do not use both PVS1(RNA) and PP3 or BP4. However, in the event that RNA data are available and they reflect no variant-specific impacts, PP3 or BP4 may be applied in conjunction with BP7(RNA).",
+                "",
+                "Supporting",
+                "    Missense: REVEL score ≤.249",
+                "    Splicing: No predicted impact via splicing (SpliceAI ≤0.1)."
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                "PVS1"
+            ]
+        },
+
+        {
+            "name": "BP5",
+            "description": [
+
+                "Original ACMG Summary",
+                "Variant found in a case with an alternate molecular basis for disease.",
+                "Not Applicable",
+                "Comments: Do not use: Cases with multiple pathogenic variants have been observed with no noticeable difference in phenotype (e.g. BRCA1 and BRCA2). In addition, ATM has low penetrance and will naturally occur with other pathogenic variants more frequently due to higher tolerance/presence in the general population."
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP6",
+            "description": [
+
+                "Original ACMG Summary",
+                "Reputable source recently reports variant as benign, but the evidence is not available to the laboratory to perform an independent evaluation.",
+                "Not Applicable",
+                "This criterion is not for use as recommended by the ClinGen Sequence Variant Interpretation VCEP Review Committee. "
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP7",
+            "description": [
+
+                "Original ACMG Summary:",
+                "A synonymous variant for which splicing prediction algorithms predict no impact to the splice consensus sequence nor the creation of a new splice site AND the nucleotide is not highly conserved.",
+                "",
+                "VCEP Specifications:",
+                "    BP7: Synonymous and deep intronic",
+                "        Can be used for deep intronic variants beyond (but not including) +7 (donor) and -21 (acceptor)",
+                "        May also apply BP4 to achieve Likely Benign",
+                "        Is not considered a conflicting piece of evidence against a body of evidence supporting a pathogenic splice defect",
+                "    BP7_Variable(RNA): RNA functional studies",
+                "        Lack of aberrant splice defect: Please see PVS1_Variable(RNA) section (above) for guidance on baseline weights and modifications of weight based on quality for RNA assays",
+                "        In the event that RNA data are available and they reflect a substantial variant-specific impact, do not use both PVS1(RNA) and PP3 or BP4. However, in the event that RNA data are available and they reflect no variant-specific impacts, PP3 or BP4 may be applied in conjunction with BP7(RNA).",
+                "",
+                "Strong:",
+                "BP7_Strong(RNA): Observed lack of aberrant RNA defect for silent substitutions and intronic variants. Variable weight applied depending on curator discretion of assay quality.",
+                "",
+                "Moderate:",
+                "BP7_Moderate(RNA): Observed lack of aberrant RNA defect for silent substitutions and intronic variants. Variable weight applied depending on curator discretion of assay quality.",
+                "",
+                "Supporting:",
+                "    BP7: Use for synonymous and deep intronic variants defined as further than (but not including) +7 and further than (but not including) -21 at donor and acceptor sites, respectively.",
+                "    BP7(RNA): Observed lack of aberrant RNA defect for silent substitutions and intronic variants. Variable weight applied depending on curator discretion of assay quality."
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "0"
+                },
+                {
+                    "name": "bm",
+                    "display_name":"mod",
+                    "description": "medium benign",
+                    "is_default": "0"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+
+            ]
+        }
+    ]
+}
