@@ -316,13 +316,13 @@ def calculate_class(scheme_type = None, version = None, selected_classes = ''):
             possible_classes = download_functions.get_possible_classes_enigma_brca2_1_0_0(class_counts) 
         elif 'brca2' in scheme_type and version == "v1.1.0":
             possible_classes = download_functions.get_possible_classes_enigma_brca12_1_1_0(class_counts) 
-        elif 'palb2' in scheme_type and (version == "v1.0.0" or version == "v1.1.0"):
+        elif 'palb2' in scheme_type and (version == "v1.0.0" or version == "v1.1.0" or version == "v1.2.0"):
             possible_classes = download_functions.get_possible_classes_enigma_palb2(class_counts) 
         elif 'tp53' in scheme_type and version == "v1.4.0":
             possible_classes = download_functions.get_possible_classes_enigma_tp53(class_counts) 
         elif 'atm' in scheme_type and version == "v1.1.0":
             possible_classes = download_functions.get_possible_classes_enigma_atm_1_1_0(class_counts) 
-        elif 'atm' in scheme_type and version == "v1.3.0":
+        elif 'atm' in scheme_type and (version == "v1.3.0" or version == "v1.4.0"):
             possible_classes = download_functions.get_possible_classes_enigma_atm_1_3_0(class_counts) 
         elif 'pten' in scheme_type and version == "v3.0.0":
             possible_classes = download_functions.get_possible_classes_enigma_pten(class_counts) 
