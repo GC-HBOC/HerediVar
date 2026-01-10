@@ -331,7 +331,8 @@ def heredicare_upload_one_variant(self, variant_id, vid, user_roles, options, pu
     conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status = status, message = message[:10000], submission_id = submission_id, consensus_classification_id = consensus_classification_id, vid = vid)
 
     if is_insert and vid is not None: # prepopulate the vid such that it is not required to do a new import from heredicare after every insert!
-        conn.insert_external_variant_id(variant_id, vid, conn.get_most_recent_annotation_type_id('heredicare_vid'))
+        if str(vid).isdigit():
+            conn.insert_external_variant_id(variant_id, vid, conn.get_most_recent_annotation_type_id('heredicare_vid'))
 
     conn.close()
 

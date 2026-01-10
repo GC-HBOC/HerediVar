@@ -116,7 +116,10 @@ def import_variants(vids, conn: Connection, user_id, user_roles, import_queue_id
     if status == "success":
         # spawn one task for each variant import
         for vid in vids:
-            _ = start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn)
+            if not str(vid).isdigit():
+                message += " ~ Skipping vid " + str(vid) + " because it is not numeric. ~"
+                continue
+            #_ = start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn)
 
     return status, message
 
@@ -128,8 +131,12 @@ def get_vid_sets(conn: Connection, do_filter = True):
     heredicare_interface = Heredicare()
 
     all_vids_heredicare_raw, status, message = heredicare_interface.get_vid_list()
-    if status == "success":
+    for vid_raw in all_vids_heredicare_raw:
+        if not str(vid_raw["record_id"]).isdigit():
+            status = "error"
+            message += " ~ HerediCaRe VID record id " + str(vid_raw) + " is not numeric! ~"
 
+    if status == "success":
         min_date = None
         if do_filter:
             min_date_1 = conn.get_min_date_heredicare_import(source = "heredicare_complete")
