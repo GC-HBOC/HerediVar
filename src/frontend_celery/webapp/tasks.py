@@ -119,7 +119,7 @@ def import_variants(vids, conn: Connection, user_id, user_roles, import_queue_id
             if not str(vid).isdigit():
                 message += " ~ Skipping vid " + str(vid) + " because it is not numeric. ~"
                 continue
-            #_ = start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn)
+            _ = start_import_one_variant(vid, import_queue_id, user_id, user_roles, conn)
 
     return status, message
 
