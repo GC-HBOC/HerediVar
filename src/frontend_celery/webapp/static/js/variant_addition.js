@@ -190,7 +190,7 @@ function update_clinvar_upload_status(url) {
             }
         },
         error: function(xhr) {
-            print(xhr)
+            console.log(xhr)
             show_clinvar_upload_status("bg-danger", "", "ClinVar internal error")
         }
     })
@@ -267,7 +267,7 @@ function update_heredicare_upload_status(url) {
             }
         },
         error: function(xhr) {
-            print(xhr)
+            console.log(xhr)
             show_heredicare_upload_status("bg-danger", "", "HerediCaRe internal error")
         }
     })

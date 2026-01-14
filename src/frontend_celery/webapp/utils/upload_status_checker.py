@@ -33,23 +33,16 @@ def check_update_clinvar_status(variant_id, publish_queue_ids_oi: list, conn: Co
             message = new_submission_status['message']
             conn.update_publish_clinvar_queue_status(publish_clinvar_queue_id, status, message, accession_id = new_submission_status['accession_id'], last_updated = new_submission_status['last_updated'])
             got_update = True
-    
     if got_update:
         # pull updated information in proper format from database
         clinvar_queue_entries = conn.get_clinvar_queue_entries(publish_queue_ids_oi, variant_id)
 
-        # update the respective needs_upload field if a submission chaged to success
-        needs_clinvar_upload = True
-        for clinvar_queue_entry in clinvar_queue_entries:
-            if clinvar_queue_entry[3] in ["success", "processed"]: #["success", "processed"]:
-                needs_clinvar_upload = False
-            else:
-                needs_clinvar_upload = True
-                break
-
-        if not needs_clinvar_upload:
+    # update the respective needs_upload field if a submission chaged to success
+    for clinvar_queue_entry in clinvar_queue_entries:
+        if clinvar_queue_entry[3] in ["success", "processed"]: #["success", "processed"]:
             consensus_classification_id = clinvar_queue_entry[9]
-            conn.update_consensus_classification_needs_clinvar_upload(consensus_classification_id)
+            if consensus_classification_id is not None and conn.needs_upload_clinvar(consensus_classification_id):
+                conn.update_consensus_classification_needs_clinvar_upload(consensus_classification_id)
 
     return clinvar_queue_entries
 
@@ -70,7 +63,7 @@ def check_update_heredicare_status(variant_id, publish_queue_ids_oi: list, conn:
         return None
 
     # pull new information from external
-    got_update = False
+    got_update = True
     for heredicare_queue_entry in heredicare_queue_entries:
         publish_heredicare_queue_id = heredicare_queue_entry[0]
         status = heredicare_queue_entry[1]
@@ -79,22 +72,16 @@ def check_update_heredicare_status(variant_id, publish_queue_ids_oi: list, conn:
             finished_at, status, message = check_heredicare_status(submission_id)
             conn.update_publish_heredicare_queue_status(publish_heredicare_queue_id, status, message, finished_at = finished_at)
             got_update = True
-    
     if got_update:
         # pull the updated information from the database (and return that later)
         heredicare_queue_entries = conn.get_heredicare_queue_entries(publish_queue_ids_oi, variant_id)
 
-        # if an upload was successful update the respective needs_upload field
-        needs_heredicare_upload = True
-        for heredicare_queue_entry in heredicare_queue_entries:
-            if heredicare_queue_entry[1] in ["success"]: #["success", "processed"]:
-                needs_heredicare_upload = False
-            else:
-                needs_heredicare_upload = True
-                break
-        if not needs_heredicare_upload:
+    # if an upload was successful update the respective needs_upload field
+    for heredicare_queue_entry in heredicare_queue_entries: # id, status, requested_at, finished_at, message, vid, variant_id, submission_id, consensus_classification_id, publish_queue_id, needs_heredicare_upload, needs_clinvar_upload
+        if heredicare_queue_entry[1] in ["success"]: #["success", "processed"]:
             consensus_classification_id = heredicare_queue_entry[8]
-            conn.update_consensus_classification_needs_heredicare_upload(consensus_classification_id)
+            if consensus_classification_id is not None and conn.needs_upload_heredicare(consensus_classification_id):
+                conn.update_consensus_classification_needs_heredicare_upload(consensus_classification_id)
 
     return heredicare_queue_entries
 

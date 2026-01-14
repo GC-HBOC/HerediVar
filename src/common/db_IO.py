@@ -1472,6 +1472,22 @@ class Connection:
         if len(result) == 0:
             return None
         return result
+    
+    def needs_upload_heredicare(self, consensus_classification_id):
+        command = "SELECT needs_heredicare_upload FROM consensus_classification WHERE id = %s"
+        self.cursor.execute(command, (consensus_classification_id, ))
+        result = self.cursor.fetchone()
+        if result is not None:
+            return result[0] == 1
+        return result
+
+    def needs_upload_clinvar(self, consensus_classification_id):
+        command = "SELECT needs_clinvar_upload FROM consensus_classification WHERE id = %s"
+        self.cursor.execute(command, (consensus_classification_id, ))
+        result = self.cursor.fetchone()
+        if result is not None:
+            return result[0] == 1
+        return result
 
     def get_user_classifications(self, variant_id, user_id = 'all', scheme_id = 'all', sql_modifier = None):
         command = "SELECT id, classification, variant_id, user_id, comment, date, classification_scheme_id, scheme_class, point_score, point_class FROM user_classification WHERE variant_id=%s AND deleted_date IS NULL"
