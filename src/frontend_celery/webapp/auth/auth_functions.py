@@ -36,17 +36,27 @@ def get_users(username = None):
     url = current_app.config['KEYCLOAK_BASEPATH'] + "/admin/realms/" + current_app.config['KEYCLOAK_REALM'] + "/users"
     token = session['tokenResponse']['access_token']
     header = {'Authorization': f'Bearer {token}', 'Content-Type': 'application/json'}
+    data = {"first": 0, "max": 100}
     if username is not None:
-        data = {'username': username, 'exact': 'true'}
+        data["username"] = username
+        data["exact"] = "true"
+
+    new_users = None
+    all_users = []
+    while new_users is None or len(new_users) != 0:
         resp = requests.get(url = url, params = data, headers = header)
-    else:
-        resp = requests.get(url = url, headers = header)
-    print('Get user: ' + str(resp.status_code))
-    if resp.status_code == 200:
-        users = resp.json()
-        if len(users) == 1:
-            return users[0]
-        return users
+        print('Get user: ' + str(resp.status_code))
+        if resp.status_code == 200:
+            new_users = resp.json()
+            all_users.extend(new_users)
+        else:
+            return abort(resp.status_code)
+        data["first"] += 100
+
+    if len(all_users) == 1:
+        return all_users[0]
+    elif len(all_users) > 0:
+        return all_users
     return None
 
 
