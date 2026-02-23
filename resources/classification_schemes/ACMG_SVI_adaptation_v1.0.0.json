@@ -852,6 +852,12 @@
                     "is_default": "0"
                 },
                 {
+                    "name": "bm",
+                    "display_name":"mod",
+                    "description": "medium benign",
+                    "is_default": "0"
+                },
+                {
                     "name": "bp",
                     "display_name":"sup",
                     "description": "supporting benign",

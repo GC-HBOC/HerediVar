@@ -1,0 +1,1102 @@
+{
+    "name": "enigma-tp53",
+    "version": "v2.4.0",
+    "display_name": "ClinGen ACMG TP53 v2.4.0",
+    "type": "acmg-enigma-tp53",
+    "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/jxqwdo9f/clingen_tp53_v2.4.0.pdf/?format=attachment",
+    "aliases": ["ACMG TP53", "ACMG TP53 Pejaver"],
+    "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5", "5M"],
+    "criteria": [
+        {
+            "name": "PVS1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Null variant (nonsense, frameshift, canonical +/-1 or 2 splice sites, initiation codon, single or multi-exon deletion) in a gene where loss of function (LOF) is a known mechanism of disease.",
+                "Caveats:",
+                " • Beware of genes where LOF is not a known disease mechanism (e.g. GFAP, MYH7).",
+                " • Use caution interpreting LOF variants at the extreme 3' end of a gene.",
+                " • Use caution with splice variants that are predicted to lead to exon skipping but leave the remainder of the protein intact.",
+                " • Use caution in the presence of multiple transcripts.",
+                "",
+                "Very Strong:",
+                "Please utilize the PVS1 decision tree for application of PVS1 code. The decision tree details the specific strengths each type of null variant may be applied at. Please see below for some additional helpful summary details for application of PVS1 code:",
+                "    - Initiation codon:",
+                "        - PVS1 may be applied to initiation codon variants",
+                "    - Nonsense or frameshift variants:",
+                "        - PVS1 applies to variants predicted to result in nonsense-mediated decay (NMD) for nonsense variants upstream of p.Lys351 and for frameshift induced premature termination codon (PTC) upstream of p.Lys351",
+                "        - PVS1_Strong applies to variants not predicted to undergo NMD (nonsense variants downstream of codon 350 or frameshift induced PTC in exon 11 or in the 3' most 50 nucleotides of exon 10) in variants located in the p.Lys351 to p.Ala 355 range",
+                "        - PVS1_Moderate applies to variants not predicted to undergo NMD (nonsense variants downstream of codon 350 or frameshift induced PTC in exon 11 or in the 3' most 50 nucleotides of exon 10) in variants located in the p.Gly356 to p.Asp393 range",
+                "        - PVS1_Moderate may also be applied to frameshift induced PTC downstream of the natural stop codon",
+                "    - Canonical splice variants (+/- 1,2 intronic positions): ",
+                "        - PVS1 applies to predicted splicing alterations that are PTC resulting in NMD (or in-frame but targeting critical domains or residues)",
+                "        - PVS1 applies to predicted splicing alterations that target the start codon (Exon 2 donor)",
+                "        - PVS1_Moderate applied to splicing alterations that are predicted to shorten (<10% of the protein removed) or expand a TP53 C-terminal end of unknown function (E10 donor or E11 acceptor)",
+                "    - Deletions",
+                "        - Full gene deletions: PVS1",
+                "        - Single- to multi-exon deletions that target the initiation codon, preserving the potential rescue ATG (p.Met40) in exon 4: PVS1",
+                "        - Single- to multi-exon deletions that target the initiation codon and the potential rescue ATG (p.Met40) in exon 4: PVS1",
+                "        - Single- to multi-exon deletion that disrupts the reading frame and is predicted to undergo NMD (nonsense or frameshift induced PTC upstream of p.Lys351): PVS1",
+                "        - Single- to multi-exon deletion that disrupts the reading frame and is NOT predicted to undergo NMD (nonsense or frameshift inducted PTC downstream of p.Leu350): PVS1",
+                "        - Single- to multi-exon deletion including the last exon where the truncated/altered region is critical to protein function (any multi-exon combination targeting exon 11): PVS1",
+                "            - If the role of the region in protein function is unknown, if the variant removed < 10% of the protein (deletion of exon 11): PVS1_Moderate",
+                "        - Single- to multi-exon deletion that preserves the reading frame where the truncated/altered region is critical to protein function: PVS1",
+                "    - Duplications (≥1 exon in size and must be completely contained within the TP53 gene)",
+                "        - Proven in tandem. Reading frame is disrupted and NMD predicted to occur (nonsense upstream of p.Lys351 or frameshift-induced PTC upstream of p.Lys351): PVS1",
+                "        - Presumed in tandem. Reading frame presumed disrupted and NMD predicted to occur (nonsense upstream of p.Lys351 or frameshift-induced PTC upstream of p.Lys351): PVS1_Strong",
+                "",
+                "For variants inducing aberrant transcripts identified via mRNA assay, apply as PVS1_Variable Weight (RNA) following recommendations from Walker et al., 2023 (PMID: 37352859), downgrading one strength level if the assay data indicates leakiness.",
+                "Caveats: PS3 should not be applied at any strength if PVS1 is applied at full strength. PP3 should not be used in combination with PVS1.",
+                "",
+                "For the purposes of unified curation, the TP53 domains/important motifs by amino acid range are defined as:",
+                "    - TAD1: aa 17-25",
+                "    - TAD2: aa 48-56",
+                "    - Proline residues: aa 64-92",
+                "    - DNA binding domain: aa 100-292",
+                "    - Hinge domain: aa 293-324",
+                "    - Oligomerization domain: aa 325-356",
+                "    - C-terminal domain (Basic domain): aa 368-387",
+                "    - A disease-specific PVS1 decision tree incorporating the above bullets as well as a supplemental file for TP53 PVS1 Splicing Worksheet is also included as an additional curation tool and has more granular details."
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                "PP3"
+            ]
+        },
+
+        {
+            "name": "PS1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Same amino acid change as a previously established pathogenic variant regardless of nucleotide change.",
+                "Example: Val->Leu caused by either G>C or G>T in the same codon.",
+                "Caveat: Beware of changes that impact splicing rather than at the amino acid/protein level.",
+                "",
+                "VCEP Specifications:",
+                "This rule code can only be used to compare variants asserted as pathogenic or likely pathogenic following the ClinGen TP53 VCEP's specifications. Must confirm there is no difference using RNA data or SpliceAI (SpliceAI < 0.2). Caveat: If both PS1 and PM5 are met, apply the strongest weight possible for each rule code not to exceed a combined strength of strong (4 points in total).",
+                "",
+                "Strong:",
+                "Can be applied to variants asserted as Pathogenic following the TP53 VCEP's specifications.",
+                "",
+                "Moderate:",
+                "Can be applied to variants asserted as Likely Pathogenic following the TP53 VCEP's specifications."
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS2",
+            "description": [
+
+                "Original ACMG Summary:",
+                "De novo (both maternity and paternity confirmed) in a patient with the disease and no family history.",
+                "Note: Confirmation of paternity only is insufficient. Egg donation, surrogate motherhood, errors in embryo transfer, etc. can contribute to non-maternity.",
+                "",
+                "VCEP Specifications:",
+                "De novo points should be tallied using the table for tallying proband points based on whether maternity and paternity have been confirmed and the type of cancer(s) seen in the proband. This includes probands that are confirmed constitutional mosaics (low TP53 VAF on blood or buccal testing with the mutation detected in non-lymphocyte tissue and/or segregating in children) which may be counted as a confirmed de novo case. For probands with multiple cancers, use the most specific/highest weight cancer to determine point application for that proband. Points for all probands should be tallied to determine the strength of PS2 code application, consistent with SVI guidance. To avoid redundancy and increase consistency, the TP53 VCEP has opted to drop PM6 and use PS2 exclusively for de novo evidence.",
+                "A Table for LFS Cancers for PS2 (and PP1) code application is included on the criteria specification registry.",
+                "",
+                "Very Strong: ≥ 8 points",
+                "Strong: 4-7 points",
+                "Moderate: 2-3 points",
+                "Supporting: 1 point"
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS3",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Well-established in vitro or in vivo functional studies supportive of a damaging effect on the gene or gene product.",
+                "Note: Functional studies that have been validated and shown to be reproducible and robust in a clinical diagnostic laboratory setting are considered the most well-established.",
+                "",
+                "VCEP Specifications:",
+                "Kato et al., 2003 (PMID: 12826609) systematic data performed best on our test set of reference variants. These data thus remain the primary functional assay underlying the classification. Giacomelli et al., 2018 (PMID: 30224644) assays are also systematic and are available for all p53 missense variants. When using cut-offs derived from original publication data (optimal cut-offs separating silent and common cancer variants), they show good concordance with other assays. Giacomelli LOF class can thus be used to support and complement Kato data. If Kato data is supported by Kawaguchi et al., 2005 (PMID: 16007150) in the tetramerization domain and tetramerization is affected, this can be used to apply PS3_Supporting. Both Kato and Giacomelli assays have results available for every possible missense variant. Kotler et al., 2018 (PMID: 29979965) data are available for a large number of variants with different effects, but only for those within the DNA binding domain. They may be used as an additional non-systematic missense LOF assay or for small deletions. The recently published CRISPR-based Funk et al. assay (PMID: 39774325) has results for a limited number of exons. Caveat: Do not apply PS3 at any weight for “missense” variants using assays done at the protein level (such as Kato et al. or Giacomelli et al.) if PP3 is applied based on SpliceAI. If there is any laboratory evidence, including RNA-seq data, of splicing aberration for the genetic variant being assessed, for which PVS1_Variable Weight (RNA) might be considered instead. Functional missense codes should not be applied if PVS1 is applied for splicing. See flowchart for functional rule codes and spreadsheet of functional results for selected assays in Files & Images section.",
+                "",
+                "Data Supporting Functional Classes:",
+                "Kato et al. 2003 (PMID: 12826609) Transactivation Class: Classification based on the median transactivation activity using eight promoters in yeast. Values can be found in the NCI TP53 Database.",
+                "Non-functional: ≤ 20% activity",
+                "Partially-functional: > 20% and ≤ 75% activity",
+                "Functional : > 75% activity (variants showing supertransactivation are treated as Functional)",
+                "",
+                "Giacomelli et al., 2018 (PMID: 30224644): Classification based on results from growth suppression assays in A549 human cells.",
+                "LOF: Etoposide Z-score ≤ -0.21",
+                "No LOF: Etoposide Z-score > -0.21",
+                "",
+                "Kawaguchi et al., 2005 (PMID: 16007150): Classification based on the ability to form an oligomer in yeast.",
+                "Abnormal: Monomer/dimer",
+                "Normal: Tetramer",
+                "",
+                "Kotler et al., 2018 (PMID: 29979965): Classification based on relative fitness scores (RFS) from in vitro growth assays in H1299 human cells",
+                "LOF: RFS ≥ -1.0",
+                "No LOF:  RFS < -1.0",
+                "",
+                "Funk et al., 2025 (PMID: 39774325): Classification based on relative fitness scores (RFS) from CRISPR-mediated saturation mutagenesis in human cancer cells",
+                "LOF: RFS ≥ 0",
+                "No LOF: EFS <0",
+                "",
+                "Other assays: Colony formation assays, growth suppression assays, apoptosis assays, tetramer assays, or knock-in mouse models may be considered.",
+                "Non-systematic assays are harder to calibrate, but if they meet Brnich et al., 2019 (PMID: 31892348) recommendations for the application of functional evidence and they are in agreement with Kato et al., 2003 , they should be taken into account. A large proportion of these assays are documented in the NCI TP53 database and thus can easily be found by curators. Second assays that may be considered include colony formation assays, apoptosis assays, tetramer assays, knock-in mouse models, and growth suppression assays.",
+                "This rule should be used and weighted appropriately for variants with functional evidence of loss of function. Follow SVI guidance regarding control numbers for functional studies. Downgrade to PS3_Moderate if PVS1_Strong is applied. Do not apply PS3 at any strength if PVS1 is applied at full strength.",
+                "See Functional Flowchart for more information and guidance on application of functional rule codes",
+                "",
+                "Strong:",
+                "Non-functional on Kato et al. data AND loss of function (LOF) by the majority of other eligible assays",
+                "",
+                "Moderate:",
+                "Partially functional on Kato et al. data AND loss of function (LOF) by the majority of other available assays",
+                "",
+                "Supporting:",
+                "Non-functional on Kato et al. data AND abnormal on Kawaguchi et al. data regardless of other assays",
+                "PS3_Supporting may also be applied to small deletions that demonstrate LOF on the majority of available assays"
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PS4",
+            "description": [
+
+                "Original ACMG Summary:",
+                "The prevalence of the variant in affected individuals is significantly increased compared to the prevalence in controls.",
+                "Note 1: Relative risk (RR) or odds ratio (OR), as obtained from case-control studies, is >5.0 and the confidence interval around the estimate of RR or OR does not include 1.0. See manuscript for detailed guidance.",
+                "Note 2: In instances of very rare variants where case-control studies may not reach statistical significance, the prior observation of the variant in multiple unrelated patients with the same phenotype, and its absence in controls, may be used as moderate level of evidence.",
+                "",
+                "VCEP Specifications:",
+                "There are two widely used clinical criteria for assessing the likelihood of Li Fraumeni syndrome - Classical and Chompret criteria - with the Chompret criteria being less restrictive. Individuals who meet the Revised Chompret criteria have an estimated ~30% risk of harboring a pathogenic TP53 variant (Bougeard et al., 2015; PMID: 26014290). Members of the TP53 VCEP calculated likelihood ratios (LRs) for patients meeting Classic LFS or Revised Chompret criteria (excluding confirmed constitutional mosaics and carriers of pathogenic variants in other cancer predisposition genes) using multigene panel testing from Ambry Genetics laboratory. Our data demonstrated that individuals meeting Revised Chompret criteria had a LR of > 2.08 to ≤ 4.3 and individuals meeting Classic LFS criteria had a LR of > 4.3 to ≤ 18.7. Therefore, we recommend that probands with TP53 germline variants meeting Revised Chompret should be given 0.5 point and probands meeting Classic LFS criteria should be given 1 point.  Do not apply this code for probands with de novo TP53 variants, in which case PS2_Variable Weight should be applied instead.",
+                "Early-onset breast cancer is the most common malignancy in women with LFS. Breast tumors from TP53 carriers are more likely to be HER2+ than those of non-carriers. Fortuno et al., 2020 (PMID: 32485079) investigated if breast tumor HER2 status has utility as a predictor of TP53 germline variant pathogenicity considering age at diagnosis. Their results showed that the identification of HER2+ breast tumors diagnosed before age 40 equated to Supporting level towards pathogenicity and therefore can be incorporated into TP53 criteria. Unrelated probands who are diagnosed with a HER2+ breast cancer below the age of 40 should be conservatively given 0.5 point. Do not apply this half point to individuals who have been given points for meeting Classical or Chompret criteria due to breast cancer diagnosis <31 years of age.",
+                "Phenotype points in unrelated probands should be tallied using the simplified table for tallying PS4 proband points.",
+                "Caveats: Points attributed to HER2 status may only be applied in unrelated individuals who underwent multigene panel testing with no other pathogenic/likely pathogenic variants in cancer predisposition genes; individuals who underwent targeted TP53 single gene testing may not count towards applied points.Variant must meet PM2_Supporting in order for PS4 to be applied at any strength.",
+                "See simplified table for tallying probing points for PS4",
+                "",
+                "Very Strong: ≥ 8 points",
+                "Strong: ≥ 4-7.5 points",
+                "Moderate: 2-3.5 points",
+                "Supporting: 1-1.5 points"
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pvs",
+                    "display_name":"vstr",
+                    "description": "very strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Located in a mutational hot spot and/or critical and well-established functional domain (e.g. active site of an enzyme) without benign variation.",
+                "",
+                "VCEP Specifications:",
+                "There are several known major hotspots for the TP53 gene. This code can be used for variants within the following codons using canonical transcript NM_000546.4: 175, 245, 248, 249, 273, 282",
+                "This code can also be used for germline missense variants seen in cancerhotspots.org (v2) with ≥ 10 somatic occurrences for the same amino acid change. This follows the recommendation from the ClinGen Germline/Somatic Variant Curation Subcommittee (PMID: 30311369).",
+                "",
+                "Moderate:",
+                "Missense variants within the following codons using transcript NM_00546.4: 175, 245, 248, 249, 273, 282. This code weight can also be used for germline missense variants seen in cancerhotspots.org with ≥ 10 somatic occurrences for the same amino acid change.",
+                "",
+                "Supporting:",
+                "Missense variants seen in cancerhotspots.org with 2-9 somatic occurrences for the same amino acid change."
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM2",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Absent from controls (or at extremely low frequency if recessive) in Exome Sequencing Project, 1000 Genomes or Exome Aggregation Consortium.",
+                "Caveat: Population data for indels may be poorly called by next generation sequencing.",
+                "",
+                "Supporting:",
+                "This rule should be applied at supporting level. Variant should have an allele frequency of less than 0.00003 (0.003%) in gnomAD or another large sequenced population. If multiple alleles are present within any genetic ancestry group, allele frequency in that group must be <0.00004 (0.004%). Genetic ancestry groups influenced by founder effects (such as Ashkenazi Jewish, Finnish, Amish, Middle Eastern, and “Remaining”) should be ignored. ",
+                "If the variant being assessed does not meet any population rule codes (PM2, BA1, BS1) AND has a total allele frequency >0.00003 with no single genetic ancestry group having multiple alleles with a frequency >0.00004, curators should recalculate the total allele frequency based on the number of alleles with variant allele fraction (VAF) >0.35 to assess whether PM2 may be met after excluding the low VAF alleles which are likely to represent clonal hematopoiesis of indeterminant potential (CHIP) contamination in the database. This can be done by visualizing the “allele balance” for heterozygotes under the genotype quality metrics for a given variant. By hovering over the histogram bars, the number of variant carriers for each bar between 0.35 and 0.65 can be totaled and this can be used to revise the allele count to determine the allele frequency that can be used to assess if PM2_Supporting can be met.",
+                "In general, the most recent version of gnomAD should be used when available; however, other population databases or earlier versions of gnomAD may be utilized if they are able to provide information the curator deems necessary for optimal variant classification (e.g, they would provide superior information for a particular variant type; have a larger sample size; or better representation for certain subpopulations, etc.)"
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ],
+            "mutually_inclusive_criteria": [
+                "PS2"
+            ]
+        },
+
+        {
+            "name": "PM3",
+            "description": [
+                "ACMG Summary:",
+                "For recessive disorders, detected in trans with a pathogenic variant",
+                "Note: This requires testing of parents (or offspring) to determine phase.",
+                "Not Applicable",
+                "Comments: This rule does not apply to TP53/Li_Fraumeni syndrome."
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM4",
+            "description": [
+                "ACMG Summary:",
+                "Protein length changes due to in-frame deletions/insertions in a non-repeat region or stop-loss variants.",
+                "Not Applicable",
+                "Comments: This rule should not be used at this time due to limited data."
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM5",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Novel missense change at an amino acid residue where a different missense change determined to be pathogenic has been seen before.",
+                "Example: Arg156His is pathogenic; now you observe Arg156Cys.",
+                "Caveat: Beware of changes that impact splicing rather than at the amino acid/protein level.",
+                "",
+                "VCEP Specifications:",
+                "This code can be applied for a missense change at an amino acid residue where one or more pathogenic/likely pathogenic variants have been identified. The other variant must be interpreted as pathogenic or likely pathogenic following the ClinGen TP53 VCEP's specifications. The previously established pathogenic/likely pathogenic variant must reach a classification of pathogenicity without PM5. ",
+                "Grantham should be used to compare the variants. The variant being evaluated must be equal or worse (value is greater than) than the known pathogenic variant (i.e. the variant residue should be equally chemically different or more chemically different than the known pathogenic residue in comparison to the wild type residue). Splicing should be ruled out with either RNA data or SpliceAI (SpliceAI < 0.2).",
+                "Caveats: If both PS1 and PM5 are met, apply the strongest weight possible for each rule code not to exceed a combined strength of strong (4 points in total).",
+                "",
+                "Strong:",
+                "Missense variant at an amino acid residue where ≥2 different missense variants previously determined to be pathogenic according to the TP53 VCEP's specifications have been seen before.",
+                "",
+                "Moderate:",
+                "Missense variant at an amino acid residue where 1 different missense variant previously determined to be pathogenic according to the TP53 VCEP's specifications has been seen before.",
+                "",
+                "Supporting:",
+                "Missense variant at an amino acid residue where 1 different missense variant previously determined to be likely pathogenic according to the TP53 VCEP's specifications has been seen before. The previously seen likely pathogenic variant must have clinical data that demonstrates pathogenicity (i.e. PS2, PS4, PP1) in order for it to count towards PM5_Supporting code application."
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PM6",
+            "description": [
+
+                "Original ACMG Summary",
+                "Assumed de novo, but without confirmation of paternity and maternity."
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Co-segregation with disease in multiple affected family members in a gene definitively known to cause the disease.",
+                "Note: May be used as stronger evidence with increasing segregation data.",
+                "",
+                "VCEP Specifications:",
+                "Meioses should be counted for individuals who both carry the variant and have a relevant cancer (see LFS cancers table). Meioses can be counted through unaffected obligate carriers. Caution should be used in counting meioses across many families where breast cancer is the only cancer present as this is a common cancer type. It is preferable that breast cancer predisposition syndromes have been ruled out with genetic testing, but this is not required to apply meioses.",
+                "In cases where multiple individuals in a family have a relevant cancer and only tumor testing demonstrating the variant (no germline data), meioses may be applied if the variant has been demonstrated in the germline in at least one individual in the family. (Caveat: Positive tumor testing must exist in multiple family members; meioses should not be applied if there is only positive tumor testing in a single individual. If the variant allele fraction in the tumor is not consistent with the variant being heterozygous it should not count towards meioses. Use caution if the family does not meet Classic LFS criteria). ",
+                "Do not apply PP1 if variant meets BA1/BS1 criteria.",
+                "See Table of LFS cancers for PP1 (and PS2) code application.",
+                "",
+                "Strong:",
+                "Cosegregation must be observed in ≥ 7 meioses across > 1 family",
+                "",
+                "Moderate:",
+                "Cosegregation must be observed in 5-6 meioses in/across 1 or more families",
+                "",
+                "Supporting:",
+                "Cosegregation must be observed in 3-4 meioses in/across 1 or more families"
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ps",
+                    "display_name":"str",
+                    "description": "strong pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                "BA1", "BS1"
+            ]
+        },
+
+        {
+            "name": "PP2",
+            "description": [
+                "Original ACMG Summary",
+                "Missense variant in a gene that has a low rate of benign missense variation and where missense variants are a common mechanism of disease.",
+                "Not Applicable",
+                "Comments: This rule does not apply due to the high number of benign missense variation."
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "PP3",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Multiple lines of computational evidence support a deleterious effect on the gene or gene product (conservation, evolutionary, splicing impact, etc.).",
+                "Caveat: As many in silico algorithms use the same or very similar input for their predictions, each algorithm should not be counted as an independent criterion. PP3 can be used only once in any evaluation of a variant.",
+                "",
+                "VCEP Specifications:",
+                "According to the published study by Fortuno et al., 2018 (PMID: 29775997) comparing the performance of different bioinformatics tools for TP53, the tools selected are aGVGD (not available for single amino acid in-frame deletions) and BayesDel. To investigate potential effects on splicing for intronic, synonymous (silent), and apparent missense variants, the SpliceAI tool was selected based on recommendations from the ClinGen SVI Splicing Subgroup. All variants should be assessed to consider if there are splicing effects predicted. PP3 should not be used in combination with PVS1.",
+                "Missense variants (See Flowchart for application of PP3 and BP4 rule codes for missense variants and spreadsheet of bioinformatics predictions and corresponding preliminary PP3 and BP4 codes in Files & Images section below)",
+                "    - PP3_Moderate: aGVGD Class C65 and BayesDel score ≥ 0.16",
+                "    - PP3: aGVGD class C25-C55 and BayesDel score ≥ 0.16",
+                "",
+                "Single amino acid in-frame deletions (See single aa BayesDel spreadsheet)",
+                "    - PP3: BayesDel score ≥ 0.16",
+                "",
+                "Exonic (including synonymous (silent) variants and apparent “missense” variants or “single amino acid in-frame deletions” for which there is a predicted splice effect) or Intronic Splice Variants (excluding ± 1,2 positions):",
+                "    - PP3: SpliceAI ≥ 0.2",
+                "",
+                "Moderate:",
+                "- Missense variants (See flowchart for application of PP3 and BP4 rules for missense variants)",
+                "- aGVGD Class C65 and BayesDel score ≥ 0.16",
+                "",
+                "Supporting:",
+                "- Missense variants (See flowchart for application of PP3 and BP4 rules for missense variants)",
+                "- aGVGD class C25-C55 and BayesDel score ≥ 0.16",
+                "- Single amino acid inframe deletions (See single aa BayesDel spreadsheet)",
+                "- BayesDel score ≥ 0.16",
+                "- Exonic (including silent variants and apparent “missense” variants or “single amino acid inframe deletions” for which there is a predicted splice effect) or Intronic Splice Variants (excluding ± 1,2 positions):",
+                "- SpliceAI ≥ 0.2"
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                "PVS1"
+            ]
+        },
+
+        {
+            "name": "PP4",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Patient's phenotype or family history is highly specific for a disease with a single genetic etiology.",
+                "",
+                "VCEP Specifications:",
+                "The frequency of likely somatic variants in blood among patients undergoing multigene panel testing is high for variants in TP53 (PMID: 29189820). TP53 variants observed at a low variant allele fraction (VAF) may be due to true constitutional mosaicism (which can be confirmed by observing the variant in other non-lymphocyte tissues; in the tumor at higher VAF; and/or segregating in other family members); technical assay issues; a clone driven by underlying malignancy or previous treatment with chemotherapy; or clonal hematopoiesis of indeterminate potential (CHIP). ",
+                "Positive selection has been proposed to be a mechanism driving clonal hematopoiesis (CH). Fortuno et al., 2022 (PMID: 34906512) demonstrated that the observation of TP53 variants at low VAF is a significant predictor of variant pathogenicity. Likelihood ratios toward pathogenicity associated with a VAF 5-25% corresponded to the ACMG-AMP strength level of moderate, and supporting with VAF 25-35%. Code-weighting for this rule was derived from datasets that are equivalent to the information available to diagnostic laboratories with the aim that this would be accurate for interpretation for low VAF variants in a real world testing situation. Uncertainty about the variant truly being the result of CHIP is built into the code strengths assigned, which therefore excludes confirmed constitutional mosaicism. ",
+                "Caveats: This evidence code assumes a somatic origin of the TP53 variant. PP4 and points towards any phenotype-based rule codes (e.g., PS4, PS2, PP1) cannot be applied in the same individual in combination. This code should not be applied if the low VAF TP53 variant has been identified in a patient with blood cancer. Do not apply this code if variant meets BA1 or BS1. Variant must have been detected on MGPT in order for this code to be applied.",
+                "",
+                "Moderate:",
+                "At least 2 independent observations of the variant with VAF 5-25%.",
+                "",
+                "Supporting:",
+                "Observation of the variant with VAF 5-35% (i.e., once or multiple times with VAF >25-35% and/or once with VAF 5-25%)"
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pm",
+                    "display_name":"mod",
+                    "description": "medium pathogenic",
+                    "is_default": "0"
+                },
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                "BA1", "BS1"
+            ]
+        },
+
+        {
+            "name": "PP5",
+            "description": [
+                "ACMG Summary:",
+                "Reputable source recently reports variant as pathogenic, but the evidence is not available to the laboratory to perform an independent evaluation.",
+                "Not Applicable",
+                "This criterion is not for use as recommended by the ClinGen Sequence Variant Interpretation VCEP Review Committee. "
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "pp",
+                    "display_name":"sup",
+                    "description": "supporting pathogenic",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BA1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Allele frequency is above 5% in Exome Sequencing Project, 1000 Genomes or Exome Aggregation Consortium.",
+                "",
+                "Stand Alone:",
+                "Filtering allele frequency (FAF) of ≥ 0.001 or 0.1% in gnomAD continental subpopulations of a single genetic ancestry group (excluding genetic ancestry groups influenced by founder effects, such as Ashkenazi Jewish, Finnish, Amish, Middle Eastern, and “Remaining”). Genetic ancestry group must have ≥2,000 alleles tested and a minimum of 2 alleles present. Caution should be exerted if the majority of alleles have a variant allele fraction ('allele balance' in gnomAD) below 0.35.  To set the stand-alone benign FAF cutoff, we used the FAF cutoff established for BS1 (0.0003) and increased this cutoff by one order of magnitude to come to a value of 0.001. ",
+                "In general, the most recent version of gnomAD should be used when available; however, other population databases or earlier versions of gnomAD may be utilized if they are able to provide information the curator deems necessary for optimal variant classification (e.g, they would provide superior information for a particular variant type; have a larger sample size; or better representation for certain subpopulations, etc.)"
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "ba",
+                    "display_name":"alo",
+                    "description": "stand-alone benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                "PP1"
+            ]
+        },
+
+        {
+            "name": "BS1",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Allele frequency is greater than expected for disorder.",
+                "",
+                "Strong:",
+                "Filtering allele frequency (FAF) of ≥ 0.0003 but < 0.001 in gnomAD continental subpopulations of a single genetic ancestry group (excluding genetic ancestry groups influenced by founder effects, such as Ashkenazi Jewish, Finnish, Amish, Middle Eastern, and “Remaining”). Genetic ancestry group must have ≥2,000 alleles tested and a minimum of 2 alleles present. Caution should be exerted if the majority of alleles have a variant allele fraction ( “allele balance” in gnomAD) below 0.35. To set the strong benign FAF cutoff, we used a Whiffin-Ware calculation using prevalence of 1 in 5,000 (Lalloo, et al., 2006 PMID: 16644204). Genetic and allelic heterogeneity were set at 100% and penetrance at 30%. ",
+                "In general, the most recent version of gnomAD should be used when available; however, other population databases or earlier versions of gnomAD may be utilized if they are able to provide information the curator deems necessary for optimal variant classification (e.g, they would provide superior information for a particular variant type; have a larger sample size; or better representation for certain subpopulations, etc.)"
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS2",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Observed in a healthy adult individual for a recessive (homozygous), dominant (heterozygous), or X-linked (hemizygous) disorder, with full penetrance expected at an early age.",
+                "",
+                "VCEP Specifications:",
+                "Using TP53 multigene panel testing results from two diagnostic labs, we compared the proportion of cancer-free individuals by age 60 in TP53 carriers vs. TP53-negative controls. Of note, in the internal data the proportion of individuals with sarcoma diagnosed ≥ age 61 was higher in carriers (0.60%) than in non-carriers (0.12%) and was a significant predictor of pathogenicity when included in the model. Based on the correspondence between likelihood ratios of pathogenicity and different levels of strengths for ACMG/AMP rules in the study by Tavtigian et al, 2018 (PMID: 29300386), our most conservative results support the following rules application. Females counted towards BS2 should be unrelated probands. If there is any variant allele frequency (VAF) provided, variants with VAF ≤ 35%, suggestive of somatic origin, should not be included in these counts.",
+                "",
+                "Strong:",
+                "≥ 8 unrelated females who have reached at least 60 years of age without cancer. These individuals all must have come from a single source (single lab, database, etc). Cases cannot be counted across sources. Individuals with a diagnosis of sarcoma ≥ 61 years of age should not be counted towards the BS2 total.",
+                "",
+                "Moderate:",
+                "4-7 unrelated females who have reached at least 60 years of age without cancer. These individuals all must have come from a single source (single lab, database, etc). Cases cannot be counted across sources. Individuals with a diagnosis of sarcoma ≥ 61 years of age should not be counted towards the BS2 total.",
+                "",
+                "Supporting:",
+                "2-3 unrelated females who have reached at least 60 years of age without cancer. These individuals all must have come from a single source (single lab, database, etc). Cases cannot be counted across sources. Individuals with a diagnosis of sarcoma ≥ 61 years of age should not be counted towards the BS2 total."
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                },
+                {
+                    "name": "bm",
+                    "display_name":"mod",
+                    "description": "medium benign",
+                    "is_default": "0"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS3",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Well-established in vitro or in vivo functional studies show no damaging effect on protein function or splicing.",
+                "",
+                "VCEP Specifications:",
+                "This rule should be used and weighted appropriately for variants with functional evidence of loss of function. Follow SVI guidance regarding control numbers for functional studies. Caveat: Do not apply BS3 at any weight for “missense” variants using assays done at the protein level (such as Kato et al. or Giacomelli et al.) if PP3 is applied based on SpliceAI. If there is any laboratory evidence, including RNA-seq data, of splicing aberration for the genetic variant being assessed, for which PVS1_Variable Weight (RNA) might be considered instead. Functional missense codes should not be applied if PVS1 is applied for splicing. See flowchart for functional rule codes and spreadsheet of functional results for selected assays in Files & Images section.",
+                "",
+                "Data Supporting Functional Classes:",
+                "Kato et al. 2003 (PMID: 12826609) Transactivation Class: Classification based on the median transactivation activity using eight promoters in yeast. Values can be found in the NCI TP53 Database.",
+                "Non-functional: ≤ 20% activity",
+                "Partially-functional: > 20% and ≤ 75% activity",
+                "Functional : > 75% activity (variants showing supertransactivation are treated as Functional)",
+                "",
+                "Giacomelli et al., 2018 (PMID: 30224644): Classification based on results from growth suppression assays in A549 human cells.",
+                "LOF: Etoposide Z-score ≤ -0.21",
+                "No LOF: Etoposide Z-score > -0.21  ",
+                "Kawaguchi et al., 2005 (PMID: 16007150): Classification based on the ability to form an oligomer in yeast.",
+                "Abnormal: Monomer/dimer",
+                "Normal: Tetramer",
+                "",
+                "Kotler et al., 2018 (PMID: 29979965): Classification based on relative fitness scores (RFS) from in vitro growth assays in H1299 human cells",
+                "LOF: RFS ≥ -1.0",
+                "No LOF:  RFS < -1.0",
+                "",
+                "Funk et al., 2025 (PMID: 39774325): Classification based on relative fitness scores (RFS) from CRISPR-mediated saturation mutagenesis in human cancer cells",
+                "LOF: RFS ≥ 0",
+                "No LOF: EFS <0",
+                "",
+                "Other assays: Colony formation assays, growth suppression assays, apoptosis assays, tetramer assays, or knock-in mouse models may be considered.",
+                "Non-systematic assays are harder to calibrate, but if they meet Brnich et al., 2019 (PMID: 31892348) recommendations for the application of functional evidence and they are in agreement with Kato et al., 2003 , they should be taken into account. A large proportion of these assays are documented in the NCI TP53 database and thus can easily be found by curators. Second assays that may be considered include colony formation assays, apoptosis assays, tetramer assays, knock-in mouse models, and growth suppression assays.",
+                "See Functional Flowchart for more information and guidance on application of functional rule codes",
+                "",
+                "Strong:",
+                "Functional on Kato et al. data AND no loss of function (LOF) by the majority of available eligible assays",
+                "",
+                "Supporting:",
+                "Partially functional on Kato et al. data AND no evidence of loss of function (LOF) by all available assays",
+                "BS3_Supporting may also be applied to small deletions with available Kotler et al. data that are loss of function (LOF) by the majority of available assays"
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                },
+                {   
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "0"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BS4",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Lack of segregation in affected members of a family.",
+                "Caveat: The presence of phenocopies for common phenotypes (i.e. cancer, epilepsy) can mimic lack of segregation among affected individuals. Also, families may have more than one pathogenic variant contributing to an autosomal dominant disorder, further confounding an apparent lack of segregation.",
+                "",
+                "Strong:",
+                "Lack of segregation in affected family members (i.e. family members diagnosed with LFS-associated cancers as described in Table of LFS Cancers and Points for PS2 and PP1 Code Application)."
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP1",
+            "description": [
+                "ACMG Summary:",
+                "Missense variant in a gene for which primarily truncating variants are known to cause disease.",
+                "Not Applicable",
+                "Comments: This rule code does not apply to these genes, as truncating variants account for only a portion of disease causing variants."
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP2",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Observed in trans with a pathogenic variant for a fully penetrant dominant gene/disorder or observed in cis with a pathogenic variant in any inheritance pattern."
+
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP3",
+            "description": [
+                "ACMG Summary:",
+                "In frame-deletions/insertions in a repetitive region without a known function.",
+                "Not Applicable",
+                "Comments: Do not use this rule at this time."
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP4",
+            "description": [
+
+                "Original ACMG Summary:",
+                "Multiple lines of computational evidence suggest no impact on gene or gene product (conservation, evolutionary, splicing impact, etc)",
+                "Caveat: As many in silico algorithms use the same or very similar input for their predictions, each algorithm cannot be counted as an independent criterion. BP4 can be used only once in any evaluation of a variant.",
+                "",
+                "VCEP Specifications:",
+                "-According to the published study by Fortuno et al., 2018 (PMID: 29775997) comparing the performance of different bioinformatics tools for TP53,  the tools selected are aGVGD (not available for single amino acid in-frame deletions) and BayesDel. To investigate potential effects on splicing for intronic, synonymous (silent), and apparent missense variants, the SpliceAI tool was selected based on recommendations from the ClinGen SVI Splicing Subgroup. All variants should be assessed to consider if there are splicing effects predicted.",
+                "Missense Variants (See Flowchart for application of PP3 and BP4 rule codes for missense variants and spreadsheet of bioinformatics predictions and corresponding preliminary PP3 and BP4 codes in FIles & Images below):",
+                "",
+                "BP4_Moderate: BayesDel ≤ -0.008 irrespective of aGVGD score (except C65, in this case do not apply BP4_Moderate) AND no predicted differences in splicing (SpliceAI < 0.2)",
+                "BP4: BayesDel < 0.16 and > -0.008 irrespective of aGVGD score (except C65, this case do not apply BP4) AND no predicted differences in splicing (SpliceAI < 0.2)",
+                "Single amino acid in-frame deletions (See single aa BayesDel spreadsheet):",
+                "BP4: BayesDel score < 0.16 AND no predicted splicing impact (Splice AI < 0.2)",
+                "Synonymous (silent) or Intronic Variants (outside ± 1,2 positions):",
+                "BP4: SpliceAI ≤ 0.1",
+                "",
+                "Moderate",
+                "- Missense variants (See flowchart for application of PP3 and BP4 rules for missense variants):",
+                "- BayesDel ≤ -0.008 irrespective of aGVGD score (except C65, in this case do not apply BP4_Moderate) AND no predicted differences in splicing (SpliceAI < 0.2)",
+                "",
+                "Supporting",
+                "- Missense variants (See flowchart for application of PP3 and BP4 rules for missense variants):",
+                "- BayesDel < 0.16 and > -0.008 irrespective of aGVGD score (except C65, this case do not apply BP4) AND no predicted differences in splicing (SpliceAI < 0.2)",
+                "- Single amino acid inframe deletions (See single aa BayesDel spreadsheet):",
+                "- BayesDel score < 0.16 AND no predicted splicing impact (Splice AI < 0.2)",
+                "- Silent or Intronic Variants (outside ± 1,2 positions):",
+                "- SpliceAI ≤ 0.1"
+
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bm",
+                    "display_name":"mod",
+                    "description": "medium benign",
+                    "is_default": "0"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP5",
+            "description": [
+                "ACMG Summary:",
+                "Variant found in a case with an alternate molecular basis for disease.",
+                "Not Applicable",
+                "Comments: This rule code is not recommended for use at this time."
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP6",
+            "description": [
+                "ACMG Summary:",
+                "Reputable source recently reports variant as benign, but the evidence is not available to the laboratory to perform an independent evaluation.",
+                "Not Applicable",
+                "This criterion is not for use as recommended by the ClinGen Sequence Variant Interpretation VCEP Review Committee. "
+            ],
+            "is_selectable": "0",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        },
+
+        {
+            "name": "BP7",
+            "description": [
+
+                "Original ACMG Summary:",
+                "A synonymous variant for which splicing prediction algorithms predict no impact to the splice consensus sequence nor the creation of a new splice site AND the nucleotide is not highly conserved.",
+                "",
+                "Strong:",
+                "A (synonymous) silent or intronic variant for which RNA splicing assay data demonstrates no splicing aberration, as per recommendations from Walker et al., 2023 (PMID: 37352859).",
+                "",
+                "Supporting:",
+                "A synonymous (silent) outside of the core splice motif (last three nucleotides and first nucleotide of the exon) or intronic variant at or beyond +7 to -21 positions for which SpliceAI predicts no impact to the splice consensus nor the creation of a new splice site (BP4 is met, SpliceAI ≤ 0.1). No requirement to assess for nucleotide conservation for rule application as per evidence and recommendations in Walker et al., 2023  (PMID: 37352859)."
+
+            ],
+            "is_selectable": "1",
+            "relevant_info": "",
+            "strengths": [
+                {
+                    "name": "bs",
+                    "display_name":"str",
+                    "description": "strong benign",
+                    "is_default": "0"
+                },
+                {
+                    "name": "bp",
+                    "display_name":"sup",
+                    "description": "supporting benign",
+                    "is_default": "1"
+                }
+            ],
+            "mutually_exclusive_criteria": [
+                
+            ]
+        }
+    ]
+}
