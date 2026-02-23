@@ -70,8 +70,6 @@ source $venv/bin/activate
 mkdir -p $basedir/$foldername
 cd $basedir/$foldername
 
-
-
 ## download gnomAD genome data in batches
 pids=""
 failed=0

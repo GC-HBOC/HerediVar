@@ -1,26 +1,16 @@
 #!/bin/bash
-set -e
-set -o pipefail
-#set -o verbose
+set -uo pipefail
 
-helpFunction()
-{
-   echo ""
-   echo "Usage: $0 -w env -h path"
-   echo "This script creates a full backup for HerediVar"
-   echo -e "\t-w Provide 'dev' for development server and 'prod' for production gunicorn server."
-   exit 1 # Exit script after printing help
-}
-
-while getopts "w:" opt
-do
-   case "$opt" in
-      w ) we="$OPTARG" ;;
-      ? ) helpFunction ;; # Print helpFunction in case parameter is non-existent
-   esac
+we=""
+args=("$@")
+for ((i=0; i<${#args[@]}; i++)); do
+  if [[ ${args[i]} == "-w" ]]; then
+    we="${args[i+1]}"
+    break
+  fi
 done
 
-# Print helpFunction in case parameters are empty
+# Print helpFunction in case mandatory parameters are empty
 if [ -z "$we" ]
 then
    echo "Some or all of the parameters are empty";
@@ -29,34 +19,44 @@ fi
 
 export WEBAPP_ENV=$we
 
-echo "Dumping all data, creating backups and creating new HerediVar version...."
-
-
-
-
-SCRIPT=$(readlink -f "$0")
-ROOT=$(dirname $(dirname $(dirname "$SCRIPT")))
-cd $ROOT
-pwd
-
-source .venv/bin/activate
-
-
-# create new version
-DOWNLOADSDIR=$ROOT/downloads
-full_dump_path=$DOWNLOADSDIR/full_dump
-mkdir -p $full_dump_path
-
+MAIL_SUBJECT_SUCCESS="Backup SUCCESS on $(hostname)"
+MAIL_SUBJECT_FAIL="Backup FAILED on $(hostname)"
 
 DATE=$(date '+%F');
 
-python3 $ROOT/src/frontend_celery/webapp/utils/create_db_version.py -d $DATE
-bgzip $ROOT/downloads/all_variants/$DATE.vcf
+SCRIPT=$(readlink -f "$0")
+ROOT=$(dirname $(dirname $(dirname "$SCRIPT")))
+SCRIPTPATH=$(dirname "$SCRIPT")
+cd $SCRIPTPATH
+pwd
 
-# create data dump backup
-DB_DUMP_DIR=$ROOT/resources/backups/database_dumper
-$DB_DUMP_DIR/dump_database.sh -w $WEBAPP_ENV
+TOOSDIR=$ROOT/tools
 
-# create keycloak backup
-KEYCLOAK_DUMP_DIR=$ROOT/resources/backups/keycloak_export
-$KEYCLOAK_DUMP_DIR/export_keycloak.sh -w $WEBAPP_ENV
+set -o allexport
+extension=env_
+source $ROOT/.$extension$WEBAPP_ENV
+set +o allexport
+
+BACKUP_LOG_DIR=$ROOT/logs/backup
+mkdir -p "$BACKUP_LOG_DIR"
+BACKUP_LOG_FILE="$BACKUP_LOG_DIR/backup_$DATE.log"
+
+./start_dump_worker.sh "$@" >> "$BACKUP_LOG_FILE" 2>&1
+EXIT_CODE=$?
+
+$TOOSDIR/script/cleanup.sh -w $WEBAPP_ENV -p $BACKUP_LOG_DIR -f backup_ -e .log >> "$BACKUP_LOG_FILE" 2>&1
+
+if [ $EXIT_CODE -eq 0 ]; then
+    echo "" >> "$BACKUP_LOG_FILE"
+    echo "Backup completed successfully at $(date)." >> "$BACKUP_LOG_FILE"
+    #mail -aFrom:$BACKUP_MAIL_FROM \
+    #     -s "$MAIL_SUBJECT_SUCCESS" "$BACKUP_MAIL_TO" < "$BACKUP_LOG_FILE"
+else
+    echo "" >> "$BACKUP_LOG_FILE"
+    echo "BACKUP FAILED at $(date) with code $EXIT_CODE." >> "$BACKUP_LOG_FILE"
+    mail -aFrom:$BACKUP_MAIL_FROM \
+         -s "$MAIL_SUBJECT_FAIL" "$BACKUP_MAIL_TO" < "$BACKUP_LOG_FILE"
+fi
+
+
+

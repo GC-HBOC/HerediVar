@@ -242,13 +242,29 @@ def calculate_point_score(scheme_type = None, version = None, selected_classes =
     selected_classes = selected_classes.split('+')
 
     class_counts = download_functions.get_class_counts(selected_classes)
-
+    
     points = {'pvs':8, 'ps':4, 'pm':2, 'pp':1, 'bp':-1, 'bm':-2, 'bs':-4, 'bvs':-8, 'ba':-8} #, 'pm2_pp':1, 'bp1_bs':-4, 'pvs1_pp':1
 
-    result = sum([points[criterium_strength.split('_')[-1]] * class_counts[criterium_strength] for criterium_strength in class_counts])
+    result = sum([points.get(criterium_strength, 0) * class_counts[criterium_strength] for criterium_strength in class_counts])
 
-    return {"points": result, "classification": decide_for_class_point_score(result)}
+    if "tp53" in scheme_type and version == "v2.4.0":
+        final_classification = decide_for_class_point_score_tp53(result)
+    else:
+        final_classification = decide_for_class_point_score(result)
 
+    return {"points": result, "classification": final_classification }
+
+
+def decide_for_class_point_score_tp53(score: int) -> int:
+    if score >= 10:
+        return 5
+    if score >= 6:
+        return 4
+    if score <= -7:
+        return 1
+    if score <= -2:
+        return 2
+    return 3
 
 def decide_for_class_point_score(score: int) -> int:
     if score >= 10:
@@ -312,24 +328,31 @@ def calculate_class(scheme_type = None, version = None, selected_classes = ''):
             possible_classes = download_functions.get_possible_classes_enigma_brca1_1_0_0(class_counts) 
         elif 'brca1' in scheme_type and version == "v1.1.0":
             possible_classes = download_functions.get_possible_classes_enigma_brca12_1_1_0(class_counts) 
+        elif 'brca1' in scheme_type and version == "v1.2.0":
+            possible_classes = download_functions.get_possible_classes_enigma_brca12_1_2_0(class_counts)
         elif 'brca2' in scheme_type and version == "v1.0.0":
             possible_classes = download_functions.get_possible_classes_enigma_brca2_1_0_0(class_counts) 
         elif 'brca2' in scheme_type and version == "v1.1.0":
             possible_classes = download_functions.get_possible_classes_enigma_brca12_1_1_0(class_counts) 
+        elif 'brca2' in scheme_type and version == "v1.2.0":
+            possible_classes = download_functions.get_possible_classes_enigma_brca12_1_2_0(class_counts)
         elif 'palb2' in scheme_type and (version == "v1.0.0" or version == "v1.1.0" or version == "v1.2.0"):
             possible_classes = download_functions.get_possible_classes_enigma_palb2(class_counts) 
         elif 'tp53' in scheme_type and version == "v1.4.0":
             possible_classes = download_functions.get_possible_classes_enigma_tp53(class_counts) 
         elif 'atm' in scheme_type and version == "v1.1.0":
             possible_classes = download_functions.get_possible_classes_enigma_atm_1_1_0(class_counts) 
-        elif 'atm' in scheme_type and (version == "v1.3.0" or version == "v1.4.0"):
+        elif 'atm' in scheme_type and (version == "v1.3.0" or version == "v1.4.0" or version == "v1.5.0"):
             possible_classes = download_functions.get_possible_classes_enigma_atm_1_3_0(class_counts) 
         elif 'pten' in scheme_type and version == "v3.0.0":
             possible_classes = download_functions.get_possible_classes_enigma_pten(class_counts) 
         elif 'pten' in scheme_type and version == "v3.1.0":
             possible_classes = download_functions.get_possible_classes_enigma_pten_310(class_counts) 
         elif any([gene_symbol in scheme_type for gene_symbol in ['pms2', 'mlh1', 'msh2', 'msh6']]) and version == "v1.0.0": # MMR genes
-            possible_classes = download_functions.get_possible_classes_enigma_insight_mmr_100(class_counts) 
+            possible_classes = download_functions.get_possible_classes_enigma_insight_mmr_100(class_counts)
+        elif 'tp53' in scheme_type and  (version == "v2.4.0"):
+            possible_classes = [calculate_point_score(scheme_type, version, '+'.join(selected_classes))["classification"]]
+
         else:
             raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme and version? (either "acmg" or VUS "task-force" based)')
 

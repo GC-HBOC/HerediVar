@@ -773,6 +773,71 @@ def get_possible_classes_enigma_brca12_1_1_0(class_counts):
     return possible_classes
 
 
+
+def get_possible_classes_enigma_brca12_1_2_0(class_counts):
+
+    possible_classes = set()
+
+    # pathogenic
+    #if class_counts['pvs'] >= 2:
+    #    possible_classes.add(5)
+    if class_counts['pvs'] == 1:
+        if class_counts['ps'] >= 1 or class_counts['pm'] >= 1 or class_counts['pp'] >= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] >= 3:
+        possible_classes.add(5)
+    if class_counts['ps'] == 2:
+        if class_counts['pm'] >= 1 or class_counts['pp'] >= 2:
+            possible_classes.add(5)
+    if class_counts['ps'] == 1:
+        if class_counts['pm'] >= 3 or (class_counts['pm'] == 2 and class_counts['pp'] >= 2) or (class_counts['pm'] == 1 and class_counts['pp'] >= 4):
+            possible_classes.add(5)
+    
+    # likely pathogenic
+    if class_counts['pvs'] == 1 and class_counts['pp'] == 1:
+        possible_classes.add(4)
+    if class_counts['ps'] == 2:
+        possible_classes.add(4)
+    if class_counts['ps'] == 1:
+        if (class_counts['pm'] >= 1 and class_counts['pm'] <= 2) or class_counts['pp'] >= 2:
+            possible_classes.add(4)
+    if class_counts['pm'] >= 3:
+        possible_classes.add(4)
+    if class_counts['pm'] == 2 and class_counts['pp'] >= 2:
+        possible_classes.add(4)
+    if class_counts['pm'] == 1 and class_counts['pp'] >= 4:
+        possible_classes.add(4)
+
+    # benign
+    if class_counts['ba'] >= 1:
+        possible_classes.add(1)
+    if class_counts['bvs'] == 1:
+        if class_counts['bs'] == 1 or class_counts['bm'] == 1 or class_counts['bp'] == 1:
+            possible_classes.add(1)
+    if class_counts['bs'] >= 2:
+        possible_classes.add(1)
+    if class_counts['bs'] == 1:
+        if class_counts['bm'] >= 2 or (class_counts['bm'] == 1 and class_counts['bp'] >= 1) or class_counts['bp'] >= 3:
+            possible_classes.add(1)
+
+    # likely benign
+    if class_counts['bs'] == 1:
+        if class_counts['bm'] == 1 or class_counts['bp'] == 1:
+            possible_classes.add(2)
+    if class_counts['bp'] >= 2:
+        possible_classes.add(2)
+    if class_counts['bp1_bs'] == 1:
+        possible_classes.add(2)
+
+    if class_counts['bm'] == 1 and class_counts['bp'] >= 1:
+        possible_classes.add(2)
+
+    #print(class_counts)
+    #print(possible_classes)
+
+    return possible_classes
+
+
 def get_possible_classes_enigma_pms2_100(class_counts):
     possible_classes = set()
 
@@ -845,6 +910,7 @@ def get_possible_classes_enigma_pms2_100(class_counts):
 
 
 def get_possible_classes_enigma_insight_mmr_100(class_counts):
+    print(class_counts)
     possible_classes = set()
 
     # pathogenic
@@ -884,7 +950,7 @@ def get_possible_classes_enigma_insight_mmr_100(class_counts):
     if class_counts['bs'] == 1 and class_counts['bp'] == 1:
         possible_classes.add(2)
     if class_counts['bp'] >= 2:
-        possible_classes.add(1)
+        possible_classes.add(2)
 
     return possible_classes
 

@@ -586,7 +586,7 @@ tp53_update: tp53_clean tp53
 ## gnomad
 GNOMADPATH = $(DBS)
 GNOMADNAME = gnomAD
-GNOMADVERSION = 3.1.2
+GNOMADVERSION = 4.1#3.1.2
 GNOMADMITOVERSION = 3.1
 GNOMAD= $(GNOMADPATH)/$(GNOMADNAME)
 gnomad: genomes venv ngs_bits

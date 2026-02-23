@@ -128,7 +128,7 @@ function criterium_strength_to_description(criterium_strength) {
         return 'strong'
     }
     if (criterium_strength == 'pm') {
-        return 'medium'
+        return 'moderate'
     }
     if (criterium_strength == 'pp') {
         return 'supporting'
@@ -137,7 +137,7 @@ function criterium_strength_to_description(criterium_strength) {
         return 'supporting'
     }
     if (criterium_strength == 'bm') {
-        return "medium"
+        return "moderate"
     }
     if (criterium_strength == 'bs') {
         return 'strong'

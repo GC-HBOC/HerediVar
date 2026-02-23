@@ -987,26 +987,85 @@ class Connection:
             actual_information += tuple(lookup_list_ids) + (len(lookup_list_ids), )
         if needs_upload is not None and len(needs_upload) > 0:
             if 'clinvar' in needs_upload:
+                #new_constraints = """
+                #    SELECT DISTINCT variant_id FROM consensus_classification WHERE needs_clinvar_upload = 1  AND is_recent = 1 and variant_id NOT IN (
+	            #        SELECT publish_clinvar_queue.variant_id FROM publish_clinvar_queue RIGHT JOIN (
+		        #            SELECT variant_id, MAX(requested_at) as requested_at FROM publish_clinvar_queue WHERE status != 'skipped' GROUP BY variant_id
+	            #        )x ON x.requested_at = publish_clinvar_queue.requested_at AND x.variant_id = publish_clinvar_queue.variant_id
+	            #        WHERE status = 'submitted' or status = 'pending' or status = 'progress' or status = 'retry'
+                #    ) AND variant_id NOT IN (SELECT id FROM variant WHERE sv_variant_id IS NOT NULL)
+                #"""
                 new_constraints = """
-                    SELECT DISTINCT variant_id FROM consensus_classification WHERE needs_clinvar_upload = 1  AND is_recent = 1 and variant_id NOT IN (
-	                    SELECT publish_clinvar_queue.variant_id FROM publish_clinvar_queue RIGHT JOIN (
-		                    SELECT variant_id, MAX(requested_at) as requested_at FROM publish_clinvar_queue WHERE status != 'skipped' GROUP BY variant_id
-	                    )x ON x.requested_at = publish_clinvar_queue.requested_at AND x.variant_id = publish_clinvar_queue.variant_id
-	                    WHERE status = 'submitted' or status = 'pending' or status = 'progress' or status = 'retry'
-                    ) AND variant_id NOT IN (SELECT id FROM variant WHERE sv_variant_id IS NOT NULL)
+                    SELECT DISTINCT cc.variant_id
+                    FROM consensus_classification cc
+                    WHERE cc.needs_clinvar_upload = 1
+                      AND cc.is_recent = 1
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM publish_clinvar_queue pq
+                          JOIN (
+                              SELECT variant_id, MAX(requested_at) AS requested_at
+                              FROM publish_clinvar_queue
+                              WHERE status != 'skipped'
+                              GROUP BY variant_id
+                          ) latest
+                            ON latest.variant_id = pq.variant_id
+                           AND latest.requested_at = pq.requested_at
+                          WHERE pq.variant_id = cc.variant_id
+                            AND pq.status IN ('submitted', 'pending', 'progress', 'retry')
+                      )
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM variant v
+                          WHERE v.id = cc.variant_id
+                            AND v.sv_variant_id IS NOT NULL
+                      )
                 """
                 new_constraints = "id IN " + functions.enbrace(new_constraints)
                 postfix = self.add_constraints_to_command(postfix, new_constraints)
             if 'heredicare' in needs_upload:
+                #new_constraints = """
+                #    SELECT DISTINCT variant_id FROM consensus_classification WHERE needs_heredicare_upload = 1  AND is_recent = 1 and variant_id NOT IN (
+	            #        SELECT publish_heredicare_queue.variant_id FROM publish_heredicare_queue RIGHT JOIN (
+		        #            SELECT variant_id, MAX(requested_at) as requested_at FROM publish_heredicare_queue WHERE status != 'skipped' GROUP BY variant_id
+	            #        )x ON x.requested_at = publish_heredicare_queue.requested_at AND x.variant_id = publish_heredicare_queue.variant_id
+	            #        WHERE status = 'submitted' or status = 'pending' or status = 'progress' or status = 'retry'
+                #    ) AND variant_id NOT IN (SELECT id FROM variant WHERE sv_variant_id IS NOT NULL) AND variant_id NOT IN (SELECT variant_id FROM (SELECT * FROM variant_consequence WHERE source = 'ensembl')y
+                #        GROUP BY variant_id 
+                #    HAVING COUNT(exon_nr is not null or intron_nr is not null OR NULL) = 0)
+                #"""
                 new_constraints = """
-                    SELECT DISTINCT variant_id FROM consensus_classification WHERE needs_heredicare_upload = 1  AND is_recent = 1 and variant_id NOT IN (
-	                    SELECT publish_heredicare_queue.variant_id FROM publish_heredicare_queue RIGHT JOIN (
-		                    SELECT variant_id, MAX(requested_at) as requested_at FROM publish_heredicare_queue WHERE status != 'skipped' GROUP BY variant_id
-	                    )x ON x.requested_at = publish_heredicare_queue.requested_at AND x.variant_id = publish_heredicare_queue.variant_id
-	                    WHERE status = 'submitted' or status = 'pending' or status = 'progress' or status = 'retry'
-                    ) AND variant_id NOT IN (SELECT id FROM variant WHERE sv_variant_id IS NOT NULL) AND variant_id NOT IN (SELECT variant_id FROM (SELECT * FROM variant_consequence WHERE source = 'ensembl')y
-                        GROUP BY variant_id 
-                    HAVING COUNT(exon_nr is not null or intron_nr is not null OR NULL) = 0)
+                    SELECT DISTINCT cc.variant_id
+                    FROM consensus_classification cc
+                    WHERE cc.needs_heredicare_upload = 1
+                      AND cc.is_recent = 1
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM publish_heredicare_queue pq
+                          JOIN (
+                              SELECT variant_id, MAX(requested_at) AS requested_at
+                              FROM publish_heredicare_queue
+                              WHERE status != 'skipped'
+                              GROUP BY variant_id
+                          ) latest
+                            ON latest.variant_id = pq.variant_id
+                           AND latest.requested_at = pq.requested_at
+                          WHERE pq.variant_id = cc.variant_id
+                            AND pq.status IN ('submitted', 'pending', 'progress', 'retry')
+                      )
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM variant v
+                          WHERE v.id = cc.variant_id
+                            AND v.sv_variant_id IS NOT NULL
+                      )
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM variant_consequence vc
+                          WHERE vc.variant_id = cc.variant_id
+                            AND vc.source = 'ensembl'
+                            AND (vc.exon_nr IS NOT NULL OR vc.intron_nr IS NOT NULL)
+                      )
                 """
                 new_constraints = "id IN " + functions.enbrace(new_constraints)
                 postfix = self.add_constraints_to_command(postfix, new_constraints)

@@ -6,9 +6,9 @@ set -o pipefail
 helpFunction()
 {
    echo ""
-   echo "Usage: $0 -w env -h path"
-   echo "This script starts the heredivar frontend gunicorn or development server"
-   echo -e "\t-w Provide 'dev' for development server and 'prod' for production gunicorn server."
+   echo "Usage: $0 -w env"
+   echo "This script starts the heredivar database backup"
+   echo -e "\t-w Provide 'dev' for development server and 'prod' for production environment"
    exit 1 # Exit script after printing help
 }
 
