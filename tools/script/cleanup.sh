@@ -71,6 +71,7 @@ cd $dump_path
 for file in $(
     ls -1 ${PREFIX}*${EXT} ${PREFIX}*${EXT}.gz 2>/dev/null | sort -r
 ); do
+    echo $file
     # Extract date: YYYY-MM-DD
     date_str=$(echo "$file" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}') || continue
     file_ts=$(date -d "$date_str" +%s)
@@ -80,7 +81,7 @@ for file in $(
         continue
     fi
 
-    # Case 2: delete older than 1 year
+    # Case 2: delete older than 2 year
     if (( file_ts < DAY_365_AGO )); then
         if [ "$is_dry" = "True" ]; then
             echo "Dry run: Deleting (older than 2 years): $file"
