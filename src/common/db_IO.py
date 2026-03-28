@@ -3110,11 +3110,14 @@ class Connection:
         return result
 
     def get_current_annotation_staus_all_variants(self):
+        #command = """
+        #SELECT a1.variant_id, a1.user_id, a1.requested, a1.status, a1.finished_at, a1.error_message
+        #    FROM annotation_queue a1 LEFT JOIN annotation_queue a2
+        #        ON (a1.variant_id = a2.variant_id AND a1.requested < a2.requested)
+        #WHERE a2.id IS NULL
+        #"""
         command = """
-        SELECT a1.variant_id, a1.user_id, a1.requested, a1.status, a1.finished_at, a1.error_message
-            FROM annotation_queue a1 LEFT JOIN annotation_queue a2
-                ON (a1.variant_id = a2.variant_id AND a1.requested < a2.requested)
-        WHERE a2.id IS NULL
+            SELECT variant_id, user_id, requested, status, finished_at, error_message FROM annotation_queue WHERE id IN (SELECT MAX(id) FROM annotation_queue GROUP BY variant_id)
         """
         self.cursor.execute(command)
         result = self.cursor.fetchall()
