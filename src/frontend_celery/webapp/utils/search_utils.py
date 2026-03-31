@@ -52,14 +52,14 @@ def preprocess_query(query, pattern = '.*', seps = get_search_query_separators()
 #    end = int(parts[2]) - 1 # bed ranges are one based at the end position -> need to substract one because mysql has start and end zero based when using BETWEEN operator
 #    return chrom + ':' + str(start) + '-' + str(end)
 
-def preprocess_ranges(ranges):
+def preprocess_ranges(ranges, flash_messages = True):
     if ranges is None:
         return None
     seps = get_search_query_separators()
     ranges_split = re.split(seps, ranges)
     ranges_split = [preprocess_range_worker(r) for r in ranges_split]
     ranges_split_filtered = [r for r in ranges_split if r is not None] # filter out erroneous
-    if len(ranges_split) != len(ranges_split_filtered):
+    if (len(ranges_split) != len(ranges_split_filtered)) and flash_messages:
         flash("At least one of your range query(s) has an error. Please check the syntax. The erroneous range query(s) were removed. You still have " + str(len(ranges_split_filtered)) + " ranges after removing the erroneous ones.", 'alert-warning')
     ranges_split = ';'.join(ranges_split_filtered)
     return ranges_split
@@ -80,83 +80,80 @@ def preprocess_range_worker(r):
     return r
 
 
-def extract_ranges(request_args):
+def extract_ranges(request_args, flash_messages = True):
     ranges = request_args.get('ranges', '')
     if ranges != '':
-        print(ranges)
         ranges = preprocess_ranges(ranges)
-        print(ranges)
         ranges = preprocess_query(ranges, pattern= r"(chr)?.+-\d+-\d+")
-        print(ranges)
-        if ranges is None:
+        if ranges is None and flash_messages:
             flash("You have an error in your range query(s). Please check the syntax! Results are not filtered by ranges.", "alert-danger")
     else:
         return []
     return ranges
 
 
-def extract_variant_ids(request_args):
+def extract_variant_ids(request_args, flash_messages = True):
     variant_ids = request_args.get('variant_ids', '')
     variant_ids = preprocess_query(variant_ids, pattern=r"\d+")
-    if variant_ids is None:
+    if variant_ids is None and flash_messages:
         flash("You have an error in your variant_ids query(s). Results are not filtered by variant_ids.", "alert-danger")
     return variant_ids
 
-def extract_selected_variants(request_args):
+def extract_selected_variants(request_args, flash_messages = True):
     variant_ids = request_args.get('selected_variants', '')
     variant_ids = preprocess_query(variant_ids, pattern=r"\d+")
-    if variant_ids is None:
+    if variant_ids is None and flash_messages:
         flash("You have an error in your variant_ids query(s). Results are not filtered by variant_ids.", "alert-danger")
     return variant_ids
 
-def extract_genes(request_args):
+def extract_genes(request_args, flash_messages = True):
     genes = request_args.get('genes', '')
     genes = preprocess_query(genes)
-    if genes is None:
+    if genes is None and flash_messages:
         flash("You have an error in your genes query(s). Results are not filtered by genes.", "alert-danger")
     return genes
 
-def extract_variants(request_args):
+def extract_variants(request_args, flash_messages = True):
     variant_strings = request_args.get('variants', '')
     variant_strings = preprocess_query(variant_strings, pattern=r"(chr)?.+-\d+-[a-zA-Z]+-[a-zA-Z]+")
-    if variant_strings is None:
+    if variant_strings is None and flash_messages:
         flash("You have an error in your variant query(s). This form is required: chrom-pos-ref-alt OR chrom-start-end-sv_type in case of structural variants. Results are not filtered by variant strings.", "alert-danger flash_id:search_error_variants")
     return variant_strings
 
-def extract_variant_types(request_args, allowed_variant_types):
+def extract_variant_types(request_args, allowed_variant_types, flash_messages = True):
     variant_types = request_args.get('variant_type', '')
     #variant_types = ';'.join(variant_types)
     regex_inner = '|'.join(allowed_variant_types)
     variant_types = preprocess_query(variant_types, r'(' + regex_inner + r')?')
-    if variant_types is None:
+    if variant_types is None and flash_messages:
         flash("You have an error in your variant type query. Results are not filtered by variant types.", "alert-danger")
     return variant_types
 
 
-def extract_external_ids(request_args):
+def extract_external_ids(request_args, flash_messages = True):
     external_ids = request_args.get('external_ids', '')
     external_ids = preprocess_query(external_ids)
-    if external_ids is None:
+    if external_ids is None and flash_messages:
         flash("You have an error in your external ID query(s). Results are not filtered by external IDs.", "alert-danger")
     return external_ids
 
-def extract_cdna_ranges(request_args):
+def extract_cdna_ranges(request_args, flash_messages = True):
     data = request_args.get('cdna_ranges', '')
 
     data = preprocess_cdna_ranges(data)
     data = preprocess_query(data, pattern = r"[^:]*:[\*-]?\d+([-+]?\d+)?:[\*-]?\d+([-+]?\d+)?")
-    if data is None:
+    if data is None and flash_messages:
         flash("You have an error in your cDNA range query(s). Results are not filtered by cDNA ranges.", "alert-danger")
     return data
 
-def preprocess_cdna_ranges(ranges):
+def preprocess_cdna_ranges(ranges, flash_messages = True):
     if ranges is None:
         return None
     seps = get_search_query_separators()
     ranges_split = re.split(seps, ranges)
     ranges_split = [preprocess_cdna_range_worker(r) for r in ranges_split]
     ranges_split_filtered = [r for r in ranges_split if r is not None] # filter out erroneous
-    if len(ranges_split) != len(ranges_split_filtered):
+    if (len(ranges_split) != len(ranges_split_filtered) and flash_messages):
         flash("At least one of your range query(s) has an error. Please check the syntax. The erroneous range query(s) were removed. You still have " + str(len(ranges_split_filtered)) + " ranges after removing the erroneous ones.", 'alert-danger')
     ranges_split = ';'.join(ranges_split_filtered)
     return ranges_split
@@ -167,77 +164,77 @@ def preprocess_cdna_range_worker(r):
     return r
 
 
-def extract_consensus_classifications(request_args, allowed_classes):
+def extract_consensus_classifications(request_args, allowed_classes, flash_messages = True):
     classes = allowed_classes + ['-']
     consensus_classifications = request_args.get('consensus', '')
     #consensus_classifications = ';'.join(consensus_classifications)
     regex_inner = '|'.join(classes)
     regex_inner = regex_inner.replace('+', '\+')
     consensus_classifications = preprocess_query(consensus_classifications, r'(' + regex_inner + r')?')
-    if consensus_classifications is None:
+    if consensus_classifications is None and flash_messages:
         flash("You have an error in your consensus class query(s). It must consist of a number between 1-5, 3+, 3- or M. Results are not filtered by consensus classification.", "alert-danger")
     include_heredicare = True if request_args.get('include_heredicare_consensus', 'off') == 'on' else False
     return consensus_classifications, include_heredicare
 
-def extract_user_classifications(request_args, allowed_classes):
+def extract_user_classifications(request_args, allowed_classes, flash_messages = True):
     classes = allowed_classes + ['-']
     user_classifications = request_args.get('user', '')
     #user_classifications = ';'.join(user_classifications)
     regex_inner = '|'.join(classes)
     regex_inner = regex_inner.replace('+', '\+')
     user_classifications = preprocess_query(user_classifications, r'(' + regex_inner + r')?')
-    if user_classifications is None:
+    if user_classifications is None and flash_messages:
         flash("You have an error in your user class query(s). It must consist of a number between 1-5, 3+, 3- or M. Results are not filtered by consensus classification.", "alert-danger")
     return user_classifications
 
-def extract_automatic_classifications(request_args, allowed_classes, which):
+def extract_automatic_classifications(request_args, allowed_classes, which, flash_messages = True):
     classes = allowed_classes + ['-']
     automatic_classifications = request_args.get(which, '')
     #automatic_classifications = ';'.join(automatic_classifications)
     regex_inner = '|'.join(classes)
     regex_inner = regex_inner.replace('+', '\+')
     automatic_classifications = preprocess_query(automatic_classifications, r'(' + regex_inner + r')?')
-    if automatic_classifications is None:
+    if automatic_classifications is None and flash_messages:
         flash("You have an error in your consensus class query(s). It must consist of a number between 1-5, 3+, 3- or M. Results are not filtered by consensus classification.", "alert-danger")
     return automatic_classifications
 
 
-def extract_clinvar_upload_states(request_args, allowed_upload_states):
+def extract_clinvar_upload_states(request_args, allowed_upload_states, flash_messages = True):
     regex_inner = '|'.join(allowed_upload_states)
     clinvar_upload_states = request_args.get('clinvar_upload_state', '')
     clinvar_upload_states = preprocess_query(clinvar_upload_states, r'(' + regex_inner + r')?')
-    if clinvar_upload_states is None:
+    if clinvar_upload_states is None and flash_messages:
         flash("You have an error in your clinvar upload state query(s). Must be one of " + str(allowed_upload_states) + " Results are not filtered by clinvar upload states.", "alert-danger")
     return clinvar_upload_states
 
 
-def extract_needs_upload(request_args, allowed_needs_request):
+def extract_needs_upload(request_args, allowed_needs_request, flash_messages = True):
     regex_inner = '|'.join(allowed_needs_request)
     clinvar_upload_states = request_args.get('needs_upload', '')
     clinvar_upload_states = preprocess_query(clinvar_upload_states, r'(' + regex_inner + r')?')
-    if clinvar_upload_states is None:
+    if clinvar_upload_states is None and flash_messages:
         flash("You have an error in your needs upload query(s). Must be one of " + str(allowed_needs_request) + " Results are not filtered by needs upload.", "alert-danger")
     return clinvar_upload_states
 
-def extract_heredicare_upload_states(request_args, allowed_upload_states):
+def extract_heredicare_upload_states(request_args, allowed_upload_states, flash_messages = True):
     regex_inner = '|'.join(allowed_upload_states)
     heredicare_upload_states = request_args.get('heredicare_upload_state', '')
     heredicare_upload_states = preprocess_query(heredicare_upload_states, r'(' + regex_inner + r')?')
-    if heredicare_upload_states is None:
+    if heredicare_upload_states is None and flash_messages:
         flash("You have an error in your heredicare upload state query(s). Must be one of " + str(allowed_upload_states) + " Results are not filtered by heredicare upload states.", "alert-danger")
     return heredicare_upload_states
 
 
-def extract_hgvs(request_args):
+def extract_hgvs(request_args, flash_messages = True):
     hgvs = request_args.get('hgvs', '')
     hgvs = preprocess_query(hgvs, pattern = r".*:?c\..+") 
-    if hgvs is None:
+    if hgvs is None and flash_messages:
         flash("You have an error in your hgvs query(s). Please check the syntax! c.HGVS should be prefixed by this pattern: 'transcript:c.' Results are not filtered by hgvs.", "alert-danger")
-    elif any(not(x.startswith('ENST') or x.startswith('NM') or x.startswith('NR') or x.startswith('XM') or x.startswith('XR')) for x in hgvs):
+    elif any(not(x.startswith('ENST') or x.startswith('NM') or x.startswith('NR') or x.startswith('XM') or x.startswith('XR')) for x in hgvs) and flash_messages:
         flash("You are probably searching for a HGVS c-dot string without knowing its transcript. Be careful with the search results as they might not contain the variant you are looking for!", "alert-warning")
     return hgvs
 
-def extract_annotations(request_args, conn: Connection):
+def extract_annotations(request_args, conn: Connection, flash_messages = True):
     annotation_type_ids = request_args.get('annotation_type_id', '')
     annotation_operations = request_args.get('annotation_operation', '')
     annotation_values = request_args.get('annotation_value', '')
@@ -261,7 +258,7 @@ def extract_annotations(request_args, conn: Connection):
         if value == "" and operation == "":
             continue
         if value == "" or operation == "":
-            if not did_flash:
+            if not did_flash and flash_messages:
                 flash("Missing some information for annotation search. Skipped some annotation searches.", "alert-danger")
             did_flash = True
             continue
@@ -280,7 +277,8 @@ def extract_annotations(request_args, conn: Connection):
 
         if annotation_type is None: # check that annotation type id is valid
             if not did_flash:
-                flash("Unknown annotation type(s) given! Skipping unknown ones.", "alert-danger")
+                if flash_messages:
+                    flash("Unknown annotation type(s) given! Skipping unknown ones.", "alert-danger")
                 did_flash = True
             continue
         
@@ -288,7 +286,8 @@ def extract_annotations(request_args, conn: Connection):
             try:
                 value = float(value)
             except:
-                flash("The value " + str(value) + " is not numeric, but must be numeric for " + annotation_type.display_title, "alert-danger")
+                if flash_messages:
+                    flash("The value " + str(value) + " is not numeric, but must be numeric for " + annotation_type.display_title, "alert-danger")
                 continue
 
         table = "variant_annotation"
@@ -300,7 +299,8 @@ def extract_annotations(request_args, conn: Connection):
             table = "variant_heredicare_annotation"
 
         if operation not in allowed_operations:
-            flash("The operation " + operation + " is not allowed for " + annotation_type.display_title + ". It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
+            if flash_messages:
+                flash("The operation " + operation + " is not allowed for " + annotation_type.display_title + ". It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
             continue
 
         if operation == '~':
@@ -471,7 +471,7 @@ def sort_annotation_types(a, b):
     return 0
 
 
-def extract_point_score(request_args, point_score_types):
+def extract_point_score(request_args, point_score_types, flash_messages = True):
     type_ids = request_args.get('point_score_type_id', '')
     operations = request_args.get('point_score_operation', '')
     values = request_args.get('point_score_value', '')
@@ -496,26 +496,30 @@ def extract_point_score(request_args, point_score_types):
             continue
         if value == "" or operation == "":
             if not did_flash:
-                flash("Missing some information for point score search value and operation must be present. Skipped some point score searches.", "alert-danger")
+                if flash_messages:
+                    flash("Missing some information for point score search value and operation must be present. Skipped some point score searches.", "alert-danger")
             did_flash = True
             continue
 
         if type_id not in valid_point_score_types: # check that type id is valid
             if not did_flash:
-                flash("Unknown point score type(s) given! Skipping unknown ones.", "alert-danger")
+                if flash_messages:
+                    flash("Unknown point score type(s) given! Skipping unknown ones.", "alert-danger")
                 did_flash = True
             continue
 
         # set allowed_operations
         allowed_operations = ["=", ">", "<", "<=", ">=", "!="]
         if operation not in allowed_operations:
-            flash("The operation " + operation + " is not allowed for " + point_score_types[type_id]["display_title"] + ". It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
+            if flash_messages:
+                flash("The operation " + operation + " is not allowed for " + point_score_types[type_id]["display_title"] + ". It must be one of " + str(allowed_operations).replace('\'', ''), "alert-danger")
             continue
 
         try:
             value = float(value)
         except:
-            flash("The value " + str(value) + " is not numeric, but must be numeric for " + point_score_types[type_id]["display_title"], "alert-danger")
+            if flash_messages:
+                flash("The value " + str(value) + " is not numeric, but must be numeric for " + point_score_types[type_id]["display_title"], "alert-danger")
             continue
 
         new_restriction = [point_score_types[type_id]["table"], type_id, operation, value]
@@ -526,7 +530,7 @@ def extract_point_score(request_args, point_score_types):
 
 
 
-def extract_lookup_list(request_args, user_id, conn: Connection):
+def extract_lookup_list(request_args, user_id, conn: Connection, flash_messages = True):
     lookup_list_names = request_args.get('lookup_list_name', "").split(';')
     lookup_list_ids = request_args.get('lookup_list_id', "").split(';')
     variant_ids_oi = []
@@ -537,11 +541,13 @@ def extract_lookup_list(request_args, user_id, conn: Connection):
         if list_name == '' and list_id == '':
             continue
         if (list_name != '' and list_id == ''):
-            flash("The list " + list_name + " does not exist. Results are not filtered by this list.", 'alert-danger flash_id:unknown_list_search')
+            if flash_messages:
+                flash("The list " + list_name + " does not exist. Results are not filtered by this list.", 'alert-danger flash_id:unknown_list_search')
         else:
             list_ids = preprocess_query(list_id, r'\d*') # either none if there was an error or a list_id
             if list_id is None:
-                flash("You have an error in your list search.", "alert-danger")
+                if flash_messages:
+                    flash("You have an error in your list search.", "alert-danger")
             elif len(list_ids) >= 1:
                 num_valid_lists += 1
                 list_id = list_ids[0]
@@ -551,7 +557,7 @@ def extract_lookup_list(request_args, user_id, conn: Connection):
                         return abort(403)
                     else:
                         variant_ids_oi.extend(conn.get_variant_ids_from_list(list_id))
-                else:
+                elif flash_messages:
                     flash("The list which you are trying to access does not exist.", "alert-danger flash_id:unknown_list_search")
     
     if num_valid_lists > 0 and len(variant_ids_oi) == 0:
@@ -562,7 +568,7 @@ def extract_lookup_list(request_args, user_id, conn: Connection):
     return variant_ids_oi
 
 
-def extract_lookup_list_ids(request_args, user_id, conn: Connection):
+def extract_lookup_list_ids(request_args, user_id, conn: Connection, flash_messages = True):
     lookup_list_names = request_args.get('lookup_list_name', "").split(';')
     lookup_list_ids = request_args.get('lookup_list_id', "").split(';')
     all_list_ids = []
@@ -572,11 +578,13 @@ def extract_lookup_list_ids(request_args, user_id, conn: Connection):
         if list_name == '' and list_id == '':
             continue
         if (list_name != '' and list_id == ''):
-            flash("The list " + list_name + " does not exist. Results are not filtered by this list.", 'alert-danger flash_id:unknown_list_search')
+            if flash_messages:
+                flash("The list " + list_name + " does not exist. Results are not filtered by this list.", 'alert-danger flash_id:unknown_list_search')
         else:
             list_ids = preprocess_query(list_id, r'\d*') # either none if there was an error or a list_id
             if list_id is None:
-                flash("You have an error in your list search.", "alert-danger")
+                if flash_messages:
+                    flash("You have an error in your list search.", "alert-danger")
             elif len(list_ids) >= 1:
                 list_id = list_ids[0]
                 list_permissions = conn.check_list_permission(user_id, list_id)
@@ -585,7 +593,7 @@ def extract_lookup_list_ids(request_args, user_id, conn: Connection):
                         return abort(403)
                     else:
                         all_list_ids.append(list_id)
-                else:
+                elif flash_messages:
                     flash("The list " + list_name + " which you are trying to access does not exist.", "alert-danger flash_id:unknown_list_search") # this should not happen
 
     return all_list_ids
@@ -622,27 +630,27 @@ def get_static_search_information(user_id, conn: Connection):
 def get_merged_variant_page(request_args, user_id, static_information, conn:Connection, flash_messages = True, select_all = False, empty_if_no_variants_oi = False, respect_selected_variants = False):
     static_information = get_static_search_information(user_id, conn)
 
-    variant_strings = extract_variants(request_args)
-    variant_types = extract_variant_types(request_args, static_information['allowed_variant_types'])
+    variant_strings = extract_variants(request_args, flash_messages = flash_messages)
+    variant_types = extract_variant_types(request_args, static_information['allowed_variant_types'], flash_messages = flash_messages)
 
-    genes = extract_genes(request_args)
-    ranges = extract_ranges(request_args)
-    consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request_args, static_information['allowed_consensus_classes'])
-    user_classifications = extract_user_classifications(request_args, static_information['allowed_user_classes'])
-    automatic_classifications_splicing = extract_automatic_classifications(request_args, static_information['allowed_automatic_classes'], which="automatic_splicing")
-    automatic_classifications_protein = extract_automatic_classifications(request_args, static_information['allowed_automatic_classes'], which="automatic_protein")
-    point_score_restrictions = extract_point_score(request_args, static_information["point_score_types"])
-    hgvs = extract_hgvs(request_args)
+    genes = extract_genes(request_args, flash_messages = flash_messages)
+    ranges = extract_ranges(request_args, flash_messages = flash_messages)
+    consensus_classifications, include_heredicare_consensus = extract_consensus_classifications(request_args, static_information['allowed_consensus_classes'], flash_messages = flash_messages)
+    user_classifications = extract_user_classifications(request_args, static_information['allowed_user_classes'], flash_messages = flash_messages)
+    automatic_classifications_splicing = extract_automatic_classifications(request_args, static_information['allowed_automatic_classes'], which="automatic_splicing", flash_messages = flash_messages)
+    automatic_classifications_protein = extract_automatic_classifications(request_args, static_information['allowed_automatic_classes'], which="automatic_protein", flash_messages = flash_messages)
+    point_score_restrictions = extract_point_score(request_args, static_information["point_score_types"], flash_messages = flash_messages)
+    hgvs = extract_hgvs(request_args, flash_messages = flash_messages)
     #variant_ids_oi = extract_lookup_list(request_args, user_id, conn)
-    external_ids = extract_external_ids(request_args)
-    cdna_ranges = extract_cdna_ranges(request_args)
-    annotation_restrictions = extract_annotations(request_args, conn)
-    clinvar_upload_states = extract_clinvar_upload_states(request_args, static_information['allowed_clinvar_upload_states'])
-    heredicare_upload_states = extract_heredicare_upload_states(request_args, static_information['allowed_heredicare_upload_states'])
+    external_ids = extract_external_ids(request_args, flash_messages = flash_messages)
+    cdna_ranges = extract_cdna_ranges(request_args, flash_messages = flash_messages)
+    annotation_restrictions = extract_annotations(request_args, conn, flash_messages = flash_messages)
+    clinvar_upload_states = extract_clinvar_upload_states(request_args, static_information['allowed_clinvar_upload_states'], flash_messages = flash_messages)
+    heredicare_upload_states = extract_heredicare_upload_states(request_args, static_information['allowed_heredicare_upload_states'], flash_messages = flash_messages)
 
     #variant_ids_oi = extract_lookup_list(request_args, user_id, conn)
-    variant_ids_oi = extract_variant_ids(request_args)
-    lookup_list_ids = extract_lookup_list_ids(request_args, user_id, conn)
+    variant_ids_oi = extract_variant_ids(request_args, flash_messages = flash_messages)
+    lookup_list_ids = extract_lookup_list_ids(request_args, user_id, conn, flash_messages = flash_messages)
     view_list_id = request_args.get('view', "")
     if view_list_id != "" and view_list_id not in lookup_list_ids:
         lookup_list_ids.append(view_list_id)

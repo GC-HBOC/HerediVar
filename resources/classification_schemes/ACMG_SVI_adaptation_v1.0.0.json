@@ -3,7 +3,7 @@
     "version": "v1.0.0",
     "display_name": "ACMG SVI adaptation",
     "type": "acmg-svi",
-    "reference": "https://pubmed.ncbi.nlm.nih.gov/25741868/",
+    "reference": "https://submit.ncbi.nlm.nih.gov/api/2.0/files/nuhiy15t6kb3wnw0/acmg_svi.pdf/?format=attachment",
     "aliases": ["ACMG standard + SVI"],
     "final_classes": ["1", "2", "3-", "3", "3+", "4", "4M", "5", "R"],
     "criteria": [
