@@ -802,7 +802,7 @@
                 "Supporting: = -1 point"
 
             ],
-            "is_selectable": "0",
+            "is_selectable": "1",
             "relevant_info": "",
             "strengths": [
                 {
