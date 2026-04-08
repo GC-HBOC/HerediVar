@@ -361,8 +361,7 @@ def calculate_class(scheme_type = None, version = None, selected_classes = ''):
     if final_class is None:
         raise RuntimeError('The class could not be calculated with given parameters. Did you specify a supported scheme and version? (either "acmg" or VUS "task-force" based)')
 
-    result = {'final_class': final_class}
-    return jsonify(result)
+    return {'final_class': final_class}
 
 
 

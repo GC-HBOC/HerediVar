@@ -181,13 +181,15 @@ def get_classification_class(criteria_dict, scheme_type, version):
                 all_criteria_strengths.append(criteria_dict[key]["criterium_name"] + '_' + criteria_dict[key][keyval])
             elif criteria_dict[key]["criterium_name"] == "PM2" and scheme_type in ["acmg-enigma-atm"]:
                 all_criteria_strengths.append(criteria_dict[key]["criterium_name"] + '_' + criteria_dict[key][keyval])
+            elif criteria_dict[key]["criterium_name"] == "PVS1" and scheme_type in ["acmg-enigma-atm"]:
+                all_criteria_strengths.append(criteria_dict[key]["criterium_name"] + '_' + criteria_dict[key][keyval])
             # default case
             else:
                 all_criteria_strengths.append(criteria_dict[key][keyval])
     all_criteria_string = '+'.join(all_criteria_strengths)
     scheme_class = calculate_class(scheme_type, version, all_criteria_string)
     point_class = calculate_point_score(scheme_type, version, all_criteria_string)
-    return scheme_class.json['final_class'], point_class['classification'], point_class['points']
+    return scheme_class['final_class'], point_class['classification'], point_class['points']
 
 
 
