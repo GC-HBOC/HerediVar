@@ -31,8 +31,10 @@ class PRIV_Connection(Connection):
 
 conn = PRIV_Connection(roles = ["super_user"])
 
+logfile=open("update_classification.log", "w")
 
 variant_ids = conn.get_all_valid_variant_ids()
+variant_ids = [35118]
 print_progress_bar(0, len(variant_ids), prefix = 'Progress:', suffix = 'Complete', length = 50)
 
 scheme_dict = {}
@@ -100,7 +102,7 @@ for i, variant_id in enumerate(variant_ids):
                 scheme_class = 3
 
             if str(classification.scheme.selected_class) != str(scheme_class):
-                print("updated user classification: " + str(variant.id) + " from " + str(classification.scheme.selected_class) + " to " + str(scheme_class))
+                logfile.write("updated user classification: " + str(variant.id) + " from " + str(classification.scheme.selected_class) + " to " + str(scheme_class) + "\n")
 
                 conn.update_user_classification_based_on_selected_criteria(
                     classification.id,
@@ -145,7 +147,7 @@ for i, variant_id in enumerate(variant_ids):
                 scheme_class = 3
 
             if str(classification.scheme.selected_class) != str(scheme_class):
-                print("updated consensus classification: " + str(variant.id) + " from " + str(classification.scheme.selected_class) + " to " + str(scheme_class))
+                logfile.write("updated consensus classification: " + str(variant.id) + " from " + str(classification.scheme.selected_class) + " to " + str(scheme_class))
 
                 conn.update_consensus_classification_based_on_selected_criteria(
                     classification.id,
