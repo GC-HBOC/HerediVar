@@ -911,7 +911,7 @@ def get_possible_classes_enigma_pms2_100(class_counts):
 
 
 def get_possible_classes_enigma_insight_mmr_100(class_counts):
-    print(class_counts)
+    #print(class_counts)
     possible_classes = set()
 
     # pathogenic
