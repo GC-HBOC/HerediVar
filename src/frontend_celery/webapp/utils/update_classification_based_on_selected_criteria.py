@@ -34,7 +34,7 @@ conn = PRIV_Connection(roles = ["super_user"])
 logfile=open("update_classification.log", "w")
 
 variant_ids = conn.get_all_valid_variant_ids()
-variant_ids = [35118]
+#variant_ids = [35118]
 print_progress_bar(0, len(variant_ids), prefix = 'Progress:', suffix = 'Complete', length = 50)
 
 scheme_dict = {}
