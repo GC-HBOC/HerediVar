@@ -452,7 +452,6 @@ def get_possible_classes_enigma_atm_1_3_0(class_counts):
         possible_classes.add(4)
     if class_counts['pvs'] == 1 and class_counts['pp'] == 1 and class_counts['pvs1_pp'] == 0: #  (PS3_Supporting, PM2_Supporting, PM3_Supporting, PM5_Supporting, PP3)
         possible_classes.add(4)
-        print("CASE")
     if class_counts['ps'] == 1:
         if class_counts['pp'] >= 2 or (class_counts['pm'] >= 1 and class_counts['pm'] <=2):
             possible_classes.add(4)
