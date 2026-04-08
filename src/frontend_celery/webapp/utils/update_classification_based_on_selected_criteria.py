@@ -99,10 +99,13 @@ for i, variant_id in enumerate(variant_ids):
             else:
                 scheme_class = 3
 
-            conn.update_user_classification_based_on_selected_criteria(
-                classification.id,
-                scheme_class
-            )
+            if str(classification.scheme.selected_class) != str(scheme_class):
+                print("updated user classification: " + str(variant.id) + " from " + str(classification.scheme.selected_class) + " to " + str(scheme_class))
+
+                conn.update_user_classification_based_on_selected_criteria(
+                    classification.id,
+                    scheme_class
+                )
 
 
     if variant.consensus_classifications is not None:
@@ -141,10 +144,15 @@ for i, variant_id in enumerate(variant_ids):
             else:
                 scheme_class = 3
 
-            conn.update_consensus_classification_based_on_selected_criteria(
-                classification.id,
-                scheme_class
-            )
+            if str(classification.scheme.selected_class) != str(scheme_class):
+                print("updated consensus classification: " + str(variant.id) + " from " + str(classification.scheme.selected_class) + " to " + str(scheme_class))
+
+                conn.update_consensus_classification_based_on_selected_criteria(
+                    classification.id,
+                    scheme_class
+                )
+
+
 
     print_progress_bar(i+1, len(variant_ids), prefix = 'Progress:', suffix = 'Complete', length = 50)
 
