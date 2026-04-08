@@ -98,6 +98,8 @@ for i, variant_id in enumerate(variant_ids):
             if all_criteria_string != "":
                 classification_dict = calculate_class(scheme_type, scheme_version, all_criteria_string)
                 scheme_class = classification_dict["final_class"]
+            elif scheme_type == "none":
+                scheme_class = "-"
             else:
                 scheme_class = 3
 
@@ -143,11 +145,13 @@ for i, variant_id in enumerate(variant_ids):
             if all_criteria_string != "":
                 classification_dict = calculate_class(scheme_type, scheme_version, all_criteria_string)
                 scheme_class = classification_dict["final_class"]
+            elif scheme_type == "none":
+                scheme_class = "-"
             else:
                 scheme_class = 3
 
             if str(classification.scheme.selected_class) != str(scheme_class):
-                logfile.write("updated consensus classification: " + str(variant.id) + " from " + str(classification.scheme.selected_class) + " to " + str(scheme_class))
+                logfile.write("updated consensus classification: " + str(variant.id) + " from " + str(classification.scheme.selected_class) + " to " + str(scheme_class) + "\n")
 
                 conn.update_consensus_classification_based_on_selected_criteria(
                     classification.id,
