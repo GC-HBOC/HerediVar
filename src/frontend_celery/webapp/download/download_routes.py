@@ -346,10 +346,12 @@ def calculate_class(scheme_type = None, version = None, selected_classes = ''):
             possible_classes = download_functions.get_possible_classes_enigma_atm_1_3_0(class_counts) 
         elif 'pten' in scheme_type and version == "v3.0.0":
             possible_classes = download_functions.get_possible_classes_enigma_pten(class_counts) 
-        elif 'pten' in scheme_type and version == "v3.1.0":
+        elif 'pten' in scheme_type and version in ["v.3.1.0", "v.3.2.0"]:
             possible_classes = download_functions.get_possible_classes_enigma_pten_310(class_counts) 
         elif any([gene_symbol in scheme_type for gene_symbol in ['pms2', 'mlh1', 'msh2', 'msh6']]) and version == "v1.0.0": # MMR genes
             possible_classes = download_functions.get_possible_classes_enigma_insight_mmr_100(class_counts)
+        elif any([gene_symbol in scheme_type for gene_symbol in ['pms2', 'mlh1', 'msh2', 'msh6']]) and version == "v2.0.0":
+            possible_classes = download_functions.get_possible_classes_enigma_insight_mmr_200(class_counts)
         elif 'tp53' in scheme_type and  (version == "v2.4.0"):
             possible_classes = [calculate_point_score(scheme_type, version, '+'.join(selected_classes))["classification"]]
 
