@@ -52,13 +52,13 @@ $TOOSDIR/script/cleanup.sh -w $WEBAPP_ENV -p $BACKUP_LOG_DIR -f backup_ -e .log 
 if [ $EXIT_CODE -eq 0 ]; then
     echo "" >> "$BACKUP_LOG_FILE"
     echo "Backup completed successfully at $(date)." >> "$BACKUP_LOG_FILE"
-    mail -aFrom:$BACKUP_MAIL_FROM \
-         -s "$MAIL_SUBJECT_SUCCESS" "$BACKUP_MAIL_TO" < "$BACKUP_LOG_FILE"
+    #mail -aFrom:$BACKUP_MAIL_FROM \
+    #     -s "$MAIL_SUBJECT_SUCCESS" "$BACKUP_MAIL_TO" < "$BACKUP_LOG_FILE"
 else
     echo "" >> "$BACKUP_LOG_FILE"
     echo "BACKUP FAILED at $(date) with code $EXIT_CODE." >> "$BACKUP_LOG_FILE"
-    mail -aFrom:$BACKUP_MAIL_FROM \
-         -s "$MAIL_SUBJECT_FAIL" "$BACKUP_MAIL_TO" < "$BACKUP_LOG_FILE"
+    #mail -aFrom:$BACKUP_MAIL_FROM \
+    #     -s "$MAIL_SUBJECT_FAIL" "$BACKUP_MAIL_TO" < "$BACKUP_LOG_FILE"
 fi
 
 

@@ -96,7 +96,7 @@ if [ "$dump_database" = "True" ]; then
    echo ""
    echo "----------------------------------------"
    echo "Starting database backup cleaning: $(date)"
-   $TOOSDIR/script/cleanup.sh -w $WEBAPP_ENV -p $DB_DUMP_DIR/$WEBAPP_ENV -f production-dump- -e .sql -d
+   $TOOSDIR/script/cleanup.sh -w $WEBAPP_ENV -p $DB_DUMP_DIR/$WEBAPP_ENV -f production-dump- -e .sql
    #$DB_DUMP_DIR/cleanup.sh -w $WEBAPP_ENV -d # cleanup old files
    echo "Finished database backup cleaning: $(date)"
    echo "----------------------------------------"
@@ -115,7 +115,7 @@ if [ "$dump_keycloak" = "True" ]; then
    echo ""
    echo "----------------------------------------"
    echo "Starting Keycloak backup cleaning: $(date)"
-   $TOOSDIR/script/cleanup.sh -w $WEBAPP_ENV -p $KEYCLOAK_DUMP_DIR/$WEBAPP_ENV -f production-dump- -e .sql -d
+   $TOOSDIR/script/cleanup.sh -w $WEBAPP_ENV -p $KEYCLOAK_DUMP_DIR/$WEBAPP_ENV -f production-dump- -e .sql
    #$KEYCLOAK_DUMP_DIR/cleanup.sh -w $WEBAPP_ENV -d
    echo "Finished Keycloak backup cleaning: $(date)"
    echo "----------------------------------------"
