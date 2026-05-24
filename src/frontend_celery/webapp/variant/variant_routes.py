@@ -34,15 +34,20 @@ def search():
     static_information = search_utils.get_static_search_information(user_id, conn)
     variants, total, page, selected_page_size = search_utils.get_merged_variant_page(request_args, user_id, static_information, conn, flash_messages = True)
     pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
+
+    print(request_args)
     
     # insert variants to list 
     if request.method == 'POST':
         list_id = request.args.get('selected_list_id')
         require_valid(list_id, "user_variant_lists", conn)
         require_list_permission(list_id, ["edit"], conn)
-        
-        list_variant_import_queue_id = tasks.start_variant_list_import(user_id, list_id, request_args, conn)
-        flash("Successfully requested insertion of variants to list from the current search.", "alert-success")
+
+        if request_args["selected_variants"].strip() == '' and request_args["select_all_variants"] == "false":
+            flash("ERROR: Select at least one variant.", "alert-danger")
+        else:
+            list_variant_import_queue_id = tasks.start_variant_list_import(user_id, list_id, request_args, conn)
+            flash("Successfully requested insertion of variants to list from the current search.", "alert-success")
         del request_args["selected_list_id"]
         return redirect(url_for('variant.search', **request_args))
 
