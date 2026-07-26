@@ -22,7 +22,7 @@ if webapp_env == 'dev':
     """ configuration for the development environment """
     
     # general paths
-    workdir = "/mnt/storage2/users/ahdoebm1/HerediVar/"
+    workdir = "/mnt/storage5/users/ahdoebm1/HerediVar/"
     datadir = joinpaths(workdir, "data/dbs")
     hardcoded_datadir = joinpaths(workdir, "data/dbs_hardcoded")
     toolsdir = joinpaths(workdir, "tools")
@@ -107,7 +107,7 @@ elif webapp_env == 'localtest':
     """ configuration when the tests are run locally and not through github actions """
 
     # general paths
-    workdir = "/mnt/storage2/users/ahdoebm1/HerediVar/"
+    workdir = "/mnt/storage5/users/ahdoebm1/HerediVar/"
     datadir = joinpaths(workdir, "src/annotation_service/tests/data/testdbs/")
     toolsdir = joinpaths(workdir, "tools")
     resources_dir = joinpaths(workdir, 'resources')
@@ -125,8 +125,8 @@ elif webapp_env == 'localtest':
 
     
     #tools
-    #vep_path = "/mnt/storage2/GRCh38/share/opt/ensembl-vep-release-104.3"
-    #vep_cache_dir = "/mnt/storage2/GRCh38/share/data/dbs/ensembl-vep-104/cache"
+    #vep_path = "/mnt/storage5/GRCh38/share/opt/ensembl-vep-release-104.3"
+    #vep_cache_dir = "/mnt/storage5/GRCh38/share/data/dbs/ensembl-vep-104/cache"
     vep_path = joinpaths(toolsdir, "ensembl-vep")
     vep_cache_dir = joinpaths(toolsdir, "ensembl-vep/data/cache")
     #ngs_bits_path = "/mnt/storage1/share/opt/ngs-bits-hg38-2022_04-70-g53bce65c/"

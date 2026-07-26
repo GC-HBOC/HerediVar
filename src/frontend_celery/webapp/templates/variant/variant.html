@@ -87,13 +87,7 @@
             </li>
             {% if 'super_user' in session['user']['roles'] or 'user' in session['user']['roles'] %}
             <li>
-                <button class="dropdown-item" id="change_hidden_state" url="{{ url_for('variant.hide_variant', variant_id = variant.id ) }}">
-                    {% if variant.is_hidden %}
-                        Unhide variant
-                    {% else %}
-                        Hide variant
-                    {% endif %}
-                </button>
+                <button id="hide_button" type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#hide-modal">{% if variant.is_hidden %}Unhide{% else %}Hide{% endif %} variant</button>
             </li>
             {% endif %}
         </ul>
@@ -105,6 +99,25 @@
 
 
 {% block modals %}
+
+<!-- hide variant modal (it is a bootstrap modal) -->
+<div class="modal fade" id="hide-modal" tabindex="-1" aria-labelledby="hide-modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="hide-modal-label">Confirm hide variant</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure that you want to {% if variant.is_hidden %}unhide{% else %}hide{% endif %} this variant?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-primary" id="change_hidden_state" url="{{ url_for('variant.hide_variant', variant_id = variant.id ) }}">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 <!-- reannotate confirmation panel (it is a bootstrap modal) -->

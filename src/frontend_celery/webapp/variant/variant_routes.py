@@ -35,7 +35,7 @@ def search():
     variants, total, page, selected_page_size = search_utils.get_merged_variant_page(request_args, user_id, static_information, conn, flash_messages = True)
     pagination = Pagination(page=page, per_page=selected_page_size, total=total, css_framework='bootstrap5')
 
-    print(request_args)
+    #print(request_args)
     
     # insert variants to list 
     if request.method == 'POST':

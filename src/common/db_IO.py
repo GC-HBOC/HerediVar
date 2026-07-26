@@ -630,7 +630,7 @@ class Connection:
                                  hgvs = None, variant_ids_oi = None, external_ids = None, cdna_ranges = None, annotation_restrictions = None, 
                                  include_heredicare_consensus = False, variant_strings = None, variant_types = None, clinvar_upload_states = None,
                                  heredicare_upload_states = None, lookup_list_ids = None, respect_selected_variants = False, selected_variants = None,
-                                 select_all_variants = False, needs_upload = None, point_score = None):
+                                 select_all_variants = False, needs_upload = None, point_score = None, only_hidden = False):
         # get one page of variants determined by offset & pagesize
         
         prefix = "SELECT id, chr, pos, ref, alt FROM variant"
@@ -1085,8 +1085,11 @@ class Connection:
             new_constraints = "id IN " + placeholders
             actual_information += tuple(variant_ids_oi)
             postfix = self.add_constraints_to_command(postfix, new_constraints)
-        if not include_hidden:
+        if not include_hidden and not only_hidden:
             new_constraints = " variant.is_hidden = 0"
+            postfix = self.add_constraints_to_command(postfix, new_constraints)
+        if only_hidden:
+            new_constraints = " variant.is_hidden = 1"
             postfix = self.add_constraints_to_command(postfix, new_constraints)
         
         command = prefix + postfix        

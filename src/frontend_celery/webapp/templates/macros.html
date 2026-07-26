@@ -582,10 +582,18 @@
         
                     <div class="form-group">
                         <label for="status-select" class="form-label">Status</label>
-                        <div id="status-select" class="d-flex">
-                            <div class="form-check d-flex bsr align-items-center">
-                                <input class="form-check-input vssr" type="checkbox" id="include_hidden" name="include_hidden" {% if request.args.get('include_hidden') == 'on' %}checked{% endif %}>
-                                <label class="form-check-label" for="include_hidden">Include hidden</label>
+                        <div class="d-flex">
+                            <div id="status-select" class="d-flex">
+                                <div class="form-check d-flex bsr align-items-center">
+                                    <input class="form-check-input vssr" type="checkbox" id="include_hidden" name="include_hidden" {% if request.args.get('include_hidden') == 'on' %}checked{% endif %}>
+                                    <label class="form-check-label" for="include_hidden">Include hidden</label>
+                                </div>
+                            </div>
+                            <div id="status-select" class="d-flex">
+                                <div class="form-check d-flex bsr align-items-center">
+                                    <input class="form-check-input vssr" type="checkbox" id="only_hidden" name="only_hidden" {% if request.args.get('only_hidden') == 'on' %}checked{% endif %}>
+                                    <label class="form-check-label" for="only_hidden">Only hidden</label>
+                                </div>
                             </div>
                         </div>
                     </div>

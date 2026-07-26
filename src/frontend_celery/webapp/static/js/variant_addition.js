@@ -42,7 +42,7 @@ $(document).ready(function(){
                     document.getElementById('hidden_pill').remove()
                     document.getElementById('change_hidden_state').innerText = "Hide variant"
                 }
-                
+                $('#hide-modal').modal('hide');
             },
             error: function() {
                 console.log('error')

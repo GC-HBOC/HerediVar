@@ -672,6 +672,7 @@ def get_merged_variant_page(request_args, user_id, static_information, conn:Conn
     selected_page_size = request_args.get('page_size', static_information['default_page_size'])
     selected_sort_by = request_args.get('sort_by', static_information['default_sort_by'])
     include_hidden = request_args.get('include_hidden', 'off') == 'on'
+    only_hidden = request_args.get('only_hidden', 'off') == 'on'
 
     if selected_sort_by not in static_information['sort_bys']:
         if flash_messages:
@@ -721,7 +722,8 @@ def get_merged_variant_page(request_args, user_id, static_information, conn:Conn
         respect_selected_variants = respect_selected_variants,
         selected_variants = selected_variants,
         select_all_variants = select_all_variants,
-        needs_upload = needs_upload
+        needs_upload = needs_upload,
+        only_hidden=only_hidden
     )
 
     return variants, total, page, selected_page_size
